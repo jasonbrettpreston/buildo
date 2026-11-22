@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:40:02.802Z file_sha256=efc656ae82b1ae1c1f8fb36fb523e4a6f3a41e1227c10e89397a434b1cf79417 prompt_sha256=8137d4a85fdaf9e5a8ada5e53d10691e2a9b242e53b80cee9a74b32821c0c571
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent" and "Proof before the switch at plan review." — plan "In-memory count: 22 of the 314 open tasks would resolve to eng-all plus a split list" and "Options: (1) accept it for this task and report the count ... not chosen here." — the switch sends the engineering file twice (40,149 to 42,312 extra chars) to 22 of 314 open tasks, more input than today for those tasks, and no pasted clause or ruling names double sending; the plan leaves that defect open instead of proving it away before the switch — resolve OPEN QUESTION A before plan-lock: either option (3) with its own card and test, or a recorded operator ruling for option (1), so no kind receives the file whole and by section.
+
+DEFER severity=MED — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan "(a) `validate` ok; `page --check` current; T1 to T5 and the changed tests green, each red before the edit." — the plan has acceptance items and an UNVERIFIED list but no 5-10 item PASS/FAIL self-skeptical checklist, so the always-applies §11 item is not addressed before PLAN LOCKED — add the checklist to the plan, walked against the table diff, with its PASS/FAIL form named.
+
+DEFER severity=MED — card "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — plan "the ui-app split deliberate (surface membership follows the `frontend` path list) but leaking for three files; no surface-136 is added to ui-app here" — the plan's own reading of INPUTS.1 records a leak for three files, so the conditional is at least partly confirmed, yet no surface-136 is attached and the condition is not recorded as unconfirmed — record the operator's determination for those three files (attach, or state INPUTS.1 did not confirm the oversight) in this task or in the ruling that defers it.
+
+DEFER severity=LOW — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md" — plan "(d) THE CARD'S FILES LINE ... The card's Files line today lacks the two other test files." — the pasted card already carries all five paths, so ORDER step 2 ("The orchestrator extends the card's Files line") rests on a false premise and would edit the card for nothing — drop ORDER step 2 and treat the card's Files line as final.
+
+MET — RR-0376 — plan "NOT touched: bylaw (stays ["bylaw-133"], ruled), specs-web-admin, specs-mobile, surface-importers, surface-contract-routes, panel-records, generated-127, storage, compute-import, queue-records, middleware-config, tests, and every infrastructure row." — Spec 137 and Spec 08 are left as they are and the infrastructure rows keep the lists they have.
+MET — RR-0380 Q4 ("2. y 3 4 N") — plan "Q4 = no: the by-law row gains NO engineering lists; it stays ["bylaw-133"]." — the operator's answer is applied to the bylaw row, and T2 pins it.
+MET — card "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — plan "Specs 126, 127, 128, 135 stay attached to the front-end rows in this task; they are dropped in a later, separate table edit (NOT IN SCOPE) once task-430 has landed" — the precedent condition (INPUTS.2, task-430) has not landed, so not dropping the four specs here complies.
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — plan ORDER "3. Write T1 to T5 and the changed expectations; run red." then "4. Edit the table" — red precedes the table edit.
+MET — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan "New describe block "task-431" in src/tests/backlog/rule-lists-table.logic.test.ts." — the new resolution and partition tests land in the logic layer.
+REJECT — card "sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared" — the change is accused of routing sections 8, 10 and 12 to eng-shared instead of front end — RR-0380's "2. y" answers Q2 yes for those three sections, and the operator's answer supersedes the card's parenthetical.
+REJECT — card "pipeline and by-law kinds get their handbook plus back-end and shared" — the change is accused of leaving the by-law row with no engineering lists — RR-0380's "4 N" ("Q4 = no: the by-law row gains NO engineering lists") rules exactly that.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 4
+Rules met: none
+
+---
+⏱  89602ms (89.6s)
+📊 Tokens — total: 40190, input: 21480, output: 18710, reasoning: 17464

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T18:40:02.816Z file_sha256=953878480367f9a2ba0b2df7d8e59b2135282a8ccc72cc2d8129eb3eddf89039 prompt_sha256=c233f4fa3e12e637085a14b995d8367c64e4c5c0c4d9e4d7f4b10823967a4e86
+🔍 Lens review of docs/reports/reviews/task-431/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — fact 2 "`sectionText` throws on more than one hit, so `validate` catches a bad selector" vs T4 "`validate` checks only that a named selector exists." — the plan gives two different failure paths for a `sections` selector, so a selector matching two headings (the plan's own warning that "1." also starts "1.1") can pass validate and throw inside a live resolve, and nothing states whether the caller catches that throw and continues with an empty list (reviewer silently loses all engineering rules) or refuses — make validate and T4 call sectionText per selector and assert exactly one hit, and write down the resolve-side catch: the list fails loudly naming list id and file, the review refuses rather than sending nothing.
+
+DEFER severity=MED — "22 of the 314 open tasks would resolve to eng-all plus a split list" and "`src/app/**` includes `src/app/api/**`, so an API route file matches ui-app and api-lib both" — a task touching a split row and an eng-all row, or ui-app and api-lib together, is sent the same rules twice (40,149 or 42,312 extra chars) with no dedup key, OPEN QUESTION A is unanswered, yet rule-lists-table.logic.test.ts:161 would pin the duplication into the golden path — dedup at resolve by file path (skip a sections list whose file is already attached whole, key = list file) or obtain the ruling before writing that expectation.
+
+DEFER severity=MED — "a task prepped but not launched whose set changes (WAITS 267 and 317 are two of the 30) must re-run plan compliance for the new list ids; launch reads the live board table (backlog-lane.mjs:78)" — "must re-run" is a human step with no key: nothing named compares the evidence's list ids to the live table, so a task prepped before commit 1 and launched after it can carry a rules-checked line for eng-all while the reviewer is actually sent eng-front, eng-back and eng-shared; cannot see whether the close check recomputes the task's resolved set against the evidence ids — add that comparison at launch (refuse on mismatch) or record a dated amnesty note.
+
+DEFER severity=LOW — "the three lists together hold every character of every `## ` section (whitespace squashed)" — if a section body is later emptied its contribution is zero characters and T4 still passes, so the empty path is unguarded — assert each selected section's squashed text is non-empty and its recorded size matches, so an emptied section fails loudly.
+
+DEFER severity=LOW — "and adds one per-list call" — a front-end task goes from 13 to 14 lens-input parts; whether any per-part count or total cap drops a part silently cannot be seen from this plan — confirm the cap with the 14-part front-end sample and require an omission notice rather than a silent drop.
+
+REJECT — "step-pipeline: `eng-all` replaced by `eng-back`, `eng-shared`" — re-applying commit 1 looks like it could duplicate list entries — each row's `lists` is a literal replacement array and the page is rendered from the table, so a replay writes the same bytes and `page --check` fails on any drift.
+
+REJECT — "the other table-editing tasks land one at a time" — two table edits landing close together look like a lost update on the generated page — the pre-commit `page --check` runs on the tree being committed, so a page rendered from a stale table fails before it lands.
+
+VERDICT: PASS on error-path safety
+Paths walked: selector match/throw at resolve, empty section body, list union and double attach (eng-all plus sections, ui-app plus api-lib), prepped-task stale evidence at launch, page render and replay, concurrent table edit, extra per-list part cap; no network, storage write or user-facing count in this change   Unguarded: 5
+
+---
+⏱  79482ms (79.5s)
+📊 Tokens — total: 35088, input: 19860, output: 15228, reasoning: 14371

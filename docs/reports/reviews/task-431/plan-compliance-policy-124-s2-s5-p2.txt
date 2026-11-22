@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:40:02.827Z file_sha256=a118f30fd07fee052820bbffbf8a4fe064c2a70180d0214c9c92fa66298a570e prompt_sha256=da4283a70a1f94b9edaae2fbd72a0ed0ece25f7c5c8808af18d7ab78a42cbc4b
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0376 "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols" — plan "In-memory count: 22 of the 314 open tasks would resolve to eng-all plus a split list" and "Planner reads (1) as the smallest and (3) as the complete fix; not chosen here" — for those 22 product tasks the change sends the whole 46,076-char file plus 40,149 to 42,312 chars of sections, i.e. more engineering text than today, and the choice is left open past plan-lock — fix: adopt OPEN QUESTION A option (3) under a ruling, or suppress eng-all whenever a split eng list resolves, before the switch; do not land with only the count reported.
+
+BUG severity=HIGH — card "front-end kinds get surface-136 plus front-end and shared" and "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — plan "Q5: no surface-136 on ui-app in this task (see NOT IN SCOPE)" while its own INPUTS.1 reading records "leaking for three files", and none of the pasted quotes (RR-0376 to RR-0383) names ui-app or surface-136 — a card clause is dropped on a Q5 presented as RULED with no operator words behind it — fix: quote the operator answer to Q5, or attach surface-136 to ui-app as the card directs.
+
+DEFER severity=MED — card "front-end kinds get surface-136 plus front-end and shared" — plan "NOT touched: ... surface-importers, surface-contract-routes" — those two surface rows never held eng-all, so nothing is repointed and they keep no eng-front and no eng-shared, leaving front-end kinds not uniformly served — fix: repoint surface-importers and surface-contract-routes to eng-front plus eng-shared, or record the ruling that puts them out of this task.
+
+DEFER severity=MED — card "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — plan "middleware-config and tests staying on eng-all is the planner's reading of \"infrastructure rows keep what they get today\", not a ruling" — the tests row keeps the whole file, so the common component-plus-test Files line still gets 46,076 chars whole and the split only adds to it — fix: obtain the ruling on the tests row (OPEN QUESTION A option 2) or state with evidence why tests is an infrastructure row.
+
+DEFER severity=MED — card "Proof before the switch at plan review" — plan "No test was run: which tests break (fact 8) is read from the assertions, and rule-lists.logic.test.ts being unaffected is the same reading" — the break list (rule-lists-table.logic.test.ts:20-23, :161, :194-203; backlog-lane.logic.test.ts:343) is asserted, not observed, at plan review — fix: run the three files at the current head and paste the red output, or mark the plan as carrying no proof yet.
+
+DEFER severity=LOW — card Files line "src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts" — plan "(d) ... The card's Files line today lacks the two other test files" and ORDER "2. The orchestrator extends the card's Files line" — the pasted card already names all three test files, so ORDER step 2 is a no-op built on a stale reading — fix: delete ORDER step 2 and correct item (d).
+
+MET — RR-0380 "sections 8, 10, 12" "2. y" — plan "eng-shared: ... \"8. Next.js & TypeScript Constraints\", \"10. Frontend/Backend Boundary\", ... \"12. Frontend Foundation Tooling\"" — 8, 10 and 12 sit in eng-shared, which both the front rows and the back rows attach.
+MET — RR-0380 "by-law tasks gain no engineering rules" ("4 N") — plan "NOT touched: bylaw (stays [\"bylaw-133\"], ruled)" — the by-law row is unchanged.
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — plan "specs-web-admin and specs-mobile still resolve the lists they have" — the specs rows are untouched and keep Specs 126 to 135.
+MET — R-HM "its outputs are generated, never hand-edited" — plan "Regenerated with `node scripts/analysis/rule-lists.mjs page --write`" and "Registered generated doc, `.husky/pre-commit` runs `page --check`" — the page is regenerated and gated by its own check.
+MET — card "the engineering standards entry split by section" — plan "a list may be `sections` picked by heading ... Never a hand-picked clause" — selection is whole level-2 sections by heading, no hand-picked clauses.
+
+REJECT — card "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — accused of deferring the surface-spec drop entirely — the condition (task-430 landing) has not happened and RR-0380 "drop the full engineering when" pushes that transition to it, so deferral is what is ruled.
+REJECT — card "sections 1, 8, 10, 12 front end" — accused of sending section 12 to back-end kinds as well — RR-0380 answers sections 8, 10, 12 for both sides and the plan records it, so the card text is superseded by the ruling.
+REJECT — R-DF "every threshold, window, timeout, limit, rate or count is a registered `<slug>_<name>` logic variable ... no literal fallback" — accused of adding literals — the change adds section titles, list ids and test expectations to data, no compute literal or bound.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 6
+Rules met: none
+
+---
+⏱  113819ms (113.8s)
+📊 Tokens — total: 41542, input: 27216, output: 14326, reasoning: 12953

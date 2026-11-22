@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T18:40:02.818Z file_sha256=953878480367f9a2ba0b2df7d8e59b2135282a8ccc72cc2d8129eb3eddf89039 prompt_sha256=a882b98056720914f44d5851d88ac25a64d5764a6845009c55bdd83e80a09147
+🔍 Lens review of docs/reports/reviews/task-431/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — MEASURES table vs the "Plainly:" paragraph — the summary says "adds one per-list call," but the plan's own rows show API 6→8, web-example 18→20, phone 18→19 (+2/+2/+1); tasks that also match a complementary row (`src/app/api/**` hits ui-app+api-lib; a descriptor hits step-pipeline+surfaces) reconstitute all 14 sections across three lists for ~550 chars of relief — correct the prose to "no benefit + one-to-two calls for overlap tasks," and decide accept-vs-split before lock — verify with `rule-lists.mjs resolve src/app/api/parcels/search/route.ts`.
+
+BUG severity=MED — TESTS T4 vs FACT 9 — T4 is the guard that a new `## N` heading cannot drop unassigned, but `validate` only checks named selectors exist and `.husky/pre-commit` runs only `page --check`; a section added later (RR-0379 "rules added over time") passes both commit-time gates and silently goes to no product kind unless someone runs the test file — fold a partition check into `validate` (or CI) or record the residual risk explicitly — verify: read `.husky/pre-commit`.
+
+BUG severity=MED — THE EXACT TABLE EDITS item 2 (the "NOT touched" list keeps `tests` and `middleware-config` on eng-all) vs the UNVERIFIED bullet — a test-only task (`src/tests/**`) resolves eng-all and gets the whole 46,076-char file with no split, and mixed tasks double; the plan itself calls this "the planner's reading ..., not a ruling" — verify `tests` qualifies as an "infrastructure rule" under RR-0376/RR-0380 and `resolve src/tests/backlog/x.test.ts`; if product-side, every test task loses the split.
+
+BUG severity=LOW — THE EXACT TABLE EDITS item 2 (api-lib → `eng-back`) vs FACT 3 — eng-back bundles section 3 (DB) with section 9 (`scripts/*.js` pipeline safety); api-lib (src libraries) then receives 4,156 chars of pipeline-script rules it cannot use, and the plan never shows api-lib's globs so "api-lib is back end" and "section 9 fits it" are unverified — read api-lib `globs` and `resolve` a representative `src/lib/x.ts`; consider step-pipeline=section 9, api-lib=section 3.
+
+BUG severity=MED — ORDER item 1 (task-435 lands FIRST) — commit 1 is hard-sequenced on task-435, which has no landed commit (UNVERIFIED) and is not in Dependencies; if 435 slips, acceptance (b)'s char figures are off by the note length and any eng-all-keyed plan proof built in between goes stale (the exact failure ORDER 1 exists to prevent) — add 435 as a declared dependency or gate commit 1 on its sha — verify `git log`/board for 435's commit.
+
+DEFER severity=MED — LANDING item 2 — a RUNNING lane whose range base sits at/after commit 1 owes out-compliance for eng-front/back/shared mid-build (18 RUNNING tasks listed); mostly mitigated because the close check reads the table at the merge-base (a pre-commit-1 launch point reads the old table), but any relaunch/rebase past commit 1 flips it — schedule 431 so no RUNNING lane's base is after commit 1 at close — rationale: bounded, reversible, and detected at close.
+
+DEFER severity=LOW — FACT 3 (sections 11 and 14 placed in eng-shared) — putting 11 (Plan Compliance Checklist, 4,382) and 14 (Prevention Loop, 2,555) in eng-shared sends 6,937 chars of plan-stage/process rules to every product task's output reviewer, while the card lists "11 and 14 placed at plan review" and RR-0380 Q2 ruled only 8/10/12 shared — confirm placement at RR-0380:1865 before lock — rationale: bounded, revert-clean.
+
+REJECT — MEASURES "saves 5,927 chars ... about 1 percent" vs the card's 531,000 relief — not a defect: the plan states plainly the large relief comes only from the later surface-spec drop (NOT IN SCOPE per Q1), so eng-shared being 36,935 chars is acknowledged, not hidden.
+
+REJECT — ORDER items 6-7 (protected-path two-commit) — not a new risk: task-412's shape (table commit with no close, then close) is the established pattern, protected path forbids the same-commit close, and rollback is a clean reverse revert.
+
+REJECT — FACTS FOUND 2 (550 preamble chars unsent to any non-infrastructure kind) — not a defect: the preamble is title/intro and carries no rules; T4 scopes to `## ` sections by design.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Complementary-split reconstitution is unaddressed and mis-summarized: API (`src/app/api/**`) and descriptor-bearing front-end tasks get all 14 sections across three lists with +2 per-list calls and ~550-char relief; correct the call-delta prose and decide accept-vs-split before lock.
+- T4 partition guard is not wired into `validate` or the pre-commit `page --check`; a future section silently drops to no product kind — wire it into validate/CI or record the residual risk.
+- `tests` (and `middleware-config`) staying on eng-all is an unruled reading; if `tests` is product-side, every test task keeps the whole file and the double-send widens.
+
+Top 3 unverified data premises (regardless of verdict):
+- api-lib's globs and back-end classification (and the section-9 pairing) are never shown — verification: read `lists`/rows for api-lib `globs` in scripts/analysis/rule-lists.json, then `rule-lists.mjs resolve src/lib/x.ts src/app/api/x/route.ts`.
+- The 22 double-send / 30 set-change counts are a dry run on the board's task files, not each lane's table copy at the actual commit-1 base — verification: resolve every open task's Files line at commit 1 (backlog-lane.mjs / rule-lists.mjs resolve over the task files).
+- Section 11/14 membership in eng-shared diverges from the card's "placed at plan review" and was not covered by RR-0380 Q2 — verification: re-read MORNING-DECISIONS.md:1865 (Q2 answered only 8/10/12).
+
+---
+⏱  207682ms (207.7s)
+📊 Tokens — total: 44108, input: 20746, output: 23362, reasoning: 21865
