@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T20:31:00Z'
+updated_date: '2026-11-22T20:53:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-436/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-436/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-436/seat-integration-1.md
+  - docs/reports/reviews/task-436/seat-reality-check-1.md
+  - docs/reports/reviews/task-436/seat-regression-1.md
 type: build
 ordinal: 136012
 ---
@@ -51,12 +57,12 @@ Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.t
 
 ## FACTS
 - F1. Spec 08 says lanes run on Sonnet in one place, 08_agents.md:359: "a multi-step build goes to the owning lane, on Sonnet". 08_agents.md:526 lists "(Sonnet seats, lane agents, ...)" as a scope phrase. It sets no model. 08_agents.md:35 lists the closed model set `sonnet | opus | haiku | fable`. There is no separate token-economy section: rule 9, :358-359, is the one.
-- F2. A test pins the :359 text word for word: src/tests/chat-rulings-register.logic.test.ts:1733. A dated note keeps that text, so the pin stays green.
+- F2. No test reads 08_agents.md:359. src/tests/chat-rulings-register.logic.test.ts:1733 pins the same sentence in the register 69a (line 15 of that test reads docs/specs/01-pipeline/69a_mcbylaw_register.md), so a note in Spec 08 cannot affect it. The note adds one line and keeps the prior text; keeping it is a review check, not a test.
 - F3. backlog-lane.mjs names no model anywhere (grep "sonnet|opus" finds nothing). Its last output line is `BRIEF-FILE: <path> sha256=<hex>` (:231 dry run, :232 real run). The header says the Agent call stays the orchestrator's (:11).
 - F4. The tests pin the BRIEF-FILE line exactly. backlog-lane.logic.test.ts:117 anchors it with `$`, and :176 requires it to be the LAST line (`toBe`). The lane guard reads it with the regex `/BRIEF-FILE:\s*(\S+)\s+sha256=([0-9a-f]{64})/` (~/.claude/hooks/lane-guard.mjs:56). So the model goes on a new line printed BEFORE it, and the BRIEF-FILE line itself does not change.
 - F5. ~/Buildo-scratch/panel-tools/brief.mjs prints every `spec.extra` entry under "## Task-specific rules" (its `body` array). backlog-lane fills `extra` (:208). One more extra entry therefore reaches the brief with brief.mjs unchanged. When `--spec` is given, the merge at :220-224 adds only the rule block and the lens line.
 - F6. The lane guard rule A1 already allows "sonnet" or "opus" (lane-guard.mjs:11, :50-51). It is outside the repo and not part of this task.
-- F7. The four seat files set `model: sonnet` (.claude/agents/*.md:9-10). That matches the ruling. .cursor/MCBYLAWS-QUEUE.md:247 ("Seats run on Sonnet by default") and 137_mcqueue.md:152 ("A Sonnet lane is named for the check") are about seats and read-only check lanes, so they do not conflict. CLAUDE.md and the README files do not mention Sonnet.
+- F7. The four seat files set `model: sonnet` (.claude/agents/*.md:9-10). That matches the ruling. .cursor/MCBYLAWS-QUEUE.md:247 ("Seats run on Sonnet by default") and 137_mcqueue.md:152 ("A Sonnet lane is named for the check") are about seats and read-only check lanes, so they do not conflict. The next sentence of MCBYLAWS-QUEUE.md:247, "Opus only for hard design adjudication", does conflict with RR-0385; the Spec 08 note supersedes it. CLAUDE.md and the README files do not mention Sonnet.
 
 ## WHAT
 1. Add one dated note to Spec 08 after :359.
@@ -64,7 +70,7 @@ Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.t
 3. Write the tests first and see them fail.
 
 ## EXACT TEXT: dated note (new line 360, indented three spaces like :359)
- Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the split is kept by the launch line, the brief and this note.
+ Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the building lane's model is carried by that line and the brief, the plan seat's by this note alone.
 
 ## CODE CHANGE (backlog-lane.mjs only; not a protected path, rule-lists.json:22)
 - Near :174, add `const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.';`
@@ -74,10 +80,10 @@ Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.t
 - In the header comment, step 6 (:11), name the new line.
 
 ## TESTS (red first), in src/tests/backlog/backlog-lane.logic.test.ts
-- T1, dry run: the output matches `/^AGENT-MODEL: opus \(RR-0385/m` on the line directly before the BRIEF-FILE line. The TASK-JSON `extra` contains "runs on Opus" and "every grounder run on Sonnet". Red on today's script because neither text exists.
-- T2, real launch: the line before the last is AGENT-MODEL. The last line is still exactly BRIEF-FILE; the existing assertion at :176 is the control and stays unchanged.
-- T3, `--spec` path: task.merged.json `extra` holds the model line exactly once. The planted defect is a given spec whose extra already holds the line; the merge must not add it twice.
-- The pin at chat-rulings-register.logic.test.ts:1733 is the control that the :359 text was kept.
+- T1, dry run: after `trim().split('\n')` the second-to-last line matches `/^AGENT-MODEL: opus \(RR-0385/` and the last line matches `/^BRIEF-FILE: /`. The TASK-JSON `extra` contains "runs on Opus" and "every grounder run on Sonnet". Red on today's script because neither text exists.
+- T2, real launch: the line before the last is AGENT-MODEL, and BRIEF.md holds "runs on Opus" (the test's fake brief.mjs, :41, writes the spec into BRIEF.md). The last line is still exactly BRIEF-FILE; the existing assertion at :176 is the control and stays unchanged.
+- T3, `--spec` path: task.merged.json `extra`: (a) a given spec with no `extra` ends with the model line once (red on the old script); (b) a given spec whose `extra` already holds the line ends with it once (green on the old script too, so a survive-the-fix lock, not a red test).
+- No test pins :359 (F2): the note adds one line and keeps the prior text, which the review checks.
 - Lock in both directions (08_agents.md:485): fails on the old script, passes on the new.
 
 ## ORDER
@@ -100,7 +106,7 @@ This task has no dependency on 437 or 438. It edits a different part of backlog-
 - lane-guard.mjs: already changed and outside the repo.
 - brief.mjs: needs no change (F5).
 - The plan-writing seat: the orchestrator launches it without a script, so its model is stated only in the note. Nothing can print or enforce it.
-- No guard and no new gate. MCBYLAWS-QUEUE.md:247 and Spec 137:152 get no note (F7).
+- No guard and no new gate. Spec 137:152 gets no note (F7); MCBYLAWS-QUEUE.md:247 is named in the Spec 08 note, not edited.
 
 ## UNVERIFIED
 - That the orchestrator reads stdout above the BRIEF-FILE line. It reads the whole output today, which is how the "plan gate ok" line at :106 is seen.
@@ -110,4 +116,18 @@ This task has no dependency on 437 or 438. It edits a different part of backlog-
 About 1.5 hours of lane time; about 20 changed lines plus 3 tests.
 
 Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md
+
+Plan review round 1: 12 folded, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/reviews/task-436/GROUNDER-PLAN.md; triage docs/reports/reviews/task-436/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#3 MED folded the plan seat's by t
+plan-compliance-eng-all#2 MED folded the second-to-last l
+plan-compliance-five-words#4 MED folded the test's fake brie
+plan-compliance-inc-S#5 MED folded the plan seat's by t
+plan-compliance-queue-137#5 MED folded MCBYLAWS-QUEUE.md:24
+plan-error-paths#4 MED folded the second-to-last l
+plan-plan-review-deepseek#3 MED folded survive-the-fix lock
+plan-plan-review-deepseek#12 MED folded No test reads 08_age
+rc#1 MED folded No test reads 08_age
+rc#2 MED folded MCBYLAWS-QUEUE.md:24
+rg#1 MED folded survive-the-fix lock
+rg#3 MED folded the second-to-last l
 <!-- SECTION:PLAN:END -->
