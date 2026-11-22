@@ -49,3 +49,13 @@ No line is about the review material (range, chunks, compliance output, REVIEW h
 ## Files
 - Review outputs and inputs: docs/reports/lanes/2026-11-21/BL-SIMPLE423/ (out-compliance-rules-p1..p12, out-code-review-p1, out-error-paths-p1, in- beside each, TASK, FINDINGS.md).
 - Task left RUNNING, grounder owed (RR-0359). No plan lens was run by this lane and no plan-*.txt is filed (the plan evidence is on the board).
+
+## Fix round 1 (RR-0374, 2026-11-22)
+- Order I worked in: (1) the changed and new tests FIRST, a commit attempt with only tests and the task file staged: 12 failing assertions (red-fix1.out; it did not land); (2) the code; (3) the real commit a7e366cbb (commit-fix1.out: 322 passed in the five test files; the first green attempt was refused by check-task-files because src/tests/backlog/backlog-brief-context.logic.test.ts is outside the Files line, so that test and backlog-brief.mjs were left as they were and the commit repeated). The red test edits and the code landed in the same commit because the red commit never landed.
+- Acceptance (f) is NOT met (5 of 12 distinct confirmed findings, the HIGH queue-137#1 missed); the per-document form is the default again; nothing here claims (f) met.
+- 1a (D2): backlog-lane.mjs: the compliance sentence is output stage only, the Plan review lenses clause, the plan-<lens>.txt output sentence and the extra plan "Review (review mode ...)" entry are gone. NOT DONE: backlog-brief.mjs:178 "Review (plan or output): ... plan-review-deepseek.md" stays, because the test that pins it (src/tests/backlog/backlog-brief-context.logic.test.ts:43) is outside the Files line of task-423 and check-task-files refused the commit; needs the Files line to name that test, then one line and one test line change. out-compliance-rules-p1#3 (MED) is therefore open.
+- 1c: the per text now orders one run per rule list at the output stage and names the joined run in one clause as an accepted form that is not the default (RR-0374, measured). plan-prep produces the per-list inputs again (rule-lists.mjs planPrep; no flag added); joinLists, JOINED_ID, members, --lists, complianceSetErrors and the validate refusal stay.
+- 1b (D1): isJoined accepts -rN and -rN-pN; test: joined round 1 plus joined round 2 closes, a per-list file beside the joined set is refused.
+- Piled with reasons (RR-0364): all LOW and NIT except p8#4, fixed (header comment line in a file touched).
+- Notes in Spec 08 (two), Spec 137 and README items 3 and 5 now say the join is accepted, not the default; page regenerated.
+- Outcomes check: see outcomes.out in the lane directory of the scratch folder (one refusal: p1#3).

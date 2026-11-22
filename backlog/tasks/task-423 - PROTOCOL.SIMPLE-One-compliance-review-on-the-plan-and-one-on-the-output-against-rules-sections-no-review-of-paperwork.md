@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SIMPLE423'
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-22T15:18:00Z'
+updated_date: '2026-11-22T15:25:00Z'
 labels:
   - McFix
   - McFix V2
@@ -32,6 +32,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-21/BL-SIMPLE423/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-SIMPLE423/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-SIMPLE423/TRIAGE.md
 type: build
 ordinal: 123012
 ---
