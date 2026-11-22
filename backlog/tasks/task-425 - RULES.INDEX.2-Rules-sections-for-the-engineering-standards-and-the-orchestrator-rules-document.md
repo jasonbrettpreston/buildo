@@ -3,10 +3,10 @@ id: TASK-425
 title: >-
   RULES.INDEX.2 Rules sections for the engineering standards and the
   orchestrator rules document
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-22T16:06:00Z'
+updated_date: '2026-11-22T16:25:00Z'
 labels:
   - McFix
   - McFix V2
@@ -41,4 +41,6 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's r
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-22 (M-246, prior text kept; RR-0376 · task-425 · Backlog; operator, verbatim: "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427.")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0378 · task-425 · Backlog; operator, verbatim: "Plan approved. We are running right now on this? Add the tasks? This is the final changes to McSix step? Provide how this impacts the tasks as a plan and you can remove step 7 right now")
 <!-- SECTION:NOTES:END -->
