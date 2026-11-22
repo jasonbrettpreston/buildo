@@ -1,0 +1,159 @@
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 45fdc3d2b4e908a8f486a9ef3499ca0e125f38ef..c64324ce572e7c8d6e4209be373e611457cc95c6 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -96,7 +96,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
+ | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+@@ -104,7 +104,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 203,117 | 9 |
++| total | 9 lists | | 204,310 | 9 |
+ 
+ ## spec-only
+ 
+@@ -113,11 +113,11 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 156,842 | 7 |
++| total | 7 lists | | 158,035 | 7 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index a0186ab31cf73850493e36871d774bd9a6a6875e..a2336c8ab50632e8c0a3dd3a6e3c1f7934a30ba5 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -357,6 +357,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+ 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+ 9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+    Dated note 2026-11-06 (MB-85, M-246, prior text kept; E2, revised form): the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".
++   Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the building lane's model is carried by that line and the brief, the plan seat's by this note alone.
+ 10. **Claims and briefs are checked before they leave the orchestrator.** (a) No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67). (b) A DeepSeek brief names only checks runnable through `bash_allow` (§C.4); otherwise provider `claude` with the reason logged (§B). Recorded as Spec 124a R-KO (`2026-10-30-batch-aj#CHAT-211.G10`).
+     Dated note 2026-11-06 (MB-85, M-246, prior text kept; C2 and C3): (C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
+     Dated note 2026-11-19 (M-246, prior text kept; RR-0232 (c), RR-0235; task-308 R8c · lane BL-R8c · stage 8; operator, verbatim, RR-0232 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:925): "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)."; RR-0235 (:931): "We need them linked with all the relevant data - beyond just the data references"): the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo. The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo). The 2026-11-19 reports of BL-R6, BL-R7a and BL-R7b are copied as the first set.
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 254dbeb31863b018468ad696e3ee91bbc240f05a..0d5b4d748f816a0595a6ff9d53e6ef4235d3021a 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -8,7 +8,7 @@
+ //   3. git worktree add -b <branch> <worktree> <board HEAD>, link both node_modules, copy .cursor/active_task.md;
+ //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
+ //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
+-//   6. print `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
++//   6. print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call) and then `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
+ // COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
+ // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
+ // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
+@@ -172,6 +172,7 @@ if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group]
+ // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
+ // task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
+ const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
++const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.'; // task-436 FINAL.1: the split in the brief (Spec 08 rule 9 dated note 2026-11-22)
+ const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
+ const lensLine = (task, ctx, lists) => {
+   const ctxArgs = `--context ${ctx} ${sectionFlags}`;
+@@ -205,7 +206,7 @@ const spec = {
+   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
+   groups: [letter ?? 'F'],
+   writeScope: [laneDir, wt],
+-  extra: [ticket, lensLine(t, ctxRel, resolved.lists)],
++  extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)], // the lens line stays last: the --spec merge below reads it there
+ };
+ let specPath = specGiven ?? path.join(laneDir, 'task.json');
+ if (!specGiven) {
+@@ -220,7 +221,7 @@ if (!specGiven) {
+   const merged = {
+     ...given,
+     inputs: inputs.some((x) => /Rule lists that govern this task/.test(String(x))) ? inputs : [spec.inputs[0], ...inputs],
+-    extra: extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]],
++    extra: [...(extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]]), ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])], // task-436: the model line once
+   };
+   specPath = path.join(laneDir, 'task.merged.json');
+   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(merged)}`);
+@@ -228,6 +229,8 @@ if (!specGiven) {
+ }
+ const briefOut = path.join(laneDir, 'BRIEF.md');
+ step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);
+-if (dry) { console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
++const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)'; // task-436: on the line before BRIEF-FILE, which stays last (lane-guard reads it)
++if (dry) { console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
++console.log(AGENT_MODEL);
+ console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`);
+ } catch (e) { fail('write', { stderr: String(e && e.message) }); }
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index c056a7cdae3af474cc655180a0fb6e4be4f1dfa5..cfb41687ae974e1d0cfc99614fa38d54a0e91dcf 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -145,6 +145,19 @@ describe('backlog-lane --dry-run (AC #3): prints every command, writes nothing',
+     expect(spec.extra.join('\n')).toMatch(/^Ticket: task-\d+/m);
+     expect(spec.extra.join('\n')).toContain('scripts/deepseek-review.js review <diff file>'); // RR-0374: output lenses only, no plan review command
+   });
++  // task-436 T1 (RR-0385, decision-170): the builder's model is printed on the line directly before BRIEF-FILE and the split is in the brief's extra
++  it('T1 dry run: the second-to-last line is AGENT-MODEL: opus, the last is BRIEF-FILE, and extra carries the Opus/Sonnet split', () => {
++    const f = fixture();
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stderr).toBe(0);
++    const lines = r.stdout.trim().split('\n');
++    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
++    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: /);
++    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
++    expect(spec, r.stdout).not.toBeNull();
++    expect(spec.extra.join('\n')).toContain('runs on Opus');
++    expect(spec.extra.join('\n')).toContain('every grounder run on Sonnet');
++  });
+ });
+ 
+ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+@@ -185,6 +198,37 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+     expect(fs.existsSync(path.join(f.base, 'lane-dir/task.json'))).toBe(false);
+     expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('"goal":"g"');
+   });
++  // task-436 T2 and T3 (RR-0385, decision-170). The model line is written as a literal: the script exports nothing (GROUNDER-PLAN.md, plan-plan-review-deepseek#19).
++  const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.';
++  it('T2 real launch: the line before the last is AGENT-MODEL: opus and BRIEF.md carries the split; the last line is still BRIEF-FILE', () => {
++    const f = fixture();
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const lines = r.stdout.trim().split('\n');
++    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
++    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: \S+ sha256=[0-9a-f]{64}$/);
++    expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('runs on Opus');
++  });
++  it('T3 (a) --spec with no extra: the merged extra ends with the model line, once', () => {
++    const f = fixture();
++    const spec = path.join(f.base, 'mine.json');
++    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'] }));
++    const r = lane(f, ['--no-launchd', '--spec', spec]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
++    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
++    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
++  });
++  it('T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock)', () => {
++    const f = fixture();
++    const spec = path.join(f.base, 'mine.json');
++    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'], extra: ['own extra', 'Compliance lens, ONCE PER RULE LIST (given)', MODEL_LINE] }));
++    const r = lane(f, ['--no-launchd', '--spec', spec]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
++    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
++    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
++  });
+   it('refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line)', () => {
+     const f = fixture({ hook: true });
+     const r = lane(f, ['--no-launchd', '--wait-ms', '1500']);

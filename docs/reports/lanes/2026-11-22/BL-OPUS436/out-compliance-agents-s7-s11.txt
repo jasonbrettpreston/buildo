@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.917Z file_sha256=68b1582e57f7c948ab783e185084ea55bda1a079067daa7dc986e5e292195d1b prompt_sha256=e223bffb773a3a990fdd41883227d31df6d6ec057fe9e15277aeb57d4b5fd361
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 7.2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec." with 11.1 "a line citation is read, not remembered." — docs/specs/00-architecture/08_agents.md:360 "This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane." — the new spec text supersedes a citation the material never records as read (the Implementation Notes verify 08_agents.md:360, the guard regex and BRIEF.md line 51, not `.cursor/MCBYLAWS-QUEUE.md:247` nor the "allows sonnet or opus" guard claim), so a stale line number would leave the conflicting sentence standing — read `.cursor/MCBYLAWS-QUEUE.md:247` and the guard, record both lines in the notes, and correct or drop the citation.
+
+DEFER severity=LOW — 11.1 "a data claim carries its query run" — docs/reports/generated/rule-lists-by-kind.md:101 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |" and :107 "| total | 9 lists | | 204,310 | 9 |" — the three new character counts (each +1,193) carry no recorded run of the generator in the Implementation Notes, which name every other check — regenerate the report with `scripts/analysis/rule-lists.mjs` and record the command and its output in the Implementation Notes.
+
+DEFER severity=LOW — RR-0389 "resolve this conflict by updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "This supersedes ... at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane." — the ruling names updating the docs, the change supersedes the conflicting sentence by note and leaves `.cursor/MCBYLAWS-QUEUE.md:247` as written — the task's Files line excludes that file and wider scope is a new item (TKT-1), so file it or rule the supersession sufficient rather than editing it in this lane.
+
+MET — 7.9 dated note 2026-11-22 "prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line" — scripts/analysis/backlog-lane.mjs "if (dry) { console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ...`); process.exit(0); }" and "console.log(AGENT_MODEL);" — the model line prints immediately before BRIEF-FILE on both the dry and the real path.
+MET — 7.9 dated note 2026-11-22 "writes the same split into the brief" — scripts/analysis/backlog-lane.mjs "extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)]" plus "extra.includes(MODEL_LINE) ? [] : [MODEL_LINE]" — the split reaches task.json and BRIEF.md exactly once (test T2 "toContain('runs on Opus')").
+MET — 7.9 dated note 2026-11-22 "the reality-check, integration and regression seats and every grounder run on Sonnet" — docs/specs/00-architecture/08_agents.md:360 — the split matches the 2026-11-21 note ("as Claude Sonnet agents with tools") and leaves rule 8 unchanged.
+MET — 7.4 dated note 2026-11-19, lens set and the brief — scripts/analysis/backlog-lane.mjs "// the lens line stays last: the --spec merge below reads it there" — the per-list lens command and its --context/--section flags are unchanged by the inserted line.
+MET — 11.3 "Survive-the-fix locks (green-both) are stated as such per case" — src/tests/backlog/backlog-lane.logic.test.ts "T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock)" — the green-both case is declared, and T1, T2, T3 (a) are recorded red at the assertions.
+MET — 11.9 TKT-1 "Wider scope than the header is a new MB item, not a longer brief." — the four diff paths — they equal the task's Files line exactly, nothing outside it is touched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: none
+
+---
+⏱  112695ms (112.7s)
+📊 Tokens — total: 43111, input: 18199, output: 24912, reasoning: 23825
