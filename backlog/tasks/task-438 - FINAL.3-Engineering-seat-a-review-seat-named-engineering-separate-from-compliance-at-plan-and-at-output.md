@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENG438'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T22:56:00Z'
+updated_date: '2026-11-22T23:07:00Z'
 labels:
   - McFix
   - McFix Final
@@ -39,7 +39,7 @@ ordinal: 138012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "We want to seperate the compliance from the engineering standards seat. For both the plan and output."; "We need a new name for an agent called engineering." THIS TASK: a new review template named engineering; the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages; the launch gate and the close check expect both seats' outputs. Task-431 then gives the seat the right sections (front end, back end). Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md
+Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -221,4 +221,8 @@ rg#4 MED folded (RR-0385 item 2 on t
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-ENG438, worktree /Users/brettpreston_macmini/Buildo-wt-eng438, branch wf1/inc1b-eng438), RR-0240
+
+2026-11-22 BL-ENG438 build: tests T1 to T5 written first (review-templates, rule-lists, check-lane-close, backlog-lane logic tests); red proven by a commit attempt with only the tests and this task file staged (red.out in the lane dir).
+
+2026-11-22 BL-ENG438 build: lens-engineering.md (the plan's TEMPLATE line changes on a copy of lens-compliance.md, which is not edited), README row and two sentences, seatOf and ENG_FILE in rule-lists.mjs with plan-prep routing by seat, per-seat proof in check-lane-close.mjs (close split when the range base holds lens-engineering.md; launch gate always split, no alias), per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat, one dated note in 08_agents.md after section 7 rule 4, rule-lists-by-kind.md regenerated (page --write) and added to the description Files line.
 <!-- SECTION:NOTES:END -->

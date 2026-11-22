@@ -22,25 +22,27 @@ if (r.error) process.exit(0);
 const cp = (rel) => { fs.mkdirSync(path.dirname(path.join(board, rel)), { recursive: true }); fs.copyFileSync(path.join(ROOT, rel), path.join(board, rel)); };
 for (const l of r.lists) cp(l.file);
 cp('.claude/review-templates/lens-compliance.md');
+cp('.claude/review-templates/lens-engineering.md'); // task-438: the launch gate reads the engineering seat's template from the board head
 const dir = path.join(board, 'docs/reports/reviews', taskId);
 fs.mkdirSync(dir, { recursive: true });
 const ctx = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
 fs.writeFileSync(path.join(dir, 'context-r1.md'), ctx);
 const sel = rt.extractSections(ctx, rt.CONTEXT_SECTIONS);
 const cut = rt.extractSections(ctx, rt.PLAN_SECTIONS);
-const tplFile = path.join(ROOT, '.claude/review-templates/lens-compliance.md');
-const tplText = fs.readFileSync(tplFile, 'utf8');
+// task-438: each list's files and template are named by its seat (rule-lists.mjs seatOf)
+const tplFile = (seat) => path.join(ROOT, `.claude/review-templates/lens-${seat}.md`);
 const planFiles = {};
 const w = (n, x) => { fs.writeFileSync(path.join(dir, n), x); };
 const outBody = 'MET - c - d - e\nVERDICT: PASS on compliance\n';
-const hdr = (inText) => `REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:00:00.000Z file_sha256=${sha(inText)} prompt_sha256=${rl.lensPromptHash({ templateText: tplText, inputText: inText, context: sel })}\n`;
+const hdr = (seat, inText) => `REVIEW template=lens-${seat}.md model=deepseek-reasoner at=2026-11-21T00:00:00.000Z file_sha256=${sha(inText)} prompt_sha256=${rl.lensPromptHash({ templateText: fs.readFileSync(tplFile(seat), 'utf8'), inputText: inText, context: sel })}\n`;
 if (type === 'build') {
   for (const l of r.lists) {
-    for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: board, material: cut, templateFile: tplFile, context: sel })) {
-      const inn = `in-plan-compliance-${l.id}${x.suffix}.txt`;
+    const seat = rl.seatOf(l);
+    for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: board, material: cut, templateFile: tplFile(seat), context: sel })) {
+      const inn = `in-plan-${seat}-${l.id}${x.suffix}.txt`;
       w(inn, x.text);
       const outn = inn.replace(/^in-/, '');
-      const o = hdr(x.text) + outBody; w(outn, o); planFiles[outn] = o;
+      const o = hdr(seat, x.text) + outBody; w(outn, o); planFiles[outn] = o;
     }
   }
 } else { const o = `REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T00:00:00.000Z file_sha256=${'a'.repeat(64)} prompt_sha256=${'b'.repeat(64)}\n${outBody}`; w('plan-code-review.txt', o); planFiles['plan-code-review.txt'] = o; }

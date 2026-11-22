@@ -11,6 +11,9 @@
 //    Files line; a build or fix task whose Files resolve to no rule list is refused;
 //  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
 //  * task-423: the compliance proof is ONE joined output set per stage (out-compliance-rules[-pN].txt, the resolved lists joined whole by joinLists) or the per-list set (a stage holding both is refused);
+//  * task-438 (RR-0385 item 2): a list on the engineering standards file (rule-lists.mjs seatOf) is the engineering seat's: out-engineering-<list id>.txt on lens-engineering.md (joined: out-engineering-rules),
+//    every other list the compliance seat's; the form is chosen per seat and per stage. The close applies the split when the range base holds lens-engineering.md (a lane launched before
+//    the landing closes as before, every list under compliance); the launch gate always splits. No alias: a compliance file never stands for the engineering seat;
 //    plan findings are ruled once: with GROUNDER-PLAN.md at the launch commit non-empty and holding a Plan line, no plan-*.txt is required and none is read for findings;
 //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
 //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
@@ -39,7 +42,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
@@ -379,11 +382,11 @@ function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneNam
  * task-375 D5 (extracted from closeErrors, behaviour preserving): the proof of ONE rule list's compliance lens output(s) in `files` for the given phases: REVIEW header and prompt hash, committed input, stamp,
  * whole-list recompute, chunk coverage (out phase). Returns the refusal line, or null when valid. `materialOk(p)` (plan gate): an extra problem text for a parsed input, or null.
  */
-function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxValues, expected, diffOf, optionalPaths, dirNote, layout, materialOk }) {
+function listProof({ id, l, seat = 'compliance', phases, files, textOf, table, root, readBase, ctxValues, expected, diffOf, optionalPaths, dirNote, layout, materialOk }) {
   const why = [];
   let ok = false;
   for (const ph of phases) {
-    const base = `${ph}-compliance-${l.id}`;
+    const base = `${ph}-${seat}-${l.id}`;
     const single = textOf(`${base}.txt`);
     const parts = files.map((f) => new RegExp(`^${esc(base)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
     if (single !== undefined && parts.length) { why.push(`${base}.txt and ${base}-pN.txt both exist (one file, or -p1..-pK)`); continue; }
@@ -396,7 +399,7 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
     for (const n of names) {
       const input = textOf(`in-${n}`);
       if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
-      bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md'), contexts: ctxValues }));
+      bad.push(...reviewErrors(n, textOf(n) ?? '', `lens-${seat}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${seat}.md`), contexts: ctxValues }));
       const p = parseLensInput(input);
       if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
       else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
@@ -417,30 +420,31 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
     if (bad.length) { why.push(bad.join('; ')); continue; }
     ok = true;
   }
-  return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
+  return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid ${seat} lens output in ${dirNote}: write ${phases.join(' or ')}-${seat}-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
 }
 
 /**
  * task-423 (PROTOCOL.SIMPLE, adjustment 1): the compliance proof of a stage in either form. The JOINED form is out-compliance-rules[-pN].txt (the resolved lists joined whole by joinLists, proved by listProof as one
  * list named rules); the PER-LIST form is out-compliance-<list id>[-pN].txt for every list (kept for a task launched before the join). The form is decided per phase from the files in the folder: a phase holding both
  * is refused, a phase holding neither is refused naming the joined file first (the per-list refusals follow). `proof(l, phases, table)` is one listProof call; `lists` the resolved lists; returns the refusal lines.
+ * task-438: `seat` (compliance or engineering) names the files; `lists` are that seat's lists only, so the joined form of a seat joins its own lists.
  */
-function complianceSetErrors({ id, lists, phases, files, table, dirNote, proof }) {
-  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-compliance-`));
-  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
-  const isAny = /^(plan|out)-compliance-.+\.txt$/;
+function complianceSetErrors({ id, seat = 'compliance', lists, phases, files, table, dirNote, proof }) {
+  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-${seat}-`));
+  const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
+  const isAny = new RegExp(`^(plan|out)-${seat}-.+\\.txt$`);
   const errors = [];
   const joinedPh = []; const perPh = [];
   for (const ph of phases) {
     const j = named(ph, isJoined);
-    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-compliance-`) && !isJoined.test(f.name));
-    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage`);
+    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-${seat}-`) && !isJoined.test(f.name));
+    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-${seat}-${JOINED_ID}*.txt) and the per-list (${ph}-${seat}-<list id>*.txt) ${seat} outputs of the ${ph} stage: keep one form per stage`);
     else if (j) joinedPh.push(ph);
     else if (p) perPh.push(ph);
   }
   const none = joinedPh.length === 0 && perPh.length === 0 && errors.length === 0;
   if (none) {
-    errors.push(`${id}: no joined compliance lens output in ${dirNote}: write ${phases.map((p) => `${p}-compliance-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
+    errors.push(`${id}: no joined ${seat} lens output in ${dirNote}: write ${phases.map((p) => `${p}-${seat}-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
     perPh.push(...phases);
   }
   if (joinedPh.length) {
@@ -510,8 +514,13 @@ export function closeErrors(i) {
   }
 
   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
+  // task-438 (F10): the seat split applies when the range base holds lens-engineering.md; without it every list is compliance, the old contract (a lane launched before the landing)
   const phases = build ? ['out'] : ['plan', 'out'];
-  errors.push(...complianceSetErrors({ id, lists: r.lists, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
+  const split = readBase('.claude/review-templates/lens-engineering.md') !== null;
+  for (const seat of ['compliance', 'engineering']) {
+    const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);
+    if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
+  }
   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
   if (build) {
     const set = lensSet({ type, files: filesText(i.taskText) });
@@ -625,18 +634,22 @@ function planGateInner(i) {
     // one valid plan compliance output per resolved list, whose stamped material is the plan sections of the context whose text produced its prompt hash
     const cands = contexts.map((c) => ({ value: lensContexts([{ name: c.name, text: c.text }], hasNotes).values[0] ?? null, cut: planCut(c.text), name: `${dir}/${c.name}` })).filter((c) => c.value !== null);
     // task-423: joined (plan-compliance-rules*) or per-list plan evidence; each proof is tried against every committed context
-    const planProof = (l, phs, tbl) => {
+    const planProof = (seat) => (l, phs, tbl) => {
       let last = null;
       for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {
-        const e = listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
-          layout: `put plan-compliance-rules[-pN].txt (or plan-compliance-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-compliance-<name>)`,
+        const e = listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
+          layout: `put plan-${seat}-rules[-pN].txt (or plan-${seat}-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-${seat}-<name>${seat === 'compliance' ? '' : ` --template .claude/review-templates/lens-${seat}.md`})`,
           materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`) });
         if (e === null) return null;
         last ??= e;
       }
       return last;
     };
-    errors.push(...complianceSetErrors({ id, lists: r.lists, phases: ['plan'], files, table: i.table, dirNote, proof: planProof }));
+    // task-438: always split at the launch gate (no range base); the compliance name is refused for an engineering list, with no alias
+    for (const seat of ['compliance', 'engineering']) {
+      const ls = r.lists.filter((l) => seatOf(l) === seat);
+      if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases: ['plan'], files, table: i.table, dirNote, proof: planProof(seat) }));
+    }
   } else {
     // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
     const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));

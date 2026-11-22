@@ -397,10 +397,15 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
   });
   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
-    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
+    for (const l of ['mobile-98', 'storage-doc16', 'inc-F']) {
       expect(extra).toContain('out-compliance-' + l);
       expect(extra).not.toContain('plan-compliance-' + l);
     }
+    // task-438 T5 (RR-0385 item 2): the engineering standards list goes to the engineering seat, with its own template; never under the compliance name
+    expect(extra).toContain('out-engineering-eng-all');
+    expect(extra).not.toContain('out-compliance-eng-all');
+    expect(extra).not.toContain('plan-engineering-eng-all');
+    expect(extra).toContain('lens-engineering.md');
     expect(extra).toContain('ONCE PER RULE LIST');
     expect(extra).not.toContain('ONE JOINED RUN PER STAGE');
     expect(extra).toContain('lens-input --list L --context');
@@ -688,11 +693,15 @@ describe('plan-prep review: the calls and what they leave', () => {
     const ctx = fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8');
     const table = rl.readTable();
     const rs = rl.resolveTask({ table, root: f.board, body: fs.readFileSync(taskFile(f), 'utf8'), type: 'build', letter: 'F' });
-    for (const l of rs.lists as { id: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
-      expect(fs.readFileSync(path.join(dirOf(f), `in-plan-compliance-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
+    // task-438 T5: the engineering list's input is named by its seat and sized with its own template
+    expect(names(f, /^in-plan-engineering-eng-all/)).toHaveLength(1);
+    expect(names(f, /^in-plan-compliance-eng-all/)).toHaveLength(0);
+    const seat = (l: { file: string }) => (l.file === 'docs/specs/00_engineering_standards.md' ? 'engineering' : 'compliance');
+    for (const l of rs.lists as { id: string; file: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, `.claude/review-templates/lens-${seat(l)}.md`), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
+      expect(fs.readFileSync(path.join(dirOf(f), `in-plan-${seat(l)}-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
     const g = prepFixture(); backlog(g.board, ['task', 'edit', g.task, '-d', 'another description\n\nFiles: scripts/analysis/thing.mjs']);
     expect(review(g).status).toBe(0);
-    const a = names(f, /^in-plan-compliance-eng-all/)[0] as string;
+    const a = names(f, /^in-plan-engineering-eng-all/)[0] as string;
     expect(fs.readFileSync(path.join(dirOf(g), a), 'utf8')).not.toBe(fs.readFileSync(path.join(dirOf(f), a), 'utf8'));
   });
   it('8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched', () => {
@@ -727,7 +736,12 @@ describe('plan-prep review: the calls and what they leave', () => {
     const li = r.stdout.split('\n').filter((l) => /lens-input/.test(l)).length;
     expect(li).toBeGreaterThan(3);
     expect(r.stdout).not.toMatch(/--list rules/); // RR-0374: the per-document form
-    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li);
+    // task-438 T5: one engineering job (eng-all), on its own template; the compliance review lines are the lens-input lines minus the engineering ones
+    const liEng = r.stdout.split('\n').filter((l) => /lens-input .*--out \S*in-plan-engineering-eng-all --template \S*lens-engineering\.md/.test(l)).length;
+    expect(liEng).toBe(1);
+    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review \S*in-plan-engineering-eng-all\S* --template \.claude\/review-templates\/lens-engineering\.md/.test(l))).toHaveLength(1);
+    expect(r.stdout).not.toMatch(/in-plan-compliance-eng-all/);
+    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li - liEng);
     expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
     expect(status(f)).toBe(before);
     expect(fs.existsSync(dirOf(f))).toBe(false);

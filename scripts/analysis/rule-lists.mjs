@@ -108,6 +108,9 @@ export function listBlocks(list, root, id = '?') {
 
 /** The id of the virtual list that joins the resolved lists (task-423); a table list may not use it. */
 export const JOINED_ID = 'rules';
+/** task-438 (FINAL.3, RR-0385 item 2, decision-170): the seat of a rule list. A list whose file is the engineering standards goes to the engineering seat (lens-engineering.md), every other list, and the joined list, to compliance. */
+export const ENG_FILE = 'docs/specs/00_engineering_standards.md';
+export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');
 /**
  * task-423 (PROTOCOL.SIMPLE, adjustment 1): a copy of the table with one extra list `rules`: the given lists joined WHOLE, in table order, nothing cut. The existing code (listBlocks, partsFor, renderLensInput,
  * the close check's whole-list recompute) reads it like any table list, so the lists are packed by size and one compliance call set covers all of them. Throws when an id is not in the table.
@@ -648,12 +651,12 @@ export async function planPrep(a) {
       const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));
       const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604); RR-0374: the per-document form is the default, the joined form is only accepted by the checks
       const briefArgv = ['node', path.join(HERE, 'backlog-brief.mjs'), '--task', taskId, '--lane', lane, '--root', board];
-      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
+      const inputArgv = (l) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', l.id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)]; // task-438: named and sized by the list's seat
       if (dry) {
         say(board, briefArgv);
-        for (const l of lists) say(board, inputArgv(l.id));
-        // the number of parts of a list is known only from the context the brief writes: the review command names the file as in-plan-compliance-<id>[-pN].txt
-        for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'), denv);
+        for (const l of lists) say(board, inputArgv(l));
+        // the number of parts of a list is known only from the context the brief writes: the review command names the file as in-plan-<seat>-<id>[-pN].txt
+        for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-${seatOf(l)}-${l.id}[-pN].txt`, `lens-${seatOf(l)}.md`), denv);
         for (const l of lenses) say(board, reviewArgv(l.file, l.tpl), denv);
         return 0;
       }
@@ -661,10 +664,11 @@ export async function planPrep(a) {
       say(board, briefArgv);
       const b = sh(briefArgv);
       if (b.status !== 0 || !fs.existsSync(path.join(board, ctxRel))) throw new Stop(1, `the brief did not write ${ctxRel}: ${first(b.stderr || b.stdout, 2)}`);
-      for (const l of lists) { say(board, inputArgv(l.id)); const x = sh(inputArgv(l.id)); if (x.status !== 0) fail(`lens-input failed for list ${l.id}: ${first(x.stderr || x.stdout, 3)}`); }
+      for (const l of lists) { say(board, inputArgv(l)); const x = sh(inputArgv(l)); if (x.status !== 0) fail(`lens-input failed for list ${l.id}: ${first(x.stderr || x.stdout, 3)}`); }
       const jobs = [];
-      for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: 'lens-compliance.md', file: `${ev}/${f}` });
-      const nCompliance = jobs.length;
+      for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-${seatOf(l)}-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: `lens-${seatOf(l)}.md`, file: `${ev}/${f}` });
+      const nCompliance = jobs.filter((j) => j.tpl === 'lens-compliance.md').length;
+      const nEngineering = jobs.length - nCompliance;
       jobs.push(...lenses);
       const started = jobs.map((j) => { const argv = reviewArgv(j.file, j.tpl); say(board, argv, denv); return runAsync(argv, denv).then((x) => ({ j, x })); });
       const done = await Promise.all(started);
@@ -676,7 +680,7 @@ export async function planPrep(a) {
       if (bad.length) fail(`${bad.length} output(s) lack the REVIEW header of their template in the first 15 lines or the VERDICT line: ${bad.map(({ j }) => `${ev}/${j.out}`).join(', ')}`);
       const report = findingsReport(evAbs);
       fs.writeFileSync(path.join(evAbs, 'FINDINGS-PLAN.md'), `${report.join('\n')}\n`);
-      console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${lenses.length} plan lens), ${report.filter((l) => l.includes('\t')).length} findings, ${ev}/FINDINGS-PLAN.md`);
+      console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${nEngineering} engineering, ${lenses.length} plan lens), ${report.filter((l) => l.includes('\t')).length} findings, ${ev}/FINDINGS-PLAN.md`);
       return 0;
     }
     function runAsync(argv, extra) {
