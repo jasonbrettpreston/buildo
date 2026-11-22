@@ -1221,6 +1221,17 @@ describe('task-438 T3: the close requires the engineering seat for a list on the
     expect(r.status, r.stderr).toBe(0);
     refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
   });
+  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
+  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
+  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
+  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
+  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
+    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
+    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
+  });
 });
 
 describe('task-438 T4: the launch gate requires the engineering seat for a list on the engineering standards file', () => {
