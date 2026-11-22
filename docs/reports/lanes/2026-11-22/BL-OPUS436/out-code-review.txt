@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T21:08:10.921Z file_sha256=e67fe410b55f4c139bbd18cb82eb0c3c0b9479a79eb3ee0248b67c2c526e1d95 prompt_sha256=e3202565b92e7e1a3e53f177ef83bc5305374262a2b656f383c2aac8abe3fc34
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-code-review.txt (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT list (max 8):
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:224 "extra.includes(MODEL_LINE) ? [] : [MODEL_LINE]" — when a given `extra` already holds MODEL_LINE but no compliance-lens line (the shape a re-run against a task.json written by this script produces: ticket, MODEL_LINE, lensLine), the spread keeps the model line where it is and the lens line is appended after it, so the merged extra no longer ends with MODEL_LINE as the T3 titles claim; nothing reads that position, so ordering only — build the base first, then force the tail, e.g. `const base = extra.some(...) ? extra : [...extra, spec.extra[spec.extra.length - 1]]; extra: [...base.filter((x) => x !== MODEL_LINE), MODEL_LINE]`.
+
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts:200 "const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; ..." — T3 (b) dedupes against a copy of the line that lives in the test, so if the script's MODEL_LINE wording ever changes, the test still goes green while the brief carries two differently-worded model lines (the old one from the fixture plus the new one) — assert on the stable prefix instead, e.g. `extra.filter((x) => /^Model \(RR-0385, decision-170\)/.test(x))` has length 1, or assert the count in BRIEF.md.
+
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts:209 "const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];" — the `as string[]` cast hides a missing `extra`, so a regression surfaces as a TypeError on `extra.length` rather than a readable assertion — add `expect(Array.isArray(extra), r.stdout).toBe(true)` before the length checks.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md:107 "| total | 9 lists | | 204,310 | 9 |" — the totals look hand-bumped rather than regenerated — the arithmetic is internally consistent: 35,775 + 1,193 = 36,968 and both tables that contain agents-s7-s11 move by the same 1,193 (203,117 → 204,310, 156,842 → 158,035), which is what one added source line produces.
+
+REJECT — src/tests/backlog/backlog-lane.logic.test.ts:202 "The model line is written as a literal: the script exports nothing" — the duplicated string looks like copy-paste drift against scripts/analysis/backlog-lane.mjs:175 — it is deliberate and documented (no export from the .mjs), so the copy is the intended lock rather than an accidental duplicate.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  61139ms (61.1s)
+📊 Tokens — total: 19964, input: 7647, output: 12317, reasoning: 11623

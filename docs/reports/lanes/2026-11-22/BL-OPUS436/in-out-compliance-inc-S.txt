@@ -1,0 +1,328 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:e67fe410b55f4c139bbd18cb82eb0c3c0b9479a79eb3ee0248b67c2c526e1d95 part 1 of 1 chunk 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 45fdc3d2b4e908a8f486a9ef3499ca0e125f38ef..c64324ce572e7c8d6e4209be373e611457cc95c6 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -96,7 +96,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
+ | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+@@ -104,7 +104,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 203,117 | 9 |
++| total | 9 lists | | 204,310 | 9 |
+ 
+ ## spec-only
+ 
+@@ -113,11 +113,11 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 156,842 | 7 |
++| total | 7 lists | | 158,035 | 7 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index a0186ab31cf73850493e36871d774bd9a6a6875e..a2336c8ab50632e8c0a3dd3a6e3c1f7934a30ba5 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -357,6 +357,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+ 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+ 9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+    Dated note 2026-11-06 (MB-85, M-246, prior text kept; E2, revised form): the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".
++   Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the building lane's model is carried by that line and the brief, the plan seat's by this note alone.
+ 10. **Claims and briefs are checked before they leave the orchestrator.** (a) No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67). (b) A DeepSeek brief names only checks runnable through `bash_allow` (§C.4); otherwise provider `claude` with the reason logged (§B). Recorded as Spec 124a R-KO (`2026-10-30-batch-aj#CHAT-211.G10`).
+     Dated note 2026-11-06 (MB-85, M-246, prior text kept; C2 and C3): (C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
+     Dated note 2026-11-19 (M-246, prior text kept; RR-0232 (c), RR-0235; task-308 R8c · lane BL-R8c · stage 8; operator, verbatim, RR-0232 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:925): "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)."; RR-0235 (:931): "We need them linked with all the relevant data - beyond just the data references"): the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo. The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo). The 2026-11-19 reports of BL-R6, BL-R7a and BL-R7b are copied as the first set.
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 254dbeb31863b018468ad696e3ee91bbc240f05a..0d5b4d748f816a0595a6ff9d53e6ef4235d3021a 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -8,7 +8,7 @@
+ //   3. git worktree add -b <branch> <worktree> <board HEAD>, link both node_modules, copy .cursor/active_task.md;
+ //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
+ //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
+-//   6. print `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
++//   6. print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call) and then `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
+ // COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
+ // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
+ // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
+@@ -172,6 +172,7 @@ if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group]
+ // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
+ // task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
+ const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
++const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.'; // task-436 FINAL.1: the split in the brief (Spec 08 rule 9 dated note 2026-11-22)
+ const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
+ const lensLine = (task, ctx, lists) => {
+   const ctxArgs = `--context ${ctx} ${sectionFlags}`;
+@@ -205,7 +206,7 @@ const spec = {
+   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
+   groups: [letter ?? 'F'],
+   writeScope: [laneDir, wt],
+-  extra: [ticket, lensLine(t, ctxRel, resolved.lists)],
++  extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)], // the lens line stays last: the --spec merge below reads it there
+ };
+ let specPath = specGiven ?? path.join(laneDir, 'task.json');
+ if (!specGiven) {
+@@ -220,7 +221,7 @@ if (!specGiven) {
+   const merged = {
+     ...given,
+     inputs: inputs.some((x) => /Rule lists that govern this task/.test(String(x))) ? inputs : [spec.inputs[0], ...inputs],
+-    extra: extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]],
++    extra: [...(extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]]), ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])], // task-436: the model line once
+   };
+   specPath = path.join(laneDir, 'task.merged.json');
+   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(merged)}`);
+@@ -228,6 +229,8 @@ if (!specGiven) {
+ }
+ const briefOut = path.join(laneDir, 'BRIEF.md');
+ step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);
+-if (dry) { console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
++const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)'; // task-436: on the line before BRIEF-FILE, which stays last (lane-guard reads it)
++if (dry) { console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
++console.log(AGENT_MODEL);
+ console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`);
+ } catch (e) { fail('write', { stderr: String(e && e.message) }); }
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index c056a7cdae3af474cc655180a0fb6e4be4f1dfa5..cfb41687ae974e1d0cfc99614fa38d54a0e91dcf 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -145,6 +145,19 @@ describe('backlog-lane --dry-run (AC #3): prints every command, writes nothing',
+     expect(spec.extra.join('\n')).toMatch(/^Ticket: task-\d+/m);
+     expect(spec.extra.join('\n')).toContain('scripts/deepseek-review.js review <diff file>'); // RR-0374: output lenses only, no plan review command
+   });
++  // task-436 T1 (RR-0385, decision-170): the builder's model is printed on the line directly before BRIEF-FILE and the split is in the brief's extra
++  it('T1 dry run: the second-to-last line is AGENT-MODEL: opus, the last is BRIEF-FILE, and extra carries the Opus/Sonnet split', () => {
++    const f = fixture();
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stderr).toBe(0);
++    const lines = r.stdout.trim().split('\n');
++    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
++    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: /);
++    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
++    expect(spec, r.stdout).not.toBeNull();
++    expect(spec.extra.join('\n')).toContain('runs on Opus');
++    expect(spec.extra.join('\n')).toContain('every grounder run on Sonnet');
++  });
+ });
+ 
+ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+@@ -185,6 +198,37 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+     expect(fs.existsSync(path.join(f.base, 'lane-dir/task.json'))).toBe(false);
+     expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('"goal":"g"');
+   });
++  // task-436 T2 and T3 (RR-0385, decision-170). The model line is written as a literal: the script exports nothing (GROUNDER-PLAN.md, plan-plan-review-deepseek#19).
++  const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.';
++  it('T2 real launch: the line before the last is AGENT-MODEL: opus and BRIEF.md carries the split; the last line is still BRIEF-FILE', () => {
++    const f = fixture();
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const lines = r.stdout.trim().split('\n');
++    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
++    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: \S+ sha256=[0-9a-f]{64}$/);
++    expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('runs on Opus');
++  });
++  it('T3 (a) --spec with no extra: the merged extra ends with the model line, once', () => {
++    const f = fixture();
++    const spec = path.join(f.base, 'mine.json');
++    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'] }));
++    const r = lane(f, ['--no-launchd', '--spec', spec]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
++    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
++    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
++  });
++  it('T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock)', () => {
++    const f = fixture();
++    const spec = path.join(f.base, 'mine.json');
++    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'], extra: ['own extra', 'Compliance lens, ONCE PER RULE LIST (given)', MODEL_LINE] }));
++    const r = lane(f, ['--no-launchd', '--spec', spec]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
++    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
++    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
++  });
+   it('refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line)', () => {
+     const f = fixture({ hook: true });
+     const r = lane(f, ['--no-launchd', '--wait-ms', '1500']);
+

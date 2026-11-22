@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.917Z file_sha256=6c9fda14a2c2327c895d0a4f3848e36ef91499867da32065ab09bd7e24ade85f prompt_sha256=5a8e4d2709fbe026c049f3fafcf647acfce4255616e42ddf4aa8b6cd70ca9878
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Operator verbatim "Teh seat that writes the plan is opus and the seat that build is Opus" — docs/specs/00-architecture/08_agents.md:360 "the building lane's model is carried by that line and the brief, the plan seat's by this note alone" — the plan seat's Opus is carried by prose only, no script line, check, test or guard distinguishes the planner from a builder — record the plan-seat enforcement as an owed item (external lane guard) in the task or the note, so the ruling is not read as mechanically satisfied
+
+DEFER severity=LOW — RR-0389 "resolve this conflict by updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "This supersedes ... the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane" — the superseded sentence in `.cursor/MCBYLAWS-QUEUE.md:247` keeps its text and lies outside this change's Files line — file that edit as an owed follow-up, or record the deferral in the task so the "docs" half of the ruling is not silently closed
+
+DEFER severity=LOW — Task "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 "This supersedes "on Sonnet" in the note above for the building lane only" — the pasted diff supersedes only the 08_agents.md:359 line, the other Sonnet lines of the same spec are in sections whose text I cannot see — confirm at close that no other Sonnet-only line in Spec 08 is in scope, or open it as its own task
+
+DEFER severity=NIT — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/backlog-lane.logic.test.ts:148 "// task-436 T1 (RR-0385, decision-170): the builder's model is printed on the line directly before BRIEF-FILE and the split is in the brief's extra" — the new tests name a ruling id and a decision id, no rule id or declared alias (the rule map I cannot see) — name the governing rule id in the test title, or get RR-0385 declared an alias, if these are to count as locks under the glossary
+
+MET — Task "the launch script's agent line ... say the builder's model" — scripts/analysis/backlog-lane.mjs:232 "const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model \"opus\" on the Agent call that takes the BRIEF-FILE line below)'" — printed on the line directly before BRIEF-FILE on both the dry and the real path
+
+MET — Task "a dated note in Spec 08 records the split" — docs/specs/00-architecture/08_agents.md:360 — the note records Opus for the plan seat and the building lane, Sonnet for the reality-check, integration and regression seats and every grounder, DeepSeek for the lenses
+
+MET — Operator verbatim "keep the current split with opus and sonnet" — docs/specs/00-architecture/08_agents.md:360 "the reality-check, integration and regression seats and every grounder run on Sonnet" — the Sonnet half of the split is written as ruled
+
+MET — Task "writes the same split into the brief" — scripts/analysis/backlog-lane.mjs:210 "extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)]" and :224 "+ ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])" — the model line reaches the brief on the generated path and once on the --spec path
+
+MET — Files line "scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md" — diff paths — exactly those four paths are touched, nothing outside the lane's write scope
+
+MET — Task "the launch script's ... brief say the builder's model" (report regeneration) — docs/reports/generated/rule-lists-by-kind.md:99 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |" — 35,775 to 36,968 and both totals rise by the same 1,193, with the unchanged rows left alone
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  102092ms (102.1s)
+📊 Tokens — total: 32446, input: 9544, output: 22902, reasoning: 21799

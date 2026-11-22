@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.917Z file_sha256=a4112ff17cdee44987a9ee52a0055c4b83ece7b0236c78edf03d6c59738991d4 prompt_sha256=e7e3d22fafaa74462a6e8e32822e0168176831f1821a909772f186ca1c3ffa32
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card THIS TASK, "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 "This supersedes \"on Sonnet\" in the note above for the building lane only" — only the one visible Sonnet builder line (the 2026-11-06 E2 note) is superseded; whether other Sonnet-only lines remain elsewhere in 08_agents.md cannot be seen from the hunk — grep 08_agents.md for "Sonnet" and confirm each hit is the seats/grounders split or is named by the new note.
+
+DEFER severity=LOW — RR-0389 "The model conflict is resolved by updating the key specs and docs themselves" / "resolve this conflict by updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "the sentence \"Opus only for hard design adjudication\" at `.cursor/MCBYLAWS-QUEUE.md:247`" — the conflicting sentence is set aside only from Spec 08; that doc is not in the card's Files line and its own text is not updated (cannot see whether it was changed) — add a dated note at that queue line in a follow-up, or record it in the lane report as kept and superseded from Spec 08.
+
+REJECT — RR-0385 citation anchors — accused of citing :1909, :1910, :1912 while the card names the ":1915 entry" — not a real issue: the id governs and the line number is a hint, per the pasted Spec 08 note "(C2) ... the id governs", and both name RR-0385 / decision-170.
+
+REJECT — doc-17 readings RR-0001 through RR-0218 — accused of being ignored or not satisfied by this diff — the pasted list states of itself "They are NOT the operator's words as a ruling and never feed a review as a ruling", so no reading in that list binds this change.
+
+MET — RR-0385 "Teh seat that writes the plan is opus and the seat that build is Opus" — docs/specs/00-architecture/08_agents.md:360 — the dated note puts the plan seat and the building lane on Opus.
+
+MET — card THIS TASK "the launch script's agent line ... say the builder's model" — scripts/analysis/backlog-lane.mjs:232 — "AGENT-MODEL: opus (RR-0385: set model \"opus\" on the Agent call that takes the BRIEF-FILE line below)" is printed directly before BRIEF-FILE on the dry and real paths.
+
+MET — card THIS TASK "the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs:175 — MODEL_LINE is placed in spec.extra, and the merge at :224 adds it once for --spec runs.
+
+MET — card THIS TASK "a dated note in Spec 08 records the split" — docs/specs/00-architecture/08_agents.md:360 — the note records Opus for the plan seat and building lane, Sonnet for reality-check, integration, regression and every grounder, DeepSeek for the lenses.
+
+MET — card THIS TASK "supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 — the 2026-11-06 E2 "on Sonnet" building-lane line is superseded for that lane only, with prior text kept.
+
+MET — RR-0385 "tests are the focus" — src/tests/backlog/backlog-lane.logic.test.ts:149 — T1, T2, T3 (a) and T3 (b) lock the line order, the brief split and the once-only merge.
+
+MET — card Files "scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md" — the diff touches exactly those four paths and no other, and the generated report's totals reconcile at 204,310 and 158,035.
+
+MET — docs/specs/00-architecture/08_agents.md rule 9 "DeepSeek handles execution and static reviews at low cost" — docs/specs/00-architecture/08_agents.md:360 "the review lenses are DeepSeek" — the third part of the split matches rule 9.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  116856ms (116.9s)
+📊 Tokens — total: 46137, input: 18961, output: 27176, reasoning: 26151

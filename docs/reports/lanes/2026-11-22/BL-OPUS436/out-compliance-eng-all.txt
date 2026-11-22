@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.918Z file_sha256=812facfa109e460ca53de19e611f52d24f7a0d4aa7f80d789d29e28276148d27 prompt_sha256=b94d019dcf010fc659f1dcb80f6eaf5c53df66f37c5056ec004c62735acfd2d4
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — eng §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — docs/specs/00-architecture/08_agents.md "+... and the sentence \"Opus only for hard design adjudication\" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane." — the note declares that sentence superseded but this commit edits only Spec 08, so the cited doc keeps the stale line and RR-0389 "resolve this conflict by updating the key specs and docs" is unmet there — add `.cursor/MCBYLAWS-QUEUE.md` to the Files line and edit :247 in this same commit, or drop the supersession clause and open a card for it.
+
+DEFER severity=MED — eng §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "Suite green: UNVERIFIED (the full suite runs only at the push station); the related run in the work commit: Tests 64 passed (64)." — the notes close the work with no PASS/FAIL self-skeptical checklist and no sibling-bug list, and the card's "## Acceptance criteria" block is empty, so no PASS/FAIL walk exists anywhere — paste the 5-10 item checklist with PASS/FAIL into the Implementation Notes before the green declaration.
+
+DEFER severity=MED — eng §5.5 "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md "+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |" — the generated file is committed with bumped counts but the material names no regenerate-and-diff assertion for it, so the +1,193 deltas are only internally consistent and a hand edit is not excluded — name or add the parity test that regenerates this report to a buffer and diffs the committed file.
+
+DEFER severity=LOW — 08_agents.md rule 10 "(C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — docs/specs/00-architecture/08_agents.md ":1909 \"Teh seat that writes the plan is opus and the seat that build is Opus\", :1910 ..." — the new note's line hints carry no sha and the card cites the same ruling entry at "MORNING-DECISIONS.md:1915", so a reader cannot resolve the hint to one version of the scratch file — sha-date the hints (":1909 at <sha>") and reconcile :1909-1912 with the card's :1915.
+
+MET — Card Description "the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs "const AGENT_MODEL = 'AGENT-MODEL: opus ...'" plus "extra: [ticket, MODEL_LINE, lensLine(...)]" — the printed line and the brief line both name the builder's model, on the no-spec and --spec paths.
+MET — Spec 08 dated note "prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line" — scripts/analysis/backlog-lane.mjs "console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(...)}`);" — the order holds on both the dry and real paths, BRIEF-FILE stays last.
+MET — RR-0385 "keep the current split with opus and sonnet" — docs/specs/00-architecture/08_agents.md "the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek." — the split is recorded as ruled and scoped to the building lane only for the Opus change.
+MET — eng §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — Implementation Notes "red seen at the assertions (T1, T2, T3 (a) failed; T3 (b) passed as the plan says, a survive-the-fix lock; red.out in the lane dir)." — red preceded the build; T3 (b) is a survive-the-fix fence, not a feature test that went green first.
+MET — Card Files line "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md" — the diff touches exactly those four paths and no others.
+MET — Spec 08 dated note "Not enforced: the lane guard (outside the repo) allows \"sonnet\" or \"opus\" on every Agent call" — Card Description "The lane guard (the operator's hook, outside the repo) already allows opus since 2026-11-22" — the note discloses the unenforced half instead of claiming a gate that does not exist.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: none
+
+---
+⏱  103082ms (103.1s)
+📊 Tokens — total: 41537, input: 20068, output: 21469, reasoning: 20262

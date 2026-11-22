@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.918Z file_sha256=e4626aa5fb48cb46db15752256e6a0a190676874ba81ea91baca730f5f2d1182 prompt_sha256=361509a1e090d0eb370a38379b676841374bc20e521d8cf0e8c3bc91e3f1f851
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-policy-124-s2-s5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0389 "resolve this conflict by updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "and the sentence \"Opus only for hard design adjudication\" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane." — the conflicting sentence is named and superseded by dated note only, the doc it names is not updated, so the contradiction RR-0389 rules on stays readable in the repo — add that file to the Files line and replace the sentence with a pointer to the Spec 08 note in the same commit.
+DEFER severity=LOW — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`" — docs/specs/00-architecture/08_agents.md:360 "RR-0385 item 1, decision-170" — the ruling is cited without the log-stem form and this diff adds no register row; whether 124a already carries the row cannot see — cite as `<log stem>#decision-170` and confirm the register row exists before merge.
+MET — card Task "the launch script names the builder's model and Spec 08 records the split" — scripts/analysis/backlog-lane.mjs @@ -228,6 +229,8 @@ — `AGENT-MODEL: opus (...)` is printed immediately before the BRIEF-FILE line on both the dry and the real path, and the dated note lands at 08_agents.md:360.
+MET — card Description "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 — note records Opus for plan and build, Sonnet for reality-check, integration, regression seats and every grounder, DeepSeek lenses, and supersedes "on Sonnet" for the building lane.
+MET — card Description "the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs @@ -205,7 +206,7 @@ — MODEL_LINE is in spec.extra and the `--spec` merge appends it once, locked by T1, T2, T3 (a) and T3 (b).
+MET — card Files line "scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md" — all four diff paths — the diff touches exactly those four paths and nothing outside them.
+MET — Rule 13 gate J "generated-doc freshness" — docs/reports/generated/rule-lists-by-kind.md @@ -96,7 +96,7 @@ and @@ -113,11 +113,11 @@ — agents-s7-s11 is recounted 35,775 to 36,968 and both totals move by the same 1,193, so the generated artifact tracks the spec edit.
+REJECT — Rule 1 "Nothing about a step's behaviour may live only in code" — the model split lives in a script literal and a duplicated test literal — not a real issue: no step descriptor or compute is touched, and Rule 1's enforcement is `step.schema.json` `checks` plus the compute shape gate over `scripts/lib/compute/**`.
+REJECT — R-GW "A spec in `docs/specs` opens with exactly one `> **Role: <role>.** <what it decides>` line" — adding body text to docs/specs/00-architecture/08_agents.md without a role banner — not a real issue: R-GW keeps every other spec on the shrink-only `role_banner_pending` list and states "no spec was edited to add one", and the manifest state cannot see, so it cannot ground a finding.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  97193ms (97.2s)
+📊 Tokens — total: 57104, input: 35422, output: 21682, reasoning: 20808

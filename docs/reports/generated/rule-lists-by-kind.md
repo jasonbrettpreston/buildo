@@ -96,7 +96,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
 | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
@@ -104,7 +104,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 203,117 | 9 |
+| total | 9 lists | | 204,310 | 9 |
 
 ## spec-only
 
@@ -113,11 +113,11 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 36,968 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 156,842 | 7 |
+| total | 7 lists | | 158,035 | 7 |
 

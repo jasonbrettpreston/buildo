@@ -1,0 +1,3 @@
+# TRIAGE BL-OPUS436 (task-436), output round 1. Outcome lines from the grounder Cairn-Ground-O436; 44 findings ruled: 2 CONFIRMED (LOW, NIT), 42 REJECTED; no CRITICAL, HIGH or MED stands (RR-0385 round 1; RR-0364 piles the LOW and NIT).
+out-code-review#1 pile:"LOW: the model line is not last when a hand-written spec holds it without a lens line; the script own task.json never has that shape, nothing reads the position; ordering and a test title only; RR-0364"
+out-compliance-queue-137#3 pile:"NIT: the note header has no lane field (lane BL-OPUS436) though sibling notes carry one; the text is the plan EXACT TEXT, form only, the facts hold; RR-0364"

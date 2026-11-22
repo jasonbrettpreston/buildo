@@ -1,0 +1,31 @@
+What changed: the lane launch script now prints "AGENT-MODEL: opus (RR-0385: ...)" on the line just before BRIEF-FILE and writes the Opus/Sonnet split line into every brief; Spec 08 has the plan's dated note at 08_agents.md:360; the generated rule-lists page was regenerated (Q8 ruling). Work commit 05b9de031, through the real hooks.
+Acceptance printed: (1) a real dry run (task-102, clone of this branch) ended with the AGENT-MODEL line then the BRIEF-FILE line, exit 0; (2) the real brief.mjs put the model line in the brief at line 51; (3) the note is at 08_agents.md:360, identical to the plan; (4) the lane-guard regex still captures the BRIEF-FILE path and a 64-hex sha from the two-line output.
+Could not be built as the plan says: the plan's LANDING line ("the test, backlog-lane.mjs, the Spec 08 note, and the task file") missed the regenerated page docs/reports/generated/rule-lists-by-kind.md; ruled Q8 (Cairn-Ground-P436), added to the Files line and committed with the work.
+Unverified: the full suite (push station only); a real, non-dry launch on the real board (covered by test T2 only); that the orchestrator reads stdout above BRIEF-FILE (plan UNVERIFIED item).
+Review: 12 DeepSeek lens outputs (10 compliance lists incl. policy-124-s2-s5, code-review, error-paths), 44 findings (2 tagged HIGH, 16 MED), untriaged; grounder owed. Task RUNNING.
+
+## Evidence
+- Red (red.out; refused commit, exit 1): "Tests  3 failed | 61 passed (64)"; T1, T2 and T3 (a) failed at their assertions (AssertionError "expected '$ cd ...' to match /^AGENT-MODEL: opus \(RR-0385/" for T1 and T2, "expected 'Review lens set ...' to be 'Model (RR-0385, decision-170): ...'" for T3 (a)); T3 (b) passed, as the plan says (it is a lock that must survive the fix).
+- First green attempt refused by the pre-commit hook: "rule-lists: docs/reports/generated/rule-lists-by-kind.md is out of date: regenerate with node scripts/analysis/rule-lists.mjs page --write". I stopped and reported. The ruling was Q8 (docs/reports/reviews/task-436/QUESTIONS-RULED.md at board 01303d587). I appended the page to the first Files line of the task description through `backlog task edit -d`; the diff touched only that line and updated_date. I then ran `rule-lists.mjs page --write`: 4 lines changed, agents-s7-s11 35,775 -> 36,968 chars, totals +1,193.
+- Second attempt refused by commit-msg (the scope must be a spec id), so I reworded it as feat(08_agents). Work commit 05b9de031 (commit.out): "Tests  64 passed (64)", "POLICY CHECKS OK (commit-msg): 2 file(s)", "5 files changed, 62 insertions(+), 10 deletions(-)".
+- T3 (b) fixture: the given extra holds a stub "Compliance lens, ONCE PER RULE LIST (given)" line before the model line. Ruled within the folded plan (Q8 entry: "ends with it once" is read as "holds exactly once").
+- Note text: 08_agents.md:360 compared with the plan line of the task file prints NOTE-IDENTICAL. `npm run typecheck` is clean.
+- Acceptance outputs were pasted on the task with --append-notes. The inputs are in the lane dir acc/ (dry.out, task.json, BRIEF-acc.md).
+- Output review: the context was refreshed with backlog-brief.mjs to context-r3.md, which was used in every --context. The diff came from the brief's command with the Files line now naming the page (base d97af25a1, 4 files, 17,237 bytes). There is one compliance input per list from `rule-lists.mjs lens-input` (policy-124-s2-s5 is 109,157 chars, one part). The code-review and error-paths lenses ran on the diff. All 12 ran in parallel with the DOTENV_CONFIG_PATH form. The finding lines are from `rule-lists.mjs findings` and are in FINDINGS.md.
+- Close check dry run (real scripts/hooks/check-lane-close.mjs on a throwaway clone at 05b9de031, the records staged and the task set BUILT), before the REPORT ref was added:
+  check-lane-close: task-436: the task's references lack the repo copy docs/reports/lanes/2026-11-22/BL-OPUS436/REPORT.md: ...
+  check-lane-close: task-436: the task's references lack the repo copy docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md: ...
+  check-lane-close: task-436: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-OPUS436/ (a build or fix task always needs a separate grounder verdict)
+  The REPORT ref has now been added. The re-run result is below. Nothing about the review material (outputs, inputs, chunks, list coverage) was refused.
+  Re-run with the REPORT ref (close2.out), exit 1, only the grounder items remain:
+  check-lane-close: task-436: the task's references lack the repo copy docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md: ...
+  check-lane-close: task-436: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-OPUS436/ (a build or fix task always needs a separate grounder verdict)
+- Landing note: task-437 changes the same generated page. Whichever of 436 and 437 lands second regenerates it after the rebase.
+
+STATUS: BUILT-PENDING-GROUNDER: work 05b9de031 landed through the hooks, 12 lens outputs and 44 findings committed untriaged, task RUNNING, grounder owed.
+
+## Close (2026-11-22)
+- Grounder Cairn-Ground-O436: 44 ruled, 2 CONFIRMED (out-code-review#1 LOW, out-compliance-queue-137#3 NIT, piled RR-0364), 42 REJECTED; no fix round (RR-0385). GROUNDER.md and TRIAGE.md copied unchanged (cmp identical).
+- check-lane-close.mjs --outcomes: exit 0, "checked 2 ids"; close check on the staged close: exit 0, no output.
+
+STATUS: BUILT: work 05b9de031, records 216efc2a7, close commit holds GROUNDER.md, TRIAGE.md, the task at BUILT; not pushed.

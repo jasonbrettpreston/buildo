@@ -3,11 +3,11 @@ id: TASK-436
 title: >-
   FINAL.1 Opus seats: the launch script names the builder's model and Spec 08
   records the split (Opus plans and builds, Sonnet seats and grounders)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-OPUS436'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T20:55:00Z'
+updated_date: '2026-11-22T21:19:00Z'
 labels:
   - McFix
   - McFix Final
@@ -30,6 +30,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-OPUS436/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-OPUS436/TRIAGE.md
 type: build
 ordinal: 136012
 ---
@@ -39,7 +42,7 @@ ordinal: 136012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "Teh seat that writes the plan is opus and the seat that build is Opus"; "keep the current split with opus and sonnet"; "Change this to Opus - approved by operator." The lane guard (the operator's hook, outside the repo) already allows opus since 2026-11-22. THIS TASK: the launch script's agent line and brief say the builder's model; a dated note in Spec 08 records the split and supersedes the Sonnet-only lines. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -148,4 +151,26 @@ rg#3 MED folded the second-to-last l
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-OPUS436, worktree /Users/brettpreston_macmini/Buildo-wt-opus436, branch wf1/inc1b-opus436), RR-0240
+
+2026-11-22 lane BL-OPUS436 (Opus, building seat): tests T1, T2, T3 (a) and (b) written first in src/tests/backlog/backlog-lane.logic.test.ts; red attempt next.
+
+2026-11-22 lane BL-OPUS436: red seen at the assertions (T1, T2, T3 (a) failed; T3 (b) passed as the plan says, a survive-the-fix lock; red.out in the lane dir). Build: MODEL_LINE in spec.extra and the --spec merge (once, after the lens line), AGENT-MODEL: opus printed before BRIEF-FILE on the dry-run and real paths, header step 6, and the Spec 08 dated note at 08_agents.md:360 with the exact text of the plan.
+
+2026-11-22 acceptance on real inputs (lane BL-OPUS436, work commit 05b9de031; inputs and outputs in ~/Buildo-scratch/lanes-20261119/inc1b/opus436-lane/acc/):
+(1) every launch prints AGENT-MODEL before BRIEF-FILE: a dry run of the committed script on a clone of this branch for the real LATER task task-102 ended, exit 0, with the two lines 'AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)' then 'BRIEF-FILE: .../acc/lane-never/BRIEF.md sha256=<sha256 of the brief>'; nothing written (wt-never and lane-never do not exist). The real (non-dry) path: tests T2 (green in 05b9de031, 64 passed (64)); not run on the real board (a real launch takes a task).
+(2) BRIEF.md carries the split: its TASK-JSON extra holds the model line once (index 1 of 3, the lens line last); the real panel-tools/brief.mjs on that task.json wrote BRIEF-acc.md, line 51: '- Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.'
+(3) Spec 08 holds the note: 08_agents.md:360 '   Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, ...', diff against the plan text: identical.
+(4) the guard regex /BRIEF-FILE:\s*(\S+)\s+sha256=([0-9a-f]{64})/ (present in ~/.claude/hooks/lane-guard.mjs: true) on the two-line output captures the BRIEF-FILE path and a 64-hex sha; the AGENT-MODEL line names 'BRIEF-FILE line' without a colon, so it is not matched. Suite green: UNVERIFIED (the full suite runs only at the push station); the related run in the work commit: Tests 64 passed (64).
+
+2026-11-22 lane BL-OPUS436: output review round 1 done (context-r3.md; 12 lens outputs, 44 findings, untriaged) in docs/reports/lanes/2026-11-22/BL-OPUS436/; grounder owed; task stays RUNNING.
+
+2026-11-22 lane BL-OPUS436 close: grounder Cairn-Ground-O436 ruled 44 findings (2 CONFIRMED LOW/NIT piled per RR-0364, 42 REJECTED; GROUNDER.md, TRIAGE.md in docs/reports/lanes/2026-11-22/BL-OPUS436/); no fix round (RR-0385). Work 05b9de031, records 216efc2a7; tests T1-T3 red then green (64 passed); status BUILT.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+backlog-lane.mjs prints AGENT-MODEL: opus on the line before BRIEF-FILE and writes the Opus/Sonnet split line into every brief; Spec 08 dated note 2026-11-22 at 08_agents.md:360 records the split (RR-0385, decision-170); rule-lists page regenerated (Q8). Work 05b9de031; tests T1, T2, T3 (a)/(b) red then green.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-OPUS436/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

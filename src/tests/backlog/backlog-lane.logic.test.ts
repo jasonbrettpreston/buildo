@@ -145,6 +145,19 @@ describe('backlog-lane --dry-run (AC #3): prints every command, writes nothing',
     expect(spec.extra.join('\n')).toMatch(/^Ticket: task-\d+/m);
     expect(spec.extra.join('\n')).toContain('scripts/deepseek-review.js review <diff file>'); // RR-0374: output lenses only, no plan review command
   });
+  // task-436 T1 (RR-0385, decision-170): the builder's model is printed on the line directly before BRIEF-FILE and the split is in the brief's extra
+  it('T1 dry run: the second-to-last line is AGENT-MODEL: opus, the last is BRIEF-FILE, and extra carries the Opus/Sonnet split', () => {
+    const f = fixture();
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stderr).toBe(0);
+    const lines = r.stdout.trim().split('\n');
+    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
+    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: /);
+    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+    expect(spec, r.stdout).not.toBeNull();
+    expect(spec.extra.join('\n')).toContain('runs on Opus');
+    expect(spec.extra.join('\n')).toContain('every grounder run on Sonnet');
+  });
 });
 
 describe('backlog-lane real launch on the temp board (AC #1)', () => {
@@ -184,6 +197,37 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(fs.existsSync(path.join(f.base, 'lane-dir/task.json'))).toBe(false);
     expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('"goal":"g"');
+  });
+  // task-436 T2 and T3 (RR-0385, decision-170). The model line is written as a literal: the script exports nothing (GROUNDER-PLAN.md, plan-plan-review-deepseek#19).
+  const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.';
+  it('T2 real launch: the line before the last is AGENT-MODEL: opus and BRIEF.md carries the split; the last line is still BRIEF-FILE', () => {
+    const f = fixture();
+    const r = lane(f, ['--no-launchd']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const lines = r.stdout.trim().split('\n');
+    expect(lines[lines.length - 2]).toMatch(/^AGENT-MODEL: opus \(RR-0385/);
+    expect(lines[lines.length - 1]).toMatch(/^BRIEF-FILE: \S+ sha256=[0-9a-f]{64}$/);
+    expect(fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8')).toContain('runs on Opus');
+  });
+  it('T3 (a) --spec with no extra: the merged extra ends with the model line, once', () => {
+    const f = fixture();
+    const spec = path.join(f.base, 'mine.json');
+    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'] }));
+    const r = lane(f, ['--no-launchd', '--spec', spec]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
+    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
+    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
+  });
+  it('T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock)', () => {
+    const f = fixture();
+    const spec = path.join(f.base, 'mine.json');
+    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', outputs: ['o'], writeScope: [f.base], groups: ['F'], extra: ['own extra', 'Compliance lens, ONCE PER RULE LIST (given)', MODEL_LINE] }));
+    const r = lane(f, ['--no-launchd', '--spec', spec]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const extra = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.merged.json'), 'utf8')).extra as string[];
+    expect(extra[extra.length - 1]).toBe(MODEL_LINE);
+    expect(extra.filter((x) => x === MODEL_LINE)).toHaveLength(1);
   });
   it('refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line)', () => {
     const f = fixture({ hook: true });

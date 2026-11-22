@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.923Z file_sha256=87078613af95e2344b5eebd8057c9d30f0dcc447901a8498fbc47c92e237f8a2 prompt_sha256=35e832a801ab0ee684a87f4b277b93967986aa5fb85b716ea8133be6d8f7981e
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "keep the current split with opus and sonnet" — scripts/analysis/backlog-lane.mjs:232 "const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model ..." — the line is printed on every launch, and per the pasted COMPLY.2 note "a record-only task gets the queue lists" this script also launches non-build tasks, so a record-only launch is told to set Opus and told "this lane is the building seat", a seat the split does not name — print the line only for a build or fix task, or word it as applying only when the lane is a build lane — one line, no change to the BRIEF-FILE ordering.
+
+DEFER severity=LOW — RR-0389 "The model conflict is resolved by updating the key specs and docs themselves" — docs/specs/00-architecture/08_agents.md:360 "the sentence \"Opus only for hard design adjudication\" at `.cursor/MCBYLAWS-QUEUE.md:247`" — the conflicting line is superseded by note only, that file is untouched and outside the pasted Files line, so one of the docs the ruling names still states the old model — update `.cursor/MCBYLAWS-QUEUE.md:247` in this change or name the follow-up task in the note.
+
+DEFER severity=LOW — card "the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs:224 "extra: [..., ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])]" — the dedupe is exact-string, so a `--spec` extra already carrying a different model line (a Sonnet line) survives beside MODEL_LINE and the brief then states two models — drop lines matching /^Model / (or /^Model \(RR-0385/) before appending MODEL_LINE.
+
+DEFER severity=NIT — Spec 08 rule 10 C2 "the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — docs/specs/00-architecture/08_agents.md:360 "at `.cursor/MCBYLAWS-QUEUE.md:247`" — the supersession target is cited by a bare line number with no sha, so it cannot be re-checked once that file moves — cite it as (`.cursor/MCBYLAWS-QUEUE.md`, :247 at <sha>).
+
+MET — RR-0385 "Teh seat that writes the plan is opus and the seat that build is Opus" — docs/specs/00-architecture/08_agents.md:360 — the dated note records the plan seat and the building lane on Opus.
+MET — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 "This supersedes \"on Sonnet\" in the note above for the building lane only" — the Sonnet line above is superseded in place, prior text kept.
+MET — card "the launch script's agent line ... say the builder's model" — scripts/analysis/backlog-lane.mjs:233 "console.log(AGENT_MODEL)" — AGENT-MODEL is printed directly before BRIEF-FILE on the dry path and at :234 on the real path.
+MET — header step 6 "print `AGENT-MODEL: opus (...)` and then `BRIEF-FILE: <path> sha256=<hex>` as the last line" — scripts/analysis/backlog-lane.mjs:235 "console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`)" — BRIEF-FILE is still the last line.
+MET — card "and brief say the builder's model" — scripts/analysis/backlog-lane.mjs:175 "const MODEL_LINE = 'Model (RR-0385, decision-170): ...'" placed at :209 in spec.extra — the brief's extra carries the split.
+MET — Spec 08 5.3 COMPLY.2 rule-list accounting — docs/reports/generated/rule-lists-by-kind.md:101 "| agents-s7-s11 | ... | 36,968 | 1 |" and :107 "| total | 9 lists | | 204,310 | 9 |" — the +1,193 matches the added note and agents-s5-1to3 stays 14,705, no list trimmed.
+MET — card Files line "scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md" — the diff touches exactly these four paths and no fifth.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  136232ms (136.2s)
+📊 Tokens — total: 40549, input: 11945, output: 28604, reasoning: 27491

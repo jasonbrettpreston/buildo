@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.918Z file_sha256=3103c79975ea72c81f4f675b744c43f4775283b37d1a2b2e1af9e8c36371a334 prompt_sha256=6273cad069fa3373c82864083208d8878f012e9964290d97aa89d9f984ee432a
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 137 Rule 10 "A ruling enters a row as a verbatim dated note. The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/00-architecture/08_agents.md (added line) "This supersedes ... the sentence \"Opus only for hard design adjudication\" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane." — the supersession exists only in the spec note; `.cursor/MCBYLAWS-QUEUE.md:247` is in neither the Files line nor the diff, and Spec 137 says "a queue row still changes only on its own row", so the superseded row keeps the opposite instruction with no dated note on it — add the M-246 dated note on that queue line in a docs commit, or card it, so the row and the spec agree before the close.
+DEFER severity=LOW — Spec 08 rule 10 dated note 2026-11-06 (C2) "the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — docs/specs/00-architecture/08_agents.md (added line) "`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 ... :1910 ... :1912" and "`.cursor/MCBYLAWS-QUEUE.md:247`" — the cites are bare line numbers with no sha, and the note's RR-0385 lines (:1909, :1910, :1912) do not match the card's own decision record "RR-0385 ... (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915)", so the words attributed to RR-0385 cannot be checked at the cited lines — cite RR-0385 at the entry the board records and date the queue-line hint with a sha.
+DEFER severity=NIT — Spec 137 Rule 4 "Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")" — docs/specs/00-architecture/08_agents.md (added line) "Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170;" — the header omits the queue name and the lane id that the form and the sibling notes carry ("task-410 V2.WHOLE, lane BL-V2WHOLE", same file) — add `lane BL-OPUS436` and the queue to the header.
+DEFER severity=LOW — Spec 137 Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — scripts/analysis/backlog-lane.mjs and src/tests/backlog/backlog-lane.logic.test.ts in the diff, no trailer line and no backlog task file in the diff (cannot see the message of work commit 05b9de031) — confirm `Task: task-436` is on the work commit, since the two-commit close moves the task file to the closing commit only.
+MET — Spec 08 rule 9 dated note 2026-11-22 — docs/specs/00-architecture/08_agents.md:360 — the Opus/Sonnet/DeepSeek split is recorded with "prior text kept" and the operator's words quoted.
+MET — card "the launch script's agent line ... say the builder's model" — scripts/analysis/backlog-lane.mjs "const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model \"opus\" on the Agent call that takes the BRIEF-FILE line below)'" plus header step 6.
+MET — Spec 08 note "prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line" — backlog-lane.mjs "if (dry) { console.log(AGENT_MODEL); ..." and "console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ...`)" with tests T1/T2 asserting lines[len-2] and lines[len-1].
+MET — Spec 08 note "writes the same split into the brief" — backlog-lane.mjs "extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)]" and the merged-extra dedupe "(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])", tested by T3 (a) and (b).
+MET — Spec 137 Rule 3 as amended 2026-11-20 "The work lands first; the status moves in a separate closing commit" — the diff moves no status line and the card reads "status: RUNNING · milestone: m-1".
+MET — Spec 137 Rule 13 "The board is a view; the row is the record." — no queue file, card or status line is edited anywhere in the diff.
+MET — generated report consistency — docs/reports/generated/rule-lists-by-kind.md "36,968", totals "204,310" and "158,035", each exactly +1,193 over the prior values, matching the one added note line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: Rule 13
+
+---
+⏱  98197ms (98.2s)
+📊 Tokens — total: 39597, input: 18460, output: 21137, reasoning: 19878

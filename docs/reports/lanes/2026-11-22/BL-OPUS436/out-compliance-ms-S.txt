@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:08:10.920Z file_sha256=12cc31881cad823f121125470e5e1c4437cf9ac5d8a4b40c256cf3f54843b3dd prompt_sha256=0d6262dd9207880b278a52477bfd6cbee019871b1100aef57e2a675a6cac940a
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-OPUS436/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — RR-0385 "the seat that writes the plan is opus and the seat that build is Opus" — docs/specs/00-architecture/08_agents.md:360 "Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder ... the plan seat's by this note alone." — the planner half of the ruling is carried by note text only: no script line, print or test in the diff sets or checks the plan seat's model — record the plan seat's model where the plan Agent call is made (a plan-step line or a check), or state in the note that the planner is verified by the orchestrator at plan time.
+DEFER severity=LOW — RR-0389 "resolve this conflict by updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170" — the note cites RR-0385 only, not RR-0389, the ruling that names task-436 and directs the spec update, so the update cannot be traced to the ruling that authorised it — add RR-0389 to the note's citation list.
+DEFER severity=LOW — RR-0389 "updating the key specs and docs" — docs/specs/00-architecture/08_agents.md:360 "the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane" — the note declares that sentence superseded but the diff does not touch the file, and cannot see whether other key specs or docs still carry the Sonnet-only lane model — grep the key specs and docs for the Sonnet-only lane line and update each, or list each as deliberately kept.
+REJECT — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant or feeds old code" — the change touches no designed search element A to G — not a real issue: RR-0385, pasted in the Task block, names task-436, the lane launcher is a supporting function for every build that serves the report and search pages, and all four Files paths are declared.
+REJECT — Increment objectives "the search page, then (1) address confusion (2) lot confusion" — the diff does not advance the search page — not a real issue: the operator ruling pasted in the Task block (RR-0385, decision-170) names this tooling fix, and the increment sequence binds the increment's own tasks, not an operator-named seat fix.
+REJECT — Project objectives "keep it simple; no scope creep" — docs/reports/generated/rule-lists-by-kind.md:100 "36,968" is edited — not a real issue: the count is the mechanical consequence of the Spec 08 note (both table totals move by exactly 1,193, 203,117 to 204,310 and 156,842 to 158,035) and the path is on the card's Files line.
+MET — RR-0385 "the seat that build is Opus" — scripts/analysis/backlog-lane.mjs:232 — "AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)" is printed on both the dry-run and real paths.
+MET — RR-0385 "keep the current split with opus and sonnet" — docs/specs/00-architecture/08_agents.md:360 — "the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek".
+MET — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — docs/specs/00-architecture/08_agents.md:360 — "This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication"".
+MET — card "the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs:209 — "extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)]" and the merge at :224 add the split to the brief once, the lens line still last in spec.extra.
+MET — lane guard reads BRIEF-FILE as the last line — scripts/analysis/backlog-lane.mjs:234 — "console.log(AGENT_MODEL);" precedes "console.log(`BRIEF-FILE: ...`)" so BRIEF-FILE stays the last line on both paths.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  86422ms (86.4s)
+📊 Tokens — total: 27141, input: 8754, output: 18387, reasoning: 17318
