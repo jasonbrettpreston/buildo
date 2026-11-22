@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:06:59.077Z file_sha256=8598129613ec330fe7b611ce7b60d0ef853279a940088717949acdbe793e94b7 prompt_sha256=2fc92c47e31430919321c650f7a7de9ee2ab0bbbe4c0c7b282e0dbe05b274752
+🔍 Lens review of docs/reports/reviews/task-435/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't ... a line citation is read, not remembered." — PLAN-435-v1 EXACT NOTE TEXT "for example `src/app/(maxbld)/admin/control-panel/page.tsx`, `src/features/admin-controls/components/ControlPanelShell.tsx`" — the text scheduled to land names a Sonner importer the plan itself says is wrong ("Facts in the note to re-check by the grounder before landing: the first example path is wrong in my draft"), so a false citation would land unless a post-approval re-check catches it — replace the example list inside EXACT NOTE TEXT with the three measured paths (src/app/admin/control-panel/page.tsx, src/app/(maxbld)/admin/layout.tsx, src/lib/media/useUploadMedia.ts) and delete the re-check instruction
+
+BUG severity=HIGH — §11.1 "Approved on paper" is not a verification state." / "a census grep runs at the full scope its conclusion covers" — PLAN-435-v1 FACTS 7 "I read this off the page; I did not run `rule-lists.mjs resolve` (UNVERIFIED for the exact docs/specs glob, a docs/specs path may also match a row I did not see)" — which rule lists must be run (rule 4, §11.1 executable surface) is left unexecuted, so the compliance input set itself is unverified — run `rule-lists.mjs resolve` on the Files line and paste its output into FACTS 7 before the plan locks
+
+DEFER severity=MED — §11.1 "a census grep runs at the full scope its conclusion covers" — PLAN-435-v1 FACTS 4 "19 files import it (grep `from 'sonner'`), 2 of them tests" — the grep scope (src only, scripts, docs, tests) is never stated, yet the count goes into a permanent spec line — record the command and its scope in FACTS 4, and state the scope in the note or drop the count
+
+DEFER severity=MED — task-435 Description "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — PLAN-435-v1 WHAT "add one blockquote dated note directly under the Status blockquote at the head of section 12 (after :306, before "### 12.1")" — the note sits at the head of section 12, not beside the §12.3/§12.5/§12.7 lines the card names, and the plan admits it ("the card says "one dated note ... beside the library lines"") — place the note immediately above §12.3 where the superseded lines sit, or get the operator's word for the head placement
+
+DEFER severity=MED — task-435 Description "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" and "No other edit" — PLAN-435-v1 EXACT NOTE TEXT "Spec 33 (dated note 2026-11-09, MF-42) records toasts as unchanged: `sonner`" and "Scope D of Spec 126 §2.0 ... is not governed by Spec 126; in `src/features/leads/` ... these lines stand as written" — the draft adds a Spec 33 ruling citation and a scope-D carve-out that neither RR-0382 ("yes add") nor the card names — take OPEN 1 option (b) and drop the Spec 33 clause, and get the operator's word on scope D (OPEN 4) before landing
+
+DEFER severity=MED — §7 rule 4 dated note 2026-11-21 "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS ... `rule-lists.mjs lens-input` refuses without `--context`" — PLAN-435-v1 LANDING "Plan-phase compliance outputs for each list the Files line resolves to, and a separate grounder" — the landing names no context-r1.md and no CONTEXT_SECTIONS entries, so the lens runs it schedules cannot be made as described — name docs/reports/reviews/task-435/context-r1.md and the section list in the landing step
+
+DEFER severity=MED — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" and C2 "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — PLAN-435-v1 OPEN 2 "Recommended: do not add; ask the operator if he wants it" — this recommendation carries no rule quote with file:line, and the plan's cites are bare line numbers with no id, anchor or sha (for example "126:138 and the 12 status line (:306)") — give each OPEN recommendation its rule id, anchor and sha-dated line
+
+MET — RR-0382 "yes add" — PLAN-435-v1 BASIS — the ruling is quoted verbatim ("Operator, verbatim: "yes add"") and named as decision-167
+
+MET — task-435 Description "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — EXACT NOTE TEXT — "Spec 126 names no toast library, and this note rules nothing on it; `sonner` is installed and imported in 19 files"
+
+MET — task-435 Description "prior text kept, nothing deleted" — EXACT NOTE TEXT and ACCEPTANCE — the note opens "(M-246, prior text kept; ...)" and closes "Nothing above is deleted", with acceptance requiring no deletion and no edit of an existing line
+
+MET — §7 rule 2 "validate the spec against reality before checking code against the spec" — FACTS 3 — package.json measured (Mantine 8.3.18, @rjsf/mantine 6.11.1, mantine-datatable 8.3.13), no react-hook-form, no components.json, Spec 33:44 verified true
+
+MET — task-435 Files line — ORDER 2 and LANDING — docs/reports/generated/rule-lists-by-kind.md is regenerated with `page --write` in the same commit and gated by `page --check`
+
+REJECT — §11.3 — accused of adding no red-first test — 11.3 governs locks that are claimed, and this note adds no lock, field or rule, so no both-directions proof exists to owe
+
+REJECT — §7 rule 3 — accused of skipping the round-2 adjudication — round 2 is scoped to money/pipeline-critical work and a spec prose note is neither
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 7
+Rules met: none
+
+---
+⏱  84877ms (84.9s)
+📊 Tokens — total: 36541, input: 17475, output: 19066, reasoning: 17545

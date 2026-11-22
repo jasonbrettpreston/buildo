@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:06:59.133Z file_sha256=397ddd8c31bfe18591cb709a06c9cbad4b3f1f6e83dfbacc67fbb8badebe0a7c prompt_sha256=9bddd4085eca2e169b04c149093f2d18c6dc515c9c218935535eb2ceeb6940dc
+🔍 Lens review of docs/reports/reviews/task-435/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan EXACT NOTE TEXT "§12.7 (Sonner) is not superseded: Spec 126 names no toast library, and this note rules nothing on it" — the note pronounces §12.7 not superseded, a status ruling on Sonner the operator "NOT answered" (plan BASIS), so it both rules and disclaims ruling — cut "is not superseded", state only the two facts the card names
+
+DEFER severity=MED — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan OPEN 1 "(a) cite Spec 33:47 as a fact (recommended ... cost: ... is a statement the card did not name" — the note adds a third fact, the Spec 33/MF-42 toast record, that neither the card nor RR-0382 names and the plan itself admits is unnamed — take option (b) and leave Spec 33 out
+
+DEFER severity=MED — card "saying they are superseded for front-end work by Spec 126 section 11b.4" — plan note text "in `src/features/leads/` and the other scope D code these lines stand as written" — the note instructs engineers that the old lines govern scope D, a rule the pasted clause and ruling do not name (they name only front-end supersession) — cut the scope D sentence or obtain the OPEN 4 ruling first
+
+DEFER severity=MED — card "one dated note in the engineering standards beside the library lines" — plan WHAT "add one blockquote dated note directly under the Status blockquote at the head of section 12 (after :306, before "### 12.1")" — the superseded checklist lines at :280-:285 and :283 ("Centered modals replaced with Shadcn `<Drawer>`") sit above the note, so a reviewer reading them meets no supersession note, the exact failure the card's Why names — place the note before the Frontend Foundation Check block, or land OPEN 2's one-line pointer
+
+DEFER severity=MED — card "Sonner is installed and in use" — plan EXACT NOTE TEXT "`src/app/(maxbld)/admin/control-panel/page.tsx`" with "the first example path is wrong in my draft" — the text to land cites a path the plan says does not exist and defers the correction to the grounder, so the note's evidence as pasted is false — paste the corrected three paths (`src/app/admin/control-panel/page.tsx`, `src/app/(maxbld)/admin/layout.tsx`, `src/lib/media/useUploadMedia.ts`) into the note now
+
+DEFER severity=LOW — Files line "Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — plan ORDER 4 "Task file and queue row updated in the same commit as the work" — the plan edits files outside the two pasted Files paths — bounded, bookkeeping only, and the card bars other edits to the standards, not the lane records
+
+MET — card "saying they are superseded for front-end work by Spec 126 section 11b.4" — plan EXACT NOTE TEXT — names "Spec 126 §11b.4, the table "The libraries"" and the Mantine/@rjsf/mantine/mantine-datatable set
+MET — card "citing the Spec 126 note" — plan EXACT NOTE TEXT — cites "that spec's dated note 2026-11-09"
+MET — card "prior text kept, nothing deleted" — plan ACCEPTANCE — "git diff shows only added lines in the engineering standards (no deletion, no edit of an existing line)"
+MET — card "No other edit (the generated rule-lists page is regenerated with it)" — plan ORDER 2 — regenerates only docs/reports/generated/rule-lists-by-kind.md and checks the diff is counts only
+MET — RR-0382 "yes add" — card Implementation Notes "Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" — plan note header matches this form and quotes "yes add" verbatim
+MET — card "Spec 126 does not name a toast library" — plan FACTS 5 — states as fact "Spec 126 names no toast library" (open question 1 aside)
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  46061ms (46.1s)
+📊 Tokens — total: 23301, input: 13820, output: 9481, reasoning: 8437

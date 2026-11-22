@@ -1,0 +1,167 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:4a3ecc8427d84f711ddd3f852555bab121bbc615e9aaf066206ef05e253f03c9 part 1 of 1
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0382 (MORNING-DECISIONS.md:1889, verbatim: "yes add"; earlier the same day: "I think teh spec 126 is more recent and is just an update of the engineering standards"). Why: docs/specs/00_engineering_standards.md (lines of 2026-06-16) names Shadcn UI, React Hook Form and Sonner; Spec 126 (dated note 2026-11-09, operator "D-0-D-4 approved", 126_maxbld_surface_standard.md:467) says "Shadcn/Tailwind above is superseded ... the web and admin archetype set is Mantine" with @rjsf/mantine and mantine-datatable (section 11b.4); a reviewer sent the engineering standards reads the old standard. THIS TASK: one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted), saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note; the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use. No other edit (the generated rule-lists page is regenerated with it).
+
+Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-435-v1: task-435 INPUTS.7, one dated note in the engineering standards
+
+Planner: read-only. Nothing run that writes. No DeepSeek call, no `.env`. All paths are under ~/Buildo-wt-board unless they start with ~.
+
+#### BASIS
+
+- Ruling RR-0382 (backlog/decisions decision-167; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, last entries, "Operator ORDERS the superseded note added to the engineering standards"). Put to him: "A dated note in the engineering standards, section 12, saying the library lines are superseded by Spec 126 for the front end. Nothing is deleted". Operator, verbatim: "yes add". Sonner "NOT answered": the note states the fact and rules nothing.
+- His view, same day, stated as "I think", not a ruling (MORNING-DECISIONS.md, entry "Operator's view on the library conflict"): "I think teh spec 126 is more recent and is just an update of the engineering standards but good question."
+- Rule for the form: the M-246 "prior text kept" dated note. Spec 137 rule 1: "The row prose stays as it was ("prior text kept", M-246)." (docs/specs/00-architecture/137_mcqueue.md:59); Spec 137:96 for rule 2 ("Source: operator, 2026-11-14, verbatim"). DoD #5 on the card: "A ruling enters a row as a verbatim dated note." (137_mcqueue.md:109). 124a:988 (quoted in the card DoD #8): "no change adds a tool, field or rule its card or ruling did not name". I did not find an M-246 definition sentence of its own; the form is taken from the examples, so that part is by example, not by quoted rule.
+- Form to copy: `> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (ii); operator, verbatim: "D-0-D-4 approved", D-2): "Shadcn/Tailwind" above is superseded. shadcn/ui is not installed (Spec 33:44); the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4).` (docs/specs/02-web-admin/126_maxbld_surface_standard.md:467). The 08_agents.md notes use the unquoted-blockquote line form: `Dated note 2026-11-06 (MB-85 ..., M-246, prior text kept; operator, ...): ...` (docs/specs/00-architecture/08_agents.md:150, :229). Note the path: 08_agents.md is in 00-architecture/, not docs/specs/.
+- Principles served: simple; no over-engineering; no scope creep; "do not change the plan"; spec text never rewritten or deleted.
+
+#### FACTS
+
+1. The file: docs/specs/00_engineering_standards.md, 467 lines, 46,352 bytes (46,076 characters per docs/reports/generated/rule-lists-by-kind.md:18). It has no dated note of its own today (grep "Dated note": no hit). Last git change 2026-10-17; the card says "lines of 2026-06-16" and I could not find that date in the file (UNVERIFIED).
+2. Library lines, each with Spec 126's words:
+
+| Line | Text | Superseded by Spec 126? |
+|---|---|---|
+| :12 | "All Tailwind CSS styling MUST be written mobile-first." | No. Tailwind 4 stays beside Mantine (126:1005 "Mantine CSS in `@layer mantine` beside Tailwind 4"). package.json:157 tailwindcss. |
+| :18 | shared UI components in `src/components/ui/` stay pure | No. That is a directory convention, not a library. The directory holds Badge.tsx and ScoreBadge.tsx only (measured by ls). |
+| :24 | haptics for "error toasts" | No. Mobile haptics, not Sonner. |
+| :28, :292 | Zod | No. Zod ^4.3.6 at package.json:125; Spec 126 does not touch it. |
+| :280 (section 11, Frontend Foundation Check) | "No `useState` for form fields — React Hook Form + Zod (§12.3)" | Partly. 126:1005: "`@rjsf/mantine` (forms from JSON Schema + uiSchema, AJV 8)". Zod stays. |
+| :283 (section 11) | "Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)" | Yes for the library name. Web/admin: Mantine (126:1005); mobile: "React Native Reusables per Spec 90 §6" (126:1006). |
+| :285 (section 11) | "Toast notifications via Sonner — no custom alert banners (§12.7)" | No. Not named by Spec 126. See 3 below. |
+| :320-323 (12.3) | React Hook Form + `@hookform/resolvers/zod` | Same as :280. |
+| :331-334 (12.5) | Shadcn UI, `npx shadcn@latest add`, Shadcn `<Drawer>` (Vaul) | Yes, as :283. 126:467: "shadcn/ui is not installed (Spec 33:44)". |
+| :340-343 (12.7) | "Use Shadcn's Sonner integration ... `toast.success()`" | Not by Spec 126. Wording "Shadcn's" is stale (shadcn absent) but Spec 126 does not rule it. |
+| :336 (12.6) | TanStack Virtual | Not a UI library of the table; untouched. |
+
+   Sections 1 and 11 are the only other places. No other library line found (no Radix, tremor, Vaul import).
+3. Installed, measured: package.json:78-80 `@mantine/core`, `dates`, `hooks` all "8.3.18"; :82 `@rjsf/mantine` 6.11.1; :107 `mantine-datatable` 8.3.13; :122 `sonner` ^2.0.7. No `react-hook-form`, no `@hookform/resolvers`, no `vaul`, no `@mantine/notifications`, no shadcn package; no `components.json` (ls). The only `react-hook-form` string in src is a comment: src/components/admin/ParcelCostTool.tsx:27 ("react-hook-form is NOT in the dependency tree"). Spec 126's table says "Mantine 9" (126:1005, and :467), but the same cell records the amendment: "the web library is Mantine 8.3 (`@mantine/core`, `hooks`, `dates` 8.3.18 ...), amending D-2's "Mantine 9"" (126:1005). Spec 33:44: "shadcn/ui is **NOT initialized in this repo** — there is no `components.json`, and `src/components/ui/*` holds only `Badge.tsx` + `ScoreBadge.tsx`". Verified true.
+4. Sonner: 19 files import it (grep `from 'sonner'`), 2 of them tests (src/tests/admin-watchlist-hooks.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts); 17 are code, e.g. src/app/(maxbld)/admin/layout.tsx, src/app/admin/control-panel/page.tsx, src/lib/media/useUploadMedia.ts. 5 of them are under src/features/ (admin-controls, admin-flight-center). Mantine is imported in 10 files, none under src/features.
+5. Toast in Spec 126/135/136: grep of "sonner", "toast", "@mantine/notifications" over 126_maxbld_surface_standard.md, 135*.md and 136*.md returns no line. So the card's "Spec 126 does not name a toast library" is true. BUT Spec 33 does: 33:45 "**Toasts:** **`sonner`** (already a dependency...)" and the dated note 33:47 (2026-11-09, MF-42; operator, verbatim: "P42 decisions approved" and "approved smaller version"): "toasts are unchanged: `sonner`, for the MaxBLD web pages too (no `@mantine/notifications`)." That is an existing operator-approved statement, outside Spec 126. It makes Sonner's state a record, not a gap. See OPEN QUESTION 1.
+6. Scope. Spec 126 section 2.0 (126:129-147): "Every descriptor declares `programme.scope` from a closed set of four"; scopes A `parcel_product` (:135), B `parcel_admin`, C `platform_shared` (:137) are "Governed by this spec? Yes"; D `estate_other` (:138), "The OTHER product: lead generation, the flight center, the lead feed, permit and job detail, builders and entities", is "**No — inventory and seam only.**" and "Scope D is fenced ... Those surfaces convert under this same standard in a later programme." The engineering standards' section 12 status line says it was "Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`)" (:306), which is scope D. The section 11 checklist block at :274-285 is headed "new code in `src/features/`", also scope D. So the old library lines still govern scope D and the note must say so, or it overstates.
+7. Locks and readers (grep src/tests, scripts, .husky):
+   - Tests mention the file only as `SPEC LINK:` comments (e.g. src/tests/setup.ts:1, src/tests/contracts.infra.test.ts:1) and one commit-message string (diff-narrator test:19). None pins a line number, section size or the 46,076 figure (grep "46,076|46076" in src/tests/backlog/rule-lists.logic.test.ts: no hit).
+   - scripts/analysis/rule-lists.json:31 defines `eng-all` as `{"file": "docs/specs/00_engineering_standards.md", "whole": true}`; it is attached to rows at :85, :97, :103, :109 and the surface row :141.
+   - docs/reports/generated/rule-lists-by-kind.md shows eng-all 46,076 at lines 18, 31, 64, 77, 101, 117 (six kinds) plus each kind's total row. After the note the count changes, so the page goes stale. `.husky/pre-commit:44` runs `node scripts/analysis/rule-lists.mjs page --check`; scripts/analysis/gates/generated-docs.mjs:53 lists the page as a generated doc with a check. So the commit is refused unless the page is regenerated (`rule-lists.mjs page --write`; usage line printed by the tool confirms the `page` verb).
+   - The Files line `docs/specs/00_engineering_standards.md` resolves, by the spec-only kind (page :109-120, "Example Files line: docs/specs/00-architecture/08_agents.md"), to seven lists: queue-137, agents-s7-s11, eng-all, five-words, plan-protocol, inc-S, ms-S (page :115-120). I read this off the page; I did not run `rule-lists.mjs resolve` (UNVERIFIED for the exact docs/specs glob, a docs/specs path may also match a row I did not see).
+   - spec-split-check.mjs does not name the file (grep: no hit).
+8. Plan evidence that goes stale: eng-all is pasted whole into each plan-phase compliance input. docs/reports/reviews/task-432/in-plan-compliance-eng-all.txt exists; task-432/context-r2.md and context-r3.md and FINDINGS-PLAN.md name eng-all. task-433's directory also lists review files (I saw task-433 listed but did not open an eng-all file there). `backlog task view`/the task files report `status: BUILT` for 418, 419, 421-423, 432, 433, 412 and RUNNING for 375; `backlog task list` shows the RUNNING group (TASK-1, 90, 179 ..., 354, 366-368 ...). Whether 432 and 433 are launched or not I could not settle from that (UNVERIFIED). If either holds committed plan evidence and has not launched, its eng-all input is recomputed from the list text at the board head at close and would differ after this lands (check-lane-close.mjs recomputes lens inputs from the stamp, 08_agents.md:231). RUNNING lanes re-make inputs only if they merge the board.
+
+#### WHAT
+
+One edit: add one blockquote dated note directly under the Status blockquote at the head of section 12 (after :306, before "### 12.1"). Nothing else in the file changes. No second note in section 11 (OPEN QUESTION 2). Regenerate the one generated page.
+
+Why one note at the head of 12 and not beside each line: the operator approved "A dated note in the engineering standards, section 12"; the card says "one dated note ... beside the library lines". Head of section 12 puts it before 12.3, 12.5 and 12.7; section 11's lines at :280-285 sit above it and are NOT in section 12, so a reader of those meets the note only if they read on. The note names them by section reference so it covers them in words.
+
+#### EXACT NOTE TEXT
+
+(one line, as the other blockquote notes are; inserted as line 307 or thereabouts, with a blank line before and after)
+
+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add"; his stated view the same day, not a ruling: "I think teh spec 126 is more recent and is just an update of the engineering standards"): for the MaxBLD surfaces that Spec 126 governs (scopes A, B and C of `docs/specs/02-web-admin/126_maxbld_surface_standard.md` §2.0: `parcel_product`, `parcel_admin`, `platform_shared`), the library lines of this section, §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`), and the two Frontend Foundation Check lines of §11 that cite them, are superseded by Spec 126 §11b.4, the table "The libraries" (web and admin: Mantine + `@rjsf/mantine` + `mantine-datatable`; mobile: React Native Reusables per Spec 90 §6), as that spec's dated note 2026-11-09 (Spec 126 §5.4: ""Shadcn/Tailwind" above is superseded. shadcn/ui is not installed (Spec 33:44)") already says. Measured at this date: `package.json` has Mantine 8.3.18, `@rjsf/mantine` and `mantine-datatable`; it has no `react-hook-form` and no shadcn package. §12.7 (Sonner) is not superseded: Spec 126 names no toast library, and this note rules nothing on it; `sonner` is installed and imported in 19 files (for example `src/app/(maxbld)/admin/control-panel/page.tsx`, `src/features/admin-controls/components/ControlPanelShell.tsx`, `src/lib/media/useUploadMedia.ts`), and Spec 33 (dated note 2026-11-09, MF-42) records toasts as unchanged: `sonner`. Scope D of Spec 126 §2.0 (`estate_other`, the lead-generation product: "inventory and seam only") is not governed by Spec 126; in `src/features/leads/` and the other scope D code these lines stand as written. Nothing above is deleted.
+
+Facts in the note to re-check by the grounder before landing: the first example path is wrong in my draft. The measured Sonner importers are `src/app/admin/control-panel/page.tsx` (not under `(maxbld)`) and `src/app/(maxbld)/admin/layout.tsx`; use these three: `src/app/admin/control-panel/page.tsx`, `src/app/(maxbld)/admin/layout.tsx`, `src/lib/media/useUploadMedia.ts` (all three seen in the grep). Replace the example list in the text above with them.
+
+Length check: one paragraph, similar to 126:467 plus the scope sentence. If the reviewer finds it long, the cuts that lose nothing the ruling named are: the "measured" sentence and the second Spec 33 clause (OPEN QUESTION 1).
+
+#### TESTS
+
+- Doc-only change. No new test, no red-first test. The rule exemption: I did not find a sentence that exempts a prose note from "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462 as the card cites it; my read of :460-464 shows a different sentence about panel seats, so the card's line number may have drifted: UNVERIFIED). The reason none applies: that rule is about locks, and the note adds no lock, field or rule ("no change adds a tool, field or rule its card or ruling did not name", 124a:988). Asked as OPEN QUESTION 3.
+- Must stay green: the pre-commit `node scripts/analysis/rule-lists.mjs page --check` (.husky/pre-commit:44); the generated-docs gate for rule-lists-by-kind.md (scripts/analysis/gates/generated-docs.mjs:53); src/tests/backlog/rule-lists.logic.test.ts; check-task-files (the Files line covers the one path); the commit-msg hooks including check-lane-close.mjs for a lane close. Run the named tests through the project's own scripts; I name no runner.
+- Regenerated: docs/reports/generated/rule-lists-by-kind.md (eng-all count at lines 18, 31, 64, 77, 101, 117 and the six totals). It is generated, so it must ride in the same commit; Files line: see below.
+
+#### ORDER
+
+1. Insert the note after the Status blockquote of section 12 (no other line touched).
+2. Regenerate the rule-lists page (`page --write`), check the diff is only the eng-all character counts and totals.
+3. Run `page --check` and the rule-lists logic test.
+4. Task file and queue row updated in the same commit as the work (137_mcqueue.md:84: "The status line changes in the same commit as the work.").
+
+#### LANDING
+
+Lane build, commit through the real hooks, none bypassed (DoD #3). Rule 3 two-commit close (Spec 137:100 note): work first, then a closing commit carrying only the lane records. Plan-phase compliance outputs for each list the Files line resolves to, and a separate grounder, as COMPLY.2 requires (08_agents.md:229). Decision record: the ruling is already in decision-167; the note quotes it verbatim.
+
+#### ACCEPTANCE
+
+- One new blockquote, directly under the section 12 Status line; `git diff` shows only added lines in the engineering standards (no deletion, no edit of an existing line).
+- The note quotes "yes add" verbatim, cites 126 §11b.4 and 126:467, names scopes A, B, C and D with Spec 126 §2.0's words, states the Sonner fact and rules nothing.
+- Every number in the note re-measured at landing: 19 files, 8.3.18, no react-hook-form.
+- rule-lists page regenerated and `--check` clean.
+- No change to 12.3, 12.5, 12.7, the checklist, or any other file besides the generated page and the task/queue records.
+
+#### NOT IN SCOPE
+
+- The handbook line on the library standard: task-430. The engineering sections split: task-431.
+- No ruling on Sonner, no statement that 12.7 or section 12.6 is right or wrong, no edit of the stale "Shadcn's Sonner integration" wording.
+- No change to Spec 33, Spec 126, package.json, or any code.
+- No second pointer note in section 11 (OPEN QUESTION 2).
+
+#### RULED / OPEN QUESTIONS
+
+Ruled: add the note (RR-0382). Not ruled: Sonner.
+
+OPEN 1. Spec 33's ruling on toasts. Spec 33:47 already records, with an operator quote, that toasts stay `sonner` for MaxBLD web pages and that `@mantine/notifications` is not used. The card says the note states Sonner is "installed and in use" and rules nothing. Options: (a) cite Spec 33:47 as a fact (recommended: omitting it makes a reader think Sonner is unsettled, and it is one clause); cost: the note is slightly longer and is a statement the card did not name, but it quotes an existing record and adds no rule. (b) leave it out, as the card says; cost: a reader may think the toast library is undecided when it is not. Draft above uses (a).
+
+OPEN 2. Section 11 checklist lines (:280, :283, :285) are in section 11, not section 12. The one note at the head of section 12 covers them in words (it names "the two Frontend Foundation Check lines of §11") but a reader stopping at the checklist does not see it. Option: one short pointer note under the "Frontend Foundation Check" heading (:274), about 40 words. Cost: a second edit in a second section, not named by the ruling ("yes add" named section 12), one more thing to review. Recommended: do not add; ask the operator if he wants it.
+
+OPEN 3. Does the DoD red-first line (08_agents.md:462 as the card cites it) apply to a doc note? I found no exemption sentence. Recommended: no test (no lock is added); the lane records the reason. If the reviewer wants a lock, the cheapest is none.
+
+OPEN 4. Scope D wording. The old lines stay in force in scope D by my reading of 126:138 and the 12 status line (:306). Whether the operator wants the note to say that, or only to say "for the front end" as he put it, is his call. Recommended: say it, because the operator's own words were "for the front end" and Spec 126 says it does not govern scope D; without it the note overstates.
+
+#### UNVERIFIED
+
+- That `rule-lists.mjs resolve` gives exactly the seven lists I read off the "spec-only" page.
+- Whether tasks 432 and 433 are launched, and so whether their committed eng-all inputs go stale; also whether task-433's directory holds an eng-all input (I opened only task-432).
+- The "lines of 2026-06-16" date on the card (not found in the file).
+- That 08_agents.md:462 is the red-first line (what I read there is about panel seats).
+- Whether the page regenerates only the eng-all counts (I did not run it).
+- Mantine/rjsf versions are as of package.json only, not node_modules.
+
+#### GUESS (estimate)
+
+About 30 to 45 minutes of lane time: 5 minutes for the edit, 5 for the page regeneration and check, the rest for the plan-phase compliance outputs (seven lists), grounder, and the two-commit close. Risk is in the review round on the note wording, not the edit.
+
+#### FILES
+
+Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md
+(The generated page is part of the Files line because the pre-commit `page --check` refuses the commit while it is stale. Resolved lists: see FACTS 7.)
+

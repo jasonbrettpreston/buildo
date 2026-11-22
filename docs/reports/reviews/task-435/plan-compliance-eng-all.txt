@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:06:59.108Z file_sha256=f3388853c139cea2ae3d6ddae33bb91c3463a058ec4b69de2c8342836b2834f0 prompt_sha256=c743d6c50b79df2ab50bd7f8a1132780326c013e5d449ba62e2f260f10506658
+🔍 Lens review of docs/reports/reviews/task-435/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "one dated note in the engineering standards beside the library lines" — plan "add one blockquote dated note directly under the Status blockquote at the head of section 12 (after :306, before "### 12.1")" — the note is not beside the library lines it supersedes: the §11 checklist lines ("Centered modals replaced with Shadcn `<Drawer>` on mobile", "No `useState` for form fields — React Hook Form + Zod") sit above it in a different section, so the reviewer the card exists for meets the old standard first — place the single note directly under the "Frontend Foundation Check" heading (:274) and point it at §12.3/§12.5, or obtain the operator's word for head-of-§12 placement in place of "beside the library lines"
+
+BUG severity=HIGH — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan note text "Spec 33 (dated note 2026-11-09, MF-42) records toasts as unchanged: `sonner`" — clause unmet: the note imports an operator-approved record that settles the toast library, while the plan's own basis records Sonner as "NOT answered" (OPEN 1 rationale: omitting it "makes a reader think Sonner is unsettled"), so the note no longer rules nothing — drop the Spec 33 clause per OPEN 1 option (b), or have the operator name Spec 33:47 before lock
+
+BUG severity=HIGH — card "saying they are superseded for front-end work by Spec 126 section 11b.4" — plan "Scope D of Spec 126 §2.0 (`estate_other`, the lead-generation product: "inventory and seam only") is not governed by Spec 126; in `src/features/leads/` and the other scope D code these lines stand as written" — clause unmet: the note narrows the operator's "for the front end" to scopes A/B/C and asserts a scope-D enforcement outcome the ruling did not name (the plan itself lists this as unanswered, OPEN 4) — state the operator's words "for the front end" and drop the scope D sentence, or get his answer to OPEN 4 before lock
+
+DEFER severity=MED — card "Sonner is installed and in use" — plan "the first example path is wrong in my draft ... use these three: `src/app/admin/control-panel/page.tsx`, `src/app/(maxbld)/admin/layout.tsx`, `src/lib/media/useUploadMedia.ts`" — the EXACT NOTE TEXT to be landed still carries the path the plan itself flags as wrong, so the landed fact is false — paste the corrected three paths into EXACT NOTE TEXT when the plan is locked, not as a grounder aside
+
+DEFER severity=MED — card "the library lines are superseded ... for front-end work" — plan "the library lines of this section, §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`), and the two Frontend Foundation Check lines of §11 that cite them, are superseded by Spec 126 §11b.4" — read without the appositive, "the library lines of this section" sweeps §12.1 Biome, §12.2 TanStack Query, §12.6 TanStack Virtual and §12.9 Motion, none of which Spec 126 supersedes — write "the UI library lines (§12.3 React Hook Form, §12.5 Shadcn UI)" so the scope of supersession is closed
+
+DEFER severity=LOW — card "No other edit (the generated rule-lists page is regenerated with it)" and "Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — plan ORDER "Task file and queue row updated in the same commit as the work" — two further edited files beyond the pasted Files line — confirm the board records fall outside the ruling's Files line or name them in it
+
+DEFER severity=LOW — card enumerates what the note says ("saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note; ... Sonner is installed and in use") — plan "Measured at this date: `package.json` has Mantine 8.3.18, `@rjsf/mantine` and `mantine-datatable`; it has no `react-hook-form` and no shadcn package" — a version fact the card did not name, and one that decays inside a durable spec — cut the measured sentence, which the plan itself offers as a lossless cut
+
+DEFER severity=LOW — card quotes the same-day view as context only ("earlier the same day: "I think teh spec 126 is more recent ..."") — plan note text "his stated view the same day, not a ruling: "I think teh spec 126 is more recent and is just an update of the engineering standards"" — an unruled opinion is given permanent spec text the ruling did not name — keep only the ruling verbatim "yes add" and drop the view clause
+
+MET — card "prior text kept, nothing deleted" — plan ACCEPTANCE "`git diff` shows only added lines in the engineering standards (no deletion, no edit of an existing line)" — insert-only note, no existing line touched
+
+MET — card "citing the Spec 126 note" — plan "are superseded by Spec 126 §11b.4, the table "The libraries" ... as that spec's dated note 2026-11-09 (Spec 126 §5.4 ...) already says" — both section and dated note cited
+
+MET — card "the generated rule-lists page is regenerated with it" — plan ORDER "Regenerate the rule-lists page (`page --write`)" and "Run `page --check` and the rule-lists logic test" — page rides in the same commit and the gate is run
+
+MET — §5.5 "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — plan "check the diff is only the eng-all character counts and totals" — drift guard exercised on the one generated artifact
+
+MET — RR-0382 "yes add" — plan note text "operator, verbatim: "yes add"" — the ruling is quoted verbatim in the note
+
+MET — card "one dated note" — plan "No second note in section 11 (OPEN QUESTION 2)" — exactly one blockquote added
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  60146ms (60.1s)
+📊 Tokens — total: 31585, input: 19505, output: 12080, reasoning: 10602

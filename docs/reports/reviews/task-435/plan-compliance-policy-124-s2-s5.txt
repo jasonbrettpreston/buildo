@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:06:59.095Z file_sha256=a88818965c67a0c7d6382e992b0a81d84f2edddac4bd2e38044bb9237efa130e prompt_sha256=3a2f4e09814d2fc5426c3c077cc53eca4b9b4d0e0e75b3a78e8058b4453223fc
+🔍 Lens review of docs/reports/reviews/task-435/in-plan-compliance-policy-124-s2-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-435 card "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — plan WHAT "add one blockquote dated note directly under the Status blockquote at the head of section 12 (after :306, before '### 12.1')" — the superseded library lines in §11 (:280 React Hook Form, :283 Shadcn Drawer, :285 Sonner) sit outside section 12 and stay live-looking with the note nowhere near them, which plan OPEN 2 itself concedes — put the note beside the §12.5/§12.7 library block, or get the operator to rule the §11 pointer note before lock
+
+BUG severity=HIGH — task-435 card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan "the first example path is wrong in my draft ... use these three: src/app/admin/control-panel/page.tsx, src/app/(maxbld)/admin/layout.tsx, src/lib/media/useUploadMedia.ts" while EXACT NOTE TEXT still reads "src/app/(maxbld)/admin/control-panel/page.tsx" — the text to be inserted carries a path the plan itself calls wrong, so the note as specified states a false measurement — replace the example list inside the EXACT NOTE TEXT block with the three corrected paths and delete the correction prose
+
+BUG severity=HIGH — task-435 card "the note states as a fact, and rules nothing on it" — plan note text "and Spec 33 (dated note 2026-11-09, MF-42) records toasts as unchanged: sonner" — the note imports a second operator-approved record to settle the toast question the plan logs as "Not ruled: Sonner", so it rules where the card says it rules nothing and adds a citation the card did not name — drop the Spec 33 clause (OPEN 1 option (b)) or have the operator's sentence named in the card before lock
+
+DEFER severity=MED — task-435 card "saying they are superseded for front-end work by Spec 126 section 11b.4" — plan note text "Scope D of Spec 126 §2.0 (estate_other, ...) is not governed by Spec 126; in src/features/leads/ and the other scope D code these lines stand as written" — the note asserts a scope carve-out the operator never ruled, which plan OPEN 4 says "is his call" — ask the operator, or state only "for the front end" as he did
+
+DEFER severity=MED — task-435 card "No other edit (the generated rule-lists page is regenerated with it)" — plan ORDER 4 "Task file and queue row updated in the same commit as the work" and ACCEPTANCE "besides the generated page and the task/queue records" — the planned commit set is wider than the card's two-file "No other edit", and the Files line names neither record — have the card name the lane records, or hold them to the closing commit only
+
+DEFER severity=MED — PLAN-435 LANDING "Plan-phase compliance outputs for each list the Files line resolves to" — plan FACTS 7 "I read this off the page; I did not run rule-lists.mjs resolve (UNVERIFIED for the exact docs/specs glob, a docs/specs path may also match a row I did not see)" — the set of compliance lists the close must satisfy is unresolved at plan-lock, so a missed list cannot be caught later — run rule-lists.mjs resolve on the Files line and paste the resolved list into the plan
+
+MET — task-435 card "prior text kept, nothing deleted" — plan ACCEPTANCE "git diff shows only added lines in the engineering standards (no deletion, no edit of an existing line)" — insertion only, note text ends "Nothing above is deleted."
+
+MET — task-435 card "citing the Spec 126 note" — plan note text "as that spec's dated note 2026-11-09 (Spec 126 §5.4: ...)" — the Spec 126 dated note is cited and quoted
+
+MET — task-435 card "the generated rule-lists page is regenerated with it" — plan ORDER 2 "Regenerate the rule-lists page (page --write)" and Files line "docs/reports/generated/rule-lists-by-kind.md" — regeneration rides the same commit
+
+MET — RR-0382 "yes add" — plan note text "operator, verbatim: \"yes add\"" — the ruling is quoted verbatim in the note
+
+REJECT — R-GW — editing a docs/specs spec without adding its single role banner — R-GW keeps every unbannered spec on the shrink-only `role_banner_pending` list "until it gains a banner; no spec was edited to add one", so a dated note needs none
+
+REJECT — R-GX — a historical spec adding a rule id — the note adds no register row and no rule-map id; "RR-0382" and "M-246" are ruling and note labels, not register ids
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+Rules met: none
+
+---
+⏱  41535ms (41.5s)
+📊 Tokens — total: 43672, input: 35034, output: 8638, reasoning: 7490

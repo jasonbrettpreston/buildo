@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T18:06:59.140Z file_sha256=c46fb803a1575cbad5043e009df944b466f62d488b6a2dfcf507cbd8f2b0dea4 prompt_sha256=9553c06870d55b1647ec85116c4bfe7fbc38a773b5efc307c43c58acf8f90aab
+🔍 Lens review of docs/reports/reviews/task-435/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — EXACT NOTE TEXT block (the blockquote under "EXACT NOTE TEXT") — the block ships wrong Sonner example paths (`src/app/(maxbld)/admin/control-panel/page.tsx`, `src/features/admin-controls/components/ControlPanelShell.tsx`); the correction lives ~20 lines below ("use these three: `src/app/admin/...`, `src/app/(maxbld)/admin/layout.tsx`, `src/lib/media/useUploadMedia.ts`"), so a literal copy pastes false evidence — rewrite the EXACT block to the corrected three paths so there is one canonical string to ship.
+
+BUG severity=HIGH — D4/OPEN 1 (draft uses option (a), citing `Spec 33:47`) — the recommended note adds a Spec 33 toast clause ("Spec 33 ... records toasts as unchanged: `sonner`") that the card did not name, contradicting the plan's own quoted rule 124a:988 ("no change adds a tool, field or rule its card or ruling did not name") — drop to option (b) (state only "Spec 126 names no toast library; `sonner` installed and in use") or get operator sign-off recorded before lock.
+
+BUG severity=MED — ORDER step 2 ("check the diff is only the eng-all character counts and totals") — the file may sit in multiple list globs (FACTS 7 lists seven resolving lists; plan's own UNVERIFIED admits it never ran the regeneration), so `page --write` could change rows beyond `eng-all` and the "only eng-all" check fails with no defined fallback — run `node scripts/analysis/rule-lists.mjs resolve docs/specs/00_engineering_standards.md` before editing and make ORDER verify exactly those lists' rows change.
+
+BUG severity=MED — note text "(for example …) … imported in 19 files" — a volatile file count embedded in a permanent standards doc goes stale within days and the plan only offers "re-measure at landing" as an ACCEPTANCE assertion with no action if it drifts — drop the count per the plan's own suggested cut, keep "installed and imported widely (for example …)".
+
+BUG severity=MED — FACTS 8 (eng-all snapshots in task-432 `in-plan-compliance-eng-all.txt`, task-433) — plan names the recompute-drift risk (check-lane-close recomputes lens inputs from the stamp, 08_agents.md:231) but adds no gating step, so a sibling lane mid-close over this change can fail a check attributable to task-435 — add ORDER step: `backlog task view 432`/`433`, and if either is mid-close, land after its close or record acceptance of the recompute.
+
+BUG severity=MED — EXACT NOTE TEXT scope clause ("scopes A, B and C … `parcel_product`, `parcel_admin`, `platform_shared` … Scope D … `estate_other`") — exact scope literal strings are encoded but never re-verified at landing against 126:135/137/138; a mis-transcribed literal makes the note wrong against the very spec it cites — add ACCEPTANCE line: re-read 126:135-138 and match the four literals exactly.
+
+DEFER severity=LOW — EXACT NOTE TEXT ("as that spec's dated note 2026-11-09 (Spec 126 §5.4: …)") — §5.4 placement of line :467 is asserted, not confirmed against the file's headings — re-confirm at landing; a wrong internal cross-ref defeats the note's purpose.
+
+DEFER severity=LOW — ORDER step 4 ("Task file and queue row updated in the same commit as the work", 137:84) vs LANDING ("Rule 3 two-commit close … a closing commit carrying only the lane records") — the status-line/commit placement is contradictory and a crash between the two commits leaves the doc changed but status stale — reconcile which commit carries the status line before start.
+
+DEFER severity=LOW — whole plan: no repo-wide inventory of *other* docs still naming Shadcn/React Hook Form/Sonner as current (only 00_engineering_standards.md + 430/431 are in view) — `grep -rni 'shadcn\|react-hook-form\|sonner' docs/specs/ | grep -v 00_engineering | grep -v 126_maxbld` now to catch siblings.
+
+DEFER severity=LOW — OPEN 2 / the §11 checklist lines (:280-285) — a reader of the Frontend Foundation Check stops before section 12 and never meets the note — accept the plan's recommendation (no second note) unless operator asks; a 40-word pointer under :274 closes it cheaply.
+
+NIT — EXACT NOTE TEXT ("`package.json` has Mantine 8.3.18") — Spec 126's own head says "Mantine 9"; the note cites 8.3.18 without reconciling the two — add "(Spec 126 §11b.4 amendment records 8.3)" or accept the apparent discrepancy.
+
+REJECT — implementation note quoting operator "I think teh spec 126 …" with the typo — quoting the operator's mis-spelling verbatim is intentional (M-246 "prior text kept") and explicitly labeled "his stated view … not a ruling" — not a defect.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- EXACT NOTE TEXT ships wrong Sonner paths; the correction lives only in a paragraph below (BUG/HIGH above).
+- The note cites Spec 33:47, which the card did not name, contradicting the plan's own 124a:988 (BUG/HIGH above).
+- `page --write` blast radius is undefined (file may match multiple list globs); "only eng-all changes" has no fallback (BUG/MED above).
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- "19 files import sonner" (and which are code vs test) — verify at landing: `grep -rl "from 'sonner'" src --include=*.ts --include=*.tsx | wc -l`; expect the number the note prints.
+- Mantine/RHF/RJSF presence and versions — verify: `node -e "const p=require('./package.json');console.log(p.dependencies['@mantine/core'],p.dependencies['react-hook-form'],p.dependencies['@rjsf/mantine'],p.dependencies['mantine-datatable'],p.dependencies['sonner'])"`; expect 8.3.18 / undefined / present / present / ^2.x.
+- Scope literals A/B/C/D — verify: `sed -n '135p;137p;138p' docs/specs/02-web-admin/126_maxbld_surface_standard.md`; expect `parcel_product`, `parcel_admin`, `platform_shared`, `estate_other`.
+
+---
+⏱  50442ms (50.4s)
+📊 Tokens — total: 27749, input: 17864, output: 9885, reasoning: 8368

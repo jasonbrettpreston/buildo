@@ -1,0 +1,39 @@
+# Seat: regression: task-435 plan (PLAN-435-v1)
+Saved by: the orchestrator, from the seat's hand-back message, verbatim. The seat ran as a read-only agent and would not write files; no word of the findings below is the orchestrator's.
+
+Basis: board head 6c3f450c9. Read-only: Spec 33:40-47, Spec 126:129-147, :463-467, :999-1015, Spec 90 §6 (:62-67), Spec 135/136 greps (zero hits for mantine, shadcn, sonner, toast, react-hook-form in both), .claude/domain-admin.md:19-20, :37-38, :51-53, 08_agents.md:150, :229, :485, 137_mcqueue.md notes. No writes, no .env, no model calls.
+
+### rg#1 MED: the note is long for "one dated note", and over-delivers against the ruling and the principles
+Plan sentence: the whole EXACT NOTE TEXT (one paragraph, about 330 words, with a verbatim operator view, a measurement sentence, three file paths, a Spec 33 clause, a scope D sentence).
+Evidence: the operator's words were "A dated note ... saying the library lines are superseded by Spec 126 for the front end. Nothing is deleted"; "simple, no over-engineering, no scope creep". The M-246 forms are short: 126:467 is about 60 words; 08_agents.md:150 about 85. The plan's own note says "If the reviewer finds it long, the cuts that lose nothing the ruling named are: the measured sentence and the second Spec 33 clause". Added items the ruling did not name: "his stated view the same day, not a ruling" quote (put in a standard; it is a view, MORNING-DECISIONS says "not yet a ruling to change a document"), the package.json measurements (they will go stale), the file list, the Spec 33 record, the scope D sentence. Under task-431 this text is also sent to every front- and back-end compliance review (section 12 goes to eng-shared).
+What would go wrong: a standard carries data that rots (versions, a file count of 19) and an operator "I think" quote; 124a:988 ("no change adds a tool, field or rule its card or ruling did not name") is arguably tested by the scope D and Sonner clauses.
+Smallest correction: keep: date, M-246 prior text kept, RR-0382 and "yes add" verbatim, the supersession of §12.3 and §12.5 (and the two §11 lines) by Spec 126 §11b.4, "Sonner not ruled" in one clause, "nothing deleted". Cut the "I think" quote, the measurements and the file list.
+
+### rg#2 MED: the note's scope D sentence goes beyond RR-0382 and runs against Spec 33:44
+Plan sentence: "Scope D ... is not governed by Spec 126; in `src/features/leads/` and the other scope D code these lines stand as written."
+Evidence: Spec 126:138 ("No - inventory and seam only"; "Those surfaces convert under this same standard in a later programme", :147) supports "Spec 126 does not govern scope D". It does not say the engineering standards govern it. Spec 33:44 (corrected 2026-07-10) says shadcn/ui "is NOT initialized in this repo"; ".claude/domain-admin.md" :19 says "UI kit: none" and :53 says Sonner is "NOT via shadcn"; no code imports react-hook-form, vaul or a shadcn component (only comments). So "stand as written" asserts a standard the record already says is not followed, and the operator said "for the front end", not for A to C only.
+What would go wrong: (a) it overstates (scope D); (b) it creates a newly stated obligation to use Shadcn/RHF for the leads code, contrary to Spec 33:44 and to what Spec 126 :147 says is a later programme; (c) the operator's "for the front end" is narrowed without his word.
+Smallest correction: either say "for front-end work (Spec 126 §11b.4)" as he put it and leave scope D out, or "Spec 126 does not govern scope D (§2.0); this note changes nothing there". Not "stand".
+
+### rg#3 LOW: does the note undo or contradict an earlier ruling? No, with two things to watch
+Evidence: (1) Spec 33:44 says do NOT install `@mantine/core` or shadcn without a Spec 33 amendment; that sentence is superseded in the record by Spec 33's McFrontend Phase 2 amendment notes and 126:1005 (Mantine 8.3 installed, MF-37). The note agrees with them, does not contradict them. (2) .claude/domain-admin.md:19 "UI kit: none" and :37 "desktop-first" (admin) still read stale next to Mantine; not touched by the card or this note; the note's first sentence points to Spec 126, which does not edit domain-admin.md. Out of scope for 435 (handbook line is task-430). (3) Spec 135/136 have no library lines (zero hits), so no conflict there. (4) Spec 90 §6 (:62-67): the plan's mobile pointer "React Native Reusables per Spec 90 §6" is right (126:1006). The eng standards §12.5 Drawer line speaks of "mobile viewports" in a web sense, while Spec 90 §6 is the native app; the note's "mobile: React Native Reusables" parenthesis is accurate to 126:1006.
+What would go wrong: nothing from the note itself.
+Smallest correction: none; optionally mention domain-admin.md is not changed.
+
+### rg#4 LOW: the note under-covers Tailwind and mobile-first, correctly, but the Tailwind line is a possible reader trap
+Evidence: eng standards 1.1 "All Tailwind CSS styling MUST be written mobile-first" stays (126:1005: "Mantine CSS in `@layer mantine` beside Tailwind 4"). 126:465 also says admin is "desktop-first `md:` breakpoints per `.claude/domain-admin.md`". The note does not touch it. Correct to leave, and the plan's table lists it as "No".
+Smallest correction: none.
+
+### rg#5 LOW: form match to the M-246 examples
+Evidence: 126:467 and 08_agents.md:150, :229 are single-line blockquote (or bare) notes opening "Dated note <date> (M-246, prior text kept; <task/record>; operator, verbatim: "...")". The plan's opening matches that. Differences: it adds a mid-parenthesis "his stated view ..., not a ruling" (no precedent in the examples), and a ""..."" doubled-quote inside a quote at the 126:467 quotation (renders awkwardly). The plan says it found no M-246 definition sentence, only examples; that is true for what I read (137_mcqueue.md uses the form in :16, :18). The placement under the Status line of section 12 is a blockquote like the Status line itself; fine.
+Smallest correction: drop the mid-paren "his stated view" and the doubled quotes (cite the line number instead of re-quoting).
+
+### rg#6 LOW: overstatement check of the supersession itself
+Evidence: "§12.3 (React Hook Form) ... superseded by Spec 126 §11b.4": 126:1005 gives `@rjsf/mantine` forms; Zod is untouched (the plan's table says so, and the note does not claim it). The §11 line :280 reads "React Hook Form + Zod (§12.3)": superseded half, Zod half stays. The note says "superseded", not "removed"; the Zod half is not mentioned, which a reader could take as dropping Zod. One short clause ("Zod stays") would prevent it; the card did not ask for it.
+Smallest correction: leave out, or one clause.
+
+OPEN questions, what the record supports (no ruling):
+- Q1 cite Spec 33:47: the record supports Sonner as the toast library (Spec 33:45 and :47 operator-worded; domain-admin.md:20, :53). RR-0382 says Sonner "NOT answered" in this ruling and that the note states the fact and rules nothing. Citing 33:47 is a statement of record, but it makes the note longer (rg#1) and states something the card did not name.
+- Q2 second pointer note in section 11: the two lines :280 and :283 are covered by words in the section 12 note only if a reader goes on to section 12; the operator said "section 12". Nothing in the record rules on a second note.
+- Q3 red-first for a doc note: 08_agents.md:485 ("Every lock is proven in BOTH directions ... before red is claimed") is about locks; the note adds no lock. The card cites :462, which is another sentence. The page check is a live two-way gate.
+- Q4 scope D words: 126:138 and :147 support "Spec 126 does not govern scope D"; they do not support "these lines stand". The operator's words ("for the front end") do not name scope D. Section 12's Status line (:306) names `src/features/leads/` as the adoption scope.

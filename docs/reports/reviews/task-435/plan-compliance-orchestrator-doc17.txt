@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:06:59.099Z file_sha256=5481aa22b8a83975896850892ff7037d072068cad2088247fe41c357b5f5e1ec prompt_sha256=4f5cd4c5e5fd6637ea3f4da1a7cc94b235615fe1bdbcbd7792cbb9562862e602
+🔍 Lens review of docs/reports/reviews/task-435/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card, Description "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — plan WHAT "Head of section 12 puts it before 12.3, 12.5 and 12.7; section 11's lines at :280-285 sit above it and are NOT in section 12, so a reader of those meets the note only if they read on." — clause unmet: the single note is not beside the library lines the plan itself lists as superseded (:280 React Hook Form, :283 Shadcn Drawer), and the plan concedes a reader of the section 11 checklist never meets it — fix: land the note beside the library lines as the card says, under the section 11 checklist (:274) where :280-:285 sit, and record that placement against the ruling text before lock.
+
+BUG severity=HIGH — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan EXACT NOTE TEXT "§12.7 (Sonner) is not superseded: Spec 126 names no toast library, and this note rules nothing on it" against plan NOT IN SCOPE "no statement that 12.7 or section 12.6 is right or wrong" — clause unmet: the note rules that §12.7 is not superseded, a verdict on 12.7 that the plan's own NOT IN SCOPE forbids and that goes past the bare fact the card named — fix: delete "§12.7 (Sonner) is not superseded:" and leave only the fact sentences.
+
+DEFER severity=MED — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — plan "Spec 33 (dated note 2026-11-09, MF-42) records toasts as unchanged: `sonner`" with "OPEN 1 ... Recommended: (a) cite Spec 33:47 as a fact" — claim: a clause the card did not name is left open with a recommendation that adopts it, turning the fact statement into a pointer at a ruling — rationale: take option (b) unless the operator rules, one clause deleted, nothing the ruling named is lost.
+
+DEFER severity=MED — card "saying they are superseded for front-end work by Spec 126 section 11b.4" — plan note text "Scope D of Spec 126 §2.0 (`estate_other`, the lead-generation product: "inventory and seam only") is not governed by Spec 126; in `src/features/leads/` and the other scope D code these lines stand as written." with "OPEN 4 ... is his call" — claim: the note carves scope D front-end code out of "superseded for front-end work", which the card did not name, and leaves it open — rationale: scope D is front-end code, so the carve-out needs the operator's word before lock or the sentence goes.
+
+DEFER severity=LOW — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — plan note text "his stated view the same day, not a ruling: "I think teh spec 126 is more recent and is just an update of the engineering standards"" — claim: a non-ruling view is written into a governing spec that later reviews read, and the card names only the ruling — rationale: the "not a ruling" label mitigates it, and dropping the clause loses nothing the card named.
+
+DEFER severity=LOW — card "the note states as a fact ... Sonner is installed and in use" — plan "the first example path is wrong in my draft. The measured Sonner importers are `src/app/admin/control-panel/page.tsx` (not under `(maxbld)`) ... Replace the example list in the text above with them." against note text "`src/app/(maxbld)/admin/control-panel/page.tsx`" — claim: the EXACT NOTE TEXT under review carries a path the plan itself calls wrong, so the reviewed text is not the text to land — rationale: copy the corrected three paths into the note text so the executor cannot land the wrong citation.
+
+DEFER severity=LOW — pasted card "## Acceptance criteria" with no text under it — plan "DoD #5 on the card: "A ruling enters a row as a verbatim dated note."" and "124a:988 (quoted in the card DoD #8)" — claim: the note's form rests on card text I cannot see, so the DoD #5 and DoD #8 compliance the plan claims cannot be checked — rationale: paste the DoD lines or restate them so the form is checkable without guessing.
+
+REJECT — RR-0218 "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" — the change is accused of touching one spec only — this is a register entry, kind entry, which this list's header says "are NOT the operator's words as a ruling", and it names no spec.
+
+MET — card "prior text kept, nothing deleted" — plan ACCEPTANCE — "`git diff` shows only added lines in the engineering standards (no deletion, no edit of an existing line)".
+MET — card "citing the Spec 126 note" — plan EXACT NOTE TEXT — "as that spec's dated note 2026-11-09 (Spec 126 §5.4: ...)".
+MET — card "Sonner is installed and in use" — plan note text — "`sonner` is installed and imported in 19 files".
+MET — card "No other edit (the generated rule-lists page is regenerated with it)" — plan ORDER — "Regenerate the rule-lists page (`page --write`), check the diff is only the eng-all character counts and totals."
+MET — card Files "docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — plan FILES — same two paths, the page justified by the pre-commit "page --check".
+MET — RR-0382 "yes add" — plan note text — `operator, verbatim: "yes add"`.
+MET — card "one dated note" — plan WHAT — "One edit: add one blockquote dated note directly under the Status blockquote at the head of section 12".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  59466ms (59.5s)
+📊 Tokens — total: 31087, input: 18573, output: 12514, reasoning: 11061
