@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-22T20:24:00Z'
+updated_date: '2026-11-22T20:31:00Z'
 labels:
   - McFix
   - McFix Final
@@ -67,4 +67,6 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: migration 333: option (b): keep the seed row gate_unit_factor_tolerance, delete migrations/333_gate_unit_factor_tolerance.sql, release mig-333 in the ID ledger; npm run migrate already loads every seed key (scripts/seeds/apply-logic-variables.js; scripts/migrate.js near :324), and Spec 132 core.8 asks for a registered variable, not a migration. Fold order: this branch folds LAST, after the pilot, with the baseline at 3 rows.
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "My only direction is the task 367 the handbook rules are key."): this is the KEY card of the McFix Final plan: tests for handbook rules that have no machine check. Task-434 is merged into it. A read-only look at the lane branch comes first.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0386 · task-367 · Backlog; operator, verbatim: "a")
 <!-- SECTION:NOTES:END -->
