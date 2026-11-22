@@ -6,13 +6,19 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:24:00Z'
+updated_date: '2026-11-22T20:28:00Z'
 labels:
   - McFix
   - McFix V2
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-430/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-430/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-430/seat-integration-1.md
+  - docs/reports/reviews/task-430/seat-reality-check-1.md
+  - docs/reports/reviews/task-430/seat-regression-1.md
 type: build
 ordinal: 130012
 ---
@@ -277,6 +283,88 @@ The adjudicator of the 13 rows and 12 readings at plan is the grounder Cairn-Gro
 Section 16 as the planner wrote it (v1; the Files line above replaces it):
 
 Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
+
+Plan review round 1: 129 folded, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/reviews/task-430/GROUNDER-PLAN.md; triage docs/reports/reviews/task-430/TRIAGE-PLAN.md
+plan-compliance-agents-s7-s11#1 MED folded Result (round 1): TH
+plan-compliance-agents-s7-s11#2 MED folded Census (round 1, gre
+plan-compliance-agents-s7-s11#3 MED folded all four are RULED b
+plan-compliance-agents-s7-s11#7 MED folded FE-02 is added (its 
+plan-compliance-eng-all#1 MED folded Result (round 1): TH
+plan-compliance-eng-all#2 MED folded FE-02 is added (its 
+plan-compliance-eng-all#3 MED folded The words dropped fr
+plan-compliance-eng-all#4 MED folded The copy has a drift
+plan-compliance-five-words#1 MED folded Result (round 1): TH
+plan-compliance-five-words#3 MED folded The words dropped fr
+plan-compliance-inc-S#1 MED folded Result (round 1): TH
+plan-compliance-inc-S#2 MED folded The words dropped fr
+plan-compliance-inc-S#3 MED folded FE-02 is added (its 
+plan-compliance-inc-S#4 MED folded so C no longer depen
+plan-compliance-ms-S#1 MED folded Result (round 1): TH
+plan-compliance-ms-S#2 MED folded The words dropped fr
+plan-compliance-ms-S#3 MED folded A2 is STRUCK (round 
+plan-compliance-plan-protocol#1 MED folded Result (round 1): TH
+plan-compliance-plan-protocol#2 MED folded The words dropped fr
+plan-compliance-plan-protocol#3 MED folded A2 is STRUCK (round 
+plan-compliance-queue-137#1 MED folded the closing commit h
+plan-compliance-queue-137#2 MED folded the closing commit h
+plan-compliance-queue-137#3 MED folded the task file edited
+plan-compliance-queue-137#4 MED folded M-246, prior text ke
+plan-compliance-queue-137#5 MED folded all four are RULED b
+plan-compliance-queue-137#6 MED folded Result (round 1): TH
+plan-compliance-surface-126-p1#1 MED folded Result (round 1): TH
+plan-compliance-surface-126-p1#2 HIGH folded Commit 0 (records), 
+plan-compliance-surface-126-p1#3 MED folded an Operator-Ruling l
+plan-compliance-surface-126-p1#4 MED folded MF-95, the next free
+plan-compliance-surface-126-p2#1 MED folded Result (round 1): TH
+plan-compliance-surface-126-p2#2 MED folded FE-02 is added (its 
+plan-compliance-surface-126-p3#1 MED folded Result (round 1): TH
+plan-compliance-surface-126-p3#2 MED folded The words dropped fr
+plan-compliance-surface-126-p3#3 MED folded A Current reading is
+plan-compliance-surface-126-p4#1 MED folded Result (round 1): TH
+plan-compliance-surface-126-p4#2 MED folded The words dropped fr
+plan-compliance-surface-126-p5#1 MED folded Result (round 1): TH
+plan-compliance-surface-126-p5#2 MED folded FE-02 is added (its 
+plan-compliance-surface-126-p5#3 MED folded the seam IS in Spec 
+plan-compliance-surface-126-p5#6 MED folded The words dropped fr
+plan-compliance-surface-127#1 MED folded Result (round 1): TH
+plan-compliance-surface-127#2 MED folded The words dropped fr
+plan-compliance-surface-127#3 MED folded The libraries row sa
+plan-compliance-surface-128#1 MED folded Result (round 1): TH
+plan-compliance-surface-128#2 MED folded No commit message ho
+plan-compliance-surface-128#4 MED folded the 13 rows of 17.2 
+plan-compliance-surface-128#6 MED folded Measured in memory b
+plan-compliance-surface-128#7 MED folded The words dropped fr
+plan-compliance-surface-135-p1#1 MED folded Result (round 1): TH
+plan-compliance-surface-135-p1#2 MED folded the 13 rows of 17.2 
+plan-compliance-surface-135-p1#4 MED folded 13 new lines (the id
+plan-compliance-surface-135-p2#1 MED folded Result (round 1): TH
+plan-compliance-surface-135-p2#3 MED folded The words dropped fr
+plan-compliance-surface-136#1 MED folded Result (round 1): TH
+plan-compliance-surface-136#2 MED folded FE-02 is added (its 
+plan-compliance-surface-136#4 MED folded The words dropped fr
+plan-error-paths#1 MED folded a status cell that c
+plan-error-paths#2 MED folded must be the date of 
+plan-error-paths#3 MED folded an authored ellipsis
+plan-error-paths#4 MED folded compute the expected
+plan-error-paths#6 MED folded Whichever lands seco
+plan-plan-review-deepseek#3 MED folded Whichever lands seco
+plan-plan-review-deepseek#5 MED folded The copy has a drift
+plan-plan-review-deepseek#8 MED folded a status cell that c
+plan-plan-review-deepseek#16 MED folded Spec 133's 13 clippe
+plan-ux#2 MED folded Result (round 1): TH
+plan-ux#3 MED folded the 13 rows of 17.2 
+ig#1 HIGH folded Commit 0 (records), 
+ig#2 HIGH folded The page docs/report
+ig#3 MED folded Whichever lands seco
+ig#4 MED folded under Phase 2 (mcfro
+rc#1 MED folded Result (round 1): TH
+rc#2 MED folded The libraries row sa
+rc#3 MED folded The Full cell quotes
+rc#4 MED folded The render-smoke cla
+rc#5 MED folded FE-29 is added (its 
+rg#2 MED folded A Current reading is
+rg#3 MED folded R-03 stays ACCEPTED 
+rg#4 MED folded Known standing excep
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes

@@ -1,11 +1,11 @@
 ---
 id: TASK-398
 title: FOLD.CHECK The close check runs on a branch range before a fold
-status: RUNNING
+status: DROPPED
 assignee:
   - '@lane-BL-FOLDCHECK'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-22T20:24:00Z'
+updated_date: '2026-11-22T20:29:00Z'
 labels:
   - McFix
   - McFix Z
@@ -43,4 +43,6 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 2026-11-20 taken on the board at lane launch (lane BL-FOLDCHECK, worktree /Users/brettpreston_macmini/Buildo-wt-foldcheck, branch wf1/inc1b-foldcheck), RR-0240
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): to be withdrawn after a read-only look at what the lane branch holds (unbuilt gate work). Status not changed yet.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."): withdrawn after the read-only look of 2026-11-22: branch wf1/inc1b-foldcheck (2808793b7) is an ancestor of the board, 0 unlanded commits, no check-fold code was ever written. Nothing is lost. The lane worktree and branch are left as they are (worktrees are removed only through the operator).
 <!-- SECTION:NOTES:END -->

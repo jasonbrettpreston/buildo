@@ -3,11 +3,11 @@ id: TASK-371
 title: >-
   ENFORCE.1 If it is not enforced it does not get done: the six enforcement
   measures, reviewed plan first
-status: RUNNING
+status: DROPPED
 assignee:
   - '@lane-BL-ENFORCE'
 created_date: '2026-11-20T13:31:00Z'
-updated_date: '2026-11-22T20:24:00Z'
+updated_date: '2026-11-22T20:29:00Z'
 labels:
   - McFix
   - McFix E
@@ -75,4 +75,6 @@ Operator 2026-11-20 (verbatim): "Essentially if its not enforced it doesnt get d
 2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): to be withdrawn after a read-only look at what the lane branch holds (unbuilt gate work). Status not changed yet.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."): withdrawn after the read-only look of 2026-11-22: branch wf1/inc1b-enforce (8448e0db5) holds 0 commits the board lacks; only plan records were made and they are on the board (docs/reports/lanes/2026-11-20/BL-ENFORCE/); nothing was built. Kept: the scratch file ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md, which tasks 379 to 388 and 405 cite.
 <!-- SECTION:NOTES:END -->
