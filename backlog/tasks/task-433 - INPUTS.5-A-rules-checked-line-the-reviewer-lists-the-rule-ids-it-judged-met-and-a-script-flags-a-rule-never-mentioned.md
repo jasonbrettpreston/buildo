@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MET433'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:46:00Z'
+updated_date: '2026-11-22T17:50:00Z'
 labels:
   - McFix
   - McFix V2
@@ -167,4 +167,6 @@ ACCEPTANCE (lane BL-MET433, 2026-11-22, commit 5559f1d21). 1: red.out = 8 failin
 2026-11-22 fix round 1 (grounder Cairn-Ground-O433, RR-0369): control (e) pinned string changed first, red attempt next
 
 2026-11-22 fix 1 built: README:159/160, lens-compliance.md:76, rule-lists.mjs:864 printed line, test control (e) string and :1853 cite (F1, F2 and the grounder's optional wording items). Acceptance 4 (orchestrator, live, on the edited template at 5559f1d21): one live compliance review of the surface-136 list (44 ids) printed 'Rules met:' with 36 real ids and unmentioned printed '8 of 44 rule ids are in no finding and not in the Rules met line: fe.04, fe.12, fe.17, fe.21, fe.25, fe.26, fe.39, fe.44' (the 8 OWED rows of Spec 136); files in ~/Buildo-scratch/lanes-20261119/inc1b/met433-lane/live/; one run, n=1.
+
+2026-11-22 output round 2 filed after fix 1 (06cfb3f23): 42 findings in 11 outputs (findings --dir), untriaged; grounder owed, task RUNNING
 <!-- SECTION:NOTES:END -->

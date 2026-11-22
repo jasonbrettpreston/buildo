@@ -1,19 +1,26 @@
 ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.724Z file_sha256=0b9bf26c2a5919e65c4e96d1c95e0cce637310ca0fe00cf8ca65418b9758dc55 prompt_sha256=aec3b8b881d8be5e8d1eb46840846d4f158e091572e56d35b7bbf33404b1c418
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.851Z file_sha256=0babc780914aad914716d480f395b0a3fb6fed5ff3990a610eb818740249cffb prompt_sha256=27300485bb93c2b4ef05b60041c08778d96f811239aa6b58a25a9406db259da6
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — task-433 card — "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/README.md:160 "each ends with a `VERDICT:` line" — the template now makes `Rules met:` the last line of the closing block, so a compliance output no longer ends with the `VERDICT:` line that the README (a file on this task's Files line, left unamended at :160) says the close enforces; the close script is not in this diff, so its parser cannot be seen — put `Rules met:` before the `VERDICT:` line, or amend README:160 to state the new closing order
-DEFER severity=MED — task-433 card — "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the mention test runs over the whole output text, so an id named in prose, in a cited quote or in the header counts as mentioned although it is in no finding and not in the Rules met line, and the grounder report under-flags — test only finding lines, MET/REJECT lines and the Rules met line, as README:159 "appear in no finding, MET or REJECT line and not in that line" states
-DEFER severity=MED — RR-0381 — "the lane reviews with a copy of the launch-commit compliance template" — NONE — nothing in the plan's Implementation Notes or in ACCEPTANCE 1-4 records that this lane's own compliance reviews use the launch-commit copy of lens-compliance.md, the very file this lane edits, so the named ruling is absorbed by no step — add the step and its evidence (which template copy produced this lane's out-compliance-*.txt) to the plan and the lane report
-DEFER severity=LOW — task-433 card — "No verdict per rule" — .claude/review-templates/README.md:159 "appear in no finding, MET or REJECT line and not in that line" — the README and control (c) of rule-lists.logic.test.ts "MET — fe.03 — a.ts:2 — ok" make per-rule MET/REJECT lines part of the output the grounder reads, while the template changed here defines no such line and the card forbids a per-rule verdict — drop MET/REJECT from the README and the test, or state they are tolerated legacy forms only
-MET — task-433 card, the template asks for one closing line of ids judged met — .claude/review-templates/lens-compliance.md:74 — closing block adds "Rules met: <rule ids, comma separated>" after `Clauses checked` with the none/never-invent sentence at :77 and the control tests at review-templates.logic.test.ts
-MET — task-433 card, ids of the sent handbook read from the sent list, not a hand list — scripts/analysis/rule-lists.mjs:476 — ids are taken from the lens input's list part via parseLensInput, `--in` defaulting to `in-<output name>` matching the close check's input naming
-MET — task-433 card, no verdict per rule — scripts/analysis/rule-lists.mjs:478 — the function returns ids/missing/hasLine only and the CLI prints a count plus the missing ids
-MET — README:159, a report for the grounder, not a gate — scripts/analysis/rule-lists.mjs:857 — the `unmentioned` branch only prints, dies only on a missing --out or a non-lens input, and no close script is touched by this diff
+BUG severity=HIGH — RR-0381 "Task-433: the lane reviews with a copy of the launch-commit compliance template (grounded fix approved)" — task-433 Implementation Notes "Acceptance 4 (orchestrator, live, on the edited template at 5559f1d21)" — the only review evidence in the material was produced with the lane's own edited template, not the launch-commit copy, so the clause that stops this lane's template change from being reviewed by itself is not shown met — re-run the compliance lens for this lane against the launch-commit copy of lens-compliance.md and file those outputs as the lane evidence.
+
+BUG severity=MED — task-433 card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — .claude/review-templates/README.md:+160 "prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text)" — the card names two places, the code counts any occurrence anywhere in the output, so a rule id mentioned in passing prose but never judged is silently not flagged — match only finding lines and the Rules met line, or amend the card to "appear nowhere in the output".
+
+DEFER severity=MED — .claude/review-templates/README.md:+159 "each holds a `VERDICT:` line" — NONE, check-lane-close.mjs is a protected path, is not in this diff and cannot be seen — the close contract for a compliance output is relaxed in prose while the hook that enforces it is unchanged, so whether an output whose last line is the mandated Rules met line closes cannot be established from the material — quote the hook's VERDICT test in the report, or keep the wording and place the new line where the hook tolerates it.
+
+DEFER severity=LOW — task-433 card "one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:+78 "The last line names by id the rules of the pasted list you judged met and raised no finding on." vs src/tests/backlog/rule-lists.logic.test.ts "const withLine = `${BODY}Rules met: fe.01, fe.12\n---\ntook 12.3s\n`;" — the tool trailer lands after the Rules met line, so the mandated line is not literally the output's last line and README's "ends with a line" is loose — say "the last review line" and "holds a Rules met line".
+
+MET — task-433 card "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:+73 "Rules met: <rule ids, comma separated>" — the closing block carries the line plus the id form, the none case and the never-invent instruction.
+
+MET — task-433 card "No verdict per rule." — .claude/review-templates/README.md:+160 "a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it)" — the subcommand only prints missing ids and exits 0; no per-rule verdict is produced.
+
+MET — task-433 card "a small script lists rule ids of the sent handbook" — scripts/analysis/rule-lists.mjs:+466 "export function unmentionedRules(inputText, outputText)" — the ids are taken from the sent list part of the lens input, not from a guess at the repo.
+
+MET — task-433 card Files line — the diff touches exactly .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md and the two named test files; nothing outside the Files line was changed.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 7   Unmet: 4
+Clauses checked: 8   Unmet: 2
 
 ---
-⏱  99049ms (99.0s)
-📊 Tokens — total: 31632, input: 12088, output: 19544, reasoning: 18675
+⏱  73050ms (73.0s)
+📊 Tokens — total: 27614, input: 12844, output: 14770, reasoning: 13922

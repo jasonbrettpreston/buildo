@@ -1,30 +1,23 @@
 ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.723Z file_sha256=1bbed010e6f6d7335c72588e72af0b47610ecfd0c62341f21d35c5d93863a5c5 prompt_sha256=0c032e815f384fe2a8e982ed68f7b6b348c506f50cd8e698ecebd49a8cb8d050
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.873Z file_sha256=86a8874e86aafea550b2d12f08f45ecdda9cbdeaafcfee753a1bf6f4257a4458 prompt_sha256=073a7882884340b4717651a18e420bdfb0a667210c6fb754c861970c4c4bdb88
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — README step 5, close requirements "each ends with a `VERDICT:` line" — .claude/review-templates/README.md, step 4 added text "the compliance lens output ends with a line `Rules met: <rule ids>`" — the README now asserts two different last lines for the same compliance output, and a close check reading the step-5 sentence literally would refuse every compliance close, cannot see scripts/hooks/check-lane-close.mjs (protected, not in the diff) — amend the step-5 sentence to name the Rules met line as the final line, or rule which line is last and say so in step 4.
+BUG severity=HIGH — RR-0381 "Task-433: the lane reviews with a copy of the launch-commit compliance template" — .claude/review-templates/README.md:158 "`scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md`" — the process text still points every compliance run at the live template file this diff edits, and nothing in the diff or the lane notes records a launch-commit copy, so the ruling has no implementer and the notes' own live review is "on the edited template at 5559f1d21" — add a README step-3 line that a lane which changes a lens template reviews with a copy of the launch-commit version, names that copy, and record the lane's own compliance run against it.
 
-DEFER severity=LOW — task-433 Description "appear neither in a finding nor in that line" — .claude/review-templates/README.md, step 4 added text "the rule ids of the sent list part that appear in no finding, MET or REJECT line and not in that line" — the script treats a MET or REJECT line as a mention, a third and fourth place the card did not name, so a rule the reviewer only dismissed drops out of the report with no finding behind it — get a ruling on the wider test or narrow it to the card's two places.
+DEFER severity=MED — task-433 Description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the test runs on the whole output, so an id named in prose, a REMARKS block or the REVIEW header counts as mentioned and is never flagged, which is a narrower set than the card's "a finding or that line" and contradicts the printed wording at :865 — restrict the mention test to finding lines (BUG/DEFER/MET/REJECT) plus the Rules met line, or get the wider reading ruled and printed.
 
-DEFER severity=LOW — task-433 Description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs "const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)]..." — an id that is not a lowercase-and-dot-number, or is bold at the start of a line without a bullet marker (the template says "the bold id that starts a line of the pasted rule list"), is invisible, and the pasted list in this run (doc-2 Increment-S, whose ids read SRCH.A6, LS.12, GAP.13, MF-53) yields none, so such a part gets a clean "holds no rule ids, nothing to report" instead of a flag — widen the pattern to the handbook's id style, or print a warning when a long list part yields no ids.
+MET — task-433 Description "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 — the closing block adds "Rules met: <rule ids, comma separated>" and the id/none/never-invent sentence at :76, pinned by the review-templates test.
+MET — task-433 Description "a small script lists rule ids" — scripts/analysis/rule-lists.mjs:473 — unmentionedRules plus the unmentioned subcommand at :857, exercised by T1, T2 and controls (a) to (e).
+MET — task-433 Description "No verdict per rule" — scripts/analysis/rule-lists.mjs:865 — the command prints counts and ids only, no per-rule verdict.
+MET — task-433 Files line — the diff — exactly the five named paths change: lens-compliance.md, rule-lists.mjs, README.md, rule-lists.logic.test.ts, review-templates.logic.test.ts.
+MET — task-433 Description "a script flags a rule never mentioned" — .claude/review-templates/README.md:159 — the README documents the command, its exit 0 and that nothing at close reads it, matching the card's report-not-gate framing.
 
-DEFER severity=NIT — task-433 Description "the compliance template asks for one closing line of the rule ids judged met" (no clause names an input-path flag) — scripts/analysis/rule-lists.mjs "const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));" — adds a `--in` override no clause asks for — harmless but it is behaviour the card did not name, so record it or drop it.
+REJECT — Increment S requirements "A Search page / B Address confusion / ... / G Hand-off to the report" — accused of unmet search-page clauses — the diff changes only review tooling and its tests, with no search page, route or data element touched, so none of these clauses binds this change.
+REJECT — task-433 Description "No verdict per rule" — accused that the Rules met line is a per-rule verdict — it names only the ids judged met and carries no pass or fail per rule, so it is what the card asks for.
 
-MET — task-433 Description step 6 "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md "Rules met: <rule ids, comma separated>" placed after "Clauses checked: <n>   Unmet: <n>" in the closing block — the closing line asked for is present and last in that block.
-
-MET — task-433 Description "No verdict per rule." — scripts/analysis/rule-lists.mjs unmentioned branch "? r.missing.join(', ') : 'none'" with exit 0 — prints a missing-id list only, no per-rule verdict is emitted.
-
-MET — task-433 Files "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — the diff touches exactly those five paths and no sixth.
-
-MET — README step 4 "a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it)" — code exits 0 with findings, 2 only on missing --out, 1 only on a non lens input; nothing was added to the close path.
-
-MET — README step 4 "`Rules met: none` when the list has none" and template "If the pasted list has no such ids, or none was met, write `Rules met: none`" — CLI branch "the sent list part holds no rule ids, nothing to report", test control (e) — the no-id case is handled without inventing an id.
-
-MET — RR-0378 "Plan approved. We are running right now on this? Add the tasks?" naming task-433 — the diff implements step 6 only (template line, script subcommand, README, two test files) — no other step of the ruling is implemented here.
-
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 0
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
 
 ---
-⏱  58623ms (58.6s)
-📊 Tokens — total: 26069, input: 14351, output: 11718, reasoning: 10663
+⏱  126122ms (126.1s)
+📊 Tokens — total: 42208, input: 15107, output: 27101, reasoning: 26330

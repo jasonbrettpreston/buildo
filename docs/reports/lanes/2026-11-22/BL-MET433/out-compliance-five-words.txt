@@ -1,22 +1,28 @@
 ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.723Z file_sha256=e2f73b08abeacf4d0f8650302e4952733c8239f24be769e61f93791f11d89486 prompt_sha256=ea94e0b8e3f452824dec5891830cc6fc24012f9aa8c63b210df29764f21ab72f
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.854Z file_sha256=12268f5eb333878abbf51e74a9ebd587c47c79232841b14dbccf935474138f89 prompt_sha256=32a6c718b408b888fb2204d8d7d1fa2aa399dc5f2cc2c0ddec3232684979afad
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-five-words.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — task-433 Description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:476 "const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];" — only lowercase.digits bold ids are collected, so the lane's own control (e) calls "**slug**" a part with no rule ids and the acceptance records "on the five-words list (no ids) ... holds no rule ids", while the template and README this same diff adds define a rule id as the bold id that starts a list line; on the list sent for this very run the report is a no-op — collect every bold id at line start, or narrow the template and README definition to the dotted form and say so.
+DEFER severity=MED — card INPUTS.5 "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:475 "const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];" — only name.N bold bullets are read, so on the list that governs this very task (the five-words Glossary, whose ids are PH-0, #44, Gate A, PURITY-G0, G-2, LDG-10) the script reports nothing to report and no never-mentioned id is ever flagged, the card names no id shape — print the bold ids of the other shapes as uncovered, or widen the pattern to the shapes the sent lists use, instead of printing nothing to report.
 
-DEFER severity=MED — task-433 Description "appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the mention test scans the whole output text, so an id echoed in prose or named only on a MET or REJECT line counts as covered (test control (c) shows this), though the card allows only findings and the Rules met line; ids the reviewer never really checked drop out of the report — restrict the test to BUG and DEFER lines plus the Rules met line, or write the wider rule into the card.
+DEFER severity=MED — card INPUTS.5 "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:864 "rule ids are in no finding and not in the Rules met line:" — the printed line says the check is findings plus Rules met while the match is the whole output text (README:159 "or any other text"), so one loose prose mention silences an id and the printed wording hides that — either restrict the match to the BUG, DEFER, MET, REJECT and Rules met lines or print appear nowhere in the output.
 
-DEFER severity=MED — README:160 "each ends with a `VERDICT:` line" — README:159 "the compliance lens output ends with a line `Rules met: <rule ids>`" with lens-compliance.md:73 "Rules met: <rule ids, comma separated>" placed after the Clauses checked line — the output the template now prescribes ends with Rules met, not VERDICT, so the close rule and the template disagree; cannot see scripts/hooks/check-lane-close.mjs to know which ending it tests — move Rules met above the VERDICT line, or update the §5 sentence and the check in the same change.
+DEFER severity=LOW — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals" — NONE — the notes record output round 1 with 11 outputs and 41 findings and then only "F1, F2 and the grounder's optional wording items" fixed, so no pasted line shows a round-1 HIGH, CRIT or MED left unaddressed and I cannot see the triage — attach the FINDINGS.md and GROUNDER.md triage so every one of the 41 findings carries a CONFIRMED, REJECTED or CONFLICT line.
 
-MET — task-433 Description "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 — the closing block gains the Rules met line with the ids-only, none and never-invent rules.
+DEFER severity=LOW — Glossary "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists.logic.test.ts:960 "describe('task-433: unmentioned prints the rule ids of the sent list part that appear nowhere in the output (a report, not a gate)'" — the new tests name task-433, INPUTS.5 and RR-0378 step 6 but no rule id and no declared alias, so under the pasted glossary they are no rule's lock — name the rule id or declared alias in the test title and comment, or record that this change adds no lock.
 
-MET — task-433 Description "No verdict per rule" — scripts/analysis/rule-lists.mjs:476 — the subcommand prints only the ids missing from the findings and the met line, emits no per-rule verdict, and no close hook is added.
+MET — card INPUTS.5 "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:76 — the closing block gains "Rules met: <rule ids, comma separated>" after Clauses checked, with the ids-only, none and never-invent instruction.
 
-MET — task-433 Description "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — the diff touches exactly these five paths and nothing else.
+MET — card INPUTS.5 "No verdict per rule" — .claude/review-templates/README.md:159 — the tool is documented and built as "a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it)", no PASS or FAIL per rule.
 
-VERDICT: FAIL
-Clauses checked: 6   Unmet: 2
+MET — card "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — src/tests/backlog/rule-lists.logic.test.ts:959 — the diff touches exactly those five paths and no other file.
+
+MET — Glossary "a check is a `step-validate` invariant or gate token" — .claude/review-templates/README.md:159 — unmentioned is added as a CLI report only, not to step-validate and not to the close, so it is not smuggled in as a check.
+
+REJECT — card INPUTS.5 "No verdict per rule" — the Rules met line is accused of being a per-rule verdict — not a real issue: the card itself orders that line ("the rule ids judged met") and the script prints no PASS or FAIL per rule.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
 
 ---
-⏱  134280ms (134.3s)
-📊 Tokens — total: 36814, input: 9687, output: 27127, reasoning: 26393
+⏱  110869ms (110.9s)
+📊 Tokens — total: 33200, input: 10443, output: 22757, reasoning: 21733

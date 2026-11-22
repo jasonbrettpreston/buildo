@@ -1,21 +1,26 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.724Z file_sha256=5540af65e654ad9b8a6707464f9e701be61662cde40733ad82f34ad95743faf6 prompt_sha256=b3ba25c602bd1f0a6b5e2469cc59313816159c8c9fa0e669331a5d5f746ccae0
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.850Z file_sha256=096d3622cd969985f3dd7621ecaf7b568f5189d6d1af732b7e444b08c4e97729 prompt_sha256=cd8c251bd679871aa77616b0d62daa927a290f037893bd139bdfb1435bfbff95
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — task-433 card, "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:476 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the clause counts a mention only in a finding or in the Rules met line, but the code tests the whole output text, so an id written in prose, in a summary list or on a NIT line is treated as mentioned and is never flagged — match only the finding lines plus the Rules met line (as the README line this same diff adds says), or change the README and the card wording
-BUG severity=MED — README step 5, pasted line of hunk @@ -156,7 +156,7 @@ "or parts `-p1..-pK`; a stage holding both forms is refused; each ends with a `VERDICT:` line)" — .claude/review-templates/lens-compliance.md:72 "Rules met: <rule ids, comma separated>" is now the last line of the closing block, so the README's own statement about the same output form ("each ends with a VERDICT line") is contradicted and not updated, and a close that reads the last line would refuse the new outputs (check-lane-close.mjs not pasted, cannot see) — amend that sentence to name both closing lines, or state that any VERDICT line is read rather than the last
-DEFER severity=LOW — lens-compliance.md:75 "A rule id is the bold id that starts a line of the pasted rule list (for example fe.12, core.3, m.431)" — scripts/analysis/rule-lists.mjs:475 "const ids = [...new Set([...p.listPart.matchAll(/^\\s*[-*]\\s+\\*\\*([a-z][a-z0-9-]*\\.\\d+)\\*\\*/gm)].map((m) => m[1]))];" — the template tells the reviewer any bold id that starts a line, the code reads only a bulleted list line whose bold run ends at the id, so an id in a table cell, on a plain line or in a bold run with trailing text is written by the reviewer and invisible to the report — say "starts a list line" in the template as the README does, or widen the regex
-DEFER severity=LOW — task-433 card, "a small script lists rule ids of the sent handbook" — scripts/analysis/rule-lists.mjs:860 "const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));" — the default --in name is exercised only by tests that write the input file themselves (src/tests/backlog/rule-lists.logic.test.ts "fs.writeFileSync(path.join(d, `in-${name}`), input);") and lens-input's own output name is not pasted, so the default against a tool-made input cannot be seen — add one run or test on a real lens-input output, or make --in required
-MET — task-433 card, "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:72 — the closing block now ends with `Rules met: <rule ids, comma separated>` and :75 fixes ids only, `Rules met: none` for a list with none, never invent an id
-MET — task-433 card, "No verdict per rule" — src/tests/backlog/rule-lists.logic.test.ts "T2 plant: flagged ids still exit 0" — flagged ids produce a report and exit 0, no per-rule verdict and no gate
-MET — Spec 137 §4 task-423 note, "The coupling between the specs and the tooling is rule-lists.mjs and check-lane-close.mjs only; no table key is added" — scripts/analysis/rule-lists.mjs:857 — the change adds a subcommand in the helper and no rule-lists.json key, and nothing in the close reads it
-MET — Spec 137 §4 rule 10, "the hash and count are recomputed at close, so an output edited after grounding is refused" — src/tests/backlog/rule-lists.logic.test.ts "T4 (green-both lock, parsers unchanged)" — the Rules met line leaves the strict and loose finding counts unchanged
-MET — task-433 Files line, "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — the diff's five paths — exactly the Files line, no path outside it
-REJECT — RR-0381 "the lane reviews with a copy of the launch-commit compliance template" — that the diff changes the template the lane's own close review must use — RR-0381 requires the launch-commit copy, so the lane's own output keeps the old form without a Rules met line, and nothing in the close reads the new line
+BUG/DEFER findings:
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 3
+DEFER severity=LOW — task-433 description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the test is run over the whole output text, so an id that occurs only in passing prose (not in a finding line, not in the Rules met line) is never reported, which is wider than the clause's "neither in a finding nor in that line"; README:159 states this broadening as intended ("or any other text") but no pasted ruling names it — either restrict the match to finding lines (BUG/DEFER/MET/REJECT) plus the Rules met line, or get the broadening named in a ruling and quoted beside the tool.
+
+REJECT — RR-0381 "the lane reviews with a copy of the launch-commit compliance template (grounded fix approved)" — accused that the live compliance run used the edited template at 5559f1d21 rather than the launch-commit copy — that run is the implementation note's "Acceptance 4 (orchestrator, live, on the edited template at 5559f1d21)", the orchestrator's acceptance check, not the lane's own compliance review, and the task is left RUNNING with "grounder owed".
+
+MET lines:
+
+MET — task-433 Files line "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — .claude/review-templates/lens-compliance.md:76, scripts/analysis/rule-lists.mjs:473, .claude/review-templates/README.md:159, both test files — the diff touches exactly those five paths and nothing else.
+MET — task-433 "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 "Rules met: <rule ids, comma separated>" with the sentence at :76 fixing ids only, `none`, and never invent.
+MET — task-433 "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:473 "export function unmentionedRules(inputText, outputText)" and the CLI branch at :857 printing ": the sent list part holds no name.N bullet rule ids" or the missing count.
+MET — task-433 "No verdict per rule." — .claude/review-templates/lens-compliance.md:76 "The last line names by id the rules of the pasted list you judged met and raised no finding on." and the tool prints ids plus a count only.
+MET — Spec 137 task-423 note "no table key is added, so no Cross-Spec Dependencies row changes" — scripts/analysis/rule-lists.json absent from the diff — the change adds no table row, glob, list or key.
+
+```
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+```
 
 ---
-⏱  67603ms (67.6s)
-📊 Tokens — total: 32040, input: 18603, output: 13437, reasoning: 12245
+⏱  70413ms (70.4s)
+📊 Tokens — total: 33721, input: 19359, output: 14362, reasoning: 13625
