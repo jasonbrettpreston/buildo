@@ -794,6 +794,31 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
   });
 });
 
+// task-437 T2 (RR-0385 items 3 and 4, decision-170; Spec 08 dated note 2026-11-22): a SURVIVE-THE-FIX (green-both) lock, stated as such
+// per 08_agents.md:485: green on today's code by design (check-lane-close.mjs is not changed); both directions are inside it.
+describe('task-437 T2: the round outcome forms (outcomeErrors, pure; survive-the-fix lock)', () => {
+  const reason = 'recorded for later, the finding is a wording point only';
+  const run2 = async (sev: string, triageText: string, mode: 'close' | 'plan', facts: Record<string, unknown> = goodFacts) => {
+    const { outcomeErrors } = await loadMod();
+    return outcomeErrors({ verdicts: V('CONFIRMED'), triageText, lensKinds: K('BUG', sev), facts, mode }).errors.join('\n');
+  };
+  it('a CONFIRMED MED with pile is refused in close mode and in plan mode', async () => {
+    for (const mode of ['close', 'plan'] as const) expect(await run2('MED', `id#1 pile:"${reason}"`, mode)).toMatch(/pile is not allowed for a MED BUG finding \(wontfix and pile are for LOW and NIT only\)/);
+  });
+  it('control: ruling:RR-0385 passes for a MED when the decision record exists, in close mode and in plan mode', async () => {
+    for (const mode of ['close', 'plan'] as const) expect(await run2('MED', 'id#1 ruling:RR-0385', mode)).toBe('');
+  });
+  it('the same ruling:RR-0385 line is refused when the decision record is missing (the second direction)', async () => {
+    for (const mode of ['close', 'plan'] as const) expect(await run2('MED', 'id#1 ruling:RR-0385', mode, { ...goodFacts, decisionExists: () => false })).toMatch(/RR-0385 has no decision record/);
+  });
+  it('a LOW with pile passes in plan mode', async () => {
+    expect(await run2('LOW', `id#1 pile:"${reason}"`, 'plan')).toBe('');
+  });
+  it('the same ruling:RR-0385 line also passes for a HIGH (the note\'s "any severity" sentence)', async () => {
+    for (const mode of ['close', 'plan'] as const) expect(await run2('HIGH', 'id#1 ruling:RR-0385', mode)).toBe('');
+  });
+});
+
 describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
   const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
   it('control: a lane with a valid committed context and the three references closes', () => {

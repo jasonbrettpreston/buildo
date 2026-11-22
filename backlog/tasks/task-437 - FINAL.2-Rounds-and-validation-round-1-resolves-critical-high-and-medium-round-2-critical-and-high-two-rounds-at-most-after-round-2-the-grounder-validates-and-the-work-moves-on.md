@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ROUNDS437'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:32:00Z'
+updated_date: '2026-11-22T21:43:00Z'
 labels:
   - McFix
   - McFix Final
@@ -40,7 +40,7 @@ ordinal: 137012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; "Validate the plan and the output as you mentioned as per your criteria." THIS TASK: a dated note in Spec 08 with the rule and the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push); the close check accepts two output rounds (it supersedes the third round of RR-0371); the grounder brief says LOW and NIT are recorded, not folded. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -197,4 +197,12 @@ Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder d
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-ROUNDS437, worktree /Users/brettpreston_macmini/Buildo-wt-rounds437, branch wf1/inc1b-rounds437), RR-0240
+
+2026-11-22 tests first (lane BL-ROUNDS437): T1 (backlog-lane.logic.test.ts, dry-run extra states the two-round rule) written to be red on today's brief text; T2 (check-lane-close.logic.test.ts, new describe block) is a survive-the-fix (green-both) lock per 08_agents.md:485, green on today's code by design. Red attempt: only the tests and this task file staged.
+
+2026-11-22 red seen (lane BL-ROUNDS437): the commit attempt with only the two test files and this task file staged was refused by the pre-commit related run at T1's first assertion (backlog-lane.logic.test.ts:169, expected extra to contain 'two output rounds at most'); 1 failed, 226 passed, so T2 (the survive-the-fix lock) was green as designed. Build: backlog-lane.mjs layout sentence replaced and the ROUNDS sentence appended to the grounder text, as the plan's CODE CHANGE says; the dated note added to 08_agents.md after the task-399 fix-round note (now :356); the generated page rule-lists-by-kind.md regenerated with rule-lists.mjs page --write and added to the description Files line (plan LANDING).
+
+2026-11-22 STOPPED (lane BL-ROUNDS437): the plan cannot be built as written. The work commit was refused by the pre-commit related run: 1 failed, 226 passed; the failing test is the existing lock backlog-lane.logic.test.ts:280 (task-407 V2.LAYOUT fold, commit bbb0b31f2) expect(e).not.toContain('TRIAGE.md'), in 'a build on a surface: ... a separate grounder rules in GROUNDER.md; no security'. The sentence of the plan that breaks it is CODE CHANGE item 2, the grounder append: '... gets the outcome line `<id> ruling:RR-0385` in TRIAGE.md (the grounder decides it, the lane does not rule) ...' (wording from QUESTIONS-RULED.md Q7). Nothing is committed; the edits stay staged in the worktree. Needs a ruling: reword the appended sentence without the file name TRIAGE.md, or change the task-407 lock (outside the plan). Grounder or orchestrator owed; task stays RUNNING.
+
+2026-11-22 resumed (lane BL-ROUNDS437) on the plan grounder ruling Q19 (QUESTIONS-RULED.md, board d8689023c): option (a), ' in TRIAGE.md' removed from the grounder append sentence in backlog-lane.mjs; no test line changed; the task-407 lock backlog-lane.logic.test.ts:280 stands and is the proof. post-build#1 CONFIRMED MED, recorded under RR-0385.
 <!-- SECTION:NOTES:END -->
