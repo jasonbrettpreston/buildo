@@ -7,7 +7,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:19:00Z'
+updated_date: '2026-11-22T21:30:00Z'
 labels:
   - McFix
   - McFix Final
@@ -177,4 +177,6 @@ rc#2 MED folded for a finding of any
 rg#1 MED folded when a second round 
 rg#2 MED folded gives the reason and
 rg#4 MED folded A survive-the-fix (g
+
+Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/reviews/task-437/GROUNDER-PLAN.md; triage docs/reports/reviews/task-437/TRIAGE-PLAN.md
 <!-- SECTION:PLAN:END -->
