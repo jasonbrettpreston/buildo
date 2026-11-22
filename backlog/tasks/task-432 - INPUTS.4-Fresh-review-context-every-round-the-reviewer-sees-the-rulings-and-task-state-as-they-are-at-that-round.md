@@ -3,11 +3,11 @@ id: TASK-432
 title: >-
   INPUTS.4 Fresh review context every round: the reviewer sees the rulings and
   task state as they are at that round
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-CTX432'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:10:00Z'
+updated_date: '2026-11-22T17:20:00Z'
 labels:
   - McFix
   - McFix V2
@@ -31,6 +31,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-CTX432/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-CTX432/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-CTX432/TRIAGE.md
 type: build
 ordinal: 132012
 ---
@@ -174,4 +176,14 @@ ACCEPTANCE 4: T4 green in the landing commit (lens line holds 'node scripts/anal
 2026-11-22 lane BL-CTX432 report copied to docs/reports/lanes/2026-11-22/BL-CTX432/REPORT.md; close check on a throwaway clone refuses only the grounder file and the two references (close-check.out)
 
 2026-11-22 report correction: two (not three) findings are labelled BUG HIGH (out-compliance-inc-S#1, out-compliance-ms-S#1)
+
+2026-11-22 corrections named by the grounder Cairn-Ground-O432 (records only): the findings count is 36 (rule-lists.mjs findings), not 39; acceptance 2: the Description Files line of task-423 holds 12 entries (the lane counted the Card A Files line inside the plan, 11); acceptance 3 is met by the unchanged test check-lane-close.logic.test.ts:813 and by the grounder's r1..r3 in-memory run; the sandbox read of ~/Buildo-wt-board stays UNVERIFIED and context-r3 proves nothing about it (grounder attack 7). Grounder files: GROUNDER.md, ATTACKS.md in the lane directory; TRIAGE.md holds the 8 outcome lines.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Task-432 INPUTS.4 built: backlog-brief.mjs --board flag, one re-run sentence in the lane brief lens line, README sentence, tests T1 T2 T4 (landing commit 3dc4e0c0a); output review grounded, 8 LOW/NIT findings piled, no fix owed.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 8 pile; grounder docs/reports/lanes/2026-11-22/BL-CTX432/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-CTX432/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
