@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.708Z file_sha256=b2a5fd5259b0f6723ec7248fbdce29519417c39a2d58e9e3f07b5590ec9f3699 prompt_sha256=f86610f39291e9a534ad19d6d2fd5f2400106c9fbea030d2d8bf1ce2f4668d89
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-410 note, grounder clause "refuses a commit that sets a lane's task BUILT or DONE unless docs/reports/lanes/<date>/<lane>/ holds one compliance lens output per attached list and a GROUNDER.md whose Grounder: is not the Lane:" and "The lane that wrote the work leaves the task RUNNING with 'grounder owed'." — PLAN-433-v1 LANDING "commit 2 is the closing commit with records and the status only" and ORDER "base-copy compliance outputs after the last in-range commit ...; commit." — NONE for any grounder step; the plan schedules no separate grounder, no GROUNDER.md and no "grounder owed" RUNNING status, so the closing commit it describes is refused by scripts/hooks/check-lane-close.mjs — add a step where a grounder whose name differs from the lane's rules every BUG or DEFER finding as `<finding id> CONFIRMED|REJECTED <file:line> [reason]`, written to the lane report dir, and the close sets the task RUNNING with "grounder owed".
+
+DEFER severity=MED — card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — PLAN-433-v1 WHAT "a MET or REJECT line is an explicit judgement of that rule, so it counts (Q2)" — the plan enacts Q2 option A before the operator rules, so an id named only on a MET line is never reported, narrower than the card wording; default the mention test to BUG or DEFER findings plus the Rules met line until Q2 is ruled, or obtain Q2 before landing.
+
+DEFER severity=MED — card "rule ids of the sent handbook" — PLAN-433-v1 UNVERIFIED "132 section 6 and 133 section 3 not checked line by line" — the id regex sees only `- **x.N**` list heads, so any handbook section whose ids take another bold form yields ids the script can never report; enumerate the bold ids of every list in rule-lists.json whole before landing and make `unmentionedRules` report an unrecognized bold list head instead of silently skipping it.
+
+DEFER severity=MED — task-410 note "cuts a diff that leaves no room ... into chunks at FILE boundaries" — PLAN-433-v1 NOT IN SCOPE "a union across chunks of one list part" — each chunk input carries the whole list part, so an id judged in chunk 2 is reported unmentioned in chunk 1, misleading the grounder on exactly the large front-end tasks the card was opened for; union the mentions across the chunk outputs of one list part, or print that the report is per chunk.
+
+DEFER severity=MED — task-410 note "each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context" — PLAN-433-v1 LANDING "(a) the plan gate recomputes plan-compliance hashes with the template at the BOARD HEAD ... so plan evidence already committed for a not-yet-launched task is refused until its compliance plan outputs are re-made" with Q4 left open — the landing strands committed plan evidence for pending launches while the plan defers the decision; rule Q4 first, then land after those launches or re-make their outputs in the same landing.
+
+MET — card "the compliance template asks for one closing line of the rule ids judged met" — EXACT EDITS 1 — `Rules met: <rule ids, comma separated>` added after `Clauses checked` with an instruction sentence on what an id is.
+MET — card "No verdict per rule" — EXACT EDITS 2 — `unmentioned` prints a report and exits 0, "refuses nothing", no per-rule verdict emitted.
+MET — RR-0381 "approved. fix it" — LANDING — `git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md` passed as `--template`, so the lane reviews with the launch-commit template.
+MET — task-410 note "the rest of the table (lists, rows, every_task) and the lens templates are read from the range base" — LANDING — "The close recomputes with the template at the range base, the launch commit", and outputs are made with the base copy.
+MET — task-423 note "a list is never trimmed in either form" — EXACT EDITS 2 — ids are read from `parseLensInput(inputText).listPart` whole and only reported on.
+MET — task-410 note "a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records" — LANDING — work, README, tests, protected script in commit 1, records and status only in commit 2.
+
+REJECT — card "a small script" — accused of not adding a separate small script because the report is a subcommand of scripts/analysis/rule-lists.mjs — the card names the behaviour and one id list per output, not a new file, and the subcommand sits beside the existing `findings` entry point.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  48449ms (48.4s)
+📊 Tokens — total: 19273, input: 9516, output: 9757, reasoning: 8614

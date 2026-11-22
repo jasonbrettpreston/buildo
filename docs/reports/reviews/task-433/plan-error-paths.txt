@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T16:55:30.710Z file_sha256=ee735e111b3a0ab5bf4ecb5603f449b511146784aaf4e927101588dc0a400c3d prompt_sha256=9cddbba79f73d907aa020c9ad3c28efc3bbf582cad53f12b33911d17b076d92e
+🔍 Lens review of docs/reports/reviews/task-433/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — task-433 plan EXACT EDITS 2 "when the part has no ids: `<out name>: the sent list part holds no rule ids, nothing to report`" — zero matches of `[a-z][a-z0-9-]*\.\d+` is printed as "the list holds no rule ids", so a list part whose bold ids are uppercase (LOAD.1, CHK.5 appear in the corpus pasted in this brief) or in any other bold-id form yields a clean report while every rule in it is unmentioned — bounded to an advisory report, but the one thing the card exists to show vanishes silently; count `/^\s*[-*]\s+\*\*[^*]+\*\*/gm` lines first and when some exist with zero pattern matches print them as unmatched bold ids.
+
+DEFER severity=MED — task-433 plan EXACT EDITS 2 "Mention test per id: `(?<![\w.-])<id>(?![\w-]|\.\d)` over the output text (so fe.1 is not covered by fe.12)." — a reviewer that writes fe.3 for list id fe.03, or whose line wraps mid id (the plan itself expects about 500 m.* ids on the 133 handbook), makes a rule it judged met come back unmentioned, and the only guard covers the fe.1/fe.12 boundary — no number is served from the report, but false positives are the whole failure mode; compare with leading zeros stripped and allow `\.\s*` before the digits, and join continuation lines of the Rules met block before matching.
+
+DEFER severity=MED — task-433 plan NOT IN SCOPE "a union across chunks of one list part" — if one list part is sent in more than one chunk, each output is compared against the whole part, so every id the other chunks' reviewer named is reported missing, which is a false report on the split case the per-document sending creates — the blast radius stops at the grounder's time, but it is the commonest shape of a large part; accept repeated `--out` for one input and union the mentions before printing.
+
+DEFER severity=LOW — task-433 plan EXACT EDITS 2 "hasLine = `/^Rules met:/m`" — a reviewer that writes the line indented, bulleted or bolded ("**Rules met:** fe.1") gets the note "[no \"Rules met:\" line in the output]" while the same text still counts its ids, so the report contradicts itself on a healthy run — anchor is one character class from correct; match `/^\s*(?:[-*>]\s*)*\**Rules met\**\s*:/m` and add that near-miss beside control (d).
+
+DEFER severity=LOW — task-433 plan EXACT EDITS 2 "unreadable file or not a lens input: exit 1 with the reason" — with `--in` and `--out` swapped the run exits 1 saying "not a lens input" and names neither path, so the operator cannot tell which argument failed or that the pair was reversed — prefix the reason with the flag and the path it came from.
+
+DEFER severity=LOW — pasted context "a block that would pass the total is listed as omitted" — the template grows by the Rules met instruction (about 500 characters per UNVERIFIED) out of the same 120 KB document budget, so a review already at the cap silently loses one more sent block and `unmentioned` cannot show it, leaving the report silent about a shrunken input — have lens-input record its omitted-block count and have `unmentioned` print it beside the missing ids.
+
+REJECT — task-433 plan WHAT "A REPORT FOR THE GROUNDER, NOT A GATE: it always exits 0 when it ran, refuses nothing, and nothing in the close, the launch gate or a hook reads it." — a re-run, a second tab or two lanes running `unmentioned` at once looks like a duplicate write — the command is read only, prints the same line, exits 0, and ids are deduped ("in order, unique"), so a repeat is a no-op.
+
+REJECT — task-433 plan FACTS 3 "A line starting `Rules met:` matches none of them." — the new trailing line could be counted as a finding or move the close's counts on outputs made after the template edit — findingsIn, the loose count and the VERDICT parse do not match it, and T4 pins the same findingsIn and looseFindingCount with and without the line.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing --out (exit 2), unreadable --out, missing or unreadable default in-<name>, file that is not a lens input (exit 1), list part with no matching ids, list part with no ids at all, output with no Rules met line, output with an indented or bolded line, id written wrapped or zero-padded, empty output, part split over several chunks, repeated run, template growth against the document cap   Unguarded: 3
+
+---
+⏱  74889ms (74.9s)
+📊 Tokens — total: 29098, input: 15133, output: 13965, reasoning: 12870

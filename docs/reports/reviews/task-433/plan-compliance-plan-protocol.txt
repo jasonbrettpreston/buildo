@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.700Z file_sha256=5a565b891e293ef511756e6d769b0973f3411d5506458b090fa8a1452e614199 prompt_sha256=bb0defbdcafe9518816e9c63e0419fa5f6053833f5261712e955fbd39c9b08b1
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol section 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — NONE (the plan's blocks run BASIS, FACTS, WHAT, EXACT EDITS, TESTS, ORDER, LANDING, ACCEPTANCE, NOT IN SCOPE, OPEN QUESTIONS, UNVERIFIED, with no estimate anywhere) — the clause is unmet, task-433 carries no estimate in either form — add one line: "Estimate: GUESS <n> (template edit + function/CLI + 4 tests + README; no model calls)" or a MEASURED figure with its source.
+
+BUG severity=HIGH — plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — plan "Q3 Report only, or later a gate? Default report only (as ruled: no per-rule verdict)." and "Q4 Land before or after the pending plan launches" — four rulings are asked of the operator (Q1-Q4) with no quoted search of the record for any of them — quote the search for each, or resolve it from the record and record the citation; Q4 in particular is already answered by RR-0381/LANDING.
+
+BUG severity=HIGH — plan-protocol section 2 step C gate "check.mjs, check-cites, check-quotes PASS" with step D "red-first tests named, exact commands. Gate: PASS lines" — plan "## ORDER T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; ... commit." — the plan names no PASS line for check.mjs, check-cites or check-quotes and no exact command for the tests it names, although it cites many file:line and verbatim quotes — add the exact commands (node --test paths, check.mjs/check-cites/check-quotes invocations) and their expected PASS lines to ORDER and ACCEPTANCE.
+
+BUG severity=MED — plan-protocol section 4 "Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines." — plan "5. DoD 1-10, STATUS line." — the plan names no increment for task-433, emits no seq-patch.json delta entry with source, no SITTING.md and no "tasks before, added, removed-candidate, after" count required by section 3 — add the increment id, the delta item with its source line and the before/added/removed/after counts.
+
+BUG severity=MED — plan-protocol section 2 step B "Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE." — NONE (no tag of any kind in the plan; the closest is "Principles served (DoD #9)") — task-433 is not tagged as SLICE, SUPPORT or NONE, so its removal-list eligibility is undecided — tag it, for example "SUPPORT S<n> (review tooling), source: card task-433 INPUTS.5 + RR-0378".
+
+BUG severity=MED — plan-protocol section 4 item 3 "PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)" — plan "commit 1 is the work (template, rule-lists.mjs, README, tests, task notes); commit 2 is the closing commit with records and the status only" — commit contents are named but suite, gates, commit-msg trailers, ids and the operator tty step are not — add the push review block with those five items named per commit.
+
+DEFER severity=MED — card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — plan "a MET or REJECT line is an explicit judgement of that rule, so it counts (Q2)" — the reported set is narrower than the card wording and the deviation is left open at lock — keep the card wording in the code and raise the MET-line widening only after the ruling is recorded with its search; the blast radius is bounded to one report line.
+
+BUG severity=MED — plan-protocol section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — plan '"we cant get a response on every rule - that would seem like too much"' — this operator verbatim has no file:line, so check-quotes cannot verify it while the RR-0378 quote beside it carries MORNING-DECISIONS.md:1850-1852 — add the same style of citation for it or drop the quote.
+
+MET — RR-0381 "approved. fix it" — plan LANDING "its own out-compliance outputs are made with the BASE copy of the template" — the lane reviews with the launch-commit template copy, as ruled.
+
+MET — card "the compliance template asks for one closing line of the rule ids judged met" — plan EXACT EDITS 1 "Rules met: <rule ids, comma separated>" — the closing block gains exactly one line, after the existing counts.
+
+MET — RR-0378 "Add the tasks?" — plan BASIS "RR-0378, decision-163, MORNING-DECISIONS.md:1850-1852" — the task is added on the named ruling, not invented.
+
+MET — card "No verdict per rule." — plan "No verdict per rule." in the NOT IN SCOPE block and "a report, not a gate" in WHAT — no per-rule verdict is introduced.
+
+REJECT — RR-0378 "you can remove step 7 right now" — the plan is accused of not removing step 7 or tasks 427/425 — that removal sits with the review-inputs plan RR-0378 governs, not with task-433 INPUTS.5, whose files are the template, the script, the README and two tests.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 8
+
+---
+⏱  43092ms (43.1s)
+📊 Tokens — total: 16894, input: 7939, output: 8955, reasoning: 7596

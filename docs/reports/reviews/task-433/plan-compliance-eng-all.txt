@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.703Z file_sha256=7013b70f2dc1079a1d60772546bb8a57b6e74c711dd5b2ecce167cbd514cede9 prompt_sha256=80dcafbb80679128466476d04e1181bbf08a275bc356c55965f980ddc99ed61b
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-433 card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — plan WHAT "a MET or REJECT line is an explicit judgement of that rule, so it counts (Q2)" — the report as specified will not flag an id the reviewer named only on a MET or REJECT line, although the card says an id in no finding and not in the line must be flagged, and the definition is left as open question Q2 rather than decided — resolve Q2 to option B (only BUG/DEFER lines plus the Rules met line count as mentions) before plan-lock, or obtain an operator ruling that amends the card wording first
+
+DEFER severity=MED — task-433 card "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — plan TESTS "In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts" — the plan authorizes editing check-lane-close.logic.test.ts, a sixth file the card's file set does not name — fix: pin T4 to rule-lists.logic.test.ts, or add the file to the card before locking
+
+DEFER severity=LOW — task-433 card "appear neither in a finding nor in that line" — plan EXACT EDITS 2 "Mention test per id: `(?<![\w.-])<id>(?![\w-]|\.\d)` over the output text" — the id is substituted unescaped, so fe.01's dot matches any character and text like "feX01" counts an absent id as mentioned, suppressing exactly the id the card says must be reported, while reEsc already exists in the file — fix: escape the id with reEsc before substitution
+
+MET — task-433 card "one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md closing block (:68-73) in EXACT EDITS 1 — adds "Rules met: <rule ids, comma separated>" after "Clauses checked", with the id sentence under it
+
+MET — task-433 card "No verdict per rule" — plan NOT IN SCOPE "a verdict per rule" — the per-rule verdict is explicitly excluded; the line and the report carry ids only
+
+MET — RR-0381 "the lane reviews with a copy of the launch-commit compliance template" — plan LANDING "git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md" — the lane's own compliance outputs are made with the base template copy, as ruled
+
+MET — task-433 card "a small script lists rule ids of the sent handbook" — plan EXACT EDITS 2 "export function unmentionedRules(inputText, outputText)" — reads parseLensInput(inputText).listPart, i.e. the sent list part, and reports the ids
+
+REJECT — RR-0378 "rules-checked line" — that this lane's own compliance outputs will carry no Rules met line — RR-0381 "approved. fix it" authorizes the launch-commit template copy for this lane, so the omission is ruled
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  55357ms (55.4s)
+📊 Tokens — total: 24351, input: 17464, output: 6887, reasoning: 6124

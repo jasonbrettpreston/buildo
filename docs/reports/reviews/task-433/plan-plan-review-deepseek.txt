@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T16:55:30.704Z file_sha256=ee735e111b3a0ab5bf4ecb5603f449b511146784aaf4e927101588dc0a400c3d prompt_sha256=1a916365a59e8bc2bd19a98ab9fdfd0410efb6fbac4a71a6a5de6ce1927b9050
+🔍 Lens review of docs/reports/reviews/task-433/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-433-v1 "LANDING" (template-hash bullets a/b) — The plan states two contradictory sources for the close's recomputation: "(b) The close recomputes with the template at the range base, the launch commit (:764)" (fixed) vs. base-copy instructions "If the board is merged into the lane, take the copy again from the new merge-base and re-make the outputs" (moving) — if the source really is the fixed launch commit, re-copying from a moved merge-base produces outputs with the WRONG hash and the lane's compliance outputs are refused at close — Read `check-lane-close.mjs:764` and `:631` and state precisely which commit's tree supplies the compared template text, then make the base-copy procedure use that same commit (not `git merge-base HEAD wf2/board`).
+
+BUG severity=HIGH — PLAN-433-v1 "LANDING" (plan gate recomputes at BOARD HEAD) + "UNVERIFIED" bullet 3 — "land this after the pending launches, or accept re-making" has no enumeration step, and "which board tasks hold plan evidence not yet launched" is explicitly UNVERIFIED — landing before that audit breaks N tasks' plan evidence with no automated guard — Add a pre-merge step that lists every `out-compliance-*plan*` under `docs/reports/lanes/` whose task status is still LATER/NEXT, and require the operator to sign off on re-making them before the template commit goes to the board.
+
+DEFER severity=MED — PLAN-433-v1 "WHAT (1)" vs. "FACTS (code) 1" and "TESTS T4" — The plan says "The reviewer's output ends with one more line `Rules met:`" but FACTS 1 records the tool appends `---` + timing trailer after the model text; T4's fixtures ("an output ending with the Rules met line") therefore do not mirror a real lane output — Extend T4's fixtures to end with the Rules met line FOLLOWED BY the `---` + timing trailer, so a parser that anchors on the true last line is exercised.
+
+DEFER severity=MED — PLAN-433-v1 "EXACT EDITS 2" (unmentionedRules) vs. the printed format "part `<i>` of `<n>`" (FACTS 6 reads singular `.listPart`) — The function reads `parseLensInput(inputText).listPart` (one part) yet the print enumerates "part i of n"; a single sent input with multiple list parts (multiple documents) silently drops every part except one — add a control with a 2-part input asserting both are reported, and state in EXACT EDITS whether the CLI iterates all parts or only `listPart`.
+
+DEFER severity=MED — PLAN-433-v1 "EXACT EDITS 2" (`--in` default) — `--in` default is `in-<basename of --out>`, but real siblings are `in-compliance-eng-all-p2.txt` for `out-compliance-eng-all-p2.txt` (FACTS 6); taken literally, `in-` + basename = `in-out-compliance-eng-all-p2.txt`, which does not exist — rewrite the default as "dir of `--out`, basename with the leading `out-` replaced by `in-`", and cover `--in` default for a paged name (`...-p2`) in T2 controls.
+
+DEFER severity=MED — PLAN-433-v1 "LANDING / Concurrency" (UNVERIFIED: task-431 same-file) — Same-file conflict with task-431 on `scripts/analysis/rule-lists.mjs` is declared UNVERIFIED and left as an open risk; if 431 touches the same file the new `unmentioned` function or the existing `findings`-block collide at merge — resolve now by checking task-431's "Files" list before ordering; if it also edits `rule-lists.mjs`, add a rebase-after-431 step to ORDER, or place the new function in a section 431 doesn't touch.
+
+DEFER severity=LOW — PLAN-433-v1 "WHAT (1)" and "EXACT EDITS 1" — `unmentioned` neither reads nor reports which lens template produced `--out`; run against a non-compliance output (the four other lens templates carry no `Rules met:` sentence — T3 control), `hasLine=false` and the report lists *every* absent id as unmentioned, a misleading "everything missing" result — read the `REVIEW … template:<name>` header and refuse/mark a non-compliance name, or document the subcommand as compliance-lens-only in the README edit.
+
+DEFER severity=LOW — PLAN-433-v1 "EXACT EDITS 2" (`hasLine`) — `/^Rules met:/m` is case- and space-sensitive; a model that writes "Rules Met:" or "Rules met :" triggers the `[no "Rules met:" line]` note and every absent id is reported while the line *is* present — no correctness impact (the mention test scans the whole text), but tolerated by making `hasLine` `/^\s*Rules met:/mi` and adding a NIT test.
+
+DEFER severity=LOW — PLAN-433-v1 "NOT IN SCOPE" ("validating that the ids named in the line exist in the list") — An invented id in the `Rules met:` line is silently accepted, and the reviewer can substitute `fe.99` for the real `fe.12` while the script flags `fe.12` as unmentioned but never says "fe.99 invented"; the operator cannot tell substitution from honest reporting — leave out of scope as ruled, but have the report echo the ids in the line that do NOT exist in the list part (one extra clause; no verdict per rule).
+
+DEFER severity=LOW — PLAN-433-v1 "EXACT EDITS 2" (`hasLine` + mention semantics) — An empty `Rules met:` line (`Rules met:` with nothing after) sets `hasLine=true`, suppresses the note, yet every id is absent → the report reads "all absent" with no warning the line was blank — detect `^Rules met:\s*$` (empty) and append " [empty Rules met: line]" alongside the existing missing-line note.
+
+VERDICT: FAIL
+
+Top 3 operational blockers (if FAIL):
+- Template-hash source contradiction (LANDING a/b) — the lane's own base-copy procedure may produce outputs the close refuses; resolve against `check-lane-close.mjs:764/:631` before implementation.
+- No pre-merge audit of tasks holding plan evidence not yet launched — land order can silently invalidate N tasks' compliance plan evidence with no automated prevention.
+- `--in` default `<basename of --out>` resolves to `in-out-*` and breaks for every real lane output unless `out-` is stripped; the missing-input guard becomes the normal path.
+
+Top 3 unverified data premises (regardless of verdict):
+- "about 500 m.* ids" and "the id pattern fits every generated handbook line … 132 section 6 and 133 section 3 not checked" — verify with `grep -hE '^\s*[-*]\s+\*\*[^*]+\*\*' 132_*.md 133_*.md 136_*.md | grep -vE '^\s*[-*]\s+\*\*[a-z][a-z0-9-]*\.\d+\*\*'`; any output lines are ids the regex misses (e.g. `_`, uppercase, non-list).
+- "Which board tasks hold plan evidence not yet launched" — verify with `find docs/reports/lanes -name 'out-compliance-*plan*' -printf '%h\n' | sort -u` and cross-reference each lane/task against the board's current status (LATER/NEXT) before merge.
+- "The input sits beside the output as `in-<output name>`" including paged names — verify with `ls docs/reports/lanes/*/out-compliance-* | sed 's#/out-#/in-#' | xargs ls 2>&1`; any missing `in-*` proves the default resolution must strip `out-`, not literally prepend `in-`.
+
+---
+⏱  76015ms (76.0s)
+📊 Tokens — total: 30572, input: 16019, output: 14553, reasoning: 12752

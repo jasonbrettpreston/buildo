@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.704Z file_sha256=7d72ef2f23c7105dde1024b57cfa2a6e9ba5f76ed6ea0e168a3c47841a5a1921 prompt_sha256=87027c1e218002e80f6128b98fb31f3cf6070a3aaa36e89210b258000c8ae82a
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.3 "before red is claimed", "Survive-the-fix locks (green-both) are stated as such per case." — plan ORDER "T1-T4 red; template edit (T3, T4 green)" with plan TESTS "T4 (parsers unchanged): an output ending with the Rules met line gives the same `findingsIn` and `looseFindingCount` as one without" and FACTS 3 "A line starting `Rules met:` matches none of them" — T4 declares the parsers unchanged, so it is green-both on today's tree and cannot be red, yet ORDER counts it in the red set and never states it as a survive-the-fix lock, so a lock is claimed red that has no defect to be red against — fix: move T4 out of the red set, label it green-both per 11.3, or give it a plant a current parser actually rejects.
+
+DEFER severity=MED — 08_agents.md §11.2 dated note 2026-11-21 (task-419) "it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it" — plan ORDER "T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; base-copy compliance outputs after the last in-range commit; commit." — the plan folds RR-0381 into LANDING but its order and commit list name no FOLD-CHECK.md, so the record the launch check requires is never produced — fix: add writing docs/reports/reviews/task-433/FOLD-CHECK.md beside GROUNDER-PLAN.md to ORDER and to commit 1.
+
+DEFER severity=MED — 08_agents.md §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan OPEN QUESTIONS Q1 "(A, recommended) the line holds `none` and the report says "no rule ids"" through Q4 "Default report only (as ruled: no per-rule verdict)", with BASIS "we cant get a response on every rule - that would seem like too much" carrying no location — all four recommendations go to the operator with no rule quoted with file:line — fix: attach the governing rule id with file:line to each recommendation, or state that no pasted rule covers it.
+
+DEFER severity=MED — 08_agents.md §11.1 "a census grep runs at the **full scope its conclusion covers**" — plan FACTS 5 "No ids: the glossary (`- **slug**:`, 132:627, list five-words), and every hand-written document (queue-137, agents-s7-s11, orchestrator-doc17, plan-protocol, eng-all, increments, milestones; rule-lists.json)" against plan UNVERIFIED "132 section 6 and 133 section 3 not checked line by line" — the no-ids conclusion over eight documents carries no recorded grep and no count, and the id-pattern half is admitted partial, so an executable census claim is stated as fact — fix: record the grep and its counts per document, or move FACTS 5 into UNVERIFIED.
+
+DEFER severity=MED — 08_agents.md §7 rule 4 dated note 2026-11-21 (task-375) "`rule-lists.mjs lens-input` refuses without `--context`" and "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — plan LANDING "The copy is passed as `--template <lane dir>/lens-compliance.md` to both `lens-input` and the review command in place of the repo path", with no --context and no context-rN.md anywhere in ORDER — the plan's own output-making step cannot run as written and the required per-round context file is never named — fix: name docs/reports/reviews/task-433/context-r1.md (written by backlog-brief.mjs) and pass --context with one --section per CONTEXT_SECTIONS entry for both the input and the review.
+
+DEFER severity=MED — 08_agents.md §11.4 "cases, fixtures, red/green expectations, invocation mode", "are written INTO the plan and reviewed at PLAN altitude" — plan T4 "In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts" — T4's test file and invocation mode are left undecided between two suites, so the panel cannot review the fixture at plan altitude — fix: pick one file and state the invocation.
+
+DEFER severity=LOW — 08_agents.md §11.9 TKT-1 "`Done-condition:` (the task's acceptance criteria)" — pasted card "## Acceptance criteria" (empty block, no items) against plan ACCEPTANCE "1. T1-T4 red then green with controls." — the task carries no acceptance criteria, so the Done-condition the brief must take from the task does not exist and the plan's own ACCEPTANCE list stands in for it — fix: copy ACCEPTANCE 1-5 into the task's Acceptance criteria before launch.
+
+MET — RR-0381 "approved. fix it" (task-433 base-copy compliance template) — plan LANDING — the base-copy procedure is written in, with the close's template-name check cited at check-lane-close.mjs:59-61 and deepseek-review.js:161, and re-cutting from a new merge-base on merge.
+
+MET — 08_agents.md §7 rule 6 dated note 2026-11-20 fix round 1 (3) "after any fix commit every input is re-made" — plan ORDER — base-copy compliance outputs are made after the last in-range commit, not only for the changed chunks.
+
+MET — RR-0378 step 6 (B) "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — plan EXACT EDITS 1 and 2 — both the closing line and the `unmentioned` subcommand exist, with no per-rule verdict.
+
+MET — 08_agents.md §11.9 TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped`" — plan ACCEPTANCE — "5. DoD 1-10, STATUS line."
+
+REJECT — 08_agents.md §7 rule 4 dated note 2026-11-21 (task-375) default one compliance run per rule list — the lane's outputs carry no `Rules met:` line, accused of breaking the template line this task adds — not a real issue, RR-0381 named the base copy and the close compares only the header's template name, so the base-copy outputs are the ruled form for this lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  58115ms (58.1s)
+📊 Tokens — total: 27830, input: 15434, output: 12396, reasoning: 10851

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.698Z file_sha256=21e65c5155135a1a40c3073a0274f992afbdf8253aaddab003a46714d18bb182 prompt_sha256=b63b643ec10a8cf54ff993b9d35d2311165ba9f01262e5a9079daeca6f0dfb23
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-433 description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — PLAN-433-v1 WHAT "Rule: \"mentioned\" = the id appears anywhere in the output text (a finding, a MET or REJECT line, or the Rules met line)" — the card's set is findings plus the Rules met line only, the plan widens it and pins the wider set in tests (control (c) "a REJECT line naming the id counts as a mention") while Q2 is still open, so the delivered report can omit an id the card requires to be listed — implement the card's exact set (BUG/DEFER findings plus the Rules met line) until the operator answers Q2, or record a ruling that changes the clause
+DEFER severity=LOW — task-433 "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — TESTS/T4 "In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts" — one arm writes a file the card does not name, widening the touched set past the five named files — remove the check-lane-close.logic.test.ts arm and keep T4 in rule-lists.logic.test.ts
+MET — task-433 title "A rules-checked line: the reviewer lists the rule ids it judged met and a script flags a rule never mentioned" — EXACT EDITS 1 and 2 "Rules met: <rule ids, comma separated>" and "node scripts/analysis/rule-lists.mjs unmentioned --out <output file>" — both named deliverables exist, and only the compliance template is edited (control T3 "the other four lens templates do not hold it")
+MET — task-433 description "No verdict per rule" — WHAT "the line names ids met, no verdict per rule, and the script is a report" — no per-rule verdict appears in the template edit, the CLI branch or the tests
+MET — RR-0381 "the lane reviews with a copy of the launch-commit compliance template (grounded fix approved)" — LANDING "git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md" — the lane's own compliance outputs are made from the launch-commit template copy passed with --template, and re-taken if the board is merged in
+REJECT — task-433 description "a small script lists rule ids" — the plan makes the script always exit 0 and read by no close, launch gate or hook — the card asks the script to list and forbids a verdict per rule, so a report is what the clause names, not a gate
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  34780ms (34.8s)
+📊 Tokens — total: 14074, input: 7115, output: 6959, reasoning: 6296

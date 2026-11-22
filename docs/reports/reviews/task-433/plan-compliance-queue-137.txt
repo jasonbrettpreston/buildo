@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.700Z file_sha256=bca274bc4999ff6cc632ae977c555410b185f93ec4a0b5abe85badb61258d4b3 prompt_sha256=9fbb7c3eeeceba649f0f39e9bdb7e3c0eeaf8482e8537ae7da7a1c1a7502bac6
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 (task-375) "refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md" plus the task-366 note "a GROUNDER.md from an agent that is not the lane, with a verdict line per finding" — plan LANDING "commit 1 is the work (template, rule-lists.mjs, README, tests, task notes); commit 2 is the closing commit with records and the status only." — the closing commit's required artifacts are never named: no lane GROUNDER.md with a verdict line per finding, no TRIAGE.md outcome lines per CONFIRMED/CONFLICT id, no `backlog task edit --add-ref` of REPORT/GROUNDER/TRIAGE or of the compliance:<list id> references, so commit 2 as planned is refused by check-lane-close.mjs — name the lane grounder (not Cairn-Ground-Q433, which grounded the plan) and list REPORT.md, GROUNDER.md, TRIAGE.md and the add-ref commands in ORDER and LANDING.
+
+BUG severity=MED — task-433 card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" and 124a_step_standard_policy_appendix.md:988 "Nothing was added that the card or ruling did not name" — plan WHAT "Rule: \"mentioned\" = the id appears anywhere in the output text (a finding, a MET or REJECT line, or the Rules met line)." — the report treats any prose mention as coverage, wider than the card's two places, and the deviation is left to open question Q2 with no ruling — restore the card's definition (a finding line or the Rules met line) or hold the broaden-any-mention behaviour until an operator ruling on Q2 is pasted.
+
+DEFER severity=MED — task-433 card "lists rule ids of the sent handbook that appear neither in a finding nor in that line" — plan EXACT EDITS 2 "`/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm` in `parseLensInput(inputText).listPart`" while the plan's own FACTS record "Spec 133 `- **m.431**`, `- **lc.N**`" and "132 section 6 and 133 section 3 not checked line by line" — an id whose tail is not digits is dropped and the run prints "holds no rule ids", so the report is silent for those lists — widen the id tail (or verify each handbook's bold-id form) before the report is relied on for 132/133.
+
+DEFER severity=LOW — Spec 137 §1 McLane note, Rule 3 (G3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan LANDING "commit 1 is the work (template, rule-lists.mjs, README, tests, task notes)" — commit 1 touches `scripts/` and `src/` but the plan never states the `Task: task-433` trailer that check-backlog-task.mjs requires — state the trailer on each commit that touches src/ or scripts/.
+
+MET — Spec 137 §4 Rule 3 note (two-commit close) — plan LANDING "commit 1 is the work ... commit 2 is the closing commit with records and the status only." — the protected-path close is split into work commit and closing commit.
+
+MET — RR-0381 "approved. fix it" (base-copy template) — plan LANDING "its own out-compliance outputs are made with the BASE copy of the template: `git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md`" — the lane's outputs use the launch-commit template and the close compares only the header name.
+
+MET — RR-0378 "Plan approved. We are running right now on this? Add the tasks?" — plan WHAT "(1) The reviewer's output ends with one more line `Rules met: <ids>`." — the rules-checked line is the template edit under review.
+
+MET — task-433 card "No verdict per rule." — plan WHAT "it always exits 0 when it ran, refuses nothing, and nothing in the close, the launch gate or a hook reads it" — the script is a report, no per-rule verdict and no gate.
+
+MET — task-423 note default one run per list, list never trimmed — plan EXACT EDITS 2 reads the list part whole via `parseLensInput(inputText).listPart` and reports ids, it neither joins chunks nor trims a list.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  60774ms (60.8s)
+📊 Tokens — total: 28366, input: 16031, output: 12335, reasoning: 11237

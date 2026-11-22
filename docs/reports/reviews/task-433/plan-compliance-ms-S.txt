@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:55:30.699Z file_sha256=f77a481c39160e88fd7e132f377891207aa524540c1de09471a6511a5abb5401 prompt_sha256=c2af0c4c864776828b904f1f621480f44da6508fd302de5fad5196d504e0fa11
+🔍 Lens review of docs/reports/reviews/task-433/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card Description: "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — plan: "Rule: 'mentioned' = the id appears anywhere in the output text (a finding, a MET or REJECT line, or the Rules met line)." — the mention test is wider than the card, so an id named only in a MET or REJECT line, in no finding and not in the Rules met line, is never reported while the card's wording would report it — implement the card's two-source test (finding lines plus the Rules met line), or hold the landing until the operator answers Q2.
+
+DEFER severity=LOW — card: "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — plan: "In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts: - T4 (parsers unchanged)" — the plan leaves open a sixth file, check-lane-close.logic.test.ts, that the card's Files list does not name — pin T4 to rule-lists.logic.test.ts, or add the file to the card before landing.
+
+DEFER severity=LOW — card Description: "the compliance template asks for one closing line of the rule ids judged met" — plan: "If the pasted list has no such ids, or none was met, write `Rules met: none`." — a `none` token for lists that carry no rule ids is behaviour the card does not name and Q1 is still unanswered — land with the operator's Q1 answer in hand, or scope the `none` fallback out of the template edit.
+
+REJECT — card Description: "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — accused of not validating that ids named in the Rules met line exist in the pasted list, so an invented id is never flagged — the card asks only for list ids that went unmentioned, and the plan records this limit in NOT IN SCOPE.
+
+MET — card Description: "No verdict per rule." — plan: "the line names ids met, no verdict per rule, and the script is a report" — no per-rule verdict is added anywhere in the template, the CLI or the README.
+
+MET — card Description: "the compliance template asks for one closing line of the rule ids judged met" — plan edit 1: "Rules met: <rule ids, comma separated>" — the closing block of the compliance template gains the line the card names.
+
+MET — RECORD RR-0381: "the lane reviews with a copy of the launch-commit compliance template" — plan LANDING: "The copy is passed as `--template <lane dir>/lens-compliance.md` to both `lens-input` and the review command in place of the repo path." — the lane's own compliance outputs are made from the launch-commit template copy, with the re-take rule if the board is merged.
+
+MET — RECORD RR-0378: "Plan approved. We are running right now on this? Add the tasks?" — plan: "PLAN-433-v1: task-433 INPUTS.5, a rules-checked line and a report of the rule ids never mentioned" — the task exists on the card and carries one plan.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+
+---
+⏱  34485ms (34.5s)
+📊 Tokens — total: 13077, input: 6325, output: 6752, reasoning: 5967
