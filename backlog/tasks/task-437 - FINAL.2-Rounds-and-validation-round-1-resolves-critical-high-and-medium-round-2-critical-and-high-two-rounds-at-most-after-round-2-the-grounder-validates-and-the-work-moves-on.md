@@ -4,10 +4,11 @@ title: >-
   FINAL.2 Rounds and validation: round 1 resolves critical, high and medium,
   round 2 critical and high, two rounds at most; after round 2 the grounder
   validates and the work moves on
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-ROUNDS437'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:30:00Z'
+updated_date: '2026-11-22T21:32:00Z'
 labels:
   - McFix
   - McFix Final
@@ -19,6 +20,17 @@ references:
   - docs/reports/reviews/task-437/seat-integration-1.md
   - docs/reports/reviews/task-437/seat-reality-check-1.md
   - docs/reports/reviews/task-437/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 137012
 ---
@@ -180,3 +192,9 @@ rg#4 MED folded A survive-the-fix (g
 
 Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/reviews/task-437/GROUNDER-PLAN.md; triage docs/reports/reviews/task-437/TRIAGE-PLAN.md
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-22 taken on the board at lane launch (lane BL-ROUNDS437, worktree /Users/brettpreston_macmini/Buildo-wt-rounds437, branch wf1/inc1b-rounds437), RR-0240
+<!-- SECTION:NOTES:END -->
