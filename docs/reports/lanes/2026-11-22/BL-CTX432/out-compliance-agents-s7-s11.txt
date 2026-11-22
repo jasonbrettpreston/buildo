@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:02:34.438Z file_sha256=05403b468bfb1d9956d1f66eb819739c49b1e49faff90b998ce0a26e2caf380d prompt_sha256=96276fbe1091afb630da50a8a14ccc549bea358c096a4789d2265f91d5a7e176
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG: none.
+
+DEFER severity=MED — task-375 note (Spec 08 §7 rule 6, dated 2026-11-21) "the close check recomputes each output's prompt hash with the committed context." — scripts/analysis/backlog-lane.mjs:184 "use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round", with the pasted Implementation Notes "(:161 and check-lane-close.mjs untouched)" — the change makes one context file per round but leaves the hash check with a single committed context per task, so nothing in the material says which context a round-2 out-* is recomputed against; round-1 (context-r1) and round-2 (context-r2) inputs cannot both match one path — rationale: blast radius is the lane close only (a refused or a stale-context round passing), and check-lane-close.mjs is outside the card's Files line, so the pairing must be named in a follow-up card.
+
+DEFER severity=LOW — README (this diff) "a bare `--board` or a board without that directory is refused" — scripts/analysis/backlog-brief.mjs:22 "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`)" — existsSync is true for a regular file named `backlog/decisions`, so the declared refusal is not implemented for that shape and the run reaches `readdirSync` instead — rationale: the promised named die becomes an uncaught ENOTDIR/ENOENT, bounded to a mis-supplied flag.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:184 "the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record)" — scripts/analysis/backlog-lane.mjs:184 "and commit it with the round" — the new instruction commits the review context directory per round, while the close shape names that directory among the closing commit's records and closes in TWO commits — rationale: a lane following the new sentence adds a record commit the close shape does not name; bounded to lane close bookkeeping.
+
+REJECT — RR-0378 step 5 / card Description — the change is accused of adding a `--board` flag no clause names — the pasted Implementation Notes name it: "backlog-brief.mjs gains --board <dir> (decisions read from <dir>/backlog/decisions; bare flag or missing dir dies, exit 1, no fallback)".
+
+MET — card Description "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-brief.mjs:43 "const decDir = path.join(boardDir ?? root, 'backlog/decisions');" — decisions are read from the board checkout at re-run time, not from the launch context.
+
+MET — task-375 note "The review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten" — scripts/analysis/backlog-lane.mjs:184 "which writes the next docs/reports/reviews/${task.id}/context-rN.md" — the round makes a new numbered file rather than overwriting the launch one.
+
+MET — task-375 note "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — .claude/review-templates/README.md:124 "the five `--section` flags (the one list CONTEXT_SECTIONS in `scripts/lib/review-template.js`)" — the --context/--section contract is restated unchanged.
+
+MET — README (this diff) "a bare `--board` or a board without that directory is refused" (bare-flag half) — scripts/analysis/backlog-brief.mjs:20 "if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');" — a bare flag exits 1 before any context file is written.
+
+MET — §11.3 "Every lock is proven in BOTH directions" — src/tests/backlog/backlog-brief-context.logic.test.ts "T1 plant: with --board the decisions come from the board checkout (RR-0900 in both sections)" and "T1 control (b): with --board a decision only in the root is absent (the board is the source)" — plant and control both present for the new flag.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  101344ms (101.3s)
+📊 Tokens — total: 38827, input: 19076, output: 19751, reasoning: 18703

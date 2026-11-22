@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:03:49.526Z file_sha256=efb014403ce4ab9eda5805febd9c04e3e8e7a0f3efd7603cc96e100535093d4b prompt_sha256=1c1985a63a79e7f9e977f3a3f00ee89749da9d37884134ca5e6924a7b07f1ea4
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-432 Description "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-brief.mjs "const t = readItems(root).find((x) => x.id === taskId);" — the decisions half is taken fresh from the board checkout while the task text still comes from --root, the lane worktree, which nothing in this change fast-forwards, so a task edited on the Backlog board after the lane was cut is briefed in its old form — fix: read the task file from the board checkout when --board is given, or print the task file sha and the root HEAD in the context header so a stale worktree copy is visible
+
+DEFER severity=MED — pasted RR-0378 rationale "Also measured on task-423 output round 2: 21 of 21 CRITICAL and HIGH lens findings were false, most because the lens read the round 1 context (rulings up to RR-0371 only, the old Files line)" — scripts/analysis/backlog-lane.mjs "the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round" — the fresh-context duty is carried by lane instruction alone, check-lane-close.mjs is untouched, so a round run against the launch context still produces outputs the close check can hash-verify and the measured false-finding mode is never refused — fix: have the close check (or the brief) refuse a round whose committed in- files were not made with the highest-numbered context-rN.md
+
+DEFER severity=LOW — Spec 137 §5a "com.maxbld.board-ff (fast-forwards the checkout to the programme tip)" — scripts/analysis/backlog-brief.mjs "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`)" — the only test of the board is that the directory exists, so a board checkout behind the programme tip yields stale rulings with no signal in the context or the brief — fix: print the board checkout HEAD commit in the context header (or refuse when it is not at the programme tip)
+
+NIT — pasted brief header "writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief)" — .claude/review-templates/README.md "--board <board checkout> > /dev/null" — the re-run's redirect discards the brief and with it the context sha256, so a round records no hash of the context it was made from — fix: drop the redirect or tee the header line into the lane report directory
+
+REJECT — Spec 137 Rule 13 "Nobody edits the board. A change on the board changes nothing; a status changes only on its row (rules 1, 3, 4)." — accused of letting a board change alter review inputs — not a real issue: `backlog/decisions` is the plan's stated home in Spec 137 §2 and this change only reads it, writing no status line anywhere
+
+MET — task-432 Files line "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the diff touches exactly those five paths and no sixth
+MET — Spec 137 Rule 4 "A ruling is kept as a verbatim dated note on its row" — scripts/analysis/backlog-brief.mjs "const q = /verbatim, [^:]*: \"([^\"]+)\"/.exec(body)?.[1]; const cite = /^Cite: (.*)$/m.exec(body)?.[1]" — the decision parse is unchanged, only the directory source moves, so board decisions are still read in the verbatim plus Cite form
+MET — Spec 137 §2 "| McIncrement plan | `backlog/` (tasks, drafts, milestones, decisions, docs)" — scripts/analysis/backlog-brief.mjs "path.join(boardDir ?? root, 'backlog/decisions')" — the decisions read stays inside the plan's home under whichever checkout is named
+MET — Spec 137 Rule 3 note (task-410) "the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — scripts/analysis/backlog-lane.mjs "commit it with the round" — the regenerated context-rN.md sits in the review context directory, a path the close check already allows
+MET — Spec 137 Rule 3 as amended "The work lands first; the status moves in a separate closing commit that carries only the lane's records" — the diff changes no status line, so the two-commit close is untouched
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  172262ms (172.3s)
+📊 Tokens — total: 38946, input: 19673, output: 19273, reasoning: 18154

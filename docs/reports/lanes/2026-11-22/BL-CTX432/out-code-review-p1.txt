@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T17:02:34.438Z file_sha256=24aad312fab9de2993c98d87c95632adf0bd693fa02294a73905d839296d3eb6 prompt_sha256=284cb2883a5fd5d32c18af9c6e3f97961b23a0d30b0b88572d3368b6f5037eaf
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:22 "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`)" — existsSync is true for a regular file, so a file at backlog/decisions passes this guard and the unchanged "fs.readdirSync(decDir)" then throws ENOTDIR as an unhandled stack trace instead of the promised clean refusal — check fs.statSync(...).isDirectory() in the guard, or wrap the readdirSync in a die.
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts:292 "const file = path.join(dir, fs.readdirSync(dir).find((n) => n.startsWith(f.task))!);" — the non-null assertion hides a real null: if no fixture file starts with f.task, path.join gets undefined and throws a bare TypeError with no hint of the expected task — replace with an explicit find plus a fail message naming f.task.
+DEFER severity=LOW — src/tests/backlog/backlog-brief-context.logic.test.ts:209 "const inForce = (d: string, task: string) => /## Decisions in force[^\n]*\n([\s\S]*?)\n## /.exec(ctxOf(d, task))?.[1] ?? '';" — a non-matching regex silently yields '', so the control (b) assertion "expect(inForce(d, task)).not.toContain('RR-0501')" passes vacuously and proves nothing — throw (or expect non-null) when exec returns null.
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts:296 "as { extra: string[] } | null)?.extra.join('\n') ?? ''" — the cast is unchecked: if TASK-JSON parses to an object without an array extra, .join throws a TypeError instead of the intended assertion message — use Array.isArray(o?.extra) ? o.extra.join('\n') : ''.
+DEFER severity=NIT — scripts/analysis/backlog-lane.mjs:185 "--root ${wt} --board ${board} > /dev/null" — the worktree and board paths are interpolated into a shell command unquoted, so a path containing a space splits the arguments the lane is told to run — wrap ${wt} and ${board} in double quotes.
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts:293 ".replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`)" — if the fixture frontmatter has no labels line the replace is a silent no-op, type is never set, and the failure surfaces only as the generic empty-extra assertion — assert the string changed (or the type is set) before running lane().
+REJECT — scripts/analysis/backlog-brief.mjs:21 "const boardDir = a.board === undefined ? null : path.resolve(a.board);" — looks like a silent fallback to <root> that the task forbids — null happens only when --board is absent (the documented default); a given --board is caught by the bare/empty check and the missing-directory check just above, so a supplied board never falls back.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  86776ms (86.8s)
+📊 Tokens — total: 26796, input: 9177, output: 17619, reasoning: 16873

@@ -1,0 +1,206 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:f02e4f335ca50cf3dbf2f50551e24f7ff24d38ba953d72e2127b2bfcec1e7c31 part 1 of 1 chunk 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs","src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index 2da84686e3fbcf8ab55dfa5c9e91b7e56c8b8761..bbf8e4ca146b223d24e81feed1386372ebfe0f25 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -121,7 +121,7 @@ DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/co
+   --template .claude/review-templates/lens-<lens>.md --context docs/reports/reviews/<task>/context-rN.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > r1-<lens>.txt
+ ```
+ 
+-The context file of a lane review is the task, sized (task-375): `docs/reports/reviews/<task>/context-rN.md`, one per review round and never overwritten, written by `scripts/analysis/backlog-brief.mjs` with the task's Implementation Plan and Implementation Notes; the five `--section` flags (the one list CONTEXT_SECTIONS in `scripts/lib/review-template.js`) send only the task, its description, acceptance criteria, decisions and notes. The compliance lens inputs are written by `node scripts/analysis/rule-lists.mjs lens-input --list <id> --context <context-rN.md> --material <diff file>` (the plan phase: `--material-from <context-rN.md>`, which cuts Description, Acceptance criteria and Implementation Plan); `lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context.
++The context file of a lane review is the task, sized (task-375): `docs/reports/reviews/<task>/context-rN.md`, one per review round and never overwritten, written by `scripts/analysis/backlog-brief.mjs` with the task's Implementation Plan and Implementation Notes; the five `--section` flags (the one list CONTEXT_SECTIONS in `scripts/lib/review-template.js`) send only the task, its description, acceptance criteria, decisions and notes. The compliance lens inputs are written by `node scripts/analysis/rule-lists.mjs lens-input --list <id> --context <context-rN.md> --material <diff file>` (the plan phase: `--material-from <context-rN.md>`, which cuts Description, Acceptance criteria and Implementation Plan); `lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context. Each review round (the first output round and every fix round) re-runs the brief in the lane worktree, `node scripts/analysis/backlog-brief.mjs --task <task> --lane <lane> --stage <N> --root <worktree> --board <board checkout> > /dev/null`, so the new context-rN.md holds the task file and the board's decisions as they are then (`--board` reads `<board>/backlog/decisions`; a bare `--board` or a board without that directory is refused), and the round uses the highest-numbered file in every `--context` (task-432, RR-0378 step 5).
+ 
+ Plan review (the plan is `.cursor/active_task.md`; the pasted context goes in `--specs`):
+ 
+diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
+index f3d68f83a11847f0b6bd5ee34d946ce9813673e4..bbcd5c20683cd07402d9a12ef70539513747d4eb 100644
+--- a/scripts/analysis/backlog-brief.mjs
++++ b/scripts/analysis/backlog-brief.mjs
+@@ -3,7 +3,8 @@
+ // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
+ // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
+ // command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
+-// Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
++// Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--board <dir>] [--date YYYY-MM-DD]
++// --board <dir>: read the decisions from that board checkout (<dir>/backlog/decisions) instead of <root>; a lane re-runs the brief each review round so the context holds the rulings as they are then (task-432, RR-0378 step 5).
+ // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
+ import fs from 'node:fs';
+ import { createRequire } from 'node:module';
+@@ -15,12 +16,16 @@ import { args, asList, descriptionOf, die, parseFM, planLabels, readItems, REPO,
+ const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js').CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
+ const a = args();
+ const root = path.resolve(a.root || REPO);
++// task-432: --board given must be a board checkout with backlog/decisions; a bare --board or a missing directory dies, never a silent fallback to <root>
++if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');
++const boardDir = a.board === undefined ? null : path.resolve(a.board);
++if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`);
+ const date = a.date && a.date !== true ? a.date : today();
+ const taskId = String(a.task === true ? '' : a.task ?? '').toLowerCase();
+ const lane = String(a.lane === true ? '' : a.lane ?? '');
+ const stage = a.stage && a.stage !== true ? a.stage : '1';
+ if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/.test(lane) || !/^\d{1,3}$/.test(String(stage))) die('backlog-brief: --date must be YYYY-MM-DD, --lane a plain name (letters, digits, . _ -), --stage a number');
+-if (!/^task-\d+$/.test(taskId) || !lane) die('backlog-brief: usage: --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]');
++if (!/^task-\d+$/.test(taskId) || !lane) die('backlog-brief: usage: --task task-N --lane <name> [--stage N] [--root <dir>] [--board <dir>] [--date YYYY-MM-DD]');
+ const t = readItems(root).find((x) => x.id === taskId);
+ if (!t) die(`backlog-brief: ${taskId} not found: no such task file under ${path.join(root, 'backlog/tasks')}`);
+ 
+@@ -36,7 +41,7 @@ const ac = acBlock.split('\n').map((l) => /^- \[[ x]\] #(\d+) (.*)$/.exec(l)).fi
+ // Rules: every `"quote" (cite)` found in the AC lines, plus the decisions the task names.
+ const rules = [];
+ for (const c of ac) for (const m of c.text.matchAll(/"([^"]+)"\s*\(([^)]+)\)/g)) rules.push(`"${m[1]}" (${m[2]})`);
+-const decDir = path.join(root, 'backlog/decisions');
++const decDir = path.join(boardDir ?? root, 'backlog/decisions');
+ const decisions = (fs.existsSync(decDir) ? fs.readdirSync(decDir).filter((f) => f.endsWith('.md')).sort() : []).map((f) => {
+   const text = fs.readFileSync(path.join(decDir, f), 'utf8'); const { fm, body } = parseFM(text);
+   const q = /verbatim, [^:]*: "([^"]+)"/.exec(body)?.[1]; const cite = /^Cite: (.*)$/m.exec(body)?.[1];
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 10b229e91c7b0d3871ce42940458cfb5b8ec6220..254dbeb31863b018468ad696e3ee91bbc240f05a 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -182,7 +182,7 @@ const lensLine = (task, ctx, lists) => {
+   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
+   const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <ids>\`, one set out-compliance-rules[-pN].txt for all the lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+-  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
+   return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file ${ctx}, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
+ };
+diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
+index 645520c912666817f3ede809fb0e1e6b71e707bd..88913c062eb7b3c1d3db04811ceae6f6ab96cf11 100644
+--- a/src/tests/backlog/backlog-brief-context.logic.test.ts
++++ b/src/tests/backlog/backlog-brief-context.logic.test.ts
+@@ -194,3 +194,56 @@ describe('task-375 A1/A5: the review context holds the plan and the notes; one f
+     expect(r.stdout).toContain(`${task}/context-r2.md`);
+   });
+ });
++
++// task-432 (INPUTS.4, RR-0378 step 5): --board reads the decisions from the board checkout, so a re-run in a lane worktree sees the rulings made after the lane was cut.
++describe('backlog-brief --board (task-432)', () => {
++  const dec = (n: number, rr: string, task: string, quote: string) => `---\nid: decision-${n}\ntitle: "${rr} 2026-11-22 · a ruling"\ndate: 2026-11-22\nstatus: accepted\n---\n## Context\n\nNames ${task}.\n\n## Decision\n\nOperator, verbatim, 2026-11-22: "${quote}"\n\nCite: ~/x/MORNING.md:${n}\n`;
++  const setup = () => {
++    const { d, task } = fixture();
++    put(d, 'backlog/decisions/decision-1 - RR-0501-x.md', dec(1, 'RR-0501', task, 'LANE-COPY-QUOTE'));
++    const b = path.join(d, '..', `board-${path.basename(d)}`);
++    put(b, 'backlog/decisions/decision-9 - RR-0900-x.md', dec(9, 'RR-0900', task, 'BOARD-ONLY-QUOTE'));
++    return { d, task, b };
++  };
++  const names = (d: string, task: string) => section(ctxOf(d, task), 'Decisions naming this task');
++  const inForce = (d: string, task: string) => /## Decisions in force[^\n]*\n([\s\S]*?)\n## /.exec(ctxOf(d, task))?.[1] ?? '';
++  it('T1 plant: with --board the decisions come from the board checkout (RR-0900 in both sections)', () => {
++    const { d, task, b } = setup();
++    const r = brief(d, task, ['--board', b]); expect(r.status, r.stderr).toBe(0);
++    expect(names(d, task)).toContain('RR-0900');
++    expect(names(d, task)).toContain('"BOARD-ONLY-QUOTE"');
++    expect(inForce(d, task)).toContain('RR-0900');
++  });
++  it('T1 control (a): without --board the root decisions are read, as before (RR-0501 present, RR-0900 absent)', () => {
++    const { d, task } = setup();
++    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
++    expect(names(d, task)).toContain('RR-0501');
++    expect(names(d, task)).not.toContain('RR-0900');
++  });
++  it('T1 control (b): with --board a decision only in the root is absent (the board is the source)', () => {
++    const { d, task, b } = setup();
++    brief(d, task, ['--board', b]);
++    expect(names(d, task)).not.toContain('RR-0501');
++    expect(inForce(d, task)).not.toContain('RR-0501');
++  });
++  it('T2 plant: a board with no backlog/decisions exits 1 naming it and writes no context file', () => {
++    const { d, task } = setup();
++    const empty = path.join(d, '..', `noboard-${path.basename(d)}`); fs.mkdirSync(empty, { recursive: true });
++    const r = brief(d, task, ['--board', empty]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toContain(empty);
++    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}`))).toBe(false);
++  });
++  it('T2 plant: a bare --board with no value exits 1 and writes no context file', () => {
++    const { d, task } = setup();
++    const r = script('scripts/analysis/backlog-brief.mjs', ['--task', task, '--lane', 'BL-R1', '--stage', '2', '--root', d, '--date', '2026-11-19', '--board']);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/--board/);
++    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}`))).toBe(false);
++  });
++  it('T2 control: a good board exits 0 and writes context-r1.md', () => {
++    const { d, task, b } = setup();
++    expect(brief(d, task, ['--board', b]).status).toBe(0);
++    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).toBe(true);
++  });
++});
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 9a50c2d6924d2378e3352a0a03b61d1dbf364440..c056a7cdae3af474cc655180a0fb6e4be4f1dfa5 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -284,6 +284,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     expect(e).not.toContain('plan: --material-from'); // no plan stage
+     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
++  // task-432 (INPUTS.4, RR-0378 step 5, 08_agents.md:529): the lens line gives the lane the command that makes the next context file each review round
++  it('T4: the lens line of a build brief and of a record brief holds the re-run command with --task, --lane, --stage, --root <worktree> and --board <board>, and the word highest-numbered', () => {
++    for (const type of ['build', 'record'] as const) {
++      const f = fixture();
++      const dir = path.join(f.board, 'backlog/tasks');
++      const file = path.join(dir, fs.readdirSync(dir).find((n) => n.startsWith(f.task))!);
++      fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('Launch description text.', 'Launch description text. Files: scripts/analysis/x.mjs, src/tests/').replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`));
++      if (type === 'build') plantEvidence(f.board, f.task);
++      const r = lane(f, ['--dry-run']);
++      const e = (JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra: string[] } | null)?.extra.join('\n') ?? '';
++      expect(e, r.stdout + r.stderr).not.toBe('');
++      expect(e).toContain(`node scripts/analysis/backlog-brief.mjs --task ${f.task} --lane BL-T1 --stage 1 --root ${f.wt} --board ${f.board} > /dev/null`);
++      expect(e).toContain('highest-numbered context-rN.md');
++      expect(e).toContain('Fresh context every review round');
++    }
++  });
+   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+       expect(lensBrief('build', files), files).toContain('lens-security.md');
+

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CTX432'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:58:00Z'
+updated_date: '2026-11-22T17:09:00Z'
 labels:
   - McFix
   - McFix V2
@@ -162,4 +162,11 @@ rg#1 MED folded :161 is not edited (
 2026-11-22 lane BL-CTX432 stage 1: read the task, plan review records and rule lists; tests T1, T2 (backlog-brief-context.logic.test.ts) and T4 (backlog-lane.logic.test.ts) written first, red commit attempt follows
 
 2026-11-22 build: backlog-brief.mjs gains --board <dir> (decisions read from <dir>/backlog/decisions; bare flag or missing dir dies, exit 1, no fallback); backlog-lane.mjs lens line gains one sentence with the re-run command (:161 and check-lane-close.mjs untouched); README.md:124 one sentence. Red was five failing assertions (red.out); green is the landing commit through the real hooks.
+
+2026-11-22 ACCEPTANCE 1 (T1, T2, T4 red then green with controls): red.out = five failing assertions at the designed place (T1 plant, T1 control b, T2 plant x2, T4); green = commit 3dc4e0c0a through the real hooks, tail in commit.out: 'Test Files 2 passed ... GATE OK ... POLICY CHECKS OK (commit-msg)'.
+ACCEPTANCE 2 (replay, scratch git clone --shared of wf1/inc1b-simple423 at 70edbe60b, brief with --root <clone> --board ~/Buildo-wt-board, clone deleted): context-r3.md 'Decisions naming this task' lines: '- RR-0374 Task-423 fix round approved (step 1); rules sections approved when they arrive (step 2) (names task-423, RR-0374) ...' and '- RR-0375 Task-423 closes if it is verified (names task-423) ... MORNING-DECISIONS.md:1830)'; its Description holds 'Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts' (11 entries counted; the plan said 12: noted).
+ACCEPTANCE 3 (close check on contexts r1..r3): check-lane-close.mjs and its test are not touched; the existing pin src/tests/backlog/check-lane-close.logic.test.ts:813 stands. Not run by this lane (no direct test runner): UNVERIFIED by a run here.
+ACCEPTANCE 4: T4 green in the landing commit (lens line holds 'node scripts/analysis/backlog-brief.mjs --task <id> --lane <lane> --stage <N> --root <wt> --board <board> > /dev/null' and 'highest-numbered context-rN.md'); README.md:124 carries the sentence.
+
+2026-11-22 output review (lens set, DeepSeek, context-r3.md made with --board ~/Buildo-wt-board): 11 outputs in docs/reports/lanes/2026-11-22/BL-CTX432 (nine per-list compliance, code-review, error-paths), 39 findings listed untriaged in FINDINGS.md; grounder owed, task left RUNNING.
 <!-- SECTION:NOTES:END -->
