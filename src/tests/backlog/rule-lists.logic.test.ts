@@ -957,7 +957,7 @@ describe('task-423 (e): counts pinned at most, on the real table', () => {
 });
 
 // ---- task-433 (INPUTS.5, RR-0378 step 6, RR-0381): the Rules met line and the unmentioned report ----
-// Rule: "Let's add a dn b to the plan" (decision-163, MORNING-DECISIONS.md:1852); 08_agents.md:462 both directions; PLAN-PROTOCOL.md:3 simple, no scope creep. A REPORT for the grounder, never a gate.
+// Rule: "Let's add a dn b to the plan" (decision-163, MORNING-DECISIONS.md:1853); 08_agents.md:462 both directions; PLAN-PROTOCOL.md:3 simple, no scope creep. A REPORT for the grounder, never a gate.
 describe('task-433: unmentioned prints the rule ids of the sent list part that appear nowhere in the output (a report, not a gate)', () => {
   type RM = { renderLensInput: (a: Record<string, unknown>) => string; findingsIn: (f: { name: string; text: string }[]) => { id: string }[]; looseFindingCount: (t: string) => number };
   const rm = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<RM>;
@@ -1007,7 +1007,7 @@ describe('task-433: unmentioned prints the rule ids of the sent list part that a
     const { out } = await pair('- **slug**: a glossary line\n- **other**: another\n', 'Rules met: none\n');
     const r = script(CLI, ['unmentioned', '--out', out]);
     expect(r.status, r.stderr).toBe(0);
-    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: the sent list part holds no rule ids, nothing to report');
+    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report');
   });
   it('T2 plant: flagged ids still exit 0; controls: missing --out exits 2, a file that is not a lens input exits 1, --in is honoured', async () => {
     const { d, out } = await pair(LIST, 'nothing\n');

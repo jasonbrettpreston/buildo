@@ -861,7 +861,7 @@ function cli() {
     let r;
     try { r = unmentionedRules(fs.readFileSync(inp, 'utf8'), fs.readFileSync(out, 'utf8')); } catch (e) { die(1, `unmentioned: ${e.message}`); }
     const name = path.basename(out);
-    if (!r.ids.length) console.log(`${name}: the sent list part holds no rule ids, nothing to report`);
+    if (!r.ids.length) console.log(`${name}: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report`);
     else console.log(`${name}: list ${r.list} part ${r.part} of ${r.parts}: ${r.missing.length} of ${r.ids.length} rule ids are in no finding and not in the Rules met line: ${r.missing.length ? r.missing.join(', ') : 'none'}${r.hasLine ? '' : ' [no "Rules met:" line in the output]'}`);
   } else if (cmd === 'plan-prep') {
     planPrep(a).then((c) => process.exit(c), (e) => die(1, `plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}`));

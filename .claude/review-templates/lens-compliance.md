@@ -73,7 +73,7 @@ Clauses checked: <n>   Unmet: <n>
 Rules met: <rule ids, comma separated>
 ```
 
-The last line names by id the rules of the pasted list you judged met and raised no finding on. A rule id is the bold id that starts a line of the pasted rule list (for example fe.12, core.3, m.431). Write only ids that appear in the pasted list, ids only, on one line. If the pasted list has no such ids, or none was met, write `Rules met: none`. Never invent an id.
+The last line names by id the rules of the pasted list you judged met and raised no finding on. A rule id is a bullet line whose bold id is name.N (for example fe.12, core.3, m.431). Write only ids that appear in the pasted list, ids only, on one line. If the pasted list has no such ids, or none was met, write `Rules met: none`. Never invent an id.
 
 ---
 
