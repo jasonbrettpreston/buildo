@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { HANDBOOKS, runHandbookCli } from '../../../scripts/analysis/gates/rule-map.mjs';
-import { headlineOf } from '../../../scripts/analysis/bylaw/bylaw-register.mjs';
+import { headlineOf, splitRow } from '../../../scripts/analysis/bylaw/bylaw-register.mjs';
 import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { mapFindings } from '../../../scripts/generate-bylaw-handbook.mjs';
 import { checkHandbookCitations, extractRoleBanners } from '../../../scripts/analysis/spec-split-check.mjs';
@@ -56,9 +56,9 @@ describe('FE-10 H1 — the reader: every FE row, no row can vanish', () => {
     const gate = parseRegisterRows(REGISTER);
     for (const r of rows) {
       expect(r.headline.length, r.id).toBeGreaterThan(0);
-      expect(r.headline.length, r.id).toBeLessThanOrEqual(300);
-      // A headline over 300 characters is clipped by headlineOf and ends in an ellipsis; the full ruling stays in Spec 135.
-      if (r.headline.endsWith('…')) expect(r.headline.length, r.id).toBeGreaterThan(250);
+      // MF-95 A-T3 (task-430, RR-0384 "stop the clipping"): the 300-character clip of the shared headlineOf no longer reaches Spec 136;
+      // a ruling prints whole, so no headline ends in the clip ellipsis (the pin on the shared function below stays).
+      expect(r.headline.endsWith('…'), r.id).toBe(false);
       expect(['RULED', 'OWED', 'RETIRED']).toContain(r.status);
       expect(r.status, r.id).toBe(gate.get(r.id)!.status);
       expect(r.locks, r.id).toEqual(gate.get(r.id)!.locks);
@@ -93,6 +93,71 @@ describe('FE-10 H1 — the reader: every FE row, no row can vanish', () => {
     const long = headlineOf(`Word ${'long text here '.repeat(40)}end.`);
     expect(long.length).toBeLessThanOrEqual(300);
     expect(long.endsWith('…')).toBe(true);
+  });
+});
+
+// MF-95 commit A (task-430, RR-0384 "stop the clipping"; plan section 4, A1). The shared headlineOf (scripts/analysis/bylaw/bylaw-register.mjs)
+// still clips at 300 characters for Spec 133 (pinned above); the Spec 136 generator prints the plain text of the Ruling cell instead wherever the
+// shared result was clipped. The test-side plain() is the same three replacements as the shared reader (bylaw-register.mjs plain()).
+const plainCell = (s: string) => s.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
+const rulingCells = (text: string) => new Map(text.split('\n').filter((l) => /^\| FE-\d+ \|/.test(l)).map((l) => { const c = splitRow(l); return [c[0]!, c[1]!] as const; }));
+const sized = (n: number, tail = '.') => { let s = 'Ruling'; for (let i = 0; s.length < n - tail.length; i += 1) s += ` w${i % 10}`; return `${s.slice(0, n - tail.length)}${tail}`; };
+const CLIPPED_TODAY = ['FE-18', 'FE-19', 'FE-29', 'FE-30', 'FE-31', 'FE-34', 'FE-35', 'FE-36', 'FE-37', 'FE-38', 'FE-39', 'FE-40', 'FE-41', 'FE-42', 'FE-43', 'FE-44'];
+// A literal bar in a real cell is written back escaped (splitRow reads a backslash-bar as a literal bar), so the planted row keeps six cells.
+const headlineFor = (cell: string) => readFeRows(reg([row('FE-01', 'RULED 2026-11-04.', cell.replace(/\|/g, '\\|'))]))[0]!.headline;
+
+describe('MF-95 A — Spec 136 prints every ruling whole (no clip)', () => {
+  it('A-T1 RED: a 700-character ruling with no bold prints whole; control: a 120-character ruling equals the shared headlineOf', () => {
+    const long = sized(700);
+    expect(long.length).toBe(700);
+    expect(headlineOf(long).endsWith('…')).toBe(true);
+    const h = headlineFor(long);
+    expect(h.endsWith('…')).toBe(false);
+    expect(h).toBe(plainCell(long));
+    const short = sized(120);
+    expect(headlineFor(short)).toBe(headlineOf(short));
+  });
+
+  it('A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell', () => {
+    const cells = rulingCells(REGISTER);
+    for (const r of realRows()) {
+      expect(r.headline.endsWith('…'), r.id).toBe(false);
+      expect(r.headline, r.id).toBe(plainCell(cells.get(r.id)!));
+    }
+    for (const id of CLIPPED_TODAY) expect(realRows().find((r: Row) => r.id === id)!.headline.length, id).toBeGreaterThan(300);
+  });
+
+  it('A-T5: a 299-character cell with an authored ellipsis is unchanged; 700 and 990 characters print whole', () => {
+    const authored = sized(299, '…');
+    expect(authored.length).toBe(299);
+    expect(headlineFor(authored)).toBe(headlineOf(authored));
+    expect(headlineFor(authored).endsWith('…')).toBe(true);
+    for (const n of [700, 990]) {
+      const cell = sized(n);
+      expect(headlineFor(cell), String(n)).toBe(cell);
+      expect(headlineFor(cell).length, String(n)).toBe(n);
+    }
+  });
+
+  it('A-T6 drift lock: the copy equals the shared headlineOf wherever the shared one is not clipped, and extends it where it is (real rows and planted cells)', () => {
+    const cells = [...rulingCells(REGISTER).values()];
+    const planted = [
+      sized(500), // a long cell
+      `${sized(400, '')} (operator, verbatim 2026-11-09).`, // a long cell ending in a provenance bracket: the copy keeps the bracket (it does not call stripProvenance)
+      `${sized(200, '')}<br>${sized(200)}`, // a cell with a br tag
+      `${sized(120, '')} (operator, verbatim 2026-11-09).`, // short with provenance: unclipped, the shared rule strips the bracket and the copy is the shared result
+    ];
+    for (const cell of [...cells, ...planted]) {
+      const shared = headlineOf(cell);
+      const mine = headlineFor(cell);
+      if (!shared.endsWith('…') || plainCell(cell).length <= 300) expect(mine).toBe(shared);
+      else {
+        expect(mine.startsWith(shared.slice(0, -1).trimEnd())).toBe(true);
+        expect(mine.length).toBeGreaterThan(shared.length);
+        expect(mine).toBe(plainCell(cell));
+      }
+    }
+    expect(headlineFor(planted[1]!)).toMatch(/\(operator, verbatim 2026-11-09\)\.$/);
   });
 });
 

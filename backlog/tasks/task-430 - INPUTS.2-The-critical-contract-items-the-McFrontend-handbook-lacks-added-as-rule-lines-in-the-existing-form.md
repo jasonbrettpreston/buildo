@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:41:00Z'
+updated_date: '2026-11-22T20:43:00Z'
 labels:
   - McFix
   - McFix V2
@@ -418,4 +418,8 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; o
 2026-11-22 taken on the board at lane launch (lane BL-HB430, worktree /Users/brettpreston_macmini/Buildo-wt-hb430, branch wf1/inc1b-hb430), RR-0240
 
 2026-11-22 lane BL-HB430 commit 0 (records, alone and first, plan 17.5): MF-95 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-96: MF-94 held by BL-MFRULES unlanded), prereg-MF-95-1.json (round 200, claimed in ~/Buildo-scratch/ids/round-200; rules FE-09, FE-10, FE-16 RULED), panel record docs/reports/panels/MF-95.json. Ledger: MF-95 (orchestrator), round-200 and FE-46..FE-58 claimed by this lane; FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders renumbered by the second lander (plan 17.5 landing checklist).
+
+2026-11-22 lane BL-HB430 commit A red: tests A-T1, A-T2, A-T3 (the :59/:61 clip pins become no headline ends in an ellipsis), A-T5, A-T6 in src/tests/surfaces/handbook-rule-map.logic.test.ts, staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit A: scripts/surfaces/generate-surface-handbook.mjs prints the plain Ruling cell where the shared headlineOf clipped (wholeHeadline; shared reader untouched); Spec 136 and rule-lists-by-kind.md regenerated; Spec 136 section 2 measured 19,551 characters (whole file 22,983); 0 lines end in the clip ellipsis; Spec 133 --check up to date (546 rules); git diff on scripts/analysis/bylaw/ empty.
 <!-- SECTION:NOTES:END -->

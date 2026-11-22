@@ -43,6 +43,22 @@ const DATE = /\d{4}-\d{2}-\d{2}/;
 const DATED_NOTE = /Dated note \d{4}-\d{2}-\d{2}/g;
 const CLOSED_WORD = /^(RULED|OWED|RETIRED|SUPERSEDED|WITHDRAWN|PROPOSED)/;
 const NEXT_FREE = /\*\*Next free id:\*\*\s*`FE-(\d+)`/;
+// MF-95 commit A (task-430, RR-0384 "stop the clipping"; plan section 4, A1): the shared headlineOf clips at its HEADLINE_MAX (300,
+// scripts/analysis/bylaw/bylaw-register.mjs:38, not exported) for Spec 133, whose size cap has no room to grow. Spec 136 prints each ruling
+// whole: where the shared result was clipped (it ends in the ellipsis AND the plain cell is longer than the shared cap, so an authored
+// ellipsis is never mistaken for a clip; and the cell has no leading bold span, where the shared rule prints the bold title, not the cell),
+// the line is the plain text of the Ruling cell. Named reason for this one-line copy of the shared plain(): the shared reader is a layer23
+// McBylaws path (an edit needs a McBylaws task and panel). The copy does not call stripProvenance: a long ruling keeps a trailing
+// provenance bracket (none of the FE rows has one today). Drift lock: handbook-rule-map.logic.test.ts A-T6.
+const SHARED_HEADLINE_MAX = 300;
+const CLIP_MARK = '…';
+const plainCell = (text) => text.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
+function wholeHeadline(ruleCell) {
+  const shared = headlineOf(ruleCell);
+  const plain = plainCell(ruleCell);
+  const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX && !/^\*\*/.test(ruleCell.trim());
+  return clipped ? plain : shared;
+}
 
 /**
  * The FE rows of the register text, in file order: { id, headline, status, date, locks, notes }. The id set is the
@@ -79,7 +95,7 @@ export function readFeRows(text) {
     const date = DATE.exec(statusCell);
     return {
       id,
-      headline: headlineOf(cells[1]),
+      headline: wholeHeadline(cells[1]),
       status: g.status,
       date: date ? date[0] : '',
       locks: g.locks,

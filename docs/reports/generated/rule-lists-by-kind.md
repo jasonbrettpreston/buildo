@@ -29,7 +29,7 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
-| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
+| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 19,550 | 1 |
 | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
 | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
 | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
@@ -43,7 +43,7 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 15 lists | | 679,963 | 18 |
+| total | 15 lists | | 685,730 | 18 |
 
 ## phone
 
@@ -56,7 +56,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
 | mobile-100 | docs/specs/03-mobile/100_mobile_parcel_cost_tool.md | whole file | 54,254 | 1 |
 | mobile-96 | docs/specs/03-mobile/96_mobile_subscription.md | whole file | 37,337 | 1 |
-| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
+| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 19,550 | 1 |
 | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
 | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
 | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
@@ -66,7 +66,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 15 lists | | 766,953 | 18 |
+| total | 15 lists | | 772,720 | 18 |
 
 ## storage
 
