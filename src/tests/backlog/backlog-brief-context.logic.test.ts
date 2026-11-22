@@ -40,7 +40,7 @@ describe('G1 context pack (task-309, RR-0235)', () => {
     const { d, task } = fixture();
     const r = brief(d, task);
     expect(r.stdout).toMatch(/^Context pack sections:.*Milestone.*Document sections.*Decisions naming this task.*Prior reviews and lane reports.*Dependencies/m);
-    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/${task}/context-r1.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"`);
+    expect(r.stdout).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan review (RR-0374)
     expect(r.stdout).not.toContain('deepseek-review.js plan');
     const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).digest('hex');
     expect(r.stdout).toContain(sha.slice(0, 12));
