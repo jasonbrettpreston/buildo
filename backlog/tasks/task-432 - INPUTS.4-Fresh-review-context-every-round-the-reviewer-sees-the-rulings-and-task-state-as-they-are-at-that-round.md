@@ -30,6 +30,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-CTX432/REPORT.md
 type: build
 ordinal: 132012
 ---
@@ -169,4 +170,6 @@ ACCEPTANCE 3 (close check on contexts r1..r3): check-lane-close.mjs and its test
 ACCEPTANCE 4: T4 green in the landing commit (lens line holds 'node scripts/analysis/backlog-brief.mjs --task <id> --lane <lane> --stage <N> --root <wt> --board <board> > /dev/null' and 'highest-numbered context-rN.md'); README.md:124 carries the sentence.
 
 2026-11-22 output review (lens set, DeepSeek, context-r3.md made with --board ~/Buildo-wt-board): 11 outputs in docs/reports/lanes/2026-11-22/BL-CTX432 (nine per-list compliance, code-review, error-paths), 39 findings listed untriaged in FINDINGS.md; grounder owed, task left RUNNING.
+
+2026-11-22 lane BL-CTX432 report copied to docs/reports/lanes/2026-11-22/BL-CTX432/REPORT.md; close check on a throwaway clone refuses only the grounder file and the two references (close-check.out)
 <!-- SECTION:NOTES:END -->
