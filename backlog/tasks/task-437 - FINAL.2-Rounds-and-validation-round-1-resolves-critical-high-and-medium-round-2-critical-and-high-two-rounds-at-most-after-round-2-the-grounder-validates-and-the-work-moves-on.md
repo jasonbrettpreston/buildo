@@ -7,12 +7,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T20:31:00Z'
+updated_date: '2026-11-22T21:19:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-437/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-437/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-437/seat-integration-1.md
+  - docs/reports/reviews/task-437/seat-reality-check-1.md
+  - docs/reports/reviews/task-437/seat-regression-1.md
 type: build
 ordinal: 137012
 ---
@@ -48,14 +54,14 @@ Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.t
 - RR-0385 item 3, MORNING-DECISIONS.md:1919: "round 1 resolves CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH only; two rounds at most, plan and output ... Supersedes the third output round of RR-0371."
 - RR-0385 item 4, :1920: after round 2 the grounder validates the fold and the work moves forward without the operator. It comes to him only for (i) a CRITICAL or HIGH still open after round 2, (ii) a decision that needs his word, (iii) every push.
 - The operator's words, verbatim: :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; :1912 "Validate the plan and the output as you mentioned as per your criteria."; :1909 "We want to reomve any of the gates work we added"; "Keep those that are built" (:1910).
-- Earlier rulings: RR-0369 (decision-154, :1782) is the same rule for the output. Its reading (3), :1783, says round-2 MED is recorded with a reason. RR-0371 (decision-156, :1800-1806) set two plan rounds then to the operator, and three output rounds; RR-0385 replaces both caps. RR-0364 (decision-149) says LOW and NIT are recorded, not fixed. RR-0359 (decision-144) says nothing is folded before the grounder rules; it is unchanged.
+- Earlier rulings: RR-0369 (decision-154, :1782) is the same rule for the output. Its reading (3), :1783 (the orchestrator's, not his words), says round-2 MED is recorded with a reason. RR-0371 (decision-156, :1800-1806) set two plan rounds then to the operator, and three output rounds; RR-0385 item 3 supersedes only its third output round, and the two-round plan cap stands. RR-0364 (decision-149) says medium and low findings are recorded, not fixed; RR-0369 replaced its medium part (:1782), so it now holds for LOW and NIT. RR-0359 (decision-144) says nothing is folded before the grounder rules; it is unchanged.
 - How a spec is changed: a dated note is added and the prior text is kept (M-246; model: 00_engineering_standards.md:308).
 
 ## FACTS
 - F1. Outcome forms: check-lane-close.mjs:148 (FORM_WORDS) and :194. CRITICAL, HIGH and MED take fixed (folded at the plan) or ruling; task is allowed only for a DEFER finding. LOW and NIT take any form. `pile` and `wontfix` are refused for MED (:205).
 - F2. `ruling:RR-NNNN` passes when a decision file's basename contains the id. Close check: gitFacts.decisionExists, :305. Launch gate: backlog-lane.mjs:102. "decision-170 - RR-0385-..." therefore satisfies `ruling:RR-0385` today, in both modes.
 - F3. At the plan, nothing forces a LOW to be folded. Every CONFIRMED or CONFLICT id needs one outcome line (:186, :199), and `pile` is accepted for LOW and NIT in plan mode (:148, :194). Folding a LOW is practice, not code.
-- F4. No round cap exists. The close check counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound. The plan gate reads every "Plan review round N:" line (:662-667) with no bound.
+- F4. No round cap exists. The close check counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound; a second output round is accepted and locked (check-lane-close.logic.test.ts:730-731). The plan gate reads every "Plan review round N:" line (:662-667) with no bound.
 - F5. plan-prep allows one review round per run (rule-lists.mjs:640). post refuses a second round line (:737), so a plan round 2 line is entered by hand; task-375, task-418 and task-423 hold "Plan review round 2".
 - F6. The lane brief tells lanes "a later (fix) round (r2, r3, ...)" (backlog-lane.mjs:185) and says nothing about severities by round. backlog-brief.mjs:174 already prints `max_fix_rounds: 2`.
 - F7. No grounder brief lives in the repo: the orchestrator writes it. The lane's description of the grounder is backlog-lane.mjs:186.
@@ -75,27 +81,28 @@ Changes:
 3. Tests: one red test for the brief, and one lock test that proves the existing outcome behaviour in both directions.
 
 ## EXACT TEXT: dated note (new line after :355, indented three spaces)
- Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only; two rounds at most. This supersedes the round caps of RR-0371 (two plan rounds then the operator; three output rounds) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. After round 2 the separate grounder validates the fold (FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts any recorded ruling id for a MED.
+ Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2, the second review round (not the grounder's 5.3 round-2 pass), resolves CRITICAL and HIGH only; two rounds at most. Two is the most: when a second round is run stays as RR-0363 and RR-0369 left it. This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364, whose medium part RR-0369 replaced). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. The grounder's verdict line for that id gives the reason and names the round (the round line on the card cannot), and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792). After round 2 the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED; plan-prep supports one round, and a second plan round line is entered by hand.
 
 ## CODE CHANGE (backlog-lane.mjs:185 only; not protected)
 - Replace "a later (fix) round (r2, r3, ...) is filed beside them as" with "the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as".
-- Append to the `grounder` text (:186): " ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED confirmed in round 2 is recorded as `<id> ruling:RR-0385`; LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator."
+- Append to the `grounder` text (:186): " ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` in TRIAGE.md (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator."
 
 ## TESTS (red first)
-- T1, backlog-lane.logic.test.ts, dry run: TASK-JSON `extra` contains "two output rounds at most" and "ruling:RR-0385", and does not contain "r3, ...". Red on today's text.
+- T1, backlog-lane.logic.test.ts, dry run: TASK-JSON `extra` contains "two output rounds at most", "ruling:RR-0385" and "not fixed or folded", and does not contain "r3, ...". Red on today's text.
 - T2, check-lane-close.logic.test.ts, in the pure outcomeErrors block (:758), as a lock:
-- A CONFIRMED MED with `pile:"<30+ chars>"` is refused in close mode and in plan mode. This is the planted defect.
+- A CONFIRMED MED with `pile:"<30+ chars>"` is refused in close mode and in plan mode (:699 and :702-707 already cover the close-mode ruling and HIGH or LOW pile cases).
 - `ruling:RR-0385` passes when decisionExists is true. This is the control.
 - The same line is refused when decisionExists is false. This plants the second direction.
 - A LOW with `pile:` passes in plan mode.
-- Proven in both directions (08_agents.md:485). T2 is green on today's code by design: it locks the behaviour the note relies on.
+- A survive-the-fix (green-both) lock, stated as such per 08_agents.md:485: green on today's code by design; both directions are inside it. The same line also passes for a HIGH, pinning the note's "any severity" sentence.
 
 ## ORDER
 - After 436, since both edit backlog-lane.mjs in separate regions (436 at :174/:208/:223/:231, this task at :185-186).
+- After 436 lands, the plan input for agents-s7-s11 is stale: the orchestrator re-makes it before launch, a second plan review round (task-423's round-2 note), so only CRITICAL and HIGH are folded.
 - Before 438. This task leaves check-lane-close.mjs unchanged, so task-438's edits there do not meet this task's; its only shared file is the test file check-lane-close.logic.test.ts, and the new describe block is kept separate.
 
 ## LANDING
-- Code commit: the tests, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-437`. No status move in it.
+- Code commit: the tests, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-437`. No status move in it. The lane appends docs/reports/generated/rule-lists-by-kind.md to the first Files line of its own task file in this commit (check-task-files.mjs reads the index copy), and after the note is final and 436 has landed runs `node scripts/analysis/rule-lists.mjs page --write` and stages the page (pre-commit runs `page --check`). The page resolves one more list, policy-124-s2-s5, so the output review owes one more out- compliance output for it. The note names no src/ path in backticks, so the system map is unchanged.
 - Then the closing commit with the records (two-commit close, :185).
 
 ## ACCEPTANCE
@@ -109,21 +116,65 @@ Changes:
 - No change to check-lane-close.mjs or rule-lists.mjs.
 - No cap refusal. A one-line `n > 2` refusal would also block a third round the operator himself rules under case (i), and there is no escape short of new gate work, which he withdrew (:1909).
 - No refusal of fixed or folded for LOW: "never fixed by rule" (:1783) does not forbid fixing.
-- The grounder brief: it is the orchestrator's text, outside the repo (F7).
+- The orchestrator's own grounder brief is outside the repo (F7); the Spec 08 note and the :186 text are its repo source.
 - The output rN-versus-rerun wording conflict between 08_agents.md:355 (3) and backlog-lane.mjs:185 is left as it is.
 
-## OPEN QUESTION (the record cannot settle it)
+## QUESTION (ruled by the plan grounder)
 Q1. Is a class ruling (`ruling:RR-0385`) an acceptable record for each round-2 MED?
 - (A) Yes, as planned: zero code; the per-finding line "id MED ruling RR-0385" is still on the task page (:274).
 - (B) Let `pile` count for MED in round 2 only: about 4 lines in a protected file, computing n before the outcome loop.
-- Recommendation: A, because the operator ordered the existing gates kept and no new gate work (:1909, :1910).
+- RULED A (no operator word needed): RR-0385 item 5, :1921, "gates already built are kept; unbuilt gate cards are withdrawn", and :1909 "We want to reomve any of the gates work we added"; B changes a protected check.
 
 ## UNVERIFIED
-- That FOLD-CHECK.md (task-419, check-lane-close.mjs:679) is what "validates the fold" means at the plan. The record names no file.
+- The record names no file for "validates the fold"; it is read as FOLD-CHECK.md at the plan (the launch gate requires it, check-lane-close.mjs:679-698) and the separate grounder's GROUNDER.md at the output (:566-568).
 - The card's DoD cites 08_agents.md:462 and :490. The texts are now at :485 and :513.
 
 ## GUESS
 About 1.5 hours of lane time; about 6 changed lines plus 2 tests.
 
 Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+
+Plan review round 1: 42 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/reviews/task-437/GROUNDER-PLAN.md; triage docs/reports/reviews/task-437/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED folded neither is a review 
+plan-compliance-agents-s5-1to3#2 MED folded LOW and NIT are reco
+plan-compliance-agents-s5-1to3#3 MED folded RULED A (no operator
+plan-compliance-agents-s5-1to3#4 MED folded RR-0369 replaced its
+plan-compliance-agents-s5-1to3#5 MED folded a second output roun
+plan-compliance-agents-s7-s11#4 MED folded RR-0369 replaced its
+plan-compliance-agents-s7-s11#5 MED folded neither is a review 
+plan-compliance-eng-all#1 MED folded LOW and NIT are reco
+plan-compliance-eng-all#4 MED folded neither is a review 
+plan-compliance-five-words#1 MED folded LOW and NIT are reco
+plan-compliance-five-words#2 MED folded RR-0369 replaced its
+plan-compliance-five-words#3 MED folded a second output roun
+plan-compliance-five-words#4 MED folded round 1 resolves the
+plan-compliance-inc-S#2 MED folded LOW and NIT are reco
+plan-compliance-inc-S#4 MED folded RR-0369 replaced its
+plan-compliance-inc-S#6 MED folded RULED A (no operator
+plan-compliance-ms-S#1 MED folded RR-0369 replaced its
+plan-compliance-ms-S#2 MED folded LOW and NIT are reco
+plan-compliance-ms-S#3 MED folded LOW and NIT are reco
+plan-compliance-ms-S#4 MED folded RULED A (no operator
+plan-compliance-orchestrator-doc17#2 MED folded LOW and NIT are reco
+plan-compliance-orchestrator-doc17#3 MED folded round 1 resolves the
+plan-compliance-plan-protocol#1 MED folded LOW and NIT are reco
+plan-compliance-plan-protocol#2 MED folded neither is a review 
+plan-compliance-plan-protocol#3 MED folded RULED A (no operator
+plan-compliance-plan-protocol#6 MED folded RR-0369 replaced its
+plan-compliance-queue-137#3 MED folded LOW and NIT are reco
+plan-compliance-queue-137#4 MED folded neither is a review 
+plan-compliance-queue-137#6 MED folded supersedes only its 
+plan-error-paths#6 MED folded neither is a review 
+plan-plan-review-deepseek#4 MED folded a second output roun
+plan-plan-review-deepseek#7 MED folded LOW and NIT are reco
+plan-plan-review-deepseek#13 MED folded for a finding of any
+ig#1 HIGH folded The lane appends doc
+ig#2 MED folded the plan input for a
+ig#3 MED folded the grounder decides
+ig#4 MED folded for a finding of any
+rc#1 MED folded neither is a review 
+rc#2 MED folded for a finding of any
+rg#1 MED folded when a second round 
+rg#2 MED folded gives the reason and
+rg#4 MED folded A survive-the-fix (g
 <!-- SECTION:PLAN:END -->
