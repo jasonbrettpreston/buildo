@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.894Z file_sha256=df4f5da3c44b597bdc57baf76ef28b7f77fb1c340ea73de2bc810958bc024dd2 prompt_sha256=92f093c22ec124d3224d40ea82158182f6e9cd700c894c5bb5e410b8b9701046
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 (task-366) "now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` ... refuses the commit that sets BUILT or DONE without them" — plan LANDING "Then the closing commit with the records (two-commit close, :185)." — the closing commit is named as "the records" and nothing else: no lane report directory, no per-rule-list compliance output, no GROUNDER.md, no TRIAGE.md (task-399 note) and none of the `backlog task edit --add-ref` copies task-375's note refuses a close without, so the close this plan schedules is refused by the same check — name the exact artefacts of the closing commit (report dir, `out-compliance-<list>.txt` or the joined set, GROUNDER.md, TRIAGE.md, the REPORT/GROUNDER/TRIAGE refs) in LANDING
+
+BUG severity=HIGH — task-437 card "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — plan WHAT "So check-lane-close.mjs and rule-lists.mjs (both protected paths) are NOT changed." with BASIS F4 "counts rounds as `n = 1 + prior \"Review round N:\" lines` (:272) with no bound" — a check with no bound accepts a third output round as readily as two, so RR-0371's third round is superseded only in the note's prose, which the plan itself stamps "Not enforced: the cap and the round-2 MED rule are process", and the operator words the omission rests on (":1909" `We want to reomve any of the gates work we added`) are not in the pasted context ("cannot see") — add the bound in check-lane-close.mjs with a named escape for an operator-ruled later round, or paste the operator's withdrawal verbatim into the note before lock
+
+DEFER severity=MED — task-437 card "the grounder brief says LOW and NIT are recorded, not folded" — plan NOT IN SCOPE "The grounder brief: it is the orchestrator's text, outside the repo (F7)." — a named deliverable is dropped: only the one-sentence grounder description inside the lane brief (backlog-lane.mjs:186) is edited, so the brief the grounder itself reads is unchanged — edit the grounder brief where it lives and commit a copy under the task, or record that the lane-brief sentence is what the operator accepted
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-21 (task-419) "also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script" — plan note text "(FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output)" against its own UNVERIFIED "That FOLD-CHECK.md (task-419, check-lane-close.mjs:679) is what \"validates the fold\" means at the plan. The record names no file." — the spec note is to be committed stating a file identity the plan declares unverified, so a rule enters Spec 08 on an unproven mechanism — either verify FOLD-CHECK.md against task-419's note and cite it, or word the note to name the plan grounder's output without asserting the filename
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")`" — plan EXACT TEXT "Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22," — the note carries no `lane X` field and replaces the form's `verbatim:` colon with a comma plus a date and path before the words — write `task-437 FINAL.2 · McFix Final · lane <id or "none at plan time">; operator, verbatim: "<words>" (<cite>)`
+
+DEFER severity=LOW — task-437 card "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — plan note text "This supersedes the round caps of RR-0371 (two plan rounds then the operator; three output rounds)" — the note also supersedes RR-0371's plan cap (two rounds then the operator), a change no pasted clause or operator word names; the card names only the third output round — narrow the sentence to the third output round, or paste the operator words that move the plan cap to two
+
+MET — Spec 137 §4 Rule 3 note 2026-11-20 "The work lands first; the status moves in a separate closing commit that carries only the lane's records" — plan LANDING "Code commit: the tests, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-437`. No status move in it."
+
+MET — Spec 137 §4 Rule 3 / G3 "a commit that changes `src/`, `scripts/` ... carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan LANDING "the task file with `Task: task-437`" in the same commit as scripts/analysis/backlog-lane.mjs and both test files
+
+MET — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue" — plan quote ":1910 \"2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium.\"" is word for word the card's verbatim, typos kept
+
+MET — task-437 card "the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push)" — plan note "(i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word ..., or (iii) a push is due."
+
+MET — Spec 137 §5a Rule 13 "Nobody edits the board. A change on the board changes nothing" — plan contains no board write and no status change made on 6421
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 6
+Rules met: Rule 3, Rule 10, Rule 13
+
+---
+⏱  75878ms (75.9s)
+📊 Tokens — total: 31202, input: 15405, output: 15797, reasoning: 14263

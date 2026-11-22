@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.885Z file_sha256=d4b913ff3d7321f8add9e519c471de11f035f2d740421d27f0e0f15cb026e573 prompt_sha256=42ee12f54565c174b6c2d40d954783aee6645f22908dee0f8c0f9ed3e8585141
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=MED — card/RR-0385 "the grounder brief says LOW and NIT are recorded, not folded" — backlog-lane.mjs:186 plan text "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed;" — the brief the grounder reads is told "not fixed" and is silent on "folded", which is the exact act the grounder validates (note text: "the separate grounder validates the fold") — change the appended brief sentence to "not fixed or folded (pile or wontfix, 30+ character reason)".
+
+BUG severity=MED — 00_engineering_standards.md §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan NOT IN SCOPE "The output rN-versus-rerun wording conflict between 08_agents.md:355 (3) and backlog-lane.mjs:185 is left as it is." — the ruling changes the round rule while the adjacent cited spec text stays contradicting the code, the drift class this clause names — amend 08_agents.md:355 in the same commit or add one sentence to the dated note superseding that wording.
+
+BUG severity=MED — 00_engineering_standards.md §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — NONE in the plan (BASIS/FACTS/TESTS/ACCEPTANCE hold no PASS/FAIL items and no WF3 "list 3-5 sibling bugs" block) — an always-applies item is absent — add a 5-10 item PASS/FAIL checklist and the sibling-bug line to the plan before lock.
+
+DEFER severity=LOW — RR-0385 item 4 "after round 2 the grounder validates the fold and the work moves forward without the operator" — plan EXACT TEXT "FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output" against plan UNVERIFIED "The record names no file." — the note writes an unverified file name into the governing spec as settled fact, an addition the ruling does not name — state "the grounder's fold check" in the note, or mark the file name as provisional until task 419 is confirmed.
+
+DEFER severity=LOW — card "the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push)" — plan CODE CHANGE "reported with STATUS: blocked, for the operator" — introduces a "STATUS: blocked" token no pasted ruling or spec clause names; item 4 says it comes to him, not that a status code is set — drop the status token or cite the clause that defines it.
+
+DEFER severity=LOW — card "Every build task of this plan follows the six steps, plan written and built on Opus (his words: 'I want this plan for each task and built by opus')" — NONE in the plan (no step list, no model attribution anywhere in BASIS/LANDING) — an operator condition on every build task is unrecorded, so compliance cannot be checked at landing — add one line naming the six steps and the model to the LANDING block.
+
+REJECT — 00_engineering_standards.md §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — accused of editing scripts/analysis/backlog-lane.mjs — this is not a frontend WF and touches no DB entry path, so §10.2 does not bind it.
+
+MET — RR-0385 item 3 "round 1 resolves CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH only; two rounds at most ... Supersedes the third output round of RR-0371" — 08_agents.md new dated note — the note states both rounds' severities, "two rounds at most", and the RR-0371 supersession for plan and output.
+
+MET — card "a dated note in Spec 08 with the rule and the three things that still come to the operator" — 08_agents.md new dated note, three indented spaces after :355 — cases (i), (ii), (iii) are all present and prior text is kept (M-246 form).
+
+MET — card "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — plan F4 "The close check counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound" — two rounds already pass, and the note records the cap as process, matching the operator's withdrawal of new gate work.
+
+MET — 00_engineering_standards.md §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — plan "TESTS (red first)" / "T1 ... Red on today's text" — the only code edit, backlog-lane.mjs:185-186, has a test that fails on today's string.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: none
+
+---
+⏱  60184ms (60.2s)
+📊 Tokens — total: 29782, input: 17013, output: 12769, reasoning: 11626

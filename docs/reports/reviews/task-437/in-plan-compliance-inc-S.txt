@@ -1,0 +1,263 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:e5db85e90759855837ca0992bbcb3df9957f7f8661da421b9d7a91f73a94d600 part 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; "Validate the plan and the output as you mentioned as per your criteria." THIS TASK: a dated note in Spec 08 with the rule and the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push); the close check accepts two output rounds (it supersedes the third round of RR-0371); the grounder brief says LOW and NIT are recorded, not folded. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
+
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-437-v1: FINAL.2 Rounds and validation (task-437)
+
+#### BASIS
+- RR-0385 item 3, MORNING-DECISIONS.md:1919: "round 1 resolves CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH only; two rounds at most, plan and output ... Supersedes the third output round of RR-0371."
+- RR-0385 item 4, :1920: after round 2 the grounder validates the fold and the work moves forward without the operator. It comes to him only for (i) a CRITICAL or HIGH still open after round 2, (ii) a decision that needs his word, (iii) every push.
+- The operator's words, verbatim: :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; :1912 "Validate the plan and the output as you mentioned as per your criteria."; :1909 "We want to reomve any of the gates work we added"; "Keep those that are built" (:1910).
+- Earlier rulings: RR-0369 (decision-154, :1782) is the same rule for the output. Its reading (3), :1783, says round-2 MED is recorded with a reason. RR-0371 (decision-156, :1800-1806) set two plan rounds then to the operator, and three output rounds; RR-0385 replaces both caps. RR-0364 (decision-149) says LOW and NIT are recorded, not fixed. RR-0359 (decision-144) says nothing is folded before the grounder rules; it is unchanged.
+- How a spec is changed: a dated note is added and the prior text is kept (M-246; model: 00_engineering_standards.md:308).
+
+#### FACTS
+- F1. Outcome forms: check-lane-close.mjs:148 (FORM_WORDS) and :194. CRITICAL, HIGH and MED take fixed (folded at the plan) or ruling; task is allowed only for a DEFER finding. LOW and NIT take any form. `pile` and `wontfix` are refused for MED (:205).
+- F2. `ruling:RR-NNNN` passes when a decision file's basename contains the id. Close check: gitFacts.decisionExists, :305. Launch gate: backlog-lane.mjs:102. "decision-170 - RR-0385-..." therefore satisfies `ruling:RR-0385` today, in both modes.
+- F3. At the plan, nothing forces a LOW to be folded. Every CONFIRMED or CONFLICT id needs one outcome line (:186, :199), and `pile` is accepted for LOW and NIT in plan mode (:148, :194). Folding a LOW is practice, not code.
+- F4. No round cap exists. The close check counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound. The plan gate reads every "Plan review round N:" line (:662-667) with no bound.
+- F5. plan-prep allows one review round per run (rule-lists.mjs:640). post refuses a second round line (:737), so a plan round 2 line is entered by hand; task-375, task-418 and task-423 hold "Plan review round 2".
+- F6. The lane brief tells lanes "a later (fix) round (r2, r3, ...)" (backlog-lane.mjs:185) and says nothing about severities by round. backlog-brief.mjs:174 already prints `max_fix_rounds: 2`.
+- F7. No grounder brief lives in the repo: the orchestrator writes it. The lane's description of the grounder is backlog-lane.mjs:186.
+- F8. Spec 08 states the outcome forms in the notes at :354-355. No Spec 08 note states round limits or cites RR-0369 or RR-0371.
+
+#### WHAT
+Today's code refuses none of the ruled behaviour:
+- A round-2 MED can be recorded as `ruling:RR-0385` (F2).
+- LOW and NIT can be piled (F3).
+- Two rounds are already allowed (F4).
+
+So check-lane-close.mjs and rule-lists.mjs (both protected paths) are NOT changed. "Build with existing components" (:1522); no new gate work (:1909).
+
+Changes:
+1. One dated note in Spec 08 after :355.
+2. One brief edit at backlog-lane.mjs:185, plus one sentence of the rule.
+3. Tests: one red test for the brief, and one lock test that proves the existing outcome behaviour in both directions.
+
+#### EXACT TEXT: dated note (new line after :355, indented three spaces)
+ Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only; two rounds at most. This supersedes the round caps of RR-0371 (two plan rounds then the operator; three output rounds) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. After round 2 the separate grounder validates the fold (FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts any recorded ruling id for a MED.
+
+#### CODE CHANGE (backlog-lane.mjs:185 only; not protected)
+- Replace "a later (fix) round (r2, r3, ...) is filed beside them as" with "the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as".
+- Append to the `grounder` text (:186): " ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED confirmed in round 2 is recorded as `<id> ruling:RR-0385`; LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator."
+
+#### TESTS (red first)
+- T1, backlog-lane.logic.test.ts, dry run: TASK-JSON `extra` contains "two output rounds at most" and "ruling:RR-0385", and does not contain "r3, ...". Red on today's text.
+- T2, check-lane-close.logic.test.ts, in the pure outcomeErrors block (:758), as a lock:
+- A CONFIRMED MED with `pile:"<30+ chars>"` is refused in close mode and in plan mode. This is the planted defect.
+- `ruling:RR-0385` passes when decisionExists is true. This is the control.
+- The same line is refused when decisionExists is false. This plants the second direction.
+- A LOW with `pile:` passes in plan mode.
+- Proven in both directions (08_agents.md:485). T2 is green on today's code by design: it locks the behaviour the note relies on.
+
+#### ORDER
+- After 436, since both edit backlog-lane.mjs in separate regions (436 at :174/:208/:223/:231, this task at :185-186).
+- Before 438. This task leaves check-lane-close.mjs unchanged, so task-438's edits there do not meet this task's; its only shared file is the test file check-lane-close.logic.test.ts, and the new describe block is kept separate.
+
+#### LANDING
+- Code commit: the tests, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-437`. No status move in it.
+- Then the closing commit with the records (two-commit close, :185).
+
+#### ACCEPTANCE
+- Spec 08 holds the note.
+- Every brief states the two-round rule and the round-2 MED form.
+- The lock test pins the forms.
+- The suite is green.
+- The rule applies from this landing (:1925 reading).
+
+#### NOT IN SCOPE
+- No change to check-lane-close.mjs or rule-lists.mjs.
+- No cap refusal. A one-line `n > 2` refusal would also block a third round the operator himself rules under case (i), and there is no escape short of new gate work, which he withdrew (:1909).
+- No refusal of fixed or folded for LOW: "never fixed by rule" (:1783) does not forbid fixing.
+- The grounder brief: it is the orchestrator's text, outside the repo (F7).
+- The output rN-versus-rerun wording conflict between 08_agents.md:355 (3) and backlog-lane.mjs:185 is left as it is.
+
+#### OPEN QUESTION (the record cannot settle it)
+Q1. Is a class ruling (`ruling:RR-0385`) an acceptable record for each round-2 MED?
+- (A) Yes, as planned: zero code; the per-finding line "id MED ruling RR-0385" is still on the task page (:274).
+- (B) Let `pile` count for MED in round 2 only: about 4 lines in a protected file, computing n before the outcome loop.
+- Recommendation: A, because the operator ordered the existing gates kept and no new gate work (:1909, :1910).
+
+#### UNVERIFIED
+- That FOLD-CHECK.md (task-419, check-lane-close.mjs:679) is what "validates the fold" means at the plan. The record names no file.
+- The card's DoD cites 08_agents.md:462 and :490. The texts are now at :485 and :513.
+
+#### GUESS
+About 1.5 hours of lane time; about 6 changed lines plus 2 tests.
+
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.881Z file_sha256=d591dacd51f9a1a4e7dc34ed0b88851e8bc604a644b82a0afae8b1a6ff3e088c prompt_sha256=08984eb45af69146a4cc3789e4ad8b078a48245844f3e3cff261271ce58f5f86
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card Description, grounder brief clause "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:186 "Append to the `grounder` text (:186): ... LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed" — the edit lands on the lane's description of the grounder, which the plan itself says is not the grounder brief, and the brief text is excluded as "outside the repo (F7)", so nothing in the plan makes the grounder brief say it — fix: either state that the :186 text is the brief the grounder receives, or name the brief's file and edit it there.
+
+DEFER severity=MED — decision RR-0364 "RR-0364 Medium and low findings recorded not fixed" — docs/specs/00-architecture/08_agents.md:355 "LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364)" — the note cites RR-0364 as authority for LOW and NIT while the pasted ruling covers Medium and low, so the note misstates the ruling it cites and leaves RR-0364's MED half unreconciled with round 1 resolving MED — fix: cite RR-0364 as MED and LOW recorded not fixed, then say RR-0369 and RR-0385 put round-1 MED back in scope.
+
+DEFER severity=MED — card Description "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — scripts/hooks/check-lane-close.mjs:272 "counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound" — the clause names the close check's round acceptance; the plan changes nothing there, plans no test of the count, and the note is to say the check "counts Review round N lines without a bound", so two rounds are not what the check accepts, any number is — fix: add a lock on the :272 count (two accepted, a third not silently accepted) or record the clause as satisfied by F4 and get it restated.
+
+DEFER severity=MED — RR-0359 "Nothing is folded before the grounder has ruled" — docs/specs/00-architecture/08_agents.md:356 "After round 2 the separate grounder validates the fold ... and the work moves on without the operator" — the note puts the fold before the grounder rules while BASIS says "RR-0359 (decision-144) ... it is unchanged", so the same note holds two rules that oppose each other — fix: add one clause to the note stating how RR-0359 now reads (findings recorded, grounder validates the fold) or that RR-0385 supersedes it for review findings.
+
+DEFER severity=LOW — card Description "Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — NONE — the plan never names the six steps it follows nor records that plan and build are on Opus, so that operator instruction is neither shown nor checkable — fix: add a BASIS line naming the six steps applied and stating plan and build are on Opus.
+
+DEFER severity=LOW — card Description "RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170)" — docs/specs/00-architecture/08_agents.md:355 "operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 ... and :1912" — the note points the verbatim at :1910 and :1912 where the pasted record places the RR-0385 entry at :1915, so the pointer does not land on the ruling cited — fix: cite the lines the register cites, :1915 with the item lines :1919 and :1920.
+
+DEFER severity=LOW — RR-0385 item 4 "(ii) a decision that needs his word" — docs/specs/00-architecture/08_agents.md:356 "(a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways)" — the note adds a definition of the operator handoff that no pasted ruling names, which narrows when work reaches him — fix: attribute the gloss to a decision id or drop it from the note.
+
+DEFER severity=LOW — Glossary "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/check-lane-close.logic.test.ts:758 "T2, check-lane-close.logic.test.ts, in the pure outcomeErrors block (:758), as a lock" — the plan calls T2 a lock but never says the test names RR-0385 as the id it asserts, and it pins pre-existing behaviour rather than the new rule, so the pasted definition is not shown to be met — fix: state the describe/it title carries RR-0385 and that `npm test` runs the file.
+
+MET — card Description, dated note with the rule and the three operator items — docs/specs/00-architecture/08_agents.md:356 — the note lists (i) a CRITICAL or HIGH still open after round 2, (ii) a decision that needs his word, (iii) a push due.
+MET — card Task line, round 1 critical/high/medium, round 2 critical/high, two rounds at most — docs/specs/00-architecture/08_agents.md:355 — "round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only; two rounds at most".
+MET — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals" — docs/specs/00-architecture/08_agents.md:355 — the note applies the same ordering to plan and output.
+MET — card Description "Scope and Files line at its plan review" — PLAN-437-v1 "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md" — the Files line matches the four files the card lists.
+MET — operator "We want to reomve any of the gates work we added"; "Keep those that are built" — PLAN-437-v1 "So check-lane-close.mjs and rule-lists.mjs (both protected paths) are NOT changed" — the plan adds no gate and keeps both built files untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 8
+Rules met: RR-0369, RR-0371
+
+---
+⏱  129862ms (129.9s)
+📊 Tokens — total: 23815, input: 6489, output: 17326, reasoning: 15771

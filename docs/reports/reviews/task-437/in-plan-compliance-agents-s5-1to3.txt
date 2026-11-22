@@ -1,0 +1,129 @@
+LIST agents-s5-1to3 sha256:893945d877cbfe06e5465a56739cbf69410578a219d07418b5a947866764e95d material sha256:e5db85e90759855837ca0992bbcb3df9957f7f8661da421b9d7a91f73a94d600 part 1 of 1
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
+
+Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
+
+Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
+
+Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
+
+Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
+
+Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL-SIMPLE423, Increment 1·B; operator, verbatim, 2026-11-21, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, RR-0363 at :1718: "We just need the rules for deepseek." and the objective at :1711: "the objective is an effective compliance review on the plan and the output.  It isn't 17"): the joined run is an accepted form of the compliance lens output set and is NOT the default: the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`), one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined), and the close check and the plan gate accept it; a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`). The default stays one compliance run per rule list, as the notes above say, because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"); a list is never trimmed in either form (the "never trimmed" sentence above stays true), and nothing orders the join.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; "Validate the plan and the output as you mentioned as per your criteria." THIS TASK: a dated note in Spec 08 with the rule and the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push); the close check accepts two output rounds (it supersedes the third round of RR-0371); the grounder brief says LOW and NIT are recorded, not folded. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
+
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-437-v1: FINAL.2 Rounds and validation (task-437)
+
+#### BASIS
+- RR-0385 item 3, MORNING-DECISIONS.md:1919: "round 1 resolves CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH only; two rounds at most, plan and output ... Supersedes the third output round of RR-0371."
+- RR-0385 item 4, :1920: after round 2 the grounder validates the fold and the work moves forward without the operator. It comes to him only for (i) a CRITICAL or HIGH still open after round 2, (ii) a decision that needs his word, (iii) every push.
+- The operator's words, verbatim: :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium."; :1912 "Validate the plan and the output as you mentioned as per your criteria."; :1909 "We want to reomve any of the gates work we added"; "Keep those that are built" (:1910).
+- Earlier rulings: RR-0369 (decision-154, :1782) is the same rule for the output. Its reading (3), :1783, says round-2 MED is recorded with a reason. RR-0371 (decision-156, :1800-1806) set two plan rounds then to the operator, and three output rounds; RR-0385 replaces both caps. RR-0364 (decision-149) says LOW and NIT are recorded, not fixed. RR-0359 (decision-144) says nothing is folded before the grounder rules; it is unchanged.
+- How a spec is changed: a dated note is added and the prior text is kept (M-246; model: 00_engineering_standards.md:308).
+
+#### FACTS
+- F1. Outcome forms: check-lane-close.mjs:148 (FORM_WORDS) and :194. CRITICAL, HIGH and MED take fixed (folded at the plan) or ruling; task is allowed only for a DEFER finding. LOW and NIT take any form. `pile` and `wontfix` are refused for MED (:205).
+- F2. `ruling:RR-NNNN` passes when a decision file's basename contains the id. Close check: gitFacts.decisionExists, :305. Launch gate: backlog-lane.mjs:102. "decision-170 - RR-0385-..." therefore satisfies `ruling:RR-0385` today, in both modes.
+- F3. At the plan, nothing forces a LOW to be folded. Every CONFIRMED or CONFLICT id needs one outcome line (:186, :199), and `pile` is accepted for LOW and NIT in plan mode (:148, :194). Folding a LOW is practice, not code.
+- F4. No round cap exists. The close check counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound. The plan gate reads every "Plan review round N:" line (:662-667) with no bound.
+- F5. plan-prep allows one review round per run (rule-lists.mjs:640). post refuses a second round line (:737), so a plan round 2 line is entered by hand; task-375, task-418 and task-423 hold "Plan review round 2".
+- F6. The lane brief tells lanes "a later (fix) round (r2, r3, ...)" (backlog-lane.mjs:185) and says nothing about severities by round. backlog-brief.mjs:174 already prints `max_fix_rounds: 2`.
+- F7. No grounder brief lives in the repo: the orchestrator writes it. The lane's description of the grounder is backlog-lane.mjs:186.
+- F8. Spec 08 states the outcome forms in the notes at :354-355. No Spec 08 note states round limits or cites RR-0369 or RR-0371.
+
+#### WHAT
+Today's code refuses none of the ruled behaviour:
+- A round-2 MED can be recorded as `ruling:RR-0385` (F2).
+- LOW and NIT can be piled (F3).
+- Two rounds are already allowed (F4).
+
+So check-lane-close.mjs and rule-lists.mjs (both protected paths) are NOT changed. "Build with existing components" (:1522); no new gate work (:1909).
+
+Changes:
+1. One dated note in Spec 08 after :355.
+2. One brief edit at backlog-lane.mjs:185, plus one sentence of the rule.
+3. Tests: one red test for the brief, and one lock test that proves the existing outcome behaviour in both directions.
+
+#### EXACT TEXT: dated note (new line after :355, indented three spaces)
+ Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only; two rounds at most. This supersedes the round caps of RR-0371 (two plan rounds then the operator; three output rounds) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. After round 2 the separate grounder validates the fold (FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts any recorded ruling id for a MED.
+
+#### CODE CHANGE (backlog-lane.mjs:185 only; not protected)
+- Replace "a later (fix) round (r2, r3, ...) is filed beside them as" with "the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as".
+- Append to the `grounder` text (:186): " ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED confirmed in round 2 is recorded as `<id> ruling:RR-0385`; LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator."
+
+#### TESTS (red first)
+- T1, backlog-lane.logic.test.ts, dry run: TASK-JSON `extra` contains "two output rounds at most" and "ruling:RR-0385", and does not contain "r3, ...". Red on today's text.
+- T2, check-lane-close.logic.test.ts, in the pure outcomeErrors block (:758), as a lock:
+- A CONFIRMED MED with `pile:"<30+ chars>"` is refused in close mode and in plan mode. This is the planted defect.
+- `ruling:RR-0385` passes when decisionExists is true. This is the control.
+- The same line is refused when decisionExists is false. This plants the second direction.
+- A LOW with `pile:` passes in plan mode.
+- Proven in both directions (08_agents.md:485). T2 is green on today's code by design: it locks the behaviour the note relies on.
+
+#### ORDER
+- After 436, since both edit backlog-lane.mjs in separate regions (436 at :174/:208/:223/:231, this task at :185-186).
+- Before 438. This task leaves check-lane-close.mjs unchanged, so task-438's edits there do not meet this task's; its only shared file is the test file check-lane-close.logic.test.ts, and the new describe block is kept separate.
+
+#### LANDING
+- Code commit: the tests, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-437`. No status move in it.
+- Then the closing commit with the records (two-commit close, :185).
+
+#### ACCEPTANCE
+- Spec 08 holds the note.
+- Every brief states the two-round rule and the round-2 MED form.
+- The lock test pins the forms.
+- The suite is green.
+- The rule applies from this landing (:1925 reading).
+
+#### NOT IN SCOPE
+- No change to check-lane-close.mjs or rule-lists.mjs.
+- No cap refusal. A one-line `n > 2` refusal would also block a third round the operator himself rules under case (i), and there is no escape short of new gate work, which he withdrew (:1909).
+- No refusal of fixed or folded for LOW: "never fixed by rule" (:1783) does not forbid fixing.
+- The grounder brief: it is the orchestrator's text, outside the repo (F7).
+- The output rN-versus-rerun wording conflict between 08_agents.md:355 (3) and backlog-lane.mjs:185 is left as it is.
+
+#### OPEN QUESTION (the record cannot settle it)
+Q1. Is a class ruling (`ruling:RR-0385`) an acceptable record for each round-2 MED?
+- (A) Yes, as planned: zero code; the per-finding line "id MED ruling RR-0385" is still on the task page (:274).
+- (B) Let `pile` count for MED in round 2 only: about 4 lines in a protected file, computing n before the outcome loop.
+- Recommendation: A, because the operator ordered the existing gates kept and no new gate work (:1909, :1910).
+
+#### UNVERIFIED
+- That FOLD-CHECK.md (task-419, check-lane-close.mjs:679) is what "validates the fold" means at the plan. The record names no file.
+- The card's DoD cites 08_agents.md:462 and :490. The texts are now at :485 and :513.
+
+#### GUESS
+About 1.5 hours of lane time; about 6 changed lines plus 2 tests.
+
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md
+

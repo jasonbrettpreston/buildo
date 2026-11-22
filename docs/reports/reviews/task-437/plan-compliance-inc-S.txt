@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.883Z file_sha256=91c3a5739f9ba76767434b5daaf999a7d0b76b0c9eb4988be331397ad7b8ee59 prompt_sha256=135af80db75e50d3f7fdd49c64d1aeb3a0c6a88c0a3787f639e529c49bd59c6b
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card, "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — plan, "So check-lane-close.mjs and rule-lists.mjs (both protected paths) are NOT changed" and note text "Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts \"Review round N\" lines without a bound" — the card names the close check as the place the third output round is superseded, but the plan leaves it unbounded, so a `Review round 3:` line still closes and no test touches the round count (T2 tests outcome forms only) — fix: implement the bound in check-lane-close.mjs (refuse n > 2 output rounds, carrying the case-(i) exception as the one escape) and add a T2 case that a third round line is refused, or get the operator to strike that card clause in writing.
+
+DEFER severity=MED — card, "the grounder brief says LOW and NIT are recorded, not folded" — plan grounder text, "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed", with NOT IN SCOPE "No refusal of fixed or folded for LOW" — the brief forbids fixing but not folding, so a LOW folded at round 1 passes the brief and the card's word "folded" is unmet — fix: write "recorded (pile or wontfix with a reason), not fixed or folded" at backlog-lane.mjs:186 and delete the NOT IN SCOPE line that keeps folding legal.
+
+DEFER severity=MED — card, "Every build task of this plan follows the six steps, plan written and built on Opus (his words: \"I want this plan for each task and built by opus\")" — NONE — no line in ORDER, LANDING or ACCEPTANCE names the six steps or Opus authorship, and I cannot see the six steps in the pasted context so I do not invent them — fix: add one LANDING line recording that this task runs the six steps and that plan and build are on Opus.
+
+DEFER severity=MED — RR-0364, "Medium and low findings recorded not fixed" — note text, "LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364)" — the note cites RR-0364 for LOW and NIT only and drops Medium from that ruling's scope without recording that RR-0385 overrides RR-0364 for MED — fix: state that RR-0364 covers MED and LOW, and that RR-0385 supersedes it for MED at round 1.
+
+DEFER severity=LOW — card, "the three things that still come to the operator (... a decision that needs his word ...)" — note text, "a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways)" — the note narrows the open trigger to two defined cases, so a decision needing his word outside those two no longer reaches him — fix: keep the clause open as "a decision needs his word" and mark the two as examples.
+
+DEFER severity=LOW — card, "a dated note in Spec 08 with the rule" — plan, "OPEN QUESTION (the record cannot settle it) Q1. Is a class ruling (`ruling:RR-0385`) an acceptable record for each round-2 MED?" — the note hard-codes option A while Q1 is unanswered, so ACCEPTANCE "Every brief states the two-round rule and the round-2 MED form" rests on an open question — fix: settle Q1 under operator trigger (ii) before landing, or have the note say option A holds only pending his word.
+
+DEFER severity=NIT — card, "LOW and NIT are recorded (pile or wontfix with a reason)" forms — T2, "A LOW with `pile:` passes in plan mode" — the lock test proves the LOW form only, though the card and note name NIT as well — fix: add the matching NIT pile case to T2.
+
+MET — card, dated note with the rule and the three operator triggers — plan EXACT TEXT — round 1 CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH, and the three triggers (i) (ii) (iii) are all written.
+MET — operator verbatim, "2b is round one is Med. High and Critical amd Round 2 High and Critical" — plan EXACT TEXT — both rounds' severities and "two rounds at most" are stated.
+MET — RR-0369, "the second round is just highs and criticals" — plan EXACT TEXT — "round 2 resolves CRITICAL and HIGH only".
+MET — RR-0359, "Nothing is folded before the grounder has ruled" — plan BASIS, "RR-0359 (decision-144) says nothing is folded before the grounder rules; it is unchanged".
+MET — card, "Scope and Files line at its plan review" — plan header, "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md".
+MET — RR-0385, "tests are the focus" — plan TESTS, "T1, backlog-lane.logic.test.ts, dry run ... Red on today's text" plus T2 as a lock.
+MET — RR-0385, "Label all realted tasks McFix Final" — card, "labels: McFix, McFix Final".
+
+REJECT — RR-0371 — that the note supersedes more than the card's "third round of RR-0371", namely the plan-side hand-off to the operator — RR-0385's pasted summary names "two rounds, validation without the operator", which covers plan and output alike.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 7
+Rules met: RR-0359, RR-0369, RR-0371
+
+---
+⏱  53611ms (53.6s)
+📊 Tokens — total: 22188, input: 11153, output: 11035, reasoning: 9683

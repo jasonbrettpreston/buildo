@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.885Z file_sha256=4d23e227f8881a1f1eec2e765f912f32487bf86b3e30e2cf95a9c9e90d21b625 prompt_sha256=e493f034bd26a9e5f6ba6b8e65a100b620c1fd3a84418bc47e5007b0b2e25688
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card description clause "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — plan "NOT IN SCOPE - No change to check-lane-close.mjs or rule-lists.mjs." and plan F4 "counts rounds as `n = 1 + prior "Review round N:" lines` (:272) with no bound" — the close check is left unbounded, so a third output round still closes and RR-0371's third round is superseded by no code and by no test in the test list — add a bounded close-mode refusal of a third "Review round N" line with a T2 case, or paste the operator word that authorises leaving the count unbounded.
+BUG severity=HIGH — card description clause "the grounder brief says LOW and NIT are recorded, not folded" — plan "NOT IN SCOPE - The grounder brief: it is the orchestrator's text, outside the repo (F7)." and CODE CHANGE "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed" — the clause names the grounder brief and the word folded; the plan edits only the lane's description of the grounder, says "not fixed" instead of "not folded", and T1 asserts neither — put "LOW and NIT are recorded, not folded" into the in-repo grounder text and assert that sentence in T1.
+DEFER severity=MED — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — note text "round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only" together with "After round 2 the separate grounder validates the fold" — the note lets CRITICAL, HIGH and MED be resolved at round 1 and has the grounder look only after round 2, while claiming it "keeps RR-0359" — state in the note that a round-1 or round-2 resolution is a proposal until the grounder's fold check passes.
+DEFER severity=MED — card description "Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — NONE — the plan never states the six steps are followed, nor that the plan and the build are on Opus — add one line in BASIS or ORDER naming the six steps and Opus as planner and builder.
+DEFER severity=LOW — plan T2 "A CONFIRMED MED with `pile:"<30+ chars>"` is refused in close mode and in plan mode." against plan F1 "`pile` and `wontfix` are refused for MED (:205)" and F3 "`pile` is accepted for LOW and NIT in plan mode (:148, :194)" — the stated facts place the MED-pile refusal at :205, outside the plan-mode outcome path, so the plan-mode half of the lock test is not shown green by the plan's own facts — name the plan-mode line that refuses MED pile, or drop "and in plan mode" from T2.
+MET — RR-0369 — docs/specs/00-architecture/08_agents.md new note — "round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only".
+MET — RR-0364 — docs/specs/00-architecture/08_agents.md new note — "LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364)".
+MET — card description, the three things that still come to the operator — docs/specs/00-architecture/08_agents.md new note — "(i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word ... (iii) a push is due".
+MET — RR-0385 "Label all realted tasks McFix Final" — task block — "labels: McFix, McFix Final".
+MET — card description "Scope and Files line at its plan review" — plan Files line — "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md".
+REJECT — doc-17 readings RR-0001 to RR-0218 — the material is accused of not carrying the register readings — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)", so those lines create no clause to meet.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+Rules met: none
+
+---
+⏱  38271ms (38.3s)
+📊 Tokens — total: 24622, input: 15906, output: 8716, reasoning: 7647

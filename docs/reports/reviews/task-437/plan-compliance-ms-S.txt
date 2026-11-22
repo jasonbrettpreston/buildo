@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:56:43.888Z file_sha256=e9b425dbb5d214202655d2725943025d82693934b77ef21a766e0f2596b4e0c2 prompt_sha256=d8b81872075d6c8a7484488e2f2c57b072b9148a01df8ff664bcfe949e2bc525
+🔍 Lens review of docs/reports/reviews/task-437/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0364 "Medium and low findings recorded not fixed; paperwork tasks get a grounder check, no review" — plan BASIS "RR-0364 (decision-149) says LOW and NIT are recorded, not fixed." — the pasted ruling covers Medium as well, so the note that will land narrows a standing ruling to LOW and NIT and never records that RR-0385 supersedes RR-0364 for round-1 MED — fix: quote RR-0364 as pasted and add to the note and the BASIS line "RR-0385 supersedes RR-0364 for round-1 MED".
+
+DEFER severity=MED — card "the grounder brief says LOW and NIT are recorded, not folded" — plan "Append to the `grounder` text (:186)" with "The grounder brief: it is the orchestrator's text, outside the repo (F7)." — the wording lands in the lane's description of the grounder, not in the grounder brief the card names, so nothing changed makes the grounder brief say it — fix: put the grounder-brief sentence verbatim in the Spec 08 dated note so the orchestrator's brief has a repo source.
+
+DEFER severity=LOW — card "the grounder brief says LOW and NIT are recorded, not folded" — plan text "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed" — the operative term here is fold (FOLD-CHECK.md, "validates the fold"), and the brief says only "not fixed", leaving folding unaddressed for a lane reading the brief — fix: write "not required to be fixed or folded".
+
+DEFER severity=LOW — card "a dated note in Spec 08 with the rule and the three things that still come to the operator" — plan note "A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`" beside "OPEN QUESTION (the record cannot settle it)" — the note asserts a per-finding record form no pasted clause names, and the plan itself calls it unsettled in the same landing — fix: land the note stating only that a round-2 MED is recorded and not fixed, and settle Q1 before naming the class-ruling form.
+
+REJECT — RR-0371 "three rounds on the output" — the change leaves check-lane-close.mjs unbounded, so a third output round can still be closed — not a real issue: RR-0385 pasted "unbuilt gates withdrawn" and the plan's F4 shows no cap exists, so the supersession is recorded in the note rather than enforced by a new gate.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — plan note — "After round 2 the separate grounder validates the fold (FOLD-CHECK.md at the plan, its round-2 GROUNDER.md at the output)", the grounder still rules before any fold, unchanged.
+MET — RR-0385 "two rounds, validation without the operator" — plan note — records exactly the three escalation cases: a critical or high open after round 2, a decision that needs his word, a push due.
+MET — RR-0369 "the second round is just highs and criticals" — plan note — "round 1 resolves CRITICAL, HIGH and MED findings and round 2 resolves CRITICAL and HIGH only".
+MET — RR-0371 "two rounds on the plan, then to me and three rounds on the output" — plan note — "This supersedes the round caps of RR-0371 (two plan rounds then the operator; three output rounds) and keeps RR-0369".
+MET — card "Scope and Files line at its plan review" — "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md" — the Scope and Files line is present with all four paths.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+Rules met: none
+
+---
+⏱  60522ms (60.5s)
+📊 Tokens — total: 19019, input: 5699, output: 13320, reasoning: 12411
