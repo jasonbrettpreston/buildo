@@ -1,0 +1,223 @@
+LIST agents-s5-1to3 sha256:893945d877cbfe06e5465a56739cbf69410578a219d07418b5a947866764e95d material sha256:be7552096a0ec2504a3206ad841690f40958dcb088f16915b13f6cdf42698df7 part 1 of 1 chunk 1 of 1
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-compliance.md","scripts/analysis/rule-lists.mjs","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
+
+Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
+
+Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
+
+Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
+
+Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
+
+Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL-SIMPLE423, Increment 1·B; operator, verbatim, 2026-11-21, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, RR-0363 at :1718: "We just need the rules for deepseek." and the objective at :1711: "the objective is an effective compliance review on the plan and the output.  It isn't 17"): the joined run is an accepted form of the compliance lens output set and is NOT the default: the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`), one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined), and the close check and the plan gate accept it; a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`). The default stays one compliance run per rule list, as the notes above say, because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"); a list is never trimmed in either form (the "never trimmed" sentence above stays true), and nothing orders the join.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index bbf8e4ca146b223d24e81feed1386372ebfe0f25..6e2e83fa9729fd06ff557a9ab1afa6a67c0b8032 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -156,8 +156,8 @@ Operator, verbatim, 2026-11-20 (`~/Buildo-scratch/queues-20261113/MORNING-DECISI
+ 1. **The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists (`rows`: globs or `globs_from` an existing path map, optional `imports_from`, `lists`, `why`). A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause. `node scripts/analysis/rule-lists.mjs validate` checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path; `resolve --files "<Files line>" --type <type> --letter <group>` prints what a Files line attaches.
+ 2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
+ 3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md > <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part).
+-4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited).
+-5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each ends with a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well.
++4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text): a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: each -pN file is one list part with one material chunk; when the material is cut into chunks every chunk repeats every list part, so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand.
++5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well.
+ 
+ The close check also reads the review tool's REVIEW header (`scripts/deepseek-review.js` writes `REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex>` among the first lines of a lens-mode output): a required lens output without it, with another template's name, or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused; the input's first line `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed, and the parts of a list together must carry the whole list as it is now. The lane report dir is scoped to one task by a file `TASK` holding the task id. Every staged task file that moves to a finished status (`finished_statuses` in the table: BUILT, DONE, MERGED) is checked, whatever the commit message says, including the board's auto-commit; a build, fix or check task needs an `@lane-*` assignee in the closing commit; paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line; a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task. A grounder name that contains or is contained in the lane or an assignee (case, punctuation and digits removed) is refused; quotes are 20+ characters, distinct per finding, not on a line that occurs more than 3 times in the cited file; REJECTED and CONFLICT reasons are 30+ characters; a loose reading of the finding lines must count the same as the strict one.
+ 
+diff --git a/.claude/review-templates/lens-compliance.md b/.claude/review-templates/lens-compliance.md
+index d02b5237c00e4c509d4fcf99418b1d7cc4646a76..cb62e5a60290ee2f6e9d7ab0b29ac88ce7ed989b 100644
+--- a/.claude/review-templates/lens-compliance.md
++++ b/.claude/review-templates/lens-compliance.md
+@@ -70,8 +70,11 @@ End with:
+ ```
+ VERDICT: PASS or FAIL on compliance with the pasted clauses
+ Clauses checked: <n>   Unmet: <n>
++Rules met: <rule ids, comma separated>
+ ```
+ 
++The last line names by id the rules of the pasted list you judged met and raised no finding on. A rule id is a bullet line whose bold id is name.N (for example fe.12, core.3, m.431). Write only ids that appear in the pasted list, ids only, on one line. If the pasted list has no such ids, or none was met, write `Rules met: none`. Never invent an id.
++
+ ---
+ 
+ ## Anti-patterns (do NOT produce these)
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 5578edce1d02a76bcc9d75583bf1497ac70dc1c0..c6fe42d29eca972538775b261b578b5c760adf40 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -465,6 +465,19 @@ export function parseLensInput(text) {
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- task-433 (INPUTS.5, RR-0378 step 6): the rule ids of the sent list part that appear nowhere in a review output ----
++/**
++ * A report for the grounder, never a gate. ids = the bold ids that start a list line of the list part of a lens input (fe.01, core.3, m.431), in order, unique; a document without such ids gives none.
++ * missing = the ids that appear nowhere in the output text (a finding, a MET or REJECT line, or the Rules met line); an id is matched whole, its dot literal (fe.1 is not covered by fe.12).
++ */
++export function unmentionedRules(inputText, outputText) {
++  const p = parseLensInput(inputText);
++  if (!p) throw new Error('not a lens input');
++  const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];
++  const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));
++  return { ids, missing, hasLine: /^Rules met:/m.test(outputText), list: p.id, part: p.part, parts: p.parts };
++}
++
+ // ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
+ /**
+  * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
+@@ -841,8 +854,17 @@ function cli() {
+     const dir = str('dir', '');
+     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
+     for (const l of findingsReport(dir)) console.log(l);
++  } else if (cmd === 'unmentioned') {
++    const out = str('out', '');
++    if (!out) die(2, 'usage: unmentioned --out <review output file> [--in <its lens input, default in-<output name> beside it>]');
++    const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));
++    let r;
++    try { r = unmentionedRules(fs.readFileSync(inp, 'utf8'), fs.readFileSync(out, 'utf8')); } catch (e) { die(1, `unmentioned: ${e.message}`); }
++    const name = path.basename(out);
++    if (!r.ids.length) console.log(`${name}: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report`);
++    else console.log(`${name}: list ${r.list} part ${r.part} of ${r.parts}: ${r.missing.length} of ${r.ids.length} rule ids are in no finding and not in the Rules met line: ${r.missing.length ? r.missing.join(', ') : 'none'}${r.hasLine ? '' : ' [no "Rules met:" line in the output]'}`);
+   } else if (cmd === 'plan-prep') {
+     planPrep(a).then((c) => process.exit(c), (e) => die(1, `plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}`));
+-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | plan-prep');
++  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | unmentioned | plan-prep');
+ }
+ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();
+diff --git a/src/tests/backlog/review-templates.logic.test.ts b/src/tests/backlog/review-templates.logic.test.ts
+index 6ae1754619972afe013f478d1e3c72977b90224c..0843a6e401f49079ef47aa1fdb005db3d50c11a3 100644
+--- a/src/tests/backlog/review-templates.logic.test.ts
++++ b/src/tests/backlog/review-templates.logic.test.ts
+@@ -14,3 +14,21 @@ describe('review lens templates: the plan placeholder appears once, so the mater
+     });
+   }
+ });
++
++// task-433 (INPUTS.5, RR-0378 step 6): the compliance template closes with the Rules met line after Clauses checked; no other lens template carries it.
++describe('task-433: the compliance lens ends with a Rules met line', () => {
++  const read = (lens: string) => fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
++  it('lens-compliance.md holds a Rules met line after the Clauses checked line, in the closing block', () => {
++    const t = read('compliance');
++    const a = t.indexOf('Clauses checked: <n>   Unmet: <n>');
++    const b = t.indexOf('Rules met: <rule ids, comma separated>');
++    expect(a).toBeGreaterThan(0);
++    expect(b).toBeGreaterThan(a);
++    expect(t).toContain('Rules met: none');
++  });
++  for (const lens of ['code-review', 'error-paths', 'ux', 'security']) {
++    it(`control: lens-${lens}.md does not carry it`, () => {
++      expect(read(lens)).not.toContain('Rules met:');
++    });
++  }
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 85b2fa9482294b9d10236dfb95cd8ee0fad050e2..427bface9fdc84a28e42d2a03acfba770d6ce10e 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -955,3 +955,83 @@ describe('task-423 (e): counts pinned at most, on the real table', () => {
+     expect(r.stderr).toMatch(/--lists/);
+   });
+ });
++
++// ---- task-433 (INPUTS.5, RR-0378 step 6, RR-0381): the Rules met line and the unmentioned report ----
++// Rule: "Let's add a dn b to the plan" (decision-163, MORNING-DECISIONS.md:1853); 08_agents.md:462 both directions; PLAN-PROTOCOL.md:3 simple, no scope creep. A REPORT for the grounder, never a gate.
++describe('task-433: unmentioned prints the rule ids of the sent list part that appear nowhere in the output (a report, not a gate)', () => {
++  type RM = { renderLensInput: (a: Record<string, unknown>) => string; findingsIn: (f: { name: string; text: string }[]) => { id: string }[]; looseFindingCount: (t: string) => number };
++  const rm = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<RM>;
++  const pair = async (listPart: string, output: string, name = 'out-compliance-hb.txt') => {
++    const m = await rm();
++    const d = tmp('unm');
++    const input = m.renderLensInput({ id: 'hb', list: { file: 'docs/x.md', whole: true }, part: listPart, i: 1, n: 1, material: 'MAT', paths: null });
++    fs.writeFileSync(path.join(d, `in-${name}`), input);
++    fs.writeFileSync(path.join(d, name), output);
++    return { d, out: path.join(d, name) };
++  };
++  const LIST = '# Handbook\n- **fe.01** one\n- **fe.02** two\n- **fe.03** three\n- **fe.12** twelve\n';
++  const BODY = 'REVIEW template=lens-compliance.md model=x\nBUG severity=HIGH — fe.02 "two" — a.ts:1 "x" — claim — fix\nVERDICT: FAIL\nClauses checked: 4   Unmet: 1\n';
++  it('T1 plant: a finding names fe.02 and the Rules met line names fe.01 and fe.12, so exactly fe.03 is printed', async () => {
++    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.12\n`);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 1 of 4 rule ids are in no finding and not in the Rules met line: fe.03');
++  });
++  it('control (a): every id mentioned prints none and exits 0', async () => {
++    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.03, fe.12\n`);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 0 of 4 rule ids are in no finding and not in the Rules met line: none');
++  });
++  it('control (b): fe.1 is not covered by fe.12, and the dot is literal (feX01 does not cover fe.01)', async () => {
++    const { out } = await pair('- **fe.1** a\n- **fe.12** b\n- **fe.01** c\n', 'Rules met: fe.12, feX01\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.1, fe.01');
++    expect(r.stdout).not.toContain('fe.12,');
++  });
++  it('control (c): a REJECT or MET line naming the id counts as a mention', async () => {
++    const { out } = await pair(LIST, 'REJECT — fe.01 — accused — not real\nMET — fe.03 — a.ts:2 — ok\nRules met: fe.12\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.stdout.trim().endsWith('fe.02')).toBe(true);
++    expect(r.stdout).toContain('1 of 4');
++  });
++  it('control (d): an output with no Rules met line gets the note and ids absent from findings are listed', async () => {
++    const { out } = await pair(LIST, BODY);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.01, fe.03, fe.12');
++    expect(r.stdout).toContain('[no "Rules met:" line in the output]');
++  });
++  it('control (e): a list part with no rule ids (the glossary form) prints "holds no rule ids", nothing invented', async () => {
++    const { out } = await pair('- **slug**: a glossary line\n- **other**: another\n', 'Rules met: none\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report');
++  });
++  it('T2 plant: flagged ids still exit 0; controls: missing --out exits 2, a file that is not a lens input exits 1, --in is honoured', async () => {
++    const { d, out } = await pair(LIST, 'nothing\n');
++    expect(script(CLI, ['unmentioned', '--out', out]).status).toBe(0);
++    expect(script(CLI, ['unmentioned']).status).toBe(2);
++    fs.writeFileSync(path.join(d, 'in-plain.txt'), 'not a lens input\n');
++    fs.writeFileSync(path.join(d, 'plain.txt'), 'x\n');
++    const bad = script(CLI, ['unmentioned', '--out', path.join(d, 'plain.txt')]);
++    expect(bad.status).toBe(1);
++    expect(bad.stderr).toMatch(/not a lens input/);
++    const other = path.join(d, 'elsewhere-input.txt');
++    fs.copyFileSync(path.join(d, 'in-out-compliance-hb.txt'), other);
++    fs.writeFileSync(path.join(d, 'solo.txt'), 'Rules met: fe.01\n');
++    const r = script(CLI, ['unmentioned', '--out', path.join(d, 'solo.txt'), '--in', other]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.02, fe.03, fe.12');
++  });
++  it('T4 (green-both lock, parsers unchanged): the Rules met line and the tool trailer change neither the strict nor the loose finding count', async () => {
++    const m = await rm();
++    const plain = `${BODY}`;
++    const withLine = `${BODY}Rules met: fe.01, fe.12\n---\ntook 12.3s\n`;
++    for (const text of [plain, withLine]) {
++      expect(m.findingsIn([{ name: 'out-compliance-hb.txt', text }]).length).toBe(1);
++      expect(m.looseFindingCount(text)).toBe(1);
++    }
++  });
++});
+

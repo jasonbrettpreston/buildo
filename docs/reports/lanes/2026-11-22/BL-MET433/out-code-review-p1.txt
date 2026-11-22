@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T17:48:36.879Z file_sha256=301d4252ec923c59bc0962fb0acf4ae02fd05435967e1d1e399f18ab56cc4b01 prompt_sha256=b08cd494f7c4229917e7aff40a18cfdebfa3956140619d90486bd2774b1ce1be
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:865 "rule ids are in no finding and not in the Rules met line" — the number printed comes from a filter that counts a mention anywhere in the output (a MET or REJECT line included, pinned by control (c) at src/tests/backlog/rule-lists.logic.test.ts:1014 "REJECT, fe.01, accused, not real"), so the label states a narrower search than the code performs and a rule that appears only on a MET line is silently treated as mentioned — reword the line to name the whole search: appear nowhere in the output, meaning not in a finding, not on a MET or REJECT line, not on the Rules met line.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:478 "hasLine: /^Rules met:/m.test(outputText)" — anchored at column 0, so a reviewer that indents the line or writes it as a bullet gets the note "[no \"Rules met:\" line in the output]" even though the ids on that line did clear their rules — match with leading whitespace and an optional bullet: /^\s*(?:[-*]\s+)?Rules met:/m.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:860 "const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));" — the default expects the input beside the output named in- plus the output basename, while the README's own lens-input example writes the input as in-<phase>-compliance-L with no .txt (.claude/review-templates/README.md:159 "`--out <dir>/in-<phase>-compliance-L` writes the lens input"); the lane dir naming cannot be seen here, but on the documented name the run dies with ENOENT unless --in is passed — align the default on the phase or document and require --in.
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs:862 "try { r = unmentionedRules(fs.readFileSync(inp, 'utf8'), fs.readFileSync(out, 'utf8')); } catch (e) { die(1, `unmentioned: ${e.message}`); }" — logs the message only, while the sibling branch at :867 logs the first three stack lines ("plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}"), so a read or parse failure gives no location — print the same three-line stack in this catch.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  94293ms (94.3s)
+📊 Tokens — total: 28094, input: 8863, output: 19231, reasoning: 18659

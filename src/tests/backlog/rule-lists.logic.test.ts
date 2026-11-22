@@ -955,3 +955,83 @@ describe('task-423 (e): counts pinned at most, on the real table', () => {
     expect(r.stderr).toMatch(/--lists/);
   });
 });
+
+// ---- task-433 (INPUTS.5, RR-0378 step 6, RR-0381): the Rules met line and the unmentioned report ----
+// Rule: "Let's add a dn b to the plan" (decision-163, MORNING-DECISIONS.md:1853); 08_agents.md:462 both directions; PLAN-PROTOCOL.md:3 simple, no scope creep. A REPORT for the grounder, never a gate.
+describe('task-433: unmentioned prints the rule ids of the sent list part that appear nowhere in the output (a report, not a gate)', () => {
+  type RM = { renderLensInput: (a: Record<string, unknown>) => string; findingsIn: (f: { name: string; text: string }[]) => { id: string }[]; looseFindingCount: (t: string) => number };
+  const rm = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<RM>;
+  const pair = async (listPart: string, output: string, name = 'out-compliance-hb.txt') => {
+    const m = await rm();
+    const d = tmp('unm');
+    const input = m.renderLensInput({ id: 'hb', list: { file: 'docs/x.md', whole: true }, part: listPart, i: 1, n: 1, material: 'MAT', paths: null });
+    fs.writeFileSync(path.join(d, `in-${name}`), input);
+    fs.writeFileSync(path.join(d, name), output);
+    return { d, out: path.join(d, name) };
+  };
+  const LIST = '# Handbook\n- **fe.01** one\n- **fe.02** two\n- **fe.03** three\n- **fe.12** twelve\n';
+  const BODY = 'REVIEW template=lens-compliance.md model=x\nBUG severity=HIGH — fe.02 "two" — a.ts:1 "x" — claim — fix\nVERDICT: FAIL\nClauses checked: 4   Unmet: 1\n';
+  it('T1 plant: a finding names fe.02 and the Rules met line names fe.01 and fe.12, so exactly fe.03 is printed', async () => {
+    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.12\n`);
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 1 of 4 rule ids are in no finding and not in the Rules met line: fe.03');
+  });
+  it('control (a): every id mentioned prints none and exits 0', async () => {
+    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.03, fe.12\n`);
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 0 of 4 rule ids are in no finding and not in the Rules met line: none');
+  });
+  it('control (b): fe.1 is not covered by fe.12, and the dot is literal (feX01 does not cover fe.01)', async () => {
+    const { out } = await pair('- **fe.1** a\n- **fe.12** b\n- **fe.01** c\n', 'Rules met: fe.12, feX01\n');
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain('fe.1, fe.01');
+    expect(r.stdout).not.toContain('fe.12,');
+  });
+  it('control (c): a REJECT or MET line naming the id counts as a mention', async () => {
+    const { out } = await pair(LIST, 'REJECT — fe.01 — accused — not real\nMET — fe.03 — a.ts:2 — ok\nRules met: fe.12\n');
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.stdout.trim().endsWith('fe.02')).toBe(true);
+    expect(r.stdout).toContain('1 of 4');
+  });
+  it('control (d): an output with no Rules met line gets the note and ids absent from findings are listed', async () => {
+    const { out } = await pair(LIST, BODY);
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain('fe.01, fe.03, fe.12');
+    expect(r.stdout).toContain('[no "Rules met:" line in the output]');
+  });
+  it('control (e): a list part with no rule ids (the glossary form) prints "holds no rule ids", nothing invented', async () => {
+    const { out } = await pair('- **slug**: a glossary line\n- **other**: another\n', 'Rules met: none\n');
+    const r = script(CLI, ['unmentioned', '--out', out]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report');
+  });
+  it('T2 plant: flagged ids still exit 0; controls: missing --out exits 2, a file that is not a lens input exits 1, --in is honoured', async () => {
+    const { d, out } = await pair(LIST, 'nothing\n');
+    expect(script(CLI, ['unmentioned', '--out', out]).status).toBe(0);
+    expect(script(CLI, ['unmentioned']).status).toBe(2);
+    fs.writeFileSync(path.join(d, 'in-plain.txt'), 'not a lens input\n');
+    fs.writeFileSync(path.join(d, 'plain.txt'), 'x\n');
+    const bad = script(CLI, ['unmentioned', '--out', path.join(d, 'plain.txt')]);
+    expect(bad.status).toBe(1);
+    expect(bad.stderr).toMatch(/not a lens input/);
+    const other = path.join(d, 'elsewhere-input.txt');
+    fs.copyFileSync(path.join(d, 'in-out-compliance-hb.txt'), other);
+    fs.writeFileSync(path.join(d, 'solo.txt'), 'Rules met: fe.01\n');
+    const r = script(CLI, ['unmentioned', '--out', path.join(d, 'solo.txt'), '--in', other]);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain('fe.02, fe.03, fe.12');
+  });
+  it('T4 (green-both lock, parsers unchanged): the Rules met line and the tool trailer change neither the strict nor the loose finding count', async () => {
+    const m = await rm();
+    const plain = `${BODY}`;
+    const withLine = `${BODY}Rules met: fe.01, fe.12\n---\ntook 12.3s\n`;
+    for (const text of [plain, withLine]) {
+      expect(m.findingsIn([{ name: 'out-compliance-hb.txt', text }]).length).toBe(1);
+      expect(m.looseFindingCount(text)).toBe(1);
+    }
+  });
+});

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.850Z file_sha256=096d3622cd969985f3dd7621ecaf7b568f5189d6d1af732b7e444b08c4e97729 prompt_sha256=cd8c251bd679871aa77616b0d62daa927a290f037893bd139bdfb1435bfbff95
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+DEFER severity=LOW — task-433 description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the test is run over the whole output text, so an id that occurs only in passing prose (not in a finding line, not in the Rules met line) is never reported, which is wider than the clause's "neither in a finding nor in that line"; README:159 states this broadening as intended ("or any other text") but no pasted ruling names it — either restrict the match to finding lines (BUG/DEFER/MET/REJECT) plus the Rules met line, or get the broadening named in a ruling and quoted beside the tool.
+
+REJECT — RR-0381 "the lane reviews with a copy of the launch-commit compliance template (grounded fix approved)" — accused that the live compliance run used the edited template at 5559f1d21 rather than the launch-commit copy — that run is the implementation note's "Acceptance 4 (orchestrator, live, on the edited template at 5559f1d21)", the orchestrator's acceptance check, not the lane's own compliance review, and the task is left RUNNING with "grounder owed".
+
+MET lines:
+
+MET — task-433 Files line "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — .claude/review-templates/lens-compliance.md:76, scripts/analysis/rule-lists.mjs:473, .claude/review-templates/README.md:159, both test files — the diff touches exactly those five paths and nothing else.
+MET — task-433 "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 "Rules met: <rule ids, comma separated>" with the sentence at :76 fixing ids only, `none`, and never invent.
+MET — task-433 "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:473 "export function unmentionedRules(inputText, outputText)" and the CLI branch at :857 printing ": the sent list part holds no name.N bullet rule ids" or the missing count.
+MET — task-433 "No verdict per rule." — .claude/review-templates/lens-compliance.md:76 "The last line names by id the rules of the pasted list you judged met and raised no finding on." and the tool prints ids plus a count only.
+MET — Spec 137 task-423 note "no table key is added, so no Cross-Spec Dependencies row changes" — scripts/analysis/rule-lists.json absent from the diff — the change adds no table row, glob, list or key.
+
+```
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+```
+
+---
+⏱  70413ms (70.4s)
+📊 Tokens — total: 33721, input: 19359, output: 14362, reasoning: 13625

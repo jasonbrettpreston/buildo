@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:48:36.872Z file_sha256=b2f3d95fe5abfc15812002aad397e7453e7556674922f83aaeabe6f0fae1e180 prompt_sha256=f80569c9071a488dab47ac6b7a7c24b6bd9bb8d7fdeeb4b97768c40bfdab0e9c
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-433 card scope "THIS TASK (step 6, B): the compliance template asks for one closing line of the rule ids judged met; a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line." — .claude/review-templates/README.md:160 "or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line)" — the pre-change text said each output "ends with a `VERDICT:` line" and the diff silently relaxes it to "holds", which no pasted clause or ruling names, while the gate `scripts/hooks/check-lane-close.mjs` is not in this diff so the relaxed claim cannot be seen to be true; if the gate requires the VERDICT line last, it now refuses every output the new template writes, because the template puts `Rules met:` after that line — fix: read the gate, and either keep `VERDICT:` as the last line of the closing block (Rules met above it) or record a gate run on a template-conforming output; make the README wording say exactly what the gate does.
+
+DEFER severity=MED — task-433 card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" and test control (c) "a REJECT or MET line naming the id counts as a mention" — the code treats any mention anywhere in the output (a REJECT line, a MET line, running prose) as coverage, so ids the card defines as reportable are dropped, and the printed headline "are in no finding and not in the Rules met line" describes a narrower rule than the one computed — fix: either list ids absent from both findings and the Rules met line as the card says, or change the printed sentence to "appear nowhere in the output" and record the card wording as amended.
+
+DEFER severity=LOW — plan-protocol "Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability" — .claude/review-templates/README.md:159 "so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand" — "the files" are the outputs, which do not carry the same text because each chunk judges different material, which is exactly why the next clause needs a by-hand union — fix: say the input files repeat the same list part text while the outputs differ per chunk.
+
+DEFER severity=LOW — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals" — NONE, cannot see: the pasted lane notes say "output round 1 done (11 outputs, 41 findings, FINDINGS.md untriaged)" and fix 1 fixed "F1, F2 and the grounder's optional wording items" — I cannot confirm from the paste that every medium of the 41 findings was fixed in round 1 — fix: paste the FINDINGS.md triage or record one disposition line per finding in the lane notes.
+
+MET — task-433 card "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 — "Rules met: <rule ids, comma separated>" is the last line of the closing block, with the ids are bullet name.N, none, never-invent sentence at :76.
+
+MET — task-433 card Files line "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — every hunk of the diff falls in one of those five files and no sixth file is touched.
+
+MET — task-433 card "No verdict per rule." — scripts/analysis/rule-lists.mjs:473 "export function unmentionedRules(inputText, outputText) {" — the function returns ids, missing, hasLine, list, part, parts only, no per-rule judgement.
+
+MET — README:159 "a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it)" — scripts/analysis/rule-lists.mjs:864 — the report exits 0 on every completed run and `scripts/hooks/check-lane-close.mjs` is absent from this diff, so nothing in the close reads it.
+
+MET — task-433 card "a small script lists rule ids of the sent handbook" — scripts/analysis/rule-lists.mjs:476 "const ids = [...new Set([...p.listPart.matchAll(...)])]" — ids are read from the lens input's own list part, deduped, and matched whole so fe.1 is not covered by fe.12.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  67793ms (67.8s)
+📊 Tokens — total: 25303, input: 11267, output: 14036, reasoning: 12859

@@ -465,6 +465,19 @@ export function parseLensInput(text) {
 /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
 export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
 
+// ---- task-433 (INPUTS.5, RR-0378 step 6): the rule ids of the sent list part that appear nowhere in a review output ----
+/**
+ * A report for the grounder, never a gate. ids = the bold ids that start a list line of the list part of a lens input (fe.01, core.3, m.431), in order, unique; a document without such ids gives none.
+ * missing = the ids that appear nowhere in the output text (a finding, a MET or REJECT line, or the Rules met line); an id is matched whole, its dot literal (fe.1 is not covered by fe.12).
+ */
+export function unmentionedRules(inputText, outputText) {
+  const p = parseLensInput(inputText);
+  if (!p) throw new Error('not a lens input');
+  const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];
+  const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));
+  return { ids, missing, hasLine: /^Rules met:/m.test(outputText), list: p.id, part: p.part, parts: p.parts };
+}
+
 // ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
 /**
  * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
@@ -841,8 +854,17 @@ function cli() {
     const dir = str('dir', '');
     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
     for (const l of findingsReport(dir)) console.log(l);
+  } else if (cmd === 'unmentioned') {
+    const out = str('out', '');
+    if (!out) die(2, 'usage: unmentioned --out <review output file> [--in <its lens input, default in-<output name> beside it>]');
+    const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));
+    let r;
+    try { r = unmentionedRules(fs.readFileSync(inp, 'utf8'), fs.readFileSync(out, 'utf8')); } catch (e) { die(1, `unmentioned: ${e.message}`); }
+    const name = path.basename(out);
+    if (!r.ids.length) console.log(`${name}: the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report`);
+    else console.log(`${name}: list ${r.list} part ${r.part} of ${r.parts}: ${r.missing.length} of ${r.ids.length} rule ids are in no finding and not in the Rules met line: ${r.missing.length ? r.missing.join(', ') : 'none'}${r.hasLine ? '' : ' [no "Rules met:" line in the output]'}`);
   } else if (cmd === 'plan-prep') {
     planPrep(a).then((c) => process.exit(c), (e) => die(1, `plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}`));
-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | plan-prep');
+  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | unmentioned | plan-prep');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();

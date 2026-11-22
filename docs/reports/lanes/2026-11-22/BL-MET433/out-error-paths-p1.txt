@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T17:48:36.871Z file_sha256=301d4252ec923c59bc0962fb0acf4ae02fd05435967e1d1e399f18ab56cc4b01 prompt_sha256=efaab0cf807bd169b1eea0caf43981e307b9e12f73a272831ca257155bbcd3cd
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none found in this diff — n/a — no uncaught write, no double-count, no fail-open write path in the change.
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:860 "const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));" — the input file is guessed from the output basename via "in-<name>"; for split list parts (-pN) or chunked material the real lens-input file may be named differently, in which case readFileSync throws and the CLI dies(1) on exactly the large split inputs this feature targets; I cannot see lens-input's naming for parts/chunks, grounder to confirm, then read the path from the input's LIST line or require --in for parts.
+DEFER severity=MED — .claude/review-templates/README.md:160 "each -pN file is one list part with one material chunk" — the printed line "list hb part 1 of 1: 0 of 4 rule ids are ... none" carries no material chunk index, so a grounder running one chunk file reads "none unmentioned" as global and an actually unmentioned rule is silently dropped; fix: print the material chunk id/count in the line, or refuse when only one of several chunk files is supplied.
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:478 "hasLine: /^Rules met:/m.test(outputText)" — a reviewer that writes the line with a leading space, a bullet, or bold "**Rules met:**" is reported as "[no "Rules met:" line in the output]" although the line exists, mis-informing the grounder; fix: match `/^\s*(?:[-*]\s*)?(?:\*\*)?Rules met:/m`.
+DEFER severity=LOW — .claude/review-templates/README.md:160 "it exits 0 whenever it ran and nothing in the close reads it" — the CLI actually dies(1) on a non-lens-input or unreadable file (scripts/analysis/rule-lists.mjs:862 "die(1, `unmentioned: ${e.message}`)") and dies(2) with no --out, so a batch loop over many outputs aborts on the first hand-made or joined output rather than skipping; fix: skip with the note and exit 0, or state the nonzero exits in the README.
+REJECT — .claude/review-templates/README.md:159 "each holds a `VERDICT:` line" — reads like a loosening of a VERDICT-must-be-last rule that the new trailing "Rules met:" line would break — handled: the compliance closing block already placed "Clauses checked:" after the VERDICT line before this change, so no close check could have required VERDICT as the final line; adding "Rules met:" after it changes nothing there.
+
+VERDICT: PASS on error-path safety
+Paths walked: parse failure, missing input file, missing --out, empty list (no ids), empty output, split part/chunk naming, per-file aggregation, exit codes, repeat run idempotency (read-only), VERDICT line placement   Unguarded: 2
+
+---
+⏱  76303ms (76.3s)
+📊 Tokens — total: 23501, input: 8880, output: 14621, reasoning: 13919
