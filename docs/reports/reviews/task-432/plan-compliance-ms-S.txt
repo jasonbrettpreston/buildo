@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:34:40.662Z file_sha256=c2bbcc8c5a7ea0dae4c4962e6bb9acf9fb1e214cf9257d91c7155947d602ab24 prompt_sha256=6a3d853fe7ee07a693e1aee241820ce812db7fedba93eaf0cce47474da799891
+🔍 Lens review of docs/reports/reviews/task-432/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-432 Description 'the review context is re-made for each output round so it carries the decisions and the task text as they are then' — EXACT EDITS 1 'after the "Context pack sections" line (:180): one line, "Fresh context every review round ... run `node scripts/analysis/backlog-brief.mjs ...`"' plus FINDING FIRST 3 'the lens commands bake in the launch file (`ctxRel`, backlog-lane.mjs:189)' — the per-round fresh context is delivered only by a sentence printed to stdout and one README sentence, no code path and no test asserts that any output round used the newest context file, and Q2 leaves the only possible check out, so the card's core clause rests on instruction text alone — make the lane run the brief itself at the start of each output round before printing the lens commands, or add a lane test that the round command names the file the re-run writes.
+
+BUG severity=MED — task-432 Description 'the review context is re-made for each output round' — 'Q3 Is round 1 also re-made? Recommended yes (the lane edits the task between launch and round 1, as task-423 did). Cost: one extra brief run.' — the first output round is left as an open question while the clause says each output round, and EXACT EDITS 1 already writes '(the first, and every fix round)', so the plan contradicts itself on the very round task-423 failed — answer Q3 yes, fold it into WHAT, and delete the question before plan-lock.
+
+BUG severity=MED — Project objectives 'we need one plan - we can only execute one plan' (MORNING-DECISIONS.md:652) — 'Q1 Where do the lane's decisions come from? (A, recommended) the board checkout read at each re-run (`--board`) ... (B) the lane merges wf2/board before each round ... (C) both: no extra value.' and 'Q2 Should the close refuse a round whose outputs hash with an older context than the newest? Default no.' — three open questions leave the input source, the close change and round 1 undecided, so the material is a menu of options rather than one executable plan, and a yes on Q2 would touch protected check-lane-close.mjs that LANDING says is not touched — lock A, answer Q2 no and Q3 yes in the plan text before plan-lock.
+
+DEFER severity=MED — Project objectives 'If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code' (MORNING-DECISIONS.md:635) — 'Principles served (DoD #9, .cursor/MCBYLAWS-QUEUE.md:104): accurate (the reviewer sees the rulings and task as they are), observable (the context lists every decision title and is committed), simple and reuse' — the plan lists the five principles but never names a designed element (A to G) or the supporting function this tooling serves, so the relevance screen the pasted clause sets is not answered — add one line naming the supporting function (the review gate that lets the search page and elements A to G land) or attach the operator's approval that tooling work is in scope.
+
+REJECT — 'keep it simple; no scope creep' (PLAN-PROTOCOL.md:3) — the accusation that the new `--board` flag adds behaviour the card did not name — not a real issue: FINDING FIRST 8 states 'A re-run with `--root <lane worktree>` would still read the lane's copy, so the re-run ALONE does not fix the decisions', so without the flag the card's 'decisions ... as they are then' cannot be met.
+
+MET — task-432 Files 'scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts' — EXACT EDITS 1 to 4 plus '4. NOT edited: check-lane-close.mjs, review-template.js, any spec.' — every edit stays inside the five files the card names.
+
+MET — task-432 Description 'carries the decisions and the task text as they are then' (task half) — FINDING FIRST 1 'It reads the task from `--root` (:17, :24)' and FINDING FIRST 7 'Re-running the brief in the lane worktree reads the lane's current task file' — the widened Files line is picked up because the re-run reads the lane worktree, not the launch copy.
+
+MET — 'keep it simple' (PLAN-PROTOCOL.md:3) — 'one flag and one brief sentence, no new tool, no change to the close check' — no new tool, no close change, one flag and one printed sentence in the plan's own accounting.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  67622ms (67.6s)
+📊 Tokens — total: 18313, input: 6364, output: 11949, reasoning: 10845

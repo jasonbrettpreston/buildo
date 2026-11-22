@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T16:34:40.665Z file_sha256=68e94d83d0f807bc6593ccb8a2a0ba18ff06211bb8ffa0fc834b6da360ea3104 prompt_sha256=88e743c73e5f24ac1d05182556ae3fbad79a0725b2847e553c9ac8454f7ec5ce
+🔍 Lens review of docs/reports/reviews/task-432/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — `backlog-lane.mjs:187` (lens line) + `backlog-lane.mjs:161` — The printed lens commands keep `--context ${ctx}` where `${ctx}` is the **launch** file; the only nudge toward the fresh context is a parenthetical. A lane that runs the ticket's commands verbatim reverts to the stale launch context — exactly the task-423 failure (21/21 false findings) this task exists to kill. Fix: print the re-run command first and make the lens command reference a placeholder the lane must fill (`--context <context-rN.md the brief just wrote>`), or promote Q2's binding check into scope so a stale-context output cannot close.
+
+BUG severity=HIGH — `backlog-lane.mjs:161` (new `'--board', board`) — The launch brief call now unconditionally passes `--board board`; if `board` is ever falsy/`undefined` at that point the brief receives the string `'undefined'`, `path.resolve('undefined')` runs, `<cwd>/undefined/backlog/decisions` is not a directory, and `die()` exit 1 fires at G1 — blocking **every** lane launch, not just the decisions read. Verify `board` is non-null on all launch modes and guard with `...(board ? ['--board', board] : [])`; add a T5 for the null-board ticket.
+
+BUG severity=MED — `backlog-brief.mjs:39` (`decDir = path.join(boardArg ?? root, ...)`) + all other readers of `backlog/decisions` — Root cause is "reads decisions from the lane snapshot"; the plan fixes only `backlog-brief.mjs`. Any other script (close check, grounder, lane-report writer) that still reads `backlog/decisions` under `--root` keeps the stale set. Run `grep -rn "backlog/decisions" scripts/` and fold every hit into scope or record an explicit defer with line refs.
+
+BUG severity=MED — `backlog-brief.mjs:112` (case-insensitive "names this task" match) — Switching the source from the lane's ~156-file snapshot to the full board set widens the false-positive surface; if the matcher is a substring test, a decision about `task-4230` joins task-423's context. Verify the regex is word-bounded (`task-XXXX(?![0-9])`); if not, tighten it and add a T1 sibling case with `task-4230` present.
+
+BUG severity=MED — acceptance 2 (`--board ~/Buildo-wt-board`) — The replay assumes this exact path exists, is a board-branch worktree, and is readable from the lane sandbox; none is checked (the plan itself flags readability under UNVERIFIED). If the real path differs, acceptance 2 fails before reaching its assertion. Add an explicit precondition `test -d ~/Buildo-wt-board/backlog/decisions` (and `git -C ~/Buildo-wt-board rev-parse --abbrev-ref HEAD` = the board branch) as step 0 of acceptance 2.
+
+DEFER severity=LOW — `backlog-brief.mjs:159` (write) — A crash/ENOSPC mid-write leaves a truncated `context-rN.md` on disk; the next run counts it and makes `rN+1`, minting a round-number gap and a dead half-file. The close refuses a heading-less context (`:324-326`), so no false-bind — self-heals on re-run. Defer; write-to-temp-then-rename if it bites.
+
+DEFER severity=LOW — `backlog-brief-context.logic.test.ts:34-44` / ORDER — Adding the "fresh context every round" line to the brief's stdout silently changes output; any un-named exact-match/snapshot test on brief stdout (outside the two named files) will break, and the plan only re-greens the named files. Defer, but run the full `src/tests/backlog/` and note the added line in the task notes.
+
+DEFER severity=NIT — `backlog-brief.mjs` edit 1 (die check) — An existing-but-empty `<board>/backlog/decisions` passes the "is not a directory" test and yields a context with zero decisions; the negative path (T2) only covers missing-dir. Not wrong (zero decisions is a valid state), but worth a one-line control so an empty board is distinguishable from a mis-pointed `--board`.
+
+REJECT — `check-lane-close.mjs:70`/`:320-327` — "the close accepts any committed context (`.some`), so multiple rounds per task are safe" — correct and intentional; the task-423 evidence (r1 kept, r2 bound) and test `:813` pin it, so the multiple-context outcome is by design, not a defect.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- The printed lens command still points at the launch context; freshness rests on a parenthetical a lane can ignore (`backlog-lane.mjs:187`).
+- Unconditional `'--board', board` at launch can `die()` at G1 if `board` is unset, blocking all lane launches (`backlog-lane.mjs:161`).
+- Only `backlog-brief.mjs` is fixed; other readers of `backlog/decisions` keep the stale set (sibling root cause un-audited).
+
+Top 3 unverified data premises (regardless of verdict):
+- `~/.Buildo-wt-board` is the real board worktree and is sandbox-readable — verify: `test -d ~/Buildo-wt-board/backlog/decisions && git -C ~/Buildo-wt-board rev-parse --abbrev-ref HEAD`.
+- `backlog-lane.mjs:161`'s `board` is always defined — verify: `grep -n "board" scripts/analysis/backlog-lane.mjs | sed -n '1,30p'` and trace the assignment feeding :161.
+- The "names this task" matcher is word-bounded — verify: `grep -n "toLowerCase\|\.test(\|\.includes(" scripts/analysis/backlog-brief.mjs` around :109-117 and confirm a `task-4230` string does not match.
+
+---
+⏱  124211ms (124.2s)
+📊 Tokens — total: 29970, input: 16245, output: 13725, reasoning: 12313

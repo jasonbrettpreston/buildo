@@ -1,0 +1,110 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:edb3bafa3feeb108a39bdb54b71b49ef2ea6c49822f7ef10bd40895a65f530d9 part 1 of 1
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. Also measured on task-423 output round 2: 21 of 21 CRITICAL and HIGH lens findings were false, most because the lens read the round 1 context (rulings up to RR-0371 only, the old Files line). THIS TASK (step 5, A): the review context is re-made for each output round so it carries the decisions and the task text as they are then.
+
+Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-432-v1: task-432 INPUTS.4, a fresh review context every round
+
+Principles served (DoD #9, .cursor/MCBYLAWS-QUEUE.md:104): accurate (the reviewer sees the rulings and task as they are), observable (the context lists every decision title and is committed), simple and reuse (the tooling already makes a new context per run; one flag and one brief sentence, no new tool, no change to the close check).
+
+#### FINDING FIRST: what the code does today
+1. The context file is made by `scripts/analysis/backlog-brief.mjs` on EVERY run. It reads the task from `--root` (:17, :24) and the decisions from `<root>/backlog/decisions` (:39-45). The file name is `context-r<N>.md`, N = the context-r*.md files already in `docs/reports/reviews/<task>/` + 1 (:51; `contextRound`, scripts/lib/review-template.js:137-139). It writes it at :159 and never overwrites. "Decisions naming this task" (:109-117) are the decisions whose title or body names the task id, plan id or ROW id, or an RR id that the task body names.
+2. The reviewer is sent only five sections of that file, `CONTEXT_SECTIONS` = Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes (review-template.js:115). The brief's "Decisions in force" title list is NOT among them.
+3. A new N is made by whoever runs the brief again. Today only `backlog-lane.mjs:161` does, once, at launch (`--root <worktree>`). Nothing in the brief text (:178-180) or the lens line (backlog-lane.mjs:176-187) tells the lane to re-run it. The lens commands bake in the launch file (`ctxRel`, backlog-lane.mjs:189).
+4. The "round" in the file name is "brief runs", not "review rounds". For task-423 the board already held context-r1.md (the plan evidence); the launch run made context-r2.md. Output rounds 1 and 2 both used it, as the lane never re-ran the brief (docs/reports/reviews/task-423/ holds only context-r1.md and context-r2.md; GROUNDER.md:55,63 "the lens read the older context-r2.md Files line").
+5. What the close binds: `lensContexts` (check-lane-close.mjs:320-327) takes EVERY committed context-rN.md of the task (read at :836 from the index and HEAD). An output passes when its prompt hash equals the hash made with ANY ONE of them (:70 `.some`); a placeholder context or a missing heading is refused (:324-326). The test src/tests/backlog/check-lane-close.logic.test.ts:813 already pins "one committed context file; the earlier round file is kept and still binds". So a second or third context per task is ALLOWED and ACCEPTED by the close today, with no check change. The close does not bind round N to the newest file.
+6. Rules: the only rule on context files is the dated note at docs/specs/00-architecture/08_agents.md:529: "The review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten (N = the context-r*.md files already there + 1), written by scripts/analysis/backlog-brief.mjs". Same words in .claude/review-templates/README.md:124. Spec 137 :140 (note of task-375) says the close recomputes the hash with the committed context. Spec 08 section 7 rule 10 is at :360 and says nothing on contexts; the brief's cite "(:341)" at backlog-brief.mjs:7 and :179 is stale (08_agents.md:341 is blank at HEAD). So a fresh context per round is within the rules and is what 08_agents.md:529 already says; the tooling lacks only the instruction.
+7. Why the Files line was stale: the lane widened the task's Files line in its own fix commit 5d554f459 (a commit on branch wf1/inc1b-simple423, not on the board), after the launch context was made. Re-running the brief in the lane worktree reads the lane's current task file, so the task half is solved by the re-run alone. The existing test backlog-brief-context.logic.test.ts:185-195 proves a later run puts new task text in context-r2 and leaves r1 as it was.
+8. Why RR-0374 and RR-0375 were missing: decisions live on the board branch. `git ls-tree wf1/inc1b-simple423 backlog/decisions/` ends at decision-156 (RR-0371); decision-159 (RR-0374) and decision-160 (RR-0375) are only on wf2/board. A re-run with `--root <lane worktree>` would still read the lane's copy, so the re-run ALONE does not fix the decisions. Both decisions would be matched if read from the board: decision-159's text names task-423, decision-160's title names Task-423 (matched case-insensitively, :112), and the quote regex :41 reads "Operator, verbatim, 2026-11-22: "..."".
+9. The lane does not merge the board before a round (nothing orders it). The retro recommendation (~/Buildo-scratch/lanes-20261119/inc1b/retro/GROUNDED-CAPS.md:154,163: "the lane merges wf2/board once, before the outputs are made") is a recommendation, not a ruling, and has a cost: a merge re-made 11 outputs for task-419 round 3 (GROUNDED-CAPS.md:89), and the close reads the lens template at the range base (check-lane-close.mjs:764), so a merge that pulls in a changed template breaks the hash (see PLAN-433).
+
+So: partly "only the instruction is missing", partly one small code change (where the decisions are read from).
+
+#### BASIS
+- "Let's add a dn b to the plan - we already do run the review twice - once on the plan and the output." and "Plan approved. We are running right now on this?" (RR-0378, decision-163; MORNING-DECISIONS.md:1850-1852, the entry "Operator APPROVES the review-inputs plan"). Step 5 (A) as put to him: "Fresh context every review round."
+- "one per review round and never overwritten" (08_agents.md:529; README.md:124).
+- "Nothing was added that the card or ruling did not name" (124a_step_standard_policy_appendix.md:988, DoD #8): hence one flag, one sentence, one README sentence.
+- Rule must be quoted first: .cursor/MCBYLAWS-QUEUE.md:107. Red tests first: 08_agents.md:462, :490. Status line in the same commit as the work: 137_mcqueue.md:84.
+
+#### WHAT
+Every review round (the first output round and each fix round) starts with a brief re-run in the lane worktree that makes the next context-rN.md from (a) the task file in the lane worktree as it is then and (b) the decisions of the BOARD checkout as they are then. The lane uses the highest-numbered file in every `--context` of that round and commits it.
+
+"Decisions as they are then" for a lane branch: the files in `<board>/backlog/decisions` on disk at the moment of the re-run (the board is where rulings are recorded; the lane branch only holds the set from its cut). A ruling made after that moment is in the next round. "Task as it is then": the lane worktree's task file (the file the close reads, the lane's own edits included). Nothing is merged; the lane's diff range is untouched.
+
+#### EXACT EDITS
+1. scripts/analysis/backlog-brief.mjs
+ - :17 area: `const boardArg = a.board && a.board !== true ? path.resolve(a.board) : null;` and `die(...)` (exit 1, names the dir) if given and `<boardArg>/backlog/decisions` is not a directory. No silent fallback.
+ - :39: `const decDir = path.join(boardArg ?? root, 'backlog/decisions');`. Default (no flag) is unchanged.
+ - usage comment (:5) and the die text (:23): add `[--board <dir>]`.
+ - after the "Context pack sections" line (:180): one line, "Fresh context every review round (RR-0378 step 5; 08_agents.md:529): before you make the outputs of a review round (the first, and every fix round) run `node scripts/analysis/backlog-brief.mjs --task <id> --lane <lane> --stage <stage> --root <root>[ --board <board>] > /dev/null`; it writes the next docs/reports/reviews/<id>/context-rN.md from the task file in your worktree and the decisions of the board as they are then; pass the highest-numbered file as --context in every lens-input and review command of that round, and commit it with the round." (`--board` part only when the flag was given.)
+2. scripts/analysis/backlog-lane.mjs
+ - :161: add `'--board', board` to the G1 brief call (so the launch run and the printed command carry the board path).
+ - the lens line (:187): one clause after "the context file ${ctx}": "(the launch file; for each review round use the newer file the brief's re-run command writes, see the brief)". The commands keep `--context ${ctx} --section ...` so the pinned regexes (backlog-lane.logic.test.ts:270,276) still hold.
+3. .claude/review-templates/README.md:124: one sentence: the brief's re-run at each round, `--board`.
+4. NOT edited: check-lane-close.mjs, review-template.js, any spec.
+
+#### TESTS (red first; each plant has a control)
+In src/tests/backlog/backlog-brief-context.logic.test.ts (fixture at :12-26, decisions pattern at :116-118):
+- T1 plant: root d holds RR-0501 naming the task; a second dir b holds RR-0900 naming the task; run the brief with `--root d --board b`; context-r1 "Decisions naming this task" and "Decisions in force" hold RR-0900. RED now (the flag is ignored).
+Controls: (a) without `--board` RR-0900 is absent and RR-0501 present (default unchanged); (b) with `--board b` a decision only in root is absent (the board's set is the source, the ruled meaning).
+- T2 plant: `--board <dir with no backlog/decisions>` exits 1 naming the dir and writes no context file. Control: a good board exits 0.
+- T3 plant: stdout holds the "Fresh context every review round" line with `--root d --board b`. RED now. Control: without `--board` the line has no `--board`; and the brief still carries the context sha line (existing test :34-44 stays green).
+- Control kept as is: the later-run test :185-195 (new task text in r2, r1 untouched).
+In src/tests/backlog/backlog-lane.logic.test.ts:
+- T4 plant: the G1 ticket the launch writes holds `--board <the board dir>`; the lens line holds the "newer file" clause. RED now. Controls: the existing :270 and :276 regexes (`--context ...context-r2.md --section "Task"`) stay green.
+No check-lane-close test is added: :813 already pins "any committed context binds".
+
+#### ORDER
+tests T1-T4 written and shown red; brief edit; lane edit; README sentence; tests green; the named test files green; commit through the real hooks.
+
+#### LANDING
+- Files touched are not in the table's protected_paths (scripts/analysis/rule-lists.json: check-lane-close.mjs, rule-lists.mjs, rule-lists.json, deepseek-review.js, .husky/*). The card says backlog-brief.mjs is protected; the table does not list it (UNVERIFIED which is meant; no hook was found that names it). check-lane-close.mjs is NOT touched by this plan.
+- If run as a lane build: two commits (08_agents.md:529 note area, 137_mcqueue.md two-commit close): the work first (code, tests, README, task notes), then the closing commit with only the lane report directory, review context directory, task file and decision record. Task file and queue row updated with the work (137_mcqueue.md:84).
+
+#### ACCEPTANCE
+1. T1-T4 red then green, with controls.
+2. Replay on the real evidence, in a scratch checkout of wf1/inc1b-simple423 (never the board): the brief with `--root <checkout> --board ~/Buildo-wt-board` makes a context whose "Decisions naming this task" holds RR-0374 and RR-0375 and whose Description holds the widened Files line (12 entries, 5d554f459).
+3. The close check on a fixture with contexts r1..r3 stays green (existing :813).
+4. The generated brief holds the sentence; README updated.
+5. DoD 1-10 of the card, STATUS line.
+
+#### NOT IN SCOPE
+Binding round N to the newest context in the close; merging the board into the lane; changing CONTEXT_SECTIONS; a flag to skip the brief's stdout; plan rounds (plan evidence is made on the board, where the decisions already are); any spec note.
+
+#### OPEN QUESTIONS for the operator
+Q1 Where do the lane's decisions come from? (A, recommended) the board checkout read at each re-run (`--board`): one flag, no merge, no restart. (B) the lane merges wf2/board before each round: no code, but the range moves, outputs may need re-making (task-419 round 3), and a changed lens template in the merge breaks the close's hash. (C) both: no extra value.
+Q2 Should the close refuse a round whose outputs hash with an older context than the newest? Default no. Cost if yes: a protected-path change (check-lane-close.mjs), the file number is "brief runs" not "review rounds", so the mapping from out-X-r2.txt to a context is a guess.
+Q3 Is round 1 also re-made? Recommended yes (the lane edits the task between launch and round 1, as task-423 did). Cost: one extra brief run.
+
+#### UNVERIFIED
+- Whether any hook treats backlog-brief.mjs as protected (card says yes, table says no).
+- Whether lanes can read `~/Buildo-wt-board` from their sandbox (the brief already names board paths; backlog-lane.mjs reads it).
+- That RR-0374/RR-0375 come out in "Decisions naming this task" is argued from their text; acceptance 2 proves it.
+- The stale cites at backlog-brief.mjs:7,:179 (08_agents.md:341) are out of scope; flagged for the grounder.
+
+Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+

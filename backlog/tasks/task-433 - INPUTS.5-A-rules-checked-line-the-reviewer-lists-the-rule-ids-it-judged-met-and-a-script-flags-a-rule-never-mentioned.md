@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:34:00Z'
+updated_date: '2026-11-22T16:46:00Z'
 labels:
   - McFix
   - McFix V2
@@ -93,11 +93,11 @@ In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts:
 Live check (not a test; a DeepSeek call, so the orchestrator's, not run here): one lens run on a Spec 136 input shows the line and ids that exist in the list; recorded in the task notes.
 
 ## ORDER
-T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; commit.
+T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; base-copy compliance outputs after the last in-range commit (the other four lens templates are unchanged and are used as briefed); commit.
 
 ## LANDING
 - Protected path touched: scripts/analysis/rule-lists.mjs (scripts/analysis/rule-lists.json protected_paths). The close check refuses a commit that changes a protected path AND moves a task to finished (check-lane-close.mjs:32, :739-740). So: commit 1 is the work (template, rule-lists.mjs, README, tests, task notes); commit 2 is the closing commit with records and the status only. The template, README and tests are not protected.
-- Template change and hashes: it changes the prompt hash of outputs made after it. Two caveats beyond "future outputs only": (a) the plan gate recomputes plan-compliance hashes with the template at the BOARD HEAD (check-lane-close.mjs:631 `readBase: i.readRepo`, doc :597), so plan evidence already committed for a not-yet-launched task is refused until its compliance plan outputs are re-made; land this after the pending launches, or accept re-making. (b) The close recomputes with the template at the range base, the launch commit (:764); a lane launched before this lands must not merge the board's template before making its outputs (this contradicts the retro's "merge once before outputs", GROUNDED-CAPS.md:163). Lanes launched after it are unaffected.
+- Template change and hashes: it changes the prompt hash of outputs made after it. Two caveats beyond "future outputs only": (a) the plan gate recomputes plan-compliance hashes with the template at the BOARD HEAD (check-lane-close.mjs:631 `readBase: i.readRepo`, doc :597), so plan evidence already committed for a not-yet-launched task is refused until its compliance plan outputs are re-made; land this after the pending launches, or accept re-making. (b) The close recomputes with the template at the range base, the launch commit (:764); a lane launched before this lands must not merge the board's template before making its outputs (this contradicts the retro's "merge once before outputs", GROUNDED-CAPS.md:163). Lanes launched after it are unaffected. This lane edits the template itself, so its own out-compliance outputs are made with the BASE copy of the template: `git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md` (outside the repo, same file name, because the close compares only the header's template name, check-lane-close.mjs:59-61, and deepseek-review.js:161 prints the basename). The copy is passed as `--template <lane dir>/lens-compliance.md` to both `lens-input` and the review command in place of the repo path. The lane's compliance outputs therefore carry no `Rules met:` line. The live check (acceptance 4) is a separate run on the edited template by the orchestrator. If the board is merged into the lane, take the copy again from the new merge-base and re-make the outputs. (Ruled by the separate grounder Cairn-Ground-Q433; operator RR-0381 "approved. fix it".)
 - Concurrency: task-431 edits rule-lists.json (the table); same-file merge risk only in rule-lists.mjs if it also edits it (UNVERIFIED).
 
 ## ACCEPTANCE

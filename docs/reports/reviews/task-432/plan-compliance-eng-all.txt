@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:34:40.649Z file_sha256=9c2dd9bbd22e4fe25a702e7b226555e5299158379e3364264646e8ad8ff4e4d0 prompt_sha256=2cbe6da56d57ef8cce3200252948e2fc69d5ee0f781aaba18f83e9bd1fcb209b
+🔍 Lens review of docs/reports/reviews/task-432/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "THIS TASK (step 5, A): the review context is re-made for each output round so it carries the decisions and the task text as they are then." — plan WHAT "The lane uses the highest-numbered file in every `--context` of that round and commits it" vs EXACT EDITS "after the \"Context pack sections\" line (:180): one line" and "No check-lane-close test is added: :813 already pins \"any committed context binds\"" — freshness per round rests only on a printed sentence plus a parenthetical in the lens line, with no code, test or acceptance tying a round's outputs to the newest context-rN.md, so an output round can still hash against the launch file and the close accepts it, clause unmet — add an acceptance plus a red test proving a round's output prompt hash resolves to the newest context file (i.e. answer Q2 yes) before lock.
+
+DEFER severity=MED — card Description "so it carries the decisions and the task text as they are then" — plan "(`--board` part only when the flag was given.)" with "Default (no flag) is unchanged." — a brief re-run that omits --board (any lane launched before this change, and any newer lane copying a sentence out of an older context) still reads the lane branch's decisions ending at RR-0371, the exact stale set the card names as the defect — make the re-run sentence always name the board path the lane was launched with, and have T4 assert the launch ticket carries it.
+
+DEFER severity=LOW — no pasted clause names a refusal path — plan "`die(...)` (exit 1, names the dir) if given and `<boardArg>/backlog/decisions` is not a directory. No silent fallback." — new hard-fail behaviour beyond the card and RR-0378 — bounded and safe, but it is unnamed surface the operator should see before lock.
+
+DEFER severity=NIT — card "for each output round" — plan "Q3 Is round 1 also re-made? Recommended yes" — the card text already answers Q3, so an open question holds the lock on a settled point — strike Q3.
+
+MET — card Files line "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — plan Files line, identical — no file outside the card's list is touched.
+
+MET — card "Fresh review context every round" — plan edit 2 "the lens line (:187): one clause after \"the context file ${ctx}\"" — the launch prompt now points at the newer file the re-run writes.
+
+MET — RR-0371 "three rounds on the output" — plan "The close check on a fixture with contexts r1..r3 stays green (existing :813)" — no round cap, plan or output, is changed.
+
+MET — RR-0378 "Plan approved. We are running right now on this?" — plan BASIS "Step 5 (A) as put to him: \"Fresh context every review round.\"" — the plan stays inside step 5 A only.
+
+MET — card "the task text as they are then" — plan WHAT "(a) the task file in the lane worktree as it is then" — the kept control ":185-195 (new task text in r2, r1 untouched)" pins the task half.
+
+REJECT — RR-0378 "handbook plus relevant engineering sections" — accused of leaving the handbook and CONTEXT_SECTIONS work undone — because the card scopes this task to step 5 (A) and the plan's NOT IN SCOPE excludes CONTEXT_SECTIONS deliberately.
+
+REJECT — RR-0374 "Apprvoe step 1 and step 2 - when it arrives" and RR-0375 "close it if it is verified" — accused of being unaddressed by the plan — because both name task-423 actions and are pasted only as decisions the context must carry, not as work items for this task.
+
+REJECT — RR-0378 "you can remove step 7 right now" — accused of not removing step 7 — because that clause names a change to the McSix step list, not to any of the five files in this card's Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  105567ms (105.6s)
+📊 Tokens — total: 29139, input: 17503, output: 11636, reasoning: 10656

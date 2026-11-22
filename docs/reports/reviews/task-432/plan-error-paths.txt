@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T16:34:40.658Z file_sha256=68e94d83d0f807bc6593ccb8a2a0ba18ff06211bb8ffa0fc834b6da360ea3104 prompt_sha256=47dcc0339995471a66ea212c5a6fa71d04085c5d56fec6a6dda5b56e9108f8fc
+🔍 Lens review of docs/reports/reviews/task-432/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/backlog-brief.mjs:17 "const boardArg = a.board && a.board !== true ? path.resolve(a.board) : null;" — a bare `--board`, `--board=`, or `--board $UNSET_VAR` parses to null and the brief quietly reads the lane's own decisions, so the round's context is stale with exit 0 and no message, which is the RR-0374/RR-0375 miss repeating under the new instruction; die exit 1 whenever `--board` appears in argv without a non-empty value, and let only the flag's absence default to root.
+
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs:187 "the context file ${ctx}" — the lens commands still substitute the launch context (ctxRel, :189) and the re-run is only prose the agent must obey, so a skipped or failed re-run lets a later round's outputs hash with the earlier round context and the close ("lensContexts", check-lane-close.mjs:70 `.some`) accepts them with no error; print `--context` from the highest-numbered context-r*.md at print time, or have the close refuse the non-newest file (Q2 yes), so the stale case fails closed instead of open.
+
+DEFER severity=MED — scripts/analysis/backlog-brief.mjs:51 "N = the context-r*.md files already in `docs/reports/reviews/<task>/` + 1" — nothing keys a context to a round, so a second run in the same round (retry, second terminal, re-run after a crash) appends r(N+1) with no dedup, and because every committed context binds (:70 `.some`, test :813) that duplicate stays bindable forever; add a round key to the file, or write the board path and board HEAD into the context header so a duplicate or a fallback-made context is visible.
+
+DEFER severity=MED — plan WHAT "the files in `<board>/backlog/decisions` on disk at the moment of the re-run" — the only check on the board is that the directory exists, so a board checkout never fetched, or checked out on the wrong branch, yields a context whose Decisions section is silently old, which is exactly the failure this task exists to remove; record `git -C <board> rev-parse HEAD` in the context header and warn when it has not moved since the previous round's file.
+
+DEFER severity=MED — plan TESTS "T2 plant: `--board <dir with no backlog/decisions>` exits 1 naming the dir and writes no context file" — the exit-1 guard covers a missing directory only; a `<board>/backlog/decisions` that exists and holds zero decision files passes, producing a context whose "Decisions naming this task" is empty and is presented to the reviewer as "no rulings name this task"; die when the board's decisions dir holds no decision file, since an empty board set is never legitimate.
+
+DEFER severity=MED — plan EXACT EDITS 2 ":161: add `'--board', board` to the G1 brief call" — if `board` is undefined or empty at that point the argv pair becomes the literal string "undefined", path.resolve makes a bogus path and the brief exits 1, so a lane that launches today fails at launch, and this also contradicts the brief's own bare-flag handling which silently falls back; append the pair only when `board` is truthy, and make the brief reject an unresolvable `--board` with the same rule in both places.
+
+DEFER severity=LOW — plan T1 control "(b) with `--board b` a decision only in root is absent (the board's set is the source, the ruled meaning)" — the source switch is exclusive and silent, so a decision present in the lane's copy but not yet on the board (including the lane's own decision record written in its closing commit, plan LANDING) disappears from the round's context; log the counts read from the board and from root so a dropped set is visible outside a test control.
+
+VERDICT: FAIL on error-path safety
+Paths walked: brief --board parse (bare, empty, missing dir), board decisions read (stale checkout, empty dir, partial read), repeat run and dedup of context-rN, lane G1 call with undefined board, lens command context path, skipped or failed re-run before a round   Unguarded: 4
+
+---
+⏱  53205ms (53.2s)
+📊 Tokens — total: 24390, input: 15359, output: 9031, reasoning: 8070

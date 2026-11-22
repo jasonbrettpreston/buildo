@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:34:40.662Z file_sha256=9c4e236699cab74aa39183d673c0f15156fe454396061e110d6ddc47f16eb060 prompt_sha256=e855bd0faa57271376652e363fd98bf1cb9eb127a35db8a9ae359161df1dcb48
+🔍 Lens review of docs/reports/reviews/task-432/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-432 Description "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-lane.mjs:189 "The lens commands bake in the launch file (`ctxRel`, backlog-lane.mjs:189)" with EXACT EDITS 2 "The commands keep `--context ${ctx} --section ...` so the pinned regexes (backlog-lane.logic.test.ts:270,276) still hold" — nothing re-makes the context: the round's baked commands still carry the launch file, the only artefact is a printed sentence (T3 asserts the sentence exists), and the close is left taking any committed context ("NOT IN SCOPE: Binding round N to the newest context in the close") — fix: run the brief at round start and pass the newest context-rN in that round's lens command, with a test that the round command carries the newest file, or have the close refuse a non-newest hash.
+
+BUG severity=MED — task-432 Description "carries the decisions and the task text as they are then" — PLAN-432-v1 TESTS T1 control "(b) with `--board b` a decision only in root is absent (the board's set is the source, the ruled meaning)" against LANDING "the closing commit with only the lane report directory, review context directory, task file and decision record" — a decision record committed on the lane is dropped from every later round, so the round carries the board's set minus the lane's own records — fix: read the union of `<root>/backlog/decisions` and `<board>/backlog/decisions` (board wins on id clash) or die when a lane decision id is absent from the board.
+
+DEFER severity=MED — plan-protocol 3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-432-v1 "## OPEN QUESTIONS for the operator Q1 Where do the lane's decisions come from? ... Q2 Should the close refuse a round whose outputs hash with an older context than the newest? ... Q3 Is round 1 also re-made?" — three rulings are put to the operator with no quoted search and no statement that the record is silent, which the same file forbids — fix: quote the searched decisions for each question, or proceed on the recommendation and record it as taken under RR-0378.
+
+DEFER severity=MED — RR-0378 "Review-inputs plan approved and running: handbook plus relevant engineering sections; fresh context; rules-checked line; tasks 427 and 425 removed" — PLAN-432-v1 "## NOT IN SCOPE ... plan rounds (plan evidence is made on the board ...); any spec note" — no step in the material removes task 427 and task 425 and no owning card is named, so this clause of the approved ruling has no home here (cannot see a sibling card that carries it) — fix: name the card or patch that owns the 427 and 425 removals, or add the removal item with its source.
+
+DEFER severity=LOW — plan-protocol 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-432-v1 "## ORDER tests T1-T4 written and shown red; brief edit; lane edit; README sentence" — the plan carries no estimate, neither MEASURED with source nor labelled GUESS — fix: add one estimate per order step with its source or a GUESS label.
+
+DEFER severity=LOW — plan-protocol 4.3 "BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)" — PLAN-432-v1 LANDING "If run as a lane build: two commits (08_agents.md:529 note area, 137_mcqueue.md two-commit close)" — the two commits are named but no push review, trailers, ids or operator tty step are given — fix: add the push review block for the two commits with contents, suite and gates.
+
+MET — task-432 Files clause "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — PLAN-432-v1 EXACT EDITS 1-4, TESTS, "NOT edited: check-lane-close.mjs, review-template.js, any spec" — exactly the five named files are touched, no sixth.
+
+MET — task-432 Description "the task text as they are then" — PLAN-432-v1 WHAT "the lane worktree's task file (the file the close reads, the lane's own edits included)" — the task half of the context is re-read from the lane worktree on each re-run.
+
+MET — plan-protocol principles "keep it simple; no scope creep" — PLAN-432-v1 "one flag and one brief sentence, no new tool, no change to the close check" — one flag, one printed sentence, one README sentence, no spec edit.
+
+MET — RR-0371 "Let's start with 2 rounds on the plan then it comes to me and three rounds on the output." — PLAN-432-v1 "Every review round (the first output round and each fix round) starts with a brief re-run" and "NOT IN SCOPE ... plan rounds" — output rounds only, no extra round added, plan rounds untouched.
+
+REJECT — RR-0374 "Apprvoe step 1 and step 2 - when it arrives" — accused of re-opening task-423's approved fix round — not a real issue, the plan cites task-423 only as the measured evidence and changes nothing in that task's scope.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  63955ms (64.0s)
+📊 Tokens — total: 19636, input: 7978, output: 11658, reasoning: 10358

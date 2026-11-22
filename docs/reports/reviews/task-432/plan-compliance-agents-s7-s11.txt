@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:34:40.659Z file_sha256=a5148699f203da5568a5779d664da7481290dd99baf7c2a07eea9c1fc82b39b6 prompt_sha256=08bd126a260f7a8a16ec8d8c20a0aed95fb2397eab3fa12ae09902845fbd5a20
+🔍 Lens review of docs/reports/reviews/task-432/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67)" — plan "Q1 Where do the lane's decisions come from? (A, recommended) the board checkout read at each re-run (`--board`): one flag, no merge, no restart." plus "Q2 ... Default no." and "Q3 ... Recommended yes." — none of the three recommendations put to the operator carries a quoted rule with file:line — quote the governing rule with file:line (in C2 form) beside each of Q1, Q2 and Q3 before the plan goes to the operator.
+
+BUG severity=MED — 08_agents.md §7 rule 10 dated note (task-375) point (2) "the tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate ... requires their Seat lines in GROUNDER-PLAN.md" — plan ORDER "tests T1-T4 written and shown red; brief edit; lane edit; README sentence; tests green; the named test files green; commit through the real hooks" — the plan names no GROUNDER-PLAN.md Seat lines for Integration, Reality-Check or Regression although its Files line names board-tracked paths, so the plan-prep commit is refused — add the launch seat records (GROUNDER-PLAN.md with the three Seat lines, and the FOLD-CHECK.md record of §11.2) to ORDER and ACCEPTANCE.
+
+BUG severity=MED — 08_agents.md §11.1 "a census grep runs at the **full scope its conclusion covers**; a line citation is **read**, not remembered" — plan LANDING "The card says backlog-brief.mjs is protected; the table does not list it (UNVERIFIED which is meant; no hook was found that names it)" — the plan locks with the protection status unresolved and records the negative hook search without its scope or sha — run the search over the whole scope that conclusion covers (.husky/*, scripts/hooks/*, scripts/**) at a named sha, record the result, or name the protection as accepted.
+
+BUG severity=MED — 08_agents.md §7 rule 10 dated note "(C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none" — plan "## UNVERIFIED" ... "Q3 Is round 1 also re-made? Recommended yes" — the operator-facing plan ends with UNVERIFIED and three questions and carries no four-line compliance block — append the block (rule with id and anchor, compliant yes/no, five-principle test, the condition).
+
+DEFER severity=LOW — 08_agents.md §7 rule 10 dated note "(C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — plan BASIS "Rule must be quoted first: .cursor/MCBYLAWS-QUEUE.md:107." and "one per review round and never overwritten" (08_agents.md:529; README.md:124) — every rule in the plan is cited as a bare file:line with no id, anchor or sha — restate the BASIS cites in the C2 form.
+
+DEFER severity=LOW — 08_agents.md §11.9 TKT-1 "The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` ... `Rule:` ... `Scope:` ... `Done-condition:` ... `max_fix_rounds:`" — plan first line "#### PLAN-432-v1: task-432 INPUTS.4, a fresh review context every round" — the plan carries no TKT-1 header, so Scope, Done-condition and max_fix_rounds are never stated in the required header form — add the five header lines above the plan body.
+
+DEFER severity=LOW — 08_agents.md §7 rule 10 dated note (task-308 R8c) "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy" — plan LANDING "then the closing commit with only the lane report directory, review context directory, task file and decision record" — the destination path and the task-reference repointing are not named, so the copy is only implied — name `docs/reports/lanes/<date>/<lane>/` and the reference update in LANDING and ACCEPTANCE.
+
+DEFER severity=NIT — 08_agents.md §11.3 "Survive-the-fix locks (green-both) are stated as such per case." — plan "Controls: (a) without `--board` RR-0900 is absent and RR-0501 present (default unchanged)" and "Control kept as is: the later-run test :185-195" — the survive-the-fix controls are not identified as green-both — label each control red or green-both per case.
+
+MET — 08_agents.md:529 note (task-375 point 1) — plan EDIT 1 "`:39: const decDir = path.join(boardArg ?? root, 'backlog/decisions');`" with "It writes it at :159 and never overwrites" — the context stays written by backlog-brief.mjs as context-rN.md, one per run, never overwritten.
+
+MET — 08_agents.md task-375 note (1) "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — plan EDIT 2 "The commands keep `--context ${ctx} --section ...` so the pinned regexes (backlog-lane.logic.test.ts:270,276) still hold" — the lens command form is unchanged.
+
+MET — 08_agents.md §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — plan "T1 plant: root d holds RR-0501 naming the task; a second dir b holds RR-0900 naming the task; run the brief with `--root d --board b`" — cases, fixtures reference, red expectation and invocation are in the plan.
+
+MET — 08_agents.md §11.3 "Every lock is proven in BOTH directions" — plan "T1 plant ... RED now (the flag is ignored)." against "Control: (a) without `--board` RR-0900 is absent and RR-0501 present" — T1 is stated in both directions.
+
+MET — 08_agents.md §11.9 TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped`" — plan ACCEPTANCE "DoD 1-10 of the card, STATUS line" — the status line is carried into acceptance.
+
+REJECT — 08_agents.md task-375 note (1) "the close check recomputes each output's prompt hash with the committed context" — the plan leaves the close binding any committed context ("An output passes when its prompt hash equals the hash made with ANY ONE of them") — the clause does not read "newest", the plan leans on the existing `.some` and puts the stricter option to the operator as Q2.
+
+REJECT — 08_agents.md §11.8 MCINC-1 "Nothing is built before this." — building the `--board` flag and its die-guard while Q1 is open — MCINC binds every Phase 3 increment, task-432 is a McFix card at milestone m-1, so the clause does not bind this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 8
+
+---
+⏱  150418ms (150.4s)
+📊 Tokens — total: 33203, input: 15473, output: 17730, reasoning: 15936

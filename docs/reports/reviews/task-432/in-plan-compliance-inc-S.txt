@@ -1,0 +1,259 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:edb3bafa3feeb108a39bdb54b71b49ef2ea6c49822f7ef10bd40895a65f530d9 part 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. Also measured on task-423 output round 2: 21 of 21 CRITICAL and HIGH lens findings were false, most because the lens read the round 1 context (rulings up to RR-0371 only, the old Files line). THIS TASK (step 5, A): the review context is re-made for each output round so it carries the decisions and the task text as they are then.
+
+Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-432-v1: task-432 INPUTS.4, a fresh review context every round
+
+Principles served (DoD #9, .cursor/MCBYLAWS-QUEUE.md:104): accurate (the reviewer sees the rulings and task as they are), observable (the context lists every decision title and is committed), simple and reuse (the tooling already makes a new context per run; one flag and one brief sentence, no new tool, no change to the close check).
+
+#### FINDING FIRST: what the code does today
+1. The context file is made by `scripts/analysis/backlog-brief.mjs` on EVERY run. It reads the task from `--root` (:17, :24) and the decisions from `<root>/backlog/decisions` (:39-45). The file name is `context-r<N>.md`, N = the context-r*.md files already in `docs/reports/reviews/<task>/` + 1 (:51; `contextRound`, scripts/lib/review-template.js:137-139). It writes it at :159 and never overwrites. "Decisions naming this task" (:109-117) are the decisions whose title or body names the task id, plan id or ROW id, or an RR id that the task body names.
+2. The reviewer is sent only five sections of that file, `CONTEXT_SECTIONS` = Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes (review-template.js:115). The brief's "Decisions in force" title list is NOT among them.
+3. A new N is made by whoever runs the brief again. Today only `backlog-lane.mjs:161` does, once, at launch (`--root <worktree>`). Nothing in the brief text (:178-180) or the lens line (backlog-lane.mjs:176-187) tells the lane to re-run it. The lens commands bake in the launch file (`ctxRel`, backlog-lane.mjs:189).
+4. The "round" in the file name is "brief runs", not "review rounds". For task-423 the board already held context-r1.md (the plan evidence); the launch run made context-r2.md. Output rounds 1 and 2 both used it, as the lane never re-ran the brief (docs/reports/reviews/task-423/ holds only context-r1.md and context-r2.md; GROUNDER.md:55,63 "the lens read the older context-r2.md Files line").
+5. What the close binds: `lensContexts` (check-lane-close.mjs:320-327) takes EVERY committed context-rN.md of the task (read at :836 from the index and HEAD). An output passes when its prompt hash equals the hash made with ANY ONE of them (:70 `.some`); a placeholder context or a missing heading is refused (:324-326). The test src/tests/backlog/check-lane-close.logic.test.ts:813 already pins "one committed context file; the earlier round file is kept and still binds". So a second or third context per task is ALLOWED and ACCEPTED by the close today, with no check change. The close does not bind round N to the newest file.
+6. Rules: the only rule on context files is the dated note at docs/specs/00-architecture/08_agents.md:529: "The review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten (N = the context-r*.md files already there + 1), written by scripts/analysis/backlog-brief.mjs". Same words in .claude/review-templates/README.md:124. Spec 137 :140 (note of task-375) says the close recomputes the hash with the committed context. Spec 08 section 7 rule 10 is at :360 and says nothing on contexts; the brief's cite "(:341)" at backlog-brief.mjs:7 and :179 is stale (08_agents.md:341 is blank at HEAD). So a fresh context per round is within the rules and is what 08_agents.md:529 already says; the tooling lacks only the instruction.
+7. Why the Files line was stale: the lane widened the task's Files line in its own fix commit 5d554f459 (a commit on branch wf1/inc1b-simple423, not on the board), after the launch context was made. Re-running the brief in the lane worktree reads the lane's current task file, so the task half is solved by the re-run alone. The existing test backlog-brief-context.logic.test.ts:185-195 proves a later run puts new task text in context-r2 and leaves r1 as it was.
+8. Why RR-0374 and RR-0375 were missing: decisions live on the board branch. `git ls-tree wf1/inc1b-simple423 backlog/decisions/` ends at decision-156 (RR-0371); decision-159 (RR-0374) and decision-160 (RR-0375) are only on wf2/board. A re-run with `--root <lane worktree>` would still read the lane's copy, so the re-run ALONE does not fix the decisions. Both decisions would be matched if read from the board: decision-159's text names task-423, decision-160's title names Task-423 (matched case-insensitively, :112), and the quote regex :41 reads "Operator, verbatim, 2026-11-22: "..."".
+9. The lane does not merge the board before a round (nothing orders it). The retro recommendation (~/Buildo-scratch/lanes-20261119/inc1b/retro/GROUNDED-CAPS.md:154,163: "the lane merges wf2/board once, before the outputs are made") is a recommendation, not a ruling, and has a cost: a merge re-made 11 outputs for task-419 round 3 (GROUNDED-CAPS.md:89), and the close reads the lens template at the range base (check-lane-close.mjs:764), so a merge that pulls in a changed template breaks the hash (see PLAN-433).
+
+So: partly "only the instruction is missing", partly one small code change (where the decisions are read from).
+
+#### BASIS
+- "Let's add a dn b to the plan - we already do run the review twice - once on the plan and the output." and "Plan approved. We are running right now on this?" (RR-0378, decision-163; MORNING-DECISIONS.md:1850-1852, the entry "Operator APPROVES the review-inputs plan"). Step 5 (A) as put to him: "Fresh context every review round."
+- "one per review round and never overwritten" (08_agents.md:529; README.md:124).
+- "Nothing was added that the card or ruling did not name" (124a_step_standard_policy_appendix.md:988, DoD #8): hence one flag, one sentence, one README sentence.
+- Rule must be quoted first: .cursor/MCBYLAWS-QUEUE.md:107. Red tests first: 08_agents.md:462, :490. Status line in the same commit as the work: 137_mcqueue.md:84.
+
+#### WHAT
+Every review round (the first output round and each fix round) starts with a brief re-run in the lane worktree that makes the next context-rN.md from (a) the task file in the lane worktree as it is then and (b) the decisions of the BOARD checkout as they are then. The lane uses the highest-numbered file in every `--context` of that round and commits it.
+
+"Decisions as they are then" for a lane branch: the files in `<board>/backlog/decisions` on disk at the moment of the re-run (the board is where rulings are recorded; the lane branch only holds the set from its cut). A ruling made after that moment is in the next round. "Task as it is then": the lane worktree's task file (the file the close reads, the lane's own edits included). Nothing is merged; the lane's diff range is untouched.
+
+#### EXACT EDITS
+1. scripts/analysis/backlog-brief.mjs
+ - :17 area: `const boardArg = a.board && a.board !== true ? path.resolve(a.board) : null;` and `die(...)` (exit 1, names the dir) if given and `<boardArg>/backlog/decisions` is not a directory. No silent fallback.
+ - :39: `const decDir = path.join(boardArg ?? root, 'backlog/decisions');`. Default (no flag) is unchanged.
+ - usage comment (:5) and the die text (:23): add `[--board <dir>]`.
+ - after the "Context pack sections" line (:180): one line, "Fresh context every review round (RR-0378 step 5; 08_agents.md:529): before you make the outputs of a review round (the first, and every fix round) run `node scripts/analysis/backlog-brief.mjs --task <id> --lane <lane> --stage <stage> --root <root>[ --board <board>] > /dev/null`; it writes the next docs/reports/reviews/<id>/context-rN.md from the task file in your worktree and the decisions of the board as they are then; pass the highest-numbered file as --context in every lens-input and review command of that round, and commit it with the round." (`--board` part only when the flag was given.)
+2. scripts/analysis/backlog-lane.mjs
+ - :161: add `'--board', board` to the G1 brief call (so the launch run and the printed command carry the board path).
+ - the lens line (:187): one clause after "the context file ${ctx}": "(the launch file; for each review round use the newer file the brief's re-run command writes, see the brief)". The commands keep `--context ${ctx} --section ...` so the pinned regexes (backlog-lane.logic.test.ts:270,276) still hold.
+3. .claude/review-templates/README.md:124: one sentence: the brief's re-run at each round, `--board`.
+4. NOT edited: check-lane-close.mjs, review-template.js, any spec.
+
+#### TESTS (red first; each plant has a control)
+In src/tests/backlog/backlog-brief-context.logic.test.ts (fixture at :12-26, decisions pattern at :116-118):
+- T1 plant: root d holds RR-0501 naming the task; a second dir b holds RR-0900 naming the task; run the brief with `--root d --board b`; context-r1 "Decisions naming this task" and "Decisions in force" hold RR-0900. RED now (the flag is ignored).
+Controls: (a) without `--board` RR-0900 is absent and RR-0501 present (default unchanged); (b) with `--board b` a decision only in root is absent (the board's set is the source, the ruled meaning).
+- T2 plant: `--board <dir with no backlog/decisions>` exits 1 naming the dir and writes no context file. Control: a good board exits 0.
+- T3 plant: stdout holds the "Fresh context every review round" line with `--root d --board b`. RED now. Control: without `--board` the line has no `--board`; and the brief still carries the context sha line (existing test :34-44 stays green).
+- Control kept as is: the later-run test :185-195 (new task text in r2, r1 untouched).
+In src/tests/backlog/backlog-lane.logic.test.ts:
+- T4 plant: the G1 ticket the launch writes holds `--board <the board dir>`; the lens line holds the "newer file" clause. RED now. Controls: the existing :270 and :276 regexes (`--context ...context-r2.md --section "Task"`) stay green.
+No check-lane-close test is added: :813 already pins "any committed context binds".
+
+#### ORDER
+tests T1-T4 written and shown red; brief edit; lane edit; README sentence; tests green; the named test files green; commit through the real hooks.
+
+#### LANDING
+- Files touched are not in the table's protected_paths (scripts/analysis/rule-lists.json: check-lane-close.mjs, rule-lists.mjs, rule-lists.json, deepseek-review.js, .husky/*). The card says backlog-brief.mjs is protected; the table does not list it (UNVERIFIED which is meant; no hook was found that names it). check-lane-close.mjs is NOT touched by this plan.
+- If run as a lane build: two commits (08_agents.md:529 note area, 137_mcqueue.md two-commit close): the work first (code, tests, README, task notes), then the closing commit with only the lane report directory, review context directory, task file and decision record. Task file and queue row updated with the work (137_mcqueue.md:84).
+
+#### ACCEPTANCE
+1. T1-T4 red then green, with controls.
+2. Replay on the real evidence, in a scratch checkout of wf1/inc1b-simple423 (never the board): the brief with `--root <checkout> --board ~/Buildo-wt-board` makes a context whose "Decisions naming this task" holds RR-0374 and RR-0375 and whose Description holds the widened Files line (12 entries, 5d554f459).
+3. The close check on a fixture with contexts r1..r3 stays green (existing :813).
+4. The generated brief holds the sentence; README updated.
+5. DoD 1-10 of the card, STATUS line.
+
+#### NOT IN SCOPE
+Binding round N to the newest context in the close; merging the board into the lane; changing CONTEXT_SECTIONS; a flag to skip the brief's stdout; plan rounds (plan evidence is made on the board, where the decisions already are); any spec note.
+
+#### OPEN QUESTIONS for the operator
+Q1 Where do the lane's decisions come from? (A, recommended) the board checkout read at each re-run (`--board`): one flag, no merge, no restart. (B) the lane merges wf2/board before each round: no code, but the range moves, outputs may need re-making (task-419 round 3), and a changed lens template in the merge breaks the close's hash. (C) both: no extra value.
+Q2 Should the close refuse a round whose outputs hash with an older context than the newest? Default no. Cost if yes: a protected-path change (check-lane-close.mjs), the file number is "brief runs" not "review rounds", so the mapping from out-X-r2.txt to a context is a guess.
+Q3 Is round 1 also re-made? Recommended yes (the lane edits the task between launch and round 1, as task-423 did). Cost: one extra brief run.
+
+#### UNVERIFIED
+- Whether any hook treats backlog-brief.mjs as protected (card says yes, table says no).
+- Whether lanes can read `~/Buildo-wt-board` from their sandbox (the brief already names board paths; backlog-lane.mjs reads it).
+- That RR-0374/RR-0375 come out in "Decisions naming this task" is argued from their text; acceptance 2 proves it.
+- The stale cites at backlog-brief.mjs:7,:179 (08_agents.md:341) are out of scope; flagged for the grounder.
+
+Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+

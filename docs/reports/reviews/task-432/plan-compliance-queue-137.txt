@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T16:34:40.640Z file_sha256=88a8ac8121b167e0205af03c1e7cb0e468f5e3e2d04a9b2555416a18ec6a0438 prompt_sha256=0671a8f44e09c1ac5452c96cd21ebb91d46f494e3614321ddb88554fb952a2bb
+🔍 Lens review of docs/reports/reviews/task-432/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 Rule 3 dated note 2026-11-20 "for lane build and fix tasks Rule 3 is amended to the two-commit close" — plan LANDING "Task file and queue row updated with the work (137_mcqueue.md:84)." — the landing directs the status move in the work commit for a task labelled McFix, and cites 137:84 (the unamended Rule 3) as its authority, so the one clause the plan must obey for a fix task is contradicted by its own landing — fix: say the work commit carries the code, tests, README and the `Task: task-432` trailer only, and the `status:` line moves in the separate closing commit.
+
+BUG severity=HIGH — Spec 137 task-375 dated note "the LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD: the plan evidence folder, one plan compliance output per resolved list over the plan sections of the committed context, GROUNDER-PLAN.md of a separate grounder with a verdict per finding, the required seat reports ... the round block on the task and the Plan hash line" — plan ACCEPTANCE "1. T1-T4 red then green, with controls." — the plan has no step and no acceptance item for the plan evidence folder, the plan compliance output, GROUNDER-PLAN.md, FOLD-CHECK.md, the seat reports, the round block or the Plan hash line, so the launch of this McFix task is refused — fix: add these artifacts and their commit path to LANDING and ACCEPTANCE before plan-lock.
+
+DEFER severity=MED — Spec 137 task-366 dated note "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — plan LANDING "the closing commit with only the lane report directory, review context directory, task file and decision record" — no acceptance item produces the compliance lens output(s) or GROUNDER.md (or TRIAGE.md, task-399 note) that the close reads, so the closing commit is refused — fix: one acceptance item per artifact, committed in the lane report directory before the closing commit.
+
+DEFER severity=MED — pasted card "THIS TASK (step 5, A): the review context is re-made for each output round so it carries the decisions and the task text as they are then." — plan "Q1 ... (A, recommended) the board checkout read at each re-run (`--board`): one flag, no merge, no restart." — no pasted clause or ruling names a `--board` flag, and the plan leaves Q1 open while shipping the code path (backlog-brief.mjs:17, :39) and its die branch — fix: get Q1 answered before editing the brief, or ship only the re-run instruction and no flag.
+
+DEFER severity=MED — Spec 137 §4 Rule 8 "Each open row carries one waiting word (OPERATOR, WAITS or a status above), names its card, and carries its opened and expiry dates." — pasted task block "status: LATER · milestone: m-1 · assignee: none · labels: McFix, McFix V2" — the row carries no `expires`, and the plan's "5. DoD 1-10 of the card, STATUS line." never sets one, so a LATER row lands with no expiry under rule 7 — fix: set `expires` (7 days from opened) on the task front matter in the same change.
+
+DEFER severity=LOW — Spec 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — plan "Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378" — RR-0378 sits in prose and in no `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: ...)` note on the row — fix: add the M-246 dated note for RR-0378 to the task file.
+
+DEFER severity=NIT — Spec 137 §4 Rule 10 "The operator's words are copied exactly" — plan "RR-0378 (MORNING-DECISIONS.md:1852, verbatim: \"Plan approved. We are running right now on this? Add the tasks?\")" — the quote stops before the end of the same ruling at :1852, so the words are not the ruling as given — fix: quote RR-0378 to its end at the same cite.
+
+MET — Spec 137 §1 note rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan "the work first (code, tests, README, task notes)" — the work commit changes scripts/ and src/tests/ and carries the task file in the same diff.
+
+MET — Spec 137 task-410 dated note "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — plan "the closing commit with only the lane report directory, review context directory, task file and decision record" — the staged-path list matches the note exactly.
+
+MET — Spec 137 task-366 dated note "the launch refuses a task whose Files line is missing or matches no row" — pasted task block "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the Files line is present with five paths.
+
+REJECT — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — accused of letting the lane treat the board as editable — the plan only reads `<board>/backlog/decisions` and states "Nothing is merged; the lane's diff range is untouched", so the record stays on the row.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+
+---
+⏱  112714ms (112.7s)
+📊 Tokens — total: 29728, input: 16070, output: 13658, reasoning: 12256
