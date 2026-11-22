@@ -3,11 +3,11 @@ id: TASK-444
 title: >-
   FINAL.1b The specs and docs that still state the old model rule are updated to
   the Opus and Sonnet split (dated notes, prior text kept)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-DOCS444'
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T22:12:00Z'
+updated_date: '2026-11-22T22:24:00Z'
 labels:
   - McFix
   - McFix Final
@@ -28,6 +28,8 @@ references:
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md
   - docs/reports/lanes/2026-11-22/BL-DOCS444/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-DOCS444/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-DOCS444/TRIAGE.md
 type: build
 ordinal: 144012
 ---
@@ -193,3 +195,11 @@ Plan UNVERIFIED item, now run: 'node scripts/generate-bylaw-handbook.mjs --check
 
 2026-11-22 lane report committed (docs/reports/lanes/2026-11-22/BL-DOCS444/REPORT.md); close check on a throwaway clone with the task staged BUILT refuses only on GROUNDER.md (missing, owed) and its reference. Task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Three dated notes (M-246, prior text kept) for the Opus and Sonnet split: N1 .cursor/MCBYLAWS-QUEUE.md:248, N2 .cursor/MCFRONTEND-QUEUE.md:19, N3 in the status cell of 69a M-506; lock in src/tests/spec-notes-1b.logic.test.ts, red then green (work commit 1ff0eb575). Output review round 1 grounded by Cairn-Ground-O444: 5 CONFIRMED LOW/NIT piled, 31 REJECTED, no fix owed.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/lanes/2026-11-22/BL-DOCS444/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-DOCS444/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
