@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.968Z file_sha256=ce356294e498842d46f3319eae38db9f9791c01692ffbde7aeabecd21d2be846 prompt_sha256=7e48505efd749e24b587bfffac043e5e717c875e91b30bf97f100fa556c05585
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card clause "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — plan NOT IN SCOPE line "- 69a and packs/spec08.md (FACTS)." — packs/spec08.md is a hand-kept copy of the very Spec 08 §7 section task-436 notes ("Generator: hand-written, not generated", :3), so it will still state the old rule, and the exclusion rests on "No --check and no tool reads it" (a tooling reason), not on the doc no longer stating the rule — add a third dated note N3 under the copied §7 text in .claude/review-templates/packs/spec08.md, or cite an operator ruling that excludes template packs.
+
+BUG severity=HIGH — plan-protocol 2026-11-20 note, "plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)." — plan LANDING "Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529)." — no grounder seat is named anywhere in LANDING, ORDER or ACCEPTANCE, so the lane task takes the lens set but not its grounder — name the grounder seat and its input in LANDING and add its verdict to ACCEPTANCE.
+
+BUG severity=MED — step table "| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |" — plan ORDER "Then: test (red), notes (green), commit." — the red-first tests are named but no exact command is given and no PASS line is produced, so the gate cannot be checked — add the exact commands (test run, hook run, Arm Q) and one PASS line per command.
+
+BUG severity=MED — "Rulings: only when a search of the record finds none; the search is quoted." — plan UNVERIFIED line "That reviewers accept leaving 69a M-506 without a note." — whether 69a's row is "the right home" is left open to reviewers instead of resolved, and the search behind "grep count 0" is stated as a count without the command or its output quoted — quote the search command and output for 69a rows dated 2026-11-2x, or add the row note.
+
+MET — task card "After task-436 lands." — plan ORDER — "After task-436 lands and its note text is confirmed on the board."
+MET — M-246 form, "prior text kept" — plan TESTS (a) "the old sentence is still present (prior text kept)" with "Nothing is deleted."
+MET — "every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan GUESS "About 1 hour of lane time: 2 doc lines and about 25 test lines."
+MET — task card "Scope and Files line at its plan review." — plan Files line names the two queue files and the test file.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+Rules met: none
+
+---
+⏱  35475ms (35.5s)
+📊 Tokens — total: 14319, input: 7013, output: 7306, reasoning: 6589

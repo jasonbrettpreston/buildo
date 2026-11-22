@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T21:33:05.968Z file_sha256=6283b7e7dcdb1692e91e9fba2cf07e9bba73d8b946e69de005710ae6a5284660 prompt_sha256=b6f631031349c715d1a58c602842575bcd1a1d5fa4d7b1d3c0883c1c81862183
+🔍 Lens review of docs/reports/reviews/task-444/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-444-v1 TESTS (b) "the first line after it that starts with" — a second application of the same insert (a lane re-run after a failed push, or a rebase that keeps both sides) leaves two dated notes in the file and the test still passes, because only the first match is read and nothing counts occurrences; the note has no unique key in the file — assert exactly one matching line per file, count === 1, so a repeat is red.
+
+BUG severity=HIGH — PLAN-444-v1 EXACT TEXT N1 "Spec 08 §7 rule 9 carries the same split (dated note, task-436)." — if task-436 has not landed, the shipped note states that a dated note exists in 08_agents.md when it does not, and no test reads 08_agents.md, so the suite is green and the ORDER prose is the only guard; it fails open — add the 08_agents.md presence check to the same describe block, or leave the sentence out until 436 lands.
+
+DEFER severity=MED — PLAN-444-v1 WHAT "N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247" and "N2, new line 19 of MCFRONTEND-QUEUE.md" — both inserts shift every line below them by one, and the FACTS check covers only two test files ("An added line breaks neither"), so any doc or test citing MCBYLAWS-QUEUE.md past 248 or MCFRONTEND-QUEUE.md past 13 now lands one line off with no check — add a grep of line citations to those two files to the plan, or append the notes at the end of their sections.
+
+DEFER severity=MED — PLAN-444-v1 EXACT TEXT "MORNING-DECISIONS.md, :1909 ... :1910 ... :1912 ... :1954" — the note freezes four line numbers of an out-of-repo file that is appended to all day; nothing in the test or the hooks re-reads that file, so one move leaves a permanently wrong citation in both queue files — make the RR ids decision-170 and decision-174 the anchor and keep the file:line as a secondary pointer.
+
+DEFER severity=LOW — PLAN-444-v1 TESTS (b) "comes before the next `#` heading" — the plan does not say what (b) does when no `#` heading follows the note; an index of -1 compared as an ordering would make the check red on a correct note — state that a missing heading is treated as end of file.
+
+DEFER severity=LOW — PLAN-444-v1 TESTS "(c) that line contains "run on Opus", "every grounder run on Sonnet" and the :1954 words" — (c) checks words only, so a note that is present and word-complete but placed under the wrong superseded sentence in the same section is caught only by the first-match rule of (b), which finding 1 shows is not a count — assert the note line index equals the index of the old sentence plus one.
+
+REJECT — PLAN-444-v1 TESTS "Today the test is red on (b). It is green after the notes." — an absent or empty note could pass silently if the lookup returns a falsy index — it does not, the not-found direction is exercised today as red, so the empty path fails closed.
+
+REJECT — PLAN-444-v1 LANDING "One commit: the test, the two queue files and the task file, with the trailer `Task: task-444`, through the real hooks." — a double-submitted commit or a retried push could write twice — this change writes text files only, there is no store, count or charged event, and a second commit cannot re-add the lines without a second insert, which is finding 1's path.
+
+VERDICT: FAIL on error-path safety
+Paths walked: missing note (error, red), empty read or missing heading (empty), re-run insert and retried push (retry), duplicate note and duplicate commit (double-submit), task-436 absent (degrade-safety), note dedup key (idempotency: none, no unique id in the file)   Unguarded: 4
+
+---
+⏱  33643ms (33.6s)
+📊 Tokens — total: 20647, input: 14357, output: 6290, reasoning: 5372

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.959Z file_sha256=f5aa20878051a23dd621976bddc5d964b5cc14532bf74f0390640e754a9ac9e8 prompt_sha256=282c4f28f5fd92ecd0a6c932a4670748453c4a032429fbae0c69c80469035885
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-444 card, THIS TASK "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — PLAN-444-v1 FACTS, NOT A RULE "No --check and no tool reads it: lane lenses build their input from the live spec ... So nothing has to be regenerated." — the plan leaves .claude/review-templates/packs/spec08.md, a hand-kept copy of the Spec 08 §7 text that carries the model rule, with no note and never says whether that copy states the old rule, so the clause is unmet for it — grep the pack for the model sentences at plan time and either give it its own dated note or record in FACTS that it holds none, before plan-lock
+DEFER severity=MED — Spec 137 §2 note "ST-1, ST-2, ST-3 (M-516), ST-5, ST-6, ST-7 and ST-8 are dated-note rows in docs/specs/01-pipeline/69a_mcbylaw_register.md" — PLAN-444-v1 FACTS "So decision-170 and decision-174 are the record, and the register gets no new row or note." — 69a M-506 (:654) still carries a multi-step build goes to the owning lane, on Sonnet, which RR-0385 item 1 supersedes for the building lane, and the pasted spec shows 69a is the dated-note home for operator rulings (the ST rows), so leaving it un-noted leaves one doc stating the old rule — add a dated note to that 69a row recording the split, or state in FACTS that the Spec 08 §7 rule 9 note replaces its live text
+DEFER severity=MED — Spec 137 §4 rule 10 "with the date, the row id and the queue" — PLAN-444-v1 EXACT TEXT "- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22" — the label McFix Final sits in the queue slot, the lane field of the fixed M-246 form is dropped, and "operator, verbatim," replaces "operator, verbatim:", so the form rule 4 fixes is not met — rewrite the opening as row task-444, queue Backlog, the lane, then "operator, verbatim:" followed by the quoted words
+DEFER severity=LOW — Spec 137 Rule 3 note "the status moves in a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record)" — PLAN-444-v1 LANDING "One commit: the test, the two queue files and the task file, with the trailer Task: task-444, through the real hooks." — the work commit is described as carrying the task file, which the note assigns to the closing commit, and the plan does not say which commit moves the status, so the two-commit close is left ambiguous — say the first commit carries the test and the two queue files only and the task file's status moves in the closing commit
+MET — task-444 card, "After task-436 lands" — PLAN-444-v1 ORDER — "After task-436 lands and its note text is confirmed on the board."
+MET — RR-0385 item 5, "unbuilt gates withdrawn" — PLAN-444-v1 TESTS — "this extends the existing lock and adds no new gate"
+MET — Spec 137 Rule 3 note, G3 trailer — PLAN-444-v1 LANDING — "with the trailer Task: task-444", and the task file is in the same diff
+MET — Spec 137 Rule 1, "prior text kept" — PLAN-444-v1 TESTS — "(a) the old sentence is still present (prior text kept)"
+MET — Spec 137 Rule 2 note, Arm Q form — PLAN-444-v1 EXACT TEXT — neither note contains an MB-nn or MF-nn id
+MET — RR-0389, MORNING-DECISIONS.md:1954 — PLAN-444-v1 EXACT TEXT — "resolve this conflict by updating the key specs and docs" is quoted verbatim and pinned by test (c)
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: Rule 1, Rule 2, Rule 13
+
+---
+⏱  101122ms (101.1s)
+📊 Tokens — total: 37164, input: 15105, output: 22059, reasoning: 21055

@@ -1,0 +1,146 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:30bc90d1ae9cb93ab1670dd40b38456387419bc064d8ae2c6c6f77ca00d81159 part 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0389 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1954), verbatim: "resolve this conflict by updating the key specs and docs". WHY: RR-0385 item 1 rules that the seat that writes a plan and the seat that builds run on Opus, seats and grounders on Sonnet, reviewers DeepSeek. Task-436 adds the Spec 08 note and names the sentence "Opus only for hard design adjudication" at .cursor/MCBYLAWS-QUEUE.md:247 as superseded without editing that file. THIS TASK: every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept): .cursor/MCBYLAWS-QUEUE.md:247 first; the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs). After task-436 lands. Scope and Files line at its plan review. Built on Opus through the six steps.
+
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-444-v1: FINAL.1b, the documents that still state the old model rule (task-444)
+
+#### BASIS
+- RR-0385 item 1 (MORNING-DECISIONS.md:1917): "the seat that writes a plan and the seat that builds run on Opus; reality-check, integration, regression seats and grounders stay on Sonnet; reviewers DeepSeek". The operator's words: :1909 "Teh seat that writes the plan is opus and the seat that build is Opus"; :1912 "keep the current split with opus and sonnet". Recorded as decision-170.
+- RR-0389, :1954 (operator's own words, per :1955): "resolve this conflict by updating the key specs and docs". Recorded as decision-174: the documents themselves get a dated note with the prior text kept.
+- Form: M-246 dated note, prior text kept (137_mcqueue.md:125, rule 10). The wording follows the task-436 note (the task-436 card, EXACT TEXT).
+- "Tehse should be small changes" (:1909). Gates already built stay; no new gate work (RR-0385 item 5).
+
+#### FACTS (board head 693ef2a8a; task-436 has not landed: 08_agents.md has no AGENT-MODEL line)
+I ran `grep -rniE "sonnet|opus"` over docs/specs, .cursor, .claude, CLAUDE.md, scripts, mcbylaws/, tasks/ and docs/ (excluding reports). Each hit is sorted below.
+CONFLICTS (each needs a note):
+- C1 .cursor/MCBYLAWS-QUEUE.md:247: "Opus only for hard design adjudication, with the reason logged." The next line, :248, is blank.
+- C2 .cursor/MCFRONTEND-QUEUE.md:13 ends: "Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly)." Three dated notes already follow this paragraph, at :15, :17 and :18.
+- 08_agents.md:359 "on Sonnet": task-436 handles it, so this task does not touch it.
+AGREES (seats on Sonnet; leave as is):
+- MCBYLAWS-QUEUE.md:247, first sentence: "Seats run on Sonnet by default".
+- 137_mcqueue.md:152, and its copy in packs/queue.md:110 (a Sonnet check lane).
+- 08_agents.md:529 (the tool seats are Claude Sonnet).
+- .claude/agents/*.md:9-10 (`model: sonnet`).
+- check-lane-close.mjs:583 (a comment about seats).
+NOT A RULE (leave):
+- 08_agents.md:35 is the harness's closed model enum.
+- 08_agents.md:526 "(Sonnet seats, lane agents, ...)" names a scope and sets no model.
+- 69a:653-656 contain the word "opus" only inside quoted chat text.
+- .cursor/active_task.md:43 is a quote ("make sure opus actually uses the system").
+- .cursor/wf1_spec08_deepseek_execution_active_task.md:23-24, :50 and :104 are an old plan's evidence tables.
+- Hits in 101_notification_dispatch, 116, 93, supabase_migration_program_plan, the push scripts and loop-gate-context.mjs:239 are substring matches ("ExpoPush", "octopus", "corpus"), not model names.
+- CLAUDE.md, .claude/workflows.md, the skills and the README files: no hits.
+- 69a M-506 (:654) holds "a multi-step build goes to the owning lane, on Sonnet". This is a record of the 2026-11-06 ruling. The row names its live text as "Text home: Spec 08 §7 rule 9" (:654), and task-436 puts its note there. 69a "carries no rule of its own beyond the rows" (:3-4). Operator rulings now go to `backlog/decisions` ("decisions (operator rulings only)", 137_mcqueue.md:20), and no 69a row is dated 2026-11-2x (grep count 0). So decision-170 and decision-174 are the record, and the register gets no new row or note. The test that pins this sentence (chat-rulings-register.logic.test.ts:1733) stays as it is.
+- .claude/review-templates/packs/spec08.md is a hand-kept copy ("Generator: hand-written, not generated", :3). Its source range is already out of date: it says :330-346, but §7 now starts at :344. No --check and no tool reads it: lane lenses build their input from the live spec (rule-lists.json:45, the `agents-s7-s11` list). So nothing has to be regenerated.
+Hooks and generated files:
+- Both queue files are on the McBylaws `protected` list (mcbylaws/protected-paths.json:57 and :70). They are not on the `layer23` or `frontend` lists, so the commit needs no trailer, no prereg file and no panel record. At push, the gate asks for a tty "y" (gate.mjs:568-583).
+- Arm Q reads only `**MB-nn`/`**MF-nn` headings (mcbylaws-queue-check.mjs:4). The notes must therefore contain no MB-nn or MF-nn id.
+- The tests that read these files pin only the MF header text (mcfrontend-status.infra.test.ts:59-60) and the increments table (web-landing.logic.test.ts:156). An added line breaks neither.
+- The system map generator reads only docs/specs and docs/reference (generate-system-map.mjs:18-30), and no spec is edited. No other generator reads .cursor. So no file is regenerated.
+- An earlier lock for dated notes already exists: src/tests/spec-notes-1b.logic.test.ts (task-376, "pins one confirmed stale line to the dated note", :7).
+- Rule lists the Files line resolves (rule-lists.mjs resolve, letter S): queue-137, agents-s7-s11, eng-all, five-words, plan-protocol, inc-S, ms-S. eng-all is added only by the test file.
+
+#### WHAT
+1. Test first: add one describe block to src/tests/spec-notes-1b.logic.test.ts and run it red.
+2. Add one dated note under C1 and one under C2. Nothing is deleted.
+
+#### EXACT TEXT
+Both notes use the same opening:
+`- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.`
+- N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247. After the opening, add: ` This supersedes "Opus only for hard design adjudication" above for the plan seat and the building lane; "Seats run on Sonnet by default" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
+- N2, new line 19 of MCFRONTEND-QUEUE.md, after :18 (the last note on :13, which keeps the notes in date order). After the opening, add: ` This supersedes "Opus sparingly" in the paragraph above for the plan seat and the building lane; "Sonnet seats" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
+- Neither insert moves :247 or :13, so task-436's citation of `.cursor/MCBYLAWS-QUEUE.md:247` stays correct.
+
+#### TESTS (red first; this extends the existing lock and adds no new gate)
+One `describe` in spec-notes-1b.logic.test.ts. For each file:
+- (a) the old sentence is still present (prior text kept);
+- (b) the first line after it that starts with `- Dated note 2026-11-22 (M-246, prior text kept; task-444` comes before the next `#` heading;
+- (c) that line contains "run on Opus", "every grounder run on Sonnet" and the :1954 words.
+Today the test is red on (b). It is green after the notes. The lock is proven in both directions (08_agents.md:485).
+
+#### ORDER
+After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit.
+
+#### LANDING
+- One commit: the test, the two queue files and the task file, with the trailer `Task: task-444`, through the real hooks. Answer "y" at the push prompt.
+- The task file is always allowed (check-task-files.mjs:10). It is not put on the Files line because its name contains a comma.
+- Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529).
+- Close with the two-commit lane close.
+
+#### ACCEPTANCE
+- Both notes are present, each under the sentence it supersedes, with the prior text unchanged.
+- The test is red before the notes and green after; the suite is green.
+- Arm Q passes at push.
+
+#### NOT IN SCOPE
+- 08_agents.md (task-436).
+- 69a and packs/spec08.md (FACTS).
+- lane-guard.mjs (outside the repo).
+- The AGREES and NOT A RULE lines.
+
+#### UNVERIFIED
+- Hooks and tests were not run (read-only).
+- That task-436's note lands unchanged from its card.
+- That reviewers accept leaving 69a M-506 without a note.
+
+#### GUESS
+About 1 hour of lane time: 2 doc lines and about 25 test lines.
+
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+

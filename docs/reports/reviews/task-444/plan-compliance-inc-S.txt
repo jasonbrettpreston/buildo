@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.976Z file_sha256=ee63e2d9925dd6033a428a444d252945dc43c391354c4932fd67715e3203e2d5 prompt_sha256=d085aedff8e7e3171308a25f46ed929d643bc698e27eb59fe53ea5620b597271
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-444 card, scope "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" and "review template packs" — plan FACTS ".claude/review-templates/packs/spec08.md is a hand-kept copy" ... "So nothing has to be regenerated." — the pack is dropped on tooling grounds (hand-written, no --check, no tool reads it) while the plan's own FACTS say its source range is Spec 08 §7, the range that carries the superseded sentence, so a doc that states the old rule is left with no note — grep packs/spec08.md for the superseded sentence and add the dated note under it, or quote the line that proves the pack does not state the old rule.
+
+BUG severity=HIGH — task-444 card, scope "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" and "the register copy 69a if a ruling row is the right home" — plan FACTS "69a M-506 (:654) holds ... This is a record of the 2026-11-06 ruling." — the plan itself records the old model rule verbatim inside a doc and then closes the card's condition by its own argument instead of a note or a ruling, and lists the choice as UNVERIFIED, so the one doc line that was named stays uncorrected — add the dated note to 69a M-506, or obtain an operator ruling that 69a is out of this card's scope.
+
+DEFER severity=MED — task-444 card "After task-436 lands." — plan EXACT TEXT "Spec 08 §7 rule 9 carries the same split (dated note, task-436)." — the committed note asserts a cross reference the plan marks unproven (UNVERIFIED "That task-436's note lands unchanged from its card") and no test criterion checks it, so the note can ship false — confirm the rule number and text of task-436's landed note before commit, or drop the parenthetical.
+
+DEFER severity=LOW — task-444 card "Built on Opus through the six steps." — plan LANDING "Plan seats on the plan: integration, reality-check, and regression (tracked paths)" — the plan names only review seats and never states the building lane runs on Opus, the very rule it is enshrining — add one LANDING line naming the build seat as Opus.
+
+DEFER severity=LOW — plan ACCEPTANCE "Both notes are present, each under the sentence it supersedes" — plan TESTS "(b) the first line after it that starts with `- Dated note 2026-11-22 (M-246, prior text kept; task-444` comes before the next `#` heading" — the lock passes if the note drifts anywhere beneath :247, and FACTS say ":248, is blank" while N1 says "new line 248 ... directly under :247" — assert that the first non-empty line after the superseded sentence is the note.
+
+DEFER severity=LOW — task-444 card "Scope and Files line at its plan review." — plan LANDING "One commit: the test, the two queue files and the task file" against "Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts" — a path the single commit writes is absent from the Files line under review, justified only by "It is not put on the Files line because its name contains a comma" — put the task file on the Files line or drop it from the commit list.
+
+MET — RR-0385 item 1, operator words "the seat that writes a plan and the seat that builds run on Opus; reality-check, integration, regression seats and grounders stay on Sonnet; reviewers DeepSeek" — plan EXACT TEXT — the shared opening states "run on Opus", "the reality-check, integration and regression seats and every grounder run on Sonnet", "the review lenses are DeepSeek".
+
+MET — task-444 card "M-246, prior text kept" — plan WHAT step 2 "Add one dated note under C1 and one under C2. Nothing is deleted." plus TESTS (a) "the old sentence is still present (prior text kept)".
+
+MET — task-444 card ".cursor/MCBYLAWS-QUEUE.md:247 first" and plan ACCEPTANCE "each under the sentence it supersedes" — plan N1 "new line 248 of MCBYLAWS-QUEUE.md, directly under :247." and N2 "new line 19 of MCFRONTEND-QUEUE.md" — both named sentences get the note beneath them and neither insert moves :247 or :13.
+
+MET — task-444 card "After task-436 lands." — plan ORDER "After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+Rules met: none
+
+---
+⏱  46473ms (46.5s)
+📊 Tokens — total: 20915, input: 10853, output: 10062, reasoning: 8938

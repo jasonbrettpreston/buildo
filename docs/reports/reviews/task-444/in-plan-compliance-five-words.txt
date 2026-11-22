@@ -1,0 +1,131 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:30bc90d1ae9cb93ab1670dd40b38456387419bc064d8ae2c6c6f77ca00d81159 part 1 of 1
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0389 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1954), verbatim: "resolve this conflict by updating the key specs and docs". WHY: RR-0385 item 1 rules that the seat that writes a plan and the seat that builds run on Opus, seats and grounders on Sonnet, reviewers DeepSeek. Task-436 adds the Spec 08 note and names the sentence "Opus only for hard design adjudication" at .cursor/MCBYLAWS-QUEUE.md:247 as superseded without editing that file. THIS TASK: every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept): .cursor/MCBYLAWS-QUEUE.md:247 first; the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs). After task-436 lands. Scope and Files line at its plan review. Built on Opus through the six steps.
+
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-444-v1: FINAL.1b, the documents that still state the old model rule (task-444)
+
+#### BASIS
+- RR-0385 item 1 (MORNING-DECISIONS.md:1917): "the seat that writes a plan and the seat that builds run on Opus; reality-check, integration, regression seats and grounders stay on Sonnet; reviewers DeepSeek". The operator's words: :1909 "Teh seat that writes the plan is opus and the seat that build is Opus"; :1912 "keep the current split with opus and sonnet". Recorded as decision-170.
+- RR-0389, :1954 (operator's own words, per :1955): "resolve this conflict by updating the key specs and docs". Recorded as decision-174: the documents themselves get a dated note with the prior text kept.
+- Form: M-246 dated note, prior text kept (137_mcqueue.md:125, rule 10). The wording follows the task-436 note (the task-436 card, EXACT TEXT).
+- "Tehse should be small changes" (:1909). Gates already built stay; no new gate work (RR-0385 item 5).
+
+#### FACTS (board head 693ef2a8a; task-436 has not landed: 08_agents.md has no AGENT-MODEL line)
+I ran `grep -rniE "sonnet|opus"` over docs/specs, .cursor, .claude, CLAUDE.md, scripts, mcbylaws/, tasks/ and docs/ (excluding reports). Each hit is sorted below.
+CONFLICTS (each needs a note):
+- C1 .cursor/MCBYLAWS-QUEUE.md:247: "Opus only for hard design adjudication, with the reason logged." The next line, :248, is blank.
+- C2 .cursor/MCFRONTEND-QUEUE.md:13 ends: "Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly)." Three dated notes already follow this paragraph, at :15, :17 and :18.
+- 08_agents.md:359 "on Sonnet": task-436 handles it, so this task does not touch it.
+AGREES (seats on Sonnet; leave as is):
+- MCBYLAWS-QUEUE.md:247, first sentence: "Seats run on Sonnet by default".
+- 137_mcqueue.md:152, and its copy in packs/queue.md:110 (a Sonnet check lane).
+- 08_agents.md:529 (the tool seats are Claude Sonnet).
+- .claude/agents/*.md:9-10 (`model: sonnet`).
+- check-lane-close.mjs:583 (a comment about seats).
+NOT A RULE (leave):
+- 08_agents.md:35 is the harness's closed model enum.
+- 08_agents.md:526 "(Sonnet seats, lane agents, ...)" names a scope and sets no model.
+- 69a:653-656 contain the word "opus" only inside quoted chat text.
+- .cursor/active_task.md:43 is a quote ("make sure opus actually uses the system").
+- .cursor/wf1_spec08_deepseek_execution_active_task.md:23-24, :50 and :104 are an old plan's evidence tables.
+- Hits in 101_notification_dispatch, 116, 93, supabase_migration_program_plan, the push scripts and loop-gate-context.mjs:239 are substring matches ("ExpoPush", "octopus", "corpus"), not model names.
+- CLAUDE.md, .claude/workflows.md, the skills and the README files: no hits.
+- 69a M-506 (:654) holds "a multi-step build goes to the owning lane, on Sonnet". This is a record of the 2026-11-06 ruling. The row names its live text as "Text home: Spec 08 §7 rule 9" (:654), and task-436 puts its note there. 69a "carries no rule of its own beyond the rows" (:3-4). Operator rulings now go to `backlog/decisions` ("decisions (operator rulings only)", 137_mcqueue.md:20), and no 69a row is dated 2026-11-2x (grep count 0). So decision-170 and decision-174 are the record, and the register gets no new row or note. The test that pins this sentence (chat-rulings-register.logic.test.ts:1733) stays as it is.
+- .claude/review-templates/packs/spec08.md is a hand-kept copy ("Generator: hand-written, not generated", :3). Its source range is already out of date: it says :330-346, but §7 now starts at :344. No --check and no tool reads it: lane lenses build their input from the live spec (rule-lists.json:45, the `agents-s7-s11` list). So nothing has to be regenerated.
+Hooks and generated files:
+- Both queue files are on the McBylaws `protected` list (mcbylaws/protected-paths.json:57 and :70). They are not on the `layer23` or `frontend` lists, so the commit needs no trailer, no prereg file and no panel record. At push, the gate asks for a tty "y" (gate.mjs:568-583).
+- Arm Q reads only `**MB-nn`/`**MF-nn` headings (mcbylaws-queue-check.mjs:4). The notes must therefore contain no MB-nn or MF-nn id.
+- The tests that read these files pin only the MF header text (mcfrontend-status.infra.test.ts:59-60) and the increments table (web-landing.logic.test.ts:156). An added line breaks neither.
+- The system map generator reads only docs/specs and docs/reference (generate-system-map.mjs:18-30), and no spec is edited. No other generator reads .cursor. So no file is regenerated.
+- An earlier lock for dated notes already exists: src/tests/spec-notes-1b.logic.test.ts (task-376, "pins one confirmed stale line to the dated note", :7).
+- Rule lists the Files line resolves (rule-lists.mjs resolve, letter S): queue-137, agents-s7-s11, eng-all, five-words, plan-protocol, inc-S, ms-S. eng-all is added only by the test file.
+
+#### WHAT
+1. Test first: add one describe block to src/tests/spec-notes-1b.logic.test.ts and run it red.
+2. Add one dated note under C1 and one under C2. Nothing is deleted.
+
+#### EXACT TEXT
+Both notes use the same opening:
+`- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.`
+- N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247. After the opening, add: ` This supersedes "Opus only for hard design adjudication" above for the plan seat and the building lane; "Seats run on Sonnet by default" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
+- N2, new line 19 of MCFRONTEND-QUEUE.md, after :18 (the last note on :13, which keeps the notes in date order). After the opening, add: ` This supersedes "Opus sparingly" in the paragraph above for the plan seat and the building lane; "Sonnet seats" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
+- Neither insert moves :247 or :13, so task-436's citation of `.cursor/MCBYLAWS-QUEUE.md:247` stays correct.
+
+#### TESTS (red first; this extends the existing lock and adds no new gate)
+One `describe` in spec-notes-1b.logic.test.ts. For each file:
+- (a) the old sentence is still present (prior text kept);
+- (b) the first line after it that starts with `- Dated note 2026-11-22 (M-246, prior text kept; task-444` comes before the next `#` heading;
+- (c) that line contains "run on Opus", "every grounder run on Sonnet" and the :1954 words.
+Today the test is red on (b). It is green after the notes. The lock is proven in both directions (08_agents.md:485).
+
+#### ORDER
+After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit.
+
+#### LANDING
+- One commit: the test, the two queue files and the task file, with the trailer `Task: task-444`, through the real hooks. Answer "y" at the push prompt.
+- The task file is always allowed (check-task-files.mjs:10). It is not put on the Files line because its name contains a comma.
+- Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529).
+- Close with the two-commit lane close.
+
+#### ACCEPTANCE
+- Both notes are present, each under the sentence it supersedes, with the prior text unchanged.
+- The test is red before the notes and green after; the suite is green.
+- Arm Q passes at push.
+
+#### NOT IN SCOPE
+- 08_agents.md (task-436).
+- 69a and packs/spec08.md (FACTS).
+- lane-guard.mjs (outside the repo).
+- The AGREES and NOT A RULE lines.
+
+#### UNVERIFIED
+- Hooks and tests were not run (read-only).
+- That task-436's note lands unchanged from its card.
+- That reviewers accept leaving 69a M-506 without a note.
+
+#### GUESS
+About 1 hour of lane time: 2 doc lines and about 25 test lines.
+
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+

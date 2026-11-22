@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.965Z file_sha256=0ae8bbc48bae4636e3e760e290bced2ee91297544b87c9ddb289e6dbd2745cef prompt_sha256=98a06c79af3419a36b12764a6958990c7afd0c741555a50c44e2fe311c93db58
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card, "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — plan FACTS ".claude/review-templates/packs/spec08.md is a hand-kept copy ("Generator: hand-written, not generated", :3). Its source range is already out of date: it says :330-346, but §7 now starts at :344." — the exemption of the review template pack rests on tooling (no --check, no reader) and never on whether that pack still states "Opus only for hard design adjudication", so the clause is unmet for a file the card names — quote the pack's own sentence at the plan read, then add N3 under it or record the grepped absence of the old rule.
+
+DEFER severity=MED — lock, "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — plan TESTS "(a) the old sentence is still present (prior text kept); (b) the first line after it that starts with `- Dated note 2026-11-22 (M-246, prior text kept; task-444` comes before the next `#` heading; (c) that line contains "run on Opus", "every grounder run on Sonnet" and the :1954 words." — the new describe names no rule id or declared alias and asserts file text only, so the thing the plan calls an extended lock is not a lock by the pasted definition — put M-246, RR-0385 or RR-0389 (or a rule-map alias) in the describe name and assert it.
+
+DEFER severity=MED — card, "RR-0385 McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus (names RR-0385) ... (MORNING-DECISIONS.md:1915)" — plan EXACT TEXT "RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 ... :1910 ... :1912 ... :1954" — the shipped note will carry four :19xx citations and the ids decision-170 and decision-174, while the pasted record names the rulings only as RR-0385 at :1915 and RR-0389 at :1954 and says nothing of decision-17x, and :1909, :1910, :1912 cannot be seen — cite :1915 and the RR ids as the card does, or confirm each line number at build before the note is committed into two protected files.
+
+DEFER severity=LOW — card, "Built on Opus through the six steps." — plan LANDING "Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529)." — the plan fixes the review seats but never records that the building seat runs on Opus, which is the half of RR-0385 item 1 this card exists to carry — add one LANDING line binding the build seat to Opus.
+
+DEFER severity=LOW — †, "An id or code pointer that lands with another branch (rule-map `meta.pending_integration`)." — plan EXACT TEXT "Spec 08 §7 rule 9 carries the same split (dated note, task-436)." — the note hardcodes a section and rule number owned by an unlanded branch, and the plan itself lists "That task-436's note lands unchanged from its card" as unverified — verify §7 rule 9 after task-436 lands or point at the task-436 card rather than the number.
+
+REJECT — card, "the register copy 69a if a ruling row is the right home" — that the plan omits a dated note on 69a M-506 — the card makes that conditional and the plan answers the condition with quotes ("69a "carries no rule of its own beyond the rows" (:3-4)" and "Operator rulings now go to `backlog/decisions`"), so the omission is a resolved condition, not a gap.
+
+REJECT — card, "names the sentence "Opus only for hard design adjudication" at .cursor/MCBYLAWS-QUEUE.md:247 as superseded without editing that file" — that task-444 contradicts task-436 by editing that file — the no-edit constraint binds task-436 only, and RR-0389 :1954 assigns the in-place note to this task.
+
+MET — card, ".cursor/MCBYLAWS-QUEUE.md:247 first" — plan EXACT TEXT "N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247" — the file the card names first receives the first note.
+
+MET — card, "M-246, prior text kept" — plan WHAT "Add one dated note under C1 and one under C2. Nothing is deleted." plus TESTS (a) — prior text is asserted present, nothing removed.
+
+MET — RR-0389, "resolve this conflict by updating the key specs and docs" — plan EXACT TEXT quotes ":1954" and the WHAT edits the documents themselves rather than a register row.
+
+MET — RR-0385 item 1 split — plan EXACT TEXT "the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek."
+
+MET — card, "After task-436 lands." — plan ORDER "After task-436 lands and its note text is confirmed on the board."
+
+MET — card, "Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts" — plan Files line lists the identical three paths.
+
+MET — card, "Scope and Files line at its plan review." — plan Files line is present at the foot of the plan.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+Rules met: none
+
+---
+⏱  58007ms (58.0s)
+📊 Tokens — total: 18499, input: 6189, output: 12310, reasoning: 10932

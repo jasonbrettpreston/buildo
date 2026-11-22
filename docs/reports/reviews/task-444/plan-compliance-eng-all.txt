@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.962Z file_sha256=9fd71f33f896665f769ce691b18b979d743e4878870825cf01055efb4cf43b18 prompt_sha256=e5615a89fa54f8a97d5758db83d5581995dcd6461e1a3c405a5d6f413ee17086
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-444 card, scope clause "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — plan FACTS, "Its source range is already out of date: it says :330-346, but §7 now starts at :344. No --check and no tool reads it ... So nothing has to be regenerated." — the plan clears .claude/review-templates/packs/spec08.md only on the "regeneration" question and never states whether the pack's quoted §7 body contains the old rule ("Opus only for hard design adjudication", "Opus sparingly"), so one doc the card names stays unexamined — add the grep/quote result for the pack's §7 body and, if the old rule text is there, plan a dated note under it (or a dated pointer to task-436's note) in this delivery.
+
+BUG severity=MED — card scope clause "the register copy 69a if a ruling row is the right home" — plan FACTS, "69a M-506 (:654) holds \"a multi-step build goes to the owning lane, on Sonnet\". This is a record of the 2026-11-06 ruling." — M-506 is itself a doc line that states the superseded model ("on Sonnet" for a multi-step build) and the plan leaves it unchanged on an argument ("69a \"carries no rule of its own beyond the rows\"") that the row contradicts, parking the decision in "UNVERIFIED: That reviewers accept leaving 69a M-506 without a note" — either add a dated note on the M-506 row, or paste the row's live-text pointer text next to it in the plan so the plan shows why the row restates nothing.
+
+BUG severity=MED — §11 "Pre-Review Self-Checklist (always applies, every WF): Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests." — plan ORDER, "After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit." — no PASS/FAIL self-checklist step appears in WHAT, ORDER or ACCEPTANCE for a clause marked as always applying, but the checklist itself is not in the step list — insert the self-skeptical PASS/FAIL walk as an explicit step before the red test run.
+
+DEFER severity=LOW — card "Task-436 adds the Spec 08 note" with plan FACTS "task-436 has not landed: 08_agents.md has no AGENT-MODEL line" — plan EXACT TEXT N1, "Spec 08 §7 rule 9 carries the same split (dated note, task-436)." — both committed queue lines assert a cross-reference that is false at commit time if task-436 slips or its note text changes, but the ORDER gate ("After task-436 lands and its note text is confirmed") mitigates, so the risk is bounded and safe to defer.
+
+MET — RR-0385 item 1 — plan EXACT TEXT N1/N2 — the note text gives Opus to the plan seat and the building lane, Sonnet to reality-check, integration, regression and every grounder, DeepSeek to the review lenses.
+MET — RR-0389 "resolve this conflict by updating the key specs and docs" — plan WHAT step 2 — a dated note lands in each of the two conflicting queue documents and "Nothing is deleted."
+MET — task-444 Implementation Notes form "M-246, prior text kept" — plan TESTS (a) — the surviving old sentence is pinned by the test, not just by the note wording.
+MET — card "After task-436 lands." — plan ORDER — the work is explicitly gated on task-436 landing.
+MET — §5.3 red-green cycle — plan TESTS — "Today the test is red on (b). It is green after the notes," with the red run before the edits.
+MET — §10.2 boundary "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — plan Files line — only .cursor queue docs and one test file are touched.
+
+REJECT — §5.2 / §5.5 test layer "The pure function computes the right value on happy + edge inputs" — accused of putting a file-text assertion in a `*.logic.test.ts` — not a real issue: §5.2's parity/drift-guard row admits `*.logic.test.ts`, and spec-notes-1b.logic.test.ts is the existing lock this change extends.
+
+REJECT — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — accused of splitting Spec 08 into task-436 and the queues into task-444 — not a real issue: the card routes Spec 08 to task-436 and orders task-444 "After task-436 lands", so the split is the governing routing, not a divergence.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: none
+
+---
+⏱  53816ms (53.8s)
+📊 Tokens — total: 27164, input: 16713, output: 10451, reasoning: 9309

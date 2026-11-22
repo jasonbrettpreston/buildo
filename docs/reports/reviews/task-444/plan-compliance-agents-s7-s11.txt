@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.970Z file_sha256=b3d16a4fbe6bc6a22a22f9a7574ef5ead9b3fc28ddab8499da4641c0e2775ca8 prompt_sha256=a6ffc10957686c7905ae261a4a1f0458f757258296dc30b3fc621179a30bf5dd
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — rule 10 dated note 2026-11-06 (C3) "(C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none." — NONE — the plan is card task-444's answer and ends at "GUESS" with no rule quoted by id and anchor, no compliant yes or no, no five-principle test, no condition — append the four-line compliance block to the plan's close.
+BUG severity=HIGH — 11.2 dated note 2026-11-21 "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it" — ORDER "Then: test (red), notes (green), commit." — no grounder fold-check step and no FOLD-CHECK.md anywhere in ORDER or LANDING, so the launch check and the plan-prep commit refuse this plan — add the fold-check step to ORDER and FOLD-CHECK.md to the committing set.
+DEFER severity=MED — 11.9 TKT-1 dated note 2026-11-21 "requires their Seat lines in GROUNDER-PLAN.md" — LANDING "Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529)." — the seats are named but not the GROUNDER-PLAN.md Seat lines the launch gate recomputes, and not their Sonnet model — state the Seat lines and docs/reports/reviews/task-444/GROUNDER-PLAN.md as a launch deliverable.
+DEFER severity=MED — card "Built on Opus through the six steps" and MCINC-2 "Use a throwaway sandbox worktree with the work applied and the affected tests run." — UNVERIFIED "Hooks and tests were not run (read-only)." — step 2 is not measured: the affected tests are not run, so no impact map exists for a run the card puts on the six steps — run the affected tests in a sandbox worktree and record the map, or name step 2 as a named gap.
+DEFER severity=MED — 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — TESTS "Today the test is red on (b). It is green after the notes. The lock is proven in both directions (08_agents.md:485)." — red is claimed with no run behind it, while the same plan says tests were not run — add one step to run the new describe block before the notes and paste the command with the red output.
+DEFER severity=MED — rule 6 dated note 2026-11-20 "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md" — LANDING "Close with the two-commit lane close." — the close is planned but not the TRIAGE.md outcome line per finding, and not the Final Summary round line and per-finding lines the same note requires — add both artifact steps to LANDING.
+MET — rule 10 (a) — BASIS "RR-0385 item 1 (MORNING-DECISIONS.md:1917)" — every recommendation to the operator carries its rule with file:line.
+MET — 11.4 — TESTS "(a) the old sentence is still present (prior text kept);" — cases, red and green expectation and invocation mode are written into the plan, not left to the test file.
+MET — rule 7 "Compose the smallest DIVERSE panel that covers this change's actual risks" — LANDING "Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529)." — three seats, not the full menu, for a two-line document change.
+MET — rule 9 dated note 2026-11-22 "the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder" — NOT IN SCOPE "lane-guard.mjs (outside the repo)." — the plan leaves the unenforceable guard untouched, as the note states it is not enforced.
+REJECT — 11.3 — the change adds a describe block to src/tests/spec-notes-1b.logic.test.ts for behaviour no ruling names — 11.3 requires a two-direction lock and 11.4 puts the failing tests in the plan, so the lock is named, not invented.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+Rules met: none
+
+---
+⏱  54626ms (54.6s)
+📊 Tokens — total: 26675, input: 14844, output: 11831, reasoning: 10757

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:33:05.973Z file_sha256=35490f8255748620fdb353b4d4a3e173a5d6831332c7d9eb7c22e8170ffcd878 prompt_sha256=0674e15ce0c5ff6107931ea82cb58f541f6cf2987027d67f1b71b89e7bd2fb28
+🔍 Lens review of docs/reports/reviews/task-444/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card clause "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — Implementation Plan FACTS, 69a bullet "69a M-506 (:654) holds "a multi-step build goes to the owning lane, on Sonnet". This is a record of the 2026-11-06 ruling." — the plan identifies a pasted doc that still states the old rule and deliberately leaves it without a note, and its own UNVERIFIED line admits the gap — add a dated note under M-506 (or add one explicit line to the card's DECISIONS recording that the operator ruled the register needs no note) and move it out of UNVERIFIED
+
+BUG severity=HIGH — card clause "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — FACTS C2 "C2 .cursor/MCFRONTEND-QUEUE.md:13 ends: "Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly)."" — the plan's N2 supersedes only "Opus sparingly", so the same sentence still states the old exec rule ("DeepSeek exec") after the change, contradicting "the lane that builds it run on Opus" in the note — extend N2 to supersede the "DeepSeek exec" wording for the building seat as well, prior text kept
+
+DEFER severity=MED — card clause "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — FACTS packs bullet ".claude/review-templates/packs/spec08.md is a hand-kept copy ("Generator: hand-written, not generated", :3). Its source range is already out of date: it says :330-346, but §7 now starts at :344." — the review template pack is dismissed on generator grounds with no quote of its model text, so the card's "review template packs" item is answered without evidence that the pack does not state the old rule — quote the pack's rule 9 text in FACTS and either add a dated note there or record the exact sentence that shows it needs none
+
+DEFER severity=MED — card clause "the seat that writes a plan and the seat that builds run on Opus; reality-check, integration, regression seats and grounders stay on Sonnet" — ACCEPTANCE "Both notes are present, each under the sentence it supersedes, with the prior text unchanged." — acceptance never checks that Spec 08 §7 rule 9 carries its note by the time this task lands, while the card lists Spec 08 in the full list and ORDER depends on it — add an acceptance line that 08_agents.md §7 rule 9's task-436 dated note is visible on the board before the notes are committed
+
+DEFER severity=LOW — card clause "Scope and Files line at its plan review." — LANDING "One commit: the test, the two queue files and the task file, with the trailer `Task: task-444`, through the real hooks." — the commit carries a task file that the declared Files line does not contain, so the reviewed scope and the landed scope differ — name the task file in the landing section with the reason it is off the Files line, or get the Files line to cover it
+
+MET — card clause "After task-436 lands." — Implementation Plan ORDER "After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit." — start is gated on task-436 as the card requires
+
+MET — card clause ".cursor/MCBYLAWS-QUEUE.md:247 first" — Implementation Plan N1 "N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247." — the first-named document is the first note, and :247 is not moved
+
+MET — card clause "dated notes, prior text kept" — Implementation Plan WHAT "Add one dated note under C1 and one under C2. Nothing is deleted." and TESTS "(a) the old sentence is still present (prior text kept)" — both notes are additions and the old sentences are pinned by test
+
+MET — RR-0389 "resolve this conflict by updating the key specs and docs" — Implementation Plan WHAT "Add one dated note under C1 and one under C2." — the docs themselves are edited, not a wrapper or a comment elsewhere
+
+MET — RR-0385 "Label all realted tasks McFix Final" — pasted card "labels: McFix, McFix Final" — the label the ruling names is on the card
+
+MET — project objective "keep it simple; no scope creep" — Implementation Plan WHAT "Test first: add one describe block to src/tests/spec-notes-1b.logic.test.ts and run it red." — the whole change is two doc lines and one describe block, with gates already built left alone
+
+REJECT — project objective "A task that serves neither a designed element nor a supporting function is most likely not relevant" — accused of being out-of-scope document work — RR-0389, pasted in the context, orders "resolve this conflict by updating the key specs and docs", so an operator ruling names it, and this lens does not overrule a pasted ruling
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  37373ms (37.4s)
+📊 Tokens — total: 13040, input: 5399, output: 7641, reasoning: 6431
