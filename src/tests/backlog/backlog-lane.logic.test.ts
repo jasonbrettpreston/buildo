@@ -284,6 +284,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(e).not.toContain('plan: --material-from'); // no plan stage
     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
   });
+  // task-432 (INPUTS.4, RR-0378 step 5, 08_agents.md:529): the lens line gives the lane the command that makes the next context file each review round
+  it('T4: the lens line of a build brief and of a record brief holds the re-run command with --task, --lane, --stage, --root <worktree> and --board <board>, and the word highest-numbered', () => {
+    for (const type of ['build', 'record'] as const) {
+      const f = fixture();
+      const dir = path.join(f.board, 'backlog/tasks');
+      const file = path.join(dir, fs.readdirSync(dir).find((n) => n.startsWith(f.task))!);
+      fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('Launch description text.', 'Launch description text. Files: scripts/analysis/x.mjs, src/tests/').replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`));
+      if (type === 'build') plantEvidence(f.board, f.task);
+      const r = lane(f, ['--dry-run']);
+      const e = (JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra: string[] } | null)?.extra.join('\n') ?? '';
+      expect(e, r.stdout + r.stderr).not.toBe('');
+      expect(e).toContain(`node scripts/analysis/backlog-brief.mjs --task ${f.task} --lane BL-T1 --stage 1 --root ${f.wt} --board ${f.board} > /dev/null`);
+      expect(e).toContain('highest-numbered context-rN.md');
+      expect(e).toContain('Fresh context every review round');
+    }
+  });
   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
       expect(lensBrief('build', files), files).toContain('lens-security.md');

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CTX432'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:54:00Z'
+updated_date: '2026-11-22T16:58:00Z'
 labels:
   - McFix
   - McFix V2
@@ -158,4 +158,8 @@ rg#1 MED folded :161 is not edited (
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-CTX432, worktree /Users/brettpreston_macmini/Buildo-wt-ctx432, branch wf1/inc1b-ctx432), RR-0240
+
+2026-11-22 lane BL-CTX432 stage 1: read the task, plan review records and rule lists; tests T1, T2 (backlog-brief-context.logic.test.ts) and T4 (backlog-lane.logic.test.ts) written first, red commit attempt follows
+
+2026-11-22 build: backlog-brief.mjs gains --board <dir> (decisions read from <dir>/backlog/decisions; bare flag or missing dir dies, exit 1, no fallback); backlog-lane.mjs lens line gains one sentence with the re-run command (:161 and check-lane-close.mjs untouched); README.md:124 one sentence. Red was five failing assertions (red.out); green is the landing commit through the real hooks.
 <!-- SECTION:NOTES:END -->

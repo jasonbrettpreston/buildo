@@ -3,7 +3,8 @@
 // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
 // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
 // command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
-// Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
+// Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--board <dir>] [--date YYYY-MM-DD]
+// --board <dir>: read the decisions from that board checkout (<dir>/backlog/decisions) instead of <root>; a lane re-runs the brief each review round so the context holds the rulings as they are then (task-432, RR-0378 step 5).
 // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -15,12 +16,16 @@ import { args, asList, descriptionOf, die, parseFM, planLabels, readItems, REPO,
 const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js').CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
 const a = args();
 const root = path.resolve(a.root || REPO);
+// task-432: --board given must be a board checkout with backlog/decisions; a bare --board or a missing directory dies, never a silent fallback to <root>
+if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');
+const boardDir = a.board === undefined ? null : path.resolve(a.board);
+if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`);
 const date = a.date && a.date !== true ? a.date : today();
 const taskId = String(a.task === true ? '' : a.task ?? '').toLowerCase();
 const lane = String(a.lane === true ? '' : a.lane ?? '');
 const stage = a.stage && a.stage !== true ? a.stage : '1';
 if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/.test(lane) || !/^\d{1,3}$/.test(String(stage))) die('backlog-brief: --date must be YYYY-MM-DD, --lane a plain name (letters, digits, . _ -), --stage a number');
-if (!/^task-\d+$/.test(taskId) || !lane) die('backlog-brief: usage: --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]');
+if (!/^task-\d+$/.test(taskId) || !lane) die('backlog-brief: usage: --task task-N --lane <name> [--stage N] [--root <dir>] [--board <dir>] [--date YYYY-MM-DD]');
 const t = readItems(root).find((x) => x.id === taskId);
 if (!t) die(`backlog-brief: ${taskId} not found: no such task file under ${path.join(root, 'backlog/tasks')}`);
 
@@ -36,7 +41,7 @@ const ac = acBlock.split('\n').map((l) => /^- \[[ x]\] #(\d+) (.*)$/.exec(l)).fi
 // Rules: every `"quote" (cite)` found in the AC lines, plus the decisions the task names.
 const rules = [];
 for (const c of ac) for (const m of c.text.matchAll(/"([^"]+)"\s*\(([^)]+)\)/g)) rules.push(`"${m[1]}" (${m[2]})`);
-const decDir = path.join(root, 'backlog/decisions');
+const decDir = path.join(boardDir ?? root, 'backlog/decisions');
 const decisions = (fs.existsSync(decDir) ? fs.readdirSync(decDir).filter((f) => f.endsWith('.md')).sort() : []).map((f) => {
   const text = fs.readFileSync(path.join(decDir, f), 'utf8'); const { fm, body } = parseFM(text);
   const q = /verbatim, [^:]*: "([^"]+)"/.exec(body)?.[1]; const cite = /^Cite: (.*)$/m.exec(body)?.[1];
