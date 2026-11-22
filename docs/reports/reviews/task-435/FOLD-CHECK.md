@@ -17,3 +17,5 @@ On the board at HEAD 6c3f450c9; the fold edits and the plan-prep post are uncomm
 (4) PASS. `planHash` from scripts/hooks/check-lane-close.mjs on the board's task file is 3dfbbd08d304.
 
 Verdict: PASS
+
+Plan: task-435 sha256:3dfbbd08d304
