@@ -3,10 +3,11 @@ id: TASK-430
 title: >-
   INPUTS.2 The critical contract items the McFrontend handbook lacks, added as
   rule lines in the existing form
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:34:00Z'
+updated_date: '2026-11-22T20:37:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,6 +20,34 @@ references:
   - docs/reports/reviews/task-430/seat-integration-1.md
   - docs/reports/reviews/task-430/seat-reality-check-1.md
   - docs/reports/reviews/task-430/seat-regression-1.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - >-
+    compliance:surface-126
+    docs/specs/02-web-admin/126_maxbld_surface_standard.md
+  - >-
+    compliance:surface-127
+    docs/specs/02-web-admin/127_surface_conversion_procedure.md
+  - >-
+    compliance:surface-128
+    docs/specs/02-web-admin/128_surface_standard_policy.md
+  - >-
+    compliance:surface-135
+    docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:bylaw-133 docs/specs/01-pipeline/133_bylaw_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 130012
 ---
@@ -385,4 +414,6 @@ plan-compliance-policy-124-s2-s5-p3#3 MED ruling RR-0385
 Dated note 2026-11-22 (M-246, prior text kept; RR-0379 · task-430 · Backlog; operator, verbatim: "We can run step 1 in parellel - we will add to the rules overtime")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; operator, verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables.")
+
+2026-11-22 taken on the board at lane launch (lane BL-HB430, worktree /Users/brettpreston_macmini/Buildo-wt-hb430, branch wf1/inc1b-hb430), RR-0240
 <!-- SECTION:NOTES:END -->
