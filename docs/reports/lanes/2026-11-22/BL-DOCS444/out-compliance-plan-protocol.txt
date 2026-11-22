@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:07:29.836Z file_sha256=c0ce210c62296353a4081fcdc2f4e368b8106867adb461c877871ef894f59d61 prompt_sha256=265cb6593eec0e939b37967da3afe9058e2bfbff03e4c2d60b019ad9ae040b5a
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-DOCS444/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-444 Description "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCFRONTEND-QUEUE.md "This supersedes "Opus sparingly" in the paragraph above for the plan seat and the building lane; "Sonnet seats" stands." — the note supersedes only the "Opus sparingly" fragment, so the same paragraph's old rule "DeepSeek exec and lenses" still names execution (the building lane) as DeepSeek, the doc still states the old rule — extend the note to supersede "DeepSeek exec" for the building lane and keep only "lenses are DeepSeek"
+BUG severity=HIGH — task-444 Description "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCBYLAWS-QUEUE.md "DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26)." — that line is left standing two lines above the new note while the note itself says "the review lenses are DeepSeek", so the file now carries both the old rule and its successor with no supersession of "execution" — add "DeepSeek handles breadth and execution" to the sentence list the note supersedes (building lane to Opus, lenses stay DeepSeek)
+DEFER severity=MED — task-444 Description "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — docs/specs/01-pipeline/69a_mcbylaw_register.md "diff --git a/docs/specs/01-pipeline/69a_mcbylaw_register.md" — the diff covers only the two queue files, 69a and the test, so CLAUDE.md, .claude/workflows.md and the review template packs have no note and no pasted evidence they were read and cleared — paste the plan's read result for those three (clean or note added) before lock
+MET — RR-0385 item 1 "the seat that writes a task's plan and the seat that builds run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek" — .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, 69a M-506 — all three notes state the identical split
+MET — RR-0389 "resolve this conflict by updating the key specs and docs" — src/tests/spec-notes-1b.logic.test.ts "const WORDS_444 = ['run on Opus', 'every grounder run on Sonnet', '"resolve this conflict by updating the key specs and docs"'];" — the operator's verbatim words are carried in each note and asserted
+MET — task-444 Description "prior text kept" — .cursor/MCBYLAWS-QUEUE.md "Seats run on Sonnet by default. Opus only for hard design adjudication, with the reason logged." — the old sentence stays and the note is appended after it, nothing deleted
+MET — task-444 Description ".cursor/MCBYLAWS-QUEUE.md:247 first" — .cursor/MCBYLAWS-QUEUE.md "- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b" — the first-named file carries its note in this diff
+MET — task-444 Description "the register copy 69a if a ruling row is the right home" — docs/specs/01-pipeline/69a_mcbylaw_register.md "69a 2 +- (one line changed in place, no line inserted)" — the note sits in the M-506 status cell, prior Rule text "a multi-step build goes to the owning lane, on Sonnet" retained
+MET — task-444 "Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts, docs/specs/01-pipeline/69a_mcbylaw_register.md" — the four diff headers match the card exactly, no file outside the named scope
+REJECT — task-444 Description "each doc gets its own dated note" — the change is accused of writing three non-identical note texts — each note names the different sentence it supersedes, which is what "its own dated note" requires
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  59605ms (59.6s)
+📊 Tokens — total: 20312, input: 13275, output: 7037, reasoning: 5985

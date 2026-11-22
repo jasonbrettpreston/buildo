@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:07:29.836Z file_sha256=2b7c7e9b678ce2abb96cec3ac5ce5e227019bb7620b8f54e2c6d530a2314e0e9 prompt_sha256=c6b07110094e777066b8ded4992504a83e60fd0e8b71133ffd8751525edb519e
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-DOCS444/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0389 "resolve this conflict by updating the key specs and docs" — .cursor/MCBYLAWS-QUEUE.md:248 "This supersedes \"Opus only for hard design adjudication\" above for the plan seat and the building lane; \"Seats run on Sonnet by default\" stands." — the note leaves the adjacent :247 "DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26)." standing, so the file still puts execution on DeepSeek while the same note puts the building lane on Opus, and .cursor/MCFRONTEND-QUEUE.md:19 repeats the gap by superseding only "Opus sparingly" and leaving "DeepSeek exec and lenses" standing — supersede the DeepSeek-execution sentence in both notes, for the plan seat and the building lane, or state which execution stays with DeepSeek.
+
+DEFER severity=MED — Spec 137 §4 rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — src/tests/spec-notes-1b.logic.test.ts:1 "diff --git a/src/tests/spec-notes-1b.logic.test.ts b/src/tests/spec-notes-1b.logic.test.ts" — the material changes src/ and lists no backlog/ task or draft file, so the task-file half of G3 cannot be seen met from this material — stage backlog/tasks/task-444 or its draft in the same commit as the test, trailer kept.
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")`" and rule 10 "with the date, the row id and the queue" — .cursor/MCBYLAWS-QUEUE.md:248 "task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170" — the note names the row and a label but not the queue (McBylaws) and not the lane (BL-DOCS444, per the pasted Implementation Notes), the same omission sits in the MCFRONTEND and 69a notes — add the queue and the lane to all three notes.
+
+DEFER severity=LOW — task block "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a ..., review template packs)" — .cursor/MCBYLAWS-QUEUE.md:248 and .cursor/MCFRONTEND-QUEUE.md:19 are the only homes given a note besides 69a — whether CLAUDE.md and .claude/workflows.md still state the old rule is "cannot see" and no read of them is reported — record the read of both, or add their dated notes, before the close.
+
+REJECT — Spec 137 §3 rule 1 "REPLACED when the status changes, never appended" — the accusation that the M-506 edit appends to a status line — not a real issue: the status word RULED 2026-11-06 is unchanged, the added text is the rule 10 dated note, and 137 §2 already recognises dated-note rows in 69a.
+
+MET — Spec 137 §4 rule 4 — .cursor/MCBYLAWS-QUEUE.md:248 — dated note 2026-11-22, the day of the ruling, operator's words quoted with cite, same form as the task-410 and task-419 notes.
+MET — Spec 137 §4 rule 10 — docs/specs/01-pipeline/69a_mcbylaw_register.md:654 — the M-506 Rule text and its RULED 2026-11-06 status stay, the note is added after them, nothing deleted.
+MET — RR-0385 (pasted Decisions, "tests are the focus") — src/tests/spec-notes-1b.logic.test.ts:139 — a red test for the three notes lands with them and is refused at (b) before the notes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+Rules met: none
+
+---
+⏱  104932ms (104.9s)
+📊 Tokens — total: 42636, input: 21367, output: 21269, reasoning: 20267

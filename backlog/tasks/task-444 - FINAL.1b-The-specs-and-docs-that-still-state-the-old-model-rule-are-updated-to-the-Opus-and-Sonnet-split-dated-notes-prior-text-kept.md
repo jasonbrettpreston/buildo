@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-DOCS444'
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T22:05:00Z'
+updated_date: '2026-11-22T22:10:00Z'
 labels:
   - McFix
   - McFix Final
@@ -26,6 +26,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md
 type: build
 ordinal: 144012
 ---
@@ -180,4 +181,12 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0389 · task-444 · Backlog; o
 2026-11-22 red step (lane BL-DOCS444): one describe block added to src/tests/spec-notes-1b.logic.test.ts (FINAL.1b); commit attempted with only the test and this task file staged, expected refused at (b) before the notes.
 
 2026-11-22 build (lane BL-DOCS444): red recorded (3 of 17 failed at (b), spec-notes-1b.logic.test.ts:152 and :161, commit refused, exit 1). Notes added with the plan's EXACT TEXT: N1 .cursor/MCBYLAWS-QUEUE.md:248, N2 .cursor/MCFRONTEND-QUEUE.md:19, N3 in the status cell of M-506 at 69a:654 (no line inserted). Nothing deleted. Arm Q before the edit at 707ddef32: MB PASS, MF PASS.
+
+2026-11-22 acceptance on real inputs (lane BL-DOCS444, work commit 1ff0eb575):
+(1) All three notes present, prior text unchanged. Output of a node comparison against the plan EXACT TEXT: 'N1 line 248 exact: true | :247 unchanged start: true | :249 blank: true'; 'N2 line 19 exact: true | :13 still has old sentence: true | :20 blank: true'; 'N3 in-cell exact: true'; 'prose after colon equals task-436 note (08_agents.md:360): true'. git diff --stat: MCBYLAWS-QUEUE.md 1 +, MCFRONTEND-QUEUE.md 1 +, 69a 2 +- (one line changed in place, no line inserted).
+(2) Red before the notes: 'Tests  3 failed | 14 passed (17)', each at (b), e.g. 'AssertionError: .cursor/MCBYLAWS-QUEUE.md: no task-444 note after the old sentence: expected -1 to be greater than 246'; commit refused, exit 1. Green after: 'src/tests/spec-notes-1b.logic.test.ts (17 tests)', 'Tests  17 passed (17)', 'GATE OK', 'POLICY CHECKS OK (commit-msg)', '[wf1/inc1b-docs444 1ff0eb575]'. The full suite was not run (station only): UNVERIFIED until the push station.
+(3) Arm Q (queueCheck) before at 707ddef32: 'arm Q MB .cursor/MCBYLAWS-QUEUE.md @ HEAD: PASS (no refusal)', 'arm Q MF .cursor/MCFRONTEND-QUEUE.md @ HEAD: PASS (no refusal)'; after at 1ff0eb575: the same two PASS lines. Arm Q at push itself is the operator's push: UNVERIFIED.
+Plan UNVERIFIED item, now run: 'node scripts/generate-bylaw-handbook.mjs --check' printed '[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)', exit 0. No hook asked for a generated file.
+
+2026-11-22 output review round 1 (lane BL-DOCS444): fresh context docs/reports/reviews/task-444/context-r3.md; lens set on DeepSeek: compliance per list (7 outputs), code-review, error-paths; 36 finding lines (HIGH 8, MED 12, LOW 15, NIT 1), listed untriaged in docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md. Grounder owed (RR-0359); the task stays RUNNING.
 <!-- SECTION:NOTES:END -->

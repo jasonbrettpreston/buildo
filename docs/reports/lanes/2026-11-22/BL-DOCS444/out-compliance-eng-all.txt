@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:07:29.836Z file_sha256=6d2f7bae965a3ac6592dc904e4d9d188f3c7b85ab3a7dc2140ebd10e17c08047 prompt_sha256=5354f58a8df914e9fd7cdd99ef0b70902c69f19933072581d681ca336c598f19
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-DOCS444/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-444 Description "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — Files: ".cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts, docs/specs/01-pipeline/69a_mcbylaw_register.md" — no note and no recorded read result is pasted for CLAUDE.md, .claude/workflows.md or any review template pack, so "every spec and doc that still states the old rule gets its own dated note" is unproven for three of the four sources the card names (those files cannot see) — add a dated note to each that still states the old rule, or a recorded plan read line naming each and clearing it.
+
+DEFER severity=MED — task-444 "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCBYLAWS-QUEUE.md:248 "This supersedes \"Opus only for hard design adjudication\" above for the plan seat and the building lane; \"Seats run on Sonnet by default\" stands." — the superseded sentence also carries ", with the reason logged" and the note never says whether that duty survives now that Opus is the default for plan and build — add one clause to the note stating whether "with the reason logged" still applies.
+
+DEFER severity=LOW — §11 "generate a 5-10 item self-skeptical checklist ... Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "2026-11-22 acceptance on real inputs (lane BL-DOCS444, work commit 1ff0eb575):" — the response pastes three numbered acceptance items, not a 5-10 item PASS/FAIL checklist walked before the test run — paste the checklist with per-item PASS/FAIL above the acceptance section.
+
+DEFER severity=LOW — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — src/tests/spec-notes-1b.logic.test.ts:137 "passes after (08_agents.md:486)." — the new coupling is cited as a file:line rather than §7 rule 9, and the diff carries no SPEC LINK or Cross-Spec Dependencies change (the file header cannot see) — cite §7 rule 9 in the comment and update the file's SPEC LINK in the same commit.
+
+DEFER severity=NIT — task-444 "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCFRONTEND-QUEUE.md:19 "This supersedes \"Opus sparingly\" in the paragraph above for the plan seat and the building lane; \"Sonnet seats\" stands." — the superseded sentence sits at :13 with the two 2026-11-06 dated notes between it and the new note, so "the paragraph above" lands a reader on the wrong note — name :13 or quote "Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly)."
+
+MET — M-246 prior text kept — .cursor/MCBYLAWS-QUEUE.md:247-248 — "Opus only for hard design adjudication, with the reason logged." stands and the dated note is the next line.
+MET — RR-0389 ":1954 resolve this conflict by updating the key specs and docs" — .cursor/MCBYLAWS-QUEUE.md:248, .cursor/MCFRONTEND-QUEUE.md:19, 69a:654 — all three notes carry :1909, :1910, :1912 and :1954 verbatim.
+MET — RR-0385 item 1 split (Opus plan and build, Sonnet seats and grounders, DeepSeek lenses) — 69a:654 "the seat that writes a task's plan and the lane that builds it run on Opus; ... the review lenses are DeepSeek." — the note states the split the ruling names.
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — src/tests/spec-notes-1b.logic.test.ts:152 — the FINAL.1b test ships in the same diff and the notes record "3 failed | 14 passed (17)" before the notes.
+MET — "`parseRulings` keys on the first cell" — docs/specs/01-pipeline/69a_mcbylaw_register.md:654 — the M-506 note sits in the status cell, not the first cell, and the handbook check runs exit 0 at 546 rules.
+MET — §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — the whole diff — the two queue docs and 69a land with the test in one commit, for the files that were edited.
+MET — task-444 "After task-436 lands" — .cursor/MCBYLAWS-QUEUE.md:248 "Spec 08 §7 rule 9 carries the same split (dated note, task-436)." — the dependency is recorded instead of duplicated.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  60922ms (60.9s)
+📊 Tokens — total: 35838, input: 22975, output: 12863, reasoning: 11621
