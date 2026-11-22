@@ -3,11 +3,11 @@ id: TASK-436
 title: >-
   FINAL.1 Opus seats: the launch script names the builder's model and Spec 08
   records the split (Opus plans and builds, Sonnet seats and grounders)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-OPUS436'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:11:00Z'
+updated_date: '2026-11-22T21:19:00Z'
 labels:
   - McFix
   - McFix Final
@@ -31,6 +31,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-OPUS436/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-OPUS436/TRIAGE.md
 type: build
 ordinal: 136012
 ---
@@ -161,4 +163,14 @@ rg#3 MED folded the second-to-last l
 (4) the guard regex /BRIEF-FILE:\s*(\S+)\s+sha256=([0-9a-f]{64})/ (present in ~/.claude/hooks/lane-guard.mjs: true) on the two-line output captures the BRIEF-FILE path and a 64-hex sha; the AGENT-MODEL line names 'BRIEF-FILE line' without a colon, so it is not matched. Suite green: UNVERIFIED (the full suite runs only at the push station); the related run in the work commit: Tests 64 passed (64).
 
 2026-11-22 lane BL-OPUS436: output review round 1 done (context-r3.md; 12 lens outputs, 44 findings, untriaged) in docs/reports/lanes/2026-11-22/BL-OPUS436/; grounder owed; task stays RUNNING.
+
+2026-11-22 lane BL-OPUS436 close: grounder Cairn-Ground-O436 ruled 44 findings (2 CONFIRMED LOW/NIT piled per RR-0364, 42 REJECTED; GROUNDER.md, TRIAGE.md in docs/reports/lanes/2026-11-22/BL-OPUS436/); no fix round (RR-0385). Work 05b9de031, records 216efc2a7; tests T1-T3 red then green (64 passed); status BUILT.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+backlog-lane.mjs prints AGENT-MODEL: opus on the line before BRIEF-FILE and writes the Opus/Sonnet split line into every brief; Spec 08 dated note 2026-11-22 at 08_agents.md:360 records the split (RR-0385, decision-170); rule-lists page regenerated (Q8). Work 05b9de031; tests T1, T2, T3 (a)/(b) red then green.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-22/BL-OPUS436/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-OPUS436/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

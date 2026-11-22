@@ -23,3 +23,9 @@ Review: 12 DeepSeek lens outputs (10 compliance lists incl. policy-124-s2-s5, co
 - Landing note: task-437 changes the same generated page. Whichever of 436 and 437 lands second regenerates it after the rebase.
 
 STATUS: BUILT-PENDING-GROUNDER: work 05b9de031 landed through the hooks, 12 lens outputs and 44 findings committed untriaged, task RUNNING, grounder owed.
+
+## Close (2026-11-22)
+- Grounder Cairn-Ground-O436: 44 ruled, 2 CONFIRMED (out-code-review#1 LOW, out-compliance-queue-137#3 NIT, piled RR-0364), 42 REJECTED; no fix round (RR-0385). GROUNDER.md and TRIAGE.md copied unchanged (cmp identical).
+- check-lane-close.mjs --outcomes: exit 0, "checked 2 ids"; close check on the staged close: exit 0, no output.
+
+STATUS: BUILT: work 05b9de031, records 216efc2a7, close commit holds GROUNDER.md, TRIAGE.md, the task at BUILT; not pushed.
