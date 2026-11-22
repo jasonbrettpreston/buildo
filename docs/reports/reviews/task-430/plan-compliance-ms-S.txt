@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.573Z file_sha256=4f8dffc12029ecf7ec66df18b9eeb36e6f39408dd9221479691b9ddd5f3aa46c prompt_sha256=366f55af52d20d48035e1a79a722af40dd55d5b94693a662029f3518f5d3ebc2
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — PLAN-430-v1 §6 "Result: 12 new rows (FE-45..FE-56 if the register's "Next free id" is FE-45 at landing; see collision below) plus item 4 delivered by FE-31's reading." — the ruling's third thing is 13 added lines, the plan adds 12 and routes item 4 through a reading on fe.31, so one of the 13 is not added as a line — fix: add the item 4 row as a 13th line (OWED, its own src/tests/surfaces lock path) or lock only after an operator ruling, recorded as a decision naming task-430, that 12 rows satisfy it.
+
+BUG severity=MED — RR-0384 "These look great - teh 13 are perfect" — PLAN-430-v1 §6 "CORRECTION to the report: it says "Not ... Sonner"; Spec 33:47 ... says "toasts are unchanged: `sonner`"" and "the report's form ... is NOT in the spec words; dropped" (items 8, 10, 13) — four of the 13 approved items are reworded or corrected with no operator confirmation, and the INPUTS.1 report is not pasted so the approved text cannot be checked (cannot see) — fix: add a fifth open question showing items 2, 8, 10, 13 in the report form and the plan form, and require the operator's choice before plan-lock.
+
+DEFER severity=MED — card Description "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/" — PLAN-430-v1 §4 "Option A2: add an optional `max` argument to headlineOf (default HEADLINE_MAX). ... edits a layer23 file, so the commit needs `McBylaws-Task:` plus an MB panel record" — the plan keeps live a route that edits scripts/analysis/bylaw/bylaw-register.mjs, which is outside the card's Files line, and needs a McBylaws task that does not exist — rationale: strike A2 at lock or amend the Files line and open the MB task first, otherwise the recommended path and the option diverge on scope.
+
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — PLAN-430-v1 §10 "Dropping Specs 126-128 from the review table (task-431, second step)" — the trigger the transition keys on is a handbook holding the critical items; with item 4 not a line and 12 rows OWED with no locks built, the handbook at this task's close is not yet "updated iwth the critical items" — rationale: state that condition at close so task-431 is not scheduled against an incomplete handbook.
+
+DEFER severity=LOW — project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — PLAN-430-v1 §6 "C-T4 (OPTIONAL, drop if the review calls it scope)" — the optional quote lock adds about 20 lines of test code that no ruling names — rationale: the rulings name three things and a fourth test is not one of them, so drop C-T4.
+
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 §4 A1 with A-T2 "no FE headline ends in "…"" — Spec 136 emits whole headlines while the shared reader pin at handbook-rule-map.logic.test.ts:92-95 stays as proof bylaw-register.mjs is untouched.
+
+MET — RR-0384 "make each line reflect its notes" — PLAN-430-v1 §5 note form "Dated note 2026-11-22 ... Current reading: <text> (from notes dated <d1>, <d2>)" with checks (i) to (iv) — 11 pinned rows carry a reading and a later note makes --check throw.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — PLAN-430-v1 §6 item 9 "pointer row ... the row copies no table" — the row cites the headings 126 §11b.3 :963 and §11b.7 :1032 only.
+
+MET — card Description "nothing in Specs 126, 127, 128 deleted or rewritten" — PLAN-430-v1 §0 "spec text in 126/127/128 is never rewritten" and §10 — 126, 127 and 128 are cited, never edited.
+
+MET — card Description "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — PLAN-430-v1 §7 order 2 "run `node scripts/surfaces/generate-surface-handbook.mjs --write`" — Spec 136 and the rule map are produced by the existing generator and its --check, no new generator.
+
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — PLAN-430-v1 §7 order 1 "Commit A, then B, then C" — the rules enter the rule source incrementally over three separable commits, none of them a rewrite.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  49873ms (49.9s)
+📊 Tokens — total: 22348, input: 12158, output: 10190, reasoning: 8852

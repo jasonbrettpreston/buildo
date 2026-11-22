@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.545Z file_sha256=a9745580bf49726539f2a6461eb997de82ab423b1981bc2cb9df34421b45aed6 prompt_sha256=a3fa5e19c55e818955a20270e82846d25343db328cff1f0e58d312441ccf65aa
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — plan §6 "Result: 12 new rows (FE-45..FE-56 ...) plus item 4 delivered by FE-31's reading. The operator said "13 lines"; this is 13 items covered, 12 new lines (OPEN QUESTION 2)" and acceptance §9.3 "Spec 136 has fe.45..fe.56 (12 new lines)" — the operator designated only item 9 as a pointer, so folding item 4 into fe.31's reading ships 12 lines where the ruling says 13 and the acceptance criterion bakes in the lower count — add the item-4 row as a 13th line, or obtain an explicit operator ruling on the count at plan review before the plan is locked.
+
+DEFER severity=MED — RR-0384 "the 13 are perfect" — plan §6 item 8 "The report's form "parcelId in URLs and the consumer API is the municipal parcel_ref" is NOT in the spec words; dropped." and item 10 "The report's form adds "empty, offline"; not in the spec; dropped." (items 7 and 13 also "narrowed"/"reworded") — four of the thirteen items the operator called perfect lose approved wording on the lane's own judgement, not on a ruling — carry the approved wording, or list all four reductions as one consolidated question for the operator beside OPEN QUESTION 2.
+
+DEFER severity=MED — §13 Testing Mandate "**Infra:** `*.infra.test.ts` — `generate-spec-mirror.mjs --check` clean (mirror drift)" — plan §7 "Checks that must stay green after each commit: ... `node scripts/analysis/spec-split-check.mjs --check`, the pre-commit gates" — the plan edits docs/specs/02-web-admin/135 and regenerates 136 in all three commits but its keep-green list omits the mandated mirror check — add `generate-spec-mirror.mjs --check` (and its regeneration) to §7 and to the per-commit generated-file list.
+
+DEFER severity=MED — Task "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan §1 "--check compares both files, :68-77" with "buildRuleMap (:94-118), one line and one rule per FE row" against §4 "The rule map JSON does not change in A." and §7 "Generated files per commit: A: 136; B: 136; C: 136 and surface-rule-map.json" — if buildRuleMap emits the rendered line (the plan says one line per FE row), commits A and B leave surface-rule-map.json stale and the both-file --check fails on a commit that must be green alone — measure whether the rule map carries the headline text and, if it does, regenerate it in A and B as well and say so.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — plan §5 "FE-02's note says its own row "is owed as FE-40" while FE-40 is the McTest row, 135:62; a stale pointer, not contradiction" and §10 "rewriting FE-02's stale "owed as FE-40"" — a note that contradicts the row's own state is left printed on the page with the "+N dated notes" pointer that sends the reader to it, so fe.02's line does not reflect its notes — add one corrected dated note on FE-02 (not a rewrite) or extend the reading set to 12 and state it.
+
+MET — RR-0384 "stop the clipping" — plan §4 "A1 (recommended): in generate-surface-handbook.mjs readFeRows, `headline` = the shared headlineOf result unless it was clipped" — commit A stops the clip inside the McFrontend generator only, leaving the shared layer23 reader and Spec 133 untouched.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — plan §6 item 9 "pointer row ... the row copies no table" — the row is a pointer with a heading-existence lock, no table text.
+
+MET — Task "nothing in Specs 126, 127, 128 deleted or rewritten." — plan §0 "spec text in 126/127/128 is never rewritten" and §10 "Dropping Specs 126-128 from the review table (task-431, second step)" — no edit path to 126/127/128 appears in the Files line or any commit.
+
+MET — §13 Testing Mandate "**Infra:** ... a RED canary per lock" — plan §4 "A-T1 RED: a planted Ruling cell of 700 characters", §6 "C-T1 RED: the committed register with the 12 rows and no regenerated 136/rule map" — each piece is planned test-red-first with a saved control.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+Rules met: 11b.1, 11b.6
+
+---
+⏱  72731ms (72.7s)
+📊 Tokens — total: 48415, input: 33383, output: 15032, reasoning: 13847

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.571Z file_sha256=0184d8948600af216ad20b0eea0f51badfec8c1baf541fc07846a6569b9fd2b2 prompt_sha256=5535a14f9cde8ad1bf9a540b7b90b2e187843b7692e036ae5ad4ec9fc1578be0
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "add these 13 lines" — plan §6 "Result: 12 new rows (FE-45..FE-56 ...) plus item 4 delivered by FE-31's reading. The operator said '13 lines'; this is 13 items covered, 12 new lines (OPEN QUESTION 2)." — the ruling names 13 lines and the plan lands 12, deferring the 13th to an unanswered operator question, so the clause is unmet as written — add the 13th row for item 4, or amend the count only after an operator note (RR) says 12 lines.
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect." — plan §6 item 8 "The report's form ... is NOT in the spec words; dropped." and item 13 "the report's 'interactive elements 44 px minimum; every control has a name' goes beyond it" — four of the thirteen the operator called perfect (items 7, 8, 10, 13) are reworded with approved words dropped, and no pasted clause authorises the rewrite — keep the approved words and add the spec file:line beside them, or obtain an operator note for the reworded forms.
+
+BUG severity=MED — RR-0384 "make each line reflect its notes" — plan §10 "rewriting FE-02's stale 'owed as FE-40'" (NOT in scope) with §5 "FE-02's note says its own row 'is owed as FE-40' while FE-40 is the McTest row, 135:62; a stale pointer" — FE-02's line still does not reflect its own note, so "each line" is unmet for that row — add a Current reading to FE-02 stating the row is no longer owed as FE-40, or record the operator's acceptance of the exclusion.
+
+DEFER severity=MED — plan §0 "The plan review can drop B or C without touching A." — plan §6 item 4 "NO new row: duplicate ... It reaches the handbook through FE-31's Current reading (B)." — item 4's only delivery path is commit B, which the plan permits dropping, so dropping B silently loses one of the 13 approved items — give item 4 its own row so C does not depend on B.
+
+DEFER severity=MED — Task "add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source" — plan §6 item 2 "No ruling found on React Hook Form, so it is not in the row." — part of a reported item is dropped for want of a ruling, so the rule source does not carry the whole item the operator read — state the dropped half inside the item 2 row as PROSE-ONLY (the FE-04/26/44 form) rather than omitting it.
+
+DEFER severity=LOW — no pasted clause names a quote-verification lock — plan §6 "C-T4 (OPTIONAL, drop if the review calls it scope)" — this test is not required by any card clause or ruling and the plan itself offers it as droppable — drop C-T4 at plan-lock so commit C carries only what the rulings name.
+
+MET — Task "nothing in Specs 126, 127, 128 deleted or rewritten" — plan §10 "any change to Spec 133 or to bylaw-register.mjs" out of scope, no 126/127/128 edit anywhere in §15 Files.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — plan §6 item 9 "pointer row ... the row copies no table."
+
+MET — Task "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan §4 "in generate-surface-handbook.mjs readFeRows" and §4 tests all in handbook-rule-map.logic.test.ts.
+
+MET — RR-0384 "stop the clipping" — plan §4 A1 "in generate-surface-handbook.mjs readFeRows, `headline` = the shared headlineOf result unless it was clipped".
+
+MET — Task Files line "scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, ... .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/" — plan §16 Files line matches the card Files line entry for entry.
+
+MET — Implementation Notes form "Dated note 2026-11-22 (M-246, prior text kept; RR-0384 ... operator, verbatim:" — plan §5 note form "Dated note 2026-11-22 (M-246, prior text kept; task-430, RR-0384; operator, verbatim: ..." reuses the same register amendment form.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  31395ms (31.4s)
+📊 Tokens — total: 24193, input: 17612, output: 6581, reasoning: 5482

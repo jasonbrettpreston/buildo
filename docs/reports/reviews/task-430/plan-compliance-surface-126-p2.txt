@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.535Z file_sha256=f6d578ee02b0e47c4d00bd4e82f30b2330612e361de8c3d06e7238ea1ed68d05 prompt_sha256=91459d34c21bfaa9dc2fb184644b10ca1d3fe1caa022267935d558fb5d05936c
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — plan §9 "3. Spec 136 has fe.45..fe.56 (12 new lines), each OWED with its lock path" — the operator's verbatim count is 13 lines and the plan's own acceptance criterion locks in 12, deferring the gap to OPEN QUESTION 2 past plan-lock — close OPEN QUESTION 2 before lock, either add the 13th row or record an operator ruling for 12 in the card's Decisions block so acceptance matches a pasted ruling.
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — plan §10 "rewriting FE-02's stale "owed as FE-40"; mobile specs" and plan §5 "FE-02's note says its own row "is owed as FE-40" while FE-40 is the McTest row, 135:62; a stale pointer, not contradiction" — a line whose note points at the wrong row is knowingly left not reflecting its notes, and the ruling names every line, not only contradiction cases — add FE-02's Current reading (or the corrected pointer) in commit B, or take a written operator exclusion before lock.
+DEFER severity=MED — 126 §5.7 "a value in two places is a drift source, which §5.2 measured four times over." — plan §5 "(ii) every cited date must be the date of another dated note of the same row, else throws" — the staleness lock proves the cited dates exist, never that the reading still says what those notes say, so the hand-written reading is a third copy with no content lock — extend the lock (the C-T4 substring check already does this shape) to assert each reading sentence occurs in the cited note.
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — plan §5 "Five more rows have notes that add build detail without making the headline false (FE-13, FE-24, FE-29, FE-32, FE-02" and "What the lock cannot do: decide that a row with no reading needs one. That stays a reviewer judgment." — "each line" is narrowed to 11 of 26 note-bearing rows with no ruling for the narrowing — record the 11-row scope as an operator-accepted narrowing on the card, or widen it.
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — plan §6 "C-T4 (OPTIONAL, drop if the review calls it scope): quote lock" — a fourth deliverable that no pasted ruling or card line names — drop C-T4 from this card or take it under its own ruling.
+MET — task description "nothing in Specs 126, 127, 128 deleted or rewritten" — plan §6 item 6, item 10, item 12 — every 128/127 cite is read-only; the only register writes are Spec 135 rows and the generator.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — plan §6 item 9 "the row copies no table" — the page-set item renders as a pointer row with a heading-existence lock.
+MET — RR-0384 "stop the clipping" — plan §4 A-T2 "no FE headline ends in "…"; the 16 named rows are longer than 300" — the clip is removed for section 2 without touching the shared cap.
+MET — card "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan §3 and §7 — new lines flow through the existing --write/--check path and its lock test, no second generator.
+MET — RR-0379 "we will add to the rules overtime" — plan §6 "each is `OWED` with one lock path under src/tests/surfaces/ that does not yet exist" — rules land as rows now with locks owed to task-434.
+MET — 126 §6.3 "The row text above is unchanged." — plan §5 "The cell text above is kept." — the M-246 prior-text-kept note form is followed for the new readings.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+Rules met: none
+
+---
+⏱  68632ms (68.6s)
+📊 Tokens — total: 41039, input: 27405, output: 13634, reasoning: 12643

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.570Z file_sha256=9f3157f3c1a4bd8581ac56c39c743e2fc67e6ec478a752f6615d96bfdb8dec91 prompt_sha256=75bb79171dc1c3caf7117d43f5e0b5d05925e0bc3d12a6d7d88479b5fa4bee4f
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — plan §6 "Result: 12 new rows (FE-45..FE-56 ...) plus item 4 delivered by FE-31's reading. The operator said "13 lines"; this is 13 items covered, 12 new lines (OPEN QUESTION 2)." — the ruling names 13 lines and the plan lands 12, deferring the thirteenth to an operator question, so the clause is unmet at lock; item 4 also disappears entirely if B is dropped, which plan §0 permits ("The plan review can drop B or C without touching A") — land a 13th line for item 4, or hold plan lock for a dated ruling that approves 12 lines.
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — plan §10 "rewriting FE-02's stale "owed as FE-40"" (out of scope) with §5 "FE-02's note says its own row "is owed as FE-40" while FE-40 is the McTest row, 135:62; a stale pointer, not contradiction" — a line whose printed text points at the wrong row still does not reflect its notes, so the clause is unmet for FE-02 — add FE-02 to the pinned reading set with a reading that replaces the stale pointer, or get a ruling that excludes it.
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect" — plan §6 item 7 "Row says only the missing part." and item 8 "The report's form ... is NOT in the spec words; dropped." — the approved texts of items 7, 8, 10 and 13 are narrowed or reworded without a ruling — rationale: each reword carries file:line evidence and is an accuracy fix, but the operator approved specific wording, so each belongs in the OPEN QUESTIONS list at plan review, not decided by the lane.
+DEFER severity=MED — §5.5 "Parity battery ... Two surfaces that MUST agree stay in lockstep" — plan §4 A1 "the plain text of the Ruling cell ... the same three regexes as bylaw-register.mjs:83-85 ... Measured equivalence ... checked in memory: no difference" — a second copy of the plain-text stripper is added and its agreement with the shared reader is proven once by an in-memory measurement, not by a drift test — add a parity case comparing the copied plain() with the shared one over the real register, or take A2.
+DEFER severity=MED — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan §7 "Checks that must stay green after each commit: the Spec 136 lock ... at pre-push the full suite." — no commit step in the plan produces the self-skeptical checklist — add the checklist step to §7 and to §9 Acceptance for each of A, B, C.
+DEFER severity=LOW — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan §6 "Comments citing 136 line numbers (scripts/analysis/gates/mobile-literals.mjs:9 "136:163 fe.44") are text only, not locked; they go stale by position, not by id." — commit C knowingly leaves a stale spec-line citation in a gate script — update that pointer in commit C or drop the line number.
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — the change modifies scripts/surfaces/generate-surface-handbook.mjs and scripts/surfaces/_schema/surface-rule-map.json — the card's own Files line names scripts/surfaces/**, and the change is handbook tooling, not pipeline data flow, so no frontend boundary is crossed.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — plan §6 item 9 "pointer row ... the row copies no table."
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — plan §6 cites 126/127/128 by line for each row and §0 "spec text in 126/127/128 is never rewritten"
+MET — task card "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan §4/§5/§6 put every change through readFeRows, lineRow, --write/--check and handbook-rule-map.logic.test.ts, no new generator
+MET — RR-0384 "stop the clipping" — plan §4 A1 "the Spec 136 generator no longer clips" with A-T1/A-T2 red-first cases and A-T4 proving Spec 133 is byte-identical
+MET — RR-0380 "once the handbook has been updated iwth the critical items" — plan §6 delivers 13 items into 135/136 without touching the engineering standards split that RR-0380 defers to task-431
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — plan §4/§5/§6 each list RED cases with controls (A-T1, B-T1, B-T3, B-T4, B-T5, C-T1, C-T5) before the change
+MET — §5.5 "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — plan §1 "src/tests/surfaces/handbook-rule-map.logic.test.ts:273 ("the committed files are current")" stays the lock for every commit
+MET — §14 "A new ruling is a new row in Spec 135, never a line here" (plan §0, quoting 136:5 and generator:157) — plan §6 puts all 12 new items in the Spec 135 register and regenerates 136, never hand-editing it
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+Rules met: none
+
+---
+⏱  58590ms (58.6s)
+📊 Tokens — total: 34740, input: 23472, output: 11268, reasoning: 9860

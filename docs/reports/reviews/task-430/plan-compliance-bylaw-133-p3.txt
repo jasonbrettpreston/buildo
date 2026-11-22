@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:26:36.671Z file_sha256=1b900281cd94dc5ad50571bcc40962661edd748eaf3d9ae7384481c4df33558a prompt_sha256=117c88f0db7f5974386e295c481c322383cb46996b4ed32286f57790084b1d38
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — PLAN-430-v1 section 6 C-T2 "ids contiguous FE-01..FE-(44+12), Next free id = next" and C-T3 "the handbook header line Rules rendered: 56" — the plan's own lock pins 12 new rows and 56 rules against the ruling's 13 lines, and 17.1 "THIRTEEN ROWS" plus 16 "the real ids come from Next free id" confirm 57, so C-T2 and C-T3 as written are unimplementable against its own 13 rows — change both pins to FE-(44+13) and 57 (17.6 already reads "with 57 rows"), and strike the stale 44+12 arithmetic.
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — PLAN-430-v1 B-T6 "the 11 pinned ids carry a reading, every other row prints none" and B-T7 "the +N dated notes count rises by exactly 1 on those 11 rows (51 to 62)" — the B lock pins 11 readings and a 51 to 62 count while 17.4 pins the strict form for "the 12 ids" and 17.6 pins "B-T11 the 12 real readings", so a landing that follows 17.4 fails B-T6 and B-T7 and the note-count arithmetic is short by one — change B-T6 to the 12 ids of 17.3 and B-T7 to 51 to 63.
+
+BUG severity=MED — RR-0384 "These look great - teh 13 are perfect" — PLAN-430-v1 17.1 "The words dropped from the report forms (the rows quote only what a spec says; he may add any of them by his own words as a later row)" — three of the thirteen items he called perfect lose the words he read: item 2's "Not Shadcn, React Hook Form or Sonner", item 10's "empty, offline", item 13's "every control has a name" — carry those words in the three rows or put the three deltas to him before commit C, since a grounder ruling cannot narrow what the operator approved.
+
+DEFER severity=MED — m.515 "McIncrement (MCINC-8): one ID ledger." — PLAN-430-v1 17.5 "Before the launch the orchestrator claims MF-95 in the id ledger (~/Buildo-scratch/ids)" — only MF-95 is claimed; the 13 new FE ids rest on Spec 135's "Next free id" line and the second-lander renumber, so the ledger this rule names does not hold them while task-388's unlanded FE-45 does — claim the FE range in the ledger at launch and record the renumber there, bounded because the ledger check refuses a duplicate at landing.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — PLAN-430-v1 section 5 "What the lock cannot do: decide that a row with no reading needs one. That stays a reviewer judgment" — 14 of the 26 note-bearing rows carry no reading, so "each line" rests on the judgment the plan concedes — record a one-line no-reading reason per such row in the lane report so a reviewer can check the coverage claim.
+
+REJECT — m.481 — the plan's new "Current reading" lines carry no confidence and no evidence pointer, accused of breaching the confidence clause — m.481 binds each reading row of the Layer 3 bylaw switchboard, not the McFrontend register line text.
+
+REJECT — lc.53 — the 13 new rows are OWED with lock paths that do not exist, accused of partial green — lc.53 is enforced by INV-25 and verifyLock in bylaw-maxbld-trace, a P5 bylaw invariant, and the FE register's OWED-with-unbuilt-lock form lies outside it.
+
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 section 4 "A1: in generate-surface-handbook.mjs readFeRows, headline = the shared headlineOf result unless the shared result was clipped" with A-T4 "Spec 133 untouched (control)" — the clip is stopped inside the McFrontend generator and the shared reader and Spec 133 stay byte-identical.
+
+MET — RR-0384 "add these 13 lines" (the count of rows, not the test pin) — PLAN-430-v1 17.2 "Item 1 (FE-45)" through "Item 13 (FE-57)" — thirteen rows, one per item of the INPUTS.1 report, item 4 given its own row.
+
+MET — m.511 "CITE-2 cite by id and anchor" — PLAN-430-v1 17.2 item 1 "128 rule 2 (128:29), 128:55; FE-05" — every new row cites the spec by id and line anchor.
+
+MET — m.513 "CITE-4 stage-6 prereg rules[] checklist" — PLAN-430-v1 17.5 "the prereg ... schema coa-round-prereg-v1; rules[] holds RULED ids only" — commit 0 creates the prereg with RULED-only ids before A.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+Rules met: m.511, m.513
+
+---
+⏱  63501ms (63.5s)
+📊 Tokens — total: 45368, input: 31814, output: 13554, reasoning: 12341

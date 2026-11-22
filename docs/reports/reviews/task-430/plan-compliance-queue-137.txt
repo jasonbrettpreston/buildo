@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.552Z file_sha256=3fdf8ea97294510953325b73f26253d6fb85385947e6a4195f9c4f0f52e08f0d prompt_sha256=ebc720a532163e3a54963e82db2febdd08e4aa2a96a505c75498f83d1873d057
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Spec 137 §4 task-366 note "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — PLAN-430-v1 §8 "Close: work commits, then a close commit moving the task file and the MF queue row" — the planned close commit carries no lane report directory, no compliance output, no GROUNDER.md and no TRIAGE.md, so check-lane-close.mjs refuses it and task-430 cannot reach BUILT/DONE as planned — add to §8 and §9 the lane report directory with one compliance output per attached rule list, GROUNDER.md with a verdict per finding, TRIAGE.md where CONFIRMED/CONFLICT ids exist, the review context directory, and check-lane-close.mjs in the checks list.
+
+BUG severity=HIGH — Spec 137 §4 task-410 note "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" (refused) — PLAN-430-v1 §8 "then a close commit moving the task file and the MF queue row" — .cursor/MCFRONTEND-QUEUE.md is not one of the paths a lane closing commit may stage, so the close commit as planned is refused — land the MF-n queue row in its own commit before the close and state that in §8.
+
+BUG severity=HIGH — Spec 137 §4 Rule 3 note (G3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN-430-v1 §8 "Close: work commits, then a close commit moving the task file" — commits A, B and C change scripts/surfaces/generate-surface-handbook.mjs and src/tests/... while the backlog/tasks/task-430 edit sits only in the later close commit, so G3 refuses every work commit — carry an edit of backlog/tasks/task-430 in each commit that touches scripts/ or src/, or name the draft file that rides with them, and say so in §8.
+
+DEFER severity=MED — Spec 137 §4 Rule 4 "Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")" and Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue" — PLAN-430-v1 §5 "Dated note 2026-11-22 (M-246, prior text kept; task-430, RR-0384; operator, verbatim: \"make each line reflect its notes\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901))" — the note drops the queue and lane fields and quotes a fragment of RR-0384 rather than its words as pasted at :1901 — use the full M-246 form and copy the ruling's words exactly as the card holds them.
+
+DEFER severity=MED — Spec 137 §1 note "a task comment replaces the card (operator questions are Backlog comments, RR-0207)" and §5a note "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` ... and `Recommendation:`" — PLAN-430-v1 §12 "OPEN QUESTIONS for the operator" (four items, no Grounded: or Recommendation: line) — the four open decisions reach the operator only through the plan text, not through a Backlog comment or OPERATOR task with the two required lines — raise each as a Backlog comment or an OPERATOR task carrying Grounded: and Recommendation: before plan-lock.
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — PLAN-430-v1 §6 "Result: 12 new rows (FE-45..FE-56 ...) plus item 4 delivered by FE-31's reading" — the ruling's "13 lines" is delivered as 12 new lines plus a reading, so commit C meets the clause only on the operator's answer to OPEN QUESTION 2 — hold C until the operator rules 12 rows or add the 13th row.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — PLAN-430-v1 §5 "Staleness lock (in readFeRows, so --check and the lock both fail): (i) ... (ii) ... (iii) ... (iv) the set of rows that carry a reading is pinned in the test to the 11 ids" — four new generator refusals are added that the ruling's words do not name — keep them but list them in §9 acceptance as agreed scope, or move (ii) and (iv) to task-434.
+
+MET — Task Description (task-430) "nothing in Specs 126, 127, 128 deleted or rewritten" — PLAN-430-v1 §0 "spec text in 126/127/128 is never rewritten" — the three commits touch 135, 136, scripts/surfaces and tests only; 126-128 are cited, never edited.
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 §4 A1 "the Spec 136 generator no longer clips" — the shared reader and Spec 133 stay byte-identical (acceptance 4).
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — PLAN-430-v1 §6 item 9 "pointer row ... the row copies no table".
+MET — RR-0384 "make each line reflect its notes" — PLAN-430-v1 §5 option (b) "each affected row gets ONE new dated note in a fixed form, `Current reading: <text> (from notes dated <d1>, <d2>)`".
+MET — Task Description "Scope and Files line are set at its plan review from the INPUTS.1 report" — PLAN-430-v1 §16 "Files: ... docs/reports/panels/" — matches the card's Files line item for item.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+Rules met: Rule 1, Rule 2, Rule 13
+
+---
+⏱  58030ms (58.0s)
+📊 Tokens — total: 34751, input: 21864, output: 12887, reasoning: 11441

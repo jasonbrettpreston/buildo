@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:26:36.667Z file_sha256=64fcad7fdb4dfffafeea7156746beb0186a4138d04835ba406936d5555eb9940 prompt_sha256=630739ac242d947f0b5dc0649f135ea2cee2378a225551125ff66095e655c99f
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "operator, verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables."" — plan §17.1 "The Full cell quotes only his two phrases, "These look great - teh 13 are perfect" and "Approved", and labels the rest as orchestrator text he approved; no Status cell says Ruled with the approval date." — the 13 Full cells drop operator words the card records as verbatim at the same line 1901, on the plan's own reading of a scratch file this review cannot see — quote the card's recorded verbatim in full, or record the reattribution in its own dated note with the evidence before the rows land.
+DEFER severity=MED — RR-0384 ""These look great - teh 13 are perfect"" — plan §17.1 "The libraries row says nothing on the toast library: the operator was asked about Sonner and did not answer, so the row neither keeps nor drops it" against plan §6 "Spec 33:47 ... says "toasts are unchanged: `sonner`, for the MaxBLD web pages too (no `@mantine/notifications`)"" — the row omits a statement the cited spec does make, on an item he approved as perfect, so the approved item ships narrower than approved — carry the Spec 33:47 sentence in item 2's row, or record his word on Sonner.
+DEFER severity=LOW — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves; edge cases are not chased" — plan §5 "(iii) the reading is at most 800 characters (chosen, not derived; keeps the page from growing; the longest reading is 496)" — refusal (iii) fails --check on a legitimate 801-character reading and rests on no ruling, in a plan that removes one unruled cap — drop (iii), or record it as a dated lane choice naming the mistake it prevents.
+DEFER severity=LOW — RR-0384 "add these 13 lines" — plan §17.2 item 6 "Amended by the dated note of 2026-11-11 at 126:1120" against plan §13 "126:1120's own note date" listed UNVERIFIED — the row states as fact a date the plan says it has not established — write the pointer as "the dated note at 126:1120" without the date, or verify the date before landing.
+MET — RR-0384 — plan §0, §4, §5, §6, §17.2 — the ruling's three things are three separable commits A, B, C, each with red-first tests, and item 9 lands as a pointer row.
+MET — RR-0378 — plan §11 — the impact on other tasks' evidence is given as a plan section naming task-431, task-433 and the task-388 collision.
+MET — RR-0380 — plan §11 — task-431's transition is made conditional on commit C, and the 21 OWED reservations are disclosed for him to rule on.
+MET — m.246 "A dated note may be appended inside a row's status cell." — plan §17.3 — each reading is a dated note appended last in the row's Status cell with "The cell text above is kept."
+MET — task card Files line — plan §16 — the Files line matches the card's list term for term, including the page and the MF-95 prereg.
+REJECT — m.32 "Pre-commit runs generate-bylaw-provisions.mjs --check" — accused of not adding the Spec 136 --check to .husky/pre-commit — no pasted clause names the pre-commit line-up for Spec 136, and the lock test runs at pre-push and in CI (plan §1).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+Rules met: m.246
+
+---
+⏱  81235ms (81.2s)
+📊 Tokens — total: 54049, input: 36526, output: 17523, reasoning: 16626

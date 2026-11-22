@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:26:36.682Z file_sha256=f501927371fd64c57fe7535ce12ff35f4dae3dc5663241b3d5ca3b06d4630504 prompt_sha256=2c66488bdf5271838c3f3d9b8c79ea4ebcca1d3ab658eb459b7d3dff3dd23104
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect" — PLAN-430-v1 §17.1 "The words dropped from the report forms (the rows quote only what a spec says; he may add any of them by his own words as a later row): item 2 \"Not Shadcn, React Hook Form or Sonner\"; item 8 \"in URLs\"; item 10 \"empty, offline\"; item 13 ..." — four of the thirteen lines the operator called perfect ship narrower than what he approved, on lane judgment alone (item 13 also drops "every control has a name"), and RR-0380 then drops the full surface specs on the premise that the handbook holds the critical items — either carry each dropped phrase as lane-labelled text inside the same row, or take one dated operator note approving the narrowed wording before commit C.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — PLAN-430-v1 §5 "Five more rows have notes that add build detail without making the headline false (FE-13, FE-24, FE-29, FE-32, FE-02..." against §17.1 "FE-02 is added" and "FE-29 is added", and B-T6 "the 11 pinned ids carry a reading" against §17.4 "(iv) the 12 ids are pinned" — the set the ruling is measured against is stated as 11 and as 12, and FE-02 and FE-29 sit in both the needs-a-reading and needs-none lists, so "each line reflects its notes" cannot be checked at close — fix one 12-row set, delete FE-02 and FE-29 from the no-reading list, change B-T6 to 12.
+
+DEFER severity=LOW — rule 3 "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal" — PLAN-430-v1 §17.4 "(iii) at most 800 characters (chosen, not derived; keeps the page from growing; the longest reading is 496)" — a new unruled bound of exactly the class the plan is removing ("The clip had no ruling behind it: it entered in 1c3bc7dfa (2026-10-21) as a lane choice"); the rule's subject is a step, not a surface generator, so this is defect-class not violation — cite a governing line for 800, or write the lane choice and its reason in the generator header as the plan already words it.
+
+REJECT — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — that the 13 rows ship OWED with lock paths that do not yet exist is not a compliance defect — "add to the rules overtime" is the operator word licensing text-first rows, and the plan assigns the locks to task-434 and states the 21-OWED consequence for task-431.
+
+MET — rule 1 — PLAN-430-v1 §17.2 — the new lines are register rows the existing generator reads, i.e. declared data, not step behaviour moved into code.
+MET — rule 2 — PLAN-430-v1 §15/§17 file list — nothing under `scripts/lib/compute/**` and no descriptor is touched, so "Compute contains domain logic only" is untouched.
+MET — rule 13 — PLAN-430-v1 §1 and §7 — the Spec 136 pair is produced by the one existing generator (`generate-surface-handbook.mjs --write`) and locked at `handbook-rule-map.logic.test.ts:273`, not a second hand-maintained track.
+MET — RR-0378 — task Description "add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock" — plan §6/§7 commit C delivers the 13 rows through that generator and that lock.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — PLAN-430-v1 §17.2 item 9 "Ruling: POINTER, not a copy" — satisfied.
+MET — task Description "nothing in Specs 126, 127, 128 deleted or rewritten" — PLAN-430-v1 §15 — no file under `docs/specs/` other than 135 and the generated 136 is in the change.
+MET — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items" — PLAN-430-v1 §11 "task-431's transition waits for commit C of this task to land" — the transition is gated on this handbook update.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 2
+Rules met: 1, 2, 13
+
+---
+⏱  58750ms (58.8s)
+📊 Tokens — total: 41208, input: 29027, output: 12181, reasoning: 11104

@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.546Z file_sha256=2e30e00fb825ab0517d03ecbb1da3ef39ee10d8d30f07f00c378d99d4005034c prompt_sha256=23e28795ab74c646e2cb3a0725ecfd57941bc8a0afb55b67552d21c9c4711d51
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — plan section 6 "this is 13 items covered, 12 new lines (OPEN QUESTION 2)" — the ruling and the card ("so the generated Spec 136 carries them as lines") require 13 lines, the plan ships 12 rows and routes item 4 through FE-31's reading — either record a new ruling for a 12-line delivery, or add the 13th row for item 4 so the page carries 13 lines.
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — plan section 5 B-T6 "the 11 pinned ids carry a reading, every other row prints none" — "each line" is not met: 15 noted rows get no reading, and the plan itself records fe.06 as a gap ("so a reading from "its notes" cannot cover it (stated as a gap, not fixed here)"), a row the INPUTS.1 report the operator approved named — give every row whose notes widen or contradict its ruling a reading, or get the operator's narrower reading of "each line" before lock.
+
+BUG severity=HIGH — fe.16 "Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change." — plan section 5 "(b) ... Cost: about 25 lines of generator code, 11 notes written once, one small lock" (and section 4 "the Spec 136 generator no longer clips") — the plan edits the handbook tooling (plain helper, Current reading parse, staleness throws) against "No tooling change" and the card's "by the existing generator and its lock" — rule whether the generator may change, or land A/B/C through the existing reader unchanged.
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect." — plan section 6 "8 parcel id names | new row, reworded" (item 10: "not in the spec; dropped", item 13 reworded, item 2 keeps Sonner against the report) — items the operator called perfect are rewritten and one is reversed without a new ruling — present the rewordings as a single ruling request with the spec file:line for each, so the approved text and the shipped text are the operator's one act.
+
+DEFER severity=LOW — no pasted clause or ruling names a quote check; RR-0384 names three things only — plan section 6 "C-T4 (OPTIONAL, drop if the review calls it scope): quote lock" — adds a new ~20-line check and a new failure mode the operator did not name — drop C-T4 from commit C and raise it as its own card.
+
+DEFER severity=LOW — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria." — plan section 9 item 5 "All checks in section 7 green; red evidence for every planted case saved." — the acceptance list names no canaries a-f and no clean-copy zero-exit control — add one acceptance line per piece stating planted-defect non-zero and clean-copy zero, or say in the plan why fe.15 does not bind a generator-only task.
+
+MET — fe.08 — plan section 15 — both docs/specs/02-web-admin/135_mcfrontend_decisions_register.md and 136_mcfrontend_handbook.md are the register and the generated handbook, no path moves.
+
+MET — fe.10 — plan section 1 — change stays inside scripts/surfaces/generate-surface-handbook.mjs and its lock src/tests/surfaces/handbook-rule-map.logic.test.ts, Spec 126's generator section untouched.
+
+MET — fe.11 — plan section 8 — queue row for MF-n carries "- FE rows owned: none." and the 12 OWED rows are reserved to task-434's locks.
+
+MET — fe.03 — plan section 7 — every piece has a red-first planted case with a control (A-T1, B-T3, B-T4, C-T3) and the lock is the both-directions form.
+
+MET — fe.01 — plan section 0 — "spec text in 126/127/128 is never rewritten", no surface path touched, documents only.
+
+MET — fe.13 — plan section 7 — "node scripts/surfaces/surface-validate.mjs --check" is kept green after each commit.
+
+REJECT — fe.09 — item 9's pointer row is accused of carrying a PROSE-ONLY lock that only checks two headings — not a real issue, fe.04, fe.26 and fe.44 in the pasted list already read PROSE-ONLY inside an OWED Ruling and the plan gives each of the 12 rows one src/tests/surfaces/*.logic.test.ts path that does not yet exist, which is how every OWED row entered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 49   Unmet: 3
+Rules met: fe.01, fe.02, fe.03, fe.04, fe.05, fe.06, fe.07, fe.08, fe.09, fe.10, fe.11, fe.12, fe.13, fe.14, fe.17, fe.18, fe.19, fe.20, fe.21, fe.22, fe.23, fe.24, fe.25, fe.26, fe.27, fe.28, fe.29, fe.30, fe.31, fe.32, fe.33, fe.34, fe.35, fe.36, fe.37, fe.38, fe.39, fe.40, fe.41, fe.42, fe.43, fe.44
+
+---
+⏱  57909ms (57.9s)
+📊 Tokens — total: 27656, input: 15395, output: 12261, reasoning: 10954

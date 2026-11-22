@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:26:36.676Z file_sha256=857724e138b588bb6df3f550c01204220dba85c795d6c75c55b59f5b904b8577 prompt_sha256=89784ea31c244bef27994394a3327ad2fb724c8d114e8ca098aa029c62a5843e
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-bylaw-133-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." (MORNING-DECISIONS.md:1901) — plan section 0 "his own words, the only words of his in that entry, are 'These look great - teh 13 are perfect' and 'Approved'; the rest of the quoted reply ... is the orchestrator's own sentence" — the pasted decision record holds the whole three-part scope as the operator's verbatim at the same line :1901, so 17.2's Full cell ("Orchestrator text he approved, not his words") under-quotes the operator and puts "Approved" at a line the pasted text does not show it on — quote :1901 exactly as pasted in the Full cell and cite separately the line that carries "Approved", so the register's operator-verbatim cell is accurate
+BUG severity=MED — RR-0384 "add these 13 lines" — plan section 6 "C-T3 the 44 -> 56 count: the handbook header line \"Rules rendered: 56\"" and section 11 "(56 lines, 20 OWED, about 31K)" — 44 + 13 = 57 rows and 8 + 13 = 21 OWED, so the tests and the downstream plan evidence as written assert one row short, against 17.6's own "with 57 rows" — restate C-T2 ("FE-(44+12)"), C-T3 and section 11 from 17.6, that is 57 rows and 21 OWED
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — plan section 11 "at that close the page still shows 21 OWED rows, reservations whose locks are task-434's" — the precondition is met in page text only, with 21 of 57 lines unenforced at the moment of the transition — the plan already hands this to the orchestrator for task-431, so the blast radius is that one answer
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — plan section 5 "B-T7 the \"+N dated notes\" count rises by exactly 1 on those 11 rows (51 to 62)" against 17.1 "Readings: 12 rows" — 51 + 12 = 63 and B-T6's "the 11 pinned ids" contradicts the 12 ids of 17.3, so the lock as written would pin and count one reading short — set B-T6 and B-T7 to the 12 ids of 17.3 and 63 at build
+REJECT — m.431, m.369, m.401, m.394, m.395, m.457, m.465, m.497 (part 1 of bylaw-133) — that the plan ignores the bylaw evaluator, keying and MB-27/MB-31 obligations in the pasted list — the change edits the McFrontend generator, its lock and the FE register only, and touches no evaluator, keyed cell or Spec 133 output, so those rules bind nothing here
+MET — m.260 "The by-law handbook is Spec 133 — By-law Handbook, a generated reading spec." — PLAN-430-v1 section 1 "Room is 533 bytes, so raising the shared cap would break Spec 133's cap and its --check. The shared cap must not change." — Spec 133 is pinned byte-identical by A-T4 and named out of scope, and the shared reader is not edited
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 section 4 "A1 (recommended): in generate-surface-handbook.mjs readFeRows" with A-T2 "no FE headline ends in '…'" — every Spec 136 line prints whole from a plain-text reader while the shared 300 cap stays for Spec 133
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — PLAN-430-v1 17.2 item 9 "POINTER, not a copy ... The tables are not copied here." — item 9 adds one pointer line with no table copied
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: m.260, m.322
+
+---
+⏱  65585ms (65.6s)
+📊 Tokens — total: 49988, input: 36028, output: 13960, reasoning: 12942

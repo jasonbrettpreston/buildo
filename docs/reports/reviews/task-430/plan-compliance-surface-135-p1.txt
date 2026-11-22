@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.550Z file_sha256=5e698cb4048930a0a550c3ed3fa3c0d721fc0737f324c9ce8217ae3b62e20403 prompt_sha256=88826a87d014c8219533417c761fd3beb4b28a8262fd04c544cb9f87e1b2f23d
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — plan §6 "this is 13 items covered, 12 new lines (OPEN QUESTION 2)" — the ruling is 13 lines and the plan lands 12 rows, with item 4 delivered only through B, which the same plan says is droppable ("The plan review can drop B or C without touching A"), so the plan can land having delivered 12 of the 13 lines — Fix: add the 13th row for item 4 or record an operator ruling amending 13 to 12, and make item 4's delivery independent of B
+
+DEFER severity=MED — rule 4 "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — plan §6 "| Item | Verdict | Evidence |" — the plan fixes Ruling, Status and lock for the 12 new FE rows but states no Six cell value for any of them — Fix: add the Six cell per new row to the §6 table
+
+DEFER severity=MED — rule 1 "1. Protocol: Spec 124 section 4 inherited (the Spec 128 §4 mirror). A different party adjudicates." — plan §2 "Who may add a row: rule 1 (135:11)" — the plan names a different-party adjudication for B's readings only ("Written by the lane; adjudicated by a different party", §5), never for the 12 new rows the lane writes in C — Fix: name the adjudicating party for the 12 new rows in §6 and §8
+
+DEFER severity=MED — "**Next free id:** `FE-45`." — plan §9 "Spec 136 has fe.45..fe.56 (12 new lines), each OWED with its lock path" — acceptance 3 pins ids the plan itself calls placeholders (task-388 holds FE-45 unlanded) and the Next free id rewrite appears only in the Collision paragraph, not in the order or landing steps — Fix: write acceptance 3 against the register's Next free id at landing and add the Next free id dated-note rewrite to §8
+
+DEFER severity=LOW — rule 3 "3. Status words: `RULED <date>` · `OWED` · `PROPOSED` · `RETIRED`." — plan §12 "or rule a new status word (which changes the gate reader cite-parse.mjs, a protected McBylaws file)? Recommend accept." — open question 3 offers the operator a fifth status word that rule 3's closed list does not carry — Fix: drop the option and record accept-OWED as the answer
+
+DEFER severity=LOW — role "This register decides McFrontend rulings only; it does not decide McBylaws numbers, which McBylaws owns." — plan §12 "Option A2: add a length argument to the shared reader: no copy, but a McBylaws task, panel and owner step for a layer23 file." — open question 1 keeps alive an edit under scripts/analysis/bylaw/ with no MB task in existence, territory this register does not decide — Fix: close A2 as out of this register's scope and land A1
+
+DEFER severity=LOW — task "add the items the INPUTS.1 report lists, and the operator has read" — plan §6 "| 8 parcel id names | new row, reworded |" — items 7, 8, 10 and 13 are narrowed or reworded away from the report's wording, and the report is not pasted, so the items-the-report-lists clause cannot be verified here — Fix: attach the report row per item to the card so the reviewer can check the item text
+
+MET — rule 3 — plan §6 "each is `OWED` with one lock path under src/tests/surfaces/ that does not yet exist" — no OWED marker without a lock path, and no row is flipped to RULED, so the ruled-row lock rule is untouched
+MET — rule 5 — plan §6 "all 12 names checked absent in src/tests/surfaces" — each OWED lock path is a src/tests/surfaces/*.logic.test.ts that does not exist yet
+MET — rule 2 — plan §6 "each is `OWED` with one lock path" — one lock per row, carried in the Status cell as the existing rows do
+MET — task description "nothing in Specs 126, 127, 128 deleted or rewritten" — plan §0 "spec text in 126/127/128 is never rewritten", and neither Files list names 126, 127 or 128
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — plan §6 "| 9 page-set rulings | pointer row |", the row copies no table
+MET — task description "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan §6 and §7 drive all three commits through those two files
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  72216ms (72.2s)
+📊 Tokens — total: 29500, input: 13330, output: 16170, reasoning: 14973

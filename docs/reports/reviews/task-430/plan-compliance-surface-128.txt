@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.539Z file_sha256=ba390523636a3e60b3f90e5cb5244d03441a324e3f545822f3ceecd5d56592b4 prompt_sha256=6185777e638ed7314ebdb08bd53d841c8d377f1c7a7bb782ca7ef69a9378b8d8
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — plan §6 "plus item 4 delivered by FE-31's reading ... this is 13 items covered, 12 new lines (OPEN QUESTION 2)." — the operator's count of 13 lines is unmet and the plan parks it as an open question instead of resolving it, item 4 is carried on fe.31's line, not as a line — add the 13th row (item 4 as its own line) or obtain a dated operator ruling that changes 13 lines to 12 before plan-lock
+
+BUG severity=HIGH — Spec 128 §4.11 item 3 "a cite of an OWED FE row is refused unless its lock lands with red evidence in the same commit" — plan §8 "plus `Rule: FE-..` for rows touched" while §6 says "They are reservations; task-434 builds the checks and may rename by a dated note." — commit C cites its own 12 OWED rows with no lock and no docs/reports/red-evidence/ file in that commit, so the cite is refused, and §13 admits "I did not run the gate" — drop the `Rule: FE-..` trailer for the new rows, or land a lock stub plus one red-evidence file per row in commit C
+
+DEFER severity=MED — Spec 128 dated note 2026-11-09 (MF-34) "a listed row that is OWED, or absent from Spec 135, fails" — plan §2 "The 12 new rows are OWED, so the MF queue row for this task states "FE rows owned: none."" — the one declaration arm Q cannot falsify is used by the task whose own commit creates 12 OWED rows in Spec 135 — declare FE-45..FE-56 and take the arm Q refusal, or get a ruling that a row-creation task declares none
+
+DEFER severity=MED — Spec 128 §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions" — plan §2 "six cells (ROW_COLUMNS :40: id, Ruling, Amends, Six, Full, Status)" with §6 naming only Ruling and Status for the 12 rows — the Six, Amends and Full cells of the 12 new rows are never specified, so the row shape the generator parses is undefined — state each row's Six cell (pass or n/a (reason)) and the operator source that fills its Full cell
+
+DEFER severity=MED — Spec 128 §2.2a Rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)." — plan §1 "Where --check runs: NOT in .husky/pre-commit (the generator list at pre-commit :38-40 has the surface registry, the step handbook and the by-law handbook only)." — the change grows the generated 136 from 13,784 to about 31,000 characters and leaves its --check out of pre-commit, unlike 133 — add the 136 --check line to .husky/pre-commit in commit A (protected, panel arm P plus APPROVED) or record why the test route meets rule 19
+
+DEFER severity=MED — Spec 128 §3 Rule B2 "a proposal to add a declaration carries its measured cost, and the operator rules" — plan §3 "GUESS, to be re-measured at the end: about 31K characters, up from 13.8K." — the cost of 12 new rows and 11 readings is a guess, so the operator rules on an estimate — measure section 2 and the whole of 136 before plan-lock and put the numbers in the plan
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect." — plan §6 item 7 "Row says only the missing part.", item 8 "The report's form ... is NOT in the spec words; dropped.", item 13 "goes beyond it" — approved items are narrowed or have wording dropped with no new operator ruling — put the four narrowed forms to the operator in one line each, or keep the approved wording and let the row cite the spec's own line
+
+MET — RR-0384 item 9 pointer "Item 9 stays a pointer, so the page does not grow by copying tables" — plan §6 item 9 "pointer row ... the row copies no table" — satisfied
+
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — plan §1 "spec text in 126/127/128 is never rewritten" — the change adds Spec 135 rows and regenerates 136 only, no 126/127/128 edit
+
+MET — Spec 128 §2.2a "Each lock is OWED until Phase 1, one lock per row in Spec 135." — plan §6 "each is `OWED` with one lock path under src/tests/surfaces/" — twelve rows, one lock path each, so §4.10's one-lock-per-row holds
+
+REJECT — RR-0384 "stop the clipping" — the change is accused of leaving the 13 clipped by-law handbook lines (M-29, M-30 and others) clipped in Spec 133 — the ruling was given for the Spec 136 handbook and Spec 133 sits 533 bytes under its 140,000 byte cap, so raising the shared cap is a separate decision the plan names
+
+REJECT — Spec 128 §2 "a rule without a lock is not yet a rule" — the change is accused of recording 12 rulings with no lock in the same commit — §4.10 makes OWED the legal status for a ruled row whose lock is not yet built and §2.2a says "Each lock is OWED until Phase 1", so the status itself breaches no clause
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+Rules met: R-05, R-19, R-21, R-26, R-27, R-33
+
+---
+⏱  112166ms (112.2s)
+📊 Tokens — total: 57013, input: 32626, output: 24387, reasoning: 23025

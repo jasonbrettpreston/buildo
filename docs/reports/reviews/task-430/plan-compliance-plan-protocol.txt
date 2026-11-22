@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.540Z file_sha256=9ad5af033ecb3b4fb9bdd6a42734564b82a35b4feafe2c0e1721682e19809760 prompt_sha256=d19f00d1ae3b5d0fb9ec7211e8e970f691dba6fa93bc3a556e1c7f4d9983dbee
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — PLAN-430-v1 section 6 "Result: 12 new rows (FE-45..FE-56 if the register's "Next free id" is FE-45 at landing; see collision below) plus item 4 delivered by FE-31's reading." — clause unmet: the ruling names 13 lines, the plan adds 12 and routes item 4 through an existing row's reading, then re-asks in OPEN QUESTION 2 — add the 13th row as ruled, or obtain a new dated operator note that names the 12-plus-reading form before plan-lock and record it in Spec 135, do not carry it as an open question.
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect." — PLAN-430-v1 section 6 rows 8, 10, 13 "The report's form "parcelId in URLs and the consumer API is the municipal parcel_ref" is NOT in the spec words; dropped." and "the report's "interactive elements 44 px minimum; every control has a name" goes beyond it." — clause unmet: four items the operator read and called perfect (2, 7, 8, 10, 13) are narrowed, reworded or corrected against the report inside this plan, which is a new decision the ruling does not name — add each item in the approved form, or raise one dated note per reworded item for the operator to rule, and say in the plan that acceptance 3 no longer matches the report.
+
+DEFER severity=MED — task Files line "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, ..." (no scripts/analysis/bylaw/bylaw-register.mjs) — PLAN-430-v1 section 4 "Use A2 only if the operator prefers no copy over the landing cost (OPEN QUESTION 1)." — the plan keeps live an option that edits a file outside the card's Files line and, by its own words, "needs an MB task that does not exist for this work" — strike A2 at plan-lock or add the McBylaws task and the Files entry now, so the landing step cannot pick an out-of-scope file.
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — PLAN-430-v1 section 6 "C-T4 (OPTIONAL, drop if the review calls it scope): quote lock." — a new mechanical lock (about 20 lines) that no pasted clause or ruling names is offered, with the scope call handed back in OPEN QUESTION 4 — drop C-T4, or add it only under a dated operator note that names it.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — PLAN-430-v1 section 5 "Five more rows have notes that add build detail without making the headline false (FE-13, FE-24, FE-29, FE-32, FE-02..." — the reading covers only 11 of the 26 rows that carry notes, so 15 rows still print a headline their own notes widen, which the clause does not limit — state in the plan that the 5 build-detail rows and the 10 flip-note rows are deliberately left unreflected, naming the reason, so acceptance 2 matches the clause instead of a subset.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — PLAN-430-v1 section 6 item 9 row — pointer row copies no table, its lock checks only that the two cited headings exist.
+
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten." — PLAN-430-v1 sections 10 and 15 — no file under docs/specs/02-web-admin/126, 127, 128 appears in Files or steps, they are cited only.
+
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 section 4 A1 and A-T2 "no FE headline ends in '…'" — the 136 generator stops clipping, each of the 16 rows whole, with Spec 133 and bylaw-register.mjs untouched.
+
+MET — task "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — PLAN-430-v1 section 15 Files and section 7 checks — both named files are extended and the existing --check path stays the lock.
+
+MET — plan-protocol section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — PLAN-430-v1 section 6 table — each proposed row carries a spec file:line or RR-0384 as its source.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+Rules met: none
+
+---
+⏱  41781ms (41.8s)
+📊 Tokens — total: 22473, input: 13772, output: 8701, reasoning: 7580

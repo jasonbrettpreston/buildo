@@ -1,0 +1,228 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:35bb4ab3454b85253d83015c0ce9b01a723a14e4bee99ada2fe8a6ab201ea153 part 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (step 2): add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts); nothing in Specs 126, 127, 128 deleted or rewritten. Scope and Files line are set at its plan review from the INPUTS.1 report.
+
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-430-v1: INPUTS.2, three small things for Spec 136 (the McFrontend handbook)
+
+Planner: read-only. Paths are relative to ~/Buildo-wt-board unless they start with ~. Nothing was run except in-memory node reads. Every fact below has a file:line or is under UNVERIFIED. Principles served: standardized, observable, scalable, accurate, understandable; simple, no scope creep; build with existing components.
+
+#### 0. Ruling and scope
+
+- RR-0384 (backlog/decisions/decision-169, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901), operator verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables."
+- Three separable pieces, three commits, each green alone and each regenerating Spec 136: A (stop the clipping), B (each line reflects its notes), C (the new lines). The plan review can drop B or C without touching A.
+- Hard rule behind all three, found and quoted: "A new ruling is a new row in Spec 135, never a line here" (docs/specs/02-web-admin/136_mcfrontend_handbook.md:5, generator scripts/surfaces/generate-surface-handbook.mjs:157). Spec 136 is never hand-edited; spec text in 126/127/128 is never rewritten; Spec 133 output must not change.
+
+#### 1. How Spec 136 is made (verified)
+
+- Generator scripts/surfaces/generate-surface-handbook.mjs. readFeRows (:52-89) reads the FE rows of Spec 135: six cells (ROW_COLUMNS :40: id, Ruling, Amends, Six, Full, Status). Headline = headlineOf(cells[1]) (:82). Notes = count of "Dated note <date>" inside the Status cell (DATED_NOTE :43, count :86). It throws on a gap in ids, a wrong "Next free id" (:72-73), a bad status word (:77).
+- lineRow (:121-125) builds { id, headline, status, enforcedBy, notes }; the line text comes from renderLine in the Spec 133 generator (scripts/generate-bylaw-handbook.mjs:127-134): `- **<line id>** <headline>` then `  Status: ... · Enforced by: ... · +N dated notes`. So the page shows only the headline, the status and the note count.
+- Rule map scripts/surfaces/_schema/surface-rule-map.json is generated by buildRuleMap (:94-118), one line and one rule per FE row. The CLI shell is runHandbookCli (scripts/analysis/gates/rule-map.mjs:45; --write / --check; --check compares both files, :68-77). HANDBOOKS['136'] is at rule-map.mjs:35.
+- The clip: scripts/analysis/bylaw/bylaw-register.mjs:38 `HEADLINE_MAX = 300`; clip() :76-80; headlineOf :120-131 ends `return clip(head || plain(ruleCell), HEADLINE_MAX)`. HEADLINE_MAX is not exported and headlineOf has no length argument.
+- Who else uses it: readBylawRegisterRows (bylaw-register.mjs:147, headline at :174) feeds the Spec 133 generator. Measured in memory: 546 Spec 133 rows, 13 clipped (M-29, M-30, M-47, M-60, M-72, M-88, M-322, M-480, M-487, M-498, M-499, M-500, LC-33). With the cap removed those 13 lines grow by 1,920 bytes in total. Spec 133 is 139,467 bytes (wc) against its size cap max_bytes 140,000 (docs/specs/01-pipeline/122_split_manifest.json generated_size_caps["133"]; locked by src/tests/spec133-bylaw-handbook.logic.test.ts:218-233). Room is 533 bytes, so raising the shared cap would break Spec 133's cap and its --check. The shared cap must not change.
+- Protection: scripts/analysis/bylaw/** is a layer23 path (mcbylaws/protected-paths.json, list layer23 :4-5), so an edit to bylaw-register.mjs is a McBylaws commit (McBylaws-Task trailer, panel arm P, arm C: scripts/analysis/mcbylaws/cite-arms.mjs:14, panel.mjs header). The generator's own header (generate-surface-handbook.mjs:18) says nothing under scripts/analysis/bylaw/ is edited.
+- Where --check runs: NOT in .husky/pre-commit (the generator list at pre-commit :38-40 has the surface registry, the step handbook and the by-law handbook only). The Spec 136 --check runs as a test: src/tests/surfaces/handbook-rule-map.logic.test.ts:273 ("the committed files are current"), so it runs in the pre-commit related run when the generator is staged, in pre-push (full suite, .husky/pre-push) and in CI. Spec 133's --check is in pre-commit.
+
+#### 2. How a Spec 135 FE row is shaped, and what OWED and RULED mean (verified)
+
+- Rules of the register (135:11-15): 2. "A rule without a lock is not yet a rule"; 3. status words `RULED <date>` / `OWED` / `PROPOSED` / `RETIRED`, "A ruled row whose lock is not built reads OWED with the lock path. Never an OWED marker with no lock path"; 4. Six cell; 5. "an OWED row's lock path must be a valid src/tests/surfaces/*.test.ts that does NOT yet exist". Enforced by src/tests/surfaces/register-locks-resolve.infra.test.ts (OWED_LOCK_RE :19; "OWED with no lock path" :73; a RULED row with no lock path must say "see FE-nn", :64-68).
+- So the 12 new rows (no lock exists) are OWED rows, each naming a lock path that does not exist yet. This is exactly how existing rows entered: FE-04, FE-12, FE-17, FE-25, FE-26, FE-44 (135:26, :34, :39, :47, :48, :66) are OWED with a future lock path; FE-04, FE-26 and FE-44 mark parts PROSE-ONLY inside the Ruling text. The register has no PROSE-ONLY status word (rule 3). 8 OWED rows today (fe.04, 12, 17, 21, 25, 26, 39, 44; handbook line "Rules rendered: 44: 44 in force (8 OWED...)", 136:23).
+- "+N dated notes" = count of "Dated note <date>" in the Status cell (generate-surface-handbook.mjs:43, :86). Measured: 51 notes in 26 rows; 22 of the 51 are status "flip" notes (a row flips OWED to RULED), 29 are not; average length 751 characters. Notes sit inside the Status cell of the same table row (not separate rows).
+- Who may add a row: rule 1 (135:11) "A different party adjudicates"; the Full cell carries the operator's verbatim words (135 header: "Operator verbatim" = the operator's own words). Spec 135 is in the `protected` list of mcbylaws/protected-paths.json (entry docs/specs/**/135_mcfrontend_decisions_register.md, list `protected`), so a change needs the owner at push (scripts/analysis/mcbylaws/gate.mjs:568-582). FE-row discipline for `frontend` paths: the McFrontend-Task trailer and docs/reports/panels/MF-n.json in the commit's own tree (panel.mjs header; .husky/commit-msg runs gate.mjs --commit-msg). The generator, its lock and the rule map are under the `frontend` list (scripts/surfaces/**, src/tests/surfaces/**), so every one of the three commits needs the trailer and the panel record. Precedent for rows first plus panel record: commit 85955d3dd (FE-41..FE-44, queue row, panel MF-83).
+- Arm Q: a DONE MF queue heading must carry "- FE rows owned: none." or a list of rows; a listed OWED row is refused (Spec 128 §4.11 item 7, 128:171-ish dated note). The 12 new rows are OWED, so the MF queue row for this task states "FE rows owned: none." (the locks are task-434's).
+
+#### 3. Size of Spec 136 section 2
+
+- Today: section 2 is 13,784 characters (whole file 17,216), 44 lines. The review table sends this section (scripts/analysis/rule-lists.json:34, "surface-136" sections ["2. Rules"]).
+- After A: the 16 clipped lines (fe.18, 19, 29, 30, 31, 34 to 44) are whole. Unclipped lengths: 377, 328, 546, 932, 576, 681, 1062, 350, 359, 675, 1190, 576, 544, 1132, 629, 500; extra 5,657 characters. Section 2 about 19.4K. Longest line 1,190 (fe.39).
+- After B: about +3K (11 readings, 2,081 characters of text plus the fixed words).
+- After C: about +8K (12 rows: rulings about 450 each plus a Status line).
+- GUESS, to be re-measured at the end: about 31K characters, up from 13.8K. Still small against the 534,000 the reviewer is sent today (task-431 description).
+
+#### 4. THING 1: stop the clipping (commit A)
+
+Smallest correct change: the Spec 136 generator no longer clips; Spec 133 and bylaw-register.mjs are not touched.
+
+Options:
+- A1 (recommended): in generate-surface-handbook.mjs readFeRows, `headline` = the shared headlineOf result unless it was clipped (ends in "…"), in which case the plain text of the Ruling cell (a one-line `plain`: strip `<br>`, `**`, `~~`, backticks, collapse spaces; the same three regexes as bylaw-register.mjs:83-85). Named reason for the small copy: the shared reader is a layer23 McBylaws path (an edit there needs a McBylaws task and panel, and Spec 133 is 533 bytes under its size cap). Measured equivalence: for all 44 FE rows, the plain text equals the shared headline wherever the shared headline is not clipped (checked in memory: no difference), and equals the unclipped shared headline for all 44. stripProvenance (bylaw-register.mjs:88-104) changes none of the 44 today.
+- A2: add an optional `max` argument to headlineOf (default HEADLINE_MAX). Output of Spec 133 stays identical. Cost: edits a layer23 file, so the commit needs `McBylaws-Task:` plus an MB panel record plus arm C, and a second panel for the frontend files. Pure reuse, but needs an MB task that does not exist for this work. Use A2 only if the operator prefers no copy over the landing cost (OPEN QUESTION 1).
+- Rejected: raise HEADLINE_MAX for both (breaks the Spec 133 cap: +1,920 B against 533 B room; also a layer23 edit).
+
+Files: scripts/surfaces/generate-surface-handbook.mjs; src/tests/surfaces/handbook-rule-map.logic.test.ts; regenerated docs/specs/02-web-admin/136_mcfrontend_handbook.md. The rule map JSON does not change in A.
+
+Tests, red first (all in handbook-rule-map.logic.test.ts, in-memory register text via the existing `reg`/`row` helpers, :36-39):
+- A-T1 RED: a planted Ruling cell of 700 characters with no bold: today the headline ends in "…" and is 300 long, so `expect(headline.endsWith('…')).toBe(false)` and `headline === plain(cell)` fail. Control: a 120-character ruling is unchanged and equals headlineOf(cell).
+- A-T2 real register: no FE headline ends in "…"; the 16 named rows are longer than 300; every headline equals the plain text of its cell.
+- A-T3 existing assertions that encode the clip must change in the same commit (they would fail for the right reason): :59 (`headline.length <= 300`) and :61 (`endsWith('…')` implies length > 250) become "no headline ends in an ellipsis". The pin on the shared function (:92-95, a long cell still clips at 300) STAYS; it is the proof the shared reader is untouched.
+- A-T4 Spec 133 untouched (control): src/tests/spec133-bylaw-handbook.logic.test.ts green, `node scripts/generate-bylaw-handbook.mjs --check` exits 0, `git diff --stat` shows no change under scripts/analysis/bylaw/ or docs/specs/01-pipeline/133_bylaw_handbook.md.
+Result to record: the 16 lines whole, section 2 about 19.4K (re-measure).
+
+#### 5. THING 2: each line reflects its notes (commit B)
+
+Honest count (read all 51 notes of 26 rows): 11 rows have a note that contradicts or widens the printed ruling: FE-01, FE-07, FE-11, FE-14, FE-18, FE-19, FE-20, FE-31, FE-33, FE-38, FE-39. (The report named 5 to 7: fe.01, fe.19, fe.14, fe.07, fe.20, fe.31, plus fe.06.) Five more rows have notes that add build detail without making the headline false (FE-13, FE-24, FE-29, FE-32, FE-02: FE-02's note says its own row "is owed as FE-40" while FE-40 is the McTest row, 135:62; a stale pointer, not contradiction). The other 10 rows with notes carry flips and lock-landing notes only. fe.06 in the report is not a Spec 135 note: its "oracle = catalogue flags" is amended by Spec 128 dated note at 128:85, outside the row, so a reading from "its notes" cannot cover it (stated as a gap, not fixed here).
+
+Options, with cost (not chosen silently):
+- (a) the generator prints a "current reading" from a marked field or the latest dated note. Cost: low code, but the latest note is often a flip note (22 of 51) or begins with a 300-character provenance bracket; it would print provenance, not meaning. Rejected.
+- (b) each affected row gets ONE new dated note in a fixed form, `Current reading: <text> (from notes dated <d1>, <d2>)`; the generator prints it after the headline. Cost: about 25 lines of generator code, 11 notes written once, one small lock. A dated note is the register's existing amendment form (prior text kept, M-246 form, used 51 times). RECOMMENDED: smallest that is accurate, and understandable because the page shows a plain sentence and its source dates.
+- (c) print the first sentence of each note. Cost: the shared firstSentence (bylaw-register.mjs:110-117) would return "Dated note 2026-11-09 (M-246, prior text kept; ..." (every note starts with a bracket of metadata); rejected.
+
+Design of (b):
+- Form of the note appended last in the Status cell: `Dated note 2026-11-22 (M-246, prior text kept; task-430, RR-0384; operator, verbatim: "make each line reflect its notes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901)): Current reading: <text> (from notes dated <d1>, <d2>). The cell text above is kept.` It states no new ruling: each reading restates what dated notes of the same row already say, and the cited dates name them. The notes it restates carry the operator's own words. Written by the lane; adjudicated by a different party (135:11); the grounder checks each reading sentence against the cited note.
+- Generator: in readFeRows, from the Status cell find the LAST dated note; if it contains `Current reading: (.+?) \(from notes dated (dates)\)`, set row.reading. lineRow appends ` Current reading: <text> (notes <dates>)` to the SAME line as the headline (not a new line), because the existing test at handbook-rule-map.logic.test.ts:157 matches `^- \*\*fe\.N\*\*[^\n]*\n {2}Status: OWED` and a new line would break it for FE-39. Spec 133's renderLine is not touched.
+- Staleness lock (in readFeRows, so --check and the lock both fail): (i) a "Current reading" note that is not the last note of its row throws `FE-nn: a dated note follows the Current reading; restate it`; (ii) every cited date must be the date of another dated note of the same row, else throws; (iii) the reading is at most 400 characters (keeps the page from growing); (iv) the set of rows that carry a reading is pinned in the test to the 11 ids (adding one is a deliberate edit). What the lock cannot do: decide that a row with no reading needs one. That stays a reviewer judgment (said so plainly).
+- The 11 readings (drafts in ROWS-430-draft.md section B; each sentence traceable to a note I read in 135:23, :29, :33, :36, :40, :41, :42, :53, :55, :60, :61).
+
+Files: scripts/surfaces/generate-surface-handbook.mjs; handbook-rule-map.logic.test.ts; docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (11 notes); regenerated 136. Rule map JSON unchanged (it holds structure only, buildRuleMap :94-118).
+
+Tests, red first:
+- B-T1 RED: a planted row whose last note is a Current reading: the rendered line contains "Current reading: ..." (today: absent). B-T2 control: the same row without the reading note renders as today. B-T3 RED stale: a row with a later dated note after the reading throws /follows the Current reading/. Control: reading last, builds. B-T4 RED: cited date that is not a note date of the row throws; control: real dates. B-T5 RED: reading of 401 characters throws; control 400. B-T6 real register: the 11 pinned ids carry a reading, every other row prints none, the OWED regex at :157 still returns the 8 OWED ids plus no new one from B. B-T7 the "+N dated notes" count rises by exactly 1 on those 11 rows (51 to 62), shown on their lines.
+
+#### 6. THING 3: the 13 lines (commit C)
+
+Verified each of the 13 cites in the specs (docs/specs/02-web-admin). Per-item decision, with evidence, against the existing 44 rows:
+
+| Item | Verdict | Evidence |
+|---|---|---|
+| 1 client is glass | new row | 128:29 and 128:55 say it; FE-05 (135:27) says "no maths in the UI" only. No FE row mentions "deviations" or "glass" (searched all 44 rows). |
+| 2 libraries | new row | No FE row names Mantine. 126:1005 (Mantine 8.3 by dated note), :1006, :925, :75. package.json:78-83,107 has @mantine/core 8.3.18, @rjsf/mantine 6.11.1, mantine-datatable 8.3.13; "sonner" at package.json:122. CORRECTION to the report: it says "Not ... Sonner"; Spec 33:47 (docs/specs/02-web-admin/33_web_admin_engineering_protocol.md:47, operator "P42 decisions approved") says "toasts are unchanged: `sonner`, for the MaxBLD web pages too (no `@mantine/notifications`)". Sonner stays. No ruling found on React Hook Form, so it is not in the row. Shadcn is superseded at 126:467. Task-435 adds a dated note to the engineering standards on the same subject; this row cites Spec 126 and Spec 33, not that note, so the two do not depend on each other. |
+| 3 tunables | new row | 128:30 (general) and 126:189 (P4 of the eleven ADMIN principles, section 2.2.1 at 126:180, so cited as admin). FE-35 mentions logic_variables only for its own pace field. |
+| 4 scratch mocks | NO new row: duplicate | FE-31 dated note 2026-11-11 (135:53, note 5) already holds both sentences and the operator words (also 126:79). It reaches the handbook through FE-31's Current reading (B). |
+| 5 scope fence | new row | 128:205 (R-03), 126:140, 126:147. FE-39's mention of scope is unrelated. |
+| 6 auth and checkout | new row | 126:928; the in-app purchase amendment at 126:1120 (item 1 of a dated-note block that opens at :1116/:1118; the heading date of that item is UNVERIFIED). FE-21 (135:43) covers embeds only. |
+| 7 navigation extras | new row, narrowed | FE-36 (135:58) already states router, role and name, window.location. Missing from FE-36: "A tab switch uses `navigate`, not `push`" and the reach to every MaxBLD screen; both at 126:82, where the spec itself says the tab sentence is "convention, not checked by the lock". Row says only the missing part. |
+| 8 parcel id names | new row, reworded | 128:206 (R-04, ACCEPTED, lock pending). The report's form "parcelId in URLs and the consumer API is the municipal parcel_ref" is NOT in the spec words; dropped. |
+| 9 page-set rulings | pointer row | 126 §11b.3 starts at :963, §11b.7 at :1032 (verified headings). Words are the operator's pointer ruling in RR-0384; the row copies no table. |
+| 10 visible failure state | new row, reworded | The spec words are at 128:39 (Rule 12), NOT :37 (report; :37 is Rule 10 "verdict row-derived"). The report's form adds "empty, offline"; not in the spec; dropped. FE-28 (135:50) and FE-31 cover specific closed lists, not this sentence. |
+| 11 admin is a projection | new row | 126:186 (P1). FE-05 and FE-11 (135:27, :33) do not say "never a parallel data path". |
+| 12 locks proven red | new row | CORRECTION: "A rule without a lock is not yet a rule" is at 128:127 (row 4) and 128:150, and as rule 2 of Spec 135 itself (135:12); the report's 128:44 is an empty line. The "prove each lock RED" words are at 127:59 (report said :60, an empty line). FE-03 (135:25) says only "both-directions locks" inside principle P2; the sentence "a lock never red against the defect it names is not a lock" is not in any row. |
+| 13 accessibility | new row, reworded | 126:351 is a row of the check-category vocabulary: "a11y ... touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion". It is a category list, not a mandate; the report's "interactive elements 44 px minimum; every control has a name" goes beyond it. The 44 px mandate is at docs/specs/00_engineering_standards.md:14. The 44 px check C-9 exists (src/tests/surfaces/surface-conformance.logic.test.ts:631-641) for converted web golden nodes only, under FE-31's lock; the row says so and keeps the rest OWED. Against C-9 this is not a duplicate: C-9 is a lock, the row is the rule the lock does not state. |
+
+Result: 12 new rows (FE-45..FE-56 if the register's "Next free id" is FE-45 at landing; see collision below) plus item 4 delivered by FE-31's reading. The operator said "13 lines"; this is 13 items covered, 12 new lines (OPEN QUESTION 2).
+
+Status and enforcement for the 12: each is `OWED` with one lock path under src/tests/surfaces/ that does not yet exist (rule 5; names in the draft: client-glass-boundary, ui-library-set, tunables-are-data, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category, all `.logic.test.ts`; all 12 names checked absent in src/tests/surfaces). They are reservations; task-434 builds the checks and may rename by a dated note. Where no check is possible the row says PROSE-ONLY in its Ruling, as FE-04/26/44 do (item 9 row: lock checks only that the two cited headings exist). Handbook honesty: render shows "OWED · lock owed: <path>" and no "Enforced by" (generate-surface-handbook.mjs:121-125; the existing lock at handbook-rule-map.logic.test.ts:157-165 requires this).
+
+Collision (important): lane BL-MFRULES (task-388, status RUNNING) already holds FE-45 in an unlanded commit on branch wf1/inc1b-mfrules (~/Buildo-wt-mfrules, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:67 there; its Next free id is FE-46). Whichever lands second takes the next free id and the "Next free id" line is rewritten by hand with a dated note (135:17 shows the form). The draft uses FE-45.. as placeholders; the real ids are set at landing.
+
+Other effects: src/tests/backlog/rule-lists-table.logic.test.ts:205-210 pins "fe.01 to fe.44 (44 distinct ids)" and will fail for the right reason once 136 has fe.45 (task-388 hits the same). Fix in commit C: compute the expected range from the register's "Next free id" minus one. Comments citing 136 line numbers (scripts/analysis/gates/mobile-literals.mjs:9 "136:163 fe.44") are text only, not locked; they go stale by position, not by id.
+
+Tests, red first (commit C):
+- C-T1 RED: the committed register with the 12 rows and no regenerated 136/rule map: `--check` exits 1 naming both files; control: after --write, exit 0 (existing test :273 does this).
+- C-T2 real register: ids contiguous FE-01..FE-(44+12), "Next free id" = next (readFeRows throws otherwise, :68-73); each new row OWED with exactly one lock path that matches OWED_LOCK_RE and is not tracked (register-locks-resolve covers this; planted case exists at :185). The existing generic tests (every FE row appears once, :150-155; rule-map deep-equal) stay green with 56 rows (they use realRows().length).
+- C-T3 the 44 -> 56 count: the handbook header line "Rules rendered: 56" and "v1 covers the 56 FE rulings" (generator :163, :180; asserted at handbook-rule-map.logic.test.ts:~200 via realRows().length, so no edit needed). Planted defect: delete one new row from a temp register copy: --check names the rule map and handbook stale and the id gap throws "no gap or reorder" (:70).
+- C-T4 (OPTIONAL, drop if the review calls it scope): quote lock. Every double-quoted span of 25 or more characters in the Ruling cell of the 12 rows occurs, after whitespace collapse, in the spec file it cites. Planted: change one word of a quote: fails; control: real rows pass. It is the only mechanical proof of "the spec's own words". Cost: about 20 lines in the existing test file.
+- C-T5 rule-lists-table.logic.test.ts:205 computed range (red first: add a planted FE-45 line and the old pin fails).
+
+#### 7. Order
+
+1. Commit A, then B, then C (A is a precondition for B and C reading whole lines; C last because it needs B's reading form not at all but should follow the lock changes; each is independently green and droppable).
+2. Per commit: write the tests, prove red (run them before the change, saved output as the red evidence), make the change, run `node scripts/surfaces/generate-surface-handbook.mjs --write`, then the checks below.
+3. Checks that must stay green after each commit: the Spec 136 lock (handbook-rule-map.logic.test.ts, all describes), register-locks-resolve.infra.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts and rule-lists.logic.test.ts, spec133-bylaw-handbook.logic.test.ts, `node scripts/generate-bylaw-handbook.mjs --check`, `node scripts/surfaces/surface-validate.mjs --check`, `node scripts/violations/generate-surface-registry.mjs --check`, `node scripts/analysis/spec-split-check.mjs --check`, the pre-commit gates, and at pre-push the full suite. Generated files per commit: A: 136; B: 136; C: 136 and surface-rule-map.json (44 to 56 rules and lines).
+
+#### 8. Landing
+
+- Trailers on each commit: `Task: task-430` and `McFrontend-Task: MF-n` (n = a new row of .cursor/MCFRONTEND-QUEUE.md; MF-94 is held by task-388's lane; the next free number is for the orchestrator to take), plus `Rule: FE-..` for rows touched, plus a `Spec-diff:` line as the precedent commits carry (e2b2523e3, 85955d3dd). Panel record docs/reports/panels/MF-n.json with task, item, plan, output non-empty (panel.mjs recordOk); one record serves all three commits (read from the commit's own tree). Queue row for MF-n with "- FE rows owned: none." (Spec 128 §4.11 item 7 note).
+- Protected paths touched: scripts/surfaces/**, src/tests/surfaces/** (frontend), Spec 135 and the panel directory (protected): the owner is prompted at push. No file under scripts/analysis/bylaw/ in the recommended A1.
+- Close: work commits, then a close commit moving the task file and the MF queue row (Spec 137 rule; the DoD item 6 in task-430 says the status line changes "in the same commit as the work": the sha is recorded by the later close commit).
+- Through the real hooks, none bypassed (task DoD 3).
+
+#### 9. Acceptance
+
+1. Spec 136 section 2 has no line ending in "…"; the 16 lines are whole; measured size recorded.
+2. The 11 rows listed carry a Current reading on their line, with the cited note dates; a later note makes `--check` fail.
+3. Spec 136 has fe.45..fe.56 (12 new lines), each OWED with its lock path, each citing the spec's own words with file:line; item 9 is a pointer; item 4 is reached through fe.31's reading.
+4. Spec 133 byte-identical; scripts/analysis/bylaw/** untouched (A1).
+5. All checks in section 7 green; red evidence for every planted case saved.
+
+#### 10. NOT in scope
+
+Dropping Specs 126-128 from the review table (task-431, second step); building the locks of the 12 new rows (task-434); the Spec 128 R-01..R-34 rows and MF-31; fe.06's "oracle = catalogue flags" (its amendment is in Spec 128:85, not in the row); the engineering-standards note (task-435); rewriting FE-02's stale "owed as FE-40"; mobile specs; any change to Spec 133 or to bylaw-register.mjs.
+
+#### 11. Effect on other tasks' plan evidence
+
+- Tasks whose evidence quotes the surface-136 or surface-135 lists: task-431 (review table; sends section "2. Rules" of 136, rule-lists.json:34), task-433 (BUILT, rules-checked line; counts rule ids per list, so 12 more ids appear in the list), task-399, task-375, task-376, task-384, task-387, task-388, task-429 (all mention them; found by grep of backlog/tasks). Not-yet-launched ones are 431 and 434 (and 436 if it exists): their plan evidence that says "44 lines", "8 OWED" or "section 2 is about 13,800 characters" is stale after C (56 lines, 20 OWED, about 31K). Test pin at rule-lists-table.logic.test.ts:205 is the only code pin found (searched src/tests and scripts for fe.44, "44 FE", "44 rules").
+- task-388 (running) adds FE-45 and needs the same re-numbering and the same pin fix.
+
+#### 12. OPEN QUESTIONS for the operator
+
+1. Landing cost of the clip fix. Option A1 (recommended): a one-line plain-text copy inside the McFrontend generator, no McBylaws commit. Option A2: add a length argument to the shared reader: no copy, but a McBylaws task, panel and owner step for a layer23 file. Rules cannot settle it, because both are allowed and cost differs.
+2. Rows versus items. 12 new rows, not 13: item 4 is already a dated note on FE-31 and reaches the page through the reading. Keep (page is 300 characters smaller, no duplicate) or add a 13th duplicate row (his "13 lines" count exactly)?
+3. OWED stays visible. Twelve OWED rows take the page from 8 to 20 OWED. The register has no PROSE-ONLY status (135:13). Accept OWED until task-434 builds each lock, or rule a new status word (which changes the gate reader cite-parse.mjs, a protected McBylaws file)? Recommend accept.
+4. The optional quote lock C-T4: keep or drop.
+
+#### 13. UNVERIFIED
+
+- Whether the McBylaws gate refuses a McFrontend-only commit that adds OWED rows without red evidence: Spec 128 §4.11 item 3 puts the red-evidence condition on the OWED to RULED flip only; I did not run the gate.
+- The next free MF queue number and the exact queue-heading form for arm Q; the exact hooks (check-spec-diff.mjs) a docs/specs commit triggers beyond the Spec-diff precedent.
+- Whether any test other than the ones named pins note counts or line counts of Spec 136 or 135 (I searched src/tests and scripts for the literal strings only).
+- FE-01 note 1 says the surface paths "move to layer23"; mcbylaws/protected-paths.json now lists them under `frontend`. The reading therefore says only "no longer held".
+- 126:1120's own note date; item 8's claim about parcelId in routes (dropped); the report's claims about the scan scope of report-no-maths (report-no-maths.logic.test.ts:23, :225-240; not read by me, left out of the rows).
+- Section-2 sizes after B and C are estimates (about 31K); A is arithmetic from measured line lengths.
+- That Spec 33:47 and 126:467 are still the latest rulings on toasts and Shadcn (read only those lines).
+
+#### 14. GUESS estimate
+
+About 5 to 6 agent-hours of lane time: A 1 hour, B 2 hours (11 readings plus lock), C 2 hours (12 rows, per-quote check, the test pin), plus the plan review and landing steps. About 25 new test cases.
+
+#### 15. Files
+
+scripts/surfaces/generate-surface-handbook.mjs; src/tests/surfaces/handbook-rule-map.logic.test.ts; docs/specs/02-web-admin/135_mcfrontend_decisions_register.md; docs/specs/02-web-admin/136_mcfrontend_handbook.md (generated); scripts/surfaces/_schema/surface-rule-map.json (generated); src/tests/backlog/rule-lists-table.logic.test.ts; .cursor/MCFRONTEND-QUEUE.md; docs/reports/panels/MF-n.json; backlog/tasks/task-430.
+
+#### 16. Files line for the card (planner, 2026-11-22 follow-up; the task file is always allowed; the panel record is the directory until its number is taken; next free MF number found: MF-95, not claimed)
+
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
+

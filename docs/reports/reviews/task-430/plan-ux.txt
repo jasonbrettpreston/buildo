@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-22T19:02:49.586Z file_sha256=a1fd97623484539bc449df4f7ee1badb5460e11924c5f1bdeab8015586dad945 prompt_sha256=967f32f18398882f7c8c3b320440abc7160002c71fa710cce65ed0d3cf9cef89
+🔍 Lens review of docs/reports/reviews/task-430/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §3 "GUESS, to be re-measured at the end: about 31K characters, up from 13.8K. Still small against the 534,000 the reviewer is sent today" vs design "Cap: 120 KB in total, 12 KB per block" and "one small document per call finds more than large or joined ones" — the person sent Spec 136 section "2. Rules" (rule-lists.json:34) reads at most the first 12 KB of a section that goes from 13.8K to about 31K, so the 12 new lines at the end of the section fall outside what is read, and the change makes the one document the reviewer gets 2.3 times longer — fix: measure section 2 against the per-block cap after A, B and C and settle the over-cap state with the operator before lock
+
+BUG severity=HIGH — plan §6 "Result: 12 new rows (FE-45..FE-56 ...) plus item 4 delivered by FE-31's reading" vs design "add these 13 lines" — the operator approved 13 lines, the page gets 12, and because plan §0 says "The plan review can drop B or C without touching A." the item 4 content disappears with B and no line carries it — fix: make item 4 its own row so all 13 approved items are lines, or take the operator's ruling on 12 before lock
+
+DEFER severity=MED — plan §6 "The report's form 'parcelId in URLs and the consumer API is the municipal parcel_ref' is NOT in the spec words; dropped." vs design "These look great - teh 13 are perfect." — the words the operator called perfect are rewritten (items 7, 8, 10, 13) and shortened (items 8, 10) with no final wording pasted anywhere the person can read ("The 11 readings (drafts in ROWS-430-draft.md section B)"), so the approved text and the printed text differ unseen — fix: paste the final 12 line texts and 11 readings into the plan for the operator's read before lock
+
+DEFER severity=MED — plan §5 "lineRow appends ... to the SAME line as the headline (not a new line), because the existing test at handbook-rule-map.logic.test.ts:157 matches" — the reader of page 136 gets the ruling and a later reading run together in one line up to about 1,600 characters, told apart only by the inline words "Current reading:", because a regex decides the layout — fix: let the reading sit on its own indented line and change the :157 assertion in the same commit
+
+DEFER severity=MED — plan §6 "(item 9 row: lock checks only that the two cited headings exist)" vs design "A rule without a lock is not yet a rule" (135:12) — once task-434 lands and the row flips to RULED, the page shows an Enforced-by lock for item 9 that proves only two headings exist, so the page-set pointer reads as enforced when it is not — fix: keep item 9's Ruling PROSE-ONLY with no Enforced-by, or say in the Ruling exactly what the lock checks
+
+DEFER severity=MED — plan §5 "Five more rows have notes that add build detail without making the headline false" vs design "make each line reflect its notes" — 15 of the 26 rows that carry notes still print only the ruling and a "+N dated notes" count with no reading, and the page gives no sign which rows are deliberately uncovered — fix: state the coverage in the page-136 header line, or take the operator's ruling on partial coverage
+
+REJECT — plan §12 "Twelve OWED rows take the page from 8 to 20 OWED. The register has no PROSE-ONLY status" — a handbook that prints OWED with the owed lock path for 20 of 56 lines looks unfinished, but the reader sees the truth rather than an over-claim — matches 135:13 "an OWED row's lock path must be a valid src/tests/surfaces/*.test.ts that does NOT yet exist"
+
+REJECT — plan §4 "the 16 clipped lines (fe.18, 19, 29, 30, 31, 34 to 44) are whole" — nothing on the page misleads or strands the reader, the ellipses go away and every line is readable in full — matches design "stop the clipping"
+
+VERDICT: FAIL on the person's experience
+States checked: handbook line whole, line clipped, line OWED with lock owed, line with Enforced by, line with Current reading, line with notes and no reading, section-2 sent to the reviewer at the 12 KB block cap, register note states (reading last, later note after reading, cited date not a note date), build state where readFeRows throws and the page is not regenerated, first view (header "Rules rendered: 56 ... (20 OWED)")   Dead ends found: 0
+
+---
+⏱  57871ms (57.9s)
+📊 Tokens — total: 32592, input: 21447, output: 11145, reasoning: 10042

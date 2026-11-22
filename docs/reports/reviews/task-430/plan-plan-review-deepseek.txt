@@ -1,0 +1,67 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T19:02:49.552Z file_sha256=a1fd97623484539bc449df4f7ee1badb5460e11924c5f1bdeab8015586dad945 prompt_sha256=de1883a336f6501003d377c1b1c104d29fc5702977eb69d38f4c9b2ac8f714ea
+🔍 Lens review of docs/reports/reviews/task-430/context-r1.md (model: deepseek-reasoner)
+
+## Axis 1 — Failure Modes & Rollback
+
+BUG severity=HIGH — §5 "Staleness lock (ii)" — the "any note after the reading throws `FE-nn: a dated note follows the Current reading`" rule fires on task-434's inevitable OWED→RULED flip notes on the *same* 11 rows, breaking commit B the moment the plan's own dependent task lands — exempt flip/lock-landing notes (`Dated note … (… OWED→RULED …)`) from the throw, or move 434's flip notes into 430's scope so the readings are re-stated in the same commit.
+BUG severity=HIGH — §3 + §7 — Spec 136's `max_bytes` cap is not verified anywhere in the plan, yet section 2 grows from 13.8K to ~31K and `spec-split-check.mjs --check` is a required green at push — before commit A run `grep -n '136\|135' docs/specs/01-pipeline/122_split_manifest.json` and reaffirm in §3 whether 136 has a cap, or C lands into a wall.
+BUG severity=HIGH — §6 "Collision" — task-388 and task-430 both hand-edit "Next free id" (135:17) and both hit `rule-lists-table.logic.test.ts:205`; the plan names the collision but no landing protocol, and `readFeRows` gap-check :72-73 is not stated to also reject duplicate ids — add a `feIds.length === new Set(feIds).size` assertion to the register lock and a "second-to-land rebases and renumbers" rule to §6.
+BUG severity=HIGH — §4 A1 — removing the 300 clip with no replacement ceiling means a single future operator paste of a 5K Ruling silently un-bounds 136 again (the exact problem this task exists to prevent) — either carry an explicit generous bound (`READING_MAX`-style, say 2,000) or a per-row warning + review note, and say so in A1's code comment.
+BUG severity=MED — §4 A1 — the copied `plain()` has no ongoing parity lock with `bylaw-register.mjs:83-85`, and it does **not** call `stripProvenance` (:88-104); a future Ruling cell carrying a provenance bracket will print raw provenance on 136 while 133 strips it — add a parity test on the 44 rows and decide whether the copy calls `stripProvenance`.
+BUG severity=MED — §8 Landing — `Spec-diff:` format (check-spec-diff.mjs), `panel.mjs recordOk` allowing one record across three commits, and the "read from the commit's own tree" claim are UNVERIFIED (§13 implicitly); a landing-time format mismatch fails at push with no fallback — read `check-spec-diff.mjs` and `panel.mjs` before commit A, per §7's own "checks that must stay green".
+BUG severity=MED — §5 B-T5/B-T7 — only the planted 401-char case is tested; the 11 *real* draft readings are never asserted ≤400 — add B-T-real: each of the 11 current readings parses, is ≤400 chars, and cites at least one other note date.
+BUG severity=MED — §5 reading regex — `Current reading: (.+?) \(from notes dated (dates)\)` false-positives if a different Status note contains that phrase in prose — anchor to `^Dated note [0-9-]+ \(M-246, .*\): Current reading: .+? \(from notes dated [0-9-]+(, [0-9-]+)*\)\.` and add a planted-negative test (phrase in prose, must not match).
+BUG severity=MED — §5 "appends to the SAME line as the headline" — the pinned regex at `handbook-rule-map.logic.test.ts:157` is OWED-specific; 11 affected rows include RULED — add a RULED-row render test with a reading so append-on-same-line is spec'd for both statuses.
+BUG severity=MED — §11 — after C, task-431's review table sends section 2 (~31K) through a carrier that today handles 13.8K; if the carrier has a per-section cap it silently re-clips — verify the review-table section cap and, if it exists, size C below it or file a linked task-431 subtask.
+BUG severity=MED — §4 — "the rule map JSON does not change in A (and B)" is UNVERIFIED — `buildRuleMap :94-118` body is not shown; if it writes `headline` (not just id/status/enforcedBy), A must also regenerate `surface-rule-map.json`. First `--write` catches it, but state it as a premise rather than a claim.
+
+DEFER severity=LOW — §4 A1 — `plain()` collapses `<br>` to a space; existing 44 rows match today, but a genuine `<br>` hard-break in a future Ruling would be flattened — note the trade in the A1 comment; not worth a lock.
+DEFER severity=LOW — §14 — "about 25 new test cases" vs ~16 items listed in §4-§6 — cosmetic; leave as GUESS.
+DEFER severity=LOW — §8 — MF-95 "not claimed"; if task-388 rebases in the same window both lanes race the number — orchestrator's to number, plan already says so.
+DEFER severity=LOW — §6 row 2 — "task-435 and this row do not depend on each other" rests on Spec 33:47 and 126:467 being latest on toasts/Shadcn (§13 flags UNVERIFIED) — one `grep -rn 'sonner\|toast\|shadcn' docs/specs/02-web-admin/*.md | tail` before lock, else row 2 is stale the day it lands.
+
+## Axis 2 — Data Reality Verification
+
+VERIFIED (traced to wc/node measurements the plan cites): 44 FE rows, 8 OWED today, 51 notes in 26 rows, 13 clipped in 133 / 16 clipped in 136, 533 bytes of headroom under 140,000, section 2 today = 13,784 of 17,216.
+
+The plan correctly rejects raising `HEADLINE_MAX` (§1), which is the whole reason A1 exists. No refutation needed there.
+
+UNVERIFIED PREMISES (each becomes a finding above and a query below):
+- 136 has `max_bytes` — not checked.
+- 135 has growth cap — not checked (§2).
+- `readFeRows` rejects duplicate ids — not stated.
+- `buildRuleMap` doesn't write `headline` — asserted, not shown.
+- 12 lock-path names absent — asserted, not shown.
+- Panel-record-for-3-commits works — asserted, not shown.
+
+## Axis 3 — Sibling Bugs & Edge Cases
+
+Sibling defects sharing the "arbitrary N-cap" root cause:
+
+BUG severity=MED — §3 — Spec 133's 13 clipped rows are DEFERRED by the plan (533-byte room); that is a same-root sibling of 136's clipping and will *re-surface* the moment task-431 drops 126-128 and someone looks at 133 — raise as an explicit follow-up task (or a "do not fix here, do not forget" line in §10), not just implicit silence.
+BUG severity=MED — §4 A-T2 — the 16-rows-are-longer-than-300 assertion is checked but not the reciprocal ("a hypothetical 990-char Ruling can never regrow via a future amendment") — plant a synthetic 990-char row in A-T1's 700-char case and confirm no truncation, so the "no cap" is intentional and not accidentally re-introduced by a future fix.
+DEFER severity=LOW — §1 — `headlineOf`/`HEADLINE_MAX` are named as feeding 133 + 136 only; the grep for other callers should be shown in §1 (e.g. `grep -rn 'headlineOf' scripts/`) so future sibling generators (Spec 08, engineering standards) can't quietly inherit the clip after A.
+DEFER severity=LOW — §5 — reading regex and 400-char bound are themselves another arbitrary cap: a future operator ruling that needs 401 chars to state a reading will fail — accept deliberately (state "400 is chosen, not derived").
+DEFER severity=LOW — Time-boundary — `Dated note 2026-11-22` fixed; a lane run that spans midnight still writes 2026-11-22 inside the notes. The reading staleness check treats date *strings* — a legit second note dated 2026-11-23 on the same row (a next-day amendment) triggers the "restate it" throw in §5(i). Desired, but call it out so the reviewer knows a one-day amendment forces a reading edit.
+DEFER severity=NIT — §5 — reading regex with `(.+?)` is non-greedy but the trailing `\(from notes dated …\)` is not end-anchored; a reading text that ends with a stray ` (from notes dated 2026-11-09)` would truncate. End-anchor `$` closes it.
+
+REJECT — §3 GUESS "about 31K" — treating it as an estimate, not a plan-readiness figure — re-measure at commit C per §7; a GUESS here is acceptable because failure to match will surface at `--check` before push.
+
+---
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Commit B's staleness lock ("a later dated note forces restatement") fires on task-434's OWED→RULED flip notes on the same 11 rows — 430 regresses 434 before 434 launches. Fix §5 (ii) to exempt flip/lock-landing notes, or fold 434's flip notes into 430.
+- Spec 136 and 135 land-size caps are not verified; section 2 goes from 13.8K to ~31K and `spec-split-check.mjs --check` is a required green at push. Verify `122_split_manifest.json` has no `max_bytes` on 136/135 before plan-lock, or size C under the cap.
+- task-388 and task-430 both hand-edit "Next free id" and `rule-lists-table.logic.test.ts:205`; the plan names the collision but names no landing protocol and does not confirm `readFeRows` rejects duplicate ids. Add a duplicate-id assertion to the register lock and a "second lander renumbers" rule.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- Spec 136 / 135 have no `max_bytes` cap — verify with `grep -n '"136"\|"135"' docs/specs/01-pipeline/122_split_manifest.json scripts/analysis/spec-split-check.mjs` and `wc -c docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`.
+- `readFeRows` rejects duplicate ids (not just gaps) — verify with `sed -n '52,89p' scripts/surfaces/generate-surface-handbook.mjs` for a Set/`includes` check before the :72-73 gap-throw.
+- `buildRuleMap` (:94-118) does not write `headline` (so A/B need no rule-map regen) — verify with `sed -n '94,118p' scripts/surfaces/generate-surface-handbook.mjs`; if it does, commit A must include the rule-map regen.
+
+---
+⏱  103112ms (103.1s)
+📊 Tokens — total: 42447, input: 22334, output: 20113, reasoning: 17534

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.565Z file_sha256=83f0487b827454bd930307cd6db06a8299c757601b23fb5eda7ca9a67cbc071c prompt_sha256=bb638a53b121e4aa40167fae8f05603e53b97631d6fde643b02dd88fafdb0ef3
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "add these 13 lines" — plan "Rows versus items. 12 new rows, not 13" and "Result: 12 new rows ... plus item 4 delivered by FE-31's reading" — the ruling names 13 lines and commit C plans 12, item 4 substituted by a reading unless the operator answers Q2 — plan a thirteenth row for item 4, or take a new operator ruling replacing RR-0384 before plan-lock.
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — plan "the set of rows that carry a reading is pinned in the test to the 11 ids" and "What the lock cannot do: decide that a row with no reading needs one" — 26 rows carry notes, only 11 get a reading, and the 5 detail rows plus the 10 flip/lock rows sit outside both the page and the lock — extend B to the 5 detail rows, or record the narrowing as a ruled limit in the operator's words.
+DEFER severity=MED — RR-0384 "the 13 are perfect" — plan "The report's form adds 'empty, offline'; not in the spec; dropped" and "the report's 'interactive elements 44 px minimum; every control has a name' goes beyond it" — items 7, 8, 10 and 13 reach the page narrowed or with words dropped against the text the operator approved — confirm the narrowed forms with the operator, or carry the dropped words as a separate row, before the rows land in Spec 135.
+DEFER severity=LOW — task Description "add the items the INPUTS.1 report lists, and the operator has read" — plan "C-T4 (OPTIONAL, drop if the review calls it scope)" — a new quote invariant that no pasted clause or ruling names — drop C-T4 from commit C, or land it under its own ruling.
+MET — task Description "nothing in Specs 126, 127, 128 deleted or rewritten" — plan "Dropping Specs 126-128 from the review table (task-431, second step)" under NOT in scope — 126/127/128 are cited only, never edited.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — plan item 9 "pointer row ... the row copies no table".
+MET — task Description "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — plan "each green alone and each regenerating Spec 136" and section 7 — all three commits go through that generator and that lock.
+REJECT — Glossary "lock / lock-db / check / hook: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id" — that the 12 new rows name lock paths that are not locks — not an issue, the rows read OWED and the handbook renders "OWED · lock owed: <path>" with no Enforced by until task-434 builds each lock.
+REJECT — Glossary "five words: R-BA gate V" — that "Principles served: standardized, observable, scalable, accurate, understandable" must show a gate V PASS — not an issue, gate V scores pipeline steps in step-validate, not a McFrontend handbook edit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  60387ms (60.4s)
+📊 Tokens — total: 25381, input: 12948, output: 12433, reasoning: 11657

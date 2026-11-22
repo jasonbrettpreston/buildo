@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T19:02:49.604Z file_sha256=81701f9a3b16cac5f3ad0c1f46e34796c08617d78aa5ef0c5b6a5ffebc84df43 prompt_sha256=2dbb59bdadb1b2dac27068857161c8c4ff86a3eb526e5e483966ea042db19714
+🔍 Lens review of docs/reports/reviews/task-430/in-plan-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — PLAN-430-v1 §6 "The operator said "13 lines"; this is 13 items covered, 12 new lines (OPEN QUESTION 2)." — the ruling names 13 lines, the plan delivers 12 and parks the count in an unanswered open question — get an RR answer on OQ2 or add the item 4 line so the count is 13 as ruled.
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — PLAN-430-v1 §10 "rewriting FE-02's stale "owed as FE-40"" and §5 "stated as a gap, not fixed here" — the plan itself names lines whose printed text contradicts their own notes (FE-02's pointer to FE-40, which it says is the McTest row; fe.06) and excludes them, so "each line" is not met — bring FE-02 and fe.06 inside commit B, or obtain a ruling that narrows the clause to the 11 rows.
+
+BUG severity=HIGH — §14 Out-of-Scope "the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`" (declared "so a future non-fenced use cannot invent a fifth vocabulary") — PLAN-430-v1 §6 item 8 "The report's form "parcelId in URLs and the consumer API is the municipal parcel_ref" is NOT in the spec words; dropped." — the stated ground for dropping the mapping is false against the pasted clause, and the row planned loses the seam the clause declares — restore the seam mapping in the item 8 row with 126 §14 as its cite.
+
+BUG severity=MED — §14 Target Files "*(Phase 1, not yet authored)* ... `scripts/surfaces/surface-validate.mjs`" — PLAN-430-v1 §7 "`node scripts/surfaces/surface-validate.mjs --check`" — the plan makes a green run of a script the governing spec says does not exist part of "Checks that must stay green after each commit", and acceptance 5 depends on it — drop that check from §7 or state it applies only after Phase 1 lands.
+
+DEFER severity=MED — no pasted clause names a staleness throw — PLAN-430-v1 §5 "(i) a "Current reading" note that is not the last note of its row throws `FE-nn: a dated note follows the Current reading; restate it`" against §2 "22 of the 51 are status "flip" notes (a row flips OWED to RULED)" — the added invariant fails --check on the register's normal amendment form, i.e. as soon as task-434 lands a lock note after a reading — renew the reading as part of the flip, or downgrade the throw to a reported warning.
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect." — PLAN-430-v1 §6 item 10 "The report's form adds "empty, offline"; not in the spec; dropped." (same class: item 2 drops React Hook Form, item 7/13 reworded) — the plan narrows item text the operator called perfect without a new ruling — take the rewordings to the operator in the same OQ round, or keep the approved wording and add the spec cite alongside.
+
+MET — §14 Out-of-Scope "`scripts/steps/_schema/step.schema.json` — this spec MIRRORS it and must never edit it." — PLAN-430-v1 §15 — no file in the change is under scripts/steps/.
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — PLAN-430-v1 §0 "spec text in 126/127/128 is never rewritten" — no 126/127/128 file appears in any commit or in the §15 file list.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — PLAN-430-v1 §6 item 9 "pointer row ... the row copies no table" — item 9 is a heading-cite row, not a copied table.
+MET — RR-0384 "stop the clipping" — PLAN-430-v1 §4 "the Spec 136 generator no longer clips" — clipping fixed in the 136 generator, shared reader and Spec 133 left byte-identical.
+MET — task card "add the items ... so the generated Spec 136 carries them as lines, by the existing generator and its lock" — PLAN-430-v1 §6 "12 new rows (FE-45..FE-56 ...)" and §7 "`node scripts/surfaces/generate-surface-handbook.mjs --write`" — items enter via register rows and are rendered by the existing generator under its --check lock.
+MET — §14 Out-of-Scope "`migrations/**` — no migration is authored by this spec" — PLAN-430-v1 §15 — no migrations file in the change.
+MET — §14 Out-of-Scope "`src/app/api/quality/**`, `src/lib/quality/**` — held by another programme." — PLAN-430-v1 §15 — untouched.
+MET — §14 Out-of-Scope "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — PLAN-430-v1 §15 — no manifest or descriptor file in the change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 4
+Rules met: none
+
+---
+⏱  63602ms (63.6s)
+📊 Tokens — total: 26113, input: 12535, output: 13578, reasoning: 12341

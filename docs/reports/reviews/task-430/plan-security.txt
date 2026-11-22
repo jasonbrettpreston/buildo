@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-22T19:02:49.590Z file_sha256=a1fd97623484539bc449df4f7ee1badb5460e11924c5f1bdeab8015586dad945 prompt_sha256=42ed0954a2e3b8183d9d08f045103a21a87eb4bbcd0355a017e66e1542e08e51
+🔍 Lens review of docs/reports/reviews/task-430/context-r1.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: the change is documentation tooling only, a generator that renders dated rule lines from a markdown register into a generated handbook (scripts/surfaces/generate-surface-handbook.mjs, surface-rule-map.json, two logic test files, docs/specs 135/136, .cursor queue, panel records); there is no request handler, no session, no money path, no entitlement check, and no PII at runtime.
+
+```
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+```
+
+---
+⏱  3522ms (3.5s)
+📊 Tokens — total: 21857, input: 21438, output: 419, reasoning: 305

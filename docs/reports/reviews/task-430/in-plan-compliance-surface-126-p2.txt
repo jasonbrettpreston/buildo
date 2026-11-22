@@ -1,0 +1,583 @@
+LIST surface-126 sha256:1c27ff92279f9a92a42bd93ac9075f4c02c54349681ff912366ea1e281227dc7 material sha256:35bb4ab3454b85253d83015c0ce9b01a723a14e4bee99ada2fe8a6ab201ea153 part 2 of 5
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 2 of 5. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 5. How schemas work here — the seven arrows
+
+### 5.0 The ONE-SOURCE rule — added 2026-09-15
+
+**There is one source, and everything else is emitted from it.**
+
+```
+  scripts/surfaces/_schema/surface.schema.json          THE SCHEMA — 21 categories, closed vocabularies,
+            |                                            archetype profiles. Ratified once, then canonical.
+            v
+  scripts/surfaces/{surfaces,contracts,jobs}/<id>.descriptor.json     THE DESCRIPTOR — one per thing,
+            |                                            AJV-validated against the schema on every run.
+            |
+            +--> src/lib/surfaces/generated/surface-descriptor.d.ts   TypeScript types
+            +--> src/lib/surfaces/generated/validate-descriptor.mjs   the ONE runtime validator
+            +--> the migration assertions (§6.1 step 4)               declared schema vs live catalog
+            +--> the API contracts (§5.2)                             Zod / OpenAPI, both projections
+            +--> the web / mobile / admin / pdf projections (§5.3-§5.4)
+            +--> docs/reports/generated/127-surface-registry.md       the reviewable registry (Spec 127 §8)
+            +--> the Supabase seeded projection (§6.4)                surface_descriptors, git-sourced
+```
+
+**The rule:** nothing in that fan-out is hand-written, and nothing in it is a *second declaration*. A type that disagrees with the schema is not a disagreement to reconcile — the type is regenerated. A validator in a test that re-implements the rules is banned; the test imports the same module the engine does.
+
+**Why it is stated as a rule.** The measured defect this whole standard exists to retire is one contract declared at **four** sites and locked at **one**, with the two Zod copies disagreeing in strictness — *the client looser than the server it mirrors*. A fan-out with one source cannot produce that. A fan-out with two sources always eventually does.
+
+**Three consequences worth naming:**
+
+1. **A census row IS a descriptor.** The registry's source rows are not a reporting format that later gets converted — they are draft descriptors in the exact schema shape, validated by AJV on every generator run. There is **no re-keying step** between "reviewed in the registry" and "read by the engine".
+2. **A draft may be honestly incomplete, and the incompleteness is counted.** A field the schema marks `x-draft-optional` may carry the literal `UNRESEARCHED`; nothing else may. The registry renders the count per row and in its summary, so an unresearched estate is a number rather than a vague feeling.
+3. **The shards are temporary.** `scripts/surfaces/_schema/census/*.json` exists so researchers can work in parallel without collisions. Once every row is researched, the emitted descriptors become the source and the shards are retired — a hand-over Spec 127 §8.5 governs, with the generator's both-directions `--check` as the proof that the two are equal at the moment of the swap.
+
+### 5.0a The loop, stated once
+
+The repo already runs this exact mechanism, in miniature, end-to-end:
+
+> `scripts/seeds/logic_variables.json` (`admin.group` field) → `scripts/generate-logic-variable-groups.mjs` (**throws in both directions**: a pinned key whose `admin.group` disagrees, *and* a seed key absent from its group) → `src/features/admin-controls/generated/logic-variable-groups.json` → imported at `GlobalConfigCard.tsx:20` → `src/tests/logic-variable-groups.infra.test.ts` (3 tests, the third a **tampered-file RED canary**) → `npm run logic-var-groups -- --check` exits 1 when stale, wired into `npm run verify`.
+
+**One declaration file → a `--check`-capable generator that throws on bidirectional mismatch → a committed generated artifact imported directly → an infra test that re-runs the generator, plus a RED canary proving the check itself fires.** Every arrow below is that loop applied to a surface. Copy the `BUILDO_LOGIC_VARS_SEED_PATH` test-only override too — it is the difference between a canary that can be written and one that cannot. (`scripts/violations/generate-spec-mirror.mjs` already follows both conventions: `--check`, `--self-test`, and `BUILDO_SPEC_MIRROR_*_PATH` overrides.)
+
+### 5.1 Arrow 1 — descriptor → DB schema. **Declare and assert. Do not generate migrations.**
+
+Fully specified in §6. Summary: the descriptor's `database` block is a **declaration that is asserted**, never a generator input — the same posture Spec 122 §1.3 adopted for its own `database` category (*"a step pointed at a 222-migration database refuses"*).
+
+### 5.2 Arrow 2 — descriptor → API contract (Zod / OpenAPI)
+
+**The highest-value arrow; it closes a live defect class.** The parcel cost contract is declared **four** times and locked once:
+
+| Site | Form | Locked to the engine? |
+|---|---|---|
+| `scripts/lib/parcel-cost.js:77` `PARCEL_COST_LINES` | the 13-id engine source | source |
+| `src/components/admin/ParcelCostTool.tsx` `LINE_LABELS` | admin web | ✅ `src/tests/parcel-cost-line-keys.logic.test.ts` |
+| `mobile/src/lib/parcelCostFormat.ts:14` `COST_LINE_ORDER` | mobile, same 13 ids, different order | ❌ **no lock** |
+| `mobile/src/lib/schemas.ts:282` `ParcelCostMenuSchema` | `z.record(z.string(), …)` | ❌ by construction |
+
+And the two Zod declarations disagree in strictness: `src/app/api/parcels/lookup/types.ts` uses `.strict()` **6 times**; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` **5 times** — *the client is looser than the server it mirrors*. The one cross-tree lock that exists (`src/tests/admin-lead-schemas.contract.test.ts`) covers **lead** schemas, not parcel, and is **excluded from CI** because it dynamically imports `mobile/src/lib/schemas.ts`.
+
+**Generating the mobile mirror from the CONTRACT descriptor kills all four problems at once** — the transcription, the strictness drift, the missing parcel lock, and the CI exclusion (there is nothing left to cross-import). Use the `logic-variable-groups` form (§5.0), **not** the `docs/specs/_contracts.json` grep-assertion form; keep `_contracts.json` as the cross-layer numeric/vocabulary constant registry it already is.
+
+An OpenAPI document is a second projection of the same descriptor, generated, never authored.
+
+### 5.3 Arrow 3 — descriptor → web projection (RSC) and mobile projection (fetched)
+
+**The server returns the projected screen JSON; the client renders it through a small archetype component set; there is no client business logic.**
+
+This is not a new posture — Spec 90 §3 is titled *"The Prime Directive: 'Dumb Glass' Architecture"* and already mandates it, and already carves out the exception (*"Ephemeral optimistic UI state… is highly encouraged"*).
+
+**⚠️ The one cost, stated up front: React Native has no Server Components.** Spec 125 §1's "SSR via Next.js Server Components" is **true on web and false on mobile**, and it is not in Spec 125's own correction list. So:
+
+| Platform | Mechanism |
+|---|---|
+| **web** (`platforms` includes `web`) | Next.js App Router **RSC on Vercel** — descriptor parsed server-side, projection assembled server-side, maximum server side. This is the cheap half. |
+| **mobile** | a **fetched projection**: the server returns JSON describing the screen; the client's archetype registry renders it. Plus **build-time generation** of the archetype components and the Zod mirror. Not SSR. |
+| **pdf** | a server route rendering the same projection through a PDF renderer; parity asserted by golden equality, not discipline. |
+
+**Consequences for Spec 99, measured.** Max-server-side moves the Layer-2 / Layer-3 boundary:
+
+| Layer | Today | Under max-server-side |
+|---|---|---|
+| 1 SERVER | canonical for account-scoped data | **grows** — also canonical for the *projection*: section order, labels, formatting decisions, which lines render |
+| 2 TanStack cache | canonical for cached server state | unchanged in role; the cached object is now a projected screen, not a raw payload |
+| 3 Zustand | canonical for local UX state; **7 stores** | **shrinks to device + ephemeral only** |
+| 4a MMKV / 4b SecureStore | persistence | unchanged |
+| 5 Reanimated SharedValues | UI-only | unchanged |
+
+Measured impact: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns; `userProfileStore` (156L) mirrors 5 notification-preference columns. Those two collapse into server-owned projection state, retiring bridges **B2** (TanStack→Zustand) and **B3** (Zustand→Server) for those fields.
+
+**What must stay client-side, named so the design is honest** — these are the boundary, declared per surface (Spec 128 rule 2):
+1. **Device state** — GPS (`expo-location`), push token, permission status. The server cannot know these.
+2. **Optimistic UI** — declared as `outputs.optimistic`, not improvised.
+3. **Offline cache** — `mobile/src/lib/mmkvPersister.ts` (24 h). A server-driven screen still renders with no network; the projection is the cached artifact.
+4. **Animation / gesture** — Spec 99 §2.1's hard rule; orthogonal.
+5. **Navigation position** — `expo-router` owns which route is mounted. Dated note 2026-11-11 (M-246, prior text kept; MF-75): §0b item 11 ("Navigation is a route") extends this to every MaxBLD screen, web and mobile; lock `src/tests/surfaces/nav-by-route.logic.test.ts`.
+
+### 5.4 Arrow 4 — descriptor → admin projection
+
+Same descriptor, a different archetype component set (Shadcn/Tailwind, desktop-first `md:` breakpoints per `.claude/domain-admin.md`, vs RN/NativeWind mobile-first). The precedent is already in the tree and is smaller than expected: `src/components/admin/GenericFieldRenderer.tsx` (83 lines) is a type-aware renderer handling *"~120 heterogeneous DB fields (null / boolean / number / date / string / JSONB)"* without a per-field component — its own header calls it *"a deliberate renderer, not ad-hoc JSX"*. That is one archetype component, already written, already branch-tested. The admin twin of the pilot (`ParcelCostTool.tsx`, 425L) already consumes it.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (ii); operator, verbatim: "D-0-D-4 approved", D-2): "Shadcn/Tailwind" above is superseded. shadcn/ui is not installed (Spec 33:44); the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4).
+
+### 5.5 Arrow 5 — descriptor → Supabase seeded projection
+
+**Git is the source; Supabase holds a projection.** Fully specified in §6.4.
+
+### 5.6 Arrow 6 — descriptor → checkers and goldens
+
+**What a checker looks like here, measured.** `scripts/analysis/step-validate.mjs` is 3,728 lines and does six things for one step: AJV + grandfathered + semantic descriptor validation · the shape gate · targeted vitest · golden-capture presence/freshness/comparison · the Spec 123 scorecard *from artifacts, never prose* · the Spec 124 policy-coverage matrix. Plus **13 "fast invariants"** needing no DB and no vitest.
+
+**The surface seed corpus already exists in embryo** — three mobile lint tests port directly: `mobile/__tests__/routerHygiene.lint.test.ts` (209L, 5 cases), `mobile/__tests__/storeReset.coverage.test.ts` (194L, 5), `mobile/__tests__/spec99.mandates.lint.test.ts` (540L, **31**). That is a 943-line, 41-case head start on `surfaces/surface-validate.mjs`.
+
+**The golden shape — a PAIR, both required.** `surfaces/__goldens__/<surface>/<state>.json` carrying `{ harness, spec, surface, archetype, platforms, state, git_head, request, response_fixture, projection, rendered_tree, a11y_tree, emitted_events, nondeterminism[], normalised[], source_fingerprint, fingerprint_files[] }`:
+
+1. an **API response fixture** — what the contract returned;
+2. a **rendered-tree snapshot** — what the archetype renderer produced from it.
+
+The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers. The **non-determinism inventory is declared before the first diff** (Spec 123 §7 row 5, inherited). For the pilot the states are derivable today from **Spec 100 §2 item 6** (the miss contract — *"the shape drives the client state machine"*) plus items 3 and 5: `loading`, `hit`, `miss` (200 + `match:null` — **not** 404), `ambiguous` (200 + `candidates[]`), `unknown_parcel_id` (200 + nulls), `cost_menu_null`, `tier2_degraded` (`warnings[]` surfaced, Tier 1 intact), `error_400`, `error_403`, `error_429`, `error_500`, `offline`, `schema_drift`. (Spec 100 has no sub-section literally numbered §2.6 — §2 is a 9-item numbered Behavioral Contract; cited by item, not by a section number that does not exist.)
+
+### 5.7 Arrow 7 — descriptor → generated docs
+
+Precedent measured: **10** generated files under `docs/reports/generated/`, plus `npm run system-map`, `npm run db:docs`, `npm run logic-vars-docs`, `npm run lineage-docs`. Ruling R2 is already in force for the pipeline (`step.schema.json:5` — *"This file — not prose — is the single source of truth"*).
+
+Applied here: Spec 100 keeps §1 (goal / user story), §5 (the documented subscription exception) and §8 (futures) as human narrative. §2's numbered behavioural contract and §3.2's field lists become descriptor data and are **deleted from prose** — a value in two places is a drift source, which §5.2 measured four times over.
+
+
+## 6. Building the schemas directly in Supabase
+
+> This section is the detailed answer to *"how do we build the schemas straight in Supabase?"* Every table the surfaces need is specified here as a **declare-and-assert** flow, not a generated migration. Spec 127 §2 turns it into PH-0/PH-1 procedure steps.
+
+### 6.1 The declare-and-assert flow — the five steps, in order
+
+For **every** table below, without exception:
+
+| # | Step | Artifact | Gate |
+|---:|---|---|---|
+| **1** | **Declare** the table in git, as descriptor data — `database.tables[]` inside the owning CONTRACT (or JOB) descriptor: table name · every column with its SQL type, nullability and default · PK · FK targets · CHECK vocabularies as closed enums · the indexes, each with the declared read that justifies it · the RLS role matrix (§6.2) | `contracts/<slug>.descriptor.json` | AJV at construction; a descriptor that declares an unknown column type **refuses** |
+| **2** | **Hand-author the SQL migration** under the existing `scripts/migrate.js` conventions — `NNN_[feature].sql` (the `schema_migrations` key is the **filename**, not a version; `migrate.js:44-49`), an `-- UP` marker, a **comment-only `-- DOWN`** (`-- UP`/`-- DOWN` are *comments*, not section directives — `migrate.js` runs the whole file as one transaction), a `WHY THIS EXISTS` header and `SPEC LINK:` lines; `-- ALLOW-DESTRUCTIVE` where Rule 1 demands it, `CONCURRENTLY` (or `-- CONCURRENTLY-EXEMPT`) for an index on a large table, and a `DEFAULT` on any `ADD COLUMN … NOT NULL`. The header **names the descriptor it implements** (`contracts/<slug>.descriptor.json#database.tables[i]`) — a path, not a hash | `migrations/NNN_*.sql` | `scripts/hooks/validate-migrations.sh` (marker existence, fail-closed on the **staged blob**) → `scripts/validate-migration.js` Rules 1/2/3/5/6 → `scripts/hooks/check-migration-down-comments.sh` (awk scan for uncommented DDL under `-- DOWN`). All three already run in `.husky/pre-commit` |
+| **3** | **Apply and introspect** — `npm run migrate`, then `npm run db:generate` (which is `drizzle-kit introspect`, DB → TS, output `src/lib/db/generated/`) | `src/lib/db/generated/schema.ts` | migrate is idempotent and filename-keyed; re-running is safe |
+| **4** | **Assert the round trip** — a `*.infra.test.ts` drift lock proving the **introspected TS types equal the declared schema**: every declared column exists with the declared type and nullability; every declared index exists; no column outside the declared set appears in the contract's response projection. Proven **both directions** with a RED canary (a fixture descriptor declaring a column that does not exist must fail) | `src/tests/surface-schema-drift.infra.test.ts` | `npm run verify` |
+| **5** | **Seed the projection** — descriptor rows mirrored into Supabase by a seed script on the `apply-logic-variables.js` model, with a drift lock that the table equals the committed files (§6.4) | `scripts/seeds/apply-surface-descriptors.js` | run at deploy; drift-locked in CI |
+
+**Why not generate the migration.** Measured: `npm run db:generate` is `drizzle-kit introspect` (`package.json:17`; `drizzle.config.ts:5` `out: './src/lib/db/generated'`) — the arrow already runs **DB → TS**, producing `schema.ts` (2,327 lines) + `relations.ts` (389). Reversing it would collide with three live hook gates and hand a generator authority over 244 files of hand-reviewed schema history whose `schema_migrations` key is the filename and whose integrity is a per-file SHA-256 (`migrate.js:60`, CRLF-normalised) surfaced by `migrate.js --verify`. Declare-and-assert is strictly cheaper, strictly more truthful, and reuses two mechanisms that already work. (`ASK-04` re-opens this only if a future table count makes hand-authoring the bottleneck.)
+
+**⚠️ No new fingerprint is invented.** An earlier draft stamped a `DECLARED-SCHEMA-SHA256` into the migration header; it is dropped. This estate already has **two** integrity mechanisms and a third would be a third thing to keep in sync: `schema_migrations.checksum` (a per-file SHA-256, CRLF-normalised, `migrate.js:60`, surfaced by `migrate.js --verify` as DRIFT/MISSING) pins the **migration file**, and the golden `source_fingerprint` over `fingerprint_files[]` pins the **descriptor**. Between them, a migration that changed and a descriptor that changed are both already detectable. What was actually missing is the **assertion**, not another hash — which is why step 4 is the gate and the header comment is only a pointer.
+
+The vocabulary half already has a strong precedent: `docs/specs/_contracts.json` mirrors SQL `CHECK` vocabularies (`entitlement_products`, `entitlement_statuses`, `scrape_outcomes`) and `src/tests/db/236_permit_scrape_outcomes.db.test.ts:117-130` already asserts *the live `pg_constraint` definition equals the JSON list*. Step 4 generalises that assertion from CHECK vocabularies to whole table shapes.
+
+**⚠️ Migration numbering.** The highest migration on disk at authoring is **247** (`247_parcels_autovacuum_storage_params.sql`, 244 files total); the next free number is **248**. Spec 122 §7.5's reservation for the four pipeline state tables (`pipeline_intervals`, `published_batch`, `step_error`, `step_quarantine`) has been broken **three times** and its own text now says so — *"the next consumer should stop treating '245–248' (or '247–248') as license and instead run `ls migrations/ | tail -1` before claiming a number."* This spec inherits that instruction verbatim: every migration claims its number in the commit that writes it, after re-measuring.
+
+### 6.2 RLS as descriptor data — classes, roles, and the role matrix
+
+**Start from what Spec 114 actually says, not from an invented vocabulary.** Measured:
+
+- Spec 114 is **class-based, not row-per-policy**. A table is **Class A** only if it is one of the **10** named user-owned tables the spec enumerates (§3.1's 8 + §3.2's 2), **Class C** only if it is `profiles`, and *"everything else is Class B by default — including tables added after this spec is written"* (§2, `:52`). Class B is `ENABLE ROW LEVEL SECURITY` with **zero policies** — deny-all — which is why *"Class B needs no per-table catalog entry beyond 'it's Class B'"* (`:189`).
+- The Postgres role vocabulary is **`anon` · `authenticated` (owner / not-owner) · `service_role` · table owner** (§9 matrix, `:419-424`). **There is no `admin` Postgres role.** "Admin" is a *column flag* — `profiles.is_admin BOOLEAN` (`migrations/226_profiles_admin_bootstrap.sql:27`) — checked inside the policy predicate.
+- Policy naming is fixed (§8, `:388`): `` `<table>_<operation>_<scope>` ``, lowercase snake_case, operation ∈ `select|insert|update|delete`, scope ∈ `own | own_admin | admin`.
+- Live today: **26 `CREATE POLICY` statements** — **2** in `migrations/226` (`profiles_select_own`, `profiles_update_own`) and **24** in `migrations/230`; `231` declares **none** (it enables RLS on `admin_backup_codes` with zero policies, which is Class B by construction). **87** `ENABLE ROW LEVEL SECURITY` lines, 69 of them the Class-B default-deny sweep in `227` (whose own header records that its table list was **generated, not hand-authored** — *"Re-generate rather than hand-edit if the table list drifts"*: the precedent this spec's §4.3 flow extends).
+
+**What is net-new, and it is exactly two things:**
+
+| Role token | Exists today? | Disposition |
+|---|---|---|
+| `anon` | yes | unchanged |
+| `user` (`authenticated` + `auth.uid()`) | yes | unchanged |
+| **`agent`** | **no** | **NOT a DB role — an entitlement product** (`agent_reports`). A realtor sending a PDF to a client is a `user` holding one more product. It needs **zero** new policies: one widened `chk_entitlements_product` CHECK, one `stripe_price_product_map` entry, one string in `docs/specs/_contracts.json` — the same three grep-locked sites `parcel_tool` costs. A DB role for a billing distinction is a category error. (`R-09`) |
+| **`advertiser`** | **no** | **A real role, and the reason a fourth class must exist.** It is the first principal scoped by a key that is *not* `auth.uid()` — `advertiser_id` via a membership row. **Class D** = *owner-scoped by a non-user key*, policies generated as `USING (advertiser_id = current_advertiser_id())`. (`R-10`) |
+| `admin` | yes, as a flag | unchanged — `profiles.is_admin`, checked in-predicate, scope token `admin` / `own_admin` |
+
+**The matrix is a seed file, on the `logic_variables.json` model** — `scripts/seeds/roles.json`, mirrored into `docs/specs/_contracts.json` under `schema.roles` and grep-pinned exactly as `entitlement_products` already is (`src/tests/contracts.infra.test.ts`). It declares, per table: its class (A/B/C/**D**), its owner column, and the per-role verb grants. Each new table in §6.3 carries its row.
+
+**Per-table descriptor shape** (AJV-validated, and it names the class rather than re-deriving a predicate):
+
+```
+"rls": {
+  "enabled": true,
+  "class": "A",                       // A | B | C | D
+  "owner_col": "user_id",
+  "grants": { "user": ["select","insert"], "agent": ["select"], "admin": ["select"], "anon": "none" },
+  "why_none": { "anon": "no unauthenticated read of usage" }
+}
+```
+
+**Rules that are not negotiable:**
+1. **`rls.enabled: false` is legal only with a stated `why`** plus a `checks[]` entry at `severity: FAIL` naming what protects the table instead. Silence is omission, and omission is a build failure (Spec 128 rule 6).
+2. **Every role in the closed set appears**, including the ones whose answer is `none` — §4.2's rule applied to access control, where an unwritten `"none"` is most dangerous.
+3. **The assertion reads the LIVE catalog, never the migration text** — `pg_policies` for the policy set, `pg_class.relrowsecurity` for the enable flag, `pg_roles` for the roles, plus a re-execution of `classifyRoute()` over all 61 route paths. It FAILS on: a table with RLS enabled and no declared class · a policy live but not in the seed · a seed row with no live policy · `surface.guards.session ≠ contract.guards.auth_class`. **Bidirectional**, like `generate-logic-variable-groups.mjs`.
+4. **The generator EMITS a migration for human review; it does not apply one.** `seeds/roles.json` → a draft `migrations/NNN_rls_<scope>.sql` → the same hand review, the same `validate-migrations.sh` / down-comment gates, the same filename-keyed `migrate.js`. This is the easy mistake and the constraint that prevents it.
+5. **The admin reads the same tables through RLS**, not around it — an `own_admin`/`admin`-scope policy per table, so the admin surface declares `guards.session: "admin"` and the *same* CONTRACT descriptor serves it. Admin-only columns are excluded by the contract's **response projection**, not by a second table. That is what makes "one contract, N projections" hold across the trust boundary and not merely across renderers.
+6. **`docs/specs/00-architecture/114_rls_policy_catalog.md` stays the catalog of record.** New tables add rows there through the generated path, never by hand.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch item 1); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): rule 6 has one ruled, explicit departure until `scripts/seeds/roles.json` and its generator exist: `media_assets`, `offers` and `advertisers` carry a hand-written `ENABLE ROW LEVEL SECURITY` + one `<table>_select_admin` policy and no write policy (Spec 114 §2 dated note 2026-11-09). Their CONTRACT descriptors carry `guards.rls_class` B with the ruled pattern; the full `rls` block of this section (grants, `why_none`) is not representable in `surface.schema.json` yet and waits for the schema and `roles.json`. The db test reads the live catalog (rule 3).
+
+**⚠️ Two measured gaps this spec inherits rather than closes:**
+- **The existing RLS suite is not wired to CI.** `supabase/tests/rls_class_{a,b,c}.test.sql` run under `supabase test db`, which appears in no `package.json` script and no workflow — the runbook records it as *release-gating, NOT per-commit*. The `rls-matrix.db.test.ts` lock above therefore lands as a **vitest `.db` test under `BUILDO_TEST_DB=1` / `npm run test:db`**, which does run, rather than as a pgTAP file that does not. (`ASK-08`)
+- **`migrations/226`'s own comment records that the `prevent_is_admin_self_escalation` trigger is bypassable by the table owner**, with the proper fix (*"a dedicated non-owner elevated role with `REVOKE UPDATE(is_admin) FROM app_role`"*) filed as post-launch **D5**. A role-matrix page that renders a guarantee the DB does not enforce is worse than no page: D5 renders as a declared **`OPEN`** row on `/admin/roles`, never as an omission. (`R-11`)
+
+### 6.3 The tables the surfaces need
+
+Each row below is a **declaration to be authored**, not a schema shipped by this spec. Column lists are the recommended starting shape; the migration is written at the phase that needs it.
+
+| # | Table | Why it exists | Key shape | RLS posture | Indexes justified by |
+|---:|---|---|---|---|---|
+| 1 | **`app_outputs`** | the materialised projection — the **ONLY** seam the app reads (§6.3.1) | `PK (subject_kind, subject_key, projection, version)`; `payload JSONB NOT NULL`; `built_at`; `source_fingerprint`; `pipeline_run_id` | writes are service-role only (the pipeline step writes it, **no client insert/update**); reads: `anon` select only where the public flag is set (the teaser path), `user` select, `admin` select | the REPORT surface's declared read: exact match on `(subject_kind, subject_key, projection)`; plus a partial index on the public flag for the anon teaser |
+| 2 | **`usage_events`** | the one generic meter + observability spine (§7) | `PK (event_id)`; `user_id` **NULLABLE** alongside `session_id`; full shape and rationale in §7 | **Class A** on `user_id` for signed-in rows, plus **one** `anon` insert policy narrowed to `event = 'offer_impression'` (§7.1) | the quota read (`COUNT(*)` filtered by `user_id, product` over a computed period window) and the registry's 7-day usage column |
+| 3 | **`entitlements`** *(widened, not new)* | the product gate | existing `PK (user_id, product)`; the change is **one migration widening `chk_entitlements_product`** to admit **both** new keys, `'parcel_tool'` (R-01) and `'agent_reports'` (R-09), in one statement | unchanged — Class A, `entitlements_select_own` | unchanged |
+| 4 | **`advertisers`** | the advertiser principal — the membership row the `advertiser` role is scoped by | `PK (advertiser_id)`; `name`, `contact_user_id`, `active BOOLEAN` | **Class D** — `advertiser` select own (`advertiser_id = current_advertiser_id()`); `admin` select/insert/update; everyone else `none` | lookup by `advertiser_id` at policy-evaluation time |
+| 5 | **`placements`** | the closed placement vocabulary — where a SLOT may render | `PK (placement_key)`; `surface_archetype`, `max_slots`, `disclosure_required BOOLEAN NOT NULL` | `anon` / `user` / `advertiser` select; `admin` all | read by placement key at projection time |
+| 6 | **`offers`** | the inventory a SLOT renders — **a table, never a literal** | `PK (offer_id)`; `advertiser_id FK`, `placement_key FK`, `targeting JSONB`, `flight_start`, `flight_end`, `active BOOLEAN` | **Class D** — `advertiser` select/update own; `user` / `anon` select only active, in-flight rows; `admin` all | the targeting read declared by the SLOT surface: placement + active + flight window |
+| 7 | **`pdf_exports`** | one row per generated export, and the share model | `PK (export_id)`; `user_id`, `subject_kind`, `subject_key`, `storage_path`, `bytes`, `parity_fingerprint`, `expires_at`, `recipient` | **Class A** — `user` select own; `agent` (a `user` holding `agent_reports`) select rows where they are `recipient`; `admin` all; `anon` `none` | lookup by `export_id` for the share route; `user_id + created_at` for the user's own list |
+| 8 | **`surface_descriptors`** | the **seeded projection** of the git descriptors (§6.4) | `PK (surface_id)`; `archetype`, `platforms TEXT[]`, `descriptor JSONB`, `git_sha`, `seeded_at` | `admin` select; everyone else `none` — an admin registry, not product data | read by `surface_id`; listed by `archetype` for the registry page |
+| 9 | **`contract_descriptors`** | same, for CONTRACT — and its `descriptor->'consumers'` is where the fan-out graph's edges live | `PK (contract_id)`; `archetype`, `descriptor JSONB`, `git_sha`, `seeded_at` | as above | the fan-out and orphan joins, both derived from `consumers[]` |
+| 10 | **`archetype_registry`** | the closed archetype vocabulary, and which component renders it per platform | `PK (archetype, platform)`; `component_path` | `admin` select | the registry page; the unknown-archetype check (§3.5) |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "Mf-D1 - we will just input the ads via the admin" and "Mf-40 agreed"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: MF-40 D-1" and "Operator ruling 2026-11-10: MF-40 D-3, D-6, D-7"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.md` section 12): rows 4, 5 and 6 as MF-40 builds them (migration `302_admin_ads_placements.sql`, written; the operator's DB job applies it).
+> - Row 4 `advertisers`: the RLS posture is not Class D. Ads are entered by the admin only and no advertiser principal is planned, so the table carries the admin-read pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10): RLS on, `advertisers_select_admin`, no write policy; writes go through the admin API's owner connection. Minimal shape (D-3): `advertiser_id`, `name`, `contact_user_id` (nullable, unused for now, kept for this row's shape), `active`, `created_at`, `updated_at`. An advertiser is entered on the admin placements page; there is no advertiser LIST or DETAIL surface (`admin_advertiser_accounts` stays parked).
+> - Row 5 `placements`: Class E (Spec 114 §2 amendment (b)). The migration seeds exactly the slots of `scripts/surfaces/_schema/ad-contract.json` (`detail_footer`, `renovation_section`, `scenario_card`), `surface_archetype` `REPORT`, `max_slots` equal to `report-presentation.json` `ad_placements[].max_slots`. `disclosure_required` carries `CHECK (disclosure_required)` (R-17, R-34 (i)). The table is seed-only: no admin route writes it, so "admin all" is served by the migration, not by a form. `max_slots` keeps its one home in `ad_placements`; a drift lock joins the seed to it, and a new slot is a contract change plus a placement migration.
+> - Row 6 `offers`: the admin-read pattern, not Class D (as row 4). Added columns: `creative_text` (the text an offer shows; v1 creatives are text, `ad-contract.json`), a nullable `creative_asset_id` FK to `media_assets` (D-6; not rendered until ad contract v2), `created_at` and `updated_at` (the form's optimistic concurrency). `offer_id` is client-generated, so an upsert is idempotent. CHECKs: `flight_end >= flight_start` when both are set; `targeting` is a JSON object. The `user` / `anon` read of active, in-flight rows is not a policy: it belongs to the serving follow-up row (D-7), which also brings the targeting-read index. MF-40 is admin authoring and preview only.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "y recommendation: C, with the four trims. approved"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: the shared binding standard"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md` sections 5 and 8): rows 4 and 6 as the MF-40 admin page writes them. `offers.targeting` holds at most `building_type` and `design_option`, the keys each placement accepts in `report-presentation.json` `ad_placements[].targeting`; a `scenario_card` offer needs both, and the pair must be a key of `ad-contract.json` `scenario_fields`. `zone_class` targeting is not written until the serving row (D-7). `offers.active` is false on create and changes only through the list-row toggle; `offers.creative_asset_id` is not written until ad contract v2. `advertisers.active` is true on create and is not changed in v1.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 OUTPUT panel · McFrontend queue · lane MF-40 build; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"; security and compliance seat M1, M3): two corrections to the 2026-11-10 notes above. (1) The home of `max_slots` is the `placements` table (Spec 128 R-34 (i)), not `report-presentation.json` `ad_placements`: `ad_placements[].max_slots` is the joined copy, and the drift lock (`src/tests/admin-placements-seed.logic.test.ts`, the DB test arm (d)) keeps the two equal. The over_cap read uses the table (`src/lib/placements/over-cap.ts`). The row-5 sentence "`max_slots` keeps its one home in `ad_placements`" is superseded by this note; no admin route edits `placements` yet. (2) An offer may run without an end date (`flight_end` is optional); `admin_placement_max_horizon_days` bounds only a given end.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): row 2 `usage_events` lands in the narrow form (D-1 a), in migration 303 (written by MF-45, applied by the operator's DB job): the section 7 shape verbatim, closed CHECKs on `product` (the four entitlement keys), `event` (the section 7 list) and `subject_kind` (R-04), the quota index `(user_id, product, event, subject_kind, occurred_at)`, RLS on with exactly one policy, `usage_events_select_own` (Class A, Spec 114 section 2 dated note 2026-11-11). The row's "plus **one** `anon` insert policy" is NOT built here: it lands with the row that serves offers (MF-61, section 7.1), the one row allowed to relax the no-anon lock. Rows are server-written through the owner connection (D1), so there is no insert policy for `authenticated` either. The one event written is `property_view` (product `parcel_tool`, subject_kind `parcel_ref`, subject_key the matched `parcels.parcel_id`, `meta` `{}`; the raw search text is never stored). Deletion follows the account: `user_id` cascades from `auth.users` (the migration 235 sweep). The quota read is `COUNT(DISTINCT subject_key)` over a period computed at query time (section 7); no partial unique index, because a per-period index needs a stored period, which section 7 forbids. The row text above is unchanged.
+
+**No `required_fields` column on `archetype_registry`** (R-27): the required-field profile has **one** home — the surface schema's `allOf` blocks, rendered into §3.1 by the generator. A copy in a table is a copy to keep in sync.
+
+**Ten rows — and the count is that enumeration, not a number typed beside it.** Nine are net-new, each verified absent from `migrations/`, `src/` and `scripts/`: `app_outputs` · `usage_events` · `advertisers` · `placements` · `offers` · `pdf_exports` · `surface_descriptors` · `contract_descriptors` · `archetype_registry`. The tenth, `entitlements`, exists and changes by one widened CHECK. Every one follows §6.1's five steps: declared in git, hand-migrated, introspected, drift-asserted. **Names are fixed here, before the first migration** (`ASK-09` closed): `placements`, not `offer_placements`; `pdf_exports`, not `exports`. `migrate.js` is filename-keyed and DOWN blocks are comment-only, so renaming a table after it ships costs a new migration plus a data move.
+
+#### 6.3.1 `app_outputs` — written by a converted pipeline step
+
+`app_outputs` is **not** written by an API route. It is a **materialised projection written by a converted pipeline step at the end of chain `sources`** — a new step under the Spec 122 standard, with its own descriptor, its own `checks[]`, its own golden capture, and `outputs.write_discipline` declared per target. That gives the projection everything a route could not: an AJV-validated declaration, a run ledger row, a verdict derived from its own audit rows, and a golden differential when its shape changes.
+
+Consequences, stated:
+- The app reads **one** table for a projection, so a REPORT surface's contract is an exact-match lookup rather than a multi-table assembly at request time. That is the strongest form of MAX-SERVER-SIDE available.
+- Freshness becomes a declared property: `app_outputs.built_at` plus the surface's `staleness` block, with a `checks[]` freshness entry — the pipeline's `checks[] { kind: "freshness" }`, reused.
+- **The chain-position ruling is load-bearing**: the step runs at the END of `sources`, after enrichment, so the projection is never built from a half-enriched corpus. Registering it in `scripts/manifest.json` `chains.sources` is a Backend/Pipeline change and is **out of scope for this spec's Target Files** — it is Phase 2 work under the pipeline programme's own slot.
+- Until that step exists, a REPORT surface reads its existing contract (`/api/parcels/lookup`) and declares `inputs.projection_source: "live"`; the cutover to `app_outputs` is a descriptor edit plus a recapture, which is exactly the property the golden fingerprint exists to force.
+
+### 6.4 The seeded-projection tables and their drift lock
+
+**Git is the source of truth; Supabase holds a projection. Nobody edits the table by hand.**
+
+The mechanism exists: `scripts/seeds/logic_variables.json` → `scripts/seeds/apply-logic-variables.js` → the `logic_variables` table, invoked at the end of `npm run migrate`. Copy it, and copy the two lessons it paid for:
+
+1. **LM-D15** (`2ced0763`) — a declared variable with no row now **throws**; the seed file is bootstrap only. Applied here: a descriptor with no `surface_descriptors` row fails the deploy gate.
+2. **The DO-NOTHING blind spot** (WF3 cloud-parity FIX 1) — `ON CONFLICT DO NOTHING` can only ever INSERT a genuinely new key; a pre-existing row holding the wrong value survives silently with the same success line. **Therefore `apply-surface-descriptors.js` does NOT use `DO NOTHING`.** Descriptors are machine-owned, not operator-tuned, so the seed is `ON CONFLICT (surface_id) DO UPDATE` keyed on `git_sha`, and it **logs every row whose `git_sha` changed** — a value diff, not a count.
+
+The drift lock is bidirectional, per §5.0: the table equals the committed files, and the committed files equal the table. A `surface_descriptors` row with no committed descriptor is as red as the reverse.
+
+### 6.5 Supabase Storage — the PDF bucket
+
+**Where the conventions live, measured:** Spec 113 (Supabase infrastructure) does **not** cover Storage — every occurrence is a service-name list, a topology sentence, a retired Firebase env var, or an off-Supabase backup target; the nearest thing to a convention is a *negative* (`:83`, "Supabase Storage bucket names are referenced per-call, not a global env var"). The conventions live in **Spec 114 §6** (`:310-344`), which states plainly at `:312`: *"**No Buildo feature uses Supabase Storage — or GCS signed URLs for user-facing file storage — today.**"* This spec is therefore the **first consumer** of Spec 114 §6, and it adopts that section's rules verbatim rather than inventing any:
+
+| Aspect | Declaration | Source |
+|---|---|---|
+| Bucket | one bucket per render target, `surface-exports`, created **private** (`public: false` stated explicitly) | Spec 114 §6 `:320` — *"every bucket is created **private** (never `public: true`)"* |
+| Creation | **via a tracked migration, never via the dashboard** — Spec 114 `:482-487` records dashboard creation as a named failure mode | Spec 114 §6 / D5 |
+| Path template | `{auth.uid()}/{subject_kind}/{subject_key}/{export_id}.pdf` — **owner-namespaced first segment**, matching Spec 114's `<bucket>/<auth.uid()>/<filename>` shape; declared in the EXPORT contract's `storage` block, never string-built at the call site | Spec 114 §6 `:320` |
+| Bucket policy | `bucket_id = 'surface-exports' AND (storage.foldername(name))[1] = auth.uid()::text` — Spec 114's template, unchanged | Spec 114 §6 `:325-336` |
+| Access | **signed URLs with a declared TTL**, issued by the EXPORT contract; the `pdf_exports` row is the authority on who may request one. A bucket policy alone is not the gate — the route is, and the row is its record. The recipient is a `user` holding the `agent_reports` entitlement (R-09), not a new DB role |
+| Retention | `expires_at` on the row + a SCHEDULED JOB that deletes expired objects and their rows; the JOB declares its `idempotency` and `audit_row` like any other |
+| Ledger | every issue and every download writes a `usage_events` row (`event: pdf_send` / `export`), so the share path is metered and observable on day one — the opposite of the dead-meter defect |
+| Parity | `pdf_exports.parity_fingerprint` is the golden fingerprint of the projection the PDF was rendered from. "100% data parity" is asserted by comparing it to the screen projection's fingerprint, not by discipline |
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch items 2, 4); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): a second bucket, `surface-media` (admin media library, MF-37), follows the same private-by-migration rule with an `admin` scope instead of the owner path (on an instance without the Storage tables the migration's Storage half skips itself with a NOTICE, and the db test fails unless that gap is named): path `<kind>/<asset_id>.<ext>`, three `surface_media_*_admin` policies, signed URLs minted by the admin list call with the TTL as a `logic_variables` row (Spec 114 §6 dated note 2026-11-09). Uploads arrive as a data URL in the RJSF form, cap at most 3 MB (item 2), stored as `media_upload_max_bytes`. Its ledger is deferred; user-facing signing is owed by MF-38 (item 4).
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-7, stale cites only, no rule change): at `0d90d92a7` Spec 114 §6 is 114:333-372. The 114 cites in this section map :310-344 → :333-372, :312 → :335, :320 → :343, :325-336 → :347-358, :482-487 → :505-510. R-31 is recorded on 114 §6 by its own dated note.
+
+**Measured caveat:** `@aws-sdk/client-s3` is already a dependency of this repo, so S3 is an alternative substrate. Supabase Storage is recommended because the auth model (`auth.uid()` in a bucket policy) is the same one every other table uses, which keeps one role vocabulary rather than two. This is `ASK-07`.
+
+### 6.6 Indexes — justified by a declared read, never by intuition
+
+Every index in §6.3 names the surface-declared read it serves. The rule is the pipeline's P3 discipline (*disk I/O is adjudicated with numbers, never assumed*) applied to the surface estate, including EP-D17's extension to **read** cost: a declared check's scan cost is part of its price, and that price is stated against the target it actually runs on — production scale, production heap state — never a local sample. An index proposed with no declared read is rejected; a declared read with no index is a `checks[]` WARN with a measured `duration_ms` and a retighten condition.
+
+
+## 7. The usage ledger — meter and observability spine
+
+**There is no working meter to extend.** `POST /api/leads/view` holds the repo's only one — an atomic CTE inserting `lead_view_events` and incrementing `user_profiles.lead_views_count`, triple-gated to `action='view'` AND `lead_type='permit'` AND `subscription_status='trial'`. Its table is `lead_view_events(user_id, permit_num, revision_num, viewed_at, PK(user_id, permit_num, revision_num))` and **it structurally cannot hold a parcel id** — the route's own comment says so. And it has **no caller**. So model the new meter on the *shape* that was designed correctly (ledger + PK dedup + CTE) and add the two things the old one lacked: **a live caller, and a registry column that makes its absence visible on day one.**
+
+**One generic table, not a second permit-shaped one:**
+
+```sql
+CREATE TABLE usage_events (
+  event_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID            NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  session_id   TEXT            NULL,   -- anonymous principal; exactly one of user_id / session_id
+  product      TEXT        NOT NULL,   -- mirrors entitlements.product's CHECK vocabulary
+  event        TEXT        NOT NULL,   -- closed: property_view | pdf_send | offer_impression | offer_click | export | parcel_id_translated
+  subject_kind TEXT        NOT NULL,   -- closed: parcel_ref | parcel_pk | permit_rev | offer_id
+  subject_key  TEXT        NOT NULL,
+  occurred_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  meta         JSONB       NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT chk_usage_events_principal
+    CHECK ((user_id IS NULL) <> (session_id IS NULL))
+);
+```
+
+**Four properties earn their keep, each from a measured incident or a measured requirement:**
+
+- **`user_id` is NULLABLE, paired with `session_id`.** A SLOT impression is the one event that happens before anyone signs in — the marketing landing page and the public teaser path both render offers to `anon`. A `NOT NULL user_id` would make anonymous impressions unrecordable, which is how an advertiser's impression count silently becomes "signed-in users only". The CHECK makes the principal **exactly one of the two**, so a row is never ambiguous about who it belongs to.
+- **The PK is an event id, not a composite.** An earlier draft made the PK `(user_id, product, event, subject_kind, subject_key, period)` so a replay would write zero rows. That is right for a *view* and wrong for an *impression*: **impressions are counted per event**, and two impressions of the same offer by the same viewer in the same period are two facts, not one. A composite PK would silently collapse them and under-report what an advertiser is billed for. Dedup, where a given event needs it, is a **partial unique index scoped to that event kind**, declared per event in `seeds/usage-events.json` — not a property of the whole table.
+- **`period` is derived at query time, never stored.** Storing a billing bucket in the PK bakes one billing calendar into every historical row; a quota read is `COUNT(*)` over a computed window on `occurred_at` (`date_trunc`, or the period the entitlement declares). This is the same lesson as the derived counter, one level up: a denormalised bucket is a second source of truth about *when*, exactly as `lead_views_count` was a second source of truth about *how many*.
+- **`subject_kind` is required and closed** because this estate has two different things named `parcel_id`: `parcels.id` is `SERIAL` and `parcels.parcel_id` is `VARCHAR(20) UNIQUE` (the municipal id) — and the consumer API's `parcelId` is the *second* while `lead_parcels.parcel_id INTEGER REFERENCES parcels(id)` is the *first*. A bare `subject_key TEXT` would silently blend them. **R-04:** `parcel_ref` = the municipal string, `parcel_pk` = the serial.
+
+**And the counter stays derived** — `COUNT(*)` over the window, never a column — which is the `lead_views_count` lesson and the reason R-23 exists.
+
+### 7.1 The one `anon` write in the estate
+
+`usage_events` carries exactly one insert policy for `anon`, and it is **narrowed to `event = 'offer_impression'` with `session_id IS NOT NULL`**. Nothing else may be written unauthenticated. This is stated here rather than left implicit because an `anon` INSERT is the kind of policy that, granted broadly, becomes a write endpoint nobody remembers granting — and §4.2's rule is that a permissive answer must be written down where it is most dangerous.
+
+**Retire the dead meter.** `lead_view_events` / `user_profiles.lead_views_count` / `useLeadView` / `POST /api/leads/view` / the `PaywallScreen.tsx:153` branch are **one finding with two legal dispositions** — revive, or knowingly retire — and *neither has been chosen*, which is the defect. Under this spec the disposition is **knowingly-retired in favour of `usage_events`** (R-08), and per Spec 124 §4.2 a different party adjudicates it in its own WF3, with the paywall copy re-pointed at a `usage_events` count in the same commit.
+
+**Entitlement side, measured:** `migrations/228_entitlements.sql:32-33` declares `CONSTRAINT chk_entitlements_product CHECK (product IN ('lead_gen', 'flight_center'))`. **One migration widens it to four, adding `'parcel_tool'` (R-01) and `'agent_reports'` (R-09) together** — they land in the same statement because they are the same change and splitting them would mean two migrations against one CHECK. Each key then needs its `stripe_price_product_map` entry (a JSONB logic variable seeded `'{}'` at `228:45-49`) and its string in `docs/specs/_contracts.json`'s `entitlement_products` array, which `src/tests/contracts.infra.test.ts` grep-pins against `src/lib/entitlements/index.ts:39` `PRODUCTS`. **Three sites, all already mechanically locked.** That is the whole change; `src/lib/entitlements/index.ts:42-43`'s `DEFAULT_PRODUCT = 'lead_gen'` comment, which records OD5's superseded default, is corrected in the same commit.
+
+**The parcel gate today is not a meter:** `src/app/api/parcels/lookup/route.ts:46-59` is a boolean — `subscription_status ∉ {trial, active, past_due, admin_managed}` → 403, unlimited lookups otherwise, reading the *global* status rather than a per-product entitlement. Under R-01 it becomes an entitlement lookup **and** gains a meter.
+
+</architecture>
+
+---
+
+<security>
+
+
+## 8. Auth Matrix
+
+| Role | Access |
+|------|--------|
+| Anonymous (`anon`) | May render only surfaces declaring `guards.session: "none"` **with a stated `why`** and a `disclosure` block. May read `app_outputs` rows flagged public (the teaser path) and active in-flight `offers`. **May INSERT into `usage_events` for `event = 'offer_impression'` only** (§7.1), keyed by `session_id`, because a SLOT impression can precede sign-in. No other `usage_events` write, no read of anyone's rows, no `pdf_exports`, no descriptor tables. |
+| Authenticated (`user`) | Surfaces whose declared `guards.entitlement` matches a live `entitlements` row in an allowed status. Reads and inserts **own** `usage_events` rows; reads own `pdf_exports`. No descriptor tables. |
+| Agent | **Not a DB role** (R-09) — a `user` holding the `agent_reports` entitlement product, plus read access to `pdf_exports` rows where they are the declared `recipient`, via a signed URL with a declared TTL. |
+| Advertiser | **A real role, RLS class D** (R-10) — reads/updates own `offers`/`advertisers` rows scoped by `advertiser_id` (not `auth.uid()`); reads aggregate impression counts for own offers. No user-level `usage_events` rows. It is the first principal admitted to an admin-shaped surface (`advertiser_self_metrics`) **by RLS scope rather than by `is_admin`**. |
+| Admin | All tables, **through an `own_admin`/`admin`-scope RLS policy rather than around RLS**. "Admin" is the `profiles.is_admin` column flag checked in-predicate, not a Postgres role. Admin-only fields are excluded by the CONTRACT's response projection, not by a second table. |
+
+**The cross-check that does not exist today (§4.2):** `surface.guards.session` must agree with the auth class of every contract in `inputs.contract_ref[]`, as a `checks[]` entry at `severity: FAIL`. Measured live mismatch: `/builders` pages are `authenticated` by fail-closed while `/api/builders` is public.
+
+</security>
+
+---
+
+<behavior>
+
+
+## 9. Behavioral Contract
+
+- **Inputs:** a SURFACE descriptor, its referenced CONTRACT descriptors, the archetype registry, and (at request time) the projected payload.
+- **Core Logic:**
+  1. AJV-validate the descriptor against `surface.schema.json` **before** anything renders — `additionalProperties: false`, all categories required, archetype profile applied. An invalid descriptor **refuses**, the way `pipeline.step()` does.
+  2. Resolve `identity.archetype` in the registry for each declared platform; an unresolved archetype renders the declared fallback **and** raises a `checks[]` FAIL (§3.4).
+  3. Evaluate `guards` — session, entitlement, flag, permission, rate bucket — before any projection is assembled.
+  4. Assemble the projection **server-side** (RSC on web; a projection endpoint for mobile); apply `inputs.field_whitelist`, which must equal the contract's.
+  5. Render through the archetype component set. No business logic executes client-side beyond the five named exceptions (§5.3).
+  6. Write the declared `emits` — analytics events, breadcrumbs, and the `usage_events` ledger row where `metering` is declared.
+  7. Run the declared `checks[]`; derive the verdict **from the resulting rows**, never a parallel boolean.
+- **Outputs:** a rendered surface on each declared platform; a `usage_events` row where metered; a `surface_ledger` row; the golden PAIR when captured.
+- **Edge Cases:**
+  - *Unknown archetype* → fallback card + FAIL check (§3.4).
+  - *Schema drift* (payload fails the generated Zod mirror) → declared `schema_drift` state, an error class in `errors`, and a FAIL check; never a blank screen.
+  - *Entitlement missing* → the declared `on_missing` (402 \| 403 \| paywall), covering every value of the governing closed set.
+  - *Offline* → the MMKV projection renders; `states[]` must include `offline` on LIST.
+  - *Metered action replayed* → the `usage_events` PK absorbs it; zero rows written, no error.
+
+
+## 10. Observability and visualisation
+
+**The surface registry page — `/admin/surfaces`, generated from descriptors.** One row per surface, every column derived, nothing typed:
+
+| Column | Source |
+|---|---|
+| surface · archetype · `platforms` · projection | `identity` |
+| contracts read/written | `inputs.contract_ref[]` / `outputs.contract_ref[]` |
+| tables (transitively) | the referenced CONTRACT descriptors' `database` |
+| entitlement + statuses | `guards.entitlement` |
+| declared states · golden freshness | `states[]` + fingerprint freshness |
+| checks pass/fail | last `surface-validate` run |
+| events emitted | `emits` |
+| **usage, last 7 d** | `SELECT count(*) FROM usage_events WHERE …` |
+| unconsumed? | a contract with zero `sharing.surfaces` entries renders **red** |
+
+**Three visualisations the census says are worth building:**
+1. **The contract fan-out graph** — 61 contracts × their consumers, with the *idiom* labelled per edge. This is where a transcription, or a bypassed mutation hook, is *seen* rather than discovered.
+2. **The orphan panel** — the 17 zero-call-site contracts and the 13 no-contract surfaces, produced by one join. One row on it (`/api/leads/view`) is this programme's headline finding.
+3. **The state-ownership matrix, rendered** — Spec 99 §3 as data with the `check-spec99-matrix.mjs` verdict attached. It has a checker; it has never had a reader.
+
+**Deferred:** the React Flow node-graph (§0.2). Re-opens as `ASK-05`.
+
+
+## 11. The pilot — `parcel_detail` (REPORT)
+
+`mobile/app/(app)/parcel-tool/[parcelId].tsx` (231L), with its web and admin twins.
+
+1. **Lowest risk in the estate** — `outputs: "none"`, no Layer-3 store (`:5` — *"Read-only; NO Layer-3 store"*), one query key with one param, zero writes, zero migrations, zero pipeline change. The same reason `assert_schema` — the archetype that forces three categories to `"none"` — was pilot 1 on the pipeline side.
+2. **The server-side projection already exists** — `CONSUMER_HEADLINE_COLS`, 16 named columns, an explicit pick-by-name assembler at `src/lib/parcels/consumer-lookup.ts:33`, with tier-stratified degradation. Max-server-side is a *short* move here.
+3. **It proves `sharing` on day one** — three renderings of one payload already exist (mobile search 115L, mobile detail 231L, admin tool 425L = **771 hand-written lines**), which is the fastest possible refutation of "one contract, N projections" if it is wrong.
+4. **It is the operator's own metered product**, so `metering`, `offers` and `usage_events` land where they are needed rather than on a surface that will never bill.
+5. **It has a real, unguarded defect to close** — `src/tests/parcel-cost-line-keys.logic.test.ts:4-13` records that the admin tool shipped broken from its first commit (`4b1712ff`): three cost lines rendered *"n/a — not computable"* on 100% of 486K parcels with a green UI suite, because the fixture was authored against the wrong keys. That test closed the admin side; **the mobile side is today in exactly the pre-fix state.**
+6. **It is the only surface where the archetype is genuinely new** — REPORT does not exist in the pipeline's 8, so the pilot also proves the UI-only-archetype ruling.
+
+**Pilot scope:** REPORT + SLOT + EXPORT + GATE — the property preview surface, its sponsor slot, its PDF render target, and the entitlement gate in front of it. Four archetypes, one screen, one contract.
+
+**Budget, stated up front (the P3 discipline).** No descriptor in this repo is under 200 lines; the smallest real one is **388** (`scripts/compute-centroids.descriptor.json`), the largest **8,225**. Fifty-three surfaces at 388 lines is ~20,000 lines of declaration. **The archetype required-field profiles are the only mechanism that keeps that from being 53 × 400 lines of `"none"`.** A REPORT should answer perhaps 12 of the categories in substance and `"none"` the rest in one line each. **Kill criterion, declared before commit 1: if the pilot descriptor lands over ~250 lines, the profile design is wrong.**
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (step 2): add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts); nothing in Specs 126, 127, 128 deleted or rewritten. Scope and Files line are set at its plan review from the INPUTS.1 report.
+
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-430-v1: INPUTS.2, three small things for Spec 136 (the McFrontend handbook)
+
+Planner: read-only. Paths are relative to ~/Buildo-wt-board unless they start with ~. Nothing was run except in-memory node reads. Every fact below has a file:line or is under UNVERIFIED. Principles served: standardized, observable, scalable, accurate, understandable; simple, no scope creep; build with existing components.
+
+#### 0. Ruling and scope
+
+- RR-0384 (backlog/decisions/decision-169, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901), operator verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables."
+- Three separable pieces, three commits, each green alone and each regenerating Spec 136: A (stop the clipping), B (each line reflects its notes), C (the new lines). The plan review can drop B or C without touching A.
+- Hard rule behind all three, found and quoted: "A new ruling is a new row in Spec 135, never a line here" (docs/specs/02-web-admin/136_mcfrontend_handbook.md:5, generator scripts/surfaces/generate-surface-handbook.mjs:157). Spec 136 is never hand-edited; spec text in 126/127/128 is never rewritten; Spec 133 output must not change.
+
+#### 1. How Spec 136 is made (verified)
+
+- Generator scripts/surfaces/generate-surface-handbook.mjs. readFeRows (:52-89) reads the FE rows of Spec 135: six cells (ROW_COLUMNS :40: id, Ruling, Amends, Six, Full, Status). Headline = headlineOf(cells[1]) (:82). Notes = count of "Dated note <date>" inside the Status cell (DATED_NOTE :43, count :86). It throws on a gap in ids, a wrong "Next free id" (:72-73), a bad status word (:77).
+- lineRow (:121-125) builds { id, headline, status, enforcedBy, notes }; the line text comes from renderLine in the Spec 133 generator (scripts/generate-bylaw-handbook.mjs:127-134): `- **<line id>** <headline>` then `  Status: ... · Enforced by: ... · +N dated notes`. So the page shows only the headline, the status and the note count.
+- Rule map scripts/surfaces/_schema/surface-rule-map.json is generated by buildRuleMap (:94-118), one line and one rule per FE row. The CLI shell is runHandbookCli (scripts/analysis/gates/rule-map.mjs:45; --write / --check; --check compares both files, :68-77). HANDBOOKS['136'] is at rule-map.mjs:35.
+- The clip: scripts/analysis/bylaw/bylaw-register.mjs:38 `HEADLINE_MAX = 300`; clip() :76-80; headlineOf :120-131 ends `return clip(head || plain(ruleCell), HEADLINE_MAX)`. HEADLINE_MAX is not exported and headlineOf has no length argument.
+- Who else uses it: readBylawRegisterRows (bylaw-register.mjs:147, headline at :174) feeds the Spec 133 generator. Measured in memory: 546 Spec 133 rows, 13 clipped (M-29, M-30, M-47, M-60, M-72, M-88, M-322, M-480, M-487, M-498, M-499, M-500, LC-33). With the cap removed those 13 lines grow by 1,920 bytes in total. Spec 133 is 139,467 bytes (wc) against its size cap max_bytes 140,000 (docs/specs/01-pipeline/122_split_manifest.json generated_size_caps["133"]; locked by src/tests/spec133-bylaw-handbook.logic.test.ts:218-233). Room is 533 bytes, so raising the shared cap would break Spec 133's cap and its --check. The shared cap must not change.
+- Protection: scripts/analysis/bylaw/** is a layer23 path (mcbylaws/protected-paths.json, list layer23 :4-5), so an edit to bylaw-register.mjs is a McBylaws commit (McBylaws-Task trailer, panel arm P, arm C: scripts/analysis/mcbylaws/cite-arms.mjs:14, panel.mjs header). The generator's own header (generate-surface-handbook.mjs:18) says nothing under scripts/analysis/bylaw/ is edited.
+- Where --check runs: NOT in .husky/pre-commit (the generator list at pre-commit :38-40 has the surface registry, the step handbook and the by-law handbook only). The Spec 136 --check runs as a test: src/tests/surfaces/handbook-rule-map.logic.test.ts:273 ("the committed files are current"), so it runs in the pre-commit related run when the generator is staged, in pre-push (full suite, .husky/pre-push) and in CI. Spec 133's --check is in pre-commit.
+
+#### 2. How a Spec 135 FE row is shaped, and what OWED and RULED mean (verified)
+
+- Rules of the register (135:11-15): 2. "A rule without a lock is not yet a rule"; 3. status words `RULED <date>` / `OWED` / `PROPOSED` / `RETIRED`, "A ruled row whose lock is not built reads OWED with the lock path. Never an OWED marker with no lock path"; 4. Six cell; 5. "an OWED row's lock path must be a valid src/tests/surfaces/*.test.ts that does NOT yet exist". Enforced by src/tests/surfaces/register-locks-resolve.infra.test.ts (OWED_LOCK_RE :19; "OWED with no lock path" :73; a RULED row with no lock path must say "see FE-nn", :64-68).
+- So the 12 new rows (no lock exists) are OWED rows, each naming a lock path that does not exist yet. This is exactly how existing rows entered: FE-04, FE-12, FE-17, FE-25, FE-26, FE-44 (135:26, :34, :39, :47, :48, :66) are OWED with a future lock path; FE-04, FE-26 and FE-44 mark parts PROSE-ONLY inside the Ruling text. The register has no PROSE-ONLY status word (rule 3). 8 OWED rows today (fe.04, 12, 17, 21, 25, 26, 39, 44; handbook line "Rules rendered: 44: 44 in force (8 OWED...)", 136:23).
+- "+N dated notes" = count of "Dated note <date>" in the Status cell (generate-surface-handbook.mjs:43, :86). Measured: 51 notes in 26 rows; 22 of the 51 are status "flip" notes (a row flips OWED to RULED), 29 are not; average length 751 characters. Notes sit inside the Status cell of the same table row (not separate rows).
+- Who may add a row: rule 1 (135:11) "A different party adjudicates"; the Full cell carries the operator's verbatim words (135 header: "Operator verbatim" = the operator's own words). Spec 135 is in the `protected` list of mcbylaws/protected-paths.json (entry docs/specs/**/135_mcfrontend_decisions_register.md, list `protected`), so a change needs the owner at push (scripts/analysis/mcbylaws/gate.mjs:568-582). FE-row discipline for `frontend` paths: the McFrontend-Task trailer and docs/reports/panels/MF-n.json in the commit's own tree (panel.mjs header; .husky/commit-msg runs gate.mjs --commit-msg). The generator, its lock and the rule map are under the `frontend` list (scripts/surfaces/**, src/tests/surfaces/**), so every one of the three commits needs the trailer and the panel record. Precedent for rows first plus panel record: commit 85955d3dd (FE-41..FE-44, queue row, panel MF-83).
+- Arm Q: a DONE MF queue heading must carry "- FE rows owned: none." or a list of rows; a listed OWED row is refused (Spec 128 §4.11 item 7, 128:171-ish dated note). The 12 new rows are OWED, so the MF queue row for this task states "FE rows owned: none." (the locks are task-434's).
+
+#### 3. Size of Spec 136 section 2
+
+- Today: section 2 is 13,784 characters (whole file 17,216), 44 lines. The review table sends this section (scripts/analysis/rule-lists.json:34, "surface-136" sections ["2. Rules"]).
+- After A: the 16 clipped lines (fe.18, 19, 29, 30, 31, 34 to 44) are whole. Unclipped lengths: 377, 328, 546, 932, 576, 681, 1062, 350, 359, 675, 1190, 576, 544, 1132, 629, 500; extra 5,657 characters. Section 2 about 19.4K. Longest line 1,190 (fe.39).
+- After B: about +3K (11 readings, 2,081 characters of text plus the fixed words).
+- After C: about +8K (12 rows: rulings about 450 each plus a Status line).
+- GUESS, to be re-measured at the end: about 31K characters, up from 13.8K. Still small against the 534,000 the reviewer is sent today (task-431 description).
+
+#### 4. THING 1: stop the clipping (commit A)
+
+Smallest correct change: the Spec 136 generator no longer clips; Spec 133 and bylaw-register.mjs are not touched.
+
+Options:
+- A1 (recommended): in generate-surface-handbook.mjs readFeRows, `headline` = the shared headlineOf result unless it was clipped (ends in "…"), in which case the plain text of the Ruling cell (a one-line `plain`: strip `<br>`, `**`, `~~`, backticks, collapse spaces; the same three regexes as bylaw-register.mjs:83-85). Named reason for the small copy: the shared reader is a layer23 McBylaws path (an edit there needs a McBylaws task and panel, and Spec 133 is 533 bytes under its size cap). Measured equivalence: for all 44 FE rows, the plain text equals the shared headline wherever the shared headline is not clipped (checked in memory: no difference), and equals the unclipped shared headline for all 44. stripProvenance (bylaw-register.mjs:88-104) changes none of the 44 today.
+- A2: add an optional `max` argument to headlineOf (default HEADLINE_MAX). Output of Spec 133 stays identical. Cost: edits a layer23 file, so the commit needs `McBylaws-Task:` plus an MB panel record plus arm C, and a second panel for the frontend files. Pure reuse, but needs an MB task that does not exist for this work. Use A2 only if the operator prefers no copy over the landing cost (OPEN QUESTION 1).
+- Rejected: raise HEADLINE_MAX for both (breaks the Spec 133 cap: +1,920 B against 533 B room; also a layer23 edit).
+
+Files: scripts/surfaces/generate-surface-handbook.mjs; src/tests/surfaces/handbook-rule-map.logic.test.ts; regenerated docs/specs/02-web-admin/136_mcfrontend_handbook.md. The rule map JSON does not change in A.
+
+Tests, red first (all in handbook-rule-map.logic.test.ts, in-memory register text via the existing `reg`/`row` helpers, :36-39):
+- A-T1 RED: a planted Ruling cell of 700 characters with no bold: today the headline ends in "…" and is 300 long, so `expect(headline.endsWith('…')).toBe(false)` and `headline === plain(cell)` fail. Control: a 120-character ruling is unchanged and equals headlineOf(cell).
+- A-T2 real register: no FE headline ends in "…"; the 16 named rows are longer than 300; every headline equals the plain text of its cell.
+- A-T3 existing assertions that encode the clip must change in the same commit (they would fail for the right reason): :59 (`headline.length <= 300`) and :61 (`endsWith('…')` implies length > 250) become "no headline ends in an ellipsis". The pin on the shared function (:92-95, a long cell still clips at 300) STAYS; it is the proof the shared reader is untouched.
+- A-T4 Spec 133 untouched (control): src/tests/spec133-bylaw-handbook.logic.test.ts green, `node scripts/generate-bylaw-handbook.mjs --check` exits 0, `git diff --stat` shows no change under scripts/analysis/bylaw/ or docs/specs/01-pipeline/133_bylaw_handbook.md.
+Result to record: the 16 lines whole, section 2 about 19.4K (re-measure).
+
+#### 5. THING 2: each line reflects its notes (commit B)
+
+Honest count (read all 51 notes of 26 rows): 11 rows have a note that contradicts or widens the printed ruling: FE-01, FE-07, FE-11, FE-14, FE-18, FE-19, FE-20, FE-31, FE-33, FE-38, FE-39. (The report named 5 to 7: fe.01, fe.19, fe.14, fe.07, fe.20, fe.31, plus fe.06.) Five more rows have notes that add build detail without making the headline false (FE-13, FE-24, FE-29, FE-32, FE-02: FE-02's note says its own row "is owed as FE-40" while FE-40 is the McTest row, 135:62; a stale pointer, not contradiction). The other 10 rows with notes carry flips and lock-landing notes only. fe.06 in the report is not a Spec 135 note: its "oracle = catalogue flags" is amended by Spec 128 dated note at 128:85, outside the row, so a reading from "its notes" cannot cover it (stated as a gap, not fixed here).
+
+Options, with cost (not chosen silently):
+- (a) the generator prints a "current reading" from a marked field or the latest dated note. Cost: low code, but the latest note is often a flip note (22 of 51) or begins with a 300-character provenance bracket; it would print provenance, not meaning. Rejected.
+- (b) each affected row gets ONE new dated note in a fixed form, `Current reading: <text> (from notes dated <d1>, <d2>)`; the generator prints it after the headline. Cost: about 25 lines of generator code, 11 notes written once, one small lock. A dated note is the register's existing amendment form (prior text kept, M-246 form, used 51 times). RECOMMENDED: smallest that is accurate, and understandable because the page shows a plain sentence and its source dates.
+- (c) print the first sentence of each note. Cost: the shared firstSentence (bylaw-register.mjs:110-117) would return "Dated note 2026-11-09 (M-246, prior text kept; ..." (every note starts with a bracket of metadata); rejected.
+
+Design of (b):
+- Form of the note appended last in the Status cell: `Dated note 2026-11-22 (M-246, prior text kept; task-430, RR-0384; operator, verbatim: "make each line reflect its notes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901)): Current reading: <text> (from notes dated <d1>, <d2>). The cell text above is kept.` It states no new ruling: each reading restates what dated notes of the same row already say, and the cited dates name them. The notes it restates carry the operator's own words. Written by the lane; adjudicated by a different party (135:11); the grounder checks each reading sentence against the cited note.
+- Generator: in readFeRows, from the Status cell find the LAST dated note; if it contains `Current reading: (.+?) \(from notes dated (dates)\)`, set row.reading. lineRow appends ` Current reading: <text> (notes <dates>)` to the SAME line as the headline (not a new line), because the existing test at handbook-rule-map.logic.test.ts:157 matches `^- \*\*fe\.N\*\*[^\n]*\n {2}Status: OWED` and a new line would break it for FE-39. Spec 133's renderLine is not touched.
+- Staleness lock (in readFeRows, so --check and the lock both fail): (i) a "Current reading" note that is not the last note of its row throws `FE-nn: a dated note follows the Current reading; restate it`; (ii) every cited date must be the date of another dated note of the same row, else throws; (iii) the reading is at most 400 characters (keeps the page from growing); (iv) the set of rows that carry a reading is pinned in the test to the 11 ids (adding one is a deliberate edit). What the lock cannot do: decide that a row with no reading needs one. That stays a reviewer judgment (said so plainly).
+- The 11 readings (drafts in ROWS-430-draft.md section B; each sentence traceable to a note I read in 135:23, :29, :33, :36, :40, :41, :42, :53, :55, :60, :61).
+
+Files: scripts/surfaces/generate-surface-handbook.mjs; handbook-rule-map.logic.test.ts; docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (11 notes); regenerated 136. Rule map JSON unchanged (it holds structure only, buildRuleMap :94-118).
+
+Tests, red first:
+- B-T1 RED: a planted row whose last note is a Current reading: the rendered line contains "Current reading: ..." (today: absent). B-T2 control: the same row without the reading note renders as today. B-T3 RED stale: a row with a later dated note after the reading throws /follows the Current reading/. Control: reading last, builds. B-T4 RED: cited date that is not a note date of the row throws; control: real dates. B-T5 RED: reading of 401 characters throws; control 400. B-T6 real register: the 11 pinned ids carry a reading, every other row prints none, the OWED regex at :157 still returns the 8 OWED ids plus no new one from B. B-T7 the "+N dated notes" count rises by exactly 1 on those 11 rows (51 to 62), shown on their lines.
+
+#### 6. THING 3: the 13 lines (commit C)
+
+Verified each of the 13 cites in the specs (docs/specs/02-web-admin). Per-item decision, with evidence, against the existing 44 rows:
+
+| Item | Verdict | Evidence |
+|---|---|---|
+| 1 client is glass | new row | 128:29 and 128:55 say it; FE-05 (135:27) says "no maths in the UI" only. No FE row mentions "deviations" or "glass" (searched all 44 rows). |
+| 2 libraries | new row | No FE row names Mantine. 126:1005 (Mantine 8.3 by dated note), :1006, :925, :75. package.json:78-83,107 has @mantine/core 8.3.18, @rjsf/mantine 6.11.1, mantine-datatable 8.3.13; "sonner" at package.json:122. CORRECTION to the report: it says "Not ... Sonner"; Spec 33:47 (docs/specs/02-web-admin/33_web_admin_engineering_protocol.md:47, operator "P42 decisions approved") says "toasts are unchanged: `sonner`, for the MaxBLD web pages too (no `@mantine/notifications`)". Sonner stays. No ruling found on React Hook Form, so it is not in the row. Shadcn is superseded at 126:467. Task-435 adds a dated note to the engineering standards on the same subject; this row cites Spec 126 and Spec 33, not that note, so the two do not depend on each other. |
+| 3 tunables | new row | 128:30 (general) and 126:189 (P4 of the eleven ADMIN principles, section 2.2.1 at 126:180, so cited as admin). FE-35 mentions logic_variables only for its own pace field. |
+| 4 scratch mocks | NO new row: duplicate | FE-31 dated note 2026-11-11 (135:53, note 5) already holds both sentences and the operator words (also 126:79). It reaches the handbook through FE-31's Current reading (B). |
+| 5 scope fence | new row | 128:205 (R-03), 126:140, 126:147. FE-39's mention of scope is unrelated. |
+| 6 auth and checkout | new row | 126:928; the in-app purchase amendment at 126:1120 (item 1 of a dated-note block that opens at :1116/:1118; the heading date of that item is UNVERIFIED). FE-21 (135:43) covers embeds only. |
+| 7 navigation extras | new row, narrowed | FE-36 (135:58) already states router, role and name, window.location. Missing from FE-36: "A tab switch uses `navigate`, not `push`" and the reach to every MaxBLD screen; both at 126:82, where the spec itself says the tab sentence is "convention, not checked by the lock". Row says only the missing part. |
+| 8 parcel id names | new row, reworded | 128:206 (R-04, ACCEPTED, lock pending). The report's form "parcelId in URLs and the consumer API is the municipal parcel_ref" is NOT in the spec words; dropped. |
+| 9 page-set rulings | pointer row | 126 §11b.3 starts at :963, §11b.7 at :1032 (verified headings). Words are the operator's pointer ruling in RR-0384; the row copies no table. |
+| 10 visible failure state | new row, reworded | The spec words are at 128:39 (Rule 12), NOT :37 (report; :37 is Rule 10 "verdict row-derived"). The report's form adds "empty, offline"; not in the spec; dropped. FE-28 (135:50) and FE-31 cover specific closed lists, not this sentence. |
+| 11 admin is a projection | new row | 126:186 (P1). FE-05 and FE-11 (135:27, :33) do not say "never a parallel data path". |
+| 12 locks proven red | new row | CORRECTION: "A rule without a lock is not yet a rule" is at 128:127 (row 4) and 128:150, and as rule 2 of Spec 135 itself (135:12); the report's 128:44 is an empty line. The "prove each lock RED" words are at 127:59 (report said :60, an empty line). FE-03 (135:25) says only "both-directions locks" inside principle P2; the sentence "a lock never red against the defect it names is not a lock" is not in any row. |
+| 13 accessibility | new row, reworded | 126:351 is a row of the check-category vocabulary: "a11y ... touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion". It is a category list, not a mandate; the report's "interactive elements 44 px minimum; every control has a name" goes beyond it. The 44 px mandate is at docs/specs/00_engineering_standards.md:14. The 44 px check C-9 exists (src/tests/surfaces/surface-conformance.logic.test.ts:631-641) for converted web golden nodes only, under FE-31's lock; the row says so and keeps the rest OWED. Against C-9 this is not a duplicate: C-9 is a lock, the row is the rule the lock does not state. |
+
+Result: 12 new rows (FE-45..FE-56 if the register's "Next free id" is FE-45 at landing; see collision below) plus item 4 delivered by FE-31's reading. The operator said "13 lines"; this is 13 items covered, 12 new lines (OPEN QUESTION 2).
+
+Status and enforcement for the 12: each is `OWED` with one lock path under src/tests/surfaces/ that does not yet exist (rule 5; names in the draft: client-glass-boundary, ui-library-set, tunables-are-data, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category, all `.logic.test.ts`; all 12 names checked absent in src/tests/surfaces). They are reservations; task-434 builds the checks and may rename by a dated note. Where no check is possible the row says PROSE-ONLY in its Ruling, as FE-04/26/44 do (item 9 row: lock checks only that the two cited headings exist). Handbook honesty: render shows "OWED · lock owed: <path>" and no "Enforced by" (generate-surface-handbook.mjs:121-125; the existing lock at handbook-rule-map.logic.test.ts:157-165 requires this).
+
+Collision (important): lane BL-MFRULES (task-388, status RUNNING) already holds FE-45 in an unlanded commit on branch wf1/inc1b-mfrules (~/Buildo-wt-mfrules, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:67 there; its Next free id is FE-46). Whichever lands second takes the next free id and the "Next free id" line is rewritten by hand with a dated note (135:17 shows the form). The draft uses FE-45.. as placeholders; the real ids are set at landing.
+
+Other effects: src/tests/backlog/rule-lists-table.logic.test.ts:205-210 pins "fe.01 to fe.44 (44 distinct ids)" and will fail for the right reason once 136 has fe.45 (task-388 hits the same). Fix in commit C: compute the expected range from the register's "Next free id" minus one. Comments citing 136 line numbers (scripts/analysis/gates/mobile-literals.mjs:9 "136:163 fe.44") are text only, not locked; they go stale by position, not by id.
+
+Tests, red first (commit C):
+- C-T1 RED: the committed register with the 12 rows and no regenerated 136/rule map: `--check` exits 1 naming both files; control: after --write, exit 0 (existing test :273 does this).
+- C-T2 real register: ids contiguous FE-01..FE-(44+12), "Next free id" = next (readFeRows throws otherwise, :68-73); each new row OWED with exactly one lock path that matches OWED_LOCK_RE and is not tracked (register-locks-resolve covers this; planted case exists at :185). The existing generic tests (every FE row appears once, :150-155; rule-map deep-equal) stay green with 56 rows (they use realRows().length).
+- C-T3 the 44 -> 56 count: the handbook header line "Rules rendered: 56" and "v1 covers the 56 FE rulings" (generator :163, :180; asserted at handbook-rule-map.logic.test.ts:~200 via realRows().length, so no edit needed). Planted defect: delete one new row from a temp register copy: --check names the rule map and handbook stale and the id gap throws "no gap or reorder" (:70).
+- C-T4 (OPTIONAL, drop if the review calls it scope): quote lock. Every double-quoted span of 25 or more characters in the Ruling cell of the 12 rows occurs, after whitespace collapse, in the spec file it cites. Planted: change one word of a quote: fails; control: real rows pass. It is the only mechanical proof of "the spec's own words". Cost: about 20 lines in the existing test file.
+- C-T5 rule-lists-table.logic.test.ts:205 computed range (red first: add a planted FE-45 line and the old pin fails).
+
+#### 7. Order
+
+1. Commit A, then B, then C (A is a precondition for B and C reading whole lines; C last because it needs B's reading form not at all but should follow the lock changes; each is independently green and droppable).
+2. Per commit: write the tests, prove red (run them before the change, saved output as the red evidence), make the change, run `node scripts/surfaces/generate-surface-handbook.mjs --write`, then the checks below.
+3. Checks that must stay green after each commit: the Spec 136 lock (handbook-rule-map.logic.test.ts, all describes), register-locks-resolve.infra.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts and rule-lists.logic.test.ts, spec133-bylaw-handbook.logic.test.ts, `node scripts/generate-bylaw-handbook.mjs --check`, `node scripts/surfaces/surface-validate.mjs --check`, `node scripts/violations/generate-surface-registry.mjs --check`, `node scripts/analysis/spec-split-check.mjs --check`, the pre-commit gates, and at pre-push the full suite. Generated files per commit: A: 136; B: 136; C: 136 and surface-rule-map.json (44 to 56 rules and lines).
+
+#### 8. Landing
+
+- Trailers on each commit: `Task: task-430` and `McFrontend-Task: MF-n` (n = a new row of .cursor/MCFRONTEND-QUEUE.md; MF-94 is held by task-388's lane; the next free number is for the orchestrator to take), plus `Rule: FE-..` for rows touched, plus a `Spec-diff:` line as the precedent commits carry (e2b2523e3, 85955d3dd). Panel record docs/reports/panels/MF-n.json with task, item, plan, output non-empty (panel.mjs recordOk); one record serves all three commits (read from the commit's own tree). Queue row for MF-n with "- FE rows owned: none." (Spec 128 §4.11 item 7 note).
+- Protected paths touched: scripts/surfaces/**, src/tests/surfaces/** (frontend), Spec 135 and the panel directory (protected): the owner is prompted at push. No file under scripts/analysis/bylaw/ in the recommended A1.
+- Close: work commits, then a close commit moving the task file and the MF queue row (Spec 137 rule; the DoD item 6 in task-430 says the status line changes "in the same commit as the work": the sha is recorded by the later close commit).
+- Through the real hooks, none bypassed (task DoD 3).
+
+#### 9. Acceptance
+
+1. Spec 136 section 2 has no line ending in "…"; the 16 lines are whole; measured size recorded.
+2. The 11 rows listed carry a Current reading on their line, with the cited note dates; a later note makes `--check` fail.
+3. Spec 136 has fe.45..fe.56 (12 new lines), each OWED with its lock path, each citing the spec's own words with file:line; item 9 is a pointer; item 4 is reached through fe.31's reading.
+4. Spec 133 byte-identical; scripts/analysis/bylaw/** untouched (A1).
+5. All checks in section 7 green; red evidence for every planted case saved.
+
+#### 10. NOT in scope
+
+Dropping Specs 126-128 from the review table (task-431, second step); building the locks of the 12 new rows (task-434); the Spec 128 R-01..R-34 rows and MF-31; fe.06's "oracle = catalogue flags" (its amendment is in Spec 128:85, not in the row); the engineering-standards note (task-435); rewriting FE-02's stale "owed as FE-40"; mobile specs; any change to Spec 133 or to bylaw-register.mjs.
+
+#### 11. Effect on other tasks' plan evidence
+
+- Tasks whose evidence quotes the surface-136 or surface-135 lists: task-431 (review table; sends section "2. Rules" of 136, rule-lists.json:34), task-433 (BUILT, rules-checked line; counts rule ids per list, so 12 more ids appear in the list), task-399, task-375, task-376, task-384, task-387, task-388, task-429 (all mention them; found by grep of backlog/tasks). Not-yet-launched ones are 431 and 434 (and 436 if it exists): their plan evidence that says "44 lines", "8 OWED" or "section 2 is about 13,800 characters" is stale after C (56 lines, 20 OWED, about 31K). Test pin at rule-lists-table.logic.test.ts:205 is the only code pin found (searched src/tests and scripts for fe.44, "44 FE", "44 rules").
+- task-388 (running) adds FE-45 and needs the same re-numbering and the same pin fix.
+
+#### 12. OPEN QUESTIONS for the operator
+
+1. Landing cost of the clip fix. Option A1 (recommended): a one-line plain-text copy inside the McFrontend generator, no McBylaws commit. Option A2: add a length argument to the shared reader: no copy, but a McBylaws task, panel and owner step for a layer23 file. Rules cannot settle it, because both are allowed and cost differs.
+2. Rows versus items. 12 new rows, not 13: item 4 is already a dated note on FE-31 and reaches the page through the reading. Keep (page is 300 characters smaller, no duplicate) or add a 13th duplicate row (his "13 lines" count exactly)?
+3. OWED stays visible. Twelve OWED rows take the page from 8 to 20 OWED. The register has no PROSE-ONLY status (135:13). Accept OWED until task-434 builds each lock, or rule a new status word (which changes the gate reader cite-parse.mjs, a protected McBylaws file)? Recommend accept.
+4. The optional quote lock C-T4: keep or drop.
+
+#### 13. UNVERIFIED
+
+- Whether the McBylaws gate refuses a McFrontend-only commit that adds OWED rows without red evidence: Spec 128 §4.11 item 3 puts the red-evidence condition on the OWED to RULED flip only; I did not run the gate.
+- The next free MF queue number and the exact queue-heading form for arm Q; the exact hooks (check-spec-diff.mjs) a docs/specs commit triggers beyond the Spec-diff precedent.
+- Whether any test other than the ones named pins note counts or line counts of Spec 136 or 135 (I searched src/tests and scripts for the literal strings only).
+- FE-01 note 1 says the surface paths "move to layer23"; mcbylaws/protected-paths.json now lists them under `frontend`. The reading therefore says only "no longer held".
+- 126:1120's own note date; item 8's claim about parcelId in routes (dropped); the report's claims about the scan scope of report-no-maths (report-no-maths.logic.test.ts:23, :225-240; not read by me, left out of the rows).
+- Section-2 sizes after B and C are estimates (about 31K); A is arithmetic from measured line lengths.
+- That Spec 33:47 and 126:467 are still the latest rulings on toasts and Shadcn (read only those lines).
+
+#### 14. GUESS estimate
+
+About 5 to 6 agent-hours of lane time: A 1 hour, B 2 hours (11 readings plus lock), C 2 hours (12 rows, per-quote check, the test pin), plus the plan review and landing steps. About 25 new test cases.
+
+#### 15. Files
+
+scripts/surfaces/generate-surface-handbook.mjs; src/tests/surfaces/handbook-rule-map.logic.test.ts; docs/specs/02-web-admin/135_mcfrontend_decisions_register.md; docs/specs/02-web-admin/136_mcfrontend_handbook.md (generated); scripts/surfaces/_schema/surface-rule-map.json (generated); src/tests/backlog/rule-lists-table.logic.test.ts; .cursor/MCFRONTEND-QUEUE.md; docs/reports/panels/MF-n.json; backlog/tasks/task-430.
+
+#### 16. Files line for the card (planner, 2026-11-22 follow-up; the task file is always allowed; the panel record is the directory until its number is taken; next free MF number found: MF-95, not claimed)
+
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
+
