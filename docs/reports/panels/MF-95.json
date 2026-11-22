@@ -1,0 +1,30 @@
+{
+  "task": "MF-95",
+  "item": "INPUTS.2 (task-430): the Spec 136 generator prints each Spec 135 ruling whole (commit A), 12 rows gain one Current reading dated note printed on their line with a staleness lock (commit B), and 13 new OWED rows carry the RR-0384 list (commit C). Spec 133 and scripts/analysis/bylaw/ untouched.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-22",
+  "head": "prereg 1 (round 200); commits 0, A, B, C",
+  "cards": [
+    "Operator, verbatim (RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903): \"These look great - teh 13 are perfect\" and \"Approved\"; the scope sentence he pasted back between them is the orchestrator text he approved.",
+    "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only."
+  ],
+  "plan": "PLAN-430-v1 on the task-430 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-430/context-r1.md (round 1: 21 lens outputs and three seats, 157 findings) and context-r2.md (round 2: eight added outputs, 39 findings); every finding ruled by the separate plan grounder in docs/reports/reviews/task-430/GROUNDER-PLAN.md, the open questions in QUESTIONS-RULED.md, the fold checked in FOLD-CHECK.md. Tests first: red commit attempts recorded in the lane red.out; section 17 of the plan governs.",
+  "output": "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff, filed in docs/reports/lanes/2026-11-22/BL-HB430/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).",
+  "seats": [
+    "DeepSeek plan lens set, rounds 1 and 2 (grounded)",
+    "integration, reality-check and regression seats (plan)",
+    "separate plan grounder Cairn-Ground-P430",
+    "DeepSeek output lens set (owed at output)"
+  ],
+  "verdict": "PLAN RULED; OUTPUT owed",
+  "blockers": [],
+  "followups": [
+    "task-431: drop Specs 126-128 from the review table after commit C lands",
+    "task-434: build the locks of the 13 new OWED rows"
+  ],
+  "evidence": "docs/reports/lanes/2026-11-22/BL-HB430/",
+  "notes": [
+    "FE ids of the new rows are placeholders until landing: lane BL-MFRULES (task-388) holds the first free id on an unlanded branch; the second lander renumbers (plan section 17.5)."
+  ]
+}

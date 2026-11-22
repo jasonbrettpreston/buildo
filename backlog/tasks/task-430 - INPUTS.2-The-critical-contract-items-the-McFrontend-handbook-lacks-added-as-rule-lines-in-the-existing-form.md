@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:37:00Z'
+updated_date: '2026-11-22T20:41:00Z'
 labels:
   - McFix
   - McFix V2
@@ -416,4 +416,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0379 · task-430 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; operator, verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables.")
 
 2026-11-22 taken on the board at lane launch (lane BL-HB430, worktree /Users/brettpreston_macmini/Buildo-wt-hb430, branch wf1/inc1b-hb430), RR-0240
+
+2026-11-22 lane BL-HB430 commit 0 (records, alone and first, plan 17.5): MF-95 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-96: MF-94 held by BL-MFRULES unlanded), prereg-MF-95-1.json (round 200, claimed in ~/Buildo-scratch/ids/round-200; rules FE-09, FE-10, FE-16 RULED), panel record docs/reports/panels/MF-95.json. Ledger: MF-95 (orchestrator), round-200 and FE-46..FE-58 claimed by this lane; FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders renumbered by the second lander (plan 17.5 landing checklist).
 <!-- SECTION:NOTES:END -->
