@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-22T15:15:00Z'
+updated_date: '2026-11-22T16:07:00Z'
 labels:
   - McFix
   - McFix V2
@@ -47,4 +47,8 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0373 · task-427 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0374 · task-427 · Backlog; operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0375 · task-427 · Backlog; operator, verbatim: "close it if it is verified")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0376 · task-427 · Backlog; operator, verbatim: "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427.")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0377 · task-427 · Backlog; operator, verbatim: "hold on - we are just planning")
 <!-- SECTION:NOTES:END -->
