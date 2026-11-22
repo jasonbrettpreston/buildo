@@ -6,11 +6,12 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-22T20:24:00Z'
+updated_date: '2026-11-22T20:51:00Z'
 labels:
   - McFix
   - McFix E
   - McFix Final
+  - McFixReborn
 milestone: m-1
 dependencies: []
 type: check
@@ -45,4 +46,6 @@ McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status no
 Dated note 2026-11-21 (M-246, prior text kept; RR-0356 · task-386 · Backlog; operator, verbatim: "Create a plan to  approach the output review for the built taks")
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0361 · task-386 · Backlog; operator, verbatim: "We should use the old findings and ground them and then include them in the new pass.")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0387 · task-386 · Backlog; operator, verbatim: "Approved. You run it.  Let's call this the McFixReborn")
 <!-- SECTION:NOTES:END -->
