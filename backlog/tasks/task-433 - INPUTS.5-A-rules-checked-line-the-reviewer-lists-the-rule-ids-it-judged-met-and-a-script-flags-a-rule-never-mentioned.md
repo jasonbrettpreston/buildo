@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MET433'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:22:00Z'
+updated_date: '2026-11-22T17:24:00Z'
 labels:
   - McFix
   - McFix V2
@@ -154,4 +154,8 @@ rg#1 HIGH folded its own out-complian
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-MET433, worktree /Users/brettpreston_macmini/Buildo-wt-met433, branch wf1/inc1b-met433), RR-0240
+
+2026-11-22 lane BL-MET433: tests T1-T4 written first (rule-lists.logic.test.ts, review-templates.logic.test.ts); red attempt next
+
+2026-11-22 lane BL-MET433: red proven (8 failing assertions, red.out); template, unmentioned subcommand, README built
 <!-- SECTION:NOTES:END -->
