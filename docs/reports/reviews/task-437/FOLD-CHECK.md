@@ -1,19 +1,19 @@
-# Fold check: task-437 plan (PLAN-437-v1 as folded), plan review round 1
+# Fold check: task-437 plan (PLAN-437-v1 as folded), plan review round 2
 
 Checked by: Cairn-Ground-P437
 
-On the board working tree (~/Buildo-wt-board), uncommitted: the fold, the plan-prep post block and docs/reports/reviews/task-437/ are not yet committed. Read-only; every check ran in memory.
+On the board working tree (~/Buildo-wt-board). This file is valid for the state after the round-2 files are saved and the card's Implementation Plan field gains the line "Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/reviews/task-437/GROUNDER-PLAN.md; triage docs/reports/reviews/task-437/TRIAGE-PLAN.md" and nothing else. Read-only; every check ran in memory.
 
-(1) PASS. The pre-fold plan is the Implementation Plan field of the card at git HEAD. Each of the 16 pairs of FOLD-437.json (the file in ~/Buildo-scratch/lanes-20261119/inc1b/final436-437/) has its OLD exactly once in it (0 misses). Applying the 16 pairs to it gives the plan head on the card, whitespace squashed (11,062 characters on both sides; the card field is 11,079 with the round block). Everything after the plan head is the round block that post added. Outside the plan field the card differs from HEAD only by `updated_date` and the 5 new `references` lines (GROUNDER-PLAN.md, TRIAGE-PLAN.md and the three seat reports). The title and description are unchanged.
+(1) PASS. Round 2 folds nothing: FOLD-437-R2.json is an empty array, no CRITICAL or HIGH was confirmed, and the two CONFIRMED findings are LOW and piled. The plan head on the card is the round-1 folded head (checked in round 1 against the 16 pairs of FOLD-437.json); its hash on the card as it stood before the round-2 line is 23474c52521a, the round-1 value, so nothing in the plan changed.
 
-(2) PASS. Every CONFIRMED CRITICAL, HIGH and MED of TRIAGE-PLAN.md is present as folded text. There are 42 `folded:` lines (1 HIGH, 41 MED) and 0 of their quotes are missing from the task text. The plan changes only through those 16 pairs, so nothing else in the plan changed. The 16 LOW and NIT lines are `pile:` and none was folded, as RR-0385 round 1 asks.
+(2) PASS. The re-made plan-compliance-agents-s7-s11.txt has 6 findings (Ruled sha256:08df47b8dbf8). The round-1 ids of that file, which the review tool overwrote, are removed from GROUNDER-PLAN.md and TRIAGE-PLAN.md and replaced by the six new ids. The two MED folds they carried stand on other ids of the same claims.
 
-(3) PASS. The card holds one round line: "Plan review round 1: 42 folded, 0 task, 0 ruling, 0 wontfix, 16 pile", with the grounder and triage paths. It matches TRIAGE-PLAN.md (58 outcome lines: 42 folded, 16 pile) and carries one `<id> MED|HIGH folded <quote start>` line per folded id.
+(3) PASS. The card will hold the round-1 line and the round-2 line. The round-2 line matches TRIAGE-PLAN.md (40 folded, 16 pile, 0 ruling, 0 task, 0 wontfix), and the 40 `folded` per-id lines it requires are in the round-1 block. Two stale per-id lines of removed ids remain and are not read by the gate.
 
-(4) PASS. The Files line is unchanged. The card Files line and the plan's own last Files line both equal HEAD. The page `docs/reports/generated/rule-lists-by-kind.md` is added by the lane in its own commit, as the plan's LANDING sentence says.
+(4) PASS. The Files line is unchanged: the card and the plan's last Files line are as at HEAD. The page `docs/reports/generated/rule-lists-by-kind.md` is added by the lane in its own commit, as LANDING says.
 
-(5) PASS. I ran the launch check, `planGateErrors`, on the working tree with the card as it is now. It resolves 9 lists and rules 89 findings. The only refusals are the missing last Plan line in GROUNDER-PLAN.md and the missing FOLD-CHECK.md, which this file supplies. The outcome, seat, reference, verdict and round-block checks raise nothing. The hash from the checker's own `planHash` on the card as it stands is 23474c52521a. The Plan line below is the one the gate expects.
+(5) PASS. I ran the launch check, `planGateErrors`, on the working tree with the saved files and the card plus the round-2 line. It resolves 9 lists and rules 89 findings and returns no refusal: the outcome, seat, reference, verdict (two lines recited for the moved line numbers of 436), round-block and Plan-line checks raise nothing. The hash from the checker's own `planHash` on that card is 2b6819d3a5b5.
 
 Verdict: PASS
 
-Plan: task-437 sha256:23474c52521a
+Plan: task-437 sha256:2b6819d3a5b5
