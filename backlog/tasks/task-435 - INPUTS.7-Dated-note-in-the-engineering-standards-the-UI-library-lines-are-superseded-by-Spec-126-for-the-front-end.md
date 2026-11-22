@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T18:01:00Z'
-updated_date: '2026-11-22T18:04:00Z'
+updated_date: '2026-11-22T18:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,7 +19,7 @@ ordinal: 135012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0382 (MORNING-DECISIONS.md:1889, verbatim: "yes add"; earlier the same day: "I think teh spec 126 is more recent and is just an update of the engineering standards"). Why: docs/specs/00_engineering_standards.md (lines of 2026-06-16) names Shadcn UI, React Hook Form and Sonner; Spec 126 (dated note 2026-11-09, operator "D-0-D-4 approved", 126_maxbld_surface_standard.md:467) says "Shadcn/Tailwind above is superseded ... the web and admin archetype set is Mantine" with @rjsf/mantine and mantine-datatable (section 11b.4); a reviewer sent the engineering standards reads the old standard. THIS TASK: one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted), saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note; the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use. No other edit. Files: docs/specs/00_engineering_standards.md
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0382 (MORNING-DECISIONS.md:1889, verbatim: "yes add"; earlier the same day: "I think teh spec 126 is more recent and is just an update of the engineering standards"). Why: docs/specs/00_engineering_standards.md (lines of 2026-06-16) names Shadcn UI, React Hook Form and Sonner; Spec 126 (dated note 2026-11-09, operator "D-0-D-4 approved", 126_maxbld_surface_standard.md:467) says "Shadcn/Tailwind above is superseded ... the web and admin archetype set is Mantine" with @rjsf/mantine and mantine-datatable (section 11b.4); a reviewer sent the engineering standards reads the old standard. THIS TASK: one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted), saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note; the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use. No other edit (the generated rule-lists page is regenerated with it).
 
 Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
