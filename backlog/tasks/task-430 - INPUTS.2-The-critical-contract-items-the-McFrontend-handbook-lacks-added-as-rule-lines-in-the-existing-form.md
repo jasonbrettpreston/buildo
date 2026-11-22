@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:25:00Z'
+updated_date: '2026-11-22T18:04:00Z'
 labels:
   - McFix
   - McFix V2
@@ -40,4 +40,6 @@ Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's r
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-22 (M-246, prior text kept; RR-0379 · task-430 · Backlog; operator, verbatim: "We can run step 1 in parellel - we will add to the rules overtime")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; operator, verbatim: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables.")
 <!-- SECTION:NOTES:END -->
