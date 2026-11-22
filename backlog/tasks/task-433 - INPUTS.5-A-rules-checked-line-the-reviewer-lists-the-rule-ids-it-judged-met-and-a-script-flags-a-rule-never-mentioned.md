@@ -3,10 +3,11 @@ id: TASK-433
 title: >-
   INPUTS.5 A rules-checked line: the reviewer lists the rule ids it judged met
   and a script flags a rule never mentioned
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MET433'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:10:00Z'
+updated_date: '2026-11-22T17:22:00Z'
 labels:
   - McFix
   - McFix V2
@@ -18,6 +19,17 @@ references:
   - docs/reports/reviews/task-433/seat-integration-1.md
   - docs/reports/reviews/task-433/seat-reality-check-1.md
   - docs/reports/reviews/task-433/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 133012
 ---
@@ -137,3 +149,9 @@ plan-compliance-plan-protocol#2 MED folded Q1 RULED A, by the r
 ig#1 HIGH folded its own out-complian
 rg#1 HIGH folded its own out-complian
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-22 taken on the board at lane launch (lane BL-MET433, worktree /Users/brettpreston_macmini/Buildo-wt-met433, branch wf1/inc1b-met433), RR-0240
+<!-- SECTION:NOTES:END -->
