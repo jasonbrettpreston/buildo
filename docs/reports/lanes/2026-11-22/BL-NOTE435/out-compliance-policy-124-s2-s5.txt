@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.910Z file_sha256=70a1516251917703a1d0e8f7bf2a4753fcc92bf29b1b3ccbab3152dcd2466aa5 prompt_sha256=0160d36b98e12637ca52034818c45c3407b262f444fb03581a460b84345a8a64
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-policy-124-s2-s5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED, R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row", docs/specs/00_engineering_standards.md:+307 "+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" (chunk contains no `docs/reports/decisions/` log and no register row, cannot see either), an approved operator decision RR-0382 is executed here with nothing for R-HK's coverage arm to join on, so the pre-commit check has no row or log to resolve, add the `docs/reports/decisions/<date>-<slug>.json` log with the "yes add" quote plus the routed row citing `<log stem>#RR-0382`, or record the row as `owed` in the lane that owns that register and cite it from the note.
+
+DEFER severity=LOW, task-435 "one dated note in the engineering standards beside the library lines", docs/specs/00_engineering_standards.md:+307 "+> Dated note 2026-11-22 (M-246, ... superseded for the front end by Spec 126 §11b.4 ...)" sits ahead of "### 12.1 Biome (React Logic Linting)", the note is placed under the section 12 Status line about three subsections above the §12.3/§12.5/§12.7 library lines, so a reviewer who navigates straight to the §12.5 Shadcn line still reads the old standard with no visible pointer, add a one-line repeat pointer at §12.3 and §12.5 that names the dated note, same note body, no deletion.
+
+DEFER severity=LOW, task-435 "citing the Spec 126 note", docs/specs/00_engineering_standards.md:+307 "see also its dated note 2026-11-09, §5.4" and "M-246", the pasted card locates the Spec 126 note at "126_maxbld_surface_standard.md:467" and names §11b.4, never §5.4, and M-246 appears in neither the card nor RR-0382, so both anchors cannot be verified from the pasted context and a wrong section number sends the reviewer nowhere, confirm 126:467 falls inside §5.4 and that M-246 is the id the decision log carries, otherwise cite the line number.
+
+DEFER severity=LOW, task-435 "saying they are superseded for front-end work by Spec 126 section 11b.4", docs/specs/00_engineering_standards.md:+307 "and the same library names in the Frontend Foundation Check of §11", the note extends the supersession to §11, a scope neither the card (which names the §12 library lines) nor the ruling RR-0382 "yes add" names, and §11 itself is not pasted, drop §11 from the note or cite the decision-log entry that covers it.
+
+MET, task-435 "prior text kept, nothing deleted", docs/specs/00_engineering_standards.md diff hunk @@ -305,6 +305,8 @@, the spec hunk is 2 insertions and 0 deletions so §12.1 to §12.7 text and the section 12 Status line are byte-unchanged.
+
+MET, task-435 "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use", docs/specs/00_engineering_standards.md:+307 "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use.", the Sonner half is present and explicitly framed as non-ruling exactly as the card requires.
+
+MET, task-435 "No other edit (the generated rule-lists page is regenerated with it)", docs/reports/generated/rule-lists-by-kind.md "| total | 10 lists | | 197,778 | 10 |", only the two card-named files appear in the diff and all six eng-all rows plus all six totals move by exactly +537 (46,076 to 46,613), which is one generated line, not a hand edit.
+
+MET, RR-0382 "yes add", docs/specs/00_engineering_standards.md:+307 "operator, verbatim: "yes add"", the note executes and cites the very decision listed under "Decisions naming this task".
+
+REJECT, R-GW "no spec was edited to add one", the change edits docs/specs/00_engineering_standards.md without adding a Role banner, this is the compliant state, R-GX/R-GW make a pending spec that GAINS a banner the RED, so omitting the banner here is correct and adding one would be the violation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  62306ms (62.3s)
+📊 Tokens — total: 45757, input: 32399, output: 13358, reasoning: 12223

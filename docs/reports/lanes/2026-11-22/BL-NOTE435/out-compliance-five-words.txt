@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.902Z file_sha256=90d1e96b168d69e236697815446e9079dbdf614006f22ce092d94dccee77b42e prompt_sha256=3038a6d07e00745d5ba88287ca58f1df8df3d8c602192fb14a47022a26614dd8
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-435 "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — docs/specs/00_engineering_standards.md:308 "+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" placed per the impl note "note inserted under the section 12 Status line" — the note sits at the head of section 12 above 12.1, not beside the 12.3 (React Hook Form) and 12.5 (Shadcn UI) lines it supersedes, which is the placement the card names — confirm with the operator that top-of-section is acceptable, or move the note directly above 12.3.
+
+DEFER severity=MED — task-435 "names Shadcn UI, React Hook Form and Sonner" and "No other edit" — docs/specs/00_engineering_standards.md:308 "and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4" — the note also supersedes §11 Frontend Foundation Check library names, a scope the card does not name and that is not visible in this hunk — confirm §11 names those libraries and the operator intends that supersession, else delete the §11 clause from the note.
+
+DEFER severity=LOW — task-435 "citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 "see also its dated note 2026-11-09, §5.4" while the card cites "126_maxbld_surface_standard.md:467" — cannot see that the 2026-11-09 note lives in §5.4; a wrong pointer sends the reviewer nowhere — verify against Spec 126 and cite §5.4 only if the note is there.
+
+DEFER severity=LOW — task-435 "§12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`)" — docs/specs/00_engineering_standards.md:308 "§12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`)" — the diff shows only line 305 onward, so the heading names and the `<Drawer>` mention the note asserts cannot be checked against the file — verify the quoted section names and the `<Drawer>` reference before merge.
+
+MET — task-435 "prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md diff — 0 deletions, matching "Spec diff: 2 insertions (the note and one blank line), 0 deletions".
+
+MET — task-435 "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md:308 "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use."
+
+MET — RR-0382 "yes add" — docs/specs/00_engineering_standards.md:308 "operator, verbatim: "yes add"" — the operator words are recorded in the note.
+
+MET — task-435 "the generated rule-lists page is regenerated with it" — docs/reports/generated/rule-lists-by-kind.md:18 "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — every one of the six kind totals moves by the same +537 and each total row matches its row sum, so the page is consistently regenerated.
+
+REJECT — five words gate V — the change is accused of not meeting the step-conversion standard (archetype, execution.shape, stage, #NN, RE-FREEZE) — no step, manifest entry, descriptor or converted.json row is touched, so those Glossary clauses do not bind this docs-only change.
+
+VERDICT: PASS
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  60665ms (60.7s)
+📊 Tokens — total: 19633, input: 6521, output: 13112, reasoning: 12190

@@ -1,0 +1,34 @@
+GATE OK
+[step-churn-complexity] clean — no drift at window_end=b87f62d
+[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest
+src-sql-ledger: fresh, 94 file(s) (62 static, 30 interpolated, 2 not_postgres), closed set holds, every column is in the catalog (uncatalogued, skipped: mv_monthly_permit_stats, parcel_lot_view)
+STANDARDIZED: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+OBSERVABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; snapshot_age_days 45)
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135 (ii 0 · iv unmapped 135); eval_mismatches_adjudicated 0; expert_rulings_against 0; agreement_rate n/a agreement≠correctness; code_linkage=declared-only)
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+SCALABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+PHASE 1: NOT_DONE
+  report-only docs/reference/bylaw-code-findings.md STALE (never a blocker; --write refreshes it)
+  report-only twins: groups 106 · differ 52 (value 1 · label 51; 191 units) — never a blocker
+render docs/reference/bylaw-provisions.json sha256 34cc3f789d202679287ae84989dedbf8801d5add1a16f32921ed5b49cf05ec57
+render docs/reference/bylaw-provisions.md sha256 0dc9cf5a2674d9db69335cf883adf4b0b6434898b4388382a22922fccaa50178
+generate-ingest-batch: 11 ingestor batch values, 0 drifted
+generate-sharing-phase: 40 phase maps, 0 drifted
+✔ src/features/admin-controls/generated/logic-variable-groups.json is up to date
+✔ docs/reference/logic-variables-registry.md is up to date
+[generate-assert-schema-probe-lists] clean — no drift (337 declared names)
+[generate-assert-parcel-sanity-descriptor] clean — no drift (46 checks, 1 invariants, 8 plausibility, 38 logic_variables)
+[generate-assert-global-coverage-descriptor] clean — no drift (305 checks, 25 logic_variables, 25 read tables)
+[generate-assert-data-bounds-descriptor] clean — no drift (52 checks, 33 logic_variables, 16 read tables)
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+[generate-conversion-roadmap] clean — no drift
+[generate-programme-backlog] clean — no drift
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+[bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 70bcf4259d2d, 1937 input files)
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is out of date: regenerate with node scripts/analysis/rule-lists.mjs page --write (a document or the table changed)

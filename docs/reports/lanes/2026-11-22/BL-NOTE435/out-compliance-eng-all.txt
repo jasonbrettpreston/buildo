@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.907Z file_sha256=949d8cdb2363878241edcb09ea4596e0b475b803c3ad1c28e4577ad38449e13a prompt_sha256=36ceb61a55517960575e4ed3a4909d07cadd26b8ad88c73e195e437b0f781075
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §14 registry "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — docs/specs/00_engineering_standards.md:308 "> Dated note 2026-11-22 (M-246, ... are superseded for the front end by Spec 126 §11b.4 "The libraries"" — the note creates a new coupling to Spec 126 §11b.4 but the pasted diff carries no reciprocal note in `126_maxbld_surface_standard.md`, so the back-reference is one-directional — add the §11b.4-side pointer (or record a follow-up card id in the note) so the coupling is traceable both ways
+DEFER severity=LOW — Task "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — docs/specs/00_engineering_standards.md:308 "> Dated note 2026-11-22 (M-246, ..." — the note sits immediately after the §12 Status line and ~immediately before §12.1, not beside the §12.3/§12.5/§12.7 library bullets it supersedes, so a reader at those lines sees the old standard first — acceptable for one note covering §11, §12.3 and §12.5, but if strict adjacency is wanted, repeat a one-line pointer at §12.3 and §12.5
+MET — Task "one dated note ... prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md:308 — diff is 2 insertions, 0 deletions (the note plus one blank line), no existing line removed
+MET — Task "saying they are superseded for front-end work by Spec 126 section 11b.4" — docs/specs/00_engineering_standards.md:308 — names "§12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`)" and "superseded for the front end by Spec 126 §11b.4 "The libraries""
+MET — Task "citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 — "see also its dated note 2026-11-09, §5.4" plus the full path `docs/specs/02-web-admin/126_maxbld_surface_standard.md`
+MET — Task "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md:308 — "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use."
+MET — Task "No other edit (the generated rule-lists page is regenerated with it)" and Files list — docs/reports/generated/rule-lists-by-kind.md — only the two card-named files appear in the diff, and every page change is the eng-all count 46,076 -> 46,613 plus the arithmetic-consistent +537 on all six total rows
+MET — §5.5 parity battery row "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md — page regenerated from `node scripts/analysis/rule-lists.mjs page --write`, with 46,613 repeated identically in all six kind tables and totals 197,778 / 679,963 / 766,953 / 570,207 / 203,117 / 156,842 all up by exactly 537
+REJECT — Task "citing the Spec 126 note" — accused of citing "§5.4" where the card names line 467 — the card gives a line number, not a section, and the section anchor in Spec 126 cannot see, so no contradiction is established from the pasted material
+
+VERDICT: PASS
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  26663ms (26.7s)
+📊 Tokens — total: 22855, input: 17045, output: 5810, reasoning: 4898

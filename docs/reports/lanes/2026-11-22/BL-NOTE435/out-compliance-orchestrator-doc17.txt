@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.907Z file_sha256=e968e05e7b12614c30f1b124729620cd23d65817498c870a8d0115f4bc8711bd prompt_sha256=d4dad0da44c26044bcb9a90466c48c232ddb7f0ea169f9612e2f6bd1e3c65143
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+MET — Task "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — docs/specs/00_engineering_standards.md @@ -305,6 +305,8 @@ "＋> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" — one note line added under the §12 Status line, spec diff is 2 insertions / 0 deletions, so prior text is kept and nothing deleted
+MET — Task "saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 "are superseded for the front end by Spec 126 §11b.4 "The libraries" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4)" — section 11b.4 is named and the Spec 126 dated note is cited
+MET — Task "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md:308 "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — states the fact and expressly rules nothing on Sonner
+MET — Task "No other edit (the generated rule-lists page is regenerated with it)" and "Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — docs/reports/generated/rule-lists-by-kind.md "@@ -15,12 +15,12 @@ ... | total | 10 lists | | 197,241 | 10 |" to "| total | 10 lists | | 197,778 | 10 |" — only the six eng-all counts and six total rows move, each by exactly 537 (197,241/679,426/766,416/569,670/202,580/156,305 all +537), parts column unchanged, no third file touched
+DEFER severity=LOW — Task "citing the Spec 126 note" with "Spec 126 (dated note 2026-11-09, operator "D-0-D-4 approved", 126_maxbld_surface_standard.md:467)" — docs/specs/00_engineering_standards.md:308 "see also its dated note 2026-11-09, §5.4" — the note points a reader to §5.4 while the card points to line 467, and Spec 126 is not pasteable here so I cannot confirm they are the same note — confirm §5.4 is the 2026-11-09 note, or correct the section reference
+NIT — Task "one dated note in the engineering standards beside the library lines" — docs/specs/00_engineering_standards.md:308 "### 12.1 Biome (React Logic Linting)" follows the note, so the note sits at the head of §12 and not beside §12.3 / §12.5 — a reader of §12.5 can miss it — optional: move the note to sit above §12.3 with the same text
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — accused of citing RR-0382 as though a reading were a ruling — the header governs what feeds a review and RR-0382 is not in the pasted list, so its kind cannot be judged from this context
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  33946ms (33.9s)
+📊 Tokens — total: 23854, input: 15938, output: 7916, reasoning: 7051

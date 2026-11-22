@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.919Z file_sha256=a20e6e11f0e6c80e25f3b31c09119fc4f84d37caac27770da124913158bd01eb prompt_sha256=7679153fbf9161f26865b70b62d2d9f54fdff115d843c26a73a007df8f9676ec
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-435 "THIS TASK: one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted), saying they are superseded for front-end work by Spec 126 section 11b.4" — docs/specs/00_engineering_standards.md "+> Dated note 2026-11-22 ... and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4" — the note extends supersession to library names in §11 that neither the card nor the "yes add" ruling names — either state in the note the card/RR-0382 basis for covering §11, or drop that clause so it covers only §12.3, §12.5, §12.7.
+
+DEFER severity=LOW — task-435 "one dated note in the engineering standards beside the library lines" — docs/specs/00_engineering_standards.md diff "@@ -305,6 +305,8 @@ ... ### 12.1 Biome (React Logic Linting)", Implementation Notes "note inserted under the section 12 Status line" — the note sits at the head of §12, two subsections above §12.3/§12.5, so a reader who lands on §12.5 still meets the superseded library text unannotated — add a one-line pointer at §12.3/§12.5 or move the note adjacent to the library lines.
+
+MET — task-435 "prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md "@@ -305,6 +305,8 @@" — spec diff is two insertions (note plus blank line) and no deletions.
+
+MET — task-435 "superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note" — docs/specs/00_engineering_standards.md "are superseded for the front end by Spec 126 §11b.4 \"The libraries\" ... see also its dated note 2026-11-09, §5.4" — supersession scope and the Spec 126 note citation are both present.
+
+MET — task-435 "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — recorded as fact, nothing ruled.
+
+MET — task-435 "No other edit (the generated rule-lists page is regenerated with it)" — docs/reports/generated/rule-lists-by-kind.md "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" plus "| total | 10 lists | | 197,778 | 10 |" (and 679,963 / 766,953 / 570,207 / 203,117 / 156,842, each +537) — page delta is only eng-all counts and totals; the 537-character delta matches the inserted note, and no other file is touched.
+
+MET — RR-0382 "Engineering standards get a dated note: UI library lines superseded by Spec 126 for the front end (names task-435, RR-0382)" — docs/specs/00_engineering_standards.md "Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: \"yes add\")" — date, M-246, ruling id, task id and operator words are all carried.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  40401ms (40.4s)
+📊 Tokens — total: 16228, input: 7345, output: 8883, reasoning: 8027
