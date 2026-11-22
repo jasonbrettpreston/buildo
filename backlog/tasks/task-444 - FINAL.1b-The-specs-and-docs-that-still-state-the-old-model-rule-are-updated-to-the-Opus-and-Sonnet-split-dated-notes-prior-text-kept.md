@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-DOCS444'
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T22:11:00Z'
+updated_date: '2026-11-22T22:12:00Z'
 labels:
   - McFix
   - McFix Final
@@ -190,4 +190,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0389 · task-444 · Backlog; o
 Plan UNVERIFIED item, now run: 'node scripts/generate-bylaw-handbook.mjs --check' printed '[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)', exit 0. No hook asked for a generated file.
 
 2026-11-22 output review round 1 (lane BL-DOCS444): fresh context docs/reports/reviews/task-444/context-r3.md; lens set on DeepSeek: compliance per list (7 outputs), code-review, error-paths; 36 finding lines (HIGH 8, MED 12, LOW 15, NIT 1), listed untriaged in docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md. Grounder owed (RR-0359); the task stays RUNNING.
+
+2026-11-22 lane report committed (docs/reports/lanes/2026-11-22/BL-DOCS444/REPORT.md); close check on a throwaway clone with the task staged BUILT refuses only on GROUNDER.md (missing, owed) and its reference. Task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

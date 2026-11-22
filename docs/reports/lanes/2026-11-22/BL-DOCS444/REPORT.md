@@ -26,6 +26,7 @@
 ## Left for the orchestrator
 - A grounder (Sonnet, not this lane) rules the 36 ids in docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md into GROUNDER.md; then resume this lane for any fix round (max 2) and the two-commit close.
 - docs/reports/reviews/task-444/context-r2.md (the launch context file) is untracked in the worktree and was left as found.
-- The throwaway clone ~/Buildo-scratch/lanes-20261119/inc1b/docs444-lane/closeclone can be deleted (a shared clone; removing it is safe).
+- The throwaway clone (lane dir closeclone) was removed after the check.
+- gate.mjs gate: outputs and scope ok (`0 attributed to other lanes; 0 unexplained`), GATE FAIL only on ref moves: this worktree by the lane's own three commits (the brief orders them), Buildo-wt-board and Buildo-wt-rounds437 by other sessions. Not overridden.
 
 STATUS: task-444 RUNNING, built and reviewed (commits 1ff0eb575 work, 7b12bc920 records, plus this report commit); grounder owed on 36 findings; no push made.
