@@ -1,12 +1,14 @@
 ---
 id: TASK-416
 title: TOOLING.VARS review-gate literals registered as tooling_ variables
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T23:40:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies:
   - TASK-375
@@ -33,3 +35,9 @@ Card opened 2026-11-20 by the orchestrator from the plans of task-399 and task-3
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): withdrawn. Unbuilt gate work; built gates are kept (his words: "Keep those that are built").
+<!-- SECTION:NOTES:END -->

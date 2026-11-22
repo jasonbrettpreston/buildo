@@ -3,14 +3,15 @@ id: TASK-397
 title: >-
   REVIEW.LENSES Reality-check and regression lens templates; the grounder rules
   on every HIGH finding
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T15:59:00Z'
-updated_date: '2026-11-21T00:33:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix D
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -45,4 +46,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes. (HELD for this task: the orchestrator later recommended keeping 397 because Reality-Check and Regression seats were ruled in at :1593; asked once more.)". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 
 Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-397 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): withdrawn. His words: "397 - we have the seats already and they work".
 <!-- SECTION:NOTES:END -->

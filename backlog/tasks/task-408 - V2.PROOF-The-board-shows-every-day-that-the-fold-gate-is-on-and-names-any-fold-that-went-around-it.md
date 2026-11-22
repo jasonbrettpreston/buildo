@@ -3,13 +3,14 @@ id: TASK-408
 title: >-
   V2.PROOF The board shows every day that the fold gate is on, and names any
   fold that went around it
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:22:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies:
   - TASK-398
@@ -43,4 +44,6 @@ Operator, 2026-11-20, verbatim: "Hwo will I know it is actually working on a dai
 
 <!-- SECTION:NOTES:BEGIN -->
 PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). So the daily board adds a fourth line, REVIEWER INPUTS: each rebuild regenerates the lens input for one fixture task per kind of work and checks the five principles, the plan protocol, the objectives and the governing specs are in it (the same greps as V2.LIST acceptance 1); red with the missing document named when not.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): withdrawn. Unbuilt gate work; built gates are kept (his words: "Keep those that are built").
 <!-- SECTION:NOTES:END -->

@@ -6,9 +6,11 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -34,3 +36,9 @@ Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog): merged into task-367 (the key card, operator: "the handbook rules are key"); withdrawn here once the look at task-367's branch confirms nothing is lost.
+<!-- SECTION:NOTES:END -->

@@ -7,9 +7,10 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T17:26:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
+  - McFix Final
 milestone: m-1
 dependencies: []
 references:
@@ -64,4 +65,6 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 2026-11-20 operator (verbatim, MORNING-DECISIONS.md entry 'two gate answers'): '1 y 2. whate very you recommend'. Item 1 RULED: the gate conversion factors are registered as a pinned setting, not strings (G-029). Item 2 left to the orchestrator recommendation (a reading, not operator words): gates B and C may be built now under the 2026-11-20 request; the fe.01 / fe.13 dated note is owed in stage 2 for the operator to confirm. Still open with the operator: the gate list; whether Spec 90 covers the native icon package; whether core.8 binds the phone app.
 
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: migration 333: option (b): keep the seed row gate_unit_factor_tolerance, delete migrations/333_gate_unit_factor_tolerance.sql, release mig-333 in the ID ledger; npm run migrate already loads every seed key (scripts/seeds/apply-logic-variables.js; scripts/migrate.js near :324), and Spec 132 core.8 asks for a registered variable, not a migration. Fold order: this branch folds LAST, after the pilot, with the baseline at 3 rows.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "My only direction is the task 367 the handbook rules are key."): this is the KEY card of the McFix Final plan: tests for handbook rules that have no machine check. Task-434 is merged into it. A read-only look at the lane branch comes first.
 <!-- SECTION:NOTES:END -->

@@ -1,14 +1,15 @@
 ---
 id: TASK-400
 title: FOLD.STALE A code change after the review is refused as unreviewed
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-21T00:25:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix Z
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -39,4 +40,6 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): withdrawn. Unbuilt gate work; built gates are kept (his words: "Keep those that are built").
 <!-- SECTION:NOTES:END -->

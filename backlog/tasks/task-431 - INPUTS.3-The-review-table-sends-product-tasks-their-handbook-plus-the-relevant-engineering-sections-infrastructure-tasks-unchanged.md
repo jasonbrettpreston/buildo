@@ -6,10 +6,11 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T18:39:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -172,4 +173,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0379 · task-431 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0380 · task-431 · Backlog; operator, verbatim: "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent  2. y 3 4 N")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0383 · task-431 · Backlog; operator, verbatim: "1. what is your recommendation. I approve it")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend"): re-scoped. The plan on this card (PLAN-431-v2) and its round 1 records are superseded; a new plan follows the engineering seat task. The A, B or C question of the plan grounder is closed by this ruling. The four surface specs are dropped by a separate card after task-430.
 <!-- SECTION:NOTES:END -->

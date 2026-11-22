@@ -5,11 +5,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-FOLDCHECK'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix Z
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -40,4 +41,6 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-FOLDCHECK, worktree /Users/brettpreston_macmini/Buildo-wt-foldcheck, branch wf1/inc1b-foldcheck), RR-0240
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): to be withdrawn after a read-only look at what the lane branch holds (unbuilt gate work). Status not changed yet.
 <!-- SECTION:NOTES:END -->

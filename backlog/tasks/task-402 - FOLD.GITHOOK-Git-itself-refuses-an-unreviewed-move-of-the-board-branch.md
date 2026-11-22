@@ -1,14 +1,15 @@
 ---
 id: TASK-402
 title: FOLD.GITHOOK Git itself refuses an unreviewed move of the board branch
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T22:38:00Z'
+updated_date: '2026-11-22T20:24:00Z'
 labels:
   - McFix
   - McFix Z
   - McFix V2
+  - McFix Final
 milestone: m-1
 dependencies: []
 type: build
@@ -39,4 +40,6 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 FORGERY ROUTES owned here (task-410 grounder file ~/Buildo-scratch/lanes-20261119/inc1b/v2whole/GROUNDER.md, sha256 b3425b2c1d6c0b77f90dffc6065954ff0df8394e603c7245e7dadfa2af6a67b; operator entry '2026-11-20 · Operator ORDERS task-410 finished', 'Finsih it!'): task-410's close check is an omission guard and does not stop a lane that sets out to forge: (1) a hand-written output with the right public hashes; (2) an earlier-commit edit of the lane's own working-tree copy of scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, scripts/analysis/mcbylaws/paths.mjs or the commit-msg hook (it changes what runs at commit time); (3) a board ref moved by a forbidden command. The git-level refusal of an unreviewed move of the board branch (this task) is the place for (2) and (3).
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "I agree with the task chages and removals."; MORNING-DECISIONS.md:1915 entry): withdrawn. Unbuilt gate work; built gates are kept (his words: "Keep those that are built").
 <!-- SECTION:NOTES:END -->
