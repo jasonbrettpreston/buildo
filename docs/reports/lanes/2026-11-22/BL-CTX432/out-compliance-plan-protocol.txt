@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:03:48.617Z file_sha256=db67419486cab299509e2a922b7a15440a542431808fee2f0c74e0d5261776cc prompt_sha256=b103f71eff2e75256ffe96a4d1a41c002dbcfd1388148adfb19777818644f393
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — README retained clause "the close check recomputes each output's prompt hash with the committed context." — .claude/review-templates/README.md:124 "Each review round (the first output round and every fix round) re-runs the brief in the lane worktree ... so the new context-rN.md holds the task file and the board's decisions as they are then" — the change makes the context file change after round 1 while the notes state "(:161 and check-lane-close.mjs untouched)", so nothing says which context file a round-1 output is hashed against — fix: state in the README and lens line that each output is hashed against the context committed with its own round, or extend check-lane-close.mjs to the round's in- file.
+
+DEFER severity=LOW — task title "the reviewer sees the rulings and task state as they are at that round" — scripts/analysis/backlog-brief.mjs "const t = readItems(root).find((x) => x.id === taskId);" — only the decisions come from the board, the task file is still read from the worktree, so a task file the orchestrator advanced on the board is not what the round's context shows — fix: read the task from boardDir when --board is given, or say in the card that the lane's worktree copy is the task text of record.
+
+DEFER severity=LOW — description clause "carries the decisions and the task text as they are then" — scripts/analysis/backlog-brief.mjs "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(...)" — the hard refusal for a board without backlog/decisions is behaviour no pasted clause names and it stops the round instead of falling back — rationale: fail-loud is safer than a silent root read and the blast radius is one round, but the refusal needs a ruling line on the card.
+
+DEFER severity=LOW — plan-protocol step C gate "check.mjs, check-cites, check-quotes PASS" — scripts/analysis/backlog-lane.mjs "Fresh context every review round (RR-0378 step 5, 08_agents.md:529)" — the new 08_agents.md:529 citation and "(task-432, RR-0378 step 5)" cannot be seen in the pasted context and the notes report no check-cites or check-quotes PASS line, so the gate is unproven — fix: report those PASS lines for the new citations in the task notes.
+
+MET — M-246 item 3 "the board is the plan" — scripts/analysis/backlog-brief.mjs "const decDir = path.join(boardDir ?? root, 'backlog/decisions');" — rulings are read from the board checkout, as the ruling requires.
+MET — description step 5 "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-lane.mjs "Before the lens inputs of each review round (the first output round and every fix round) run in the worktree ... use the highest-numbered context-rN.md instead in every --context of that round" — every round is ordered to re-run the brief and use the new file.
+MET — Files line "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the diff touches exactly those five paths and no others.
+MET — M-246 item 4 "plus its separate grounder (Spec 08 section 7 rules 5 and 7)" — scripts/analysis/backlog-lane.mjs "const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2)..." — the grounder text and the output lens set are unchanged by the added sentence.
+MET — plan-protocol Principles "keep it simple; no scope creep" — .claude/review-templates/README.md:124 — one sentence plus two tests, no other behaviour altered.
+
+REJECT — M-246 item 4 "a single lane task takes the Spec 08 section 7 lens set" — accused of skipping the nine-seat panel on task-432 — this is a lane task, so the narrow Spec 08 section 7 lens set governs, not the whole-increment panel.
+REJECT — RR-0371 "three rounds on the output" — accused of allowing unbounded fix rounds through "every fix round" — the added text only mandates a brief re-run per round and names no round past the cap; the cap is applied by the orchestrator, not this text.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  65250ms (65.3s)
+📊 Tokens — total: 23662, input: 11581, output: 12081, reasoning: 11004

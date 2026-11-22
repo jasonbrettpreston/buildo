@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:02:34.438Z file_sha256=2c3a806fb24c897eac58c61dd2d48d84f97836835ba6388650cd4ba2eb6fdf8d prompt_sha256=9be2305c029705ed27c0b09104974bdb68c140fb074f7eb3da31e3848bad763f
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-432 not pasted-witnessed? no.
+
+Output:
+
+```
+DEFER severity=MED — task-432 Description "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-lane.mjs:185 "Before the lens inputs of each review round (the first output round and every fix round) run in the worktree" — the re-making is delivered only as a sentence in the generated brief plus a new flag, nothing refuses a round whose newest context file is not the one its lens inputs used, so the fresh-context clause can silently fail exactly as on task-423 (Implementation Notes, "check-lane-close.mjs untouched") — add one refusal to scripts/hooks/check-lane-close.mjs: the round's --context file must be the highest-numbered context-rN.md for that task at close time
+DEFER severity=LOW — task-432 Description "THIS TASK (step 5, A): the review context is re-made for each output round" — scripts/analysis/backlog-brief.mjs:20 "if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');" — hard exit on a bare or decision-less --board is behaviour neither the card text nor the pasted rulings name, only the change's own README sentence does — bounded guard, keep it but record it as scope added by the lane rather than by a ruling
+MET — task-432 Files line "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the five diff headers — exactly those five paths are changed and no other path is touched
+MET — RR-0378 "Plan approved. We are running right now on this? Add the tasks?" with the decision title "fresh context" — scripts/analysis/backlog-brief.mjs:19 "--board <dir>: read the decisions from that board checkout (<dir>/backlog/decisions) instead of <root>" — the decisions now come from the board as they stand at the round, which is what the ruling approved
+MET — .claude/review-templates/README.md:124 "(`--board` reads `<board>/backlog/decisions`; a bare `--board` or a board without that directory is refused)" — scripts/analysis/backlog-brief.mjs:21 "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(...)" — the refusal the text promises is the refusal the code performs
+MET — task-432 "the round uses the highest-numbered file in every `--context` (task-432, RR-0378 step 5)" — scripts/analysis/backlog-lane.mjs:185 "the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round" — the instruction is in the generated brief and asserted by test T4 ("expect(e).toContain('highest-numbered context-rN.md')")
+MET — RR-0371 "Let's start with 2 rounds on the plan then it comes to me and three rounds on the output." — .claude/review-templates/README.md:124 "Each review round (the first output round and every fix round) re-runs the brief in the lane worktree" — fix rounds are covered by the same wording, no extra round or lens is added
+MET — RR-0375 "close it if it is verified" — src/tests/backlog/backlog-brief-context.logic.test.ts "T1 plant: with --board the decisions come from the board checkout (RR-0900 in both sections)" and "T2 plant: a board with no backlog/decisions exits 1 naming it and writes no context file" — the new flag carries plant and control assertions, including absence of the root-only decision
+REJECT — doc-2 F-SEARCH-WEB "the web search page is built but sends no lookup while MAXBLD_WEB_LIVE is false" — the change is accused of touching built search-page state — the diff changes only .claude/review-templates/README.md, scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs and two src/tests/backlog files, so no Increment S element (A.1 to G.6) is added, removed or restated
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  60487ms (60.5s)
+📊 Tokens — total: 26840, input: 15421, output: 11419, reasoning: 10358

@@ -194,3 +194,56 @@ describe('task-375 A1/A5: the review context holds the plan and the notes; one f
     expect(r.stdout).toContain(`${task}/context-r2.md`);
   });
 });
+
+// task-432 (INPUTS.4, RR-0378 step 5): --board reads the decisions from the board checkout, so a re-run in a lane worktree sees the rulings made after the lane was cut.
+describe('backlog-brief --board (task-432)', () => {
+  const dec = (n: number, rr: string, task: string, quote: string) => `---\nid: decision-${n}\ntitle: "${rr} 2026-11-22 · a ruling"\ndate: 2026-11-22\nstatus: accepted\n---\n## Context\n\nNames ${task}.\n\n## Decision\n\nOperator, verbatim, 2026-11-22: "${quote}"\n\nCite: ~/x/MORNING.md:${n}\n`;
+  const setup = () => {
+    const { d, task } = fixture();
+    put(d, 'backlog/decisions/decision-1 - RR-0501-x.md', dec(1, 'RR-0501', task, 'LANE-COPY-QUOTE'));
+    const b = path.join(d, '..', `board-${path.basename(d)}`);
+    put(b, 'backlog/decisions/decision-9 - RR-0900-x.md', dec(9, 'RR-0900', task, 'BOARD-ONLY-QUOTE'));
+    return { d, task, b };
+  };
+  const names = (d: string, task: string) => section(ctxOf(d, task), 'Decisions naming this task');
+  const inForce = (d: string, task: string) => /## Decisions in force[^\n]*\n([\s\S]*?)\n## /.exec(ctxOf(d, task))?.[1] ?? '';
+  it('T1 plant: with --board the decisions come from the board checkout (RR-0900 in both sections)', () => {
+    const { d, task, b } = setup();
+    const r = brief(d, task, ['--board', b]); expect(r.status, r.stderr).toBe(0);
+    expect(names(d, task)).toContain('RR-0900');
+    expect(names(d, task)).toContain('"BOARD-ONLY-QUOTE"');
+    expect(inForce(d, task)).toContain('RR-0900');
+  });
+  it('T1 control (a): without --board the root decisions are read, as before (RR-0501 present, RR-0900 absent)', () => {
+    const { d, task } = setup();
+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
+    expect(names(d, task)).toContain('RR-0501');
+    expect(names(d, task)).not.toContain('RR-0900');
+  });
+  it('T1 control (b): with --board a decision only in the root is absent (the board is the source)', () => {
+    const { d, task, b } = setup();
+    brief(d, task, ['--board', b]);
+    expect(names(d, task)).not.toContain('RR-0501');
+    expect(inForce(d, task)).not.toContain('RR-0501');
+  });
+  it('T2 plant: a board with no backlog/decisions exits 1 naming it and writes no context file', () => {
+    const { d, task } = setup();
+    const empty = path.join(d, '..', `noboard-${path.basename(d)}`); fs.mkdirSync(empty, { recursive: true });
+    const r = brief(d, task, ['--board', empty]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain(empty);
+    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}`))).toBe(false);
+  });
+  it('T2 plant: a bare --board with no value exits 1 and writes no context file', () => {
+    const { d, task } = setup();
+    const r = script('scripts/analysis/backlog-brief.mjs', ['--task', task, '--lane', 'BL-R1', '--stage', '2', '--root', d, '--date', '2026-11-19', '--board']);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/--board/);
+    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}`))).toBe(false);
+  });
+  it('T2 control: a good board exits 0 and writes context-r1.md', () => {
+    const { d, task, b } = setup();
+    expect(brief(d, task, ['--board', b]).status).toBe(0);
+    expect(fs.existsSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).toBe(true);
+  });
+});

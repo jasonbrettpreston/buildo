@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:03:44.883Z file_sha256=6b185fedb72a32920070221106e4a5e7c2e36efb4ed427633fd1e43a88145505 prompt_sha256=0e4172c79f1783d5a6d18b525c64cd215243e6d6349752e2dbf655ed9cf2f8d9
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-432 Description "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — .claude/review-templates/README.md:124 "the close check recomputes each output's prompt hash with the committed context" — one more context-rN.md is now written per round while Implementation Notes say "check-lane-close.mjs untouched", so I cannot see whether a fix round's out-*.txt is hashed against the context file of its own round; if it is not, the fresh-context round is refused at close, which defeats the clause — name in the lane line and README which context-rN.md the close check binds per round (or make the round's context the one it recomputes), and show that in the diff.
+
+MET — doc-17 "The operator's rulings are the decisions" — scripts/analysis/backlog-brief.mjs:44 "const decDir = path.join(boardDir ?? root, 'backlog/decisions');" — the quoted rules and the decisions sections are read only from decision records; no readings file is a source.
+
+MET — doc-17 "Readings and register entries ... never feed a review as a ruling" — scripts/analysis/backlog-brief.mjs:20 "if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');" — the only added source is another backlog/decisions directory, a bare or non-board --board is refused, never a silent fallback to root.
+
+MET — RR-0378 "Review-inputs plan approved and running: handbook plus relevant engineering sections; fresh context; rules-checked line" — scripts/analysis/backlog-lane.mjs:185 "Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree ... --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board}" — every round is commanded to cut its context from the board's decisions as they are then.
+
+MET — task-432 Description "the review context is re-made for each output round" — .claude/review-templates/README.md:124 "Each review round (the first output round and every fix round) re-runs the brief in the lane worktree ... and the round uses the highest-numbered file in every `--context` (task-432, RR-0378 step 5)" — the round's input is the newest context file, not the launch file.
+
+MET — task-432 Description "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the diff touches exactly those five paths, nothing outside the card's Files line.
+
+MET — task-432 Description "a bare flag or missing dir dies, exit 1, no fallback" (Implementation Notes) — src/tests/backlog/backlog-brief-context.logic.test.ts:236 "T2 plant: a bare --board with no value exits 1 and writes no context file" — the refusal is covered by a test that also asserts no context file is written, not by a comment or a name alone.
+
+REJECT — doc-17 "Readings and register entries of the rulings register ... are NOT the operator's words as a ruling and never feed a review as a ruling" — the change is accused of feeding the pasted register items (RR-0001 to RR-0218, for example RR-0002 "Lane tooling first", RR-0105, RR-0110) as rulings — those items carry no "Operator, verbatim, ..." line and no "Cite:" line, so the brief's decisions map never selects them; the rulings that bind here are the decisions the card names, RR-0371, RR-0374, RR-0375 and RR-0378.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  58031ms (58.0s)
+📊 Tokens — total: 30802, input: 20174, output: 10628, reasoning: 9687

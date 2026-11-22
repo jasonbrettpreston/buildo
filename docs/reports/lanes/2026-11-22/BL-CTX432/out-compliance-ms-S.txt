@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:03:35.003Z file_sha256=7d209dd14d946c0b72af2fbf51e00b8c3471b8c9f5937b85e0951d1c3f6635fe prompt_sha256=473633ed22312d8c2498f28a0c3cd74a3b55ab93d6c6f9510563a28da4557e75
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Description, step 5 "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-lane.mjs "node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null" — the one command the lane is told to run before the lens inputs of "each review round (the first output round and every fix round)" carries the launch stage baked in, and the diff shows no stage advance and no overwrite guard, so a fix round re-writes docs/reports/reviews/<task>/context-r<N>.md, the file .claude/review-templates/README.md:124 calls "one per review round and never overwritten", and the "highest-numbered context-rN.md" the lane is told to use never changes — fix: emit the round number (README already writes it as "`--stage <N>`") or tell the lane to pass the next stage each round, and have backlog-brief.mjs refuse an existing context-rN.md while naming the next free N.
+
+DEFER severity=LOW — Spec 137 Rule 3 as amended, "the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record)" — scripts/analysis/backlog-lane.mjs "use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round" — the added sentence tells the lane to commit the context with each round while the close rule puts the review context directory in the closing commit, so a lane can read it as licence for a mid-run records commit — rationale: cannot see from the diff whether check-lane-close.mjs exempts docs/reports/reviews from the work commit or refuses a context file landing there.
+
+MET — Description, step 5 "so it carries the decisions ... as they are then" — scripts/analysis/backlog-brief.mjs "const decDir = path.join(boardDir ?? root, 'backlog/decisions');" — the board checkout is now the decisions source, so a re-run after the lane was cut sees the rulings made since.
+
+MET — Files line "scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the diff touches exactly those five paths and nothing else.
+
+MET — Implementation Notes "bare flag or missing dir dies, exit 1, no fallback" — scripts/analysis/backlog-brief.mjs "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`)" — both refusals are real code paths, not comments, and the T2 plants assert exit 1 with no context file written.
+
+MET — task title "the reviewer sees the rulings and task state as they are at that round" — scripts/analysis/backlog-lane.mjs "--root ${wt}" — the re-run is made in the lane worktree, so the task text the context carries is the lane's current file.
+
+MET — "keep it simple; no scope creep" — .claude/review-templates/README.md:124 "Each review round (the first output round and every fix round) re-runs the brief in the lane worktree" — one flag, one sentence in the lens line, one README sentence, no other behaviour changed.
+
+REJECT — RR-0378 "you can remove step 7 right now" — the change is accused of not removing step 7 — step 7 is not on this card's Files line and is its own card, so this diff cannot carry it.
+
+REJECT — RR-0374 "Apprvoe step 1 and step 2 - when it arrives" — the change is accused of omitting step 2's rules sections — this card is step 5 ("THIS TASK (step 5, A)"), step 2 is a separate card.
+
+REJECT — Increment objectives "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant" — the change is accused of being scope-adjacent to no designed element — the review-input pipeline is a supporting function of the report/design work the increments serve.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  66022ms (66.0s)
+📊 Tokens — total: 21969, input: 9967, output: 12002, reasoning: 10985

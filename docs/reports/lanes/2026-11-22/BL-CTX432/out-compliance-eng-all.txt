@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:02:34.438Z file_sha256=9ea6c0dabb5764451df366aa7bb9ba86e3e65134dbb51d29fc6dfe5f8d8fb9b4 prompt_sha256=6f96d493b9c246a6c73fe82e9277410a4420ca207dc9b5f89f47debdb8284697
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-432 card "the review context is re-made for each output round so it carries the decisions and the task text as they are then" — scripts/analysis/backlog-lane.mjs:185 "`--stage ${stage}`" — the re-run command prints the stage of the round that generated the brief (the README's own wording is "`--stage <N>`", a placeholder), so a fix round copying the command verbatim lands on the launch stage and its context file name does not advance, which collides with "one per review round and never overwritten" — print the stage as a placeholder (`--stage <round>`) or say in the sentence that the round number is raised to the next highest-numbered context-rN.md.
+
+DEFER severity=LOW — task-432 card "carries the decisions and the task text as they are then" — src/tests/backlog/backlog-brief-context.logic.test.ts:214 "expect(names(d, task)).toContain('RR-0900');" — only the decisions half is proved; nothing asserts that a re-run picks up an edited task file, which is the stale "old Files line" failure the card cites as the reason for the task, so half the clause rests on the untested `--root <worktree>` read — add one case that rewrites the task file's Files line in the root and asserts the re-made context carries the new line.
+
+DEFER severity=NIT — §14 "Every source/test file's SPEC LINK points at the spec AND the section (§N)" — src/tests/backlog/backlog-brief-context.logic.test.ts:198 "// task-432 (INPUTS.4, RR-0378 step 5): --board reads the decisions from the board checkout" — the new link names the task and the ruling but no spec section, unlike its sibling at backlog-lane.logic.test.ts:287 which cites "08_agents.md:529" — add the governing spec section to the brief test's link comment.
+
+REJECT — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`" — the new `dec()` helper builds decision markdown strings, not entity mocks, and follows the file's existing `fixture()`/`put()` helpers — the typed-factory rule targets DB rows.
+
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — this is a backlog-tooling task, not a frontend workflow, and the card's Files line names both scripts explicitly.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — the two touched files are `.mjs` analysis tools with no pool, no write and no transaction, so no SDK obligation attaches.
+
+MET — task-432 card "the review context is re-made for each output round so it carries the decisions ... as they are then" — scripts/analysis/backlog-brief.mjs:44 — `const decDir = path.join(boardDir ?? root, 'backlog/decisions');` reads the rulings from the board checkout, and T1/T1(b) prove board-only in, root-only out.
+MET — README claim "a bare `--board` or a board without that directory is refused" — scripts/analysis/backlog-brief.mjs:19 — both `die()` guards, backed by T2's two plants (exit 1, no context file written).
+MET — RR-0378 "fresh context" step 5 — scripts/analysis/backlog-lane.mjs:185 — the lens line now names the re-run command with `--task`, `--lane`, `--stage`, `--root <worktree>`, `--board <board>` and the "highest-numbered context-rN.md" switch, and README.md:124 carries the same in the same commit (§14 same-commit doc rule).
+MET — card "Files: scripts/analysis/backlog-brief.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — the diff touches exactly those five paths and no others.
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — Implementation Notes "Red was five failing assertions (red.out); green is the landing commit through the real hooks."
+MET — §5.2 test file pattern — both new suites are `*.logic.test.ts` under `src/tests/backlog/`, the layer for pure derivation logic.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  70359ms (70.4s)
+📊 Tokens — total: 34525, input: 21106, output: 13419, reasoning: 12334

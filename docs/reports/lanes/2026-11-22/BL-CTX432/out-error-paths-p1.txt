@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T17:04:01.300Z file_sha256=24aad312fab9de2993c98d87c95632adf0bd693fa02294a73905d839296d3eb6 prompt_sha256=0d7edc64b02719190a318cc40d4398ed6c102329adda17c04add40ec6a890294
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-CTX432/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG none CRIT/HIGH found, see DEFER lines below.
+
+DEFER severity=MED — .claude/review-templates/README.md:124 "Each review round (the first output round and every fix round) re-runs the brief in the lane worktree" — the re-run is instructed with no bound of one per round, and the identical sentence then says "the round uses the highest-numbered file in every --context", so a retry after a failed run, or any re-run after the round's lens inputs are built, mints a further context-rN.md that no in-/out- file of that round was made from, and the close check's prompt-hash recompute is then against a context the lenses never read — make the brief refuse (die naming the file) when a context file newer than the round's existing in-* inputs is about to be written, or key the file name to the round so a re-run replaces it.
+
+DEFER severity=MED — scripts/analysis/backlog-brief.mjs:45 "const decisions = (fs.existsSync(decDir) ? fs.readdirSync(decDir).filter((f) => f.endsWith('.md')).sort() : [])" — an existing but empty or wrong-branch board `backlog/decisions` passes the guard at :22 and yields zero decisions, so the round's context silently carries no rulings and the reviewer runs without them (the exact miss task-432 exists to prevent) — die, or at minimum print the count of decision files read to stderr, when a `--board` read yields zero.
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:22 "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(`backlog-brief: --board ${boardDir} has no backlog/decisions directory`)" — the guard tests existence only, so a regular file at `<board>/backlog/decisions` passes it and the readdirSync at :45 throws an uncaught ENOTDIR stack trace instead of the die message — use fs.statSync(...).isDirectory() in the guard.
+
+DEFER severity=MED — scripts/analysis/backlog-brief.mjs:21 "const boardDir = a.board === undefined ? null : path.resolve(a.board);" — a stale board checkout (not fetched since the lane was cut) is indistinguishable from a fresh one, so the context silently holds old rulings while claiming the decisions "as they are then"; nothing records the revision read — print the board checkout's git HEAD sha and the decision count in the brief output so staleness is visible.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:184 "node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null" — `${wt}` and `${board}` are interpolated unquoted into a copy-pasted shell command, so a worktree or board path holding a space splits the argument and the lane's pasted run dies on a truncated `--board` path — shell-quote both interpolations the way the same sentence quotes diff paths.
+
+REJECT — scripts/analysis/backlog-brief.mjs:20 "if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)')" — looks like a bare flag could silently fall back to `<root>` decisions — it dies before any read or write, and both plants (bare flag, missing directory) assert exit 1 and no context file written.
+
+REJECT — scripts/analysis/backlog-brief.mjs:44 "const decDir = path.join(boardDir ?? root, 'backlog/decisions');" — looks like the board path replaces root decisions with no fallback if the board lacks a ruling — that is the ruled intent (board is the source, T1 control (b) asserts the root-only decision is absent), not a silent degrade.
+
+VERDICT: PASS on error-path safety
+Paths walked: bare --board, missing board/decisions, file-in-place-of-directory, empty board decisions, stale board checkout, re-run of the brief within a round, unquoted command interpolation, no-board (root) path   Unguarded: 3
+
+---
+⏱  56373ms (56.4s)
+📊 Tokens — total: 19723, input: 9194, output: 10529, reasoning: 9588
