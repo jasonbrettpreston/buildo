@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-NOTE435'
 created_date: '2026-11-22T18:01:00Z'
-updated_date: '2026-11-22T18:25:00Z'
+updated_date: '2026-11-22T18:27:00Z'
 labels:
   - McFix
   - McFix V2
@@ -238,4 +238,8 @@ rg#2 MED folded Q4 RULED: no scope D
 Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")
 
 2026-11-22 taken on the board at lane launch (lane BL-NOTE435, worktree /Users/brettpreston_macmini/Buildo-wt-note435, branch wf1/inc1b-note435), RR-0240
+
+Build 2026-11-22 (lane BL-NOTE435): note inserted under the section 12 Status line. Acceptance pre-insert: grep -c "Dated note 2026-11-22 (M-246" = 0; page --check exit 0 (is current). After insert, before page --write: grep -c = 1; page --check exit 1 "out of date: regenerate with node scripts/analysis/rule-lists.mjs page --write" (the red). git diff of the spec: 2 insertions, 0 deletions.
+
+After page --write: page --check exit 0 ("is current", the green). Page diff: 12 insertions 12 deletions, only the eng-all count 46,076 -> 46,613 in six kinds and the six total rows (e.g. 197,241 -> 197,778). Spec diff: 2 insertions (the note and one blank line), 0 deletions; lines around it: Status line, blank, note, blank, "### 12.1 Biome (React Logic Linting)".
 <!-- SECTION:NOTES:END -->

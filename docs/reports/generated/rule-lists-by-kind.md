@@ -15,12 +15,12 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
 | airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
 | airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
 | airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 10 lists | | 197,241 | 10 |
+| total | 10 lists | | 197,778 | 10 |
 
 ## McFrontend web
 
@@ -28,7 +28,7 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
 | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
 | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
@@ -43,7 +43,7 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 15 lists | | 679,426 | 18 |
+| total | 15 lists | | 679,963 | 18 |
 
 ## phone
 
@@ -61,12 +61,12 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
 | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
 | surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 15 lists | | 766,416 | 18 |
+| total | 15 lists | | 766,953 | 18 |
 
 ## storage
 
@@ -74,7 +74,7 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
 
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
 | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
 | storage-doc16 | backlog/docs/doc-16 - McStorage-policy-v2.md | whole file | 38,848 | 1 |
@@ -87,7 +87,7 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 13 lists | | 569,670 | 16 |
+| total | 13 lists | | 570,207 | 16 |
 
 ## tooling
 
@@ -98,13 +98,13 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
 | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
 | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 202,580 | 9 |
+| total | 9 lists | | 203,117 | 9 |
 
 ## spec-only
 
@@ -114,10 +114,10 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
 | --- | --- | --- | ---: | ---: |
 | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
 | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 35,775 | 1 |
-| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 156,305 | 7 |
+| total | 7 lists | | 156,842 | 7 |
 
