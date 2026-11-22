@@ -1,0 +1,244 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:8593c134159831cf995e4ddab1b9cc830b88dd910c1d373188d92f82a4da171c part 1 of 1 chunk 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".cursor/MCBYLAWS-QUEUE.md",".cursor/MCFRONTEND-QUEUE.md","docs/specs/01-pipeline/69a_mcbylaw_register.md","src/tests/spec-notes-1b.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.cursor/MCBYLAWS-QUEUE.md b/.cursor/MCBYLAWS-QUEUE.md
+index a416532a4751b0754030496c9c0bfa600cbe4b6e..14b88d5bed4bc0423d3a077da1e2910c2269431e 100644
+--- a/.cursor/MCBYLAWS-QUEUE.md
++++ b/.cursor/MCBYLAWS-QUEUE.md
+@@ -245,6 +245,7 @@ Nothing has been built, committed or written to the DB. Next: the operator answe
+ | D DB nights | **Idempotency lens (mandatory)** + Reality-Check + Integration | Reality-Check on the loaded rows + Guardian |
+ | P product | as M/E, plus the frontend nuance (08 §11.5-FE) | Guardian + grounded reviewer |
+ Seats run on Sonnet by default. Opus only for hard design adjudication, with the reason logged. DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26).
++- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "Opus only for hard design adjudication" above for the plan seat and the building lane; "Seats run on Sonnet by default" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).
+ 
+ ### Lanes (08 §C.6: one worktree per task, write scopes must not overlap, claims checked by the engine)
+ | Lane | What | Writers | Worktree / branch | Running limit |
+diff --git a/.cursor/MCFRONTEND-QUEUE.md b/.cursor/MCFRONTEND-QUEUE.md
+index ef4a4115b12c8b89bbb5ab87e233493f1959fe11..43accfdcc0c6b903f4bc644a7e46f76d480df2f0 100644
+--- a/.cursor/MCFRONTEND-QUEUE.md
++++ b/.cursor/MCFRONTEND-QUEUE.md
+@@ -16,6 +16,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
+ 
+ - Dated note 2026-11-06 (M-246, prior text kept; operator answer to the opening decision list D-1..D-9, verbatim "yes. proceed", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; map `~/Buildo-scratch/mcfrontend/phase1/opening-map.md`): the Phase 1 order is (D-1 b) this documents commit, then an early gate batch (MF-17 items 1-5 of Spec 128 §4.11, the loop-scope item of D-2 and MF-24a), then the policy flip, then MF-10. D-2 b: the surface paths go in a separate front-end policy list that arms H, C and P read and the McBylaws loop gate does not read. D-3 a: the gate batch is recorded in `docs/reports/panels/MF-17.json` with McBylaws (MB-67 lane) owner sign-off. D-4 a: the golden dir is `src/tests/fixtures/surfaces/**`, and this queue file joins the protected list. D-5 b and D-8 b: MF-33 baselines the Parcel Cost Tool now; the REPORT payload is re-timed and the numbers ruled after MF-13. D-6 a: web timing with Playwright, mobile by a manual operator run. D-9 b: MF-24 is split into MF-24a (in the early gate batch) and MF-34 (after MF-17 item 1). This pulls MF-17 items 1-5 and MF-24a ahead of MF-10 (check-increment-order rule), as ruled.
+ - Dated note 2026-11-06 (M-246, prior text kept; MF-33 W-1; operator, verbatim: "W-1a", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): D-6 a is amended by the operator (W-1a): web render timing and a smoke test of the current page run on `next dev` with DEV_MODE (a non-production build; no gate weakened, no keys), every number labelled DEV. DEV baseline over the 25 golden lots, 3 runs, loaded host: full render p50 816 ms, p95 879 ms, max 1470 ms. A `next build/start` run is not possible (isDevMode requires NODE_ENV!=='production'); production-build load stays PROSE-ONLY (FE-04). Mobile remains a manual operator device run, UNVERIFIED. Prior D-6 a text kept (M-246). Evidence: `~/Buildo-scratch/mcfrontend/phase1/mf33-web/RESULTS.md`.
++- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "Opus sparingly" in the paragraph above for the plan seat and the building lane; "Sonnet seats" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).
+ 
+ ## Phase 0: specs ruled and recorded (documents only)
+ 
+diff --git a/docs/specs/01-pipeline/69a_mcbylaw_register.md b/docs/specs/01-pipeline/69a_mcbylaw_register.md
+index 73bb844a2e20e9f2c5fb1dbe622f6e63846a474c..368e1f3e018f4724837d1f7fbcdfa9f28ea6d9ae 100644
+--- a/docs/specs/01-pipeline/69a_mcbylaw_register.md
++++ b/docs/specs/01-pipeline/69a_mcbylaw_register.md
+@@ -651,7 +651,7 @@ this table with the block (`parseRulings` keys on the first cell; an empty first
+ | **M-503** | **TKT-3 McProof answer-first. Text home: Spec 08 §11.9 (§11.7 note).** Operator approved 2026-11-06 (chat, "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well."; "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.TKT-3`). Rule text: McProof answer-first. A McProof reply puts its answers first, in the answer table the code already requires (`scripts/analysis/mcproof/prompts.mjs:10`, one row per example id: a number with an optional unit, a closed status, or `cannot decide`); the working follows the table. Rows outside the table are not read. MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) M-438 (MCPROOF-3): no conflict, its dated note points here. M-447 (MCPROOF-13): no conflict, its dated note points here. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Spec 08 §11.9 (§11.7 note) | Applies M-438, M-447 (no conflict); `2026-11-06-batch-bd#CHAT-231.TKT-3` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+ | **M-504** | **TKT-4 empty or truncated is failed. Text home: Spec 08 §11.9, §9.** Operator approved 2026-11-06 (chat, "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well."; "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.TKT-4`). Rule text: Empty or truncated is failed. An empty or truncated reply is `failed`, never a verdict and never a pass. One concise rerun is allowed; a second empty or truncated reply parks the ticket with an operator card (MCPROOF-13). McProof stage runs keep the configured retry count (`scripts/analysis/mcproof/mcproof.config.json:69`, `max_retries_per_stage` = 2) until that value is moved by a ruling (OWED, infra, frozen): this rule changes no config and no code. Output-cap and stop-reason logging are infra and frozen. A truncated or empty reply that reads like a verdict (MB-85, 2026-11-06). A seat reply cut off by an output cap, or empty, can look like a pass because nothing in it objects. It is not a verdict: it is `failed` (§11.9 TKT-4). The cap and stop-reason logging live in the ask tool, which is not in this repo, and are infra, frozen, not part of this rule. MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) M-447 (MCPROOF-13, parking): no conflict, applied; the config value is unchanged (decision D3 A, OWED). | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Spec 08 §11.9, §9 | Applies M-447 (no conflict); `2026-11-06-batch-bd#CHAT-231.TKT-4` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+ | **M-505** | **TKT-5 lane-to-lane through the orchestrator, no agent teams. Text home: Spec 08 §C.6 and §11.9.** Operator approved 2026-11-06 (chat, "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.TKT-5`). Rule text: No agent teams; lane-to-lane facts go through the orchestrator. A fact one lane needs from another goes through the orchestrator as a note of at most 100 words that cites file:line and grants no authority. Claude Code agent teams are not enabled (a harness setting is infra, frozen until lifted by name). Source (verbatim, operator 2026-11-06): "E1 a" ("E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry"). lanes do not message each other and agent teams stay off; a lane-to-lane fact is an orchestrator-relayed note of at most 100 words that cites file:line and grants no authority (§11.9 TKT-5). Operator, verbatim: "E1 a".<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) Spec 08 §C.6 (one writer per worktree): no conflict, applied. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Spec 08 §C.6 and §11.9 | New (no conflict); `2026-11-06-batch-bd#CHAT-231.TKT-5` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+-| **M-506** | **ORCH-1 orchestrator split. Text home: Spec 08 §7 rule 9 (dated note).** Operator approved 2026-11-06 (chat, "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.ORCH-1`). Rule text: the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) Spec 08 §7 rule 9 (substrate economics): no conflict, the note is dated and the rule text stands. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Spec 08 §7 rule 9 (dated note) | Applies Spec 08 §7 rule 9 (no conflict); `2026-11-06-batch-bd#CHAT-231.ORCH-1` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
++| **M-506** | **ORCH-1 orchestrator split. Text home: Spec 08 §7 rule 9 (dated note).** Operator approved 2026-11-06 (chat, "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.ORCH-1`). Rule text: the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) Spec 08 §7 rule 9 (substrate economics): no conflict, the note is dated and the rule text stands. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Spec 08 §7 rule 9 (dated note) | Applies Spec 08 §7 rule 9 (no conflict); `2026-11-06-batch-bd#CHAT-231.ORCH-1` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) · *Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the Rule text above for the building lane only; Spec 08 §7 rule 9 carries the same split (dated note, task-436).* |
+ | **M-507** | **BOARD-1 one open-work list. Text home: Queue lane board (dated note).** Operator approved 2026-11-06 (chat, "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry"; "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.BOARD-1`). Rule text: One open-work list: this lane board. Each open row carries one waiting word (OPERATOR, WAITS or HELD), names its card, and carries an opened date and an expiry date 7 days later. At expiry it is resurfaced in the next decision list; it is never closed automatically. The status file is an index of MB-nn and MF-nn rows with the waiting word, card and date; it holds no state of its own, and "row owed" marks a row not yet in the queue until the next queue dated note. No tool and no code. One-time sweep (E5): a read-only lane lists the unanswered CARD files against their queue rows (answered elsewhere, open with a row, or open with no row); nothing is deleted. Operator, verbatim: "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry" then "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?".<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) Queue Status words list: no conflict, no new word. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Queue lane board (dated note) | New (no conflict); `2026-11-06-batch-bd#CHAT-231.BOARD-1` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+ | **M-508** | **EXP-1 7-day expiry. Text home: Queue lane board (dated note).** Operator approved 2026-11-06 (chat, "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry"; "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.EXP-1`). Rule text: One open-work list: this lane board. Each open row carries one waiting word (OPERATOR, WAITS or HELD), names its card, and carries an opened date and an expiry date 7 days later. At expiry it is resurfaced in the next decision list; it is never closed automatically. The status file is an index of MB-nn and MF-nn rows with the waiting word, card and date; it holds no state of its own, and "row owed" marks a row not yet in the queue until the next queue dated note. No tool and no code. One-time sweep (E5): a read-only lane lists the unanswered CARD files against their queue rows (answered elsewhere, open with a row, or open with no row); nothing is deleted. Operator, verbatim: "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry" then "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?". The one-time read-only card sweep (`~/Buildo-scratch/mcbylaws/MB-85/card-sweep/open-no-row.md`) found 17 open cards with no queue row. Each is listed here with its card path and opened date (a file date where the card gives none). Each carries a 7-day expiry, 2026-11-13: at expiry it is resurfaced in the next decision list and is never closed automatically. Nothing is deleted and no ruling is taken here.<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) None found; extends BOARD-1. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Queue lane board (dated note) | Applies BOARD-1 (no conflict); `2026-11-06-batch-bd#CHAT-231.EXP-1` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+ | **M-509** | **PUSH-1 planned push windows. Text home: Queue Process 9 (dated note).** Operator approved 2026-11-06 (chat, "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?"; card ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; record ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; `2026-11-06-batch-bd#CHAT-231.PUSH-1`). Rule text: pushes are planned push windows, and lanes build on the verified local `wf1/mb-rulings` tip, so a lane is not held for a push. The operator still approves each push (F-34). Operator, verbatim: "P3 Mb-86 D1-D7.".<br>Five words: standardized (one form, one home); observable (the line is in every brief or reply); scalable (every lane and seat); accurate (the operator's own words); understandable (one statement). Added check: none; no tool or code change. No scope beyond the card (M-328).<br>**Conflict check.** (The register search by clause keys returns no candidate: the row cites no by-law clause.) Process 9 / F-34 (operator approves the push): no conflict, unchanged. | ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md; Queue Process 9 (dated note) | Applies queue Process 9 (no conflict); `2026-11-06-batch-bd#CHAT-231.PUSH-1` | Added check: none (text only; infra frozen); record: `chat-rulings-register.logic.test.ts` › "CHAT-231 (2026-11-06-batch-bd)" | RULED 2026-11-06 (operator) |
+diff --git a/src/tests/spec-notes-1b.logic.test.ts b/src/tests/spec-notes-1b.logic.test.ts
+index d99ec740dc14e6e970515e680432f698e609b2f3..655aae9e6157570495d3f1c54cace5d60a368688 100644
+--- a/src/tests/spec-notes-1b.logic.test.ts
++++ b/src/tests/spec-notes-1b.logic.test.ts
+@@ -133,3 +133,33 @@ describe('D3-ext: Spec 135 carries the footer ruling (MF-91, SRCH.FOOTER) on the
+     expect(row).toContain('Dated note 2026-11-11 (M-246, prior text kept; rulings landing');
+   });
+ });
++
++// FINAL.1b (task-444, lane BL-DOCS444; RR-0385 item 1, decision-170; RR-0389, decision-174): the documents that still state the
++// old model rule carry a dated note under it (M-246, prior text kept). Fails on (b) before the notes, passes after (08_agents.md:486).
++describe('FINAL.1b: the old model rule carries the task-444 dated note, prior text kept', () => {
++  const NOTE_444 = 'Dated note 2026-11-22 (M-246, prior text kept; task-444';
++  const WORDS_444 = ['run on Opus', 'every grounder run on Sonnet', '"resolve this conflict by updating the key specs and docs"'];
++  const QUEUES: Array<[string, string]> = [
++    ['.cursor/MCBYLAWS-QUEUE.md', 'Opus only for hard design adjudication, with the reason logged.'],
++    ['.cursor/MCFRONTEND-QUEUE.md', 'Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly).'],
++  ];
++  it.each(QUEUES)('%s: the old sentence stays, the note follows it before the next heading and carries the split', (rel, old) => {
++    const lines = rt(rel).split('\n');
++    const at = lines.findIndex((l) => l.includes(old));
++    expect(at, `${rel}: the prior sentence is gone`).toBeGreaterThan(-1); // (a)
++    const note = lines.findIndex((l, i) => i > at && l.startsWith(`- ${NOTE_444}`));
++    const heading = lines.findIndex((l, i) => i > at && l.startsWith('#'));
++    expect(note, `${rel}: no task-444 note after the old sentence`).toBeGreaterThan(at); // (b)
++    expect(heading === -1 || note < heading, `${rel}: the note is not before the next heading`).toBe(true);
++    for (const w of WORDS_444) expect(lines[note]).toContain(w); // (c)
++  });
++  it('69a M-506: the Rule text stays, the note sits in the status cell after it and carries the split', () => {
++    const row = rt('docs/specs/01-pipeline/69a_mcbylaw_register.md').split('\n').find((l) => l.startsWith('| **M-506** |')) ?? '';
++    const old = row.indexOf('a multi-step build goes to the owning lane, on Sonnet');
++    expect(old, 'M-506: the prior Rule text is gone').toBeGreaterThan(-1); // (a)
++    const note = row.indexOf(NOTE_444);
++    expect(note, 'M-506: no task-444 note after the Rule text and the status').toBeGreaterThan(row.indexOf('RULED 2026-11-06 (operator)')); // (b)
++    expect(row.indexOf('RULED 2026-11-06 (operator)')).toBeGreaterThan(old);
++    for (const w of WORDS_444) expect(row.slice(note)).toContain(w); // (c)
++  });
++});
+

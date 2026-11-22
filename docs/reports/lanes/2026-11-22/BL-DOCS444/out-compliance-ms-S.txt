@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:07:29.836Z file_sha256=9acc5e21917faf614117a50fc18bb42c66948f73b26ecae16662ccd2714866c2 prompt_sha256=bb8da2d1d62b947a3a03f2de13967d426dacbebcb6f62c23c99452d394a707d9
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-DOCS444/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 item 1 "the seat that writes a plan and the seat that builds run on Opus, seats and grounders on Sonnet, reviewers DeepSeek" — .cursor/MCBYLAWS-QUEUE.md:247 "DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26)." — the new note supersedes only "Opus only for hard design adjudication" and "Seats run on Sonnet by default" stands, so the same paragraph still states DeepSeek does execution, the conflict RR-0389 ordered resolved, in the file the card names first — extend the note to say it supersedes "DeepSeek handles breadth and execution" for the building lane, prior text kept, and add the word "exec" to the test's WORDS_444 assertion set.
+BUG severity=HIGH — RR-0385 item 1 "the seat that writes a plan and the seat that builds run on Opus" — .cursor/MCFRONTEND-QUEUE.md:13 "Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly)." — the note supersedes only "Opus sparingly", so "DeepSeek exec" still stands and contradicts the Opus building lane — extend that note to supersede "DeepSeek exec" for the building lane as well, prior text kept.
+DEFER severity=MED — task-444 card "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — NONE (no hunk for CLAUDE.md, .claude/workflows.md or any review template pack in the material) — cannot see whether those named docs still state the old rule, or the read that cleared them, so "every spec and doc that still states the old rule" is unverified outside the four touched files — record the per-file read result for CLAUDE.md, .claude/workflows.md and the review template packs, and add a note where the old rule stands.
+DEFER severity=LOW — task-444 card "Built on Opus through the six steps." — NONE — the Implementation Notes name lane BL-DOCS444, worktree and commit but never state which seat or model ran the build, so compliance with the Opus build seat cannot be seen — add one line to the Implementation Notes naming the build seat and model.
+REJECT — ms-S objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — the change is accused of serving no designed search or report element — the operator named task-444 in RR-0389 ("resolve this conflict by updating the key specs and docs"), which makes the docs update a supporting function, and the clause is a default ("most likely"), not a bar.
+
+MET — task-444 card "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCBYLAWS-QUEUE.md:248 — the added line reads "Dated note 2026-11-22 (M-246, prior text kept; task-444" and the prior sentence at :247 is unchanged.
+MET — RR-0389 "resolve this conflict by updating the key specs and docs" — docs/specs/01-pipeline/69a_mcbylaw_register.md:654 — the M-506 status cell carries the same dated note after "RULED 2026-11-06 (operator)" with the verbatim quote.
+MET — task-444 card "Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts, docs/specs/01-pipeline/69a_mcbylaw_register.md" — src/tests/spec-notes-1b.logic.test.ts:136 — the diff touches exactly those four paths and nothing else, so no scope creep against the Files line.
+MET — task-444 card "gets its own dated note (M-246, prior text kept)" — .cursor/MCFRONTEND-QUEUE.md:19 — the note sits below the old sentence at :13 and before the next heading, quoting ":1954 \"resolve this conflict by updating the key specs and docs\"".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  53880ms (53.9s)
+📊 Tokens — total: 23169, input: 11661, output: 11508, reasoning: 10503

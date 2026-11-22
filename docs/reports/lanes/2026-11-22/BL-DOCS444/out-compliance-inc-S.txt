@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:07:29.836Z file_sha256=e0118ea5230dc5e91008889c650d44068e46ca07a39a9d7f9bf70d57f66a890b prompt_sha256=23d6bc38e0daa8ecb3262ac9c309becfe41d8580f4e397307ccaba7032f048f7
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-DOCS444/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings first, then MET lines.
+
+DEFER severity=MED — task-444 description "the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs)" — NONE (the diff has no hunk for CLAUDE.md, .claude/workflows.md or any review template pack) — the "every spec and doc that still states the old rule gets its own dated note" clause is unproven for the docs the card itself names, and the implementation notes record no read of them, so whether they still state the old rule is cannot see — record in Implementation Notes, per named doc, whether it was read and whether it states the old rule, and add the dated note to any that does
+DEFER severity=LOW — task-444 "every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept)" — .cursor/MCFRONTEND-QUEUE.md:19 "This supersedes \"Opus sparingly\" in the paragraph above for the plan seat and the building lane; \"Sonnet seats\" stands." — the superseded sentence sits at line 13 in the 2026-11-06 order note, and the 2026-11-06 MF-33 note lies between it and the new note, so "the paragraph above" does not locate the prior text the note keeps — name the source, for example "the 2026-11-06 Phase 1 order note above"
+DEFER severity=LOW — 69a M-506 conflict check pasted in the diff "Spec 08 §7 rule 9 (substrate economics): no conflict, the note is dated and the rule text stands." — docs/specs/01-pipeline/69a_mcbylaw_register.md:654 "This supersedes \"on Sonnet\" in the Rule text above for the building lane only" — the same status cell now asserts both that the rule text stands and that part of that text is superseded, so the row reads two ways on which text governs the building lane — in the new note, say the conflict check's "the rule text stands" is read as superseded here, keeping the prior text
+DEFER severity=LOW — task-444 "operator, verbatim: \"resolve this conflict by updating the key specs and docs\"" — .cursor/MCBYLAWS-QUEUE.md:248 "operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 \"Teh seat that writes the plan is opus and the seat that build is Opus\", :1910 ..." — three of the four cited line numbers (:1909, :1910, :1912) are not in the pasted context, which cites RR-0385 at :1915 and RR-0389 at :1954, so the provenance of the ruling cannot be checked from what is pasted — add :1915 to the note's cites, or verify the three lines exist in MORNING-DECISIONS.md before merge
+
+MET — task-444 "Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts, docs/specs/01-pipeline/69a_mcbylaw_register.md" — all four hunks — the diff touches exactly those four paths and nothing else
+MET — task-444 ".cursor/MCBYLAWS-QUEUE.md:247 first" — .cursor/MCBYLAWS-QUEUE.md:247 unchanged, note added at :248 — the old sentence "Opus only for hard design adjudication, with the reason logged." is kept in place and the note follows it
+MET — RR-0385 "Opus plans and builds" / "seats and grounders on Sonnet, reviewers DeepSeek" — .cursor/MCBYLAWS-QUEUE.md:248, .cursor/MCFRONTEND-QUEUE.md:19, docs/specs/01-pipeline/69a_mcbylaw_register.md:654 — each note carries "the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek"
+MET — M-246 prior text kept — docs/specs/01-pipeline/69a_mcbylaw_register.md:654 — the M-506 row is replaced by an identical minus/plus line with the note appended to the status cell, one line changed in place, no text removed
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  80104ms (80.1s)
+📊 Tokens — total: 26481, input: 17115, output: 9366, reasoning: 8296

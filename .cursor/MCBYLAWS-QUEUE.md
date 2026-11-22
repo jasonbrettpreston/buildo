@@ -245,6 +245,7 @@ Nothing has been built, committed or written to the DB. Next: the operator answe
 | D DB nights | **Idempotency lens (mandatory)** + Reality-Check + Integration | Reality-Check on the loaded rows + Guardian |
 | P product | as M/E, plus the frontend nuance (08 §11.5-FE) | Guardian + grounded reviewer |
 Seats run on Sonnet by default. Opus only for hard design adjudication, with the reason logged. DeepSeek handles breadth and execution (08 §7 rule 9; the operator's token directive 2026-10-26).
+- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "Opus only for hard design adjudication" above for the plan seat and the building lane; "Seats run on Sonnet by default" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).
 
 ### Lanes (08 §C.6: one worktree per task, write scopes must not overlap, claims checked by the engine)
 | Lane | What | Writers | Worktree / branch | Running limit |
