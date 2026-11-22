@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-DOCS444'
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T22:02:00Z'
+updated_date: '2026-11-22T22:05:00Z'
 labels:
   - McFix
   - McFix Final
@@ -176,4 +176,8 @@ rg#3 MED folded arm Q (queueCheck) i
 Dated note 2026-11-22 (M-246, prior text kept; RR-0389 · task-444 · Backlog; operator, verbatim: "resolve this conflict by updating the key specs and docs")
 
 2026-11-22 taken on the board at lane launch (lane BL-DOCS444, worktree /Users/brettpreston_macmini/Buildo-wt-docs444, branch wf1/inc1b-docs444), RR-0240
+
+2026-11-22 red step (lane BL-DOCS444): one describe block added to src/tests/spec-notes-1b.logic.test.ts (FINAL.1b); commit attempted with only the test and this task file staged, expected refused at (b) before the notes.
+
+2026-11-22 build (lane BL-DOCS444): red recorded (3 of 17 failed at (b), spec-notes-1b.logic.test.ts:152 and :161, commit refused, exit 1). Notes added with the plan's EXACT TEXT: N1 .cursor/MCBYLAWS-QUEUE.md:248, N2 .cursor/MCFRONTEND-QUEUE.md:19, N3 in the status cell of M-506 at 69a:654 (no line inserted). Nothing deleted. Arm Q before the edit at 707ddef32: MB PASS, MF PASS.
 <!-- SECTION:NOTES:END -->

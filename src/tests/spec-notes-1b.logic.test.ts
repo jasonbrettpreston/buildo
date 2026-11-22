@@ -133,3 +133,33 @@ describe('D3-ext: Spec 135 carries the footer ruling (MF-91, SRCH.FOOTER) on the
     expect(row).toContain('Dated note 2026-11-11 (M-246, prior text kept; rulings landing');
   });
 });
+
+// FINAL.1b (task-444, lane BL-DOCS444; RR-0385 item 1, decision-170; RR-0389, decision-174): the documents that still state the
+// old model rule carry a dated note under it (M-246, prior text kept). Fails on (b) before the notes, passes after (08_agents.md:486).
+describe('FINAL.1b: the old model rule carries the task-444 dated note, prior text kept', () => {
+  const NOTE_444 = 'Dated note 2026-11-22 (M-246, prior text kept; task-444';
+  const WORDS_444 = ['run on Opus', 'every grounder run on Sonnet', '"resolve this conflict by updating the key specs and docs"'];
+  const QUEUES: Array<[string, string]> = [
+    ['.cursor/MCBYLAWS-QUEUE.md', 'Opus only for hard design adjudication, with the reason logged.'],
+    ['.cursor/MCFRONTEND-QUEUE.md', 'Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly).'],
+  ];
+  it.each(QUEUES)('%s: the old sentence stays, the note follows it before the next heading and carries the split', (rel, old) => {
+    const lines = rt(rel).split('\n');
+    const at = lines.findIndex((l) => l.includes(old));
+    expect(at, `${rel}: the prior sentence is gone`).toBeGreaterThan(-1); // (a)
+    const note = lines.findIndex((l, i) => i > at && l.startsWith(`- ${NOTE_444}`));
+    const heading = lines.findIndex((l, i) => i > at && l.startsWith('#'));
+    expect(note, `${rel}: no task-444 note after the old sentence`).toBeGreaterThan(at); // (b)
+    expect(heading === -1 || note < heading, `${rel}: the note is not before the next heading`).toBe(true);
+    for (const w of WORDS_444) expect(lines[note]).toContain(w); // (c)
+  });
+  it('69a M-506: the Rule text stays, the note sits in the status cell after it and carries the split', () => {
+    const row = rt('docs/specs/01-pipeline/69a_mcbylaw_register.md').split('\n').find((l) => l.startsWith('| **M-506** |')) ?? '';
+    const old = row.indexOf('a multi-step build goes to the owning lane, on Sonnet');
+    expect(old, 'M-506: the prior Rule text is gone').toBeGreaterThan(-1); // (a)
+    const note = row.indexOf(NOTE_444);
+    expect(note, 'M-506: no task-444 note after the Rule text and the status').toBeGreaterThan(row.indexOf('RULED 2026-11-06 (operator)')); // (b)
+    expect(row.indexOf('RULED 2026-11-06 (operator)')).toBeGreaterThan(old);
+    for (const w of WORDS_444) expect(row.slice(note)).toContain(w); // (c)
+  });
+});
