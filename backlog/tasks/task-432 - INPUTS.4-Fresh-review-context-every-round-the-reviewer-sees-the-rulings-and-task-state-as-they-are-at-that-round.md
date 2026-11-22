@@ -3,10 +3,11 @@ id: TASK-432
 title: >-
   INPUTS.4 Fresh review context every round: the reviewer sees the rulings and
   task state as they are at that round
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-CTX432'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:52:00Z'
+updated_date: '2026-11-22T16:54:00Z'
 labels:
   - McFix
   - McFix V2
@@ -18,6 +19,17 @@ references:
   - docs/reports/reviews/task-432/seat-integration-1.md
   - docs/reports/reviews/task-432/seat-reality-check-1.md
   - docs/reports/reviews/task-432/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 132012
 ---
@@ -141,3 +153,9 @@ ig#1 MED folded :161 is not edited (
 ig#2 MED folded Fresh context every 
 rg#1 MED folded :161 is not edited (
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-22 taken on the board at lane launch (lane BL-CTX432, worktree /Users/brettpreston_macmini/Buildo-wt-ctx432, branch wf1/inc1b-ctx432), RR-0240
+<!-- SECTION:NOTES:END -->
