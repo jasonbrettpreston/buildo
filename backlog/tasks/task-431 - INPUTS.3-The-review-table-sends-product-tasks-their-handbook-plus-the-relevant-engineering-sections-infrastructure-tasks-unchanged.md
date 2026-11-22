@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:33:00Z'
+updated_date: '2026-11-22T22:53:00Z'
 labels:
   - McFix
   - McFix V2
@@ -157,4 +157,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0380 · task-431 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0383 · task-431 · Backlog; operator, verbatim: "1. what is your recommendation. I approve it")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend"): re-scoped. The plan on this card (PLAN-431-v2) and its round 1 records are superseded; a new plan follows the engineering seat task. The A, B or C question of the plan grounder is closed by this ruling. The four surface specs are dropped by a separate card after task-430.
+
+2026-11-22 (orchestrator, from the task-438 plan ruling by Cairn-Ground-P438, docs/reports/reviews/task-438/QUESTIONS-RULED.md; word for word): Task-431 carries the de-dup line moved out of task-438 (438 plan ruling, RR-0380 and RR-0385 item 7): add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line; in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));` so a file's text goes once when its whole list and a sections list both resolve; rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent'), with one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed); change the line of PLAN-431-v3 that says it relies on 438's de-dup; re-prep it after 438 lands.
 <!-- SECTION:NOTES:END -->

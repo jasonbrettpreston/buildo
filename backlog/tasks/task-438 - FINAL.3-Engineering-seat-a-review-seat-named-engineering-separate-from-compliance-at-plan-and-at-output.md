@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T20:32:00Z'
+updated_date: '2026-11-22T22:53:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-438/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-438/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-438/seat-integration-1.md
+  - docs/reports/reviews/task-438/seat-reality-check-1.md
+  - docs/reports/reviews/task-438/seat-regression-1.md
 type: build
 ordinal: 138012
 ---
@@ -21,7 +27,7 @@ ordinal: 138012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "We want to seperate the compliance from the engineering standards seat. For both the plan and output."; "We need a new name for an agent called engineering." THIS TASK: a new review template named engineering; the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages; the launch gate and the close check expect both seats' outputs. Task-431 then gives the seat the right sections (front end, back end). Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -43,110 +49,95 @@ Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/RE
 <!-- SECTION:PLAN:BEGIN -->
 # PLAN-438-v1: a review seat named engineering, separate from compliance, at plan and at output
 
-Planner: Opus, read-only, board worktree head 0c4a0d2fb. All measurements were taken in memory with the table's own functions (resolveTask, listBlocks, buildLensInputs, validateTable). Nothing was written and no tests were run.
+Planner: Opus, read-only, board worktree head 0c4a0d2fb; folded at head 34fe2ad6c (tasks 436, 437 and 444 landed; line numbers re-read). All measurements were taken in memory with the table's own functions (resolveTask, listBlocks, buildLensInputs, validateTable). Nothing was written and no tests were run.
 
 ## BASIS
 - RR-0385 / decision-170 (MORNING-DECISIONS.md, last entry), verbatim: "We want to seperate the compliance from the engineering standards seat. For both the plan and output."; "We need a new name for an agent called engineering." Ruled item 2: "a review seat named `engineering`, separate from compliance, at plan and at output". Orchestrator's reading in the same entry: "the engineering seat from the landing of its task".
 - RR-0385 item 5: built gates stay. This task adds no gate. It renames what the existing gate requires for one document.
-- RR-0380, verbatim: "drop the full engineering when arts can be sent". Grounder Q6 (docs/reports/reviews/task-431/QUESTIONS-RULED.md): only a resolver rule removes the double sending.
-- Operator: "Tehse should be small changes"; "build with existing components". Principles: standardized, observable, scalable, accurate, understandable.
+- RR-0380, verbatim: "drop the full engineering when arts can be sent". The de-dup line is task-431's (RR-0385 item 7); 438 changes no list resolution.
 
 ## FACTS (file:line)
-1. Today every resolved list is one compliance job: plan-prep inputArgv rule-lists.mjs:651, dry run :654-656, jobs :666 (template `lens-compliance.md`, output `plan-compliance-<id>[-pN].txt`).
-2. The brief's lens line (backlog-lane.mjs:181-183) names `out-compliance-<id>` for every list.
-3. The close and the plan gate prove each list through `listProof`, which hard-codes the base name `${ph}-compliance-${l.id}` (check-lane-close.mjs:386), the template `lens-compliance.md` (:399) and the message (:420). `complianceSetErrors` (:428-453) adds the joined/per-list form and is called at :514 (close) and :639 (plan gate).
-4. `reviewErrors` compares the header template name (:61).
-5. F10: the close reads templates at the range base (:763 `readBase`). The plan gate reads them from the repo (:631 `readBase: i.readRepo`).
-6. The review tool takes any `--template` (deepseek-review.js:161, :362). It needs no change.
-7. lens-input sizes the prompt with `--template` and defaults to lens-compliance.md (rule-lists.mjs:827).
-8. Only the engineering standards file `docs/specs/00_engineering_standards.md` (rule-lists.json:31 `eng-all`) is an engineering list. No other file in the table has both a whole list and a sections list (measured).
-9. Precedent for keeping an old form for tasks launched earlier: the per-list form was "kept for a task launched before the join" (check-lane-close.mjs:425).
-10. `isLensOutput` (rule-lists.mjs:302) and the grounder rules read any `plan-*`/`out-*` file. Findings ids and `unmentioned` work without change.
-11. The engineering file has 0 bold `name.N` rule ids (grep), so its `Rules met:` line will read `none`.
-12. Fixtures in check-lane-close.logic.test.ts use lists on docs/a.md (:22), so existing close tests are untouched. LENS_TEMPLATES (:33) commits the lens templates into the temp repo.
+3. `listProof` (check-lane-close.mjs:386, :399, :420) hard-codes the base name `${ph}-compliance-${l.id}` and lens-compliance.md; `complianceSetErrors` (:428-453) adds the joined/per-list form and is called at :514 (close) and :639 (plan gate).
+5. F10: the close reads templates at the range base (:764 `readBase`). The plan gate reads them from the repo (:631 `readBase: i.readRepo`).
+8. Only `eng-all` (rule-lists.json:31, docs/specs/00_engineering_standards.md) is an engineering list; no file has both a whole and a sections list (measured).
 
 ## WHAT
 1. Add one template.
-2. Add one routing predicate: the list's `file` is the engineering standards file. I chose this over a `seat` field because it needs no table data, no validate code, and no field that a new list can forget (task-431's three lists route with no edit). The ruling names the document itself ("the engineering standards seat").
-3. Add one de-dup line in resolveTask.
-4. Give the four readers (plan-prep, brief, close, plan gate) a seat name. lens-compliance.md is NOT edited: the plan gate recomputes prompt hashes from the repo template (:631), so an edit would invalidate every prepped plan-compliance output, including task-430's 28.
+2. Add one routing predicate: the list's `file` is the engineering standards file (no table field: the ruling names the document, and task-431's three lists route with no edit).
+3. No de-dup line here: it belongs to task-431 and acts on nothing today (no file has both lists, measured).
+4. Give the four readers (plan-prep, brief, close, plan gate) and the fixture writer a seat name. lens-compliance.md is NOT edited: an edit would invalidate every prepped plan-compliance output (hashes are recomputed from the repo template, :631).
 
 ## TEMPLATE `.claude/review-templates/lens-engineering.md`
-A copy of lens-compliance.md with exactly these line changes. All other lines are verbatim, including the one `{{PLAN}}`, the format lines (FINDING_LINE readers), `Clauses checked: <n>   Unmet: <n>`, the `Rules met:` line and its paragraph.
-- L1 `# Lens: Engineering standards (DeepSeek)`
-- L3 `**Axes:** Engineering rule by rule`
-- L4 `**Spec 08 seat:** Engineering: the engineering-standards part of A10 Compliance as its own seat (RR-0385, decision-170)`
-- L5 insert `lens-engineering.md · ` after `lens-compliance.md · `
-- L12 `You are an engineering standards reviewer. You have exactly one question: is the plan or diff built to every engineering rule pasted in the context (docs/specs/00_engineering_standards.md, whole or by section), rule by rule? You judge against the pasted engineering rules only; a rule that is not pasted is not yours to invent.`
-- L14 and L30: the question becomes `Is the plan or diff built to every pasted engineering rule?`
-- After L16, a new first bullet: `- spec clauses, handbook rules and operator rulings (lens-compliance)`
-- L48 `1. List every engineering rule in the pasted list that binds this change. Skip rules that do not touch the change.`
-- L49 `2. For each bound rule, find the plan step or the diff line that meets it, or say none does.`
-- L50 `3. A rule met only by a comment, a TODO or a test name is UNMET.`
-- L51 is deleted. The "nothing added" scope check stays with compliance.
-- L71 `VERDICT: PASS or FAIL on the pasted engineering rules`
-- L82 `- Judging against a rule that is not in the pasted list. If you recall a rule from elsewhere, say "not pasted" and do not raise it.`
+A copy of lens-compliance.md with exactly these line changes; all other lines are verbatim. It is a seat of its own, not a renamed copy: the standards hold the error, security, logging and type rules, so the NOT-responsible list must leave those to it. It has no `Rules met:` line: the file has no `name.N` rule ids.
+- L1, L3, L4, L5: engineering titles (L4 cites RR-0385, decision-170); L5 also lists lens-engineering.md.
+- L12 `You are an engineering standards reviewer. You have exactly one question: is the plan or diff built to every engineering rule pasted in the context, rule by rule? You judge against the pasted engineering rules only; a rule that is not pasted is not yours to invent, and a pasted rule is yours even where another lens also covers its topic.`
+- L14 and L30: the question becomes `Is the plan or diff built to every pasted engineering rule?` The clause ref is the numbered section (for example `4. Security and API Contracts`).
+- L17 to L21 become three bullets: spec clauses, handbook rules, operator rulings, design text, "nothing added" (lens-compliance); quality or behaviour no pasted rule states (the code-review, ux, error-paths and security lenses), where a pasted rule on their topic is yours; failure modes, rollback, data reality (plan-review-deepseek).
+- L48 to L50: "clause or ruling" becomes "engineering rule" in the same three steps; L51 is deleted (the "nothing added" check stays with compliance).
+- L71 `VERDICT: PASS or FAIL on the pasted engineering rules`; L73, L75, L76 (Rules met and its paragraph) are deleted.
+- L82 `- Judging against a rule that is not in the pasted list. If you recall a rule from elsewhere, say "not pasted" and do not raise it.` L83 becomes `- Reporting style, naming or performance that no pasted rule states.`
 
-README.md: one row in the lens table after :100 (`lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385) | every task whose lists include the engineering standards | plan and output), plus one sentence in "The lens line" (:158) giving the seat's file names.
+README.md: one row in the lens table after :100 (`lens-engineering.md`, Engineering (RR-0385), plan and output), a sentence in "The lens line" (:158) and in item 5 (:160) naming the seat's files.
 
 ## CODE (per function, lines changed)
-**rule-lists.mjs** (protected, about 8 lines):
+**rule-lists.mjs** (protected, about 7 lines):
 - Add `export const ENG_FILE = 'docs/specs/00_engineering_standards.md'` and `export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')`: +2 lines.
-- resolveTask, before `return result` (:282): `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));`, +1 line. A whole list on a file makes that file's section lists redundant, so the text goes once. Today this changes 0 open tasks (measured). After task-431 it removes the double sending from 21 open tasks.
-- reviewPhase: inputArgv takes the list and writes `in-plan-${seatOf(l)}-${id}` with `--template <REPO>/.claude/review-templates/lens-${seat}.md` (1 line). Dry-run lines :654/:656 (2). The jobs line :666 uses the seat's prefix and template (1). The summary :679 counts engineering separately (1).
+- reviewPhase: inputArgv writes `in-plan-${seatOf(l)}-${id}` with `--template <REPO>/.claude/review-templates/lens-${seat}.md` (1 line); dry-run lines :654/:656 (2); jobs :666 (1); summary :679 counts engineering separately (1).
 
-**check-lane-close.mjs** (protected, about 17 lines):
+**check-lane-close.mjs** (protected, about 21 lines):
 - Import `seatOf` (1).
 - listProof gains `seat`: base `${ph}-${seat}-${l.id}`, template `lens-${seat}.md` twice, message (4).
-- complianceSetErrors gains `seat`: its three regexes and two messages use `${ph}-${seat}-` (6). The joined form is per seat (`out-engineering-rules`), with joinLists over that seat's lists only.
+- complianceSetErrors gains `seat`: its three regexes and two messages use `${ph}-${seat}-` (6). The joined form is per seat (`out-engineering-rules`), with joinLists over that seat's lists only. The form is chosen per seat and per stage: a joined compliance set with per-list engineering files is accepted; an old joined `out-compliance-rules` that holds eng-all is refused once the base has the template.
 - closeErrors :514: `const split = readBase('.claude/review-templates/lens-engineering.md') !== null;` then one call per seat with its non-empty list subset. When `split` is false every list is compliance, which is the old contract (3).
-- Plan gate :639: one call per seat, always split (3).
+- Plan gate (the launch gate) :639: one call per seat with its non-empty list subset, always split (3). Text naming compliance moves to the seat: layout :632, messages :420, :437, :443, comment :12-21 (+4).
 - The fix branch (:644) is unchanged, because fix tasks run no list lenses (rule-lists.mjs:649).
 
-**backlog-lane.mjs** lensLine (about 3 lines):
+**backlog-lane.mjs** lensLine (:177-184; about 4 lines):
 - `ids` splits into compliance and engineering ids.
-- The `per` sentence names `out-compliance-<id>` for compliance lists.
+- The `per` sentence (:184) names `out-compliance-<id>` for compliance lists, and its joined-run clause says `--lists <the compliance list ids>` (the pinned substrings `--list rules --lists` and `accepted form that is not the default` stay).
 - A new sentence: "Engineering lens, once per engineering list: the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool; files `out-engineering-<id>.txt`."
 
-## CUT-OVER (F10; least cost, honest)
-- **Close:** the split applies when the range base holds lens-engineering.md. This is the existing F10 rule, the same one that reads templates at the base, with the precedent at :425. RUNNING lanes launched before the landing (20 carry eng-all: 354, 366, 372-376, 378, 381, 383, 384, 387-390, 395, 396, 406, 407, 411) close as today with `out-compliance-eng-all` and re-run nothing. A lane that merges the board after the landing owes `out-engineering-<id>`: one call per engineering list part, plus grounder verdicts.
-- **Plan gate:** it has no range base, so the split applies from the landing.
-- task-430 (LATER, prepped, no Plan line in GROUNDER-PLAN.md): launch it BEFORE 438 lands, at no cost.
-- Otherwise re-make one output, `plan-engineering-eng-all.txt`, from its one-part input renamed `in-plan-engineering-eng-all.txt`. That is 1 DeepSeek call, and the grounder adds a Ruled line and verdicts for it. The old plan-compliance-eng-all.txt stays committed; the compliance proof ignores it because it iterates compliance lists only.
-- Every other LATER/WAITS task is prepped after the landing.
+**plant-evidence.mjs** (docs/reports/reviews/task-375/, the launch-test fixture writer, on the Files line, about 5 lines): it names each list's files and template with `seatOf` and copies lens-engineering.md; without it the plan gate refuses every build launch test (the fixture's thing.mjs hits the lane-tools row, rule-lists.json:159, which carries eng-all). The path adds no rule list (resolveTask: the same 9; exempt as docs/reports/reviews/**), so no second plan round. Being exempt, the output lenses and chunk coverage never see it: the backlog-lane tests that run it are its proof.
+
+**08_agents.md** (on the Files line): one dated note (M-246, prior text kept) after :351 (section 7 rule 4) records the seat split and that the per-list rule of :241 and :351 reads `out-compliance-<id>` or `out-engineering-<id>`. Spec 137 rule 10 and engineering standards section 14 ("A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit") require it, as in tasks 436 and 437 (Spec-diff trailer). The lane regenerates docs/reports/generated/rule-lists-by-kind.md (`page --write`) and adds it to the Files line in its own commit, as task-437 did; that adds list policy-124-s2-s5 to the output review.
+
+## CUT-OVER (verified at head 34fe2ad6c)
+- **Close:** the split applies when the range base holds lens-engineering.md (:764; precedent :425). A lane launched before the landing has no such base and closes as today with `out-compliance-eng-all`: task-430 (BL-HB430, RUNNING; 436, 437 and 444 are BUILT and folded), 438 itself and 20 other RUNNING lanes that resolve eng-all. This is a deliberate exception for lanes already launched (as the 2026-11-21 note in Spec 137); their engineering list is still reviewed, under the compliance name.
+- **No re-run:** the lane's hook is its own copy (.husky/commit-msg:7), a fold is a merge commit the close skips (:707-708), and only a commit that sets a finished status runs the close (:735), so no closed lane is checked again. A lane that merges the board before it closes gets the new code and the template together and owes `out-engineering-<id>` plus verdicts; the orchestrator tells it not to merge first.
+- **Plan gate (the launch gate):** no range base, so the split applies from the landing; the compliance name is refused for an engineering list, with no alias. Only task-431 is prepped and unlaunched with plan-compliance-eng-all (measured), and its agents-s7-s11 evidence is stale already: it is re-prepped after 438 lands.
+- These lines are the ruled change itself (RR-0385 item 2 on the gates item 5 keeps), not new gate work.
 
 ## TESTS (red first; each with a planted defect or control)
-- **T1** review-templates.logic.test.ts: add `engineering` to the one-placeholder loop. A new test asserts lens-engineering.md holds `Clauses checked: <n>   Unmet: <n>`, `Rules met: <rule ids, comma separated>` after it, `Rules met: none`, and the question line. Control: lens-compliance.md lacks the question line. Red now (the file is absent).
+- **T1** review-templates.logic.test.ts: `engineering` joins the one-placeholder loop; one new test asserts lens-engineering.md holds the structural strings of review-lens-template.infra.test.ts:80-92 and `Clauses checked: <n>   Unmet: <n>` and no `Rules met:` (control: lens-compliance.md holds it). That infra test is left alone (its LENSES would force lens-compliance.md to name lens-engineering, and it is not edited). Red now (the file is absent).
 - **T2** rule-lists.logic.test.ts:
 - seatOf: eng-all and a sections list on ENG_FILE give engineering. bylaw-133 and the joined list (joinLists) give compliance.
-- De-dup on a temp table (resolveIn pattern, rule-lists-table.logic.test.ts:181-192): row A holds W (whole, file F) and row B holds S (sections of F). A Files line hitting both resolves W and not S. Control: B only resolves S.
-- Planted defect: the filter line removed gives S plus W (this is today's behaviour, so the test is red now).
+- Red now (seatOf is not exported); planted defect: seatOf returning compliance for every list fails the eng-all case.
 - **T3** check-lane-close.logic.test.ts, fixture option `eng` (an `eng` list on docs/specs/00_engineering_standards.md, on the src row; LENS_TEMPLATES :33 gains `engineering`):
 - (a) out-engineering-eng with lens-engineering.md is accepted.
 - (b) The same review filed as out-compliance-eng is refused, naming `out-engineering-eng.txt`.
 - (c) An engineering output whose header names lens-compliance.md is refused ("expected lens-engineering.md").
 - (d) F10 control: with a base without the template, out-compliance-eng is accepted.
 - (e) The joined `out-compliance-rules` (compliance lists only) plus out-engineering-eng is accepted.
-- **T4** plan gate (fixture near :874): plan-engineering-eng is accepted and plan-compliance-eng is refused, naming plan-engineering-eng.
+- (f) No engineering list needs no out-engineering file. (g) A joined out-compliance-rules over all lists, eng-all included, is refused with the template at the base, accepted without. (h) A joined out-engineering-rules is accepted; with a lens-compliance.md header, refused.
+- **T4** plan gate (fixture near :874): plan-engineering-eng is accepted and plan-compliance-eng is refused, naming plan-engineering-eng; no engineering list needs no plan-engineering file.
 - **T5** backlog-lane.logic.test.ts:
-- :343 changes: eng-all leaves the out-compliance loop, and the test expects `out-engineering-eng-all` and `lens-engineering.md` (with no out-compliance-eng-all).
+- Changed: :398-403 (eng-all expects `out-engineering-eng-all` and `lens-engineering.md`); :691-695 (stub run: `in-plan-engineering-eng-all`, header lens-engineering.md); :730 (lens-compliance review lines = lens-input lines minus engineering lists). Unchanged: :270, :301, :336-343, :370, :408, :551, :644-665, :681, PARITY. Every plantEvidence fixture needs the writer change.
 - plan-prep `--dry-run` with an engineering list prints `in-plan-engineering-<id>` and `--template …lens-engineering.md`.
 
 ## ORDER
-1. task-430 launches (or re-makes one output, as above).
-2. 438 lands.
-3. 431 lands.
+1. 438 lands (task-430 launched before it and owes nothing).
+2. 431 is re-prepped after 438 lands, then lands; it carries the de-dup.
 
 ## LANDING
 Protected paths (rule-lists.json:22), so a two-commit close (check-lane-close.mjs:740, 137_mcqueue.md:138):
-1. Commit 1: the template, README, code, tests and task notes.
+1. Commit 1: the template, README, code, fixture writer, tests, the Spec 08 note (Spec-diff trailer), the regenerated page with its Files entry, task notes.
 2. Commit 2: the close records.
 
 ## ACCEPTANCE
 - `plan-prep review --dry-run` for a task resolving eng-all prints one engineering job and the compliance jobs for the other lists.
 - The close and the gate require `out-`/`plan-engineering-<id>` and refuse the compliance name.
 - T1 to T5 are green.
-- `rule-lists.mjs validate` and `page --check` are unchanged.
+- `rule-lists.mjs validate` is ok and `page --check` is current after the page is regenerated.
 
 ## NOT IN SCOPE
 - The 431 sections.
@@ -156,15 +147,60 @@ Protected paths (rule-lists.json:22), so a two-commit close (check-lane-close.mj
 - Renaming the generated page.
 - Spec 08 section 5.1's seat table.
 
-## OPEN QUESTIONS
-Does Spec 08 section 5.1 need an Engineering row (one line), or are the README row and decision-170 enough? The record does not say.
-
 ## UNVERIFIED
-- Whether a board-side fold commit of a lane closed under the old code re-runs the close with board code (base = board head). If it does, that fold owes engineering outputs.
-- The engineering template's length against the compliance one (call counts use the compliance template).
+- The red and green state of every test above (nothing was run at plan time).
 
 ## ESTIMATE (GUESS)
-About 30 code lines plus an 86-line template; half a day of Opus build.
+About 40 code lines plus an 83-line template, one dated note and a regenerated page; half a day of Opus build.
 
-Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md
+
+Plan review round 1: 52 folded, 0 task, 0 ruling, 0 wontfix, 17 pile; grounder docs/reports/reviews/task-438/GROUNDER-PLAN.md; triage docs/reports/reviews/task-438/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED folded Spec 137 rule 10 and
+plan-compliance-agents-s5-1to3#3 MED folded No de-dup line here:
+plan-compliance-agents-s5-1to3#4 MED folded The form is chosen p
+plan-compliance-agents-s7-s11#1 MED folded No de-dup line here:
+plan-compliance-agents-s7-s11#2 MED folded No de-dup line here:
+plan-compliance-agents-s7-s11#3 MED folded it is re-prepped aft
+plan-compliance-agents-s7-s11#4 MED folded so no closed lane is
+plan-compliance-eng-all#1 MED folded No de-dup line here:
+plan-compliance-eng-all#2 MED folded No de-dup line here:
+plan-compliance-eng-all#3 MED folded Spec 137 rule 10 and
+plan-compliance-five-words#1 MED folded No de-dup line here:
+plan-compliance-inc-S#1 MED folded No de-dup line here:
+plan-compliance-inc-S#2 MED folded This is a deliberate
+plan-compliance-ms-S#1 MED folded No de-dup line here:
+plan-compliance-ms-S#2 MED folded This is a deliberate
+plan-compliance-ms-S#4 MED folded No de-dup line here:
+plan-compliance-orchestrator-doc17#1 MED folded No de-dup line here:
+plan-compliance-orchestrator-doc17#3 MED folded Spec 137 rule 10 and
+plan-compliance-orchestrator-doc17#4 MED folded This is a deliberate
+plan-compliance-plan-protocol#1 MED folded No de-dup line here:
+plan-compliance-plan-protocol#2 MED folded No de-dup line here:
+plan-compliance-plan-protocol#4 MED folded Spec 137 rule 10 and
+plan-compliance-plan-protocol#5 MED folded This is a deliberate
+plan-compliance-plan-protocol#6 MED folded one call per seat wi
+plan-compliance-queue-137#1 MED folded No de-dup line here:
+plan-compliance-queue-137#2 MED folded Spec 137 rule 10 and
+plan-compliance-queue-137#3 MED folded so no closed lane is
+plan-error-paths#4 MED folded it is re-prepped aft
+plan-plan-review-deepseek#1 MED folded one call per seat wi
+plan-plan-review-deepseek#2 MED folded No de-dup line here:
+plan-plan-review-deepseek#4 MED folded No de-dup line here:
+plan-plan-review-deepseek#8 MED folded 438 itself and 20 ot
+plan-plan-review-deepseek#9 MED folded task-430 (BL-HB430, 
+ig#1 HIGH folded The path adds no rul
+ig#2 MED folded That infra test is l
+ig#3 HIGH folded This is a deliberate
+ig#4 MED folded it is re-prepped aft
+ig#5 MED folded Spec 137 rule 10 and
+ig#6 MED folded its joined-run claus
+rc#1 HIGH folded It is a seat of its 
+rc#2 MED folded (Rules met and its p
+rc#3 MED folded No de-dup line here:
+rc#4 MED folded folded at head 34fe2
+rg#1 HIGH folded Changed: :398-403 (e
+rg#2 MED folded (f) No engineering l
+rg#3 MED folded The form is chosen p
+rg#4 MED folded (RR-0385 item 2 on t
 <!-- SECTION:PLAN:END -->
