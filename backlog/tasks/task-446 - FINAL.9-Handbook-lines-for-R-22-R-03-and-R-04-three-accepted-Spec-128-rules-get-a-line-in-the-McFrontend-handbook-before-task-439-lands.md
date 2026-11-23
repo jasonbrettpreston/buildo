@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T15:00:00Z'
+updated_date: '2026-11-23T15:33:00Z'
 labels:
   - McFix
   - McFix Final
@@ -415,4 +415,8 @@ Item 7: the pre-commit related run of commit 2905df62d ran src/tests/surfaces/ha
 2026-11-23 lane BL-HB446: real check-lane-close.mjs on a throwaway clone at 337b627ac with the task staged BUILT refuses only on GROUNDER.md and its reference (grounder owed); pasted in docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md.
 
 2026-11-23 lane BL-HB446 round 1 fix commit (the grounder Cairn-Ground-O446 fix list, RR-0385 round 1 resolves MED): out-compliance-surface-126-p4#1, the FE-58 Status and Lock cell cite .cursor/MCFRONTEND-QUEUE.md:713 becomes :719 (the MF-31 status line at the lane HEAD, re-read before the commit); out-engineering-eng-all-p1#1, one inline comment above const r = hit[0]! in handbook-rule-map.logic.test.ts. generate-surface-handbook.mjs --check: up to date (58 rules); rule-lists.mjs page --check: current; nothing regenerated. Task stays RUNNING.
+
+2026-11-23 lane BL-HB446 (orchestrator decision after the round 1 fix): the round 1 output review as ruled by the grounder Cairn-Ground-O446 is at commit 22b1e36b0 (git history keeps it): 134 ids, 26 CONFIRMED, the 2 MED fixed in 390c54261 (out-compliance-surface-126-p4#1, out-engineering-eng-all-p1#1). The base-named lens files in docs/reports/lanes/2026-11-23/BL-HB446/ are re-run on the whole diff at 390c54261 with context-r4.md, because the close check builds its whole-change proof from the base names only (scripts/hooks/check-lane-close.mjs:385-394); this re-run is review round 2 (RR-0385: CRITICAL and HIGH only).
+
+2026-11-23 lane BL-HB446 output review round 2: base-named lens files re-made by lens-input on the diff 240e559e3..390c54261 with context-r4.md; 49 outputs re-run on DeepSeek, out-compliance-bylaw-133-p1 kept (input byte-identical); surface-135 p6..p8 and the single orchestrator-doc17 file removed (the split moved; round 1 stays at 22b1e36b0). 120 findings untriaged in FINDINGS.md (HIGH 7, MED 34, LOW 65, NIT 13, 1 blank). Grounder owed; the task stays RUNNING.
 <!-- SECTION:NOTES:END -->

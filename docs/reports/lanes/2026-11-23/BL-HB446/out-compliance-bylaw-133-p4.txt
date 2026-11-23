@@ -1,21 +1,23 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:21:43.700Z file_sha256=78d02b45ae34a9dbd210b92adf839da5094d7c1e208c2ff2cb449284b9de16b5 prompt_sha256=c9d0a37e500aee188bcb8a60905ce56cd3d8c315ef2c137fe2dcd23f3817ba60
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:09:41.783Z file_sha256=289367c0befd2eb4f398aef97c990f6109dcf8fcdb47bbb20066abc52a597176 prompt_sha256=334248a6a154136355eb97c412487581ce2f44f06b6ca7a9bd6edb9599d38fce
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p4.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — task-446 card "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 adds a permanent CI assertion that R-03 (128:205) and R-04 (128:206) are each cited exactly once, going beyond the R-22 line and beyond task-430's pattern that tested only its own rows; read narrowly this is a new check on out-of-scope rules — restrict the loop to R-22 (128:224) and keep R-03/R-04 only as off-register planted/control fixtures.
+DEFER severity=MED — card scope "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules, a generator change, a rule-table change (task-439's)." — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 makes a live exactly-one-line check over R-03 and R-04 on the real register, which is a new check on the "other lower-rank rules" the card excludes and RR-0396 limits to R-22 — fix: keep the real-register length-1 assertion for 128:224 only, and drive the 128:205 and 128:206 citation-count arms from planted fixtures.
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));" — the replaced assertion adds no constraint on what follows the thirteen, so the MF-95 lock no longer pins the 13 rows as the register tail and a reorder or stray row after them passes — fix: add a following assertion that rows.slice(at + 13) is exactly the one task-446 row, located by the R22_LOCK path.
+DEFER severity=LOW — Implementation Notes "FE-58 handed over to BL-HB446 (FE-58/owner dated line); FE-59 not claimed." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — the 2026-11-22 note still records FE-58 as reserved to lane BL-MFRULES while the 2026-11-23 note takes FE-58 for task-446 and records no handover, so the line contradicts itself on its face — fix: append one clause to the 2026-11-23 dated note stating FE-58 was handed over to task-446.
 
-REJECT — m.360 "a test never asserts a red floor" — T2 "expect(r.status).toBe('OWED');" pins a red baseline — not a real issue: OWED is the row's current correct status (its enforcement lock is task-367's, not T2), the test goes green once FE-58 lands, and the plan records the same-commit edit when task-367 flips the row.
-
-MET — RR-0396 "Question2 No" (no seam sentence on fe.49) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — only FE-58/fe.58 are added; fe.49 is untouched.
-MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — "- **fe.58** No Server Components on mobile ..." added in section 2.
-MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135_mcfrontend_decisions_register.md — "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" is OWED and the path is absent.
-MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json — "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK" and expected_totals equal expected_before_totals.
-MET — register Next free id rule "the first value on the line, the one the Spec 136 generator reads, is FE-59" — 135_mcfrontend_decisions_register.md — the line advanced 58 to 59 with a dated note.
+MET — card "one handbook line (Spec 136 section 2) for R-22" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.58** No Server Components on mobile." — exactly one line added, restating Spec 128 R-22 at 128:224 with no new rule text.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — FE-58 is OWED and its single lock is a valid surfaces path that does not exist yet (acceptance item 6 "lock absent" = 1).
+MET — card "Question2 No" / "no seam sentence appended to fe.49" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history." — the only Spec 136 content change is the counts line and the fe.58 line; no fe.49 line is touched.
+MET — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Do not edit by hand: `--check` and `src/tests/surfaces/handbook-rule-map.logic.test.ts` fail on a stale file." — the counts line and scripts/surfaces/_schema/surface-rule-map.json both carry fe.58 / FE-58 in the same shape as fe.57, consistent with a generator write.
+MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK" — no floor value or floor line is moved by this change.
+MET — m.360 "Floor discipline: a test never asserts a red floor, the --accept door counts RULED rows" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "expected_moves": [], "expected_figure_changes": [] — empty moves and figure changes, no pool re-base and no line moved, consistent with a documents and one root test change.
+MET — m.260 "The by-law handbook is Spec 133 — By-law Handbook, a generated reading spec." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "GENERATED by `node scripts/surfaces/generate-surface-handbook.mjs --write`" — the handbook added to here is Spec 136 McFrontend, generated by its own generator; no Spec 133 by-law handbook file is touched.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 0
-Rules met: m.322, m.360
+Clauses checked: 11   Unmet: 0
+Rules met: m.260, m.322, m.360
 
 ---
-⏱  108688ms (108.7s)
-📊 Tokens — total: 53836, input: 30633, output: 23203, reasoning: 22531
+⏱  58056ms (58.1s)
+📊 Tokens — total: 43213, input: 31236, output: 11977, reasoning: 10743

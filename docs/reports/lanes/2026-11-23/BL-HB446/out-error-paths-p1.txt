@@ -1,26 +1,24 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T14:32:13.887Z file_sha256=6de1e7097c970bf83cddcf0afaba36cf6421f57812f7fbd7c2f089dff2c8b3b4 prompt_sha256=ae34f4ced9a7ba1c7f650894386040f63b5f7deee7a90efb9603e868fb053bad
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T15:29:36.193Z file_sha256=b893d7fee8ddf388ca5a9b4f8f4bae47e4a4fd5f0709799a84060152ac2b0794 prompt_sha256=ddc5a07f96d5e4c79195a67009d8a13ae7fd5035802ed5df38dd45bb534d1ca5
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-error-paths-p1.txt (model: deepseek-reasoner)
 
-BUG severity=CRIT — none found.
+DEFER severity=LOW — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing and rewrites this line by a dated note" — two lanes can each write a row at a now-shared id and the de-dup is a manual renumber at landing, with no explicit duplicate-id assertion in this diff — add a test that rejects two rows carrying the same FE id (or confirm readFeRows' "no gap or reorder" already rejects duplicates, cannot see its body)
 
-DEFER severity=MED — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:17 "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — the reserved renumber range for lane BL-MFRULES landing second still ends at FE-58, which this change consumes, so a second landing that follows this note instead of the ledger writes a second FE-58 row and the rule map is keyed by that id — extend the parenthetical to FE-59 onward and say BL-MFRULES renumbers to the first free id after FE-58.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "const old = build(makeRoot(stripRows(REGISTER, tail, rows.length - tail.length + 1)));" — looks like a fresh off-by-one versus the old rows.length - 12 — it is exactly rows.length - (rows stripped) + 1, so it preserves the prior remaining+1 form, no double-write or miscount introduced
 
-DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-97** (ids are never reused)" — the MF path has no renumber-on-second-claim sentence while the FE register carries one, so two lanes launched while the line read MF-96 both append an MF-96 row and this file gives no recovery rule, the only dedup key being the out-of-repo ledger "id claimed in ~/Buildo-scratch/ids/MF-96" — add the same renumber-at-landing sentence the FE note uses.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);" — fresh[0]!.id throws TypeError if fresh is empty — the preceding expect(fresh.map(...)).toEqual(NEW_LOCKS) fails and halts the test first, so the throw is unreachable
 
-DEFER severity=LOW — pasted Implementation Notes "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite" — the four checks that would catch a duplicated queue row, a stale rule-lists table or an OWED lock path that already exists do not run before this commit, detection is pushed to the push station, which fails closed but only after the commit exists — run those four in the pre-commit related set or record them as an explicit push-station gate on the MF-96 row.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(() => readFeRows(stripRows(REGISTER, [rows.at(-1)!.id], rows.length))).not.toThrow();" — rows.at(-1)! can be undefined and throw on an empty register — H1 asserts the register reads >= 30 rows, so the last-row access is always populated
 
-REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:294 "stripRows(REGISTER, tail, rows.length - tail.length + 1)" — the +1 looks off by one for a call that removes tail.length rows, leaving rows.length - tail.length — handled: the replaced call carried the same +1 (rows.length - 12 for 13 ids), so the offset is stripRows' own convention, its body is not visible and the case is green.
+REJECT — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "so every total below is the unchanged MF-95 prereg total" — copying totals while adding one OWED row could make the prediction wrong and read as a silent miscount — the bylaw check compares and fails loudly on drift (fail closed), and rules[] holds only the three RULED rules the new OWED row never cites
 
-REJECT — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json:2 "every total below is the unchanged MF-95 prereg total" — copying the previous baseline looks like it could silently approve a stale figure — handled: a figure that moved between the two preregs mismatches expected_before_totals and the run reports DIFFER, so it fails closed.
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| total | 15 lists | | 724,797 | 20 |" — hand-checked delta could double-count — surface-136 +386 and surface-135 +1,905 sum to +2,291, matching both the 722,506 to 724,797 and 803,569 to 805,860 totals, and the generator's --check would reject a wrong figure anyway
 
-REJECT — docs/reports/generated/rule-lists-by-kind.md:47 "| total | 15 lists | | 724,797 | 20 |" — a hand-checkable total that would drift on a partial write — handled: 28,690+386 and 111,851+1,905 sum to the +2,291 delta and the page is rebuilt by rule-lists.mjs page --write then --check, so a second run is a no-op.
-
-REJECT — docs/specs/00-architecture/00_system_map.md:100 "src/tests/surfaces/mobile-no-rsc.logic.test.ts" — the map now names a test file that does not exist, which an existence check would fail — handled: register rule 5 (135:15 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist") makes absence correct, and the lane reports system-map.infra.test.ts green at commit 2905df62d.
+DEFER severity=NIT — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(rows.length).toBeGreaterThanOrEqual(57);" — the lower bound was not raised for the 58th row — a silently dropped FE-58 still fails T2's lock lookup, so the loose bound costs nothing
 
 VERDICT: PASS on error-path safety
-Paths walked: error (generator --check stale, T1/T2 red), empty (fresh/hit empty, citing over zero rows), retry (second --write, BL-MFRULES second landing), time-out (RUNNING expires 2026-11-30, push-station deferral), double-submit (MF-96 and FE-58 claim collision, row appended twice), degrade-safe (OWED lock absent, system map pointing at it, prereg baseline), idempotency (id ledger key, generated totals, rule-lists page)   Unguarded: 1
+Paths walked: generator --write then --check idempotency round trip, register readFeRows gap/reorder on a stripped or malformed register, OWED lock-file absence, rule-lists totals arithmetic, FE id dedup across BL-HB446/BL-MFRULES, prereg expected totals   Unguarded: 0
 
 ---
-⏱  79512ms (79.5s)
-📊 Tokens — total: 41797, input: 26982, output: 14815, reasoning: 13861
+⏱  90319ms (90.3s)
+📊 Tokens — total: 39024, input: 27588, output: 11436, reasoning: 10670

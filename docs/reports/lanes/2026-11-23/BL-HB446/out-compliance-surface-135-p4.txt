@@ -1,27 +1,21 @@
 ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:30:07.501Z file_sha256=6bdc2408312c1003b65136caeca1ed90bdc2cfe0787336d110b9e968cb2c8987 prompt_sha256=5b54191b53c6fc34544d1631fe06876ffa092c2761fb167ae31a8f78d3bdf311
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:26:37.912Z file_sha256=27afa5f4482aa78e088120c830c9492c88258f0ce3d613a4dfef41be55f0dc4c prompt_sha256=f4df2086362f496a2d23904d470dd49f89980eb4a5a74042b4b3030c3e42d5ba
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p4.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0396 "the fe.58 line text as shown to him" and "no seam sentence appended to fe.49" — NONE — this chunk holds only the queue row, the panel record, the rule-lists page and the system map, so the fe.58 line text and the absence of a seam sentence on fe.49 cannot be seen — verify both in docs/specs/02-web-admin/136_mcfrontend_handbook.md and 135 (chunk 2) before the closing commit.
-
-REJECT — FE-56 "A rule without a lock is not yet a rule" — the change is accused of landing FE-58 with no lock — the row is OWED with a reserved path, which is exactly the state FE-56's evidence column sanctions ("Today only the red-evidence file is checked, for an OWED flip").
-
-REJECT — FE-55 "The admin is a projection, not a product" — the change is accused of opening a parallel admin path — the diff is documents only (queue row, panel record, regenerated page, system map) and names no admin surface or data path.
-
-MET — FE-58 — .cursor/MCFRONTEND-QUEUE.md "one OWED Spec 135 row restating Spec 128 R-22 (128:224) with one reserved lock path (the lock is task-367's)" — the row restates R-22 only, the lock stays task-367's reservation, no SSR-assuming mobile mechanism is planned.
-
-MET — FE-58 — docs/specs/00-architecture/00_system_map.md "src/tests/surfaces/mobile-no-rsc.logic.test.ts" — the reserved path recorded on the spec 135 row is the same path the register row names.
-
-MET — FE-56 — .cursor/MCFRONTEND-QUEUE.md "The new register row is OWED, so this row owns none (arm Q, Spec 128 section 4.11 item 7)." — the OWED state is declared in the row, the queue block and the register, and no lock is claimed proven or red.
-
-MET — RR-0395 "one handbook line per missing rule before task-439 lands, recommended for R-22, R-03 and R-04" — the queue Done-condition and the system map change carry R-22 only; no R-03 or R-04 row or line is added by this chunk.
-
-MET — card "NOT in this task: ... a rule-table change (task-439's)" — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | ... | 113,756 | 3 |" — only the generated character and total counts move (386 + 1,905 = 2,291 in both totals), no rule-table change.
+MET — card "Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, docs/specs/02-web-admin/135..., ... docs/specs/00-architecture/00_system_map.md" — the whole diff, 9 paths — the diff touches exactly the nine paths the card's Files line names, nothing outside them
+MET — FE-48 "Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-58 row) — the row cites ~/Buildo-scratch paths and quotes operator words only, no mock, brief or Stitch export is copied in, the same form FE-45..FE-57 use
+MET — FE-49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed." — .cursor/MCFRONTEND-QUEUE.md:654-657 (MF-96 row) — no Spec 100, lead feed, flight board or lead_parcels reference is added anywhere in the diff
+MET — FE-47 "All tunables are data; zero thresholds in `src/`." — src/tests/surfaces/handbook-rule-map.logic.test.ts:307-309 "const R22_LOCK = ... const R22_HEADLINE = ..." — the added code carries one lock path and one headline string, no debounce, page size, stale time or rate limit value
+MET — RR-0396 "Question1 yes. push complete" and "Question2 No" (no seam sentence on fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205-206 "- **fe.58** No Server Components on mobile." — only fe.58 is added between fe.57 and "## 3. History", fe.49 is untouched
+MET — RR-0395 "Agreed. Plan approved" (one small task adds the missing handbook lines before task-439 lands) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "| FE-58 | No Server Components on mobile." — exactly one OWED row and one handbook line, R-03 and R-04 are not re-added
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — docs/reports/panels/MF-96.json:3 "R-03 and R-04 are already fe.49 and fe.52." — R-22 only is added, no other lower-rank rule is touched
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — docs/reports/panels/MF-96.json:21 ""verdict": "PLAN RULED; OUTPUT owed"" — the task stays RUNNING with findings untriaged and the grounder owed, nothing is folded
+REJECT — card "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — accused of adding an R-22 machine check via test T1 and T2 in handbook-rule-map.logic.test.ts — the card itself prescribes "tests first" and "added the way task-430 added its 13 lines", and the reserved R-22 lock src/tests/surfaces/mobile-no-rsc.logic.test.ts is not created, so T1/T2 only pin the line inside an existing lock
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 0
-Rules met: FE-56, FE-58
+Clauses checked: 23   Unmet: 0
+Rules met: FE-45, FE-46, FE-47, FE-48, FE-49
 
 ---
-⏱  109542ms (109.5s)
-📊 Tokens — total: 33140, input: 19415, output: 13725, reasoning: 13081
+⏱  71670ms (71.7s)
+📊 Tokens — total: 53240, input: 36687, output: 16553, reasoning: 15715

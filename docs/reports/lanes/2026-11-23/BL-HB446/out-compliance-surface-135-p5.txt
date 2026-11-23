@@ -1,31 +1,24 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:30:13.739Z file_sha256=6847ac8f0d875f99600cd67eea4894a56e70558e927dc26fe3fe2a31e05f8d93 prompt_sha256=cf980daf3b2bc374a14a19995b13ee42afb7f9f0c705f5d759c34b3fc7c427c2
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:27:49.666Z file_sha256=428774923136409bb2583827401b9de6e5bd70f249831045367f7306de12748d prompt_sha256=0f74a92afcb34266f1140b4e9c56df0db5fcad3184bdb6cd67c7e8b3e1cf8546
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p5.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — Spec 135 rule 4 "Six cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-58 row "D pass, P owed, F n/a, S pass, H n/a, E pass" — the new FE row's Six cell carries "owed", a value rule 4 does not list, so FE-58 is outside the ruled Six vocabulary — set FE-58's P to the Spec 128 §4.9 value (pass or FAIL), or add a dated note to rule 4 admitting a fourth word; the same word already sits on FE-55..FE-57 (RR-0384), so a one-row fix would desync the register.
+DEFER severity=LOW — pasted list, "Rows moved from Spec 128 section 5" "DEFERRED (Spec 128 §5 dated note 2026-11-04; MF-31). Not drafted." — docs/specs/02-web-admin/136_mcfrontend_handbook.md:11 "The policy rows R-01..R-34 are in Spec 128 §5 until MF-31." (and the same commit's FE-58 cell "MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:719)") — the regenerated handbook rewritten by this commit still says the R rows sit in Spec 128 "until MF-31" while the new FE-58 row says MF-31 is dropped, so two statements about one task ship in one commit and neither is reconciled — either cite the queue status word as reported rather than asserted in the FE-58 cell, or hand the 136:11 sentence to task-439 (no generator change is allowed here) and record the hand in the row
 
-DEFER severity=LOW — RR-0396 "Question1 yes. push complete" and "Question2 No" (R-22 only, the fe.58 line text as shown to him, no seam sentence on fe.49) — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 adds a uniqueness gate on fe.49 and fe.52 (128:205, 128:206) that fails any future second line citing those rules, an obligation the ruling did not name when it bound the task to R-22 only — narrow T1 to 128:224, or record a dated note approving the R-03/R-04 pins.
+DEFER severity=LOW — pasted FE-57 "OWED `src/tests/surfaces/a11y-category.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:78 "the lock is task-367's (task-434 merged into it, RR-0385 item 6)" — the row this change appends records that task-434 no longer exists, yet FE-50..FE-57, the eight rows directly above it, still name task-434 as the lock owner, so the register now gives two owners for the same reservation and the change does not reconcile them — one dated note under the FE-58 row or the register stating the merge for FE-50..FE-57, or an explicit hand of that restatement to task-367 in the queue row's Done-condition
 
-DEFER severity=LOW — Spec 135 header "The move of R-01..R-34 here is DEFERRED (Spec 128 §5 dated note 2026-11-04); those ids stay in Spec 128 for now." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "v1 covers the 58 FE rulings of Spec 135. The policy rows R-01..R-34 are in Spec 128 §5 until MF-31." against FE-58's "MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:713)" — the change leaves the regenerated handbook saying the R rows sit in Spec 128 "until MF-31" while the register row it renders declares MF-31 dropped, so the two generated pages disagree on whether MF-31 exists — reconcile the 136 sentence in this change or drop the parenthetical from FE-58.
+DEFER severity=NIT — pasted FE-56 "a lock never red against the defect it names is not a lock" — src/tests/surfaces/handbook-rule-map.logic.test.ts (T1) "expect(citing(dup, '128:205')).toHaveLength(2);" — T1 names three rules but plants and controls only the 128:205 cite, so the R-22 (128:224) and R-04 (128:206) arms have no planted defect inside the committed test and their red rests only on the lane red.out — add one planted duplicate carrying "(128:224)" so the arm this task exists for is proven red by its own fixture in the file
 
-MET — Spec 135 rule 2 / rule 5 ("ONE lock per row; the Lock is in the LAST cell"; "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist") — 135 FE-58 last cell "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395)" — exactly one lock, in the last cell, a valid surfaces path shape, and the diff creates no such file.
-
-MET — Spec 135 rule 3 ("A ruled row whose lock is not built reads `OWED` with the lock path. Never an OWED marker with no lock path") — 135 FE-58 "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — the OWED marker carries its lock path.
-
-MET — Spec 135 "**Next free id:**" dated-note clause ("the first value on the line, the one the Spec 136 generator reads") — 135:15 "**Next free id:** `FE-59`. Dated note 2026-11-23 (M-246, prior text kept; MF-96 ... RR-0395 ...): the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446)" — first value FE-59, prior text kept, dated-note form, and the claimed prior value matches the removed line.
-
-MET — task card "one handbook line (Spec 136 section 2) for R-22" — 136 "fe.58 No Server Components on mobile. ... Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" — one handbook line, one row.
-
-MET — task card "the handbook and rule map regenerated by the existing generator" — scripts/surfaces/_schema/surface-rule-map.json "id": "fe.58", "section": "rules" and "id": "FE-58", "kind": "fe-row", "status": "owed", "handbook_line": "fe.58" — rule map carries the new line and row anchors.
-
-MET — RR-0396 "Question2 No" (no seam sentence on fe.49) — the diff adds only the FE-58 row and contains no hunk touching the FE-49 row — fe.49 is left as it stood.
-
-MET — task card "added the way task-430 added its 13 lines" (counts stay consistent) — 136 "**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history." against the previous 57/21 OWED — the one added OWED row moves both counts by exactly one.
+MET — card, RR-0396 "Question1 yes. push complete" and "Question2 No" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 — the fe.58 line carries the R-22 text as shown to the operator and no sentence is appended to fe.49
+MET — card "one handbook line (Spec 136 section 2) for R-22" and "rows in the Spec 135 register table, the handbook and rule map regenerated by the existing generator" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:78 — FE-58 is OWED with exactly one reserved lock, src/tests/surfaces/mobile-no-rsc.logic.test.ts
+MET — card "the rule map, the rule-lists page and the system map regenerated by their existing commands" — scripts/surfaces/_schema/surface-rule-map.json:891 — the FE-58 entry is kind fe-row, status owed, handbook_line fe.58, register anchor FE-58
+MET — card Files "docs/reports/generated/rule-lists-by-kind.md" — docs/reports/generated/rule-lists-by-kind.md:36 — surface-135 characters move 111,851 to 113,756 and the total 722,506 to 724,797, equal to the 1,905 the register diff adds
+MET — card Files "docs/specs/00-architecture/00_system_map.md" — docs/specs/00-architecture/00_system_map.md:100 — the Spec 135 Tests list gains src/tests/surfaces/mobile-no-rsc.logic.test.ts, the same OWED reservation the register names
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — .cursor/MCFRONTEND-QUEUE.md:655 — MF-96 stays RUNNING with "next: Land the closing commit" and the grounder recorded owed
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 15   Unmet: 2
-Rules met: none
+Clauses checked: 19   Unmet: 0
+Rules met: FE-58
 
 ---
-⏱  133879ms (133.9s)
-📊 Tokens — total: 32884, input: 16184, output: 16700, reasoning: 15420
+⏱  144809ms (144.8s)
+📊 Tokens — total: 62896, input: 32408, output: 30488, reasoning: 29413

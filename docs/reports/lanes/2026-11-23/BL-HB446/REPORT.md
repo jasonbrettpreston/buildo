@@ -4,7 +4,7 @@
 2. Acceptance printed: --check exit 0; 58 fe lines; "Rules rendered: 58: 58 in force (22 OWED ..."; cites 128:205, 128:206, 128:224 one each; the mobile-no-rsc line is 136:206; the lock file is absent (1); page --check current, surface-136 one part (29,076); generator, Spec 128 and rule-lists.json untouched (empty stat).
 3. Built as the plan says, with one stale cite kept as written: the FE-58 Status cell says "MF-31 ... DROPPED (.cursor/MCFRONTEND-QUEUE.md:713)"; after commit 0 added the MF-96 row, that Status line is at :719 (lenses out-compliance-surface-126-p2#3 and -p4#1 name it). The plan's C-T2 title replacement also reads "in item order, are contiguous, in item order" (the plan's words joined into the old title).
 4. Unverified: acceptance item 7 for register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue (the commit's related run ran only handbook-rule-map, 41 passed, and system-map, 13 passed; the lane may not call the runner); items 10 and 11 (id check, full suite) are the orchestrator's and the push station's.
-5. Open: a separate grounder must rule the 134 findings (CRIT 2, HIGH 5, MED 39, LOW 80, NIT 6, 2 blank) in GROUNDER.md; the task stays RUNNING; the close commit is not made.
+5. Open: round 1 was ruled by Cairn-Ground-O446 (134 ids, 26 CONFIRMED; the 2 MED fixed in 390c54261); round 2 (the base-named lens files re-run at 390c54261 on context-r4.md) holds 120 findings (HIGH 7, MED 34, LOW 65, NIT 13, 1 blank, no CRITICAL) for the grounder; the task stays RUNNING; the close commit is not made.
 
 ## Commits (branch wf1/inc1b-hb446, from launch 240e559e3; nothing pushed)
 - 0ae43e69c commit 0, records alone and first: MF-96 queue row + Next free id MF-97 note, prereg-MF-96-1.json (round 201, totals copied from prereg-MF-95-1.json, expected_moves empty), docs/reports/panels/MF-96.json, the task's first dated note with RR-0396 verbatim. Hook tail: lane commit0.out ("GATE OK", "POLICY CHECKS OK (commit-msg)").
@@ -37,4 +37,12 @@ No refusal about the review material remains: the two lines left are the grounde
 ## Not done (by the brief)
 No closing commit, no BUILT, no push, no merge or rebase of the board. The clone in the lane dir is removed after the check.
 
-STATUS: built-awaiting-grounder — commits 0 and 1 landed through the real hooks, red first; the output review round 1 is filed untriaged; the task stays RUNNING, grounder owed (RR-0359).
+
+## Round 1 fix and round 2 (2026-11-23)
+- Fix commit 390c54261 (real hooks: "GATE OK", "Tests  41 passed (41)", "POLICY CHECKS OK (commit-msg)"): 135:80 cite .cursor/MCFRONTEND-QUEUE.md:713 -> :719 (out-compliance-surface-126-p4#1); one inline comment above const r = hit[0]! in handbook-rule-map.logic.test.ts (out-engineering-eng-all-p1#1). generate-surface-handbook.mjs --check "is up to date (58 rules)"; rule-lists.mjs page --check "is current"; nothing regenerated.
+- After the fix the close check refused every list and lens output: "is not what git diff prints for its paths (first difference at character 42044 ...)". Its proof reads base names only (check-lane-close.mjs:385-394), so, on the orchestrator decision, the base-named files were re-made by lens-input on the diff 240e559e3..390c54261 with context-r4.md and 49 outputs re-run; out-compliance-bylaw-133-p1 kept (input byte-identical, cmp). Round 1 stays at 22b1e36b0. Details at the top of FINDINGS.md.
+- Round 2 findings, untriaged: 120 ids, HIGH 7, MED 34, LOW 65, NIT 13, 1 blank; no CRITICAL.
+
+CLOSE-CHECK-R2
+
+STATUS: built-awaiting-grounder — round 2 filed untriaged at the base names; the task stays RUNNING, grounder owed for round 2 (RR-0359).

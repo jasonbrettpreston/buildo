@@ -1,31 +1,35 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:27:53.208Z file_sha256=142798af4aced1830cbf29064ea5bf14259c74d4e10c6738ed4d950f7abd0c80 prompt_sha256=4f60c94d3602a68777a27a3e1125fec7850b346187477878cc3320fc06d1f2ce
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:22:25.135Z file_sha256=b4b041079312223c5443626679e997cba860b56699e8132eef5b995ce2c352b3 prompt_sha256=1f62ffd398d348c6e60e98e01ce68ef4a567113fa406b07b76086224a63b33a2
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — Spec 128 §4.9 "each `pass`, `n/a (reason)` or `FAIL`; a FAIL row is not RULED" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, FE-58 Six cell "D pass, P owed, F n/a, S pass, H n/a, E pass" — "owed" is outside the closed set (pass, n/a with reason, FAIL), so the new FE row's six-principle check is recorded in a value §4.9 does not define and the row cannot be RULED on this cell — fix: record "P FAIL (R-22 lock is task-367's, not built)" and give each "n/a" a reason, at latest in the flip commit.
+DEFER severity=MED — 128 §4.4 "A rule without a lock is not yet a rule" — src/tests/surfaces/handbook-rule-map.logic.test.ts:265 "it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them)" against the pasted note "the FE-58 row, the Next free id note and the regenerated files staged with the OLD C-T2 and C-T1 forms; the old forms go red once the row is added; recorded in the lane red.out" — the "last thirteen rows" assertion of the MF-95 lock is relaxed in the same commit that makes it red, and its both directions proof lives only in a scratch-lane red.out that is not part of the change — fix: state the red.out path in the test header and the commit body, or keep the tail bound as a computed assertion the appended row cannot silently relax.
 
-DEFER severity=MED — Spec 128 §4.8.1 "it is resolved mechanically" — task-446 Implementation Notes, lane BL-HB446 item 7 "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite" — the new Lock path's mechanical resolution is asserted by comment only, and the material itself marks the resolver unrun — fix: run register-locks-resolve (and rule-lists / mcfrontend-queue) on the tip and attach the output before the DONE flip.
+DEFER severity=LOW — 128 §4.11 item 5 dated note (2026-11-06) "An MF prereg added alone is the R-LE(a) bootstrap commit" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json:2 "committed alone and first, before the MF-96 work commit" against the pasted note "commit 0 (records, alone and first, plan section 7): MF-96 queue row under Phase 2 with \"FE rows owned: none.\" (Next free id MF-97), prereg-MF-96-1.json ..., panel record docs/reports/panels/MF-96.json" — the prereg's record of its own commit shape is not what the lane notes say landed — fix: reword the $comment to name the three records carried by commit 0.
 
-DEFER severity=LOW — Spec 128 §4.11 item 5 "with non-empty `rules[]`, each RULED" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "FE-16" — cannot see FE-16's register status in this material, so "each RULED" is unverified for one of the three cited ids — fix: name FE-16's register line in the $comment, as it already does for FE-09 and FE-10, so the RULED state is checkable.
+DEFER severity=LOW — 128 §4.8 item 1 "it holds a path, a `file:line`, or a commit SHA, and it is resolved mechanically" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/mobile-no-rsc.logic.test.ts`" against docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "no machine check yet, the lock is task-367's ... and the path is a reservation" — the system map now lists a Spec 135 locking test that does not exist, so that column does not resolve mechanically — fix: mark the path reserved in the map row until task-367 lands the file.
 
-MET — Spec 128 §4.10 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, FE-58 last cell "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — a ruled row without a built lock reads OWED with exactly one lock path, matching "A row that is ruled and whose lock is not yet built reads OWED with its lock path."
+DEFER severity=LOW — 128 §4.9 "each `pass`, `n/a (reason)` or `FAIL`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "D pass, P owed, F n/a, S pass, H n/a, E pass" — "P owed" is outside the closed Six vocabulary, so FE-58 cannot read RULED without this cell being edited in the same commit as the flip — fix: at the task-367 flip record P as pass or n/a (reason) in that same commit.
 
-MET — Spec 128 §4.7a / §4.8.2 — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" — no row reads BUILT; the lock is shown as owed, not enforced.
+DEFER severity=LOW — RR-0396 "Question2 No (no seam sentence appended to fe.49)" — src/tests/surfaces/handbook-rule-map.logic.test.ts:318 "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1)" — T1 counts lines that cite a string, so a seam sentence appended to fe.49 would leave the count at one and pass, leaving the ruling's negative half unlocked — fix: pin fe.49's headline text the way T2 pins fe.58's, so an appended sentence fails.
 
-MET — Spec 128 §4.11 item 7 — .cursor/MCFRONTEND-QUEUE.md "  - FE rows owned: none." — the new MF-96 block holds exactly the one permitted bullet, and the heading is RUNNING, not DONE, so no OWED-row DONE refusal is triggered.
+MET — 128 §4.10 "One lock per register row (multi-lock rows are split)" — src/tests/surfaces/handbook-rule-map.logic.test.ts:326 "expect(r.locks).toEqual([R22_LOCK])" with the single reserved path in the register row.
 
-MET — RR-0396 "the handbook task adds the R-22 line only; no seam sentence on fe.49" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.58** No Server Components on mobile." — one line added, no text added to fe.49, and the row's Full text cell records "Question2 No".
+MET — 128 §4.8 item 2 "A row may not read `BUILT` unless its `Lock` resolves" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:206 "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts", no row reads BUILT and none is flipped.
 
-MET — card "one OWED Spec 135 row restating Spec 128 R-22 (128:224)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "| FE-58 | No Server Components on mobile. "React Native has no Server Components." (Spec 128 R-22, 128:224, ACCEPTED)." — the row quotes the accepted R-22 rule and rules nothing new.
+MET — 128 §4.7a item 1 "Every `ACCEPTED` row names a deciding source outside this pass" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "Operator verbatim as recorded (2026-11-23, RR-0395, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993 and backlog/decisions/decision-180): \"Agreed. Plan approved\"".
 
-MET — Spec 128 §4.11 item 9 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — the reserved lock is not a `.db.test.ts`, so no CI-step naming is required.
+MET — RR-0396 "Question1 yes ... R-22 only, the fe.58 line text as shown" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 "- **fe.58** No Server Components on mobile." is the only line added and its text is the row's headline.
 
-REJECT — card "NOT in this task: ... a new check or lock for these rules" — the change is accused of adding the R-22 enforcement lock — it is not: the reserved path stays task-367's, and T1/T2 are register-consistency pins, the comment stating "T1 is a handbook-consistency pin (exactly one line states each rule, keyed on the cite string in the headline), not the R-22 lock, which is task-367's."
+MET — task-446 "No generator, Spec 128 or rule-table change." — the diff touches no scripts/surfaces generator, no 128_surface_standard_policy.md and no rule table, only the register, handbook, rule map, rule-lists page, system map, queue, panel, prereg and the one test file.
+
+MET — 128 §4.11 item 7 dated note (MF-34) "holds one `- FE rows owned: none.`" — .cursor/MCFRONTEND-QUEUE.md:658 "  - FE rows owned: none." on the MF-96 row, with "The new register row is OWED, so this row owns none".
+
+MET — .cursor/MCFRONTEND-QUEUE.md next-free-id form "now also the first value on the line, the one tools read" — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-97** (ids are never reused). Dated note 2026-11-23 ... the line read \"Next free id: **MF-96**\" before this note."
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 0
+Clauses checked: 22   Unmet: 0
 Rules met: none
 
 ---
-⏱  216617ms (216.6s)
-📊 Tokens — total: 60153, input: 31865, output: 28288, reasoning: 27208
+⏱  110293ms (110.3s)
+📊 Tokens — total: 55931, input: 32471, output: 23460, reasoning: 22001

@@ -1,26 +1,21 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T14:32:09.997Z file_sha256=ecb7ae35d0963a52542975cead029fc5a41fc3d46a5a234485dc30180b422700 prompt_sha256=fed19576a48015ce0661a405ae14b65278789ee05386978abb208d38ebf5d6b9
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T15:29:28.587Z file_sha256=5515874288d7a48c5d029df099e54b859582b70735fb8fc36043d609c944b807 prompt_sha256=7c0bbf604bce5b2871f1a12d1a082dc5936d1067e4ea1a6b0e7f29d83d508d46
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — 14. The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — NONE (src/tests/surfaces/handbook-rule-map.logic.test.ts header is outside the chunk; the only visible new lines are the describe and pins) — the commit adds a new coupling (test pins Spec 128 R-22 `128:224` and FE-58/fe.58, and adds `src/tests/surfaces/mobile-no-rsc.logic.test.ts` to Spec 135's row of the system map) but the pasted diff carries no edit to the file's SPEC LINK header or to any Cross-Spec Dependencies section in the cited specs — check the test header names Spec 135 and the section, and add the reverse citation in Spec 135/128 if absent; bounded because the pin is a docs-only handbook line.
+DEFER severity=MED — 14. The Prevention Loop "Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*" — pasted task-446 Implementation Notes "findings listed untriaged in FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed). Grounder owed (RR-0359): the task stays RUNNING." — no §14 class-prevention answer is recorded for the CRIT 2 / HIGH 5 output findings, and the round 1 fix list names MED only ("RR-0385 round 1 resolves MED") — record, per CRIT/HIGH finding, the standing-rule question answer or an explicit "no standing rule" ruling in FINDINGS.md/GROUNDER.md before BUILT.
 
-REJECT — 12.12 Property-Based Tests "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test" — accused of adding pure helpers `citing`, `escRe` in `src/tests/surfaces/handbook-rule-map.logic.test.ts` with no fast-check test — not a real issue: these are test-local string filters/regex escapers, not one of the named invariant classes (score, key normalizer, distance/unit, cursor comparator), and no production module changes.
+MET — 12.8 SQL Linting & Migration Safety — diff path list (no migrations/ entry) — no NEW migration file exists in the change, so neither sqlfluff, validate-migration.js nor a DOWN block is triggered.
+MET — 12.10 Real-DB Integration Tests — "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — the only test path added is "src/tests/surfaces/mobile-no-rsc.logic.test.ts", an OWED surface reservation, and no migration is added.
+MET — 12.11 Footgun Lint Gate — "Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`." — the diff touches no file under those scopes, and the changed test adds no `new Pool(`, no `process.env.X ||`, no silent catch, no null type-guard filter.
+MET — 13.3 Backend Structured Logging — "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — the change adds no API route and no catch block, only docs, JSON and a surface logic test.
+MET — 12.13 Mutation Testing — "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface." — none of the four modules or their siblings is touched; the changed test is "src/tests/surfaces/handbook-rule-map.logic.test.ts".
 
-REJECT — 12.6 List Virtualization "Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer`" — accused of the rule-lists page table growing past 50 rows with `48 lists` totals — not a real issue: the pasted diff is a generated markdown report row (`docs/reports/generated/rule-lists-by-kind.md`), not a rendered React list, and no component is added.
-
-MET — 12.1 Biome "Biome MUST pass on all files in `src/features/leads/` before commit … Do NOT replace ESLint repo-wide." — src/tests/surfaces/handbook-rule-map.logic.test.ts changes — the touched test is outside `src/features/leads/`, so the Biome gate is not triggered and ESLint scope on `src/` is unchanged.
-
-MET — 12.8 SQL Linting & Migration Safety / 12.10 Real-DB Integration Tests "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — the diff's path list (`.cursor/`, `docs/`, `scripts/analysis/bylaw-validation/`, `scripts/surfaces/_schema/`, `src/tests/surfaces/`) — no migration file is added or edited, so sqlfluff, validate-migration and the db-test pairing do not apply.
-
-MET — 12.13 Mutation Testing "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface" — no target file appears in the changed paths — no mutation-surface file is touched, so the ≥50% score gate is untouched.
-
-MET — 13.3 Backend Structured Logging "API routes MUST emit at least one `logInfo` per successful request … All catch blocks use `logError(tag, err, context)`." — the only code change is the test's `out: () => {}, err: (s: string) => err.push(s)` injected writer — no API route and no catch block is added, so nothing needs a log line.
-
-MET — 13.5 Feature Flags "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — docs/specs/02-web-admin/136_mcfrontend_handbook.md new line "- **fe.58** No Server Components on mobile." — the change adds a handbook line and a register row only, no user-facing feature and no route, so no flag is owed.
+REJECT — 13.1 Product Telemetry — "Mandatory coverage: Every interactive handler in `src/features/leads/` ... MUST call `captureEvent()`" — a handbook line and register row restating an ACCEPTED rule add no interactive handler.
+REJECT — 13.5 Feature Flags — "Any new user-facing feature MUST be wrapped in a feature flag check at the route level" — the diff ships documentation and a test for an existing accepted rule, not a new user-facing feature.
 
 VERDICT: PASS on the pasted engineering rules
-Clauses checked: 19   Unmet: 0
+Clauses checked: 20   Unmet: 0
 
 ---
-⏱  39193ms (39.2s)
-📊 Tokens — total: 37016, input: 32109, output: 4907, reasoning: 3984
+⏱  47443ms (47.4s)
+📊 Tokens — total: 42957, input: 32715, output: 10242, reasoning: 9559
