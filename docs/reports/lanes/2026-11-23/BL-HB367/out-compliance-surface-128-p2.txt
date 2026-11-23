@@ -1,19 +1,31 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:06:45.259Z file_sha256=a6a7aae4c2665bc3e39ec4b7771d2827759dfe4dfe7bd9eb802820ecbfbbb69a prompt_sha256=d8f29e2b6d3463be12c63ae7419651e4a34eb9a40db95caf309aedbe876a8553
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:19:49.590Z file_sha256=8996cbc93f17625e82b827724149a0712e99a8444f74eb6bde662ebe32db37ff prompt_sha256=350d399073b2ce4567f5b2e88b07685364ac283099ef296faa5d771198263aa4
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 (pasted decision) "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-51 row, unchanged context line) "| OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule. |" — the ruling flips three rows in the commit that lands their tests, the row's own done-condition says "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths", yet only FE-49 and FE-54 flip and Spec 136 keeps printing "Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts" for a lock this task ships — read FE-51 RULED 2026-11-23 with its two named owned tab-push exceptions recorded, or take the three-to-two change back to the operator as an amendment to RR-0413.
-DEFER severity=MED — R-03 Lock cell "*(none yet — a check asserting no surface descriptor references `lead_parcels`)*" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (new FE-49 text) "so it stays out of the scope-fence test with this note as its record, and a widening of the test to platform_shared is a later batch row of task-367" — the row reads RULED on a check that knowingly does not judge the one descriptor that names lead_parcels, so the lock landing is narrower than R-03's own lock wording — amend R-03's Lock cell in this change (dated note, MF-31 convert-on-touch) to the scope actually enforced, or land the widening first.
-DEFER severity=MED — MCFRONTEND-QUEUE form rule "naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135" — .cursor/MCFRONTEND-QUEUE.md "+  - FE rows owned: FE-49, FE-54." — this row builds FE-51's reserved lock (nav-tab-switch.logic.test.ts is in its done-condition) but may not name FE-51 while FE-51 is OWED, so at DONE it cannot satisfy the same rule that forbids listing the OWED row — move the FE-51 lock out of this row into the row that can own it, or hold that lock until Q-D is answered.
-DEFER severity=LOW — task card AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — "src/tests/surfaces/scope-fence.logic.test.ts", "src/tests/surfaces/failure-state-declared.logic.test.ts" and "docs/reports/reviews/task-367/red.out" — all three fall outside this chunk (chunk 1 of 2), so whether the locks the two RULED cells point at exist and went red first is cannot see — confirm chunk 2 carries the three tests and red.out red-then-green before the flips are treated as landed.
-MET — Spec 128 §5 "No row reads `BUILT`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit" — both flips stop at RULED and no pasted Lock cell is filled, so the register's no-BUILT position holds.
-MET — task card AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (20 OWED, whose lock is still to land)" — the generator moved OWED 22 to 20 and docs/reports/generated/rule-lists-by-kind.md moves 226,854 to 226,914 and 307,917 to 307,977, the same +60 on both totals.
-MET — Spec 128 §8 Out-of-Scope Files — .cursor/MCFRONTEND-QUEUE.md "(round 203, tests and documents only, nothing moves)" — the diff edits no docs/specs/01-pipeline/124*, no scripts/steps/_schema/step.schema.json and nothing under migrations/**.
+BUG severity=none — n/a for this chunk (see DEFER lines)
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 3
-Rules met: R-14, R-19, R-24, R-26, R-28
+DEFER severity=LOW — §5 dated note 2026-11-14 "each has its register row, its goldens and planted-fault locks, and its OUTPUT panel record `docs/reports/panels/MF-83.json`" — docs/reports/panels/MF-98.json:20 "OUTPUT review owed at the lane output stage: the lens set ... filed in docs/reports/lanes/2026-11-23/BL-HB367/ with FINDINGS.md untriaged" — the panel record carries no trace of the completed output round 1 (78 lens inputs, 285 findings: 2 CRIT, 73 HIGH, 115 MED, 95 LOW, per the pasted lane notes) nor of the round-1 fix, so the record cannot show the RR-0359 grounder state on the open CRITs — add the round-1 counts and the grounder parts A to H ruling to the panel's `output` field.
+
+DEFER severity=LOW — RR-0406 "That would help to determine which running tasks and built tasks will close with that process." (the decision names task-367), with RR-0412 "So both 442 and 367 should be running once this push lands." — task card "status: RUNNING · milestone: m-1 · assignee: @lane-BL-HB367 · labels: McFix, McFix Final" — task-367 is a McFixReborn-covered task but neither the label nor a note explaining its absence appears anywhere in chunk 1's record of the row — add the McFixReborn label to the card, or record in the MF-98 row why the label is not applied.
+
+DEFER severity=LOW — Acceptance criteria #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the only shrink evidence in the change is the row's prose "Acceptance 3 now reads 19 (grep -c Status: OWED on Spec 136)" with no baseline given, and the generated section grew by 90 bytes, so a three-rule shrink cannot be audited from the diff — record the before count beside the after count (e.g. 22 to 19) in the panel or the row so AC3 is verifiable.
+
+MET — R-19 "No generated migrations. Declare and assert." — docs/reports/panels/MF-98.json:3 "No app, descriptor, mobile or gate-script change." — chunk 1 adds no migration, seed, schema or descriptor file.
+
+MET — R-13 "every component file in those trees appears in **exactly one** surface's `owns.components[]`" — docs/reports/panels/MF-98.json:3 "No app, descriptor, mobile or gate-script change." — no surface descriptor or component file is added or moved, so neither direction of the totality lock is disturbed.
+
+MET — §8 "Out-of-Scope Files ... `migrations/**` — this spec records rulings about schema, never schema." — .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-98.json — the chunk edits only the queue, the generated page and the panel record and touches none of the target or out-of-scope files.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json:24 "PLAN RULED; OUTPUT owed" — the row stays RUNNING and is not set BUILT before the grounder's output ruling.
+
+MET — RR-0413 "yes to both A. Status flip." — .cursor/MCFRONTEND-QUEUE.md:664 "FE rows owned: FE-49, FE-51, FE-54." — the three operator-confirmed rows are exactly the row's owned set.
+
+MET — RR-0386 "Task-367: gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md:663 "the parked branch wf1/inc1b-gates (RR-0386)" — no gates A or B landing is included in the change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 0
+Rules met: R-12, R-13, R-19, R-20
 
 ---
-⏱  102382ms (102.4s)
-📊 Tokens — total: 57099, input: 34804, output: 22295, reasoning: 21179
+⏱  85645ms (85.6s)
+📊 Tokens — total: 45357, input: 27190, output: 18167, reasoning: 17153

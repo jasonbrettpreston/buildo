@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:17:51.972Z file_sha256=8038113cee3dce2c33865ec3c802d7dcf888418527449cce9808f1be465c434f prompt_sha256=6af949a698b10cce7eebdf2206dab189019223500af1e8bea809018e675da6e4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop ... a server file a descriptor does not declare is not scanned." — fe.49 is certified RULED for the rule quoted at scope-fence.logic.test.ts:4 "lead_parcels is read by no surface", but the scan covers only tracked files named by in-scope descriptors, so an undeclared server file reading lead_parcels passes the gate — add a whole-tree `git ls-files` grep arm for `lead_parcels`, or narrow fe.49's rule text in Spec 136 to the declared file set before the row reads RULED
+
+BUG severity=HIGH — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:137 "expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted)" — the in-memory RED cases exercise only `findTabPushes` (line 134) and the `miscounted` arm; the `unexplained` arm at line 88, the one that catches a real unlisted tab push, is never observed red, so the gate's primary failure path is unproven — add a case asserting `judge([...scanTree().findings, planted], ALLOW).unexplained` is non-empty
+
+BUG severity=MED — Spec 127 §8.4 "The `x-draft` block each row carries (raw file list, line counts, the shard it came from) is retired with them; nothing downstream may read it." — src/tests/surfaces/scope-fence.logic.test.ts:108 "for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])])" (same at nav-tab-switch.logic.test.ts:106) — both gates' file sets rest on a block the spec retires, so the retirement commit collapses each set to `identity.route` alone — build the set from the retained descriptor fields (`owns.components[]`, `identity.route`)
+
+BUG severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:126 "expect(a.why).toMatch(/^owed: MF-\d+/)" — the "owned" half of the ruling is checked as a regex over a prose string, so an owner id that resolves to no queue row (MF-51 and MF-52 are named in no pasted spec section, and their rows cannot see be verified here) passes — assert each owner id resolves in `.cursor/MCFRONTEND-QUEUE.md`
+
+BUG severity=MED — Spec 127 §8.4 "`… --check` fails on registry drift **and** on descriptor drift, in **both** directions" — src/tests/surfaces/scope-fence.logic.test.ts:145 "expect(descs.length).toBeGreaterThanOrEqual(45);" — the comment above it promises "a listing that silently shrinks turns this red", but a `>=` floor stays green when one surface is lost and another gained, which is exactly the silent shrink it names — assert the exact in-scope descriptor and file set both directions, not a floor
+
+DEFER severity=LOW — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds" — pasted card "Task stays RUNNING; output round 2 is owed." — the three locks are judged before round 2 has run, so a round-2 finding can still rewrite them — run output round 2 and re-check these files before merge
+
+DEFER severity=NIT — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — cannot see the regenerated Spec 136 and rule-lists page in this chunk (chunk 3 holds only the three test files) — confirm from chunk 1 or 2 that `generate-surface-handbook.mjs --check` and `rule-lists.mjs page --check` exit 0
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:33-35 — exactly two allow entries, matching the two audited tab pushes (NAV-AUDIT #1, #12), keyed by file and call text, never by line
+MET — RR-0386 "gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts:1 — both gates are new files with SPEC LINK headers, no reuse of the parked wf1/inc1b-gates checker code
+MET — Spec 127 §2 step 1 "`git ls-files` + the import graph" — src/tests/surfaces/scope-fence.logic.test.ts:95 "execFileSync('git', ['ls-files', '--', 'scripts/surfaces/']" — the inventory is measured from git, not typed into a list
+MET — Spec 127 §10 "**Logic:** `*.logic.test.ts`" — both new gates land under the mandate's own suffix and the register lock stays in `*.infra.test.ts`
+MET — RR-0392 "no other infrastructure beyond this" — the diff adds three test files and touches no script or generator
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  117571ms (117.6s)
+📊 Tokens — total: 50890, input: 25077, output: 25813, reasoning: 24543

@@ -1,20 +1,31 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:05:12.344Z file_sha256=56647072658fe5ab969522a72ac6fc6fd8c65aae69dfb289dc1b58d9e8e4c27e prompt_sha256=c5c787a2811a11a20d5f02afde6f44e54df38c9668d059c02a3544cbd968f3df
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:15:00.106Z file_sha256=1e40fa53b53ed2be741859ca153beba876a68afdefd3418b83248b8ef49c1cae prompt_sha256=42f34af2a51bffaed3c50591825eddbb5adeb29df60203dae241d851aaeeb259
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p9.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" and RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/136_mcfrontend_handbook.md @@ -25,7 +25,7 @@ "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land), 0 history." — the third gate landed (card notes "AC6 nav-tab-switch: // SPEC LINK: ... FE-51 (Spec 136 §fe.51)" and "nav-tab-switch (5)") yet the generated line still counts fe.51 among locks "still to land", so the handbook asserts an owed lock that exists and the no-check list shrank by two of the three gated rules — fix: flip fe.51 to RULED in the register (19 OWED, regenerate Spec 136 and the rule map) or have the generator render an explicit "lock landed, flip pending" state for the FLIP_PENDING row.
-DEFER severity=MED — RR-0413 "the operator confirms the three rows ... "yes to both A. Status flip."" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`" — only FE-49 and FE-54 carry the RR-0413 dated note; the fe.51 deferral rests on the lane's own "Q-D is not answered: the build follows the plan NOT-YES branch" note, and no pasted operator ruling names that branch as ruled — fix: record the operator's Q-D answer as a dated note on the fe.51 row (or complete the flip) so the register's status matches the ruling that produced it.
-DEFER severity=MED — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/handbook-rule-map.logic.test.ts "else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));" — the lock now enforces the string "lock owed" for a row whose lock file is tracked and green (BUILT_BY_367, on FLIP_PENDING), contradicting the handbook's own legend "an OWED row shows the lock it owes" — fix: assert a distinct text for FLIP_PENDING rows so "lock owed" is only required where the lock file is untracked.
-REJECT — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — accused of flipping fe.54 to RULED while the lock is declaration-only, excludes 8 out-of-scope contract readers and misses the live mobile/src/lib/maxbldHelp.ts:19 break — why not a real issue: AC2 asks for a planted defect, which case B supplies, and both limits are written into the row's dated note and assigned to the task-343 leftovers, so nothing pasted requires code reading.
-MET — AC2 — src/tests/surfaces/failure-state-declared.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem', () => {" — three planted defects (no error state, answer none, answer UNRESEARCHED) each assert exactly the one expected problem line.
-MET — AC3 (generators, not hand edits) — scripts/surfaces/_schema/surface-rule-map.json "status": "active" under "id": "FE-54" — the rule map mirrors the two flipped register rows, and the card records both generators run with --write/--check exit 0.
-MET — RR-0413 (FE-49, FE-54) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "Lock: `src/tests/surfaces/scope-fence.logic.test.ts`" — each flipped row names the ruling, its lock path and a dated note, and Spec 136 renders "Status: RULED 2026-11-23 · Enforced by: ...".
-MET — card Files, prereg first — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json "prereg 1, committed alone and first, before the MF-98 work commit." — the prereg exists at round 203 with empty expected_moves and before/expected totals equal, as an no-move task requires.
+BUG severity=HIGH — n/a? → I have no HIGH. Let me produce the format.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 23   Unmet: 2
+DEFER severity=MED — spec 126 §9 "*Schema drift* (payload fails the generated Zod mirror) → declared `schema_drift` state, an error class in `errors`, and a FAIL check; never a blank screen" — src/tests/surfaces/failure-state-declared.logic.test.ts:43 "if (!(d.states ?? []).some((s) => s.name === 'error')) out.push(`${id}: reads a contract but declares no error state`)" — the lock behind the now-RULED FE-54 "Enforced by" reading checks one state name and one `errors.answer` string, never the `schema_drift` state nor what the user actually sees, so the declared-states half of §9 stays unenforced — add a `schema_drift` (and rendered-content) arm to the same finder before the row keeps its "Enforced by" reading.
+
+DEFER severity=MED — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." against docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-54 dated note) "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — the green is green inside a fence whose population the lock states as 8 and the register states as 32, and 8 live descriptors fail the rule the row now reads RULED for — restate the LIMITS to the register's numbers and read FE-54 RULED with its named out-of-scope exceptions, the pattern FE-51 already uses.
+
+DEFER severity=LOW — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-49 dated note) "a widening of the test to platform_shared is a later batch row of task-367" — a RULED row with "Enforced by" carries a known in-repo mention of `lead_parcels` that the lock does not reach, so the reading is wider than the lock; name the exception on the row the way FE-51 names its two tab pushes, or land the widening before the flip — rationale: the exception is recorded and owned, so the blast radius is bounded to what a reader infers from RULED.
+
+MET — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land)" — three rows flipped RULED and both generators were re-run (22 OWED to 19; rule map FE-49/FE-51/FE-54 owed to active).
+
+MET — RR-0413 "the three handbook rows flip to RULED with their tests" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 and FE-54 "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit" — flip and lock land in the same change, cited to MORNING-DECISIONS.md:2108.
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "two tab pushes stay in the lock as named, owned exceptions" — exactly two files named, each with its owning MF id.
+
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:69 "B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem" — red is asserted per defect class, green asserted on the real tree in case A.
+
+REJECT — RR-0413 — FE-54 reads RULED although the same row records the live break at mobile/src/lib/maxbldHelp.ts:19 — not a real issue: the note names the break and its owner (task-343 leftovers) and the lock is declaration-level by its own stated limit; the flip was operator-confirmed.
+
+REJECT — spec 126 §6.4 "the table equals the committed files, and the committed files equal the table" — accused of shipping no bidirectional drift lock — not a real issue: this chunk touches no descriptor table, seed or migration, so §6.4 binds nothing here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
 Rules met: none
 
 ---
-⏱  84039ms (84.0s)
-📊 Tokens — total: 49240, input: 31711, output: 17529, reasoning: 16424
+⏱  108848ms (108.8s)
+📊 Tokens — total: 55255, input: 33877, output: 21378, reasoning: 20236

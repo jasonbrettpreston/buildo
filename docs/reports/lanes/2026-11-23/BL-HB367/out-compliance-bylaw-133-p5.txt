@@ -1,20 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:38.715Z file_sha256=0f27b3b36d5614a1b53320c1300b0e44fcf6db58466737386cfaf8b60e01fe9d prompt_sha256=552e4f5bf85b80d3e8281f315c0a557b0708d09305249d8b4fcf4342d3887bd8
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:51:09.864Z file_sha256=5a42bf661460b0559b7e71db739686665e5989a2dfd53536defa55fcf2f6965d prompt_sha256=05953e743ff9c7b6f0370e75d2e336d65729589213b68b4505b303d9ab1d1015
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p5.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/handbook-rule-map.logic.test.ts:260 "reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (FE-51 while the operator's Q-D is open)" — the approved third flip is not executed; the lane note records "Q-D is not answered: the build follows the plan NOT-YES branch (fe.51 lock lands, row stays OWED on FLIP_PENDING)", so a nav-tab-switch lock that landed is left as an OWED row and a new pending-flip mechanism no ruling names is added — flip FE-51 to RULED with its dated note under RR-0413, or file an operator ruling withdrawing its flip before merge
-BUG severity=HIGH — task-367 acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "58 in force (20 OWED, whose lock is still to land)" — three gates land but the no-check list drops only 22 to 20 and still says a lock is "still to land" while the nav-tab-switch lock is tracked and asserted tracked by the same commit's test — flip fe.51 so the list reads 19, or have the generator render the pending-flip state so the sentence is true for a tracked lock
-DEFER severity=LOW — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:71 "RR-0413, operator, verbatim: \"yes to both\"" — the verbatim quote drops "A. Status flip", the words that scope what was approved and that the FE-51 question turns on — quote the reply in full
-DEFER severity=LOW — m.321 "Each CoA fix round pre-registers the rows it expects to move" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:14 "\"expected_moves\": []" with :7-10 "\"FE-09\", \"FE-10\", \"FE-16\", \"FE-36\"" — the round names no bylaw-133 row and moves nothing, so the pre-registration cannot be checked against the register it is filed in — cite the bylaw-133 rows the round depends on, or state that this round is documentation-only with no row expectation
-MET — m.246 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:71 — the dated note is appended inside the FE-49 status cell with prior text kept ("Dated note 2026-11-23 (M-246, prior text kept; ...")
-MET — m.343 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:194 — both flipped status cells start "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit", so each row is --accept --ruling authority
-MET — m.1 — scripts/surfaces/_schema/surface-rule-map.json:796 — the rule map moves with the register row it is generated from ("status": "active" replaces "owed"), not from a second hand-written list
-MET — m.305 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:1 — the prereg sits under the coa-* tool root and is passed by path, not embedded
+DEFER severity=MED — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 status cell "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" vs src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the gate's own declared LIMITS understates the population it excludes by four times (8 stated, 32 recorded), so a reader cannot tell what the gate leaves unjudged — replace the parenthetical with the register's split: 32 outside scope (14 estate_other, 18 platform_shared), 8 of which would fail the finder today.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 2
-Rules met: m.1, m.246, m.305, m.343
+DEFER severity=LOW — 135 FE-54 rule cell "An unhandled state is a FAIL, not a blank screen." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — the 8 known failing contract readers are disclosed but given no owner or named follow-up row, unlike FE-49 "a later batch row of task-367" and FE-51 "each removed with its fix" — name the owning row for the 8 in the FE-54 note.
+
+REJECT — FE-51 — FE-51 reads RULED while two mobile tab pushes stay unchecked and the web half is outside the lock — not a real issue: the row records the exact authority and scope, "put to him as: \"may FE-51 read RULED with its two named exceptions, yes or no?\"" and "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix", and FE-36 sets the cited precedent.
+
+REJECT — m.321 "Each CoA fix round pre-registers the rows it expects to move" — the new prereg registers a full CoA round (round 203, three total sets) for a task that touches no by-law, cost or engine file — not a real issue: the card's Files list names prereg-MF-98-1.json and the file states "Pre-registered moves: none" with identical before/after totals, which is the shape the clause asks for when nothing moves.
+
+MET — m.1 — scripts/surfaces/_schema/surface-rule-map.json:796 "status": "active", — the generated map flips with the register rows and Spec 136 regenerates from the same rows in the one diff, one source of truth.
+MET — m.246 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 status cell "Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: \"yes to both\"" — dated note appended inside the status cell with prior text kept.
+MET — m.343 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:3 "rules[] holds RULED rows only: FE-09" — only RULED rows are cited and "The rows this task locks are OWED at this commit and are never cited".
+MET — m.330 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:86 "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK" — no floor drops are pre-registered.
+MET — task-367 AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:72 "B. RED planted (KNOWN_BAD, in memory)" beside test A on the clean tree — red on a planted defect and green on the real tree are both in the gate.
+MET — task-367 AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "58 in force (19 OWED, whose lock is still to land)" (was 22) — the no-check list shrinks by the three gated rules through the generator.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: m.1, m.246, m.330, m.343
 
 ---
-⏱  81440ms (81.4s)
-📊 Tokens — total: 53739, input: 36089, output: 17650, reasoning: 16799
+⏱  104640ms (104.6s)
+📊 Tokens — total: 57123, input: 35739, output: 21384, reasoning: 20324

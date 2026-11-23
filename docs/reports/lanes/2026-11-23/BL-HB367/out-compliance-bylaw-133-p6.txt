@@ -1,23 +1,29 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:44.533Z file_sha256=8c5e0b95c3aa8d441298f6c29f7642890d282865771b80dc2e869cfd6479326a prompt_sha256=f5aa86e50691a0ee8ded8df66bf2bc0bfb5e0e27baeaa61a94d801cbfa394b48
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:51:12.813Z file_sha256=cc039bf1625110eddc45306ab0f5bc62a26341997546bac82c050e65117464a3 prompt_sha256=441ca25e43dec8fbf97ce4004d6a9ef390cdcca95debc95c4d961af7578fdf26
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p6.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows ... "yes to both A. Status flip."" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row (unchanged in the diff) "| FE-51 | Navigation extras that FE-36 does not state. ... | OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet" — only two of the three confirmed flips are carried out, the rule map changes "owed" to "active" for FE-49 and FE-54 only, and handbook-rule-map.logic.test.ts is taught to accept a built 367 lock on an OWED row — either flip FE-51 to RULED with its dated note, or paste the operator ruling (the Q-D answer the lane says is open) that keeps it OWED, since the prereg itself declares "the register rows whose flip the operator approved read RULED"
-BUG severity=HIGH — FE-54 "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39) — 135_mcfrontend_decisions_register.md FE-54 row "the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers" and "8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged" — the row reads RULED 2026-11-23 while the quoted clause is unmet on a live path and on eight descriptors the lock is written not to judge — keep FE-54 OWED until those are covered, or record an operator ruling narrowing the clause to declaration coverage inside programme scope
-DEFER severity=MED — FE-54 "a surface declares what the user sees when it fails" — src/tests/surfaces/failure-state-declared.logic.test.ts:88 "const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });" with :89 "expect(failureStateProblems([staticPage], scope.programme_scopes)).toEqual([]);" — a surface stripped of its error state is judged clean because it does not read a contract, so the lock enforces less than the clause it is cited for — either judge every SURFACE in scope or write the narrowing into the FE-54 row
-DEFER severity=MED — FE-49 "`lead_parcels` is read by no surface." (128:205, R-03) — 135_mcfrontend_decisions_register.md FE-49 row "The platform_shared standing exception is outside the lock ... the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433" — the row flips to RULED while a descriptor names lead_parcels and the lock by design does not judge it — either bring the descriptor into the lock, or record an operator ruling that a notes string is not a read
-DEFER severity=LOW — m.489 "one impact map, measured on the current origin tip" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:2 "every total below is the unchanged MF-96 prereg total (the newest prereg)" — the round's figures are copied from an earlier prereg rather than measured for this round — re-run the key on the current tip, or cite the checklist item that allows a copy when no by-law path changes
-MET — m.515 — prereg-MF-98-1.json:2 "In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202)" — the new round id is claimed in the ID ledger before use and the card names the next free id MF-99
-MET — m.513 — prereg-MF-98-1.json:5 "rules[] holds RULED rows only: FE-09 ... FE-36 ... The rows this task locks are OWED at this commit and are never cited." — the stage-6 prereg rules[] carries only RULED rows
-MET — RR-0386 — the diff carries no gates A, B or C file, so the parked gates stay parked while the handbook tests start fresh
-MET — AC #2 of the pasted card — src/tests/surfaces/failure-state-declared.logic.test.ts:77 "B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem" — each lock is shown red on a planted defect and green on the real tree in A
-REJECT — m.452 — accused of flipping a row to a landed lock without the note-reading generator — m.452 names Spec 69a rows only and this diff edits Spec 135 FE rows, so the clause does not reach it
-REJECT — m.483 — accused of a bylaw_resolution_lots type change without migration 295 — no migration, seed or DB file is in this chunk and the prereg states no by-law path is touched
+DEFER severity=MED — FE-54 (Spec 128 Rule 12, 128:39) "a surface declares what the user sees when it fails" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them" vs src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged" — the register note and the lock's LIMITS state different out-of-scope populations for the same fence, so the declared limit the operator confirmed is not the limit the code states — reword the test LIMITS to "32 outside scope, 8 of them would fail the finder" to match the confirmed note.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 15   Unmet: 2
-Rules met: m.513, m.515
+DEFER severity=LOW — FE-54 "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:39 "if (d.inputs?.answer !== 'contract') continue;" — the lock judges contract readers only; test C accepts a static in-scope surface that declares no error state "staticPage ... d.errors = { answer: 'none' }" — the narrowing is declared and the row was confirmed with it, so record a follow-up row if the rule is meant to reach every surface rather than leaving the gap implicit.
+
+DEFER severity=LOW — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "the lock is proven red and green (docs/reports/reviews/task-367/red.out)" — cannot see scope-fence.logic.test.ts, nav-tab-switch.logic.test.ts or red.out in this chunk, so only FE-54's planted arms ("RED planted (KNOWN_BAD, in memory)") are verifiable here — confirm the other two gates' red evidence when chunk 1 of 3 is reviewed.
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 cell "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`" — FE-49 and FE-54 flip to RULED with their dated notes and named locks, as confirmed.
+
+MET — RR-0417 "yes. worktrees removed" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 cell "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52)" — FE-51 reads RULED with exactly the two named owned exceptions the operator approved.
+
+MET — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (19 OWED, whose lock is still to land)" with scripts/surfaces/_schema/surface-rule-map.json "status": "active" for FE-49, FE-51, FE-54 — three gated rules leave the OWED list and the generated artifacts follow.
+
+MET — m.511 "CITE-2 cite by id and anchor" — src/tests/surfaces/failure-state-declared.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)" — the lock cites its rule by id and anchor.
+
+MET — m.513 "CITE-4 stage-6 prereg rules[] checklist" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json "rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 ..., FE-16 ..., FE-36" — the prereg carries its rules[] array and states why the OWED rows this task locks are not cited.
+
+REJECT — RR-0417 — FE-51 reading RULED while two live tab pushes remain in the tree — the operator ruling is explicitly "RULED with its two named exceptions" and both are named, owned and tied to MF-49/MF-50 and MF-51/MF-52, so this is the authorised form, not a violation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.511, m.513
 
 ---
-⏱  82613ms (82.6s)
-📊 Tokens — total: 50407, input: 31811, output: 18596, reasoning: 17373
+⏱  51350ms (51.4s)
+📊 Tokens — total: 42613, input: 32274, output: 10339, reasoning: 9215

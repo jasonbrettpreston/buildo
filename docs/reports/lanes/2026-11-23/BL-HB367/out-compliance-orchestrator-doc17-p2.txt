@@ -1,29 +1,31 @@
 ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:43:35.615Z file_sha256=e0a91ed0c4268107cc7d815c33d5aba798fe53855a492ffd6a37a6c4f7bee3e7 prompt_sha256=c86549689a6164584d69a4b396deda42e30ab133135288effff3136c0711d3e5
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:56:37.632Z file_sha256=319b4110e712c7bccb1235776bb8d2c016f2a5b7bb61405ab15098ee881ca698 prompt_sha256=592f220c3780ba183da07cb46c5d2d380980fad99b20dbae26034b1a3126e043
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pasted ruling flips three rows to RULED, the diff flips only FE-49 and FE-54 and leaves FE-51 OWED on FLIP_PENDING on the strength of "plan PLAN-367-v1 section 11, Q-D" (:32), which is not pasted, and the operator's words were "yes to both A. Status flip." — flip FE-51 to RULED with its dated note and remove it from FLIP_PENDING, or paste the operator's Q-D answer as a ruling before merge
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the "owned" half rests on the why string and on "expect(a.why).toMatch(/^owed: MF-\d+/)" (same file, case A2); no check confirms MF-49/MF-50/MF-51/MF-52 exist as open queue rows — add a check against .cursor/MCFRONTEND-QUEUE.md that each owner id exists and is not closed.
 
-DEFER severity=MED — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/handbook-rule-map.logic.test.ts:299 "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);" — three rules are gated by the three landed locks but fe.51 is held off the no-check list shrink (comment :261 "FE-51 while the operator's Q-D is open"), so the shrink is 2 of 3, and the floor moves with the statuses instead of the confirmed list — either flip the row (see the RR-0413 finding) or, if the row is to stay OWED, make the AC #3 shortfall explicit in the review record with the pasted operator word that allows it
+DEFER severity=LOW — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/handbook-rule-map.logic.test.ts "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" — the gate still accepts OWED plus FLIP_PENDING for the three confirmed rows, so a revert of FE-49, FE-51 or FE-54 passes — require RULED for the three BUILT_BY_367 rows and keep FLIP_PENDING for the pre-existing MF-37 rows only.
 
-DEFER severity=LOW — RR-0413 "the operator confirms the three rows" — src/tests/surfaces/nav-tab-switch.logic.test.ts:35 "why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab'" — the two allow-list entries permanently tolerate breaches of fe.51 and their owners (MF-49/MF-50, MF-51/MF-52) are named in no pasted ruling, only in queue rows, so the gate's tolerance rests on text outside the pasted clauses — bind each entry to a pasted ruling id or to the operator's Q-D word when it is logged
+DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers" — pasted card "labels: McFix, McFix Final" and RR-0412 "So both 442 and 367 should be running once this push lands." — task-367 is under the McFixReborn process per RR-0412 yet the card carries no McFixReborn label — add the McFixReborn label to task-367.
 
-MET — doc-17 rule 10 "never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — src/tests/surfaces/failure-state-declared.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)." — the three new locks cite ruling ids only, no RR-0001 to RR-0111 reading is used as authority
+REJECT — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling." — accused of feeding register entries RR-0413/RR-0417 as rulings — they are pasted under "## Decisions naming this task", and doc-17 itself closes "The operator's rulings are the decisions", so these are decisions, not readings used as rulings.
 
-MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:78 "B. RED planted (KNOWN_BAD, in memory)" with the clean-tree case at :68 — both directions present for each of the three locks
+MET — doc-17 rule "never feed a review as a ruling" — src/tests/surfaces/scope-fence.logic.test.ts "RR-0385 item 6, RR-0413" — the material cites decision ids only; no RR-0001 to RR-0218 reading appears as authority.
 
-MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the change lands handbook rule locks only, none of the parked compute gates A, B or C
+MET — RR-0417 — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-51 is not left on the pending list.
 
-MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — no new runtime, service or script outside the test files in this diff
+MET — RR-0417 naming — src/tests/surfaces/nav-tab-switch.logic.test.ts "const ALLOW: Allow[] = [" with two entries keyed by file and call — the two exceptions are named by path and call text.
 
-MET — RR-0385 "unbuilt gates withdrawn, tests are the focus" — three new logic test files plus two edits to existing locks, no product code touched
+MET — RR-0386 — the three new files are src/tests/surfaces handbook locks, no gates A/B artifact — the parked gates are not landed.
 
-REJECT — doc-17 rule 10 — that the diff leans on register readings such as RR-0106 "MF-51 and MF-59 are on the launch list" — the diff names RR-0384, RR-0385 and RR-0413 only, all pasted rulings, so no reading feeds it
+MET — AC #2 — "Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" (red.out) and the case A "expect(problems, ...).toEqual([])" — red on the planted defect, green on the clean tree.
+
+MET — RR-0413 lock side — scripts/surfaces/_schema/surface-rule-map.json:796 "\"status\": \"active\"," (FE-49) and :818 (FE-51) and :851 (FE-54) — each of the three rows has its tracked lock.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 3
+Clauses checked: 13   Unmet: 3
 Rules met: none
 
 ---
-⏱  80056ms (80.1s)
-📊 Tokens — total: 44487, input: 26491, output: 17996, reasoning: 16963
+⏱  256743ms (256.7s)
+📊 Tokens — total: 80867, input: 28859, output: 52008, reasoning: 51147

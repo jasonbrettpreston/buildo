@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:35:58.093Z file_sha256=a9fa3ef865578da5bef623c20bd2d1bb88b686d0d0e5ce360bc8c48edb34cdc8 prompt_sha256=f327ba6f1c0d79a0a9c91d6066e6f99f8c377742585e173e7d47ddcae72b1010
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s7-s11-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in" — the exclusion of web rests on a grep claim that no assertion runs, so the lock's domain is asserted, not executed — assert the Tabs census over src/app/(maxbld), src/components/surfaces and src/components/report, or delete the claim.
+
+DEFER severity=MED — 11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/surfaces/nav-tab-switch.logic.test.ts:116 "it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count'" — the conclusion claims every tab push while line 13 admits tab routes held in variables are missed, so the conclusion is wider than the census — name the conclusion over literal and PARCEL_TAB_ROUTE pushes, or add a census for variable held routes.
+
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 "// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):" — the file that carries the two exceptions cites RR-0413, and the sibling note at src/tests/surfaces/register-locks-resolve.infra.test.ts:31 says "RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions", so the operator word that authorizes the entries (RR-0417) is cited nowhere in the file — add RR-0417 to the header line.
+
+DEFER severity=MED — 7.6 dated note "after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names" — NONE "Task stays RUNNING; output round 2 is owed." — 78 lens outputs were produced before the round 1 fix commit and the card records only a round 2 to come, never a re-run of the existing outputs against the diff at HEAD — record the re-made inputs and the outputs re-run under the same names, or the close check will read every output as stale.
+
+DEFER severity=LOW — 11.3 "Survive-the-fix locks (green-both) are stated as such per case." — src/tests/surfaces/scope-fence.logic.test.ts:111 "describe('fe.49: the scope fence (Spec 128 R-03)', () => {" — case A expects zero hits on today's tree, so it is a green-both lock, and no case is marked green-both — mark case A as survive-the-fix/green-both in the file header.
+
+DEFER severity=LOW — 11.3 "a lock that was never red against the defect it names is not a lock" — src/tests/surfaces/nav-tab-switch.logic.test.ts:124 "expect(ALLOW.length).toBeLessThanOrEqual(2);" — the header's "The list only shrinks" is enforced only by the constant 2, so an entry can be dropped and a different one added with no red ever run against the added entry — assert the exact allowed key set so any new entry is red first.
+
+REJECT — RR-0417 — accused of letting two tab pushes survive the fe.51 lock — not a real issue: RR-0417 names exactly two owned exceptions and A2 caps the list at 2 with an owner pattern and a count on each.
+
+REJECT — 11.1 — accused of unexecuted data or DB claims — not a real issue: both files state "Files come from `git ls-files`. No DB, no network." and read only git output and file text.
+
+MET — RR-0417 — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 — two allow entries, each with an owning later row (MF-49/MF-50, MF-51/MF-52), a count and a why.
+
+MET — 7.10 — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — SPEC LINK names the spec file and rule id, and the rule is quoted verbatim at line 4.
+
+MET — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:126 — each planted linkage form gives exactly one hit and each control gives zero.
+
+MET — 11.3 — src/tests/surfaces/register-locks-resolve.infra.test.ts:31 — FLIP_PENDING shrinks back to FE-39 with the shrink reason recorded.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 6
+Rules met: 7.10, 11.5
+
+---
+⏱  131046ms (131.0s)
+📊 Tokens — total: 53315, input: 24298, output: 29017, reasoning: 27850

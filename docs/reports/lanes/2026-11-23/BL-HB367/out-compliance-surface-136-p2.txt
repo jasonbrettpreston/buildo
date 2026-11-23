@@ -1,20 +1,21 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:15:15.223Z file_sha256=63b82629cb5eaf103345c0132450a34e35a146da26e400388b48f4716ba36a39 prompt_sha256=e168788c667a28b557bcd41e23b4979c99853aea7d08b6484c907a89eb7a86ea
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:31:15.991Z file_sha256=14caad8c0ce278decd3d1fc6d60a5fc5396732a45c729722f8df3ce3a8cfe6c1 prompt_sha256=40477f8b77f85f31411691440dbc8956234a9fe2a42e66dd3149c6d3c00275b2
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows ... \"yes to both A. Status flip.\"" — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only two of the three named rows flip to RULED; fe.51 is held OWED on a self-declared NOT-YES branch ("Q-D is not answered") that no pasted ruling authorises, so the third row the operator confirmed still renders "Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts" though that lock now exists — flip fe.51 to RULED with a dated note naming the two owned pushes, or take Q-D to the operator and record the answer before merge
-DEFER severity=MED — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts "{ file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' }" — the live tree holds two tab pushes, so the lock is green while the clause is violated, and the row cannot honestly read RULED until the two pushes are fixed — keep both entries shrink-only and resolve the RULED flip only with the operator's word on the exceptions
-DEFER severity=LOW — fe.49 "lead_parcels is read by no surface" — src/tests/surfaces/scope-fence.logic.test.ts "LIMITS (stated, not widened): declared files only, no import hop" — the fence is checked only on descriptor-declared tracked files and descriptor table refs, so a server route no descriptor declares can read lead_parcels unseen — state the gap as a coverage limit on the row's dated note rather than leaving it in the file header
-REJECT — fe.56 "Prove each lock RED on a fixture that declares a column or a policy that does not exist" — the new locks plant their defects as in-memory source strings ('planted.tsx', 'control.tsx') rather than files on disk — fe.56 is OWED with no lock of its own, and AC2 ("Each gate is shown red on a planted defect and green on the clean tree") names exactly this form, which each new test carries as its B case
-MET — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — src/tests/surfaces/register-locks-resolve.infra.test.ts "+// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joins it." — FE-51's Lock path now resolves to a tracked file, recorded with its date and pattern
-MET — fe.10 "The generator lives in the spec: the REPORT section of Spec 126." — src/tests/surfaces/handbook-rule-map.logic.test.ts "if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));" — the handbook rendering is still read from the register and checked per row
-MET — fe.16 "Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change." — src/tests/surfaces/handbook-rule-map.logic.test.ts "+import { execFileSync } from 'node:child_process';" — no spec path moves and no tooling file changes; the import is test-local
-MET — fe.49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts "expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);" — the clause now has the lock the row names, with a planted-defect red case and both-directions controls
+DEFER severity=MED — fe.54 "a surface declares what the user sees when it fails" — src/tests/surfaces/failure-state-declared.logic.test.ts:88 "const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });" — the lock's own control accepts a non-contract surface with no error state, so the clause is read narrower than "a surface" — record the static-page (fe.37 leave-out) reading as a dated note the operator confirms, or extend the check to non-contract surfaces.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 1
-Rules met: fe.09, fe.10, fe.16, fe.49
+DEFER severity=MED — fe.49 "lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:17 "a server file a descriptor does not declare is not scanned" — a lead_parcels read in an undeclared server module is not caught, so the clause is proven only for declared files — extend the scan to the server modules the in-scope routes import, or record the gap as a dated note.
+
+DEFER severity=LOW — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:146 "'router.replace(PARCEL_TAB_ROUTE.lookup);'" — the control treats a tab switch by replace as clean, so the positive "uses navigate" form is unchecked — record the FE-36 replace reading as a dated note or test replace.
+
+MET — fe.09 — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 — the FLIP_PENDING comment is updated and the list stays ['FE-39'] so the Lock column keeps resolving.
+
+MET — fe.10 — src/tests/surfaces/handbook-rule-map.logic.test.ts:264 — the rule-map lock accepts RULED rows with "Enforced by" and reads FLIP_PENDING from the register lock, both directions.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: fe.09, fe.10
 
 ---
-⏱  38601ms (38.6s)
-📊 Tokens — total: 29740, input: 21777, output: 7963, reasoning: 6888
+⏱  185666ms (185.7s)
+📊 Tokens — total: 68253, input: 24308, output: 43945, reasoning: 43473

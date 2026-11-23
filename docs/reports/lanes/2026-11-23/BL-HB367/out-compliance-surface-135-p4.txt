@@ -1,20 +1,33 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:11:11.902Z file_sha256=281e7478ac805761cf58ff7c17fbae9b363127f68a4c277646c26c3d40e1a70c prompt_sha256=d1d1270ebf2f818faba202188bc1d1722c4869ba734dbc9854c32242641a09e8
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:26:32.346Z file_sha256=4ee3a411bdccc3b737faeacb1b4bece462a4df8c0926ceb0b12435ab6071eee5 prompt_sha256=3893d0c1a8be2fc1531701c285ac255f486cfc97cb5cfa49c6a9b0a8a32e1eab
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p4.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md:662 "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the operator confirmed all three rows, so leaving FE-51 OWED does not satisfy the ruling — flip FE-51 to RULED in the same commit or record a later operator ruling that Q-D overrides RR-0413.
-MET — FE-56 — .cursor/MCFRONTEND-QUEUE.md:663 — done-condition requires each lock proven red at its designed assertion through real commit hooks, then green.
-MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md:663 — row excludes the parked wf1/inc1b-gates branch.
-MET — RR-0385 — docs/reports/panels/MF-98.json:12 — building seat Opus and output review rounds recorded.
-MET — RR-0412 — .cursor/MCFRONTEND-QUEUE.md:662 — task-367 is RUNNING.
-MET — RR-0392 — docs/reports/panels/MF-98.json:3 — item records tests and documents only, no infrastructure.
-MET — AC1 — docs/reports/panels/MF-98.json:11 — RR-0413 confirms the three rows as the list.
-MET — AC2 — docs/reports/panels/MF-98.json:14 — plan records the red commit attempt in red.out.
+BUG severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests" and the panel's own record of question A "A: the rows flip from OWED to RULED in the commit that lands their tests" — .cursor/MCFRONTEND-QUEUE.md "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) in the MF-98 fix commit" — FE-51's flip is placed in the fix commit, one commit after commit 1 landed its test, and the RR-0417 words quoted ("yes. worktrees removed") answer may-it-read-RULED only, not the timing, while the same row's Done-condition still demands "RULED in the commit that lands their tests (RR-0413 A)", so the approved timing is unmet for that row — cite RR-0417 in the FE-51 note as the operator's replacement for the RR-0413 A timing, or record the flip commit as the commit that lands the test.
+
+BUG severity=MED — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — pasted task card "labels: McFix, McFix Final" — task-367 runs under that process (RR-0412 "both 442 and 367 should be running once this push lands") yet the ruling that names it has no effect anywhere in the material, no McFixReborn label and no note in the MF-98 row or panel saying why not — add the McFixReborn label at the next card edit, or record the operator's reason it does not apply to task-367.
+
+DEFER severity=LOW — fe.56 "a lock never red against the defect it names is not a lock" — pasted Implementation Notes "the three tests staged with T1's and T2's plant lines and T3's empty allow-list" — the nav-tab-switch red rests on emptying the lock's own exception allow-list, and docs/reports/reviews/task-367/red.out is not in this chunk (cannot see), so a red produced by a tab push cannot be checked here — confirm from red.out that the failing assertion names the _layout.tsx and tracked.tsx push lines before BUILT.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" — the task stays RUNNING, nothing is set BUILT.
+
+MET — RR-0386 "a" (gates parked, handbook tests fresh) — .cursor/MCFRONTEND-QUEUE.md "Not in this row: ... the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates plan and branch are untouched and scoped out.
+
+MET — fe.51 "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix" — docs/reports/panels/MF-98.json "the row that fixes mobile/app/(app)/parcel-tool/_layout.tsx or tracked.tsx removes its nav-tab-switch entry in the same commit" — both exceptions carry an owner pair and a removal trigger.
+
+MET — fe.54 "the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged)" — .cursor/MCFRONTEND-QUEUE.md "Not in this row: any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19)" — the named break is left to its owner, matching the row's scope.
+
+MET — task card AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — pasted note "Acceptance 3 now reads 19 (grep -c Status: OWED on Spec 136)" after "Spec 136 OWED count 20", with "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current" — three flips take the OWED count from 22 to 19 and the page is regenerated by its command (surface-136 29,076 to 29,166, totals 226,944 and 308,007, arithmetic consistent).
+
+MET — queue rule "Next free id: **MF-97** (ids are never reused)" — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-99**" with "the line read "Next free id: **MF-97**" before this note" — MF-98 is claimed by the COMPLY.3 row, MF-97 held by BL-FEDB442, first value on the line is the one tools read.
+
+MET — task card AC1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "(B: the three rows are the list)" and row "FE rows owned: FE-49, FE-51, FE-54." — only the three operator-confirmed rows are built.
+
+REJECT — fe.54 — the change is accused of leaving 8 contract readers that would fail the finder unjudged — the pasted FE-54 row itself states that scope and names the owner of the live break, so the change matches the clause as written and whether the scope is right is ground truth, not this lens.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 1
-Rules met: FE-56
+Clauses checked: 21   Unmet: 2
+Rules met: fe.51, fe.52, fe.53, fe.54, fe.55, fe.57, fe.58
 
 ---
-⏱  83700ms (83.7s)
-📊 Tokens — total: 36712, input: 18762, output: 17950, reasoning: 17578
+⏱  132566ms (132.6s)
+📊 Tokens — total: 48748, input: 21218, output: 27530, reasoning: 26282

@@ -1,0 +1,394 @@
+LIST policy-124-s2-s5 sha256:511f9fd4e1c41f8fa1320800b7962f291d606d1fb946d57a4c53b528c0113110 material sha256:b413d5fb4851e32ae924c1dad87ee49de319c8862285f40e81b820e7a57b3830 part 2 of 3 chunk 3 of 3
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 2 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+## §5. Register of rulings
+**This section is the authoritative register going forward (R-J, 2026-08-28).** Spec 122's own top-of-file
+tables — the three architecture decisions (A1–A3), the six programme rulings (R1–R6), the seven vocabulary
+rulings (V1–V7), and its copy of R-A..R-F — remain as **history**: read them there for full pre-2026-08-28
+text and evidence. This table is live for anything estate-wide from here on.
+**M18 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B7 — Register rows R-A…R-AI (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-07, 2026-10-08.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B7 — Register rows R-A…R-AI (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-07 — 2026-10-08 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; P1-C9 register move (QUEUE 2026-10-06: one owner, P1-C9; fleet2-assembly/P1-C9.md item 5). Spec 124 had 128 B of arm (iv) headroom and owed two §5 rows (R-BS geom drift Q1/Q2, R-BT Spec 78 Q9). Rows R-A…R-AI (the first contiguous register block, 2026-08-28…09-15) stay in force as Spec 124 §5 rulings and are cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a sections headed LIVE REGISTER. New rows are still added to Spec 124 §5.
+**M20 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B8 — Register rows R-AJ…R-AP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-13, 2026-10-13.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B8 — Register rows R-AJ…R-AP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-13 — 2026-10-13 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; H5 purity-seam landing (QUEUE 2026-10-13): Spec 124 had ~330 B of arm (iv) headroom and owes the S1–S4 register rows R-CD…R-CM (~10 KB). Rows R-AJ…R-AP (the next contiguous block after M18) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+| # | Ruling (one line) | Amends | Full text |
+|---|---|---|---|
+**M21 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B9 — Register rows R-AQ…R-AW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-16, 2026-10-16.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B9 — Register rows R-AQ…R-AW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-16 — 2026-10-16 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; H6 conformance (QUEUE 2026-10-16): Spec 124 had ~100 B of arm (iv) headroom and owes R-CT/R-CU (conversion traps). Rows R-AQ…R-AW (the next contiguous block after M20) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+**M24 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17, 2026-10-17.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17 — 2026-10-17 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+**M25 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B11 — Register rows R-BJ…R-BY (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18, 2026-10-18.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B11 — Register rows R-BJ…R-BY (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18 — 2026-10-18 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; V3 package (operator directive 2026-10-18; Spec 08 output panel round 1): Spec 124 was at 380/380 lines after R-DQ…R-DS and owes R-DT and the six-part V3 row. Rows R-BJ…R-BY (the next contiguous block after M24) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+**M27 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18, 2026-10-18.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18 — 2026-10-18 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 124 was at 371/380 lines and owes the runner-lane rows (R-DM and the drafts allocated from R-DX) beside the badges lane R-DW. Rows R-BZ…R-CP (the next contiguous block after M25) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+**M31 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B13 — Register rows R-CQ…R-CW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-19, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B13 — Register rows R-CQ…R-CW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-19 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; w4-rulings-5 (operator 2026-10-19: P4-SWAP and drafts A/B/C, cite or create a ruling, McDonald's Airtight V3): Spec 124 was at 379/380 lines with ~180 B of arm (iv) headroom and owes R-EQ…R-ES. Rows R-CQ…R-CW (the next contiguous block after M27; R-CX stays, it is spec124-register-locks.logic's first V3-final row) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+| R-CX | **A catalog fact a compute depends on is a runner-owned probe (McDonald's Airtight V3, operator 2026-10-16, CP-S5).** (i) SRID: `guards.requires {kind:"srid", name:"<table>.<column>", equals:<int>, on_missing:"fail"}` is probed by `REQUIREMENT_PROBES.srid` (`Find_SRID`) before any hook; compute holds no `Find_SRID` and no SRID throw. (ii) Column facts come from `ctx.catalog` (`scripts/lib/step/catalog.js`: `columnCount`, `columnCounts`, `columnType`; a recorder declares an optional `{catalog:{op,tables}}` read): read-only, `public` only, and a table outside the declared read set (`inputs.reads.tables` ∪ `checks[].reads` ∪ `outputs.writes`) is refused before SQL, loud. Compute holds no `information_schema` catalog SQL (a declared system-view read such as assert_engine_health's `pg_stat_user_tables` is G3-allowed). (iii) Amends R-CH: the vocab-coverage core takes its column-type reader as `opts.columnType` (ASSERT: `ctx.catalog.columnType`; the legacy pool wrapper passes its own); with no reader it answers `unresolved`, never throws; a catalog refusal propagates. RE-FREEZE #36. | Amends: R-CH; R-BZ G3/G8; Rule 10 | `purity-s5-catalog-srid.logic`, `vocab-coverage-core.logic` |
+**M32 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B16 — Register rows R-CY…R-DE (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B16 — Register rows R-CY…R-DE (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; rulings-6 (operator 2026-10-20: R-ET, R-EU, COA-D11, Q-R-EQ-1, McDonald's Airtight V3): Spec 124 was at 379/380 lines and owes R-ET…R-EV. Rows R-CY…R-DE stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.
+**M33 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B18 — Register rows R-DF…R-DT (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B18 — Register rows R-DF…R-DT (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; v3-label lane (operator 2026-10-20: R-EY, R-EZ, R-FA, McDonald's Airtight V3): Spec 124 was at 379/380 lines and owes R-EY…R-FA. Rows R-DF…R-DT stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.
+**M35 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B24 — Register rows R-DU…R-EP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B24 — Register rows R-DU…R-EP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; integrate-12 (wf2/p4-integrate-12, 2026-10-20): merging backfill-9 and tooling-fix-1 put Spec 124 at 384/380 lines and 130,429/126,959 B. Rows R-DU, R-DV and R-DX…R-EP (21 contiguous rows; R-DW sits out of order further down and stays) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9), rule-map.mjs and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.
+**M36 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B26 — Register rows R-EQ…R-FB (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B26 — Register rows R-EQ…R-FB (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; layer2-spec (wf2/layer2-spec, 2026-10-20): recording the operator's 2026-10-20 rulings as R-GY and R-HB…R-HK put Spec 124 at 382/380 lines. Rows R-EQ…R-FB (12 contiguous rows) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9), rule-map.mjs and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.
+| R-GP | **An unchanged `step-validate --write` leaves `measured-validate.json` byte-identical (McDonald's Airtight V3, operator y 2026-10-20: "y to all", tooling-fix-1 item 2, MV-DRIFT; provisional id, renumbered at integration if taken).** `foldValidateOnlyMeasured` (`step-validate.mjs`) folds a `validate_only` entry only when its measured `value` differs (JSON equality) from the stored one; an equal value is printed as unchanged and not re-stamped. So the file, and every descriptor `last_measured` generated from it (`generate-last-measured.mjs`, `generate-assert-parcel-sanity-descriptor.js`), changes only when a measured value changes. Semantics: an entry's `at`, `commit`, `cost_ms` and `sample_n` describe the measurement that last CHANGED its value (`sample_n` counts value-changing folds), not the last run. No reader judges freshness from `at` (measured 2026-10-20: `generate-last-measured.mjs` only copies it; `chain-end-synthesis.mjs` sums `cost_ms`, still a real measurement). Before: every `--all --write --fast` re-stamped both sidecars (assert_parcel_sanity, link_parcel_addresses) and the pre-commit generator `--check` failed. Conflict check and seven questions: 124a §B23. | Amends the P2-C4 R1 writer (Spec 122 §1.5); follows R-BF, R-DJ (1) | `p2c4-last-measured.logic` |
+| R-GQ | **`generate-last-measured.mjs --check` runs at pre-commit against a closed, shrink-only stale baseline (McDonald's Airtight V3, operator y 2026-10-20: "a & b y", tooling-fix-1 finding (a); provisional id after R-GP).** The check joins the R-DJ (1) chain-era generator `--check`s in `.husky/pre-commit`. The 84 descriptor `last_measured` entries (17 steps) stale when it was wired cannot be resynced before REFREEZE-BUNDLE-1 (a resync moves descriptor fingerprints and stales POST goldens), so `scripts/steps/_schema/last-measured-stale-baseline.json` lists each by step and key with pin REFREEZE-BUNDLE-1. RED: a stale entry not listed (the list never grows); a listed entry that is now fresh (it leaves through `--shrink-baseline`, R-X); a listed entry without the pin, a duplicate, an unsourced entry; an entry not in the committed (HEAD) baseline, so nothing is swapped in or re-added. Writing needs an explicit `--write`; no flag or an unknown flag exits 2 with usage (verify-12). Form: the R-DW / R-EB shrink-only list, kept apart from `standard-gates-ledger.json` because it is generated-artifact drift, not a step gate (amends R-BA's one-allowlist clause for this check only). The resync is bundled-night item (7) (124a §B17). Conflict check and seven questions: 124a §B23. | Extends R-DJ (1); amends R-BA (one allowlist, this check only); follows R-DW, R-EB, R-GP | `p2c4-last-measured.logic`; `hooks-composition.infra` |
+| R-GR | **One defect-ledger status form for a declared deviation (McDonald's Airtight V3, operator y 2026-10-20: "a & b y", tooling-fix-1 finding (b); provisional id after R-GQ).** A `docs/reports/defect-ledger.md` row whose status names a declared deviation reads `CLOSED · declared deviation (<rule id>[, …])` when the behaviour change is accepted and ruled — each id the register rule its acceptance record (descriptor `deviations[].adjudicated_by` or an operator ruling) names, and each resolving in this register — or `OPEN · **PIN** <pin>` only while work is owed (a ruling, a library feature, a stage). Any third form is RED (`ledgerStatusFormFindings`, `scripts/analysis/gates/v3-label.mjs`). An assessment table that mirrors the row repeats the new status (#36). Applied 2026-10-20: CLOSED COA-D11 (R-EV), N-D4 (R-W); LC-D7 and LC-D12, formerly CLOSED with no rule, read `OPEN · **PIN** RULING-OWED`. *(Amended 2026-10-20, operator y: R-AZ / R-AR.1 are not stretched; LC-D7 closes on R-GS; LC-D6, LC-D11, M-D10, N-D5 close on R-GT; N-D1 reads `OPEN · **PIN** RULING-OWED`. The ledger leads until REFREEZE-BUNDLE-1 item (7) (item (5) on `wf2/tooling-fix-1`): those four descriptors' `deviations[].adjudicated_by` still name R-AZ, and re-citing them moves fingerprints.)* *(Integrate-12, 2026-10-20: LC-D12 closes on R-FV — the operator-authorized load_centreline plan declares the single-call validation as deviation LC-D12 (`docs/reports/2026-09-24-plan-batch2-p3-2-load-centreline.md`:59, :101), the case the operator's "close LC-D12 if covered" allows; N-D1 stays RULING-OWED — its plan resolved NB-D1 without the operator (`docs/reports/2026-09-25-plan-batch2-p3-8-neighbourhoods.md`:123-124).)* every other declared-deviation row was already `OPEN · **PIN**` and stays open (no accepting register rule). Conflict check and seven questions: 124a §B23. | Follows R-EY (9); Spec 123 G6 (vocabulary unchanged) | `ledger-status-form.logic` |
+| R-GS | **Operator ruling A-5 (2026-08-25, INGESTOR pilot), lifted into the register: an accept-anomaly override lets a run complete past a declared FAIL check and never suppresses the FAIL row (McDonald's Airtight V3; recorded 2026-10-20 (operator y), "y to liftinh A-5"; provisional id after R-GR).** Source, verbatim (`.cursor/archive/pilot2_load_ravines_active_task_closed_2026-08-27.md`): :2 "authorized 2026-08-25 \"proceed. Looks good!\" — rulings: … A-5 `override.accept_anomaly[]` box"; :218 "`RAVINE_ACCEPT_*` are *\"proceed despite a FAIL, but never suppress the FAIL row\"* — a fourth kind, present in ≥2 loaders. P1.4 candidate: `override.accept_anomaly: [{env, check_id, why}]`, which also makes the *\"override never suppresses FAIL\"* rule … **structural**". Implementation reference: `scripts/steps/_schema/step.schema.json`:4871 (commit `1a440908`; the runner also emits a WARN row whenever the env is standing). Accepted at conversion: a legacy ad-hoc accept env read becomes an `override.accept_anomaly[]` entry `{env, check_id}` naming a declared FAIL check; the run completes, the FAIL row stays, and a standing-override WARN row fires whenever the env is set. Not accepted: an override that suppresses or downgrades the FAIL row, names an undeclared check, or skips the step. First cases: load_ravines (A-5's own pilot); LC-D7 (`CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT` → `centreline_count_drift_pct`). Conflict check and seven questions: 124a §B23. | Records A-5 (pilot 2 plan :2, :218); Spec 59 L7c | `ledger-status-form.logic`; `load-ravines.db` |
+| R-GT | **A conversion retires an INGESTOR's local acquisition override; the declared external is the only source (McDonald's Airtight V3, operator y 2026-10-20: "y to your recommendations"; provisional id after R-GS).** Accepted: removing (a) an env var or argv position that points the step at a local file or path instead of its declared external (`CENTRELINE_LOCAL_ZIP`, `process.argv[2]`/`[3]`), with any WARN row that announced it, and (b) a step-local on-disk copy of that same external (a `data/` cache and its shell extraction, `execSync` unzip/PowerShell). Acquisition becomes the `inputs.reads.externals[]` entry, fetched by `scripts/lib/step/acquire.js` every run; the bounded or offline affordances are the `src/tests/steps/<slug>/` fixture tier and `override.dry_run`. Each retirement is a descriptor `deviations[]` entry. Not accepted: a local file that is the step's real source (it stays a declared external, e.g. load_wsib WS-D4); a new override; a row cap (R-AZ); keeping a cache; any change to the parsed rows. First cases: LC-D6 and LC-D11 (`CENTRELINE_LOCAL_ZIP`), M-D10 (`data/3d-massing-wgs84/` cache, `process.argv[2]`, unzip/PowerShell), N-D5 (`data/neighbourhoods-4326.geojson`, `process.argv[2]`/`[3]`; the cache measured byte-identical to CKAN). Conflict check and seven questions: 124a §B23. | Narrows nothing; sits beside R-AZ (row cap) | `ledger-status-form.logic` |
+| R-GU | **The step handbook is Spec 132 — Step Standard Handbook, a generated reading spec (McDonald's Airtight V3, operator y 2026-10-20: "y to both", `2026-10-20-spec132-rulings#HANDBOOK`; provisional id after R-GT, renumbered at integration if taken; R-GZ is held by another lane).** `node scripts/generate-step-handbook.mjs --write` renders `scripts/steps/_schema/rule-map.json` and the runner code into `docs/specs/01-pipeline/132_step_standard_handbook.md` (`HANDBOOK_REL`, `scripts/analysis/gates/rule-map.mjs`); its `--check` runs at pre-commit (R-DJ (1)). The header carries `**Status:** GENERATED` (read by `generate-system-map.mjs`), the role banner (R-GW), "Authority: Spec 124 register (policy) + Spec 122 (schema); GENERATED from rule-map.json — do not hand-edit", and the citation form `Spec 132 §<line id> (R-xx)`; the operator's shorthand "comply with Spec 132" means comply with the step standard it renders. `spec-split-check --check` arm (iii-b) resolves every such citation against the rule map: the line exists and each named rule maps to it. A generated spec has no hand-written line budget (arm (iv)); it has a size cap, `122_split_manifest.json` `generated_size_caps["132"]` = 925 lines / 112,000 B with its measured why (arm (iv-b)), raised only by a reviewed hand-edit. `docs/handbook/step-standard.md` is a hand-written pointer. The by-law handbook (Spec 133) is not ruled here. Conflict check and seven questions: 124a §B25. | Amends the consolidation 1-4 handbook path; follows R-BF, R-DJ (1), R-AA | `spec132-handbook-roles.logic`; `handbook-rule-map.logic`; `spec-split-check --check` |
+| R-GV | **Standard + policy pairs; Spec 124's transition clause is flipped (McDonald's Airtight V3, operator y 2026-10-20: "y to this revised version", `2026-10-20-spec132-rulings#ROLES`; provisional id after R-GU).** Each family has one standard and one policy register: steps, Spec 122 (standard: the live descriptor schema and runner/validator behaviour) + Spec 124 with the 124a LIVE REGISTER sections (policy); by-laws, Spec 68 + Spec 69/69a; lot configuration, Spec 78 + Spec 131. On a policy question the register governs; on the schema and behaviour the standard does (Spec 131:7's wording). Spec 124's header (line 11) is amended from "On conflict during the transition, Spec 122 governs (it carries the live schema)" to that form. Spec 132 is generated from 122 + 124 (R-GU); Spec 122a is historical. Spec 122 leaves `rule-map.json` `meta.historical_design_records`; Specs 119, 120, 121 and 123 stay listed. This records consolidation decision 2 (`meta.precedence`) as amended. Not ruled here: the roles of Specs 120, 121 and 123 (123:12 "Spec 121 is the method and GOVERNS this document"; 123's G0–G9 gates) are with the operator; Spec 119 is out of scope. Conflict check and seven questions: 124a §B25. | Amends Spec 124:11; records decision 2, amended; follows R-J | `spec132-handbook-roles.logic` |
+| R-GW | **Every spec carries one role banner (McDonald's Airtight V3, operator y 2026-10-20: "y to this revised version", `2026-10-20-spec132-rulings#ROLES`; provisional id after R-GV).** A spec in `docs/specs` opens with exactly one `> **Role: <role>.** <what it decides>` line; role is one of authority register, standard, design, historical, generated handbook. A historical spec decides nothing and introduces no rule id; a new rule goes to its family's register. First banners: Spec 122 standard; Spec 122a historical; Spec 124 and Spec 124a authority register (124a: its LIVE REGISTER sections are register rows, every other section is history); Spec 132 generated handbook. Every other spec sits on the closed, shrink-only `role_banner_pending` list in `122_split_manifest.json` (108 at landing) until it gains a banner; no spec was edited to add one. Conflict check and seven questions: 124a §B25. | New convention; follows R-J, R-GV | `spec-split-check --check` arm (vii); `spec132-handbook-roles.logic` |
+| R-GX | **The role lock: every spec has a role banner, and a historical spec adds no rule id (McDonald's Airtight V3, operator y 2026-10-20 to the revised spec roles, `2026-10-20-spec132-rulings#ROLES`; provisional id after R-GW).** `spec-split-check --check` arm (vii) (`checkSpecRoles`) is RED when: a spec has no banner and is not on `role_banner_pending`; a pending spec has a banner (it leaves the list; the list only shrinks); a spec has two banners or a role outside the R-GW vocabulary; a historical spec has no `historical_rule_ids` baseline, carries a rule id not in it (a `rule-map.json` id whose `source.file` is the spec, or a register-shaped `\| R-x \|` row), or its baseline names an id no longer present (the baseline only shrinks). Baseline at landing: 122a's R1–R6 and V1–V7. Declared limitation: an id written only in prose is not seen; the handbook lock routes every register id into the map. Red-first: `docs/reports/red-evidence/spec132/roles-lock-red.json` (14/14 RED before the build). Conflict check and seven questions: 124a §B25. | Follows R-DW, R-EB, R-GQ (shrink-only lists), R-AA (spec-split-check arms) | `spec-split-check --check` arm (vii); `spec132-handbook-roles.logic` |
+| R-GY | **`resolve_bylaws` (Layer 2) has its own owner spec: Spec 134 — resolve_bylaws — Layer 2 by-law resolution (McDonald's Airtight V3, operator approved 2026-10-20 on the review page, `2026-10-20-scenario-build-rulings#R-2`, whose recommendation left the number to the operator ("the operator assigns the number"); the coordinator then wrote in chat "I'll number it Spec 134 unless you'd prefer another" and the operator did not object; provisional id after R-GX, renumbered at integration if taken; R-GZ and R-HA are held by lane night-p4-c).** The Layer 2 plan named an owner "Spec 72" that was never created (`docs/reports/2026-10-20-plan-mcbylaw-phase2-v2.md`:4). Spec 134 (role: standard) is the step's behavioural contract under Specs 122/124; Spec 68 §11 carries a one-line pointer to it, not the contract, because Spec 68 is at its byte budget. By-law readings stay in Spec 69a and lot-configuration rules in Spec 131; the step-side rulings are R-HB…R-HG. Conflict check and seven questions: 124a §B27. | Supersedes the plan's "Spec 72"; follows R-GV, R-GW | `spec134-resolve-bylaws.logic`; system map row 134 |
+| R-GZ | **A bracket's text suffix is fitted to a bounded column's catalog width (McDonald's Airtight V3, operator y 2026-10-20, to the night-p4-c draft, `2026-10-20-chat-night-p4c#FIT-WIDTH`; provisional id, may be renumbered at integration — integrate-12 holds through R-GT).** `ingestor-forced-cohort.js` `append_text:<s>` (R-CZ) and `derived_status:<s>` (R-ET) render, for each perturbed column whose `information_schema.columns.character_maximum_length` is `w`, `left(col, w - char_length(<s>)) || <s>`; an unbounded column keeps the plain append (byte-identical, so existing recipes replay unchanged). A suffix as wide as a bounded column is refused at `--plan`/`--backup`/`--run` before any perturbation. `--plan` prints each width, the SET form and the first cohort row's fitted value. Flags, before-images, heal/restore checks, lock 902002 and exit codes are unchanged. First case: coa `data_hash` (sha256 hex, always 64 chars in varchar(64)); Night P4 `--run` failed `value too long for type character varying(64)` with nothing perturbed. Conflict check and V3 table: 124a §B29. | Amends R-CZ (append_text), R-ET (derived_status) | `cohort-fit-width.logic`; `docs/reports/red-evidence/r-gz/red-fit-width.json` |
+| R-HA | **#44 (b)/(c) for an R-DY derived target (McDonald's Airtight V3, operator y 2026-10-20, to the night-p4-c draft, `2026-10-20-chat-night-p4c#DERIVED-WITNESS`; provisional id, may be renumbered at integration — R-GU…R-GX are taken by spec132-move and the next ids by the Layer 2 spec lane).** A derived target (`outputs.writes[i].derive`) is written only when its prior-state read differs, so per POST trace: (b) traced write tables ⊆ declared and every NON-derived target written; per slug: each derived target written by at least one fresh POST trace (`b:derived-unwitnessed:<t>`); (c) when `write_inventory.derived_statements` is declared, the trace's distinct write statements lie in [`statements`, `statements` + `derived_statements`] (`c:statements:<lo>..<hi>!=<n>`), else the exact count as before. Schema: `derived_statements` (RE-FREEZE #38, provisional number; no runner byte). First case: coa, whose plain POST traces write coa_applications alone (2 statements) and whose R-ET bracket trace adds lifecycle_status_history (3); COA-D16 declares 2 + 1. Conflict check and V3 table: 124a §B30. | Amends #44 (b)/(c) (R-BK, R-DB); applies R-DY, R-ET | `witness-derived-target.logic`; `docs/reports/red-evidence/r-ha/red-witness-derived.json` |
+| R-HB | **`resolve_bylaws` is a MATERIALIZER (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-3`; provisional id).** It writes only its own derived Layer 2 tables, never `parcels`, as `compute_maxbld_scenarios` does (Spec 78 §Phase-5), so the plan's "ENRICHER (provisional, R-AO)" is replaced. The archetype is what was ruled; the R-EH rows form and the reset posture in Spec 134 §7 are design defaults, not part of this ruling. R-AO still holds: the census archetype is provisional until PH-0 re-derives it from the code (fast invariant #25). Conflict check and seven questions: 124a §B27. | Amends the plan's archetype; follows R-AO | `spec134-resolve-bylaws.logic`; step-validate #25 at ① |
+| R-HC | **R-DK covers both new steps; the plan's R-AS adaptation question is closed as superseded (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-7`; provisional id).** `resolve_bylaws` and `compute_maxbld_scenarios` are net-new (census `legacy: "none"`): no PRE capture, G8 against the committed POST, the full R-DK evidence set and a rerun-zero proof. R-AS (a perturbation cohort against a legacy step) does not apply, as R-BT already recorded for the scenario step. Plan question Q20 is closed; no adapted R-AS rule is written. Conflict check and seven questions: 124a §B27. | Follows R-DK, R-BT; closes plan Q20 | `spec134-resolve-bylaws.logic`; `step-validate-net-new.logic` at ① |
+| R-HD | **`resolve_bylaws` runs in `sources` after `enrich_parcels` and before `link_parcel_abutments` and `compute_maxbld_scenarios` (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-8`; provisional id).** The scenario step needs Layer 2 rows first (Spec 78 §Phase-5 step identity and D-1). Its phase number is assigned at ③. Consequence, recorded in Spec 134 §2: the step does not read `parcel_abutments` (written later in the chain); neighbour-dependent readings stay with the scenario step. Conflict check and seven questions: 124a §B27. | Answers plan Q3; follows R-DE (cross-step order) | `spec134-resolve-bylaws.logic`; LDG-10 and gate D at ① |
+| R-HE | **Scenario data reaches the app through the Spec 100 consumer contract, amended with an explicit whitelisted block; no new endpoint (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-10`; provisional id).** Spec 100 §2.1 says the response is presentation only and §3.2 excludes scenario and by-law fields today. The amendment adds one whitelisted block as a coordinated `.strict()` change: the server schema, the mobile mirror and the S-001 descriptor `field_whitelist` with its parity check in one commit (the R-DL parity form). **OWED** to the app lane (node N11), after the scenario step's field set is frozen at its ①. Until then no app reads a Layer 2 or scenario table. Conflict check and seven questions: 124a §B27. | Amends Spec 100 §2.1, §3.2 when the app lane lands; follows R-DL | `spec134-resolve-bylaws.logic` (the contract text); the whitelist parity test at N11 (OWED) |
+| R-HF | **The stale owed entries for M-217…M-222 and M-225 close only through named locks: INV-18 and INV-19 become named `describe` titles in the existing `bylaw-evaluator-fixes.logic` file (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-13`; provisional id).** Spec 78 names INV-18 / INV-19 as those locks, but no test carries the ids; adding the titles is the cheapest true lock (Spec 131 LC-53: verified by named lock, no partial green). Owed to the by-law fix lane, which owns that file, Spec 69a and the lineage registry; **landed** by wf1/bylaw-fix-1 `284596a4` (describes "INV-18 — …", "INV-19 — …", "INV-19 open arm — …"; red evidence `docs/reports/red-evidence/bylaw/inv18-inv19-red.json`), merged at integrate-13. Conflict check and seven questions: 124a §B27. | Follows LC-53; applies to Spec 78 P5.15 INV-18/19 | `bylaw-evaluator-fixes.logic` (INV-18 / INV-19 titles); `spec134-resolve-bylaws.logic` |
+| R-HG | **Before scheduling commit ① of the scenario step `compute_maxbld_scenarios` (node N6), the orchestrator confirms that the 18 runner rulings binding it are built (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-14`; provisional id).** Spec 78 P5.11 binds the scenario step's ① to the 18 runner rulings approved 2026-10-18 (register ids from R-DV); the check reads `programme-items.json` and the R-DV, R-EB and R-EC rows, and a missing one blocks scheduling. A process rule; it does not extend to `resolve_bylaws` ①. Conflict check and seven questions: 124a §B27. | Follows R-DV, R-EB, R-EC | `spec134-resolve-bylaws.logic`; `programme-items.json` gate |
+| R-HH | **Spec 120 is historical (McDonald's Airtight V3, operator "y" 2026-10-20, `2026-10-20-spec-roles-rulings#SPEC-120`; provisional id).** One `historical` role banner replaces the header block that contradicted itself ("No human has approved this document" beside "authorized registration"); the false-ratification incident and the later authorization ("the specs are good ratify") are kept as a dated note under the banner, the original block in git history; the Status line is `HISTORICAL`. Under R-GW it decides nothing and adds no rule id (`historical_rule_ids` baseline: none); `Spec 120 §x` code citations stay valid as history. Conflict check and seven questions: 124a §B27. | Applies R-GW, R-GX; amends the 120 header | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
+| R-HI | **Spec 121 is historical (McDonald's Airtight V3, operator "y" 2026-10-20, `2026-10-20-spec-roles-rulings#SPEC-121`; provisional id).** The same banner clean-up as Spec 120, landed with R-HJ so that no historical spec governs a live one. Its still-true M-items already live in Spec 132 lines (decision 4); its `historical_rule_ids` baseline is the retired M1–M14. Conflict check and seven questions: 124a §B27. | Applies R-GW, R-GX; needs R-HJ | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
+| R-HJ | **Spec 123 is a standard: the conversion procedure and the G0–G9 gates `step-validate` computes (McDonald's Airtight V3, operator "y" 2026-10-20 to option (a), `2026-10-20-spec-roles-rulings#SPEC-123`; provisional id).** Its gates stay live (R-R). The step family has three live specs: Spec 122 (standard: schema and behaviour), Spec 123 (standard: conversion procedure) and Spec 124 (register: policy); Spec 132 is generated from them. 123:12 no longer says "Spec 121 is the method and GOVERNS this document"; it calls Spec 121 the historical method record and names the R-GV precedence. Spec 123 leaves `rule-map.json` `meta.historical_design_records`. Conflict check and seven questions: 124a §B27. | Amends R-GV's 123 listing and decision 2; follows R-R | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
+| R-HK | **Operator decisions are transferred by generator into decision logs and register rows, under a coverage lock (McDonald's Airtight V3, operator 2026-10-20: "Ensure you used a generator to transfer the rulings etc or you will have forgoteen some", and the standing lane constraint "Operator decisions are transferred mechanically (decision log + generator + coverage lock), never hand-copied"; provisional id; drafted by lane layer2-spec and confirmed by the operator 2026-10-20, `2026-10-20-chat-batch-a#CHAT-3`, "push failed 1 test y to 1-4").** Each set of rulings is committed verbatim as `docs/reports/decisions/<date>-<slug>.json` (a review-page export via `scripts/analysis/decision-log.mjs --import`, or a chat ruling with its quote); a later chat amendment is recorded in the log with its quote. Every approved decision is a register row citing `<log stem>#<decision id>`; `--write` emits the row skeletons; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row, a row citing an unknown decision or log, a row outside its routed register and id, an extra row in another register, an amended decision whose row lacks the amendment quote, or a log that differs from its raw record committed under `docs/reports/decisions/raw/` (re-imported by `--import`, never hand-edited). A routed row another lane owes is marked `owed` until it lands. Red-first: `docs/reports/red-evidence/decision-log/`. Conflict check and seven questions: 124a §B27. **Amended 2026-10-20 (R-DV-1, operator approved on the By-law Fix Rulings page, `2026-10-20-bylaw-fix-rulings#R-DV-1`; drafted by lane wf1/bylaw-fix-2):** a decision may mean `no_ruling` (an existing ruling already decides the question): it needs no new row, its routing names the register row(s) it rests on (`routing.<id>.rests_on`), and `--check` is RED when one is not a register row; the default vocabulary is computed only when the previous log declares none. Conflict check: R-HK's closed meanings gain one value; no row-coverage arm changes. V3: STANDARDIZED one closed meaning; OBSERVABLE `--check` RED on a missing `rests_on`; RECORDED the raw value kept, the meaning declared; SCALABLE every "no ruling needed" item; ACCURATE no fake approval row, no lost decision; SIMPLE one value, one routing field; EXTERNALIZED `decision_vocab` and `routing` are log data. | Follows R-DF (RECORDED), R-DJ (1), R-EC | `decision-log.logic`; `hooks-composition.infra` |
+| R-HL | **Front-yard averaging stays in the scenario step; `resolve_bylaws` keeps its R-HD place (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-chat-batch-a#CHAT-2`, "push failed 1 test y to 1-4"; provisional id).** "Keep front-yard averaging in the scenario step (compute_maxbld_scenarios), as Spec 134 has it; do not move resolve_bylaws later in the chain." Layer 2 does not read `parcel_abutments` (Spec 134 §2); the averaged front setback is applied by `compute_maxbld_scenarios`, which runs after `link_parcel_abutments`. This closes the scenario plan's owed item "front-averaging into the Layer 2 lot flags". Conflict check and seven questions: 124a §B28. | Follows R-HD; amends the scenario plan's owed item | `spec134-resolve-bylaws.logic` |
+| R-HM | **R-RS: a product report surface has one field declaration (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-chat-batch-a#CHAT-4`, "push failed 1 test y to 1-4"; drafted as R-RS by lane report-schema; provisional id).** "A product report surface has one field declaration; every field names exactly one source; a generator --check gates names, types, presentation and pending states; its outputs are generated, never hand-edited." Its first instance is the v2 report declaration and `report-schema.mjs --check` (RS-0…RS-11), landed from `wf2/report-schema` at integrate-13; the declaration is generated by `scripts/surfaces/_schema/seed-report-v2.mjs`. *Dated note 2026-10-20 (`2026-10-20-chat-batch-b#CHAT-11`, operator chat "y to all"):* the ten Q-7 scope rows (`pending:operator_confirm:Q-7-scope`) are in the Spec 100 §3.2 whitelist amendment; the seed reads CHAT-11 from its decision log and moves them to `pending:spec100_amendment:Q-7`. Conflict check and seven questions: 124a §B28. | Follows R-BF (generated, never hand-kept), R-DJ (1) | `report-schema.logic` (runs `report-schema.mjs --check` and `seed-report-v2.mjs --check`); `decision-log.logic` (the record) |
+**M34 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B21 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B21 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; backfill-9 (operator y 2026-10-20: the V3 condition-9 backfill, and consolidation decision 3, the W4A rulings): Spec 124 was at 372/380 lines and owes 39 rows, R-FC…R-GO. They stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. wf2/p4-rulings-7 also allocated 124a §B17/§B18 and M33 and rulings-8 used §B19: §B20 and M34 are renumbered at integration if taken. Re-performed 2026-10-20 after verify-12c (R-EZ) corrected rows R-FF, R-FJ, R-FL, R-FT, R-FY, R-FZ, R-GA, R-GB, R-GC, R-GF, R-GI, R-GL before integration.
+**Standard versions (operator 2026-10-11).** A step's standard is printed by `step-validate` as `standard: V2|V3` (R-DT, 2026-10-18, amended by R-EY 2026-10-20: V3 = all nine conditions — compute purity, no ledger allowance, #44 PASS with nothing attributed, no blocking registry failure, no stage-gated red, scorecard at max, five words PASS with zero deferred, no unmet cutover_prereq item, every exception citing a register rule id; a V2 print lists the failing conditions).
+| Version | Adds | Enforced by |
+|---|---|---|
+| V1 | Pilot form (Spec 122 §5 nine-commit pilots) | historical |
+| V2 — McDonald's Airtight | Specs 122/122a/124/124a step standard: descriptor, closed-answer gates, ledger R-BA, witness #44 | `step-validate` fast invariants, gates A–K |
+| R-DW | **Admin range badges derive from each step's own declared bounds; the badge margin is a logic variable (McDonald's Airtight V3, operator y 2026-10-18; amends R-DL and R-DJ (3); builds the 2026-10-17 range-badge PIN).** A converted step, or a pending step whose descriptor exists, carries no `STEP_EXPECTED_RANGES` entry (`src/lib/admin/funnel.ts`). Its badge is its own `records_meta.audit_table` check row: status = the row verdict, bound = the value the runner resolved from that step's `checks[].limit_from_config` / `warn_limit_from_config`, each a registered seed key. The 13 converted entries are removed; measured on the latest chain-scoped runs, 13 steps' hand volume badges retire (e.g. link_massing `parcel_buildings` ins 14361 vs [0, 500], anomaly) and their check rows already render. The rest is a closed, shrink-only grandfather list of 12 unconverted steps; a pending entry with no descriptor keeps its range until ② (R-DV). `getRangeStatus`'s bare 20 % margin becomes `admin_range_badge_borderline_margin_ratio` (seed 0.2, migration 266). Its prefix names the owning admin surface, the R-DE (v) `<owner>_<name>` shape that `engine_health_*` already uses. `/api/quality` resolves it, with the seeded default as the only fallback. The `\|\| 1` unit span for an exact range is deleted (zero tolerance). R-DJ (3)'s admin count reads `STEP_DESCRIPTIONS` only. | R-DF EXTERNALIZED; R-BF; R-DL; R-DV; Spec 26 §3.4 | `admin-step-registration.logic`; `quality.infra`; `gate-chain-status.infra` |
+| V3 — McDonald's Airtight V3 (FINAL, R-DF; every future step) | V2 + the V3 PACKAGE, six labelled parts (operator directive 2026-10-18; R-DT: `standard: V3` means all six): **(1) STANDARDIZED GATES** — R-BA gates A–K + the fast invariants, hard from commit ①, no ledger allowance (R-BC (b)); **(2) REGISTRY** — R-BF generated/witnessed, R-DJ generator `--check`s at pre-commit, R-DL admin visibility (`admin-step-registration.logic`); **(3) CROSS-STEP TRUTH** — R-DI LDG-10 (#50), #44 arms a/b/c/e/h/i (R-DG, R-DO; `witness.mjs`); **(4) COMPUTE PURITY** — R-BZ/R-CA codes G0–G13, gate E #32 (`compute-purity.mjs`, `compute-literals.mjs`); **(5) EXTERNALIZED** — R-DF (operator 2026-10-17/18: every threshold, window, timeout, limit, rate or count is a registered `<slug>_<name>` logic variable, R-DE (v), seeded by migration in R-CV form, or an exact zero; no literal fallback): gate E #32 (compute literals), gate A (`closed-bounds.mjs`: every check bound is `limit_from_config` or `viol == 0`; (v) step-owned names), R-DL (admin bounds derived); PIN EXT-1 (dated 2026-10-18; owner: the runner lane, Spec 122 §8 re-freeze, operator-approved after step 0) is R-EB (the gate E estate arm: `scripts/analysis/gates/**` at 0 and the tooling ratchet BUILT; the `scripts/lib/step/**` rows, `index.js`:6829's `: 4` included, land with RE-FREEZE #37) and R-EC (the R-DJ pre-commit budget, registered and observed by fast invariant #52); **(6) REPRODUCIBLE CAPTURES** — R-CZ, R-DN, R-DP, R-DQ, #38 (gate G). Plus the latent-compliance rulings R-CV…R-DT; admission test R-DF | `step-validate` prints `standard=V3` only per R-DT as amended by R-EY (`standardFor`, `compute-literals.mjs`): all nine R-EY conditions, fail closed; otherwise `V2 (fails: …)` (`gate-compute-literals.infra`, `step-validate-standard-label.logic`). Enforced by R-EY E1 (V3 ratchet) and E2 (cutover gate), on; E3 (every converted step V3) behind `gate_v3_hard_gate_enabled`, off (`v3-label-enforcement.logic`). A step entering `converted[]` or `pending[]` with any finding is RED, no ledger allowance |
+**M17 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B6 — R-BA five-word gate build scorecard (moved from Spec 124 §5) — HISTORICAL, 2026-10-04, 2026-10-04.**
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B6 — R-BA five-word gate build scorecard (moved from Spec 124 §5) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Build-status snapshot of the R-BA gates A-K + H (all BUILT, test counts as of 2026-09-27); the R-BA register row stays the live rule and step-validate prints the live five-word verdict. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

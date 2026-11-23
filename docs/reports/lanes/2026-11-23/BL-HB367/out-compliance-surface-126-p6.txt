@@ -1,21 +1,22 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:04:13.171Z file_sha256=ba56ec5e59ba6db500a4296ff22b4a85d7644d879c621903d2717d64e2978eec prompt_sha256=934e86c89609924d4722a450c682e7e9bf096f18e595db3b9ec42d28ea1ce264
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:13:23.965Z file_sha256=a056cdda135cd54996d8da82872cad344c68a6c815f10a2a5fb3dfab019dfb67 prompt_sha256=5af43a3de9f2378b118c6ba8d7c01aa4e50efb54879a97e9628ee73a6f1180af
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0413 "the rows flip from OWED to RULED in the commit that lands their tests" — .cursor/MCFRONTEND-QUEUE.md "+**MF-98 COMPLY.3 ... — RUNNING** (E) ... fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — fe.51's nav-tab-switch.logic.test.ts lands in commit 1 yet the row is kept OWED although RR-0413 approved the three-row flip ("yes to both A. Status flip") — either record Q-D as an explicitly unanswered operator question (not an orchestrator/plan question) before the fe.51 commit rides, or flip fe.51 to RULED per RR-0413 and note the two owned exceptions as dated-note scope.
+DEFER severity=LOW — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 |" — the only generator output in this chunk grows 29,076 to 29,166 (+90) rather than shrinking, and the no-check list lives in Spec 136 which is in another chunk, so the required shrink cannot be seen here, confirm in the Spec 136 chunk that fe.49/fe.51/fe.54 left the no-check list.
 
-DEFER severity=LOW — acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/reports/panels/MF-98.json "verdict": "PLAN RULED; OUTPUT owed" — the red/green proof lives only in the test files (chunk 2 of 3), not in this chunk, so acceptance #2 cannot be verified here — verify red.out and the 67-pass green run in the test-file chunk before task-367 is set BUILT.
+MET — queue id rule — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-99** ... next free id **MF-99**, now also the first value on the line, the one tools read" — MF-98 row is listed and the first value advanced to one past the larger of MF-97/MF-98.
+MET — RR-0413 "yes to both A. Status flip." — docs/reports/panels/MF-98.json "cards" and queue row "FE rows owned: FE-49, FE-51, FE-54." — the operator's three-row confirmation is recorded in the panel and the queue row.
+MET — RR-0417 "yes. worktrees removed" — queue row "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)" — fe.51 recorded RULED with its two named, owned exceptions.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — queue row "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder" and panel "verdict": "PLAN RULED; OUTPUT owed" — nothing is set BUILT before the grounder rules.
+MET — RR-0386 "gates parked, handbook tests start fresh" — queue row "Not in this row: any fix of a live break ... the parked branch wf1/inc1b-gates (RR-0386)." — the parked gates branch is left untouched and the handbook tests start clean.
 
-MET — §14 "migrations/** — no migration is authored by this spec" — the three changed files (`.cursor/MCFRONTEND-QUEUE.md`, `docs/reports/generated/rule-lists-by-kind.md`, `docs/reports/panels/MF-98.json`) touch no migration.
-
-MET — §11b.7 page set — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" — this is a generator regen count and the MF-98 row is a handbook-test row, introducing no change to the A1-A6 / W1-W10 / D1-D4 page set.
-
-REJECT — acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — the rule-lists §2 "Rules" char count grew (29,076 to 29,136) — not a real issue: the §2 total includes the added dated notes, while the actual no-check shrink is the panel's "Spec 136 OWED count 20 (NOT-YES branch: 20)" (fe.49 and fe.54 flipped from OWED), which the generators produced; the acceptance is measured by the OWED count, not the raw char total.
+REJECT — Spec 126 §11b.7 "Spec 126 owns which pages exist and how they connect" — the change is accused of not satisfying the MaxBLD page set — this chunk adds only a queue row, a panel record and regenerated rule-list counts, none of which is a page, route, connection or look, so §11b.7 is not implicated.
+REJECT — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — the change is accused of carrying no red/green evidence — the three lock files and docs/reports/reviews/task-367/red.out are chunk 2/3 of this change, reviewed in their own runs, so chunk 1 cannot show them.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 6   Unmet: 0
+Clauses checked: 12   Unmet: 0
 Rules met: none
 
 ---
-⏱  59081ms (59.1s)
-📊 Tokens — total: 39026, input: 26743, output: 12283, reasoning: 11665
+⏱  96061ms (96.1s)
+📊 Tokens — total: 49364, input: 27662, output: 21702, reasoning: 21011

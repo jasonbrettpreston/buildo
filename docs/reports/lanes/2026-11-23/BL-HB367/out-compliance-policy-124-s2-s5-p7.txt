@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:02:29.812Z file_sha256=35d28ddbb6cd2c711f89266451c9530230384f0ee61e4c3ed76fe80aefb1e6d3 prompt_sha256=2ca9a1236a3b7975e826f2d44808e8043fd26000bdb2c0a70feeaf85f2611d5d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:125 "expect(a.why).toMatch(/^owed: MF-\d+/);" — the "owned" half of the operator's condition is proven only by the shape of the why string, never by resolving MF-49/MF-50/MF-51/MF-52 to real queue rows — read .cursor/MCFRONTEND-QUEUE.md and fail when a named row id is absent.
+DEFER severity=MED — fe.49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:30 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — '/(app)/map' is banned as a lead route although no pasted clause or ruling names the map route — drop '/(app)/map' or cite the pasted clause that names it.
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:123 "expect(ALLOW.length).toBeLessThanOrEqual(2);" — shrink-only is machine-checked only as a count cap, so one entry can be retired and a different unaudited push admitted in the same commit while the test still passes — pin the two file+call keys as literals and assert set equality.
+DEFER severity=LOW — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:14 "LIMITS (stated, not widened): a route held in a variable is missed" — the RULED rule is backed by a gate that cannot see a tab switch routed through a variable, the shape a later fix commit is most likely to take — resolve "const x = PARCEL_TAB_ROUTE.<tab>" identifiers before judging push arguments.
+MET — fe.51 — src/tests/surfaces/nav-tab-switch.logic.test.ts:145 — C controls give 0 for navigate/replace/non-tab push and B plants two tab pushes that each yield exactly one finding.
+MET — fe.49 — src/tests/surfaces/scope-fence.logic.test.ts:120 — A asserts zero hits on the real tree and B plants each linkage form so each yields exactly one hit.
+MET — RR-0417 — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 — "const FLIP_PENDING: readonly string[] = ['FE-39'];" leaves FE-51 out of the pending list, with exactly the two named ALLOW entries in the lock.
+MET — RR-0392 — src/tests/surfaces/scope-fence.logic.test.ts:20 — "import { execFileSync } from 'node:child_process';" the two new locks add no harness, no network, no DB beyond node:fs/typescript/vitest.
+REJECT — fe.49 — that the fence omits import hops and undeclared server files — the file states "declared files only, no import hop" as a declared LIMIT, not a silent widening, and no pasted clause requires transitive scanning.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+
+---
+⏱  71376ms (71.4s)
+📊 Tokens — total: 36386, input: 21976, output: 14410, reasoning: 13573

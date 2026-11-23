@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:03:15.081Z file_sha256=ae8a9d860d79b87408087cf7ea47660b5571e33203c9f62203bd04dc60bd25d3 prompt_sha256=0310ff63438c86cce0e346506b77992e6e2bad89f1e82daaf0d3b48ab51451be
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests" — src/tests/surfaces/scope-fence.logic.test.ts:58 "return; // the module path is checked above; its string is not a route or a table read" — the import/export branch returns before the lead_parcels test, so `import { pool } from '@/db/lead_parcels'` or `import { lead_parcels } from './x'` yields zero hits although the header declares TESTED "(1) a string, template text or identifier that holds lead_parcels in any letter case", which makes FE-49 RULED on a lock that cannot see a form its own rule text names — fix: call str(n, n.moduleSpecifier.text) and test every bound name against LEAD_TABLE_RE before returning
+
+DEFER severity=MED — AC1 "The gate list is confirmed by the operator before any gate is built" — src/tests/surfaces/scope-fence.logic.test.ts:30 "'/(app)/map'" — the lock bans a route no pasted ruling and no quoted rule text names (LeadDetail, the flight board, the lead feed), so a compliant MaxBLD map route turns the lock red — drop /map from LEAD_ROUTES or cite the ruling that names it
+
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:127 "expect(a.why).toMatch(/^owed: MF-\d+/)" — ownership rests on free text in the why string, nothing checks MF-49/MF-50/MF-51/MF-52 are real queue rows — read the ids from .cursor/MCFRONTEND-QUEUE.md and assert each resolves
+
+MET — RR-0413 — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49" — one of the three rows the ruling flips lands with its lock and its SPEC LINK, per the AC6 form in the acceptance notes
+MET — RR-0417 — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "const ALLOW: Allow[] = [" — exactly two entries, each with a count and an owed owner, and A2 caps the list at 2 so it can only shrink
+MET — RR-0386 — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — no parked gate is landed here, FE-51 leaves the pending list only after RR-0417, and the list shrinks
+MET — AC2 — src/tests/surfaces/nav-tab-switch.logic.test.ts:143 "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" — both directions are shown red before the clean-tree A assertion
+
+REJECT — RR-0386 "task-367: gates parked, handbook tests start fresh" — accused of building the parked gates A/B/C before the gate list is confirmed — these are the surface handbook rule locks the card's Files list names, and RR-0417 confirmed the FE-51 row
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+Rules met: none
+
+---
+⏱  88362ms (88.4s)
+📊 Tokens — total: 44456, input: 26142, output: 18314, reasoning: 17529

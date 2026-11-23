@@ -1,0 +1,371 @@
+LIST surface-128 sha256:43cfba743a22d707ddab64116c7895afe6ba2d4708121f6a73f67cc5dde383d6 material sha256:0241b0be44a9dd4fad90c80b453b491c86be903637bd54467d4559ad65f9fba4 part 1 of 2 chunk 3 of 3
+RULE LIST surface-128 (docs/specs/02-web-admin/128_surface_standard_policy.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+# SPEC 128 — Surface Standard Policy (the durable half)
+
+> **Status: DRAFT** — authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation.
+>
+> **Placement note.** See Spec 126's header: a `docs/specs/04-platform/` folder is not supported by `scripts/generate-system-map.mjs:24-31`'s hard-coded `SECTIONS` allow-list (a directory absent from it is silently dropped — no throw) nor by `src/tests/system-map.infra.test.ts:49,300,325`. Filed as **`ASK-06`** below.
+>
+> ⚠️ **System-map coupling.** `docs/specs/00-architecture/00_system_map.md` **has been regenerated** as part of this change (`node scripts/generate-system-map.mjs`); re-run it whenever a boundary list changes.
+
+---
+
+
+## §1. Purpose
+
+Every surface in this estate is the same surface, except for its projection. Nothing about how a surface is gated, guarded, validated, metered, recovered or observed is a per-surface invention — it is a declaration chosen from a closed menu, and the schema, the engine and a small set of shape rules make every other answer either impossible to omit or impossible to hide. A surface author's discretion begins and ends at the projection.
+
+**This spec is the durable half** — the part that must still be true after the conversion programme finishes and the packaging Spec 127 describes is forgotten. Spec 126 is the contract; Spec 127 is the procedure; this is the policy, the ruling register, and the open asks.
+
+---
+
+
+## §2. The rules
+
+Thirteen rules, mirrored from Spec 124 §2 by `node scripts/violations/generate-spec-mirror.mjs`. The source rows are parsed from that spec, so this table cannot drift from it without `--check` failing. Each surface rule states what its pipeline ancestor becomes on a surface; the enforcement artifact for each lands in Phase 1 and is scored in Spec 127 §5's policy-coverage matrix.
+
+<!-- generated:mirror:128-rules -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: docs/specs/01-pipeline/124_step_standard_policy.md §2 (13 rules parsed).
+
+| # | Spec 124 rule (source text, abridged) | Source anchor | Surface rule | What it means on a surface |
+|---:|---|---|---|---|
+| 1 | Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 1 | **Nothing hidden** | no surface behaviour lives only in a component — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order. |
+| 2 | Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 2 | **The client is just glass** | the surface analogue of "compute is just compute", and it is not new: Spec 90 §3 already mandates Dumb Glass and already carves out optimistic UI by name. Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected. |
+| 3 | Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is al… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 3 | **Tunables externalized** | every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture — same registry, same presence/validity split (R-G). |
+| 4 | A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 4 | **Projection rule declared** | which fields render, in which order, with which labels, is a declaration the server owns — not a component's implicit knowledge. The measured defect: one contract declared at four sites, locked at one. |
+| 5 | `checks` may never be `"none"` — every step declares at least one. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 5 | **checks ≥ 1** | inherited verbatim; `checks` may never be `"none"` on any surface, contract or job. |
+| 6 | Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 6 | **Omission fails** | a category present with fields missing is the same "we forgot something again" the standard exists to answer. `"none"` is legal; silence is not. |
+| 7 | A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 7 | **Archetype gates categories** | the load-bearing operator ruling — a UI archetype selects a required-field profile, exactly as `identity.archetype` does at `scripts/steps/_schema/step.schema.json`. REPORT forces `outputs`/`state` to `"none"`; SLOT forces `disclosure`. |
+| 8 | A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 8 | **Per-target write discipline** | moves to CONTRACT with the vocabulary unchanged; a surface declares only its optimistic write and its rollback. |
+| 9 | A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (p… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 9 | **Banned write needs a ledger row** | a metered action with no `usage_events` row is the dead-meter defect repeating (`/api/leads/view`, 44 green tests, zero callers, an unreachable paywall branch). |
+| 10 | The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 10 | **Verdict row-derived** | a surface's check verdict is derived from its own audit rows, never a parallel boolean — inherited verbatim, including R-Q's severity split. |
+| 11 | A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1). | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 11 | **Render-order re-derive** | the phase-order analogue: when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched. |
+| 12 | A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 12 | **Truthful failure posture** | a surface declares what the user sees when it fails — the crash-posture analogue. An unhandled state is a FAIL, not a blank screen. |
+| 13 | A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track). | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 13 | **A surface validates itself** | ONE command generates the scorecard and the policy-coverage matrix from artifacts; a hand-written scorecard is not evidence. |
+
+**The rule about rules, inherited verbatim (Spec 124 §4.4):** *a rule without a lock is not yet a rule* — the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new.
+<!-- /generated:mirror:128-rules -->
+
+### §2.1 Rule 2's boundary, named once
+
+Rule 2 ("the client is just glass") is the one rule whose boundary must be written down rather than inferred, because "everything server-side" has five legitimate exceptions and a reviewer who cannot name them will either over-apply the rule or waive it. The five, declared per surface:
+
+1. **Device state** — GPS, push token, permission status. The server cannot know these.
+2. **Optimistic UI** — declared as `outputs.optimistic`, not improvised. Spec 90 §3 explicitly encourages it.
+3. **Offline cache** — the MMKV projection; a server-driven screen must still render with no network.
+4. **Animation / gesture** — Spec 99 §2.1's hard rule; orthogonal to layers 1–4.
+5. **Navigation position** — which route is mounted; `expo-router` owns it.
+
+Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date.
+
+### §2.2 Two rules with no pipeline ancestor — and the gates that enforce them
+
+The thirteen above are mirrored. Two more exist only here, because the surface estate has two properties the pipeline does not: a schema it *declares but does not generate*, and a projection that must render *identically to more than one target*. Each is stated as a rule so that Spec 127's gate has something to score.
+
+**Rule 14 — a declared schema is asserted against the live catalog, never against its own migration.** Every column, type, nullability, index and RLS policy a descriptor declares is proven against the introspected types and `pg_policies` / `pg_class.relrowsecurity` / `pg_roles`, in **both** directions: a column live but undeclared fails exactly as a column declared but absent does. Reading the migration text back is not an assertion — it is the declaration restated. *Enforced by:* Spec 127 gate **S-schema**, under `BUILDO_TEST_DB=1 npm run test:db`, each lock carrying a RED canary. *Violation reads as:* a red `surface-schema-drift` lock naming the column or policy and which side it was missing from.
+
+**Rule 15 — parity between render targets is a comparison, not a discipline.** A surface declaring more than one `render.targets[]` entry proves its projections equal on the shared field set, by golden comparison. "100% data parity between the web view and the exported document" was a promise in Spec 125 §7 and is a diff here. *Enforced by:* Spec 127 gate **S-parity**, over the golden PAIR. *Violation reads as:* a field present in one target's projection and absent or different in another's, named by the differential.
+
+Both rules are scored in Spec 127 §5's policy-coverage matrix alongside rules 1–13, and both are `PROSE-ONLY GAP` until Phase 1 lands their artifacts — which is the honest status, not a placeholder.
+
+### §2.2a McFrontend rules 16-20, and a real lock for Rule 15 (added 2026-11-04)
+
+Added by the McFrontend Phase 0 documents (prior text kept, M-246). Rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`; principles: Spec 126 §0a; register: Spec 135. Scope: the REPORT archetype now. Each lock is OWED until Phase 1, one lock per row in Spec 135. Task ids are the McFrontend queue's (`.cursor/MCFRONTEND-QUEUE.md`).
+
+| Rule | Text | Lock (OWED until Phase 1) |
+|---|---|---|
+| **16 Single source** | A REPORT surface displays values read from the contract; it does not add, subtract, round or compare to produce a displayed number. Formatting is the only transformation, from one named helper with its own test (output = input digits only). | `src/tests/surfaces/report-no-maths.logic.test.ts`: an AST scan of EVERY file under the projection dirs AND the generator; bans arithmetic BinaryExpression, `Math.*`, `reduce`, `Number()`/`parseFloat` on field values, numeric literals other than 0 and 1 outside the formatter; allow-lists the formatter by name; plus a generator pass-through check (output value = catalogue value). One RED fixture per bypass. |
+| **17 Honest display** | Status words come from the closed list (Spec 126 §11a.3). `at_least` renders "at least"; a required disclosure renders; `not_modelled`/`not_evaluated` render as such. The renderer throws on an unknown field or status. | `src/tests/surfaces/report-honest.logic.test.ts`: oracle = the catalogue flags (at_least, not_modelled, not_evaluated, required disclosure): for each flagged row the real per-target output contains the marker. Plant: drop "at least" from renderer output. |
+| **18 Performance budget (REPORT)** | REPORT declares a payload limit (and load) in protected archetype data, tighten-only. Load time is PROSE-ONLY. The numbers are measured first, then ruled (operator "QMf5 a"; Spec 126 §11a.8). | `src/tests/surfaces/budget.infra.test.ts`: payload bytes on golden fixtures <= limit; RED fixture = padded payload. |
+| **15 Parity (existing) gets a real lock** | Rule 15 above says parity by golden comparison, and the paragraph after it admits PROSE-ONLY GAP. Lock: compare what each target actually emits (React Native test-renderer text, server-rendered DOM text, admin render, extracted PDF text), each normalised to `{field, label, value, status, confidence, provenance, disclosures}`, over the WHOLE declaration; any per-target difference fails. A comparison of one builder's tree does not count. | `src/tests/surfaces/parity.golden.test.ts`; RED fixture: change one value in ONE real target's output (one RED per target, admin included). |
+| **19 No hand-written scenario field** | Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern). | `src/tests/surfaces/report-generated-only.infra.test.ts` (a hand edit of generated output: `--check` red) |
+| **20 Binding** | Every displayed field's `source` is in the closed set (Spec 126 §11a.1): catalogue row id, content id, input-contract id, ad-contract id, declared external embed. The set is in a protected file; adding a member needs a register row and a panel. | `src/tests/surfaces/report-binding.logic.test.ts`; RED fixture: a node with an invented field. |
+
+Principle map: 1 = rules 1, 19; 2 = §4.4, rule 14, surface-validate; 3 = 18; 4 = 16; 5 = 17; 6 = 15; binding = 20.
+Canary b = three checks: generator `--check` (hand edit), the Rule 20 lock (invented field), the Rule 16 AST numeric-literal scan. Arm L (literal-scan) is not used for surfaces.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): Rule 16's scope gains the binding modules listed in `scripts/surfaces/_schema/bindings.json` (`modules`): the FE-05 lock reads them as files and fails closed (card §2.4 "No maths (FE-05) | binding modules"). Formatting stays server-side; a comparison-only client sort over a declared `sort_field` stays legal.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-23 · McFrontend queue · lane T; operator, verbatim: "all approved as recommended", MF-23 D-3; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 4): Rule 17's oracle is "the catalogue flags". Measured at 34b5ff12c: the generator `seed-report-v2.mjs` emits no flag, no `at_least` marker and no disclosure code, and `report-presentation.json` `disclosure_texts` holds no codes, so a flag-driven oracle cannot yet be built. Until the flags exist, canary a ("a-now", `src/tests/surfaces/mcfront-proof.infra.test.ts`) plants the named defects (drop "at least"; drop a disclosure) in a temp copy and requires shipped locks to go red. Measured red: the at_least leg in `report-render.logic.test.ts` and `report-generated-only.infra.test.ts` (the golden compare; `parity.golden.test.ts` and `report-honest.logic.test.ts` read the stored golden tree and stay green); the disclosure leg in `parity.golden.test.ts` and `report-view.ui.test.tsx`. The oracle is the shipped locks and the golden compare, not the catalogue flags. The disclosure leg runs on synthetic trees only. Corrected 2026-11-09 after the MF-23 OUTPUT panel (the first wording named the honest and parity locks). What is NOT proven: the link from a catalogue flag to its marker. That is card MF-23-F1 (`.cursor/MCFRONTEND-QUEUE.md`). The table cell above is unchanged.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-16 · McFrontend queue · lane T; operator, verbatim: "2. MF-16 approved provided its ocmplaint", D-2 a; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): Rule 16 says the scan covers "EVERY file under the projection dirs AND the generator". Scope of the `report-no-maths` scan: the three projection directories, `src/lib/surfaces/report/`, `src/components/report/` and `src/app/admin/report-preview/`, found by directory walk. "The generator" means code that produces a displayed value. `scripts/surfaces/seed-report-v2.mjs` emits declarations, not displayed values (its hits are array indices, an indent and source notes), so it is outside the scan. The value pass-through (output digits = input digits) stays pinned by the runtime test in `report-render.logic.test.ts`. No formatter is allow-listed because none is named and the projection files hold no numeric operation. If a generator ever produces a displayed value, it joins the scan.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-38 · McFrontend queue · lane MF-38; operator, verbatim: "0-1 b"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-38 O-1"; plan `~/Buildo-scratch/mcfrontend/MF-38/plan.md` with `plan.delta-1.md`): Rule 16: the FE-05 scan also covers `src/lib/surfaces/report-images/` (the pure image selection: comparisons only; the frontage edges are injected `logic_variables` values, never literals). Rule 15: the image node is identical in the tree on every target and every target renders the same one image; the FE-07 parity lock compares the image leg too.
+
+### §2.3 Archetype variance
+
+The Spec 124 §3 variance table has a surface analogue: `✓` = must answer per the archetype's required-field profile, `N/A` = the profile forces `"none"`. The full table is generated per archetype from `surface.schema.json`'s `allOf` blocks once Phase 1 lands, on exactly the mechanism Spec 126 §3 mirrors. Until then, the per-archetype MUST/MUST-BE-`"none"` columns in Spec 126 §3.1–§3.3 are the register of record.
+
+---
+
+
+## §3. Budget and refresh rules
+
+**Rule B1 — the descriptor budget is declared before commit 1, and it is a kill criterion.** No descriptor in this repo is under 200 lines; the smallest real one is **388** (`scripts/compute-centroids.descriptor.json`), the largest **8,225**. Fifty-three surfaces at 388 lines is ~20,000 lines of declaration. The archetype required-field profiles are the only mechanism that prevents 53 × 400 lines of `"none"`. **If the pilot descriptor lands over ~250 lines, the profile design is wrong** — that is a stated kill criterion, not a retrospective observation.
+
+**Rule B2 — a proposal to add a declaration carries its measured cost, and the operator rules.** The pipeline's P3 discipline, inherited: every added box, declared check or audit row costs per surface × per render × per user. Visibility wins by default; the cost is *stated*. The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size), never hand-computed once and forgotten.
+
+**Rule B3 — a declared check's READ cost is part of its price, stated against the target it actually runs on.** The EP-D17 extension, inherited and load-bearing here: five `enrich_parcels` post-checks declared `cost_ms` of 180–260 ms from a single local golden sample while the same queries measured 568,601–573,235 EXPLAIN cost against the production heap — and cloud-measured 16–30 s on a vacuumed heap versus 40+ minutes against 1.35M dead tuples, a 150× cliff keyed on heap state alone. **A number an author wrote down once and nobody re-checked is not a cost.** Every surface check that queries pairs a declared ceiling with a per-entry `duration_ms` audit row.
+
+**Rule B4 — goldens refresh on fingerprint, never on request.** A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment.
+
+**Rule B5 — the register is refreshed at every cutover, not periodically.** A `§R Reflection` section is required after every conversion's cutover (Spec 127 gate S9, binary): a low-confidence table and a recurring / standard-shaping table. The second feeds §4.6's promotion criterion. A ruling with no recurrence claim stays a ledger row.
+
+**Rule B6 — the pre-batch rule. → §5 R-12 is the single home; this is a pointer, not a second statement.** An unaudited admin mutation blocks conversion of the surface that calls it. Measured: **9 of the 15 mutating admin routes write no `admin_audit_log` row**, including `control-panel/configs` **PUT**, which rewrites `logic_variables` plus three more tunable tables. `src/lib/admin/admin-audit.ts`'s own header calls an unaudited admin mutation *"a compliance hole"*, and the mechanism to close each one already exists and is centralised. Closing them is independent of every Spec 126 decision and gets more expensive once the routes are regenerated. **Status: ACCEPTED at R-12** (decided by the measurement plus `admin-audit.ts`'s own header, not by this pass).
+
+---
+
+
+## §4. When the policy is unclear — the ruling protocol
+
+Inherited from Spec 124 §4 without modification. The steps, mirrored:
+
+<!-- generated:mirror:128-register-shape -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: docs/specs/01-pipeline/124_step_standard_policy.md §4 (7 protocol steps) + §5 (register columns).
+
+**Register columns, mirrored from docs/specs/01-pipeline/124_step_standard_policy.md §5:** `#` · `Ruling (one line)` · `Amends` · `Full text` — plus one column this register adds, **`Lock`**, because Spec 124 §4.4's "a rule without a lock is not yet a rule" was prose there and is a COLUMN here.
+
+| # | Step of the ruling protocol (source, abridged) | Source anchor | Applies here as |
+|---:|---|---|---|
+| 1 | An agent pass (or a reviewer) **discovers** the ambiguity and proposes a disposition, using the closed Intent Ledger vocabulary (`preserved-in-runner \| preserved-in-validator \| preserved-in-compute \| encoded-as-descriptor-field \| encod… | docs/specs/01-pipeline/124_step_standard_policy.md §4.1 | verbatim — this register inherits the protocol unchanged |
+| 2 | **A different party adjudicates — never the pass that discovered it.** This is a **policy rule**, not merely a procedure step (Spec 123 §7.1, restated here per R-I.3): the same pass may never both discover a fence/ambiguity and rule on its… | docs/specs/01-pipeline/124_step_standard_policy.md §4.2 | verbatim — this register inherits the protocol unchanged |
+| 3 | The ruling is recorded in **§5's Register of rulings** with an id, the statement, and what it amends. | docs/specs/01-pipeline/124_step_standard_policy.md §4.3 | verbatim — this register inherits the protocol unchanged |
+| 4 | **A rule without a lock is not yet a rule** — the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new) proving it. | docs/specs/01-pipeline/124_step_standard_policy.md §4.4 | verbatim — this register inherits the protocol unchanged |
+| 5 | If the ruling changes what §2 says generically (not just for one step), this spec is amended in the same commit as the lock — a ruling that only lives in a pilot report or a defect-ledger row has not yet reached policy. | docs/specs/01-pipeline/124_step_standard_policy.md §4.5 | verbatim — this register inherits the protocol unchanged |
+| 6 | **Promotion criterion — pilot-local → estate-wide.** A ruling stays pilot-local (a Defect Ledger row, `<PREFIX>-D<n>`) until it is **expected to recur in another archetype** — that expectation is what promotes it into this register as a le… | docs/specs/01-pipeline/124_step_standard_policy.md §4.6 | verbatim — this register inherits the protocol unchanged |
+| 7 | **A document move or consolidation this protocol produces is verified by a line-set diff before commit (R-I.4)** — every non-empty moved line found verbatim in the destination, nothing dropped; a mismatch is filed as a defect, never silent… | docs/specs/01-pipeline/124_step_standard_policy.md §4.7 | verbatim — this register inherits the protocol unchanged |
+<!-- /generated:mirror:128-register-shape -->
+
+### §4.7a ⚠️ Specs 126, 127 and 128 cannot ground each other
+
+Stated here because the protocol above makes it load-bearing. All three specs were authored in **one WF1 pass**, on one date, by one author. §4's step 2 — *a different party adjudicates, never the pass that discovered it* — is a **policy rule** (Spec 124 §4.2, restated per R-I.3), so **a §5 row whose `Amends` cell points only at Spec 126 or 127 is citing its own author.** That is not disqualifying, but it changes what the register is worth for such a row: the value is **the lock, not the rule**.
+
+Two consequences, applied throughout §5:
+
+1. Every `ACCEPTED` row names a **deciding source outside this pass** — a ratified spec, an executed code fact, a prior operator ruling, or law. A row that cannot name one is `PROPOSED`, however obviously right it looks.
+2. `Lock` cells are honest: none resolves yet, so **no row reads `BUILT`** (§4.8). `ACCEPTED` means the decision is made and not re-litigated; it does not mean the rule is enforced.
+
+### §4.8 The BUILT-evidence lock (this register's own addition)
+
+**Adopt the resolver, not just the table.** `src/tests/programme-backlog.infra.test.ts`'s `evidenceResolves()` passes only if an evidence token is a real path (`file:line` allowed) or a `git cat-file -e`-resolvable object, with a **RED canary asserting that `'trust me'` fails**. Two commits on this branch (`fc08ff8d`, `b9e3ba8c`) exist solely because evidence strings failed that resolver at pre-push.
+
+Therefore, in this register:
+
+1. The **`Lock`** column is not prose — it holds a path, a `file:line`, or a commit SHA, and it is resolved mechanically.
+2. A row may not read `BUILT` unless its `Lock` resolves. A ruling whose lock does not resolve reads `PARTIAL` at best.
+3. The same commit that records a ruling adds its both-directions test. **A rule without a lock is not yet a rule** — which is why `Lock` is a column here and was prose in Spec 124.
+4. Ask rows (§6) carry a recommended default and a reversibility note, never a lock — an Ask is not a ruling.
+
+### §4.9 The six-principle check (McFrontend, added 2026-11-04) — FE rows only
+
+A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions, one per Spec 126 §0a principle: Declared, Proven, Fast, Single source, Honest, Same everywhere, each `pass`, `n/a (reason)` or `FAIL`; a FAIL row is not RULED. It applies to FE rows only; R-rows moved later are not re-checked (deferred).
+
+### §4.10 Status vocabulary and one lock per row (McFrontend, added 2026-11-04)
+
+The McBylaws gate's `statusOf` (`scripts/analysis/mcbylaws/cite-parse.mjs:57-70`, comment at :67, read at `ac9200aa8`) maps RETIRED/SUPERSEDED/WITHDRAWN to RETIRED; PROPOSED; a leading `OWED` or `OWED:`/`OWED ->` anywhere to OWED; else RULED. Spec 135 words: `RULED <date>`, `PROPOSED`, `RETIRED`, `OWED`. The form `RULED <date>. **OWED:** x` reads OWED (not RULED) to arm C; an OWED marker is never written with zero lock paths (it would be permanently uncitable). A row that is ruled and whose lock is not yet built reads OWED with its lock path.
+
+One lock per register row (multi-lock rows are split). `lockLands` uses `some` (`cite-arms.mjs`); changing it to `every` is NOT proposed (it would change McBylaws gate behaviour).
+
+### §4.11 What arm C needs before it judges FE rows (all code changes WAIT for the named freeze lift; McBylaws owner review)
+
+A change list, written now; no code lands with it.
+
+1. **Register list:** `CITE_INPUTS.registers` (`gate.mjs:31-34`, three paths). Add 135. `citeInputs` returns null if any file is missing (`gate.mjs:106-113`); the caller substitutes the empty sentinel (`gate.mjs:198-199`, :269, :323); fail-closed comes from `sentinelsOk` in cite-arms.mjs `run` (needs M-361, LC-15 owed and M-180 RULED), and only for commits touching a layer23 path. Arm C reads the PARENT (HEAD) and the index: Spec 135 must land in an EARLIER commit than the registers-array change (the same commit is not enough).
+2. **Row form:** `parseRegisterRows` (`cite-parse.mjs:78-91`), `ROW_HEAD_RE` at :13; id `[A-Z]{1,2}-\d+`; the first id wins (:85). FE-nn and R-nn both match.
+3. **Status and locks:** status = the LAST pipe cell (`lastCell`, `cite-parse.mjs:41`); locks = backticked paths ending .test.ts/.tsx/.mjs (`locksOf`, :44-55). The OWED exception also needs the lock added or modified in the SAME commit AND a new file under docs/reports/red-evidence/ (existence only).
+4. **Ids and trailer:** `ID_RE` (`cite-parse.mjs:8`): add `FE-\d+`. `TRAILER_RE` (:9): accept `McFrontend-Task: MF-n`.
+5. **Prereg machinery:** `prereg-<task>-<k>.json` under scripts/analysis/bylaw-validation/coa-expected/ with non-empty `rules[]`, each RULED; the task shape is `MB-\d+`: change `prereg-name.mjs` and `PREREG_RE` (cite-arms.mjs `findPrereg`) to accept MF-n.
+6. **Policy:** surface paths (`scripts/surfaces/**`, `src/lib/surfaces/**`, `src/tests/surfaces/**`) are NOT layer23 today, so gate `staged()` returns [] and arm C never runs on them. Until Phase 1 opens, put them in `pending_globs`/held (hold.mjs) so a commit is refused (this makes FE-01 mechanical); at Phase 1 open move them to `layer23` (`paths.mjs:9, :100`). Add the FE register and golden dirs to `protected`.
+7. **Arm Q** (`mcbylaws-queue-check.mjs`): hard-wired to `.cursor/MCBYLAWS-QUEUE.md` and `MB-nn`. Parameterise the queue path and id prefix; convert the MF queue to the heading+status+@sha form; add: a DONE MF task whose FE row is still OWED is refused (MF-24). Dated note 2026-11-09 (M-246, prior text kept; MF-34; operator, verbatim: "approve D-1 - D-8 as recommended"): the refusal is built in `mcbylaws-queue-check.mjs` (Q6, MF prefix only). A DONE heading in `.cursor/MCFRONTEND-QUEUE.md` must hold one `- FE rows owned: none.` or `- FE rows owned: FE-nn, FE-mm.` bullet; a listed row that is OWED, or absent from Spec 135, fails (`FAIL:Q:done-fe-owed`, `done-fe-unknown`; a missing bullet is `done-fe-undeclared`); an unreadable Spec 135 is `cannot-decide`. The done-condition is that a DONE task DECLARES an OWED row; whether a declaration is complete is judged at the McBylaws owner review (follow-up MF-34-F1). The check re-judges every DONE heading at the tip. Arm Q runs only on a push that touches the MF queue or a surface path, so a push that edits only Spec 135 is not re-judged.
+8. **Hooks and CI:** `.husky/pre-commit` + test.yml: `surface-validate.mjs --check`, generator `--check`, handbook `--check` lines (.husky/* is protected: panel arm P + APPROVED). Add a CI step in test.yml that runs the `*.db.test.ts` locks (npm test and pre-push exclude them).
+9. **Lock-must-run:** `register-locks-resolve` fails an OWED/RULED lock that is a `.db.test.ts` and is not named in a CI step.
+
+Order: Spec 135 landed first; then the gate changes; then the policy globs flip from held to layer23. Not changed: `lockLands` some/every. The pre-push summary may print the count of OWED FE rows: visibility, not a lock.
+
+> Dated note 2026-11-06 (M-246, prior text kept; operator answer to the McFrontend opening decision list D-1..D-9, verbatim "yes. proceed", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; map `~/Buildo-scratch/mcfrontend/phase1/opening-map.md`). How items 1-7 are built (MF-17 early gate batch and MF-24a; the McBylaws verdict of every MB-trailer commit stays unchanged):
+> - **Item 6 (D-2 b).** The surface paths go in a separate, optional policy list `frontend` in `mcbylaws/protected-paths.json`, not in `layer23`. Arms H, C, P, the push prompt and arm Q read it (`paths.mjs isFrontend`); `classify` and the McBylaws loop gate (`loop-oracle.mjs loadLayer23`) do not, so `layer23` keeps meaning by-law code (R-LI). `pending_globs` only exempts a glob from the dead-glob lint (it refuses nothing); the earlier words "so a commit is refused" did not hold (opening map finding 2). The flip fills `frontend` after the gate code lands (D-1 b).
+> - **Item 1.** Spec 135 is read into a second row set (`feRows` = the three registers, then 135) used only by the McFrontend judgement; `CITE_INPUTS.registers` stays three paths, so a rev without 135 changes nothing for a McBylaws commit. A missing 135, or a 135 parse without FE-01, makes the McFrontend judgement cannot-decide.
+> - **Item 4.** `ID_RE` and `TRAILER_RE` are unchanged; `parseFrontendMessage` reads `McFrontend-Task: MF-n` and the `FE-n` ids for the McFrontend judgement only. A surface path needs the MF trailer: a McBylaws trailer never passes it (opening map finding 3); a commit with both kinds of path needs both judgements and both panel records (`docs/reports/panels/MF-n.json`, D-3).
+> - **Item 5.** `PREREG_FORM_RE` and `parsePreregName` stay McBylaws-only (the loop imports them); `MF_PREREG_FORM_RE` reads `prereg-MF-n-k.json` in the same directory, newest k only, with no legacy-name fallback. An MF prereg added alone is the R-LE(a) bootstrap commit, as for McBylaws; the McBylaws legacy scan never reads a `prereg-MF-` file.
+> - **Item 3.** Unchanged (`lockLands` some; red evidence is existence of a new file): a cite of an OWED FE row is refused unless its lock lands with red evidence in the same commit.
+> - **Item 7 (D-9 b).** MF-24a: arm Q takes a queue path and an id prefix; the McFrontend queue is in the heading form; arm Q reads it at push and CI for a range that changes it or a surface path. The OWED-FE refusal is MF-34.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-76 · McFrontend queue · lane E; operator, verbatim: "Wow this looks great! 1. y 2. add not legal advice as well. 3. keep it 4. I think we need subscription boxes ..." (landing v9 rulings), "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y" (D-1 a, D-2 a, D-5 a, D-6 a), "3 y" (D-3 a) and "you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios"; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md` ("Operator round (2026-11-11 ~15:45)" and the rulings after it); plan `~/Buildo-scratch/mcfrontend/MF-46/plan.md` v3 (§3, §12, §13, §13a, §13b)). **§4 escalation, ruled (D-2 a): a STATIC page may read declared stored values on the server.** `scripts/surfaces/_schema/surface.schema.json` describes STATIC as "content or a redirect, with no data fetch"; the MaxBLD landing (`web_landing`) shows counts, allowances and a sample built from data. The ruling: a STATIC page's values are content templates with one `{value}` slot filled on the server with a server-formatted string (FE-05; the FE-35 pattern), each from a DECLARED server read named in the page table (`scripts/surfaces/_schema/static-page.json`, a part's `value`) and listed by the page's server module (`src/lib/surfaces/maxbld-landing.ts` `LANDING_READS`). No API contract and no client fetch; the closed render vocabulary is not widened (the descriptor says `inputs.answer: app_outputs`, the stored row a pipeline step writes, plus `config.logic_variables`). A read that throws, a missing stored row, a zero value or an out-of-bounds setting leaves its part out on the server (logged, never a 500, never a partial group); the binding never skips a part silently (a missing value throws). Register row: Spec 135 FE-37. Lock: `src/tests/surfaces/web-landing.logic.test.ts` (with `src/tests/surfaces/web-landing.ui.test.tsx`); red evidence `docs/reports/red-evidence/MF-76/landing-red.txt`.
+
+> Dated note 2026-11-15 (M-246, prior text kept; MF-19 · McFrontend queue · lane MF19-B; operator, verbatim: "R-1 thru R-6 recommendations approved" (MF-19 plan v3 R-1..R-6, 2026-11-15) and the amendment "b" (2026-11-14: the entry is width (frontage) + depth with one ft/m switch, plus the link "My lot isn't a rectangle — enter the area instead"); record `~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md` and `~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`): the closed part-role list of the report page's sheet section (`scripts/surfaces/_schema/report-page.json` "roles", closed per section kind, fail closed) grows by one role, `link`: a text part that names a link inside the sheet. Reason: the ruling requires a link ("My lot isn't a rectangle — enter the area instead") and no existing role carries one; a `cancel`-style button would mislabel the part (R-3 (a)). Method (the closed-list growth precedent, §4 steps 1-4): the plan panel (`~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`, Spec lens finding 1) required this note before the role is built; the operator ruled it (R-3 (a)); the lock is the report-page roles test and the sheet goldens, red first. The `link` part is text only: it carries no href and no action in the page tree (the sheet's client island swaps the form when the form is mounted: MF-44 web, MF-48 mobile). The sheet's two unit roles `unit.sqft` and `unit.m2` become `unit.ft` and `unit.m` in the same change (the entry takes width and depth in feet or metres).
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

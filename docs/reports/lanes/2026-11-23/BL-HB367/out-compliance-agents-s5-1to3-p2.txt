@@ -1,18 +1,29 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:32.447Z file_sha256=03aab49eb23261276cf5575b48419fd68e632e7235b9b7fd1b5232a54c6c8398 prompt_sha256=800d08c052b6264f55844bf1de467cf9406e1ac7332ad1dccf2802a2cffe33bc
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:45:43.971Z file_sha256=a33e7e5a4619227963abf69c799f12338105cb1fbba002ab8df50cc713a8580c prompt_sha256=4b39b80ff9eb078460d060231aadd6e72d4c36fc98f6a01814cf6fbecd7012cb
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "RR-0413 task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" (comment at :32 "RR-0413 (\"yes to both\") does not cover RULED with the lock's two named, owned tab-push exceptions, which waits for the operator's own word") — the pasted ruling records the operator's confirmation of all three rows and this chunk delivers two, leaving FE-51 OWED and on FLIP_PENDING, so AC3's shrink covers 2 of the 3 gated rules — flip FE-51 to RULED with its dated note and the two owned exceptions, or get the operator to restate on the card that FE-51 alone stays OWED before close.
-DEFER severity=MED — task-367 Description "Waits on: task-365 grounded; the operator confirms the gate list before the build." — NONE — no pasted line records task-365 grounded or the plan reviewed; the last pasted word on it is "The plan is not reviewed or grounded yet", and the three locks are built regardless — add the grounding line (or the operator's explicit waiver) to the task file so the card's wait condition is not satisfied only by omission.
-MET — Files line "Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, ... src/tests/surfaces/register-locks-resolve.infra.test.ts" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — all three files in this chunk are named on the card's Files line.
-MET — task-367 AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:116 "it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count'" — the planted-red (B, B2) and controls (C) assertions are real code, not a comment, in both gate files.
-MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the chunk lands handbook-rule locks only; no gate A/B/C machinery is added.
-MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the change adds test files and one list entry, no new infrastructure.
+DEFER severity=MED — Spec 136 fe.49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:72 "if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);" — a require('@/screens/LeadDetail') or a dynamic import('...LeadDetail') module path is a lead linkage the scan never sees, because the lead-screen name check runs only on import/export declarations (line 60) and str() tests only lead_parcels and the route prefixes — treat require() and import() module specifiers as module paths and run namesLeadScreen on them, with a planted case in B.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 2
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)." — the gate whose whole allowance rests on RR-0417 cites only RR-0413, while the register file cites the ruling that actually permits the two exceptions, so the authority for the exception set is not traceable from the test — add RR-0417 to the SPEC LINK header or the ALLOW comment.
+
+DEFER severity=LOW — Spec 136 fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "LIMITS (stated, not widened): a route held in a variable is missed" — a push of a tab route held in a variable (const r = PARCEL_TAB_ROUTE.account; router.push(r)) is green, so a real breach of the rule it gates passes the gate; the limit is declared but no owning row is named for that form — resolve one level of const initializer, or name the queue row that owns the residue.
+
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:112 "B. RED planted (KNOWN_BAD, in memory)" — every linkage form is planted and asserted at exactly one hit, case C asserts the controls give zero, and A asserts the real tree is empty.
+
+MET — RR-0417 "yes. worktrees removed" (FE-51 RULED with its two named owned exceptions) — src/tests/surfaces/nav-tab-switch.logic.test.ts:33 "const ALLOW: Allow[] = [" — exactly the two named, owned entries (NAV-AUDIT #1 on _layout.tsx, #12 on tracked.tsx) are allowed and A2 caps the list at 2.
+
+MET — RR-0413 "yes to both A. Status flip." — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-49 and FE-51 are no longer held in FLIP_PENDING and the list is back to the single FE-39 lock.
+
+MET — card Files line "src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts" — every path in this chunk is named on the Files line, so no behaviour is added outside the card.
+
+REJECT — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — accused of not shrinking the no-check lists — the generator output (Spec 136, rule-lists-by-kind.md) is not in chunk 2, and the card's acceptance record shows generate-surface-handbook --check and rule-lists page --check exit 0, so it is judged in its own chunk run.
+
+REJECT — Spec 136 fe.51 "A tab switch uses navigate, not push." — accused of leaving two tab pushes in the tree while the row reads RULED — RR-0417 permits exactly those two named, owned exceptions, so the allow list implements the ruling rather than breaching the rule.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
 Rules met: none
 
 ---
-⏱  124141ms (124.1s)
-📊 Tokens — total: 42002, input: 15539, output: 26463, reasoning: 25678
+⏱  106901ms (106.9s)
+📊 Tokens — total: 39161, input: 16215, output: 22946, reasoning: 21979

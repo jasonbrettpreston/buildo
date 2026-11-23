@@ -1,15 +1,29 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:08:41.888Z file_sha256=476acdc31acb156aa35f17db2a7d17db6d331755aec2c7c3eb6cf3089ca459ad prompt_sha256=ec71e739973eaece5659a31b1aae546862e294e54f1ca6d2232ce8a944b65686
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:23:02.243Z file_sha256=a45ebb4495973385c94d82b43169abf4edc5b0dc45c6319ac89283d0bcbd0b46 prompt_sha256=69d8c4ec87e9626221c84e9ffe4852f76d3e0136b3e3302a4c374dc7abc52524
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p10.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — RR-0413 flips FE-49, FE-51 and FE-54 to RULED, but the change keeps FE-51 OWED (comment "while the row stays OWED") and parks it in FLIP_PENDING, so the third confirmed row is not flipped — Flip FE-51 to RULED with its nav-tab-switch lock and drop it from FLIP_PENDING, or get the operator's explicit word that RR-0413 excludes FE-51.
-DEFER severity=MED — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pending-flip list grows from one entry (FE-39) to two (FE-39, FE-51), so it is no longer "one OWED row" and is not shrink-only — Flip FE-39 first, or record the operator's approval to grow the shrink-only list before adding FE-51.
-MET — FE-01 — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 — locks built inside the open Phase 1/Phase 2 window, consistent with the 2026-11-06 and 2026-11-09 notes that lift the freeze by name.
+DEFER severity=MED — card AC1 "The gate list is confirmed by the operator before any gate is built" — src/tests/surfaces/scope-fence.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)" — the locks rest on RR-0413 ("yes to both A. Status flip.", recorded in the round-1 fix) and PLAN-367-v1 is not pasted, so no pasted line shows the gate list confirmed before the builds; cannot see — paste the operator's gate-list confirmation or leave AC1 open on the card before the closing commit.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 3   Unmet: 2
-Rules met: FE-01
+DEFER severity=MED — FE-49 rule text at the SPEC LINK "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop ... a server file a descriptor does not declare is not scanned" — the lock cannot establish "read by no surface" over undeclared server files, so the absolute clause as quoted is only partially gated — add the import hop plus a descriptor-completeness assertion, or record the limit as an operator-accepted note on the row.
+
+DEFER severity=MED — FE-49 rule text "No linkage to LeadDetail, the flight board, or the lead feed" — src/tests/surfaces/scope-fence.logic.test.ts:31 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — a route literal such as "/(app)/lead-feed" or "/(app)/lead-detail" reaches neither predicate (str tests only lead_parcels and leadRoute startsWith) and passes the fence — add the lead-feed and lead-detail route prefixes with one planted case each.
+
+DEFER severity=LOW — FE-13 "The check logic has one home, `scripts/surfaces/report-checks.mjs`, which the gate and the landed honest and parity locks import (R-27)" — src/tests/surfaces/nav-tab-switch.logic.test.ts:9 "The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form" — judge() and keyOf() are a second copy of the nav-by-route allow-list comparison, not an import, against the R-27 one-home rule cited in the register — import the comparison from the existing lock.
+
+DEFER severity=LOW — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)'" — the owned-exception claim is asserted by a string regex (expect(a.why).toMatch(/^owed: MF-\d+/), :122) and MF-49, MF-50, MF-51, MF-52 appear nowhere in the pasted context, so "each entry has an owner row" is not checked; cannot see — resolve the four owner ids against .cursor/MCFRONTEND-QUEUE.md or assert them in A2.
+
+REJECT — FE-03 "the flip lands in the same commit as its lock ... a later flip-only commit that regenerates the rule map cannot pass" — accused: FE-51 read RULED in the 2026-11-23 fix commit while its lock landed in the work commit — not a real issue: FE-51 is not in prereg-MF-98-1's rules (FE-09, FE-10, FE-16, FE-36), so arm C's per-commit id check never fires, and the FE-39 pattern in the same lock ("the row stays OWED until the operator approves the flip") is the sanctioned form.
+
+REJECT — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock" — accused: the work commit held FE-39 and FE-51 together, growing the list — not a real issue: the diff's final state is src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39'];" and the removal is recorded in the added dated comment at :31.
+
+MET — FE-09 — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 — rule 5's register lock keeps the pending-flip list at one landed-lock row, FE-51 removed after RR-0417.
+
+MET — FE-03 — src/tests/surfaces/nav-tab-switch.logic.test.ts:132 — both directions present: planted red cases (B, B2) plus clean controls (C), the form the register requires for a lock.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
 
 ---
-⏱  101021ms (101.0s)
-📊 Tokens — total: 48549, input: 25997, output: 22552, reasoning: 22140
+⏱  85144ms (85.1s)
+📊 Tokens — total: 43189, input: 26673, output: 16516, reasoning: 15339

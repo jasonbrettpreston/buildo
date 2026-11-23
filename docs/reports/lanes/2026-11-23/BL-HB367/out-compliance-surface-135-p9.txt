@@ -1,27 +1,22 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:14:12.512Z file_sha256=e30ac687328600a744c91f0997fe3de5e64673a9cf45204412cb3cb0b708abd9 prompt_sha256=5ef5f367bb504a7e63109ad5b8edae1ab4d7a8023ff2b92c05a30d02ce4957e4
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:30:41.490Z file_sha256=1e8e57a420c6a194a3c25dcfbd6e8a9f21dca7e2d3d324b120986a967ecde0c0 prompt_sha256=36e070eb157ed399f8183f14080fb8940bd965a2638456e95fdf1b6d88e8baf6
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p9.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the diff lands FE-51's lock (nav-tab-switch.logic.test.ts:1 "SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51") while the same added block says line 32 "the row stays OWED", which rule 5 forbids, and the FLIP_PENDING entry exempts FE-51 from the very test that enforces rule 5 — fix: flip FE-51 to RULED with its landed lock in this change and delete the FE-51 entry from FLIP_PENDING.
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:125 "expect(ALLOW.length).toBeLessThanOrEqual(2);" — the two named exceptions are present, but A2 pins only the count, the MF owner prefix (":127 expect(a.why).toMatch(/^owed: MF-\d+/);") and distinct keys, not the two named calls, so a swap to another MF-owned pair would leave the ruling unmet while FE-51 still reads RULED — pin the key set in A2 to the two named calls (LAYOUT push, TRACKED push).
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "the row stays OWED: RR-0413 (\"yes to both\") does not cover RULED" — the change keeps one of the three named rows OWED on its own reading of the operator's words, a reading no pasted clause supports, so the ruling's flip is not executed for FE-51 — fix: flip FE-51 to RULED with a dated note citing RR-0413 and record the two tab-push exceptions as owed rows, or obtain the operator's own words that FE-51 stays OWED.
+REJECT — rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — the change is accused of keeping an OWED row whose lock already exists (FE-39 in FLIP_PENDING) — FE-39 predates this chunk (its 2026-11-19 note and entry are context lines, register-locks-resolve.infra.test.ts:27-29,33 "const FLIP_PENDING: readonly string[] = ['FE-39'];"), the change only removes FE-51 from that list, so no new breach is introduced here.
 
-MET — Spec 135 rule 5 "a RULED row's lock paths must exist" — src/tests/surfaces/scope-fence.logic.test.ts:1 — FE-49's lock is a real src/tests/surfaces/*.test.ts added by this diff, so the RULED side of rule 5 holds for FE-49.
+MET — register path (header: "number and folder RULED 2026-11-04 (Q-MF1 a): `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`") — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51" — every SPEC LINK in the chunk cites that exact ruled path.
+MET — rule 1 "A different party adjudicates." — pasted line "RR-0417 FE-51 tab switch may read RULED with its two named owned exceptions (names task-367, RR-0417)" — FE-51's RULED status rests on the operator's "yes. worktrees removed", not on the lane's own say-so.
+MET — rule 2 "ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)." — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: ... FE-49" — each row cited in the chunk carries exactly one lock file (FE-49 scope-fence, FE-51 nav-tab-switch), no second lock path appears.
+MET — rule 3 "A ruled row whose lock is not built reads OWED with the lock path." — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "so the list is FE-39 alone again" — FE-51 is out of FLIP_PENDING and its built lock agrees with its RULED status, not an OWED marker.
+MET — rule 5 "a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 and src/tests/surfaces/scope-fence.logic.test.ts:1 — both are new files under src/tests/surfaces, and none of the three is a `.db.test.ts`, so the test.yml clause is not triggered.
+MET — "**Next free id:** `FE-59`." — src/tests/surfaces/scope-fence.logic.test.ts:1 "FE-49 (Spec 136 §fe.49)" — the diff claims no new FE id; the ids it uses (FE-49, FE-51, FE-54) are already-taken rows well below the free id.
 
-MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory)" — planted defect gives exactly one finding, A asserts the clean tree, C holds the controls.
-
-MET — Description "Each gate: red first on a planted defect, both directions" — src/tests/surfaces/scope-fence.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit" — both directions shown, planted red and control green.
-
-MET — Task Files "src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts" — the diff touches exactly these three named paths and no unlisted source file.
-
-REJECT — AC #1 "The gate list is confirmed by the operator before any gate is built" — that the three gates were built with no operator-confirmed gate list — the pasted RR-0413 "yes to both A. Status flip." with its note "the operator confirms the three rows" and RR-0385 "proceed" cover the three gates.
-
-REJECT — Spec 135 rule 4 "Six cell: letters D P F S H E" — that the diff leaves a row's Six cell unset — the Six cell is a register row cell, and these three test files carry no FE row status or Six data.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 2
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
 Rules met: none
 
 ---
-⏱  62632ms (62.6s)
-📊 Tokens — total: 27611, input: 13852, output: 13759, reasoning: 12936
+⏱  126311ms (126.3s)
+📊 Tokens — total: 40312, input: 14528, output: 25784, reasoning: 24902

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:17:38.725Z file_sha256=46207b8451ce82446ea84b9992bba05bbf1eeff5f76869f1d9cb0976ba962c58 prompt_sha256=a6cdd77cef5a13d2698fd9b579675a5c5398f52e31b81f1f320c59af806b1388
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-54 (Spec 128 Rule 12, 128:39) "a surface declares what the user sees when it fails" / "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:41 "if (d.inputs?.answer !== 'contract') continue;" — the lock FE-54 now reads RULED against only reaches contract readers, so a static or DB-reading surface that fails with no declared state passes, and no pasted ruling narrows the rule — widen failureStateProblems to every in-scope SURFACE descriptor, or land a dated operator note narrowing FE-54 before the row reads RULED.
+
+BUG severity=MED — FE-49 (128:205, R-03) "lead_parcels is read by no surface." / "Scope D is fenced, and the fence is Spec 128 R-03." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 note "the fence is converted-surfaces.json programme_scopes" and "so it stays out of the scope-fence test with this note as its record" — the fence judges programme-scope descriptors only, so a lead_parcels read in any estate_other or platform_shared descriptor passes while FE-49 reads RULED — scan every descriptor for lead_parcels and carry the one notes string at contract_admin_pipeline_step_output.descriptor.json:410 as the single named exception.
+
+BUG severity=MED — FE-54 (Spec 128 Rule 12, 128:39) "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:9 "the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here; it is owned by the task-343 leftovers" — the row flips to RULED while the change itself records a live unhandled failure state and defers it to task-343, a task no pasted ruling names — cite the dated operator deferral inside the note, or fix maxbldHelp.ts:19 with the MF-98 work commit before the row reads RULED.
+
+DEFER severity=MED — 127 §11 "scripts/surfaces/_schema/surface.schema.json — the DRAFT descriptor schema, the ONE source (Spec 126 §5.0)" — src/tests/surfaces/failure-state-declared.logic.test.ts:21 "const BAD_ERRORS = new Set(['none', 'UNRESEARCHED']);" plus :43 "s.name === 'error'" — the required state name and the two unhandled answers are hand-copied beside the one source, so a schema change (a third unhandled answer) passes the RULED lock silently — read the state name and the bad answers from surface.schema.json.
+
+DEFER severity=LOW — FE-54 dated note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the test comment states the out-of-scope population as 8 where the register note in the same change says 32, understating what the lock does not judge — correct the comment to 32 out of scope, 8 of which would fail today.
+
+DEFER severity=LOW — RR-0413 "yes to both A. Status flip." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 note "RR-0413, operator, verbatim: \"yes to both\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`)" — the note quotes a truncated operator sentence, so a reader cannot tell what "both" approved from the note alone, same truncation in the FE-49 and FE-54 notes — quote the full pasted sentence "yes to both A. Status flip.".
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 and FE-54 rows — both read RULED 2026-11-23 with dated notes citing RR-0413 at MORNING-DECISIONS.md:2108 and prior text kept.
+
+MET — RR-0417 "yes. worktrees removed" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row — reads RULED with the two named, owned tab-push exceptions (_layout.tsx and tracked.tsx) and the question put to the operator stated in the note.
+
+MET — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (19 OWED, whose lock is still to land)" — the three fe.49 / fe.51 / fe.54 lines now read "Status: RULED 2026-11-23 · Enforced by:" and the OWED count moves 22 to 19.
+
+MET — 127 §11 Out-of-Scope "migrations/** — no migration is authored by this spec" and "scripts/analysis/step-validate.mjs and docs/specs/01-pipeline/123_step_opt_assessment_validation.md ... must never edit them" — the diff paths — no path under migrations/, scripts/analysis/step-validate.mjs or the 123 spec is touched.
+
+MET — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:75 "B. RED planted (KNOWN_BAD, in memory)" — three planted defects each yield exactly one problem, controls yield zero, and case A asserts zero problems on the real tree with the scanned count equal to the manifest count.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  91151ms (91.2s)
+📊 Tokens — total: 40709, input: 22061, output: 18648, reasoning: 17205

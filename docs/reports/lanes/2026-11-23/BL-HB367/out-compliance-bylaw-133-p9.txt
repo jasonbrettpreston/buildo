@@ -1,21 +1,22 @@
 ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:42:19.640Z file_sha256=2cd07241299a7eb0c3093bb00c781f6c48d288e2f3c82cfa7f934a9064f3cf6a prompt_sha256=318f7e4b347ad1a20939ab001677e91e612ae916e43b1ca75c1031dbda7783d7
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:52:41.222Z file_sha256=ffd6ee15d54cf844bbcd4ac059b00e05aeec02bba0669b34cf60e06c8683f2c5 prompt_sha256=a0d6147d9e34e722b56f453c82b7ce7109a6a32b6da22fb8d56037ae0b2e9c72
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p9.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the ruling names three flips, the diff lands two and holds FE-51 OWED on the lane's own reading "RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions", so the clause is unmet for one of its three rows — flip FE-51 to RULED with its dated note and drop it from FLIP_PENDING, or record the operator refusing that row before merge.
-DEFER severity=MED — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "// commit while the row stays OWED: RR-0413" — fe.51 now has a machine check (nav-tab-switch.logic.test.ts) yet stays OWED, so the no-check list shrinks by two of the three gated rules and the third shrink has no path in this change; the regenerated pages are in another chunk, cannot see — after the flip, rerun generate-surface-handbook.mjs --write/--check and rule-lists.mjs page --write/--check and show the OWED count before and after.
-DEFER severity=LOW — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:110 "expect(a.why).toMatch(/^owed: MF-\d+/);" — the allow-list's property "each owned by an existing LATER queue row" is checked only as a string prefix, so an exception naming an MF id with no queue row still passes both directions — resolve each MF id in the why string against .cursor/MCFRONTEND-QUEUE.md inside the test.
-MET — RR-0386 — src/tests/surfaces/scope-fence.logic.test.ts:1 — gates A and B stay parked, the two new files are handbook rule locks only, no blocking wiring lands.
-MET — AC #1 — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — the locks built are the rows RR-0413 names and no gate beyond them is wired (stage 2 still waits on the gate list).
-MET — AC #2 — src/tests/surfaces/scope-fence.logic.test.ts:119 "B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit" — planted-defect red plus the clean-tree assertion in A are both present.
-MET — RR-0392 — src/tests/surfaces/register-locks-resolve.infra.test.ts:31 — the change adds no infrastructure beyond the two test files and one list edit.
-MET — RR-0388 — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — the new lock lands with no McFixReborn change, so the wait condition is honoured.
-REJECT — m.452, and every m.* / lc.* rule pasted in this part — accused of failing the OWED bylaw obligations of the bylaw-133 list — why: each pasted m.*/lc.* clause names MaxBLD bylaw work (MB-27, MB-31, MB-79, MB-80, Layer 3, enrich_parcels, checkout feeds), and none names these three McFrontend surface test files or their subject.
+BUG none raised.
+DEFER severity=LOW — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/handbook-rule-map.logic.test.ts (hunk +257) "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" — the new RULED / FLIP_PENDING tolerance added to C-T2 has no planted-defect arm of its own; the planted case C-T1/C-T3 exercises the generator, not this branch — add an in-memory case where a BUILT_BY_367 row reads RULED with an untracked lock, and assert C-T2 fails on it.
+DEFER severity=LOW — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE (chunk 3 carries no docs/specs/02-web-admin/136 line and no generator output) "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter(...)" — the shrink is visible in this chunk only as a loosened floor, the generator evidence is in the record, not the diff — cannot see; confirm on the chunk that carries the regenerated Spec 136 before merge.
+DEFER severity=LOW — fe.49 rule text as quoted in the diff "lead_parcels is read by no surface" — src/tests/surfaces/scope-fence.logic.test.ts "LIMITS (stated, not widened): declared files only, no import hop" — the RULED flip rests on a gate that skips any server file a descriptor does not declare, so a surface reading lead_parcels from an undeclared file passes green — put that limit in the FE-49 dated note beside the platform_shared exception, not only in the test header.
+REJECT — RR-0417 "yes. worktrees removed" — accused of leaving the FE-51 tab-push exceptions in place after the operator said yes — the exceptions are the two named owned ones the ruling allows (MF-49/MF-50, MF-51/MF-52), and FLIP_PENDING is FE-39 alone, so nothing is left over.
+REJECT — AC#1 "The gate list is confirmed by the operator before any gate is built" — accused of building gates without confirmation — RR-0413 "yes to both A. Status flip" plus RR-0417 "yes" confirm the three rows and FE-51, which are the three gates this chunk lands.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 2
+MET — RR-0413 — src/tests/surfaces/handbook-rule-map.logic.test.ts "const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch']" — the three flipped rows are gated, RULED is tolerated only with a tracked lock.
+MET — RR-0417 — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-51 is off FLIP_PENDING and its allow-list carries exactly two named, owned entries.
+MET — AC#2 — src/tests/surfaces/nav-tab-switch.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails" — red arms exist on planted defects for both new gates.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
 Rules met: none
 
 ---
-⏱  75898ms (75.9s)
-📊 Tokens — total: 40309, input: 24303, output: 16006, reasoning: 15165
+⏱  54866ms (54.9s)
+📊 Tokens — total: 38504, input: 27480, output: 11024, reasoning: 10242

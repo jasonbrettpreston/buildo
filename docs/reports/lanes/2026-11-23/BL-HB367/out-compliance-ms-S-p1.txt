@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:54:53.479Z file_sha256=ccbbbd58e1d0858f4fcba4f7782c35ed0dc3db3fc41391ff330a9d72fcb4c0c4 prompt_sha256=b672e857ff5aa1753cdc72c5dc762da0990edbb9fce114096606009575c82564
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — #2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — the green is only green inside the programme fence: 8 real contract-reading descriptors fail the same finder, no pasted ruling or queue row owns them, and the row reads RULED — name an owner row for the 8 in the panel followups or in the FE-54 note
+DEFER severity=LOW — ms-S "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged" — the lock header states 8 unjudged descriptors where the register states 32 unjudged and 8 failing, so the lock's stated coverage is wrong — restate the header as 32 not judged, 8 failing
+DEFER severity=LOW — ms-S "accuracy, understandability" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.51 "so it is PROSE-ONLY until the lock below exists." then "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts" — the generated line the operator reads says the rule is unchecked and then says it is enforced — have the register rule cell or the generator mark that sentence as satisfied by the lock
+DEFER severity=NIT — ms-S "keep it simple; no scope creep" — src/tests/surfaces/handbook-rule-map.logic.test.ts "const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)]" — with RR-0417 applied no row of BUILT_BY_367 reads OWED, so the cross-file FLIP_PENDING reader couples two tests for a state that no longer exists and no ruling named — drop the reader and keep the plain RULED assertion until a flip is actually pending
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 and FE-54 — both read "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit", exactly the flip the ruling approved
+MET — RR-0417 "yes. worktrees removed" — src/tests/surfaces/nav-tab-switch.logic.test.ts ALLOW — exactly the two named, owned exceptions (MF-49/MF-50, MF-51/MF-52) the question put to him
+MET — #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (19 OWED, whose lock is still to land)" — 22 to 19 OWED rendered by generate-surface-handbook, and the +90 characters on the rule-lists page reconcile to the three RULED lines
+MET — #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "RR-0413 ... B: the three rows are the list" — the built list is exactly the three confirmed rows
+MET — RR-0386 "a" — .cursor/MCFRONTEND-QUEUE.md MF-98 "Not in this row: any fix of a live break ... the parked branch wf1/inc1b-gates (RR-0386)." — no gate A, B or C work lands
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json "PLAN RULED; OUTPUT owed" — the fold followed the grounder (parts A to H) and the panel keeps the output stage owed
+MET — ms-S "we need one plan - we can only execute one plan" — docs/reports/panels/MF-98.json "PLAN-367-v1 on the task-367 card (Implementation Plan)" — one plan, the earlier gates plan parked in history
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — .cursor/MCFRONTEND-QUEUE.md "MF-97 is held by lane BL-FEDB442 ... and MF-98 is taken by the COMPLY.3 row" — the two running ids are claimed separately, no id reuse
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  104113ms (104.1s)
+📊 Tokens — total: 58149, input: 35994, output: 22155, reasoning: 21032

@@ -1,17 +1,25 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:10:22.989Z file_sha256=8cba30234c1ad2930434c6eea4d16a289d796852052145acff71e3ba11dbe9a0 prompt_sha256=647e527d882bb705ea22de86773dcebc6b7e2f2e1cac319d551676e7c780b9e1
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:26:04.000Z file_sha256=0225f41982f14d3e3ec480999cc0fbf2c0f75d47bd5d9ad004ae63dd354f0d1f prompt_sha256=1c701c99cb86b653dccd46c55694f14286a87d84b6fc59bf668e35cb6e634297
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder; fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the third operator-approved row is left OWED while the task is planned BUILT, so the ruling is unmet — flip FE-51 to RULED in the commit that lands nav-tab-switch.logic.test.ts, or obtain a new operator ruling that supersedes RR-0413 and cite it in the panel.
-MET — FE-08 — docs/reports/generated/rule-lists-by-kind.md "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — the generated page keeps the 136 handbook at the ruled docs/specs/02-web-admin path.
-MET — FE-09 — .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING" — the pending-flip list is the FE-09 note's allowed path for an OWED row whose lock has landed, though RR-0413 separately requires the flip.
-MET — FE-13 — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." — the row adds no new FE row; it owns existing rows.
-MET — FE-16 — docs/reports/generated/rule-lists-by-kind.md "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — the 136 spec is at the ruled path once landed.
+DEFER severity=LOW — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" — .cursor/MCFRONTEND-QUEUE.md:+ "the fe.51 row reads RULED with the two named, owned tab-push exceptions ... and leaves FLIP_PENDING" — the shrink is asserted only by a dated note; register-locks-resolve.infra.test.ts is not in this chunk, so the lock's list state is unverified here — confirm in the chunk carrying the lock that FE-51 is absent from the pending-flip list and the list only shrank.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 5   Unmet: 1
-Rules met: FE-08, FE-09, FE-13, FE-16
+DEFER severity=LOW — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json:+ "\"output\": \"OUTPUT review owed at the lane output stage ... with FINDINGS.md untriaged\"" — the panel still calls FINDINGS.md untriaged while the card records round 1 grounded (Cairn-Ground-O367, parts A to H) and fixed — restate the record as round 1 grounded and round 2 owed so it does not read as un-grounded.
+
+MET — FE-02 — .cursor/MCFRONTEND-QUEUE.md:+ (MF-98 row) — the queue row lands alone and first (commit 0) and every ruling is quoted verbatim with file:line (:1913, :1930, :2108, :2134), satisfying "queue row first ... rulings verbatim and cited".
+
+MET — FE-08 — docs/reports/generated/rule-lists-by-kind.md:+ "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 |" — the generated handbook is at the ruled path.
+
+MET — FE-16 — docs/reports/generated/rule-lists-by-kind.md:+ "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — 136 exists at the spec path the register (135) rules, both under docs/specs/02-web-admin.
+
+MET — FE-11 — .cursor/MCFRONTEND-QUEUE.md:+ MF-98 added before "## Later: convert-on-touch" — the new row sits in Phase 2, so no MF task falls outside Phase 0-2 or convert-on-touch.
+
+MET — FE-14 — .cursor/MCFRONTEND-QUEUE.md:+ (MF-98 placement, panel class "T") — the change stays within Phase 2 and adds no parallel infra, matching LEAN's "no MF task outside Phase 0-2 or convert-on-touch".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: FE-02, FE-08, FE-11, FE-14, FE-16
 
 ---
-⏱  103435ms (103.4s)
-📊 Tokens — total: 54059, input: 29649, output: 24410, reasoning: 23988
+⏱  106936ms (106.9s)
+📊 Tokens — total: 53872, input: 30568, output: 23304, reasoning: 22668

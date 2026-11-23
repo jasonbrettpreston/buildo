@@ -1,20 +1,31 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:10:03.464Z file_sha256=1284142c1e62fd80e7b08745d16ebfb821627af6dda2610317ab8898a2b1b0d5 prompt_sha256=a7478f40dcf9f21908555d15e0ddd41268031e48cfb411a99a2191f50910a7fb
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:24:27.465Z file_sha256=fcf52ece236d65a7c01205e031179147be437bad52df65534abd82ecdd6d3fc5 prompt_sha256=0c2419c8e3d27dc23ed4cf0f2a6cac71bfed266f6ed59f383b48e08264b593bf
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p12.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pasted ruling flips three rows to RULED and the change flips two, holding FE-51 OWED on an unseen plan question ("RR-0413 ("yes to both") does not cover RULED ... which waits for the operator's own word (plan PLAN-367-v1 section 11, Q-D)"), a plan clause not pasted — fix: flip FE-51 to RULED with its dated note as RR-0413 says, or record the operator's Q-D answer in the register before merge.
-DEFER severity=MED — FE-56 "a lock never red against the defect it names is not a lock" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' }" — the landed tab-push lock is green on the real tree while both defects it names are still present and "a route held in a variable is missed", so it is not yet red-capable against them — rationale: the row stays OWED on FLIP_PENDING and each entry is counted and shrink-only, so the exposure is bounded; the fixing commit must delete the entry.
-DEFER severity=MED — FE-54 "An unhandled state is a FAIL, not a blank screen." — pasted row "The lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope ... are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 ... is owned by the task-343 leftovers" — the row reads RULED while "every failure" is unjudged for 8 descriptors and one live Help open, on a row whose Ruling cell says "this row rules nothing new" — fix: record the operator's word on the two carve-outs in the row's Ruling cell, so the narrowed reach rests on a ruling and not on orchestrator line text alone.
-DEFER severity=LOW — FE-56 "A rule without a lock is not yet a rule" — src/tests/surfaces/nav-tab-switch.logic.test.ts:128 "expect(ALLOW.length).toBeLessThanOrEqual(2);" and src/tests/surfaces/scope-fence.logic.test.ts:120 "expect(files.length).toBeGreaterThanOrEqual(41);" — the change adds invariants no pasted clause or ruling names (a shrink-only cap, hard-coded file and descriptor floors, an exactly-three-tabs fail-closed parse) — rationale: harmless today, but a renamed tab or a retired descriptor goes red on a legitimate tree change with no clause to point at.
+BUG: none. DEFER severity=LOW — FE-51 "The lock now checks the tab-push half." — src/tests/surfaces/nav-tab-switch.logic.test.ts:7 "The tab routes are parsed by AST from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied" vs :133 "router.push('/(app)/parcel-tool/account')" — the red proof hard-codes one route literal the header says is not copied, so a route rename reddens test B with no defect present — take the planted literal from the parsed routes map, or assert it exists in `routes` before planting.
 
-MET — FE-53 — src/tests/surfaces/nav-tab-switch.logic.test.ts:5 "The tab routes are parsed by AST from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied" — the pointer discipline holds, no Spec 126 page table is copied into code or test.
-MET — FE-55 — src/tests/surfaces/scope-fence.logic.test.ts:10 "The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`)" — the new tests read the same descriptors the admin projects, no parallel data path is introduced.
-MET — FE-58 — src/tests/surfaces/scope-fence.logic.test.ts:14 "Files come from `git ls-files`. No DB, no network." — nothing in the diff declares or assumes an RSC mechanism for mobile; the scan is build-time only.
+DEFER severity=LOW — FE-51 "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix" — src/tests/surfaces/nav-tab-switch.logic.test.ts:124 "expect(ALLOW.length).toBeLessThanOrEqual(2);" — shrink-only is not enforced: an entry can be dropped and a fresh one added back at the same length, and nothing checks the named owner row still exists — assert each entry's owner is still OWED in the register, so a new exception cannot be re-added silently.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 1
-Rules met: FE-53, FE-55, FE-58
+DEFER severity=LOW — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — cannot see the regenerated Spec 136 or rule-lists-by-kind.md in this chunk; the "Status: OWED count 20" and "now reads 19" figures appear only as card notes — verify the generated files in the chunk that holds Spec 136.
+
+REJECT — FE-51 "The navigation rule reaches \"every MaxBLD screen, web and mobile\" (126:82)" — accused of not locking the web half — the register itself rules "Not in the lock: a route held in a variable, and the web half (no tab bar today)", confirmed at RR-0417 "yes. worktrees removed", so this is the ruled scope, not a gap.
+
+REJECT — FE-49 — the scope-fence lock's contents judged without its clause — FE-49 is not in this pasted part (part 4 starts at FE-51); it reaches this chunk only as FE-51's file set, so its own clauses are not mine to judge.
+
+MET — FE-51 — src/tests/surfaces/nav-tab-switch.logic.test.ts:34-35 — the lock carries exactly the register's two named exceptions, LAYOUT "NAV-AUDIT #1" MF-49/MF-50 and TRACKED "NAV-AUDIT #12" MF-51/MF-52, count 1 each, each `owed: MF-`.
+
+MET — FE-51 — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "LIMITS (stated, not widened): a route held in a variable is missed; ... web has no tab bar" — matches the register's stated limit exactly, not widened.
+
+MET — FE-56 — src/tests/surfaces/nav-tab-switch.logic.test.ts:132-137 — test B plants a tab push and a stale entry and the lock goes red on the defect it names.
+
+MET — FE-56 — src/tests/surfaces/register-locks-resolve.infra.test.ts:31-33 "so the list is FE-39 alone again" — FE-51 leaves FLIP_PENDING in the fix commit, as the register's "the flip rides its fix commit" requires.
+
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:132-137 — the plant line reds the lock and the card's green run records "nav-tab-switch (5)" passing.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: FE-51, FE-56
 
 ---
-⏱  68394ms (68.4s)
-📊 Tokens — total: 29354, input: 15110, output: 14244, reasoning: 13309
+⏱  99539ms (99.5s)
+📊 Tokens — total: 39433, input: 17323, output: 22110, reasoning: 21243

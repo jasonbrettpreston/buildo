@@ -1,19 +1,26 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:46:10.167Z file_sha256=cee8809d875cc4326aa45743215f1ba883be523cfab34caf605ad2ab75fe7110 prompt_sha256=3c2156c0c9fdf7973c7bd262c09935acdac6a56989a09f749c5096deb2b746f8
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:07:14.276Z file_sha256=fc54c0f267f280896f71b928cf5fa1c355388ebdb2d2000e7544742380f24f7c prompt_sha256=1a74a7b9daa2fdcab7840b5ea9a469e2dfe2fa4f9558bfeb27340d8703404a4e
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p13.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" and "yes to both A. Status flip." — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" (comment: "FE-51 joins it ... RR-0413 (\"yes to both\") does not cover RULED") — the ruling flips all three handbook rows (FE-49, FE-51, FE-54) to RULED with their tests, and the diff keeps FE-51 OWED, so one of the three rows the operator confirmed does not flip — remove FE-51 from FLIP_PENDING and land its row RULED with the dated note, or obtain and cite an explicit operator ruling that reverses RR-0413 for FE-51.
-DEFER severity=MED — 126 §0b item 11 "It extends §5.3 item 5 (\"expo-router owns which route is mounted\") to every MaxBLD screen, web and mobile" — src/tests/surfaces/nav-tab-switch.logic.test.ts "LIMITS ...: ... web has no tab bar (no Tabs in src/app/(maxbld), src/components/surfaces or src/components/report)." — the lock reads only `mobile/` files, so the web half of the clause rests on a code comment, not a check — add a mechanical assertion that the scanned web tab-push set is empty today, or record the web n/a as a dated note on the FE-51 row.
-DEFER severity=LOW — 126 §0b item 11 "a tab switch uses `navigate` (the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52)" — src/tests/surfaces/nav-tab-switch.logic.test.ts "expect(ALLOW.length).toBeLessThanOrEqual(2);" with two entries (#1, #12) — the third tab-switch flag #6, owed by MF-35/MF-52, has no entry and A2 forbids a third one, so #6 is either outside the scan or would fail A with no owner recorded — add #6's entry with its owed row, or a LIMITS line naming the file that carries #6 and why the gate cannot reach it.
-MET — 126 §0b item 11 "Its allow-list is fail-closed both ways (an unexplained finding fails; an entry that no longer matches fails)" — src/tests/surfaces/nav-tab-switch.logic.test.ts judge() — unexplained and miscounted are both returned and asserted empty, and B proves a stale entry fails.
-MET — 126 §0b item 2 "red first, each lock proven in both directions" — src/tests/surfaces/nav-tab-switch.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory)..." — planted tab pushes and a reshaped constant are proven red, controls C green.
-MET — 126 §2.0 "Scope D is fenced, and the fence is Spec 128 R-03" — src/tests/surfaces/scope-fence.logic.test.ts "it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product'" — code, route, table-ref and descriptor fence over the declared in-scope set, one hit per planted form.
-MET — acceptance criterion #2 "Each gate is shown red on a planted defect and green on the clean tree" — card note "docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" and the d5e3695b9 run "Test Files 5 passed (5), Tests 67 passed (67)".
+BUG severity=HIGH — §0b item 11 "Two sentences above are convention, not checked by the lock: a tab switch uses `navigate`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:4 "Spec 126 called it \"convention, not checked by the lock\" (126:82); this test checks it." — the new lock makes the governing line false and nothing pasted amends 126:82; §0b item 6 requires a ruling to be "landed", and docs/specs/02-web-admin/126_maxbld_surface_standard.md is absent from the card Files list so no dated note can land in this row — add 126 to the card Files and land an M-246 dated note in §0b item 11 recording that FE-51 now checks the sentence, citing RR-0413/RR-0417
+
+BUG severity=HIGH — §0b item 6 "cited by every commit, prereg and lock that relies on it" — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)" against src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions" — the lock that carries FE-51's RULED status cites only the ruling this same change says did not grant it, and RR-0417 appears nowhere in the file — add "RR-0417 (MORNING-DECISIONS.md:2134)" to the header line and to both ALLOW `why` strings
+
+DEFER severity=MED — §0b item 11 "the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52" — src/tests/surfaces/nav-tab-switch.logic.test.ts:12 "The two entries are the audited tab pushes NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row." — flag #6, owed by MF-35/MF-52, has no allow entry and no stated exclusion; LIMITS names only "a route held in a variable" and "the lead-gen five-tab bar" — state what form #6 takes and why the finder cannot see it, or add its owned entry
+
+DEFER severity=LOW — §2.0 "Spec 100 §1 states the parcel tool \"is **not** coupled to the Lead Feed, Flight Center, or LeadDetail\"" — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop" — a declared MaxBLD file that reaches a lead screen through one intermediate module passes the fence, so the check sits one hop short of "not coupled" — record the accepted one-hop risk as a dated note on the FE-49 row, or restrict a hop check to modules whose path names a lead screen
+
+MET — §0b item 11 fail-closed both ways, "an entry that no longer matches fails" — src/tests/surfaces/nav-tab-switch.logic.test.ts:119 "expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] })"
+MET — §0b item 11 "each with its reason and owner" — src/tests/surfaces/nav-tab-switch.logic.test.ts:33 "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'"
+MET — §0b item 11 "The owning row removes its entry in the commit that fixes the control" — src/tests/surfaces/nav-tab-switch.logic.test.ts:31 "// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry."
+MET — §2.0 "Scope D is fenced, and the fence is Spec 128 R-03" — src/tests/surfaces/scope-fence.logic.test.ts:119 "expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([])"
+MET — §2.0 "The descriptor tree is partitioned by scope" — src/tests/surfaces/scope-fence.logic.test.ts:100 ".filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''))"
+MET — §0b item 10 fail on an empty walk (grounder residue carried in the card) — src/tests/surfaces/nav-tab-switch.logic.test.ts:120 "expect(files.length).toBeGreaterThanOrEqual(20)"
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 2
+Clauses checked: 13   Unmet: 4
 Rules met: none
 
 ---
-⏱  66378ms (66.4s)
-📊 Tokens — total: 38027, input: 22765, output: 15262, reasoning: 14361
+⏱  103842ms (103.8s)
+📊 Tokens — total: 47499, input: 23441, output: 24058, reasoning: 22921

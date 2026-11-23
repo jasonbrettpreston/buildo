@@ -1,22 +1,30 @@
 ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:32.449Z file_sha256=282e8e568cf753bdc7a19fff2c94232e98a2bd4549709e032f2b90b5a104ef1d prompt_sha256=06a86cdffb2d8835ea3df50d04ad60a446d83b13785878c12245d149d470c414
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:49:05.894Z file_sha256=ae880444f4229103b4cffd7bab941af2ba618b752c1f5c336282e7d548f54aba prompt_sha256=35c8a8bd273b7d7c0aef66e6c7ce96833636c9eee87e705c783ae7464f27f7ff
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "+  - FE rows owned: FE-49, FE-54." — the ruling names three rows flipping to RULED, the row owns two and leaves fe.51 OWED behind the lane's own Q-D — flip fe.51 with the two named owned tab-push exceptions recorded with it, or get Q-D answered and dated before the closing commit sets task-367 BUILT.
-DEFER severity=LOW — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — Implementation Notes "AC3: Status: OWED count 20 (NOT-YES branch: 20)" — the YES and NOT-YES branches differ exactly by fe.51's flip, so one identical OWED count cannot evidence the shrink AC3 names for both — record the count before and after, once per branch.
-DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — card front matter "labels: McFix, McFix Final" — no line in this chunk adds the McFixReborn label RR-0406 names for task-367 — land the label on the card in the chunk that carries it, or record that it is deferred.
-MET — m.246 — .cursor/MCFRONTEND-QUEUE.md — "Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0385, operator, verbatim: ...)" is a dated note appended with prior text kept and the old first value quoted.
-MET — m.0 — .cursor/MCFRONTEND-QUEUE.md — "the line read \"Next free id: **MF-97**\" before this note" says what the change replaces, in the row's own words.
-MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md — "the parked branch wf1/inc1b-gates (RR-0386)" listed under "Not in this row", the gates parked and the handbook tests started fresh.
-MET — RR-0385 — docs/reports/panels/MF-98.json — "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." records the two rounds and the engineering seat.
-MET — RR-0412 — .cursor/MCFRONTEND-QUEUE.md — "whichever of the two rows lands second rewrites this line by dated note to one past the larger id" sequences 367 and 442 on one id line.
-MET — RR-0392 — .cursor/MCFRONTEND-QUEUE.md — "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths" adds no infrastructure beyond the named locks.
-MET — AC1 — docs/reports/panels/MF-98.json — "Operator, verbatim (RR-0413, ...:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)." records the operator confirming the gate list before any gate is built.
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests" — .cursor/MCFRONTEND-QUEUE.md:665 "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) in the MF-98 fix commit" — FE-51 left commit 1, the commit that landed its test, still OWED and read RULED only in the later fix commit, so the flip drifts from the RR-0413 timing the same row restates at :662 — add to that dated note that RR-0417 amends RR-0413's commit timing for FE-51, so the register flip carries an unbroken ruling chain.
+
+DEFER severity=LOW — Description "Waits on: task-365 grounded; the operator confirms the gate list before the build." — docs/reports/panels/MF-98.json:14 "PLAN-367-v1 on the task-367 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-367/context-r1.md" — no pasted line and no panel field records task-365 grounded, or a ruling waiving that wait, so one named precondition is unverified (cannot see it) — cite task-365's grounding record, or the superseding ruling, in the panel record.
+
+DEFER severity=LOW — Description "Scope now: from the task-365 coverage table and the grounded findings, one gate per rule that has no mechanical check and that 1·B code touches" — .cursor/MCFRONTEND-QUEUE.md:660 "whichever of the two rows lands second rewrites this line by dated note to one past the larger id (task-367 plan section 7)" — the row imposes a duty on a future row's Next-free-id line that no pasted ruling names and whose only source, plan section 7, is not pasted — keep that sentence in the plan or cite the plan line inside the row.
+
+DEFER severity=LOW — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds" — .cursor/MCFRONTEND-QUEUE.md:661 "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder" — the next step names one output review while the ruling requires two rounds, and the panel records round 2 at MF-98.json:13, so the closing commit as worded could set BUILT after round 1 plus the grounder — say "after output round 2 and its grounder".
+
+MET — AC #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json:11 — "yes to both" is recorded as A, the rows flip in the commit that lands their tests, and B, the three rows are the list, so the list was confirmed before commit 1 built the tests.
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — .cursor/MCFRONTEND-QUEUE.md:662 — "each proven red at its designed assertion through the real commit hooks, then green", with the pasted red run recording 3 tests failing at the designed assertions and the later related run recording 67 green.
+MET — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md:33 — the surface-136 row and both totals move by the same 90 characters, and the pasted acceptance note reads 19 OWED against 20 before the FE-51 flip.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json:22 — "PLAN RULED; OUTPUT owed", the task is not set BUILT and the output grounder is recorded as owed.
+MET — RR-0386 "gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md:662 — "the parked branch wf1/inc1b-gates (RR-0386)" is excluded from the row's work.
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — docs/reports/panels/MF-98.json:12 — the row and panel name MF-49/MF-50 and MF-51/MF-52 as the two owned exceptions and cite the verbatim ruling.
+MET — m.246 "A dated note may be appended inside a row's status cell." — .cursor/MCFRONTEND-QUEUE.md:664 — the MF-98 row carries "Dated note 2026-11-23 (M-246, prior text kept; MF-98 ...", using the note form the rule permits.
+MET — m.0 "each change says what it replaces" — .cursor/MCFRONTEND-QUEUE.md:665 — "the sentence above that held it OWED until Q-D is prior text", and the Next-free-id note records the line reading MF-97 before it.
+
+REJECT — m.32 "Pre-commit runs generate-bylaw-provisions.mjs --check" — a generated report changes here without the by-law generator — the changed file is rule-lists-by-kind.md, regenerated and checked by rule-lists.mjs page --write/--check (pasted acceptance, exit 0), and it is not bylaw-provisions.json.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 0
+Clauses checked: 26   Unmet: 0
 Rules met: m.0, m.246
 
 ---
-⏱  66185ms (66.2s)
-📊 Tokens — total: 45928, input: 32233, output: 13695, reasoning: 12883
+⏱  126842ms (126.8s)
+📊 Tokens — total: 60237, input: 32740, output: 27497, reasoning: 26250

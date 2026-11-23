@@ -1,23 +1,25 @@
 ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:41.831Z file_sha256=c567dc97dacbf354e8a76474ff6dc2e6d4f7939fa54f82549799b9794fd7e8ba prompt_sha256=0c92273995c8673495868071fbcb53ecca2757e2d61d4cfb35b3bc7e8baf21f7
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:05:39.117Z file_sha256=c63548a59c171db7cfd462bb30e8525aeb6f10552d81b56f3dc540b6b6159be9 prompt_sha256=91a351deab315f5091d77cbaa6b1e783d822f2417f063cb42f34cca3d81952d1
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts" and "...failure-state-declared..." only, while 135 FE-51 row stays "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" — the pasted RR-0413 summary says three rows flip but the diff flips two, FE-51 still OWED — reconcile the record to the operator's "yes to both" (two rows) or flip FE-51 with its dated note.
+DEFER severity=MED — FE-54 "An unhandled state is a FAIL, not a blank screen." — 135_mcfrontend_decisions_register.md FE-54 dated note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — the row reads RULED while 8 contract readers known to fail this clause today have no owning task named, unlike the sibling FE-49 exception which names one ("task-434 meets it when it builds the lock") — fix: name the task or batch row that fixes the 8, as FE-49 does, before the row reads RULED
+DEFER severity=LOW — FE-54 lock limits — src/tests/surfaces/failure-state-declared.logic.test.ts "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the test states 8 descriptors are out of scope, while the register states 32 out-of-scope contract readers of which 8 would fail, so the lock's own limits understate what it skips — fix: restate the header as 32 out-of-scope contract readers, 8 of which would fail the finder
 
-DEFER severity=LOW — FE-54 "a surface declares what the user sees when it fails" / "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "if (d.inputs?.answer !== 'contract') continue;" and "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the lock narrows the rule to contract readers in programme scope, so non-contract failure surfaces and 8 descriptors go unchecked — stated limit, bounded; revisit when the fence widens.
+MET — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — 135_mcfrontend_decisions_register.md FE-49/FE-51/FE-54 rows "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`" — all three rows read RULED and each names its lock path
+MET — RR-0417 "may FE-51 read RULED with its two named exceptions, yes or no?" — 135 FE-51 note "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52)" — both exceptions named and owned
+MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — failure-state-declared.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem'" with the recorded run "red.out 'Test Files  3 failed (3)' lines: 1"
+MET — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — 136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history." plus surface-rule-map.json "FE-49" / "\"status\": \"active\"" and the recorded "--check exit 0" for both generators
+MET — 136 handbook "The rule map ... is generated from the same rows, not hand-written" — handbook-rule-map.logic.test.ts "const owed = rows.filter((r: Row) => r.status === 'OWED').length;" and "expect(text).toContain(`**Rules rendered: ${rows.length}**: ... (${owed} OWED ...)`" — the published OWED count is derived from the register rows, not typed
+MET — 126 §11b.1 "Our code is limited to the descriptor → library binding ..., the generators, the gates and the landed web REPORT renderer." — failure-state-declared.logic.test.ts "import { execFileSync } from 'node:child_process'; ... import { describe, expect, it } from 'vitest';" — the added file is a gate, no product code
+MET — 126 §11b.1 "Library imports are allowed only in the declared binding modules." — failure-state-declared.logic.test.ts "import { readFileSync } from 'node:fs'; import { join } from 'node:path';" — no library import lands outside a binding module
 
-DEFER severity=LOW — 128 R-03 (FE-49) "`lead_parcels` is read by no surface" — 135 FE-49 dated note "The platform_shared standing exception is outside the lock ... so it stays out of the scope-fence test with this note as its record" — a platform_shared descriptor naming lead_parcels is not caught by the scope-fence lock — documented as a notes string not a table ref; revisit when the test reaches platform_shared.
-
-MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory)" and "A. the real tree: no problem" — red on the planted defect and green on the clean tree both present.
-
-MET — RR-0386 "handbook tests start fresh; landing gates A and B is a later decision" — src/tests/surfaces/failure-state-declared.logic.test.ts "task-367 COMPLY.3" — new declaration-only handbook test landed, parked gates A/B untouched.
-
-MET — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" — OWED count regenerated down from 22 to 20 for the two flipped rows.
+REJECT — FE-49 lock scope — accused of not judging platform_shared surfaces — the one out-of-scope mention is recorded as "a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref", so it is not a read of `lead_parcels`
+REJECT — FE-54 lock depth — accused of judging declarations only and not the rendered screen — the clause quoted in the row is itself a declaration requirement ("a surface declares what the user sees when it fails"), and the row states that limit
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 7   Unmet: 0
+Clauses checked: 12   Unmet: 0
 Rules met: none
 
 ---
-⏱  109562ms (109.6s)
-📊 Tokens — total: 58077, input: 32948, output: 25129, reasoning: 24434
+⏱  95079ms (95.1s)
+📊 Tokens — total: 55703, input: 35114, output: 20589, reasoning: 19479

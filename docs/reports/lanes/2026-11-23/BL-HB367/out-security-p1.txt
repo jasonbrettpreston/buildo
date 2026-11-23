@@ -1,12 +1,14 @@
 ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T19:16:56.705Z file_sha256=9bd01515209f81497a7828ea3d6ceae3fbfbdcee14c2a33419a66d293089dbea prompt_sha256=772418356d866f0eb22725cfcd32226c2d114a25f2fa1c44fa63026ef1915a14
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T20:34:21.736Z file_sha256=19a1f1610a99f56d3c8798b84ffe980d63789916bda991270f49e08f1c6d8ea3 prompt_sha256=cf5535fa139a085e45a3fe3e452db30da0c46a2e6ea53b5d4dabf34846e6518b
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-security-p1.txt (model: deepseek-reasoner)
 
-NOT APPLICABLE: the diff is documentation, register JSON, generated rule lists and three test-only vitest files; no production route, handler, descriptor value, entitlement, price, auth path or PII field changes, and the only I/O is `git ls-files` plus `readFileSync` of tracked repo files inside tests.
+NOT APPLICABLE: this chunk is docs, generated reports, register/handbook text, a prereg JSON and three vitest locks that read tracked descriptors and source text via `git ls-files`, no money, auth, entitlement, PII or admin code path is created or changed.
 
+```
 VERDICT: NOT APPLICABLE on exploitability
 Surfaces touched: none
+```
 
 ---
-⏱  3175ms (3.2s)
-📊 Tokens — total: 36190, input: 35801, output: 389, reasoning: 301
+⏱  4525ms (4.5s)
+📊 Tokens — total: 35758, input: 35106, output: 652, reasoning: 571

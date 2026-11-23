@@ -1,22 +1,25 @@
 ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:06:36.475Z file_sha256=1cd94af9e0ac323a6e8d4b3d9567b9ff76ea475d4a4505761a145bff4a0f559a prompt_sha256=1db4121627a0358fbb7c563788c2ec9d995dfbc87718ad4cb0116522689cfc8e
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:19:43.255Z file_sha256=ec6f723359353a43a3096b5f5b202e955b64646a328393073a883a5582bd384d prompt_sha256=54fa2cbee1e106deb8d22d43c882813eed619a541392f401d115ebd95e5bfcf1
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p1.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." — the third ruled row (fe.51), whose lock lands in this commit, remains OWED; only fe.49 and fe.54 flip, so the three-row flip RR-0413 orders is unmet, and the MF-98 "FE rows owned: FE-49, FE-54." bullet cannot list a row the task actually builds — flip FE-51 to RULED 2026-11-23 in this commit (the lock lands here per card "the three locks land"), or record a dated operator ruling that carves it out; unanswered Q-D is not a ruling.
+DEFER severity=MED — §4.11 item 7 "a listed row that is OWED, or absent from Spec 135, fails (`FAIL:Q:done-fe-owed`, `done-fe-unknown`; a missing bullet is `done-fe-undeclared`)" — .cursor/MCFRONTEND-QUEUE.md:660 "- FE rows owned: FE-49, FE-51, FE-54." alongside the same row's note "until then it stays OWED and is not owned by this row" — the row claims FE-51 as owned while retaining a sentence that declares it OWED and not owned, so the arm Q done check passes only if Spec 135 FE-51 reads RULED in this same commit, which chunk 1 does not show — confirm the Spec 135 FE-51 flip is in this commit and delete or fence the stale disclaimer clause so the bullet and the note cannot disagree.
 
-DEFER severity=MED — 128 §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions ... each `pass`, `n/a (reason)` or `FAIL`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "D pass, P owed, F n/a, S pass, H n/a, E n/a" (FE-54 repeats "P owed, F n/a") — the rows now read RULED while their Six cells carry "P owed" and bare "n/a", neither of which is pass, n/a (reason) or FAIL — set the Six cell to the allowed vocabulary before the row reads RULED.
+DEFER severity=LOW — Rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)." — docs/reports/generated/rule-lists-by-kind.md:33 "-| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |" — the chunk shows the regenerated file's numeric deltas (+90 to the list and to both section totals) but not the `--check` byte-identity run, so Rule 19 rests on card prose, not the diff — run `rule-lists.mjs page --check` in the commit and keep its exit in the lane record.
 
-DEFER severity=LOW — 128 §2.2a Rule 12 "An unhandled state is a FAIL, not a blank screen." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "The lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged" — FE-54 reads RULED although Rule 12 stays unchecked for 8 contract-reading descriptors — name the exclusion as a stated exception on the row, or hold RULED until it is covered.
+MET — Rule 19 — docs/reports/generated/rule-lists-by-kind.md:33 — the surface-136 list and both section totals move by the same +90, consistent with one regenerate of Spec 136 §2 Rules.
 
-MET — 128 §4.10 "One lock per register row (multi-lock rows are split)" — 135 FE-49, FE-54 — each flipped row names exactly one lock path.
-MET — 128 §4.11 item 1 "both panel records (`docs/reports/panels/MF-n.json`, D-3)" — docs/reports/panels/MF-98.json — the panel record exists for MF-98.
-MET — 128 §4.7a "no row reads `BUILT`" — 135 FE-49, FE-54 — both read RULED, neither claims BUILT, so the BUILT-evidence resolver is not triggered.
-MET — 128 §4.11 item 7 "a DONE heading ... `- FE rows owned: ...`" — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." — the MF-98 heading is RUNNING and its owned rows are now RULED, so the DONE refusal does not fire.
+MET — §4.8 "A row may not read `BUILT` unless its `Lock` resolves." — docs/reports/panels/MF-98.json:24 "verdict": "PLAN RULED; OUTPUT owed" — the panel holds the task out of BUILT until the output grounder rules.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 6   Unmet: 2
-Rules met: none
+MET — RR-0413 "task-367: the three handbook rows flip to RULED with their tests" — .cursor/MCFRONTEND-QUEUE.md:660 "FE rows owned: FE-49, FE-51, FE-54." — the row owns exactly the confirmed three rows and no others.
+
+MET — RR-0386 "gates parked, handbook tests start fresh" — docs/reports/panels/MF-98.json:3 "No app, descriptor, mobile or gate-script change." — the chunk adds no gate script or descriptor.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json:25 "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" — the panel conditions BUILT on the output grounder.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: Rule 19
 
 ---
-⏱  121331ms (121.3s)
-📊 Tokens — total: 63176, input: 34051, output: 29125, reasoning: 28340
+⏱  91949ms (91.9s)
+📊 Tokens — total: 46461, input: 26437, output: 20024, reasoning: 19319

@@ -1,5 +1,5 @@
-LIST queue-137 sha256:036b8df8b6c5c26468c0cfbdee9390708d249c3318d7cee29c47a02c7131f80f material sha256:6289733bef078cd00461446b0a12c7f8e8cc66a337aa86817853e30ac4e5b80e part 1 of 1 chunk 2 of 2
-RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json","scripts/surfaces/_schema/surface-rule-map.json","src/tests/surfaces/failure-state-declared.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts","src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+LIST queue-137 sha256:036b8df8b6c5c26468c0cfbdee9390708d249c3318d7cee29c47a02c7131f80f material sha256:5d60a23f6ce599582e9b20020d234f5733e9c089189c36e63f4a72ec48139dba part 1 of 1 chunk 2 of 2
+RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/136_mcfrontend_handbook.md","scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json","scripts/surfaces/_schema/surface-rule-map.json","src/tests/surfaces/failure-state-declared.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts","src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
 
 # SPEC 137 — McQueue
 
@@ -197,6 +197,44 @@ Dated note 2026-11-15 (M-246, prior text kept; MB-108; operator, verbatim: "y au
 Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It needs an operator amendment of this spec after the infra-freeze lift, because the queue gates read the queue rows, the row ids would be re-keyed, and Backlog.md has no expiry or landed-commit check (pilot record, "Fit verdict for step 2").
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/02-web-admin/136_mcfrontend_handbook.md b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+index fc0600d5a95739878486da6f852849b086b574ba..6e7a0e9ff375af57da02c5a76dd1c865ba2f00f9 100644
+--- a/docs/specs/02-web-admin/136_mcfrontend_handbook.md
++++ b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+@@ -25,7 +25,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+ 
+ **What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
+ 
+-**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
++**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+ 
+ **Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
+ 
+@@ -176,13 +176,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+ 
+ - **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+-  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+ 
+ - **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+   Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+ 
+ - **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+-  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+ 
+ - **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+   Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+@@ -191,7 +191,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+ 
+ - **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+-  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+ 
+ - **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+   Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
 diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
 new file mode 100644
 index 0000000000000000000000000000000000000000..457c47f1ed125462eb7111eb17aaa63ed90185b1
@@ -292,7 +330,7 @@ index 0000000000000000000000000000000000000000..457c47f1ed125462eb7111eb17aaa63e
 + "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
 +}
 diff --git a/scripts/surfaces/_schema/surface-rule-map.json b/scripts/surfaces/_schema/surface-rule-map.json
-index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..c581aa9e6f1b49f9f2c7fafe854d4023efb01708 100644
+index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..d777bec35efbd61e31fb654275f755e86916970d 100644
 --- a/scripts/surfaces/_schema/surface-rule-map.json
 +++ b/scripts/surfaces/_schema/surface-rule-map.json
 @@ -793,7 +793,7 @@
@@ -302,6 +340,15 @@ index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..c581aa9e6f1b49f9f2c7fafe854d4023
 -      "status": "owed",
 +      "status": "active",
        "handbook_line": "fe.49",
+       "source": {
+         "register": true,
+@@ -815,7 +815,7 @@
+     {
+       "id": "FE-51",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.51",
        "source": {
          "register": true,
 @@ -848,7 +848,7 @@
@@ -413,7 +460,7 @@ index 0000000000000000000000000000000000000000..bd228607eae155a765d192059b644c70
 +  });
 +});
 diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
-index c0c7c4d89f8d571749532996ca9237272ccd4591..3737bd879a121bccc711a073044a0bd83efa42a3 100644
+index c0c7c4d89f8d571749532996ca9237272ccd4591..8588eed2edd6f848258fd3ccff151005d357162b 100644
 --- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
 +++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
 @@ -8,6 +8,7 @@
@@ -429,7 +476,7 @@ index c0c7c4d89f8d571749532996ca9237272ccd4591..3737bd879a121bccc711a073044a0bd8
  // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
  const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
 +// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
-+// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (FE-51 while the operator's Q-D is open). FLIP_PENDING is read from
++// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
 +// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
 +const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
 +const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
@@ -638,21 +685,19 @@ index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb
 +  });
 +});
 diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
-index e4b5f3602633fe59f9fed64324e16ef2818a6960..bf4e49791f9df1456895567b0caa5e8bd450ad7e 100644
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
 --- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
 +++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
-@@ -27,7 +27,10 @@ const SENTINEL = 'FE-01';
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
  // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
  // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
  // commit removes the id and the list shrinks back to empty.
--const FLIP_PENDING: readonly string[] = ['FE-39'];
-+// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joins it. Its lock src/tests/surfaces/nav-tab-switch.logic.test.ts lands in the MF-98 work
-+// commit while the row stays OWED: RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions, which waits
-+// for the operator's own word (plan PLAN-367-v1 section 11, Q-D; the FE-36 precedent). The flip commit removes the id (the MF-37 pattern above).
-+const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
  
  type Row = { status: string; locks: string[] };
- 
 diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8

@@ -1,31 +1,31 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:46:22.655Z file_sha256=05d2b0aef263e17327e2154a8d4c519ad98acc77a0cad3191e89fe5eb54abb6c prompt_sha256=0febf210760ac999cccf4bb7e90e5d5c6a82ee0422d095b17fb025fe2a5f2028
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:08:03.661Z file_sha256=4863ef9491d57b43a4e3490f3548f69d7125e4126a13d4d03f2354e8e8573980 prompt_sha256=7813ed74e8eae72fb182abb706b81e7343f5e4de60985c4f3f66c5413002b610
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p14.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — FE-51 is kept OWED (added to FLIP_PENDING) although its test landed, on the strength of an unpasted plan question ("(plan PLAN-367-v1 section 11, Q-D; the FE-36 precedent)", line 33), so the ruling's flip is not executed for the third row — fix: flip FE-51 to RULED with its dated note in the same commit and remove 'FE-51' from FLIP_PENDING, or cite a pasted operator ruling that supersedes RR-0413.
+BUG severity=HIGH — Spec 126 §3.4 "a `checks[]` entry at `severity: FAIL` asserts it stays empty while R-03 holds. That check *is* the fence, mechanically." — src/tests/surfaces/scope-fence.logic.test.ts:85 "for (const k of ['inputs', 'outputs', 'evidence'] as const) {" — the fence is built as a bespoke AST scan; nothing in the reviewed material asserts the TRANSLATION contract's `consumers[]` stays `"none"`, so the mechanical check the clause names is not the check that was built — add the `checks[]` FAIL entry on `parcel_id_translation`, or assert `consumers: "none"` in the test.
 
-DEFER severity=MED — Spec 126 §4 row 12 "`deviations` | `{from, why, adjudicated_by, date}`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' }" — the two live deviations from fe.51 carry file/call/count/why but no `adjudicated_by` and no `date`, so the deviation shape the spec fixes is not answered — fix: add `adjudicated_by` and `date` to each ALLOW entry.
+BUG severity=HIGH — Spec 126 §3.1 QUERY "`database.reads[]`" and §4 row 16 "a screen does not touch a table; its contract does." — src/tests/surfaces/scope-fence.logic.test.ts:38 "inputs?: { tables?: TableRef[] };" — the descriptor arm never reads `database.reads[]` or `database.writes[]`, so an in-scope CONTRACT that reads `lead_parcels` keeps fe.49 green — scan `database.reads[]` and `database.writes[]` in `findDescriptorHits`.
 
-DEFER severity=MED — Spec 126 §4 row 13 "`limitations` | `{what, measured, check_id}`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "// LIMITS (stated, not widened): a route held in a variable is missed" — the limitation is prose only, with no `measured` count and no `check_id`, so it cannot be tracked or re-measured (contrast scope-fence.logic.test.ts:16, which at least carries "one hop adds 64 files") — fix: give each limitation a measured number and a check id.
+BUG severity=MED — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — src/tests/surfaces/scope-fence.logic.test.ts:28 "const LEAD_TABLE_RE = /lead_parcels/i;" — the fence vocabulary (LEAD_SCREENS, LEAD_ROUTES, LEAD_TABLE_RE) and the tab exceptions (ALLOW) are re-typed in test code rather than read from the registry the card names — read them from `scripts/surfaces/_schema/surface-rule-map.json` or the descriptors' `checks[]`.
 
-DEFER severity=MED — Spec 126 §3.4 "a `checks[]` entry at `severity: FAIL` asserts it stays empty while R-03 holds. That check *is* the fence, mechanically." — src/tests/surfaces/scope-fence.logic.test.ts:11 "(4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels" — the fence is re-hosted as an AST test and no descriptor `consumers[]` assertion at severity FAIL is visible here (chunks 1 and 2: cannot see) — fix: show or add the `parcel_id_translation` descriptor `checks[]` FAIL entry asserting `consumers[]` stays "none".
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:12 "LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar" — an expo-router `<Link href>` to a tab route is neither detected nor listed, an undeclared third blind spot under a RULED row — add a `<Link href={PARCEL_TAB_ROUTE.x}>` case to the finder and the controls, or declare it in LIMITS.
 
-DEFER severity=MED — card AC "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:69 "if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);" — a push of a route held in a variable is a declared miss, so a green tree is not proof of fe.51; the planted defects are in-memory only and never exercise the `git ls-files` walk — fix: plant one defect file under a test-only path override and measure the variable-held false negative.
+DEFER severity=LOW — Spec 126 §4 "**Counts (derived, not typed):** 20 pipeline categories in · 17 carried over · 3 dropped · 4 net-new · **21 SURFACE categories out.**" — src/tests/surfaces/scope-fence.logic.test.ts:123 "expect(descs.length).toBeGreaterThanOrEqual(45);" — hand-typed registry counts sit in a gate, so a legitimate descriptor retirement reds it for no compliance reason — derive the floor from the generator output, or keep a non-zero walk assertion plus the generator's `--check`.
 
-DEFER severity=LOW — Spec 126 §5.6 "That is a 943-line, 41-case head start on `surfaces/surface-validate.mjs`" and §5.0 "nothing in that fan-out is hand-written, and nothing in it is a *second declaration*" — src/tests/surfaces/scope-fence.logic.test.ts:51 "export function findFenceHits(rel: string, text: string): Hit[] {" — two hand-written surface checkers land in src/tests rather than the spec's named checker home, a third venue for surface checking alongside the validator and the goldens — fix: move the pure scanners under scripts/surfaces/ for the future surface-validate.mjs, or record the venue as a dated deviation.
+DEFER severity=LOW — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — the regenerated artifacts (Spec 136 OWED count, rule-lists page) are not in the reviewed chunk, so AC3 is carried only by the implementation notes — attach the `generate-surface-handbook.mjs --check` and `rule-lists.mjs page --check` output to the closing commit.
 
-MET — RR-0386 "Task-367: gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49" — the new files are handbook rule locks, not the parked gates A/B/C.
+MET — RR-0413 (the rows flip to RULED with their tests) — src/tests/surfaces/scope-fence.logic.test.ts:1 — SPEC LINK to FE-49 is present and the row's own rule text is quoted in the header.
 
-MET — Spec 126 §5.0 "nothing in it is a *second declaration*" — src/tests/surfaces/nav-tab-switch.logic.test.ts:7 "The tab routes are parsed by AST from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied" — the route table is read from its one source, not re-declared.
+MET — RR-0417 (two named, owned exceptions) — src/tests/surfaces/nav-tab-switch.logic.test.ts:32 — ALLOW holds exactly two entries, each `why: "owed: MF-..."`, and A2 asserts `ALLOW.length <= 2`, unique keys and `count > 0`.
 
-MET — Spec 126 §3.4 "`lead_parcels` is read by no surface descriptor" — src/tests/surfaces/scope-fence.logic.test.ts:11 "(4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels" — descriptor table refs are scanned, not just code.
+MET — Acceptance #2 (red on a planted defect, green on the clean tree) — src/tests/surfaces/nav-tab-switch.logic.test.ts:138 — the in-memory plants yield exactly one finding each and test A asserts an empty unexplained/miscounted set on the real tree.
 
-MET — RR-0385 "tests are the focus" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the chunk contains tests and one register line, no product code.
+MET — RF-0417 pattern in the register — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 — FE-51 leaves FLIP_PENDING after the operator's yes, leaving FE-39 alone as the comment states.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 13   Unmet: 3
-Rules met: none
+Clauses checked: 9   Unmet: 2
+Rules met: RR-0413, RR-0417
 
 ---
-⏱  72645ms (72.6s)
-📊 Tokens — total: 39729, input: 23619, output: 16110, reasoning: 14786
+⏱  108265ms (108.3s)
+📊 Tokens — total: 48679, input: 24295, output: 24384, reasoning: 23290
