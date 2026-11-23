@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T16:05:00Z'
+updated_date: '2026-11-23T18:13:00Z'
 labels:
   - McFix
   - McFix Final
@@ -294,6 +294,13 @@ in#9 MED folded they fold onto the b
 rg#1 MED folded FIXED IN THIS TASK (
 rg#2 MED folded the count equals the
 rg#3 MED folded every key of the rep
+
+Plan review round 2: 44 folded, 0 task, 20 ruling, 0 wontfix, 28 pile; grounder docs/reports/reviews/task-442/GROUNDER-PLAN.md; triage docs/reports/reviews/task-442/TRIAGE-PLAN.md
+plan-compliance-agents-s7-s11#4 MED ruling RR-0385
+plan-compliance-queue-137#1 MED ruling RR-0385
+plan-compliance-queue-137#3 MED ruling RR-0385
+plan-compliance-queue-137#5 MED folded Before launch the or
+plan-compliance-surface-136#2 MED folded are the next round o
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
