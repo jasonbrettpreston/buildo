@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:50:00Z'
+updated_date: '2026-11-23T18:52:00Z'
 labels:
   - McFix
   - McFix Final
@@ -49,6 +49,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-HB367/REPORT.md
 type: build
 ordinal: 67012
 ---
