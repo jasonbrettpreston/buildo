@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FEDB442'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T18:46:00Z'
+updated_date: '2026-11-23T19:08:00Z'
 labels:
   - McFix
   - McFix Final
@@ -378,4 +378,6 @@ McFrontend-Task: MF-97
 746:POLICY CHECKS OK (commit-msg): 3 file(s)
 
 2026-11-23 output review round 1 filed in docs/reports/lanes/2026-11-23/BL-FEDB442/ (28 lens outputs beside their inputs, TASK, FINDINGS.md untriaged: 103 findings, CRIT 2, HIGH 5, MED 38, LOW 55, NIT 2); context docs/reports/reviews/task-442/context-r4.md. Real check-lane-close.mjs on a throwaway clone with the task staged BUILT refuses only on GROUNDER.md (close-check.out). Task stays RUNNING: grounder owed (RR-0359).
+
+2026-11-23 round-1 fix (grounder Cairn-Ground-O442, CONFIRMED MED out-compliance-orchestrator-doc17#2; Spec 137 rule 3, 137_mcqueue.md:98): the MF-97 Status line next field now names the closing commit, not the landed work commit. The 15 CONFIRMED LOW and NIT are piled (RR-0385 item 3).
 <!-- SECTION:NOTES:END -->
