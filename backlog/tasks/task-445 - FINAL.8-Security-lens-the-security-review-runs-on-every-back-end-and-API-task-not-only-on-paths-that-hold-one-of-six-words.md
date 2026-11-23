@@ -3,10 +3,11 @@ id: TASK-445
 title: >-
   FINAL.8 Security lens: the security review runs on every back-end and API
   task, not only on paths that hold one of six words
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SEC445'
 created_date: '2026-11-23T01:50:00Z'
-updated_date: '2026-11-23T02:38:00Z'
+updated_date: '2026-11-23T12:29:00Z'
 labels:
   - McFix
   - McFix Final
@@ -18,6 +19,17 @@ references:
   - docs/reports/reviews/task-445/seat-integration-1.md
   - docs/reports/reviews/task-445/seat-reality-check-1.md
   - docs/reports/reviews/task-445/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 145012
 ---
@@ -212,4 +224,6 @@ rg#4 MED folded hdr takes the materi
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-22 (M-246, prior text kept; RR-0391 · task-445 · Backlog; operator, verbatim: "add it. Then once these close move on to the Mcfix plan for the closed and built tasks with the new approach.")
+
+2026-11-23 taken on the board at lane launch (lane BL-SEC445, worktree /Users/brettpreston_macmini/Buildo-wt-sec445, branch wf1/inc1b-sec445), RR-0240
 <!-- SECTION:NOTES:END -->
