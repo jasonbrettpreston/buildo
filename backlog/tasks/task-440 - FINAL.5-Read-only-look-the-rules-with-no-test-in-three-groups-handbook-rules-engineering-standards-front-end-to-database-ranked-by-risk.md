@@ -3,11 +3,11 @@ id: TASK-440
 title: >-
   FINAL.5 Read-only look: the rules with no test, in three groups (handbook
   rules, engineering standards, front end to database), ranked by risk
-status: RUNNING
+status: DONE
 assignee:
   - '@lane-BL-LOOK440'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T14:12:00Z'
+updated_date: '2026-11-23T14:39:00Z'
 labels:
   - McFix
   - McFix Final
@@ -25,6 +25,9 @@ references:
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/reviews/task-440/RULE-CHECKS.md
   - docs/reports/lanes/2026-11-23/BL-LOOK440/REPORT.md
+  - docs/reports/reviews/task-440/GROUNDER-LOOK.md
+  - docs/reports/lanes/2026-11-23/BL-LOOK440/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-LOOK440/TRIAGE.md
 type: record
 ordinal: 140012
 ---
@@ -39,15 +42,15 @@ Files: docs/reports/reviews/task-440/RULE-CHECKS.md, docs/reports/reviews/task-4
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
 - [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
 - [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
 - [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
 - [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
 - [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
-- [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
@@ -273,4 +276,12 @@ rg#5 MED folded scripts/analysis/mcb
 2026-11-23 lane BL-LOOK440 (Opus): RULE-CHECKS.md written at pin S=ba4ac48fd (the launch head): group 2 (58 rows: 7 enforced, 22 partly, 29 none), group 1 (57 rows: 33 enforced, 4 partly, 20 none; fe.58 pending via task-446), group 3 (47 rows listed again: 0 enforced, 17 partly, 30 none). One open known break ranked (fe.54, K2 BL-RULESACC GROUNDER.md:136); D2, D3, D6, D7, D8, D14 read fixed; D1 and D10 open under Outside. Read-only: no code, test, tool or rule change. Task stays RUNNING: compliance lens next, then the separate grounder (GROUNDER-LOOK.md, RR-0359).
 
 2026-11-23 lane BL-LOOK440: compliance lens run once per rule list (five-words, plan-protocol, inc-S, ms-S) on fresh context context-r2.md; 20 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-LOOK440/FINDINGS.md. Lens material: the brief's diff command excludes docs/reports/reviews/** and so prints nothing for the two Files paths; the material is the same diff without those excludes (stated in REPORT.md). Task left RUNNING: grounder owed (GROUNDER.md for the lens findings, GROUNDER-LOOK.md for the look), RR-0359.
+
+2026-11-23 landing (lane BL-LOOK440). Acceptance 7: GROUNDER-LOOK.md by the separate grounder Cairn-Ground-O440 copied unchanged (cmp of the grounder's file and docs/reports/reviews/task-440/GROUNDER-LOOK.md: no difference; same for GROUNDER.md and TRIAGE.md in docs/reports/lanes/2026-11-23/BL-LOOK440/); its 5 WRONG rows corrected in 7a60cc538 and the re-check items in 1e332d979, passed by the grounder at 1e332d979. Acceptance 8: git diff --name-only ba4ac48fd..HEAD lists only docs/reports/reviews/task-440/ (RULE-CHECKS.md, context-r1.md, context-r2.md), docs/reports/lanes/2026-11-23/BL-LOOK440/ records and the task file; nothing under src/, scripts/, mobile/, migrations/ or docs/specs/. Acceptance 9: DONE in the landing commit through the real hooks. check-lane-close.mjs --outcomes docs/reports/lanes/2026-11-23/BL-LOOK440: checked 7 ids.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Read-only look (record task, RR-0385 item 6): docs/reports/reviews/task-440/RULE-CHECKS.md lists at pin ba4ac48fd every rule in three groups with the existing machine check (file:line) or none, status and risk rank. Group 1 McFrontend handbook 57 rows: 30 enforced, 7 partly, 20 none (fe.58 pending via task-446); group 2 engineering standards 58 rows: 7 enforced, 22 partly, 29 none; group 3 front end to database 47 rows listed again: 0 enforced, 18 partly, 29 none. Open known break ranked: fe.54 (failed Help open only logged, maxbldHelp.ts:19); open outside the groups: D1 (CRITICAL), D10 (HIGH), two K2 Help lines. Feeds task-367 (group 1), task-441 (group 2), task-442 (group 3). Compliance lens once per rule list (20 findings: 7 CONFIRMED and fixed or piled, 13 REJECTED); separate grounder Cairn-Ground-O440 checked the look (GROUNDER-LOOK.md), 5 WRONG rows corrected. DoD #2-#4 not applicable: record task, no test (plan section 2). No code, test, tool or rule change.
+<!-- SECTION:FINAL_SUMMARY:END -->
