@@ -3,11 +3,11 @@ id: TASK-446
 title: >-
   FINAL.9 Handbook line for R-22: the accepted Spec 128 rule React Native has no
   Server Components gets a line in the McFrontend handbook before task-439 lands
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T15:45:00Z'
+updated_date: '2026-11-23T15:46:00Z'
 labels:
   - McFix
   - McFix Final
@@ -433,4 +433,6 @@ task-446 (FINAL.9, MF-96): one OWED Spec 135 row restating Spec 128 R-22 (React 
 Review round 1: 2 fixed, 0 task, 0 ruling, 0 wontfix, 24 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb446-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 22b1e36b0); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb446-lane/grounder/r1/TRIAGE.md
 out-compliance-surface-126-p4#1 MED fixed 390c54261
 out-engineering-eng-all-p1#1 MED fixed 390c54261
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-HB446/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->
