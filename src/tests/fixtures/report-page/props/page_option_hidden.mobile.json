@@ -1017,7 +1017,7 @@
             "brief": "B9.5",
             "kind": "content",
             "content": "row.unit_size_basis_value",
-            "text": "the basement; 10 % circulation"
+            "text": "the basement, not shared stairs and halls"
           },
           {
             "role": "size.row.label",

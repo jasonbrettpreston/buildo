@@ -1558,7 +1558,7 @@
             "brief": "B9.5",
             "kind": "content",
             "content": "row.unit_size_basis_value",
-            "text": "the basement; 10 % circulation"
+            "text": "the basement, not shared stairs and halls"
           },
           {
             "role": "size.row.label",
@@ -1999,9 +1999,9 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
-      "scripts/surfaces/_schema/report-presentation.json": "24063195dd8e1fbd",
+      "scripts/surfaces/_schema/report-presentation.json": "34b0addce2ad502e",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "2d447d5c81933b29",
+      "scripts/surfaces/_schema/report-v2.decl.json": "869b4827190a3180",
       "scripts/surfaces/_schema/report-page.json": "5831e85c75fed373",
       "scripts/surfaces/_schema/report-page.schema.json": "e76a40a88ad58031"
     }

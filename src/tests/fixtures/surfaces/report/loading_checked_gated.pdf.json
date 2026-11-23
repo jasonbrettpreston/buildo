@@ -221,9 +221,9 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
-      "scripts/surfaces/_schema/report-presentation.json": "24063195dd8e1fbd",
+      "scripts/surfaces/_schema/report-presentation.json": "34b0addce2ad502e",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "2d447d5c81933b29"
+      "scripts/surfaces/_schema/report-v2.decl.json": "869b4827190a3180"
     }
   }
 }

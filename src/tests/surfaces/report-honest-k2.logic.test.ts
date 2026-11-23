@@ -15,7 +15,6 @@ const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROO
 const PAGE = readJson('scripts/surfaces/_schema/report-page.json');
 const PRESENTATION = readJson('scripts/surfaces/_schema/report-presentation.json');
 const SEED_TEXT = readJson('scripts/surfaces/_schema/report-v2-seed/page-text.json');
-const LV = readJson('scripts/seeds/logic_variables.json');
 const options = (): Json[] => (PAGE.sections as Json[]).filter((s) => s.kind === 'option');
 const text = (key: string): string => String(PRESENTATION.page[key] ?? '');
 
@@ -43,8 +42,8 @@ describe('K2 Q1: our settings are explained in See details; the O-17 label is no
   });
 });
 
-describe('K2 unit-size tile: See details says the figure includes the basement and the circulation share (M-496 formula unchanged)', () => {
-  it('the houseplex panel has a row naming the basement and the circulation percent, and the percent is the stored setting', () => {
+describe('K2 unit-size tile: See details says the figure includes the basement, not shared stairs and halls, in words only (M-496 formula unchanged; RR-0402, RR-0405)', () => {
+  it('the houseplex panel has a row naming the basement and the shared stairs and halls it leaves out, with no figure', () => {
     const o3 = options().find((o) => o.scenario === 'detached_houseplex') as Json;
     const parts = o3.parts as Json[];
     const i = parts.findIndex((p) => p.role === 'size.row.label' && p.content === 'row.unit_size_basis');
@@ -53,7 +52,7 @@ describe('K2 unit-size tile: See details says the figure includes the basement a
     expect([v.role, v.content]).toEqual(['size.row.value', 'row.unit_size_basis_value']);
     const t = text('row.unit_size_basis_value');
     expect(t).toMatch(/basement/i);
-    const pct = Math.round(Number(LV.houseplex_circulation_share.default) * 100);
-    expect(t).toContain(`${pct} % circulation`);
+    expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);
+    expect(t).toBe('the basement, not shared stairs and halls');
   });
 });

@@ -41,7 +41,7 @@
     "row.units": "Units",
     "row.unit_size": "Size per unit (average)",
     "row.unit_size_basis": "Size per unit includes",
-    "row.unit_size_basis_value": "the basement; 10 % circulation",
+    "row.unit_size_basis_value": "the basement, not shared stairs and halls",
     "row.basement": "Basement",
     "row.bedrooms": "Bedrooms",
     "row.roof": "Roof",

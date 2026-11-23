@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2 (the nullable `page`); docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7,
 //            §11b.2 dated note 2026-11-11 (never a second resolver); docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-38, FE-39 (no legacy
-//            value ever reaches a user); backlog/docs/doc-16 (McStorage policy v2: a stale record is never served).
+//            value ever reaches a user), FE-27 (fe.27: parcels is a source in the closed binding set; a column the read does not select fails);
+//            backlog/docs/doc-16 (McStorage policy v2: a stale record is never served).
 //
 // MB-44 W (task-123, 1.3) · the customer read module `readCustomerPageResponse` in src/lib/parcels/report-page.ts. Red first (Spec 08 08_agents.md:490),
 // written from docs/reports/lanes/2026-11-19/BL-W/PLAN.md section 4 (T1 to T10). No database: the pool is a scripted fake, as in the tests beside this one.
@@ -14,6 +15,7 @@
 //   T8 no legacy   no key outside the declared page fields, none inside `values` outside the declared bindings, no legacy column name anywhere
 //   T9 parity      for the same scripted lot, W's page equals the admin preview's page (one resolver)
 //   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
+//   T11 fe.27      (task-442, FINAL.7 plan section 3 T2) a parcels column the page binds but the one static parcels read does not select fails at load
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -57,7 +59,7 @@ import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-p
 import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
 import { CONSUMER_WITHHELD_LEGACY_COLS } from '@/lib/parcels/consumer-lookup';
 import { storedPageResponse } from '@/lib/admin/report-preview-live/stored-page';
-import { pageBindings } from '@/lib/report-projection/project';
+import { pageBindings, type Binding } from '@/lib/report-projection/project';
 import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
 import { buildPage } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
@@ -398,5 +400,35 @@ describe('T10 importers: report-page.ts is server code, imported by the lookup r
   });
   it('the fence is not vacuous', () => {
     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);
+  });
+});
+
+// T11 stays the LAST describe of this file: case (a) resets the module registry and plants a mock of the projection module; its finally undoes
+// both, and every describe above uses static imports bound at load (the doMock form of src/tests/maxbld-web-pages.logic.test.ts:113-119).
+// Gates 4 and 5 of the task-442 plan section 0 (the src SQL ledger catalog membership, consumer-registry declared writers) are not repeated here.
+describe('T11 fe.27: a parcels column the page binds but the static parcels read does not select fails at load (task-442)', () => {
+  const PROJECT = '@/lib/report-projection/project';
+  const PLANTED: Binding = { section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } };
+  const parcelsColumns = (): string[] => [...new Set(pageBindings().flatMap((b) => (b.source.kind === 'parcels' ? [b.source.column] : [])))].sort();
+  it('(a) planted binding: importing the read module throws, naming the column', async () => {
+    try {
+      expect(parcelsColumns()).not.toContain('max_build_fsi'); // the planted column is not one of the four selected columns (read-stored.ts:28)
+      vi.resetModules();
+      vi.doMock(PROJECT, async (orig) => {
+        const real = await orig<typeof import('@/lib/report-projection/project')>();
+        return { ...real, pageBindings: () => [...real.pageBindings(), PLANTED] };
+      });
+      await expect(import('@/lib/report-projection/read-stored')).rejects.toThrow('MB-93: page field source parcels:max_build_fsi is not in the static parcels read');
+    } finally {
+      vi.doUnmock('@/lib/report-projection/project');
+      vi.resetModules();
+    }
+  });
+  it('(b) control: the real module imports, and the scripted read returns exactly the parcels columns the page binds', async () => {
+    const mod = await import('@/lib/report-projection/read-stored');
+    expect(typeof mod.readLotFacts).toBe('function');
+    const lot = await mod.readLotFacts({ query: script(CURRENT_LOT) as never }, REF);
+    expect(parcelsColumns().length).toBeGreaterThan(0);
+    expect(Object.keys(lot?.columns ?? {}).sort()).toEqual(parcelsColumns());
   });
 });
