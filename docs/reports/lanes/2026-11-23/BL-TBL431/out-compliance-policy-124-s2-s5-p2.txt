@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.655Z file_sha256=8191987cad82e8621ea0bae4d2d302ee10adcde0d06439c424ee3fbb807a8bb8 prompt_sha256=8d2937abfa6d8b5ae34bf9d9258ef44b7bed5037960916e8c8f1a87d65c246d7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-431 card "front-end kinds get surface-136 plus front-end and shared"; RR-0385 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" — src/tests/backlog/rule-lists-table.logic.test.ts:281 "expect(eng(lists(f)), f).toEqual(['eng-all']);" (the ui-app row, scripts/analysis/rule-lists.json, keeps "lists": ["eng-all"]) — the one web front-end row (src/components/**, src/app/** pages, src/features/**) is given neither eng-front nor eng-shared and still receives the whole 46,613-character standards file, so eng-front reaches no web front-end row at all and RR-0380 Q1 ("drop the full engineering when arts can be sent") is unmet for those tasks — split ui-app so page and component paths resolve eng-front + eng-shared (leave src/features as its own row where section 3 is needed), or record an operator-approved deviation naming that row.
+
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs:282 "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — whole wins, so any task whose rows resolve both eng-all and a sections list of the same file is sent the full document again (D2 locks it: mobile plus test file resolves exactly eng-all), the opposite of the ruling direction; the plan direction the orchestrator item demands against RR-0380 Q1 is not pasted — land that direction (parts win, or whole wins only when the sections list adds no section) or cite the ruling that reverses RR-0380 Q1.
+
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--write` emits the row skeletons; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — NONE — the diff implements RR-0380 Q1/Q2 and RR-0385 item 7, and none of its eight files is a decision log, a raw record or a register row, and no such row is pasted — confirm and cite the register row for RR-0380 and RR-0385 item 7, or add it where the register routes it (cannot see).
+
+DEFER severity=LOW — task-431 card "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — NONE — the ui-app row still lists neither surface-136 nor any engineering section list, and INPUTS.1's outcome is not pasted, so the conditional cannot be judged — confirm INPUTS.1 and attach surface-136 if it confirmed.
+
+DEFER severity=LOW — task-431 card "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — scripts/analysis/rule-lists.json:151 ""surface-136", "surface-126", "surface-127", "surface-128", "surface-135"" — the phone row still carries the four surface specs whole and whether INPUTS.2 has landed is not pasted, so the condition cannot be judged — confirm INPUTS.2 and drop them from the front-end rows in that card's change.
+
+MET — 2026-11-22 orchestrator item "in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter(...)`" — scripts/analysis/rule-lists.mjs:282 — the line is added verbatim at the named place.
+MET — spec 08 note of 2026-11-22 "the per-list rule asks for one `out-engineering-<id>` per resolved engineering list" — src/tests/backlog/backlog-lane.logic.test.ts:406 — the brief test requires out-engineering-eng-front, eng-back and eng-shared and refuses the compliance name.
+MET — RR-0380 "sections 8, 10, 12 to both sides" — scripts/analysis/rule-lists.json:34 — eng-shared carries 8, 10 and 12 and both the phone row and the back-end rows resolve it.
+MET — RR-0380 "by-law tasks gain no engineering rules" — src/tests/backlog/rule-lists-table.logic.test.ts:275 — the bylaw row is asserted to stay ['bylaw-133'].
+MET — spec 08 note of 2026-11-22 "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`" — .claude/review-templates/README.md:101 — the lens-engineering row now names all four list ids.
+MET — task-431 card "pipeline and by-law kinds get their handbook plus back-end and shared" — scripts/analysis/rule-lists.json:88 — the step-pipeline row keeps step-132 and resolves eng-back + eng-shared.
+MET — task-431 card "the engineering standards entry split by section ... 11 and 14 placed at plan review" — src/tests/backlog/rule-lists-table.logic.test.ts:288 — P1 asserts every level-2 heading of the standards file falls in exactly one of the three lists.
+MET — R-BF "generated, never hand-kept" — docs/reports/generated/rule-lists-by-kind.md:22 — the totals are regenerated: eng-back 5,377 plus eng-shared 37,472 replace eng-all 46,613 in each affected table.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+Rules met: none
+
+---
+⏱  104699ms (104.7s)
+📊 Tokens — total: 55125, input: 34310, output: 20815, reasoning: 19527

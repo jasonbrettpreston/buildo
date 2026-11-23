@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.664Z file_sha256=9e63a3376fedb18d296027bfb956e04531e220a3c8b43c7acb64d84afef79912 prompt_sha256=60952ee5a9a2a629377a752ea91bb6b3d9d87df65f1cfa946942bb8eb8411c0e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0380 Q1 — "drop the full engineering when arts can be sent" — pasted acceptance (c) "resolving tasks with add lines: 104 | eng-all only: 39 | parts: task-372:eng-back+eng-shared task-380:eng-back+eng-shared task-381:eng-front+eng-shared task-383:eng-back+eng-shared" — 39 resolving tasks still receive the whole 46,613-char standards file and P1 proves the three section lists joined are that whole file, so parts can be sent for them under the operator's words — split the remaining rows at plan review or paste the ruling that keeps eng-all on those 39.
+DEFER severity=MED — orchestrator instruction on the de-dup direction — "rule in its plan the direction against RR-0380 Q1" — src/tests/backlog/rule-lists.logic.test.ts:45 "expect((JSON.parse(r.stdout) as Res).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all']);" — the landed direction is the opposite of Q1 (whole wins on every mixed resolution, e.g. a phone plus test task) and the plan line that rules it is not in the material, cannot see — paste the PLAN-431 direction line (and the changed PLAN-431-v3 reliance line) before plan-lock.
+DEFER severity=LOW — card front-end kinds clause — "front-end kinds get surface-136 plus front-end and shared" — docs/specs/00-architecture/08_agents.md:353 "every other row that had `eng-all` keeps it" — the web UI row ui-app keeps eng-all, so src/components, src/app and src/features front-end files still resolve the whole 46,613-char file (40,686 as parts), and RR-0385 says "front-end vs backend" — confirm ui-app is deliberately out of scope or move it to eng-front plus eng-shared.
+REJECT — card split clause — the change is accused of putting sections 8, 10 and 12 in eng-shared though the card reads "sections 1, 8, 10, 12 front end" — RR-0380 Q2 pasted says "sections 8, 10, 12 to both sides" and every front-end row also carries eng-shared, so both sides receive them and no rule is lost.
+REJECT — card by-law clause — the by-law row is accused of gaining no engineering lists though the card reads "pipeline and by-law kinds get their handbook plus back-end and shared" — RR-0380 Q4 pasted says "by-law tasks gain no engineering rules", the later ruling, and the diff leaves that row untouched.
+MET — orchestrator de-dup instruction — scripts/analysis/rule-lists.mjs:282 — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" added before `return result` in resolveTask, verbatim as pasted.
+MET — card split clause — scripts/analysis/rule-lists.json:32 — eng-front (section 1), eng-back (:33, sections 3 and 9) and eng-shared (:34, 2, 4 to 8, 10 to 14) added on the standards file.
+MET — card front-end kinds clause (phone row) — scripts/analysis/rule-lists.json:150 — the mobile row keeps surface-136 and now lists eng-front and eng-shared in place of eng-all.
+MET — card pipeline kinds clause — scripts/analysis/rule-lists.json:88 — the step-pipeline row lists eng-back and eng-shared in place of eng-all.
+MET — card back-end clause for API routes and src/lib — scripts/analysis/rule-lists.json:99 — api-lib lists eng-back and eng-shared and ui-app gains "not": ["src/app/api/**"] so API routes stay back end.
+MET — RR-0385 engineering seat naming — src/tests/backlog/backlog-lane.logic.test.ts:408 — "expect(extra).toContain('out-engineering-' + l);" for eng-front, eng-back and eng-shared, no eng-all and no compliance name.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  157367ms (157.4s)
+📊 Tokens — total: 52628, input: 22714, output: 29914, reasoning: 28943

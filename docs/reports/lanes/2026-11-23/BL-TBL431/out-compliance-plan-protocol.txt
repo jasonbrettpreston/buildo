@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.649Z file_sha256=7deefe787945c611a561f9ab7d4cfeeb5eaab58731d4af5b52318e0a869f5a43 prompt_sha256=5b95ebf8b62a3d12e220060da221b28d375eb80fb98c8bb654abf3fe764445ed
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-431 card "rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent')" and RR-0380 Q1 "drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs:282 "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the line keeps the whole list and drops the sections lists, so a task resolving a phone file and a test file still resolves eng-all (acceptance (b) "mobile/x.ts, src/tests/x.test.ts" => eng-all) and is sent the whole 46,613 character document; no pasted operator ruling approves that direction and the orchestrator note asked for it to be ruled — fix: keep the sections lists and drop the whole list of the same file as Q1 says, or land the operator ruling for whole-wins before merge
+BUG severity=MED — RR-0380 Q1 "drop the full engineering when arts can be sent" — docs/specs/00-architecture/08_agents.md:354 "When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped (`resolveTask`)" — the note cites "RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165" as its authority while stating the reverse of Q1, so the spec records a rule the ruling it names does not say — fix: cite the ruling actually taken for the direction, or rewrite the sentence to match Q1
+DEFER severity=MED — task-431 card "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" and "front-end kinds get surface-136 plus front-end and shared" — scripts/analysis/rule-lists.json:107 "      \"lists\": [\"eng-all\"]," (ui-app row) — the ui-app row is a front-end row and still resolves the whole file and gains no surface-136, and no pasted record shows INPUTS.1's answer — rationale: bounded to one row and no rule is lost because eng-all holds every section, but the card clause stays unmet until the condition is recorded either way
+DEFER severity=LOW — task-431 card "sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared" — scripts/analysis/rule-lists.json:32 "\"eng-front\": { \"file\": \"docs/specs/00_engineering_standards.md\", \"sections\": [\"1. Architecture & UI Standards\"], \"generated_by\": \"hand-written\" }," — sections 8, 10 and 12 sit in eng-shared, not eng-front as the card assigns (RR-0380 Q2 "sections 8, 10, 12 to both sides") — rationale: no rule is lost today because every row that resolves eng-front also resolves eng-shared, but the card text and the table disagree
+
+REJECT — task-431 card "pipeline and by-law kinds get their handbook plus back-end and shared" — the bylaw row keeps only ["bylaw-133"] and gains no eng-back or eng-shared — RR-0380 Q4 rules "by-law tasks gain no engineering rules" and that ruling is the later word on the same card
+REJECT — plan-protocol "keep it simple; no scope creep" — adding "not": ["src/app/api/**"] to ui-app is behaviour the card does not spell out — the api-lib row already globs src/app/api/** and the card's front-end/back-end split puts API routes on the back-end lists
+
+MET — task-431 card "front-end kinds get surface-136 plus front-end and shared; pipeline and by-law kinds get their handbook plus back-end and shared" — scripts/analysis/rule-lists.json (mobile, step-pipeline, api-lib rows) — phone row eng-front+eng-shared with surface-136, pipeline and src/lib rows eng-back+eng-shared with their handbooks intact
+MET — RR-0385 item 7 "this now serves teh engineering seat with the right sections for the task - front-end vs backend" — scripts/analysis/rule-lists.json (ui-app "not", api-lib lists) and src/tests/backlog/rule-lists-table.logic.test.ts (S1) — API routes resolve eng-back+eng-shared and no longer match the UI row
+MET — RR-0380 Q4 (by-law tasks gain no engineering rules) — scripts/analysis/rule-lists.json (bylaw row untouched) and src/tests/backlog/rule-lists-table.logic.test.ts:263 "expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);"
+MET — task-431 card "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — diff touches only the step-pipeline, api-lib, ui-app and mobile rows; lane-tools and middleware-config rows absent from the diff
+MET — FINAL.3 note "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`" — docs/specs/00-architecture/08_agents.md:354 and .claude/review-templates/README.md:101 updated in step with the table
+MET — FINAL.3 note per-list form "out-engineering-<id>" — src/tests/backlog/backlog-lane.logic.test.ts:405 "expect(extra).toContain('out-engineering-' + l);" for eng-front, eng-back, eng-shared, and no compliance name
+MET — task-431 card "Proof before the switch at plan review" — acceptance (b) lists the four resolve outcomes and (c) records check-tasks with 104 add lines and none holding both eng-all and a sections list
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 4
+Rules met: none
+
+---
+⏱  108740ms (108.7s)
+📊 Tokens — total: 40149, input: 18874, output: 21275, reasoning: 19910

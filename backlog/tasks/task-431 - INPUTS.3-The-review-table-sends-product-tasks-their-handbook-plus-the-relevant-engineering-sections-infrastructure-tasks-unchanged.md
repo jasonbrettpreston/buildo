@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-TBL431'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-23T01:14:00Z'
+updated_date: '2026-11-23T01:26:00Z'
 labels:
   - McFix
   - McFix V2
@@ -272,4 +272,20 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, ver
 2026-11-23 lane BL-TBL431: planted defect, de-dup line removed (commit attempt refused, planted-dedup.out in the lane dir): D1 red at not.toContain('first') (rule-lists.logic.test.ts:136), D2 red (:47, three engineering lists), S1 planted ui-app part red (needs the line too); every other test green. Line restored; work commit follows.
 
 2026-11-23 lane BL-TBL431: the work commit was refused by rule-lists.logic.test.ts:152 (expected [whole, queue, inc-F] to include first), a test the plan listed neither as changed nor unchanged; ruled by Cairn-Ground-P431, Q-H (docs/reports/reviews/task-431/QUESTIONS-RULED-APPEND.md, board 79631b139): the line now expects 'whole'. Finding post-build#1 MED.
+
+2026-11-23 lane BL-TBL431 ACCEPTANCE (real inputs, at the work commit a870bdf41; hook tail: 'Tests  361 passed (361)', commit.out):
+(a) validate and page:
+rule-lists: ok 58 lists, 23 rows
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+(b) resolve --type build --letter S, the lists on docs/specs/00_engineering_standards.md:
+  --files "mobile/src/app/x.tsx" => eng-front, eng-shared
+  --files "src/lib/parcels/report-compute.ts" => eng-back, eng-shared
+  --files "scripts/steps/x.json" => eng-back, eng-shared
+  --files "src/app/api/parcels/search/route.ts" => eng-back, eng-shared
+  --files "mobile/x.ts, src/tests/x.test.ts" => eng-all
+(c) check-tasks: exit 0; check-tasks: open 309: resolve 106, not yet resolvable 203
+  add lines (counted from its output): resolving tasks with add lines: 104 | eng-all only: 39 | parts: task-372:eng-back+eng-shared task-380:eng-back+eng-shared task-381:eng-front+eng-shared task-383:eng-back+eng-shared | both eng-all and a sections list: none
+(d) tests: red.out (7 failed at the designed assertions or the missing-list branch, as the plan says), planted-dedup.out (line removed: D1, D2, S1 planted ui-app red), commit.out (361 passed): D1, D2, S1, K1, P1, X1 and the changed tests green.
+
+2026-11-23 lane BL-TBL431: output review round 1 run (13 DeepSeek outputs, fresh context context-r4.md) in docs/reports/lanes/2026-11-23/BL-TBL431/, findings listed untriaged in FINDINGS.md there (post-build#1 MED, ruled Q-H, fixed in a870bdf41). RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.691Z file_sha256=afc0be69484a965db80fd833396f29d8d079c870a9e2a38e85d9ac19ca82d113 prompt_sha256=d53dad0b9515a81b71f75dba7707ab6666afb85202fb78fe50ded99c0e514ac6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0380 "drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs:281 "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — when a whole list and a sections list of one file both resolve the whole list is kept and the sections list dropped, the reverse of RR-0380 Q1; the only pasted support is agent notes (orchestrator "rule in its plan the direction against RR-0380 Q1" and the 08_agents note), no operator reversal of Q1 is pasted — confirm the operator approved the plan ruling against Q1, or invert the filter so the sections list wins and the whole list is dropped.
+
+DEFER severity=MED — task Description "front-end kinds get surface-136 plus front-end and shared" — scripts/analysis/rule-lists.json ui-app "lists": ["eng-all"], (unchanged, only a "not": ["src/app/api/**"] added) — the ui-app row covers src/components, src/app and src/features (front-end product paths) yet stays on the whole engineering document, so web UI product tasks still resolve eng-all, not eng-front + eng-shared; K1 locks this in ("the web UI, surfaces, hooks and tests rows keep exactly eng-all") — split ui-app to eng-front + eng-shared (and cover the pg-import files such as src/features/leads/lib/get-lead-feed.ts with eng-back or a narrower row), or paste the ruling that keeps it whole until INPUTS.1 lands.
+
+REJECT — task Description "pipeline and by-law kinds get their handbook plus back-end and shared" — the by-law row is accused of not being sent eng-back and eng-shared — not a real issue: RR-0380 "by-law tasks gain no engineering rules" is an operator ruling, and the bylaw row correctly stays ["bylaw-133"].
+
+REJECT — task Description "sections 1, 8, 10, 12 front end" — eng-front is accused of lacking sections 8, 10 and 12 — not a real issue: RR-0380 "sections 8, 10, 12 to both sides" is the later operator ruling, and eng-shared carries "8. Next.js & TypeScript Constraints", "10. Frontend/Backend Boundary" and "12. Frontend Foundation Tooling" to both the front and back rows.
+
+MET — RR-0380 Q2 "sections 8, 10, 12 to both sides" — scripts/analysis/rule-lists.json eng-shared sections "8. Next.js & TypeScript Constraints", "10. Frontend/Backend Boundary", "12. Frontend Foundation Tooling" — 8, 10 and 12 ride eng-shared, which both the mobile row and the step/api rows resolve.
+
+MET — RR-0385 item 7 "this now serves teh engineering seat with the right sections for the task - front-end vs backend" — scripts/analysis/rule-lists.json eng-front "1. Architecture & UI Standards" and eng-back "3. Database Management & Scaling", "9. Pipeline & Script Safety" — the standards are split front vs back.
+
+MET — orchestrator "before `return result` (:278), add `result.lists = result.lists.filter(...)`" — scripts/analysis/rule-lists.mjs:281 — the de-dup line is placed before return.
+
+MET — orchestrator "one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed)" — src/tests/backlog/rule-lists.logic.test.ts "src/one.ts (imports compute) also gets the import row, and its whole list of docs/a.md drops the sections list of the same file" — the temp-table test exercises whole plus sections of one file, with the planted line-removal defect.
+
+VERDICT: PASS on compliance with the pasted clauses (two bounded MED risks deferred, no CRIT/HIGH)
+Clauses checked: 13   Unmet: 2
+Rules met: none
+
+---
+⏱  162198ms (162.2s)
+📊 Tokens — total: 50952, input: 17260, output: 33692, reasoning: 32787

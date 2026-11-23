@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.641Z file_sha256=840a1add753a0e5855a7c5187bd64f665816045a98605c877e5ac7e0768d1553 prompt_sha256=68c709b2aee38bce23ae57939b14b0f33f9b2a13a3e91e40cfe5d02584a4a314
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 08_agents back-compat clause "a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name." — docs/specs/00-architecture/08_agents.md:353 "The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it." — the new note drops eng-all from three rows but states no equivalent exception for lanes already launched on an `out-engineering-eng-all` brief (the acceptance shows "eng-all only: 39" resolving tasks), so a live lane may be demanded outputs its launch brief never named — add one sentence to the same note: a lane launched before this landing closes on the engineering outputs its launch brief named, and re-resolve is not applied retroactively
+
+DEFER severity=LOW — card Description "the engineering standards entry split by section into front-end, back-end and shared lists (sections 1, 8, 10, 12 front end" — scripts/analysis/rule-lists.json:32 "\"eng-front\": { \"file\": \"docs/specs/00_engineering_standards.md\", \"sections\": [\"1. Architecture & UI Standards\"]" — eng-front carries section 1 only, so 8, 10 and 12 reach the front only because every front row is currently paired with eng-shared; a future row taking eng-front alone silently loses them against the card's stated front-end set — state in the 08_agents note and lock in K1 that eng-front is only legal paired with eng-shared, or repeat 8, 10, 12 in eng-front
+
+DEFER severity=LOW — card Description "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — scripts/analysis/rule-lists.json:104 "\"lists\": [\"eng-all\"]," (ui-app row, no surface-136) — whether the INPUTS.1 condition was confirmed is not in the pasted context (cannot see), so compliance of this conditional cannot be confirmed either way from the material — record INPUTS.1's outcome in the task Implementation Notes so the condition is judged rather than assumed
+
+REJECT — card Description "pipeline and by-law kinds get their handbook plus back-end and shared" — accused of not attaching eng-back and eng-shared to the by-law row — RR-0380 as pasted says "by-law tasks gain no engineering rules" and the row is asserted byte-identical as the control ("expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);"), so the later ruling governs the stale card sentence
+
+REJECT — card Description "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — accused of leaving surface-126, surface-127, surface-128 and surface-135 on the mobile row — the clause is conditional on INPUTS.2 and the Implementation Notes say "The four surface specs are dropped by a separate card after task-430", so the drop is not this card's step 3 and 4
+
+REJECT — RR-0380 "drop the full engineering when arts can be sent" — accused of the de-dup restoring eng-all (46,613 characters) whenever a phone file and a test file both resolve — the pasted orchestrator instruction names that exact line and direction ("the whole list is kept", "no rule that a matched row asked for is lost"), and the acceptance reports "both eng-all and a sections list: none" among 104 resolving tasks
+
+REJECT — Spec 124 §2 Rule 1 "Nothing about a step's behaviour may live only in code" — accused of the de-dup rule existing only in rule-lists.mjs — Rule 1 governs step descriptor data and compute under the step corpus (checks, compute-shape, step-validate), while rule-lists.mjs is review tooling; the behaviour is nevertheless stated in the dated 08_agents note and locked by D1, S1 and the two planted-defect runs
+
+MET — Spec 124 §2 Rule 1 — scripts/analysis/rule-lists.json:33-34 — the section split is declared data ("eng-back" sections 3 and 9, "eng-shared" sections 2, 4 to 8 and 10 to 14), not names or offsets computed in code
+
+MET — orchestrator word-for-word de-dup instruction — scripts/analysis/rule-lists.mjs:282 — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" matches the pasted instruction byte for byte and sits immediately before "return result"
+
+MET — RR-0385 item 7 and the 08_agents note "the pipeline-step and library rows ... get `eng-back` and `eng-shared`" — scripts/analysis/rule-lists.json:88 — "\"lists\": [\"step-132\", \"airtight-124a\", \"airtight-v3-122\", \"airtight-v2-122\", \"airtight-122a\", \"eng-back\", \"eng-shared\"]"
+
+MET — RR-0385 item 7 "(ui-app no longer matches src/app/api)" — scripts/analysis/rule-lists.json:103 — "\"not\": [\"src/app/api/**\"]," on the ui-app row, with the API route still matched by the api-lib row
+
+MET — Spec 124 §2 Rule 13 gate F/G input freshness (generated artefacts current) — docs/reports/generated/rule-lists-by-kind.md:118 — "| total | 11 lists | | 194,014 | 11 |" recomputes exactly from 197,778 minus 46,613 plus 5,377 plus 37,472, and agents-s7-s11 moves 40,664 to 42,147 in both kinds that select it
+
+MET — 08_agents note "so each rule is sent once and no rule that a matched row asked for is lost" — src/tests/backlog/rule-lists-table.logic.test.ts:301 — the P1 test asserts every level-2 heading is in exactly one of the three lists and that the joined blocks equal the file text from the first heading
+
+MET — Cairn-Ground-P431 Q-H "the line now expects 'whole'" — src/tests/backlog/rule-lists.logic.test.ts:136 — "expect(ids(b).sort()).toEqual(['inc-F', 'whole']);" with "expect(ids(b)).not.toContain('first');" above it
+
+MET — RR-0380 Q4 and "every other row that had `eng-all` keeps it" — src/tests/backlog/rule-lists-table.logic.test.ts:276 — "expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);" alongside K1's eng-all-only assertions for web UI, surfaces, hooks and tests
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: 1, 3, 13
+
+---
+⏱  179106ms (179.1s)
+📊 Tokens — total: 46921, input: 26212, output: 20709, reasoning: 19076
