@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.456Z file_sha256=89fc0ad621bd1653118b816188715415a050b3a6b7f28847f3e5059fa4932068 prompt_sha256=efcafb194d1d6cf94dab5647414b8c3c23be7605698957f479e8a14383463f48
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 "Report meter stays in the lookup route" — plan item 2 "src/lib/parcels/lookup-flow.ts: runParcelLookup({ctx uid, access, q, parcelId, semi}) holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the ruling says the meter stays in the lookup route, the plan moves the meter decision into a lib module and cites no dated grounder resolution of RR-0331 anywhere in the plan — keep the meter decision in src/app/api/parcels/lookup/route.ts (return the facts the decision needs from the flow), or record the grounder's dated resolution of RR-0331 in the lane plan before lock.
+
+BUG severity=HIGH — task-383 Files "Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts" — plan items 1 and 2 "1. src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx) returns..." and "2. src/lib/parcels/lookup-flow.ts" — two lib files not on the card are created and the one lib file the card names, report-compute.ts, is never mentioned — either amend the card's Files line with the operator/grounder words that name the two new files, or place the gate and the flow in src/lib/parcels/report-compute.ts so the change stays inside the card.
+
+DEFER severity=MED — task-383 "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — plan item 4 "a new test file for the helper (three arms)" and "each with a red-then-green plant" — red-then-green is planned but the separate attacker run and its refused/STILL OPEN report are not in the build — add the attacker step and its reported outcome to build item 4 for the helper test and each re-pointed lock.
+
+DEFER severity=MED — task-383 "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan item 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — two existing enforcement pins are dropped with no pasted ruling naming the removal and no replacement plant, while the same item claims "same strength" for the rest — re-point both pins to the flow file with their own red plants, or cite the dated ruling that authorizes the drop.
+
+MET — 122 §5.5 conversion checklist "a step entering `converted[]` or `pending[]` with a purity finding is RED" — plan item 3 "No response, meter, log key or golden changes." — no step file, descriptor or converted[]/pending[] entry is edited, so step-validate's standard V2|V3 purity status cannot change for this diff.
+
+MET — 122 §5.5 "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**`" — plan item 3 "No response, meter, log key or golden changes." — the change writes only src/app and src/lib modules, so check-step-shape.mjs and compute-shape.yml see no new module in their scope.
+
+REJECT — 122 §5.5 clauses 1 to 4 (dispatch table, ctx.report, injected I/O seams, file order) — the change is accused of not supplying `{ [checkId]: fn }`, ctx.report and ctx.fetch/ctx.clock seams — the clause's stated scope is `scripts/lib/compute/**` and this change creates no module under that directory, so those shape rules do not govern a web route's lib module.
+
+REJECT — 122 §5.5 compute-literals paragraph "scans every `scripts/lib/compute/**` module for that closed rule set" — the change is accused of violating tunables-externalized by hard-coding "it holds the ACTIVE_SUBSCRIPTION_STATUSES test" — compute-literals.mjs's closed rule set and step-validate invariant #32 are scoped to scripts/lib/compute/** and do not reach src/lib/parcels/tool-gate.ts, so no pasted clause is broken by that constant.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  42787ms (42.8s)
+📊 Tokens — total: 20078, input: 11909, output: 8169, reasoning: 7183

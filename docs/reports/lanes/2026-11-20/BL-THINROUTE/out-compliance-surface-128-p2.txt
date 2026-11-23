@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.595Z file_sha256=9e0c31ac170ce4e5b23af65bd5079ba698f8c46e699dc52c3eb317d9d1a004fb prompt_sha256=6d36322e75588370538bcc98f474d26f25c3a3f6464d7641040f53199993abb5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — operator ruling RR-0331 "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — contract_parcels_lookup.descriptor.json "verbatim at :1432 \"2. y 1 a\"" (and the question itself quoted as "leave the meter where it is?" here vs "leaving it where it is" in the task plan) — the adjudicating operator line is transcribed two different ways in the same commit, so the deviation's authority cannot be verified from the record — re-quote one verbatim string, identically, in the task plan, the descriptor and the census mirror
+MET — R-01 "The parcel tool is its own metered product, product key **`parcel_tool`**" — src/lib/parcels/tool-gate.ts "if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) return 'parcel_tool';" — the product key, the one Spec 96 §10 status set and the metered arm are unchanged, only relocated
+MET — R-04 "`parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal)" — src/lib/parcels/lookup-flow.ts "parcelRef = String(row.parcel_id);" — the meter's subject key is still the matched municipal id, never request text, and the flow returns it to the route that meters
+MET — R-23 "a **`metering` ⇒ ledger-row check**" — src/app/api/parcels/lookup/route.ts "the meter and the log stay here (RR-0331)" — the meter decision and the `withTransaction(openReport)` call remain in the route, so the contract↔ledger join the check holds is untouched
+MET — R-13 "every page STATES THE COMPONENTS IT OWNS" / no descriptor-shape change — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — only `deviations[]` is edited, no ownership, archetype or profile field is added
+MET — §8 "`migrations/**` — this spec records rulings about schema, never schema" — diff file list — no migration file is added or edited by this change
+REJECT — R-29 "`cost_ms` is retired as a spelling" — accused of introducing a cost spelling — `computeMs` is the pre-existing LOAD.1 log field for the compute duration, carried across unchanged, not a declared check's `duration_ms` audit row
+REJECT — "No response, meter, log key or golden changes" — accused of adding the `requireQ` throw as new behaviour — the query schema guarantees exactly one of q | parcelId, and the previous `q!` path had no defined outcome for a missing q, so no reachable response, meter or golden changes
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+```
+
+---
+⏱  63448ms (63.4s)
+📊 Tokens — total: 42717, input: 29351, output: 13366, reasoning: 12683

@@ -15,6 +15,7 @@
 //   C8 types      the rows of the page's own building types are equal when the compute is cut to those types (measurement pinned; the entry runs all types)
 //   C9 current    a computed ungated lot has freshness verdict `current` and a non-null page
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
@@ -240,10 +241,28 @@ describe('C6 the fence: pool, projection, switch, the miss rule; lazy core and c
     expect(BAD_IMPORT.test('@/lib/admin/report-preview-live/stored-page')).toBe(true);
     expect(BAD_IMPORT.test('@/lib/db/client')).toBe(false);
   });
-  it('the route is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
-    const walk = (d: string): string[] => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []));
-    const importers = walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(read(f)));
-    expect(importers).toEqual(['src/app/api/parcels/lookup/route.ts']);
+  // The real walk and filter, parameterised by the tree root so the plant runs the same code on a planted tree (Spec 128 section 4.4).
+  const importersOf = (root: string): string[] => {
+    const walk = (d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
+    return walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(fs.readFileSync(path.join(root, f), 'utf8')));
+  };
+  const FLOW_ONLY = ['src/lib/parcels/lookup-flow.ts'];
+  it('the flow file is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
+    expect(importersOf(ROOT)).toEqual(FLOW_ONLY); // STD.ROUTE (task-383): the flow file moved out of the route; the route imports the flow
+  });
+  it('RED plant: a planted second importer fails the lock; the control tree passes it (same walk and filter)', () => {
+    const mk = (extra: boolean): string => {
+      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
+      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
+      put('src/lib/parcels/lookup-flow.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
+      put('src/lib/parcels/report-compute.ts', "export const x = 1;\n");
+      if (extra) put('src/app/api/parcels/other/route.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
+      return tmp;
+    };
+    const control = mk(false); const planted = mk(true);
+    expect(importersOf(control)).toEqual(FLOW_ONLY);
+    expect(importersOf(planted)).not.toEqual(FLOW_ONLY);
+    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
   });
 });
 

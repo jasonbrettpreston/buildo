@@ -20,6 +20,26 @@ import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
 const ROUTE = path.resolve(__dirname, '../app/api/parcels/lookup/route.ts');
 const LIB = path.resolve(__dirname, '../lib/parcels/consumer-lookup.ts');
 const route = () => fs.readFileSync(ROUTE, 'utf8');
+// STD.ROUTE (task-383, Standard 10.3): the flow lives in src/lib/parcels/lookup-flow.ts and the one gate in tool-gate.ts; the meter, the log and the buckets stay in the route (RR-0331).
+const FLOW = path.resolve(__dirname, '../lib/parcels/lookup-flow.ts');
+const GATE = path.resolve(__dirname, '../lib/parcels/tool-gate.ts');
+const flow = () => fs.readFileSync(FLOW, 'utf8');
+const gate = () => fs.readFileSync(GATE, 'utf8');
+/** The gate lock: the route calls the helper, answers forbiddenSubscription on null, and does so before the flow call (the flow holds every DB read). */
+const gateBeforeFlow = (src: string): boolean => {
+  const g = src.indexOf('await parcelToolAccess(');
+  const f = src.indexOf('await runLookupFlow(');
+  return g > -1 && f > -1 && g < f && /parcelToolAccess\([^)]*\);?\s*\n\s*if \(access === null\) return forbiddenSubscription\(\)/.test(src);
+};
+/** The miss lock: the dangling-id miss (match null, parcel null, resolution no_match) is built in the flow. */
+/** The no-resolver lock: the route imports nothing from the admin resolver module. */
+const importsResolver = (src: string): boolean => src.includes("from '@/lib/admin/parcel-lookup'");
+/** The flow-purity lock: the flow file imports no logger, no entitlement, no meter or usage code (the meter and the log stay in the route, RR-0331). */
+const flowImports = (src: string): string[] => [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1] as string);
+const flowIsPure = (src: string): boolean => flowImports(src).every((m) => !/(^|\/)(logger|entitlements|usage)(\/|$|-)|openReport|meter/.test(m)) && !/\bopenReport\b|\blogInfo\b|\blogWarn\b|\blogError\b/.test(src.replace(/^\s*\/\/.*$/gm, ''));
+/** Eng standards 2.3: the flow holds no non-null assertion (the input is narrowed, not asserted). */
+const hasNonNullAssertion = (src: string): boolean => /[A-Za-z0-9_)\]]!(?=[,.);\]\s])/.test(src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\/.*$/gm, ''));
+const flowHoldsMiss = (src: string): boolean => /match:\s*null[\s\S]*parcel:\s*null[\s\S]*resolution:\s*'no_match'/.test(src);
 const lib = () => fs.readFileSync(LIB, 'utf8');
 
 describe('route source-shape locks (Spec 100 §3)', () => {
@@ -35,9 +55,15 @@ describe('route source-shape locks (Spec 100 §3)', () => {
   it('server-side subscription gate — 403 branch present before DB work (Spec 100 §5)', () => {
     const src = route();
     expect(src).toContain('forbiddenSubscription');
-    expect(src).toContain('ACTIVE_SUBSCRIPTION_STATUSES');
-    // The gate fires before resolveAddress / fetchParcelById (no DB touch for a lapsed account).
-    expect(src.indexOf('forbiddenSubscription')).toBeLessThan(src.indexOf('resolveAddress'));
+    // The gate fires before the flow call (no DB touch for a lapsed account); the helper holds the one status set (STD.ROUTE).
+    expect(gateBeforeFlow(src)).toBe(true);
+    expect(gate()).toContain('ACTIVE_SUBSCRIPTION_STATUSES');
+    expect(src).not.toContain('ACTIVE_SUBSCRIPTION_STATUSES.has');
+  });
+  it('RED plant: a route that runs the flow before the gate, or drops the 403, is caught', () => {
+    expect(gateBeforeFlow("const access = await parcelToolAccess(pool, ctx);\n  if (access === null) return forbiddenSubscription();\n  await runLookupFlow({});")).toBe(true);
+    expect(gateBeforeFlow("await runLookupFlow({});\n  const access = await parcelToolAccess(pool, ctx);\n  if (access === null) return forbiddenSubscription();")).toBe(false);
+    expect(gateBeforeFlow("const access = await parcelToolAccess(pool, ctx);\n  await runLookupFlow({});")).toBe(false);
   });
   it('wrapped in withApiEnvelope + uses the envelope helpers', () => {
     const src = route();
@@ -57,7 +83,34 @@ describe('route source-shape locks (Spec 100 §3)', () => {
   it('unknown parcelId is a 200 miss, never a 404 (Spec 100 §2.6)', () => {
     // The route reserves 404 for nothing — it maps a dangling id to match:null.
     expect(route()).not.toMatch(/notFound\(/);
-    expect(route()).toMatch(/match:\s*null[\s\S]*parcel:\s*null/);
+    expect(flow()).not.toMatch(/notFound\(/);
+    expect(flowHoldsMiss(flow())).toBe(true);
+  });
+  it('the flow file holds no non-null assertion (q is narrowed, never q!)', () => {
+    expect(hasNonNullAssertion(flow())).toBe(false);
+  });
+  it('RED plant: a non-null assertion is caught; the control passes', () => {
+    expect(hasNonNullAssertion('await resolveAddress(q!, { a: 1 });')).toBe(true);
+    expect(hasNonNullAssertion('const x = row!.id;')).toBe(true);
+    expect(hasNonNullAssertion('await resolveAddress(requireQ(q), { a: 1 }); if (a !== b && c != d) {}')).toBe(false);
+  });
+  it('the flow file imports no logger, no entitlement and no meter code', () => {
+    expect(flowIsPure(flow())).toBe(true);
+  });
+  it('RED plant: a flow that imports the logger, entitlements or openReport is caught; the control passes', () => {
+    expect(flowIsPure("import { resolveLotMap } from '@/lib/parcels/lot-map';")).toBe(true);
+    expect(flowIsPure("import { logInfo } from '@/lib/logger';")).toBe(false);
+    expect(flowIsPure("import { openReport } from '@/lib/entitlements';")).toBe(false);
+    expect(flowIsPure("import { x } from '@/lib/entitlements';")).toBe(false);
+    expect(flowIsPure("import { a } from '@/lib/parcels/lot-map';\nlogInfo('t', 'm', {});")).toBe(false);
+  });
+  it('RED plant: a route that imports the admin resolver again is caught; the control passes', () => {
+    expect(importsResolver("import { resolveAddress } from '@/lib/admin/parcel-lookup';")).toBe(true);
+    expect(importsResolver("import { runLookupFlow } from '@/lib/parcels/lookup-flow';")).toBe(false);
+  });
+  it('RED plant: a flow with no dangling-id miss is caught', () => {
+    expect(flowHoldsMiss("response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' };")).toBe(true);
+    expect(flowHoldsMiss("response = { match: resolved.match, parcel: payload, resolution: 'unique' };")).toBe(false);
   });
 });
 
@@ -81,11 +134,13 @@ describe('consumer lib is read-only + reuses the admin resolver (no fork)', () =
     expect(lib()).not.toMatch(/\b(INSERT INTO|UPDATE\s+\w+\s+SET|DELETE FROM)\b/);
   });
   it('reuses the admin resolver internals — never forks the normalizers', () => {
-    const src = route();
+    const src = flow();
     expect(src).toContain("from '@/lib/admin/parcel-lookup'");
     expect(src).toMatch(/resolveAddress,\s*fetchParcelById,\s*fetchCoaProjects/);
     // MF-53: the map read is its own import line (src/lib/parcels/lot-map.ts, the one SQL home of the map), never the admin resolver's.
     expect(src).toContain("import { resolveLotMap } from '@/lib/parcels/lot-map';");
+    // The route imports no resolver at all: it calls the flow (Standard 10.3).
+    expect(importsResolver(route())).toBe(false);
     // No SQL / normalizer parsing lives in the consumer lib (assembly only).
     expect(lib()).not.toMatch(/SELECT\s/i);
     expect(lib()).not.toContain('normalizeAddressNumber');

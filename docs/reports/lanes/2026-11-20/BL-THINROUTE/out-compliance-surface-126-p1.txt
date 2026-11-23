@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.583Z file_sha256=1dc9cae460f81f5ebbf95446b7071126ddd3f9f910786109592f197e550983bb prompt_sha256=89e49ccb546193b9c81c8e696e4b8f73e187162d88d08159679165fb6780336e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — §0b item 9 "No rule, no decision on the side. Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling (Spec 135 rule 1: a different party adjudicates)." — task-383 Implementation Plan step 5 "Owed to ALLOWED_REACHERS when both branches are on the board (the gates branch file, not edited here) ... Whichever branch lands second carries it." — the deferred compute-reach allow-list edit has no owning row, no operator ruling and no tracked home, so on the merged tip the new one-hop caller stays unnamed in ALLOWED_REACHERS with nobody carrying it — name the carrying row (or add one) in the plan and the REPORT, and cite it, per item 9.
+
+BUG severity=MED — §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md` ("A task not listed here is not done", `.cursor/MCFRONTEND-QUEUE.md:3`)." — task-383 Notes "2026-11-20 taken on the board at lane launch (lane BL-THINROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-thinroute, branch wf1/inc1b-thinroute), RR-0240" — the change edits the McFrontend descriptor tree (contract_parcels_lookup descriptor and census, scope A parcel_product) with no MCFRONTEND-QUEUE row cited anywhere in the plan or notes — cite the owning MF row (or land one) in the task and the commit trailer.
+
+BUG severity=MED — §0b item 2 "red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7)" — src/tests/parcels-lookup-page.logic.test.ts "expect(read('src/lib/parcels/lookup-flow.ts')).toContain("import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';");" — this re-pointed lock ships with no RED plant, unlike every sibling re-point in the same diff, so a typo that fails the pin is only proven one way — add a both-directions plant (a string without the import fails, the real file passes).
+
+DEFER severity=LOW — §2 "source of record `scripts/surfaces/_schema/surface-census.json`, drift-locked by `src/tests/surface-registry.infra.test.ts`" — diff header "+++ b/scripts/surfaces/_schema/census/contracts.json" with no docs/reports/generated/127-surface-registry.md in the diff — the new deviation is written to a path the spec does not name as source of record and the derived report is not updated, so the drift lock or the rendered registry is stale — confirm census/contracts.json is the file the registry reads (or edit surface-census.json) and regenerate the report.
+
+DEFER severity=LOW — §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited. ... The operator's own words with the date and the record path" — contract_parcels_lookup.descriptor.json "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"" — a two part answer ("2. y 1 a") is recorded against one quoted question, so the basis of half the adjudication cannot be recovered from the landed record — quote both :1431 questions alongside the answer.
+
+MET — §2 "the generated surface registry" / contract unit by reference — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — the deviation is recorded on the CONTRACT descriptor of the contract whose gate and flow changed, in the scope partitioned tree, not in prose.
+
+MET — §0b item 6 "The operator's own words with the date and the record path" — contract_parcels_lookup.descriptor.json "date": "2026-11-20" with the RR-0331 verbatim — the ruling that keeps the meter in the route is dated, verbatim and cited at the point of use.
+
+MET — clause quoted in the material, docs/specs/00_engineering_standards.md §10.3 "API routes must be thin" — src/lib/parcels/lookup-flow.ts "export async function runLookupFlow(input: ..." — the resolve through boundary-parse flow is now a lib function, and the entry itself cites the standard at its head.
+
+MET — §0b item 2 "Plan with its tests written in" — task-383 "## Implementation Plan" step 4 "Tests: re-pointed to the flow file with a plant through the real walk/filter" — the plan lands with the test list before the code.
+
+MET — §0b item 10 "one render smoke per archetype per platform (FE-31, FE-33); the gate" — src/tests/parcel-tool-gate.logic.test.ts "G7 RED plant: a route that writes its own status test again is caught" — the shared gate carries a red-first lock with a planted defect.
+
+REJECT — §0b item 4 "Existing components only" — accused of building two new modules — lookup-flow.ts and tool-gate.ts are lib functions named on the card's Files line, not components, bindings or libraries.
+
+REJECT — §2.2.1 P1 "two resolvers over the same parcel, diverging independently" — accused of entrenching the admin tracer — the flow reuses one resolver and adds no second data path; the retained lock "reuses the admin resolver internals — never forks the normalizers" pins the shared path, not a parallel one.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0 (5 DEFER, none CRIT/HIGH)
+
+---
+⏱  90136ms (90.1s)
+📊 Tokens — total: 48363, input: 29497, output: 18866, reasoning: 17504

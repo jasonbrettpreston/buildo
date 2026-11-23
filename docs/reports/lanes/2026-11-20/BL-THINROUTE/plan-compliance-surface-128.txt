@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.476Z file_sha256=8e32f92dc9e9a75c5068b6de5efbbb919cb9bfabe8d18f65f2d4fa47cc03b5bb prompt_sha256=eab5490efecc751c273ea8cd4d2a9922dd689559494e53351fb616e6f8749e28
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0331 "Report meter stays in the lookup route" — task-383 material, Lane plan step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the meter decision and its log line move out of route.ts into src/lib/parcels/lookup-flow.ts, and the plan never cites RR-0331 or pins a single caller — the ruling's stated home changes by relocation, and a second caller would double-meter.
+
+DEFER severity=MED — task-383 brief "Lines moved, not new behaviour: no response, meter or golden may change" — task-383 material, Lane plan step 1 "Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work; lot-size route calls it after the settings switch (same order as today)" — the plan asserts "same order as today" only for lot-size and gives no measured position for the lookup gate at lookup/route.ts:79-83, so a lapsed user with an invalid query could move from 400 to 402 — the new position is not proven equal to today's, so the no-response-change claim is unproven.
+
+DEFER severity=MED — RR-0317 "Plan: review enforcement only" (operator "d. just add the review enforcement not the others") — task-383 material, Task "a separate agent attacks it, results reported as refused or STILL OPEN" — the plan names red-then-green plants and a helper test file but not the run through the real hooks, the separate adversarial pass, or the refused/STILL OPEN report — the review enforcement the operator approved is not stated in the plan.
+
+DEFER severity=LOW — Spec 128 §4.4 "a rule without a lock is not yet a rule" — task-383 material, Lane plan step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — two existing locks are removed with a report note and no replacement lock or dated ruling — the behaviours they held now rest on prose, bounded because six other locks are re-pointed.
+
+REJECT — Spec 128 rule 16 (MF-16 dated note) "the three projection directories, `src/lib/surfaces/report/`, `src/components/report/` and `src/app/admin/report-preview/`, found by directory walk" — the change is accused of needing the no-maths scan because it touches src/lib/parcels/report-compute.ts — src/lib/parcels/ is not one of the named projection directories, so the rule 16 AST scan does not reach it.
+
+MET — Spec 128 §2 rule 2 "The client is just glass" — task-383 material, Lane plan step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the flow moves server side into src/lib/parcels/ and no client computation is added.
+MET — Spec 128 §2 rule 9 "Banned write needs a ledger row" — task-383 material, Lane plan step 3 "No response, meter, log key or golden changes" — the metered lookup keeps its meter and no new unmetered write is added.
+MET — Spec 128 §2 rule 12 "a surface declares what the user sees when it fails" — task-383 material, Lane plan step 2 "it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — the refusal mapping and the internalError catch stay, so the failure posture is preserved.
+MET — Spec 128 §2 rule 15 "parity between render targets is a comparison, not a discipline" — task-383 material, Lane plan step 3 "No response, meter, log key or golden changes" — holding the goldens constant leaves parity untouched.
+MET — Spec 128 §4.4 "the same commit that records a ruling adds a both-directions test" — task-383 material, Lane plan step 4 "the six locks are re-pointed to the flow file in the same commit, same strength" — each re-pointed lock carries its plant in the same commit.
+MET — RR-0278 "Report meter counts on report production only" — task-383 material, Lane plan step 4 "parcel-tool-meter.logic:215-223" — the meter lock is re-pointed at the flow file, holding the count point.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  127909ms (127.9s)
+📊 Tokens — total: 56938, input: 31655, output: 25283, reasoning: 24282

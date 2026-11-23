@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.557Z file_sha256=c84e49a3fd39c7bdad532704a46c19c46e568f82981037a64c513b9511f30558 prompt_sha256=fc66ccc422a50d0800b3022e6cdb0d0f4e84873c90cd1a84faea5243e18a1ec1
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+MET — §7 (the parcel gate) "Under R-01 it becomes an entitlement lookup **and** gains a meter." — src/app/api/parcels/lookup/route.ts:72 "const access = await parcelToolAccess(pool, ctx);" with "import { openReport } from '@/lib/entitlements';" retained — the per-product lookup is now one helper and the metered path stays in the route — nothing outstanding.
+MET — MF-45 dated note "subject_key the matched `parcels.parcel_id` ... the raw search text is never stored" — src/lib/parcels/lookup-flow.ts:72 "parcelRef = String(row.parcel_id);" — the meter subject is the DB municipal id read from the fetched row, never `q`; the module logs and returns no request text.
+MET — MF-45 dated note "Rows are server-written through the owner connection (D1), so there is no insert policy for `authenticated` either." — src/lib/parcels/lookup-flow.ts:12 "This module imports no meter, entitlement or usage code and writes nothing" — the write stays in the route's own `openReport`/`withTransaction` call, not in the moved flow.
+MET — §9 core logic 3 "Evaluate `guards` — session, entitlement, flag, permission, rate bucket — before any projection is assembled." — src/app/api/parcels/lookup/route.ts:73 "if (access === null) return forbiddenSubscription();" preceding "await runLookupFlow({ q, parcelId, semi })" — guards still run before any projection work, and parcel-lookup-gate.infra.test.ts:161 covers a thrown gate read as a 500 with nothing metered.
+MET — §6.1 step 4 "no column outside the declared set appears in the contract's response projection" — src/lib/parcels/lookup-flow.ts:102 "const body = ConsumerParcelLookupResponseSchema.parse(response);" — the strict boundary parse is moved intact and still runs before the route's meter, so a Tier-3 leak charges nothing.
+REJECT — §6.1 step 1 "Declare the table in git, as descriptor data" — the change edits `scripts/surfaces/_schema/census/contracts.json` by hand rather than regenerating it — not a real issue: the edit is byte-identical to the descriptor edit and the pasted clause governs `database.tables[]`, not that census artifact.
+REJECT — §6.1 step 2 "Hand-author the SQL migration under the existing `scripts/migrate.js` conventions" — the change ships no migration alongside a descriptor edit — not a real issue: no table, column, index, RLS row or CHECK vocabulary changes, so steps 1-5 have no trigger.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  58111ms (58.1s)
+📊 Tokens — total: 42812, input: 30935, output: 11877, reasoning: 11248

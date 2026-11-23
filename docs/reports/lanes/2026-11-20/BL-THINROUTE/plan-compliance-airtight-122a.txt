@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.460Z file_sha256=c7c44b78ef78d1b735ea2311766612000062a4d622d62cdcd6d2a639e0a48fe3 prompt_sha256=f5870e7a4e7f9c2b71e55fe180e00d39e9f3855bab2e8140064ccbd5da9d6d25
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Appendix §A26 G0/G2 "The purity codes run over compute **and its AST `require` closure**" and "A relation not in the step's `checks[].reads` ∪ IRT ∪ OW. Compute text gets **no** RUNNER_OWNED or system exemption" — lane plan "src/lib/parcels/lookup-flow.ts: runParcelLookup({ctx uid, access, q, parcelId, semi}) holds resolve, map, fetch, held/stored/compute page" and card Files "src/lib/parcels/report-compute.ts" — the plan moves SQL-bearing flow (fetch, stored read) into the directory that holds the compute core and never states whether the new file sits inside G0's closure or outside it, nor which relations the moved read touches, so G1/G2 have no answer for the new site — fix: state that lookup-flow.ts requires the compute and is not required by it (outside the closure) and name every relation the moved read touches, or paste the G1/G2 answers into the report.
+
+DEFER severity=MED — Appendix §A26 "a cross-cutting promise is declared data, generated and gated, and is never re-discovered by a manually commissioned inventory" — lane plan "ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report." — the new caller of the compute core is not declared in the reach list in the same commit and the debt lives only in prose, so nothing answers for it — rationale: bounded, land the list entry with the move or file it as a programme item so the C3 tripwire can see it.
+
+DEFER severity=MED — Appendix §A27 item 5 "every key the compute emits is a declared `emits[]` entry (gate C, measured at capture)" — lane plan "No response, meter, log key or golden changes." — the unchanged-key claim is asserted with no measurement named, and gate C only measures at capture, which this change does not have — rationale: name the golden or response test that proves the emitted key set is unchanged.
+
+DEFER severity=MED — Appendix §A27 item 13 "A test that needs Postgres is `*.db.test.ts`, under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — lane plan "a new test file for the helper (three arms)" and "parcelToolAccess(pool, ctx)" — the helper takes a pool, so the test needs Postgres or an explicit mock, and the plan names neither the path nor the suffix — rationale: name the file and its path at plan-lock so item 13 can be checked.
+
+MET — Appendix §A26 G5 compute-direct-write — lane plan "No response, meter, log key or golden changes." and "report-compute.ts" left unedited — the compute core is untouched, so no new DML text becomes reachable from compute and the closed seam set is unchanged.
+
+MET — Appendix §A26 G13 compute-no-swallow — lane plan "the catch to internalError stay in the route" — no catch body moves into the flow file or any compute-adjacent file, so no new swallow site exists.
+
+MET — Appendix §A26 G7 compute-decides — lane plan "meter decision" placed in lookup-flow.ts, a caller rather than a compute module — the verdict comparator leaves the route for a lib file, never entering compute, so the alias table sees no new `ctx.config` operand.
+
+REJECT — Appendix §A26 "Proof of no runtime change": "The landing changes gates, ledger rows and specs only — no runtime code" — accused of changing runtime code — this clause governs the A26 gate landing itself, not this task, which is a runtime refactor of route handlers into src/lib.
+
+REJECT — Appendix §A27 preamble "Every new step and every conversion walks this list before its first capture" — accused of skipping items 1 to 4 and 6 to 12 (pending status, RLS, bind limit, invalidators, explained-diffs, capture flags, recapture replay) — this change is neither a new step nor a conversion and has no descriptor or capture, so those items have no site to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  56182ms (56.2s)
+📊 Tokens — total: 24033, input: 13994, output: 10039, reasoning: 9108

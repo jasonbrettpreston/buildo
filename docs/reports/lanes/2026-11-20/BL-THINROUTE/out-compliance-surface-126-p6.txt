@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.575Z file_sha256=4ff8130c74595205e7446739bff0571d7558307ed6ba44d9dd5002e52536ae83 prompt_sha256=56b4ee28b8c810562f1d9eb4c367d8f6b4f7823b70238796ff0745046b5bf853
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling cited as the adjudication of the recorded deviation, in the material's own words "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:827 "asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"" — one operator line is quoted two ways in one commit, so the deviation's adjudication cannot be verified against a single verbatim — quote :1432 once, exactly, in the plan, the descriptor and the census.
+
+DEFER severity=MED — §13 "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — src/tests/parcel-lookup-gate.infra.test.ts:166 "throw new Error(`unexpected pool query: ${text}`);" — any unmatched query text also throws and the test still sees 500, so it proves nothing about the entitlement read firing — assert the entitlements query text was actually issued before the 500 is accepted.
+
+DEFER severity=MED — §13 "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — src/tests/consumer-parcel-lookup.infra.test.ts:99 "expect(importsResolver(\"import { resolveAddress } from '@/lib/admin/parcel-lookup';\")).toBe(true);" — the new source-shape locks (gateBeforeFlow, importsResolver, flowHoldsMiss, hasNonNullAssertion, flowIsPure) are proven on string literals, never on a mutated copy of the real file — run each new lock through the temp-tree/tampered-file form used by the sibling importer locks, or record the deviation.
+
+DEFER severity=LOW — §13 "descriptor↔`surface_descriptors` bidirectional seed drift" — scripts/surfaces/_schema/census/contracts.json:22820 "\"why\": \"Unmetered on the transitional lead_gen arm..." — the census copy is edited by hand and no generator change is visible in the diff, so whether the entry survives regeneration (and keeps the drift lock green) is unverified — confirm the census is hand-maintained or regenerate it through its script.
+
+DEFER severity=LOW — §14 "every `scripts/**/*.descriptor.json`" (operating boundary, out-of-scope files) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:825 "\"from\": \"docs/specs/00_engineering_standards.md §10.3..." — the diff edits a file this spec's boundary puts outside its own scope — get the owning slot's ack for the deviation entry or state why contract descriptors are exempt from that fence.
+
+REJECT — engineering standards §10.3 as quoted by the card "API routes must be thin ... Business logic belongs in `src/lib/`, not in route handlers." — the change is accused of leaving the meter, refusal mapping, log line and rate buckets in src/app/api/parcels/lookup/route.ts — the operator ruled the meter stays there (RR-0331 "2. y") and the deviation is declared with adjudicated_by and date in both the descriptor and the census, so it is a ruled, recorded deviation, not an unmet clause.
+
+MET — §11b.7 D-4(a) "a `lead_gen`-only holder keeps the App A shelf unmetered until MF-50 removes that path" — src/lib/parcels/tool-gate.ts:15-17 — the one Spec 96 status set and the two arms are carried over unchanged and now shared by lookup and lot-size.
+MET — §11b.7 D-6(a) "Limit reached is the 403 class with code `REPORT_LIMIT_REACHED`" — src/app/api/parcels/lookup/route.ts:46 — reportLimitReached and the meter block are untouched by the hunk, only the flow lines are removed.
+MET — §11b.7 "The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05)" — src/app/api/parcels/lookup/route.ts:94-101 — the removed block ends before the meter, so every count and flag is still computed and served by the route.
+MET — card "Lines moved, not new behaviour: no response, meter or golden may change" — src/lib/parcels/lookup-flow.ts:52-96 — the resolve, map, row, lot form, held, stored/compute, view and boundary-parse lines are a line-for-line move with the same literals.
+MET — §13 "descriptor↔`surface_descriptors` bidirectional seed drift" — scripts/surfaces/_schema/census/contracts.json:22822 and contract_parcels_lookup.descriptor.json:829 — the same new deviation entry with identical text lands in both copies.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  83980ms (84.0s)
+📊 Tokens — total: 46960, input: 29823, output: 17137, reasoning: 15958

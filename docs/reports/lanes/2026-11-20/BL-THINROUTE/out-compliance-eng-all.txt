@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:13:48.735Z file_sha256=abfc0d08f9e27bc5d9035ac0ed8e6da564ccfb0976b64c8f21f44bcf3bf9b1e9 prompt_sha256=bdc4e415e18eaf94d68f0b82edc6e9e4be3c2ba09bf8302a479f5327a0e8cc0a
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — eng-standards §2.1 "returns a safe HTTP 500 without leaking the raw `.message`" — src/tests/parcel-lookup-gate.infra.test.ts:168 "expect(r.status).toBe(500);" — the new unhappy-path test stops at status, null data, no fetch and no meter; nothing asserts the thrown "db down" text is kept out of the envelope, so the no-leak half of the clause is untested — add `expect(r.body.error).not.toContain('db down')` (or the shared no-leak helper) to that test.
+
+DEFER severity=MED — eng-standards §10.3 "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route." — src/lib/parcels/lookup-flow.ts:17 "import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';" — the new src/lib module now depends on the route folder, the inverse of the mandated direction, and the modified route's shared interface still is not under src/lib — move the lookup types to src/lib/parcels/types.ts and import them from both the route and the flow.
+
+DEFER severity=MED — eng-standards §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — src/tests/parcel-tool-gate.logic.test.ts:2 "Red first: the helper did not exist." — the only red-first evidence for the new helper and the shared gate is that comment; the committed RED plant cases run green inside the passing suite (they prove the lock bites, not a pre-code failure) — paste the actual failing run (G1/G2 or the 403-before-DB case, red output) into the task notes.
+
+DEFER severity=LOW — eng-standards §5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/parcel-tool-gate.logic.test.ts:12 "const DB = {} as never;" — the Queryable and the entitlement row fed to the mock (`mockResolvedValueOnce({ status: s })`) are untyped inline mocks — add a typed entitlement-row factory in src/tests/factories.ts and type the mock's return.
+
+DEFER severity=LOW — task card "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan step 5 "Owed to ALLOWED_REACHERS when both branches are on the board" — the reach scan that must declare src/lib/parcels/lookup-flow.ts as a one-hop caller of report-compute.ts is absent from this diff and no test covers a missing entry, so nothing detects the undeclared caller — land the ALLOWED_REACHERS edit (or a tracked owed-task id plus its lock) with whichever branch lands second.
+
+MET — §10.3 "Business logic belongs in `src/lib/`, not in route handlers." — src/app/api/parcels/lookup/route.ts:94 "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — resolve, map, lot row, page and the boundary parse now live in src/lib/parcels/lookup-flow.ts.
+
+MET — §10.3 duplicated gate now one helper — src/lib/parcels/tool-gate.ts:13 "export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null }): Promise<ParcelToolAccess | null> {" called at src/app/api/parcels/lot-size/route.ts:56 "if ((await parcelToolAccess(pool, ctx)) === null) {".
+
+MET — operator ruling "2. y 1 a" (leave the meter where it is) — src/app/api/parcels/lookup/route.ts:93 "the meter and the log stay here (RR-0331)" — the meter decision, the openReport call, the refusal mapping and the log line remain in the route.
+
+MET — §8.1 route files export HTTP handlers only — src/app/api/parcels/lookup/route.ts "export const GET = withApiEnvelope(async function GET(request: NextRequest) {" — the diff adds no non-handler export to either route; the helper and its type live in src/lib.
+
+MET — §2.3 no non-null assertion — src/lib/parcels/lookup-flow.ts:33 "function requireQ(q: string | undefined): string {" with "if (q === undefined) throw new Error(...)" — q is narrowed, not asserted, and a lock pins it.
+
+MET — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — scripts/surfaces/_schema/census/contracts.json "adjudicated_by": "operator 2026-11-20, RR-0331" and the identical deviation in scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — both records carry the same new deviation, and the stale route.ts:66-68 citation is re-pointed to src/lib/parcels/tool-gate.ts.
+
+MET — §14 "Every source/test file's SPEC LINK points at the spec **AND the section (§N)**" — src/lib/parcels/tool-gate.ts:1 "// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §5 ... docs/specs/00_engineering_standards.md §10.3".
+
+MET — §5.5 fence preserved, not dropped — src/tests/customer-report-read.logic.test.ts "const EXPECTED = ['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'];" — the importer list runs the real walk and filter and moves to the flow file with a planted-defect control; parcels-lookup-page's import-line pin is re-pointed, not deleted.
+
+REJECT — §10.3 "Business logic belongs in `src/lib/`, not in route handlers." — the change is accused of leaving the 9-state meter chain, the refusal mapping, the log line and the two rate buckets in route.ts — the meter is retained by the pasted operator answer "2. y 1 a" to "leave the meter where it is?", a per-request logInfo is required in the route by §13.3, and the remaining lines are error mapping and rate-limit config, not business logic.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+
+---
+⏱  90496ms (90.5s)
+📊 Tokens — total: 51437, input: 30219, output: 21218, reasoning: 19741

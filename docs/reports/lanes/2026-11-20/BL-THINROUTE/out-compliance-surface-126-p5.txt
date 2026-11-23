@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.594Z file_sha256=a015fa09ecdc6a515292fd6515f47e51942b1cbfeca44a4e31608b021fabd9af prompt_sha256=e9df265162348d35c459d7878f867ffd09eb560184a4a792bd053dc27e061bc8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §11b.2 Descriptor row "by one Spec 128 §4 escalation; the validator, types and registry regenerate" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)" — a CONTRACT descriptor gains a deviations entry whose `from` is a rule outside this spec and outside the pasted context, and I cannot see that the descriptor schema or SV-DESC accepts a non-Spec-126 `from` — either take the new kind through the Spec 128 §4 route or keep the departure in the task and plan only, not in the descriptor.
+
+DEFER severity=MED — operator ruling RR-0331 as quoted in this change ":1432 \"2. y 1 a\"" — backlog/tasks/task-383 "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — the same record line 1432 is quoted with two different verbatims, so the exact words that authorise "the meter stays in the route" are not settled — re-read MORNING-DECISIONS.md:1431-1433 and use one verbatim in the plan, the notes and both deviation copies.
+
+DEFER severity=LOW — Spec 126 §11b.2 Locks row "generated-only incl. the vendored manifest (FE-02)" — scripts/surfaces/_schema/census/contracts.json "+        \"date\": \"2026-11-20\"" — the census copy of the same deviation is hand-edited in the same commit and I cannot see whether the census is generated from the descriptors — regenerate the census with its script and commit only generated output, or state in the notes that the census is hand-maintained.
+
+MET — Spec 126 §11b.2 Goldens row "REPORT goldens are unchanged" — backlog/tasks/task-383 "3. No response, meter, log key or golden changes." — no golden, fixture or snapshot file appears in the diff, so no REPORT golden is restated.
+
+MET — Spec 126 §11b.2 Gate row "the REPORT arms and the success line are unchanged" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — only the deviations array is edited; no arm, report or success-line text changes.
+
+MET — Spec 126 §11b.4 "Web and admin | Mantine 9" — src/lib/parcels/lookup-flow.ts "import { resolveLotMap } from '@/lib/parcels/lot-map';" — the two new lib files import only existing in-repo modules, no package or library entry is added.
+
+MET — Spec 126 §11b.3 pages table (mobile_parcel_detail, MF-44 and MF-48) — src/app/api/parcels/lookup/route.ts "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — no surface page, route under src/app/(maxbld) or archetype binding is touched, so the page table and its queue rows stand.
+
+MET — Spec 126 §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its frontend path globs; nothing else" — src/tests/parcel-tool-gate.logic.test.ts "G7 RED plant: a route that writes its own status test again is caught" — no archetype first use is added; the new plants are route source-shape locks, not surface locks.
+
+REJECT — Spec 126 §11b.2 pipeline "descriptor → content → generator → standard library component" — the change is accused of hand-writing flow logic outside the pipeline — the pipeline governs MaxBLD surfaces; this is an API route whose governing rule (engineering standards 10.3) is not in the pasted context, so it is not mine to rule.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  58631ms (58.6s)
+📊 Tokens — total: 41436, input: 29045, output: 12391, reasoning: 11440

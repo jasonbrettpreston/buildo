@@ -17,6 +17,7 @@
 //   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
 //   T11 fe.27      (task-442, FINAL.7 plan section 3 T2) a parcels column the page binds but the one static parcels read does not select fails at load
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -390,13 +391,32 @@ describe('T9 parity: one resolver for the admin preview and the customer read', 
   });
 });
 
-describe('T10 importers: report-page.ts is server code, imported by the lookup route and the LOAD.1 compute entry only', () => {
-  const walk = (d: string): string[] => (fs.existsSync(path.join(ROOT, d)) ? fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
+describe('T10 importers: report-page.ts is server code, imported by the lookup flow file and the LOAD.1 compute entry only', () => {
+  const walkIn = (root: string, d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walkIn(root, path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
   const IMPORTS = (src: string): boolean => /from '[^']*lib\/parcels\/report-page'/.test(src);
-  it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
-    const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
-    expect(files.length).toBeGreaterThan(500);
-    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/report-compute.ts']); // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
+  /** The real walk and filter over a tree root (the plant runs it on a planted tree). */
+  const pageImporters = (root: string): { n: number; list: string[] } => {
+    const files = [...walkIn(root, 'src'), ...walkIn(root, 'mobile/src'), ...walkIn(root, 'mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
+    return { n: files.length, list: files.filter((f) => IMPORTS(fs.readFileSync(path.join(root, f), 'utf8'))) };
+  };
+  const EXPECTED = ['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']; // STD.ROUTE (task-383): the lookup flow file, not the route, reads the page; LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
+  it('no component, mobile source or other lib file imports it; the non-test importers are the flow file and the compute entry', () => {
+    const r = pageImporters(ROOT);
+    expect(r.n).toBeGreaterThan(500);
+    expect(r.list).toEqual(EXPECTED);
+  });
+  it('RED plant: a planted route importing report-page fails the lock; the control tree passes it (same walk and filter)', () => {
+    const mk = (extra: boolean): string => {
+      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
+      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
+      for (const f of EXPECTED) put(f, "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
+      if (extra) put('src/app/api/parcels/lookup/route.ts', "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
+      return tmp;
+    };
+    const control = mk(false); const planted = mk(true);
+    expect(pageImporters(control).list).toEqual(EXPECTED);
+    expect(pageImporters(planted).list).not.toEqual(EXPECTED);
+    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
   });
   it('the fence is not vacuous', () => {
     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);

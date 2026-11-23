@@ -161,8 +161,16 @@ describe('the lookup payload', () => {
     });
     expect(r.success).toBe(false);
   });
+  // The once-per-hit lock counts the call sites in the flow file; the plant shows zero and two calls are both seen.
+  const readLotFormCalls = (src: string): number => (src.replace(/^\s*\/\/.*$/gm, '').match(/\breadLotForm\(/g) ?? []).length;
+  it('RED plant: the once-in-flow lock sees no call and a doubled call; the control sees one', () => {
+    expect(readLotFormCalls('const lotForm = await readLotForm(ref);')).toBe(1);
+    expect(readLotFormCalls('const a = 1;')).toBe(0);
+    expect(readLotFormCalls('await readLotForm(a); await readLotForm(b);')).toBe(2);
+  });
   it('the route reads the view once per hit and logs the outcome, never the answer text', () => {
-    expect(ROUTE).toContain('readLotForm(');
+    // STD.ROUTE (task-383): the readLotForm( token pin on the route is dropped (the read moved to the flow file, which keeps it once per hit); the log pin stays on the route.
+    expect(readLotFormCalls(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8'))).toBe(1);
     expect(ROUTE).toMatch(/lot_form_unsure/);
   });
 });

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.582Z file_sha256=037ca9961810c7c22e153fea328adab43f59535f5992836572c885fbbc5d0485 prompt_sha256=3433f997bfd31a385686eea07e6f7c6c4ab700aab38d24ddc699674505d901cb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §5.6 "Spec 100 has no sub-section literally numbered §2.6" and "cited by item, not by a section number that does not exist." — src/lib/parcels/lookup-flow.ts:1 "// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (API), §2.6 (a miss is a valid 200), §3.2 (the whitelist, the nullable `page`)" and src/lib/parcels/lookup-flow.ts:73 "(§2.6)" — the new file, written by this change, cites a section number the governing spec rules does not exist, so the clause is unmet exactly where the comment was rewritten — cite §2 item 6 (the miss contract) as §5.6 does, and carry the same fix into the reworded body comment.
+
+DEFER severity=MED — Spec 126 §4 deviations "`{from, why, adjudicated_by, date}`" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "verbatim at :1432 \"2. y 1 a\"" against this same diff's card "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — one ruling at one cited line is quoted two ways, so `adjudicated_by` cannot name the adjudication truthfully in both files — settle one verbatim against MORNING-DECISIONS.md:1432 and copy it byte-identically into the descriptor, the shard and the card.
+
+DEFER severity=MED — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — src/tests/consumer-parcel-lookup.infra.test.ts "const flowIsPure = (src: string): boolean => flowImports(src).every((m) => !/(^|\/)(logger|entitlements|usage)(\/|$|-)|openReport|meter/.test(m))" — the flow's import graph, the gate-before-flow order and the once-in-flow count are asserted by test-local regexes whose RED plants feed string literals, so the plants prove the regex, not the repo's real files or module graph — route these through the same real-file walk this commit already uses in importersOf and pageImporters, or one shared module both the check and the plant import.
+
+DEFER severity=MED — Spec 126 §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers." — NONE (the diff touches no golden) — the change edits contract_parcels_lookup.descriptor.json while its own card states "No response, meter, log key or golden may change", so if that descriptor file is inside `fingerprint_files[]` every golden pair for this contract is stale, and I cannot see the fingerprint list to rule it out — name the fingerprint inputs for this contract and, if the descriptor is one, recapture the pair in the same commit or state why deviations are excluded.
+
+MET — Spec 126 §4 deviations — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:822-828 — the added entry carries exactly `from`, `why`, `adjudicated_by`, `date`, the unchanged shape.
+MET — Spec 126 §5.0 consequence 3 "The shards are temporary." — scripts/surfaces/_schema/census/contracts.json:22816-22827 — the identical deviation block is added to the shard and to the emitted descriptor, so the both-directions equality the swap proof rests on still holds.
+MET — Spec 126 §3.1 "a second copy of a profile is a second thing to keep in sync, which is the defect this whole spec exists to retire." — src/lib/parcels/tool-gate.ts:10-16 — the gate written twice (lookup route, lot-size route) is now one helper both routes call, and `usesSharedGate` forbids a route re-declaring `ACTIVE_SUBSCRIPTION_STATUSES`.
+
+REJECT — Spec 126 §5.0 ONE-SOURCE rule "nothing in it is a *second declaration*" — accused: writing the same deviations block into both the census shard and the emitted descriptor is a second declaration — not a real issue: consequence 3 makes the shard the parallel-research copy and the emitted descriptor the source, with the generator's both-directions `--check` as the proof they are equal, so both must carry the block.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  93414ms (93.4s)
+📊 Tokens — total: 50324, input: 30351, output: 19973, reasoning: 18920

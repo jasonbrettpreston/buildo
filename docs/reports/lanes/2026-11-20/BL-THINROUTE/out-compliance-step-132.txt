@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.600Z file_sha256=11f6426ca0ece5f3172e2ad52c27dad596b89d2acc237340bee0075169d2b05a prompt_sha256=4f63524fb21a71caa943c5cdbc8e327f49f35d4f098fdf292bedbdee85c18cb8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+REJECT — core.1 (a step is three files, descriptor plus compute plus thin shell) — accused of moving flow code without declaring a descriptor or compute module — the diff touches only src/app/api/parcels/*, src/lib/parcels/*, src/tests/* and surface-contract JSON, no pipeline step under scripts/steps/ exists in it, so the step contract has no subject here.
+REJECT — core.4 (#25 census agrees with descriptor) — accused of hand-editing a census file "scripts/surfaces/_schema/census/contracts.json" — the pasted clause names "step-archetype-census.json" for steps; the file edited here is the surfaces contract census of a surface descriptor, which no pasted clause governs.
+REJECT — core.8 (every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero) — accused of new undeclared literals — the moved body introduces no new constant (only "Date.now()" calls and the existing 500 ms route constant, which the diff does not add), and the clause is scoped to step, gate, admin-surface and tool numbers, none of which the diff adds.
+REJECT — x-captures.1 / R-AC (every capture has a recapture.json entry) — accused of a change with no golden capture — no step, no capture and no POST/PRE artifact is touched by the diff; the capture regime is step-scoped and this change is an API route refactor.
+REJECT — x-rulings.4 (each ruling committed verbatim as docs/reports/decisions/<date>-<slug>.json, each approved decision becomes a register row citing <log stem>#<decision id>) — accused of citing an unresolvable ruling "RR-0331 (backlog/decisions/decision-116)" — the citation is of the form the clause describes and its resolution is a Ground-truth question for the tree, not for this lens; I cannot see backlog/decisions/decision-116 in the pasted material and will not guess.
+REJECT — x-verify.1 / R-EZ (a fresh lane verifies every landing lane's claims read-only, report at docs/reports/verification/<branch>.md) — accused of no independent verification report — the clause binds an integrate-N branch, the diff is a single lane's work with "branch wf1/inc1b-thinroute" and no integrate commit is in the material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+
+Note on scope (not a finding): the pasted context block says "(no pasted context provided)" and the RULE LIST pasted above is Spec 132 step standard, whose every clause is scoped to a pipeline step, a step descriptor, a capture or a chain run. The material under review is task-383 STD.ROUTE (thin API routes plus a shared tool-gate helper), which contains no step, descriptor, capture or chain run, so no pasted clause binds it. The governing text for this change (docs/specs/00_engineering_standards.md §10.3 and operator ruling RR-0331 / decision-116) is cited inside the material but is not pasted in the context, so it is not mine to judge.
+
+---
+⏱  17870ms (17.9s)
+📊 Tokens — total: 36082, input: 32800, output: 3282, reasoning: 2567

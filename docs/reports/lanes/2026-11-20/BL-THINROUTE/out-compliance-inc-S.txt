@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.577Z file_sha256=79c35178d4616c4d6db33327bd9b5a918e92c42991aba827f534e4347c4d0f15 prompt_sha256=387ff5e3899de44dc6bc23dfd31d631e45342d4235e446b513ef5741fb14ec7f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+No governing spec clause or operator ruling was pasted in the context block ("(no pasted context provided)"). The only rule text visible anywhere in this prompt is the material's own quotation of rules (task card, descriptor deviations, code comments). Grading the change against its own self-quotation is circular and is not permitted, so no clause is checked and none is certified.
+
+```
+DEFER severity=LOW — Engineering Standards 10.3, not pasted "docs/specs/00_engineering_standards.md:229" — task-383 Implementation Plan "Rule: engineering standards 10.3 (docs/specs/00_engineering_standards.md:229) \"API routes must be thin — validate input, call a lib function, return the result.\"" — the governing text of 10.3 is quoted only by the change, so the declared deviation (meter, refusal mapping, log line and two rate buckets left in route.ts) cannot be measured against the actual clause — paste docs/specs/00_engineering_standards.md:228-229 in the context block
+DEFER severity=LOW — Operator ruling RR-0331 / decision-116, not pasted "asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"" — contract_parcels_lookup.descriptor.json "The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331)." — the question and answer are cited but not pasted, so whether "2. y 1 a" authorises keeping the meter, the 9-state chain and withTransaction(openReport) in the route, and whether it supersedes the earlier "resolve through meter and log" resolution, cannot be confirmed — paste decision-116 and MORNING-DECISIONS.md:1431-1432
+DEFER severity=LOW — Operator 2026-11-20 "Let the grounder resolve them all as long as the result is compliant", not pasted "MORNING-DECISIONS.md:1476" — task-383 Notes "Operator 2026-11-20, verbatim: \"Let the grounder resolve them all as long as the result is compliant\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476)." — the scope of the delegation ("as long as the result is compliant") is itself the clause that would make the narrowing lawful; its text is not pasted and its compliance yardstick is not identifiable — paste :1476 with the surrounding entries of 2026-11-20
+DEFER severity=LOW — Spec 126 R-01 / R-23 and MF-45 D-4 a, not pasted "\"from\": \"Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row\"" — contracts.json deviation now reads "src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line" — the metering and ledger-row obligation, and its adjudicated unmetered lead_gen exception, are cited but not pasted, so neither the retained meter nor the re-pointed exception can be checked — paste Spec 126 R-01/R-23 and operator 2026-11-11 MF-45 D-4 (a)
+```
+
+VERDICT: PASS on compliance with the pasted clauses (none pasted, nothing unmet, nothing certified)
+Clauses checked: 0   Unmet: 0
+
+---
+⏱  14238ms (14.2s)
+📊 Tokens — total: 27300, input: 24534, output: 2766, reasoning: 1975

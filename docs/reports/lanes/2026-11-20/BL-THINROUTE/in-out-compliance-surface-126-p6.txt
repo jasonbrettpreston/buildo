@@ -1,0 +1,924 @@
+LIST surface-126 sha256:1d9f37176d58437e1e9db63f8b99dec39ad00f6efb56dcc0b15968be7188a0cb material sha256:78d68c63f140e989a6cb6e81c7dc8ad5d34da6aa15069107d0552b899087a987 part 6 of 6
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 6 of 6. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 11b.7 MaxBLD page set (operator 2026-11-09)
+
+> Dated addition 2026-11-09 (MaxBLD page set · McFrontend queue · lane R; M-246, prior text kept, nothing above changed; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator direction 2026-11-09: the MaxBLD page set" and the two operator lines below it; source: the master list the operator approved, `maxbld-pages.html`, and the page inventory `pages-inventory.json`, read at `67d47542f`). This subsection commits the page set, as the last message below asks. §11b.3 stays the descriptor table; this subsection is the page list, its connections and the rules the operator gave for it.
+
+Operator, verbatim (four messages):
+
+- "some of these pages are confused between the MaxBLd and Buildo. MaxBld for the appt (1) Search Page (2) Search Page if two parcels selected (3) Report Page (4) Report Detail Page Still Needed (1) Account Profile Info (2) Saved Reports (provide Notifications to these lots COA updates) Web Only (3) Login Web: (1) Landing Page (2) Login (3) all the mobile pages (4) check-out (ie buy / cancel subscription / trial (5) onboarding is option - builder/realtor (but not necessary. Can you think of another others?"
+- "A. just expanded B. Im not sure but sometimes on a phone you get logged out - I dont know why - if you buy on the web - you would need to log in once on your phone. c. should come later. Let's get it working. your right we need 1-6 as well. Can you make a master list of all the MAxblf pages required and perhaps how they are connected as well. We need to add this to a spec. maybe even the McFront-end. also when should I provide the layout for these pages? Let's organize what we have here into a master list and how they connect and anything unique about them. however , it is normally done"
+- "As part of the sunscriptions we want to offer a free trial"
+- "Looks great! Commit the page set - we already have a brand spec - they should work together"
+
+Reading (record, same section): A = the report detail is the expanded card; B = login in the app too, the app keeps the session; C = PDF/share later; "1-6" = sign-up and password reset, Terms and Privacy, delete account in Account, notification settings in Account, the report-limit state on the Report page, a support contact link.
+
+**Ownership.** Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look (colours, type, tokens). A page here takes its look only from 117 via the generated theme (Spec 117 §7 dated note 2026-11-09; §11b.4). Spec 117 §6 already holds per-page layout guidance: §6.1 the search page (S-002, incl. the suggestion chips), §6.2 the shelf (S-004: Lookup · Tracked Lots · Account) and §6.3 Tracked Lots (S-072, its tokens and layout). Per-page layouts live in Spec 117 §6; the page set lives here. The page name "Tracked Lots" follows the app (`mobile/app/(app)/parcel-tool/_layout.tsx:12`, `tracked.tsx:7`) and Spec 117 §6.2-§6.3.
+
+**Phone app.** Routes are today's routes in the Buildo app's `parcel-tool` group and the shared `(auth)` group; the group moves to the MaxBLD app with MF-49.
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| A1 | Sign in, sign up, reset password | `/(auth)/sign-in`, `/(auth)/sign-up`, `/(auth)/confirm?code=`; reset: not set | shared with Buildo; a customer who bought on the web signs in once on the phone; the app keeps the session, and an unexpected sign-out is a bug | MF-49 |
+| A2 | Search | `/(app)/parcel-tool` (index) | address entry, Toronto only; shows the reports left this month | MF-35 |
+| A3 | Choose your parcel | `/(app)/parcel-tool/disambiguate?q=&kind=` | shown when an address matches two or more parcels; pick on a map or list; a stub today (Back button only) | MF-35 |
+| A4 | Report | `/(app)/parcel-tool/[parcelId]` | scenario cards with headline numbers; each card expands to every field (no detail page); one Street View photo, the photo space collapses when none is available; per-scenario ad slot and report images from admin; each new report counts toward the monthly limit, with a "limit reached" state; a Save button; PDF and share later | MF-48 (also MF-20 ad slot, MF-38 images, MF-39 photo, MF-45 limit) |
+| A5 | Tracked Lots (saved reports) | `/(app)/parcel-tool/tracked` | the lots the customer tracks (the Save button on the Report adds one); a CoA update on a tracked lot sends an alert and marks the lot; today example rows, no API | MF-51 |
+| A6 | Account | `/(app)/parcel-tool/account` | profile, plan and reports used; notification settings for the CoA alerts; delete account (app-store rule); support, Terms, Privacy, sign out; plan changes link to the web, no purchase in the app | MF-52 |
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-53 · McFrontend queue · lane E; operator, verbatim: ""choose your lot" and "address issues" screens should be built now and we should only be using the new report obviosuly"): row A3 is built by MF-53 (the stub is gone): one address over several lots shows the lots on a map with letters and cards (area, frontage, zoning) and opens the chosen lot through the same report route as a single match; an address found with no linked lot shows "No lot linked yet" with the pin and faint neighbouring lots; several such addresses the message only; more than 10 lots on one address "This address has many lots. Add a unit number or pick a nearby address."; an intersection "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected at open. "Report incorrect lot match" arrives with MF-46. W5 stays MF-44 (a web map needs a web map library outside §11b.4).
+
+**Web (maxbld.ca).**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| W1 | Landing | `/` | the front door: what MaxBLD does, Sign in and Start trial; today it still sells Buildo ("Find Construction Leads") | MF-46 |
+| W2 | Sign in, sign up, reset password | `/login`; `/signup` (listed public in `src/lib/auth/route-guard.ts:46`, no page); reset: not set | the same account as the app, MaxBLD wording | MF-46 |
+| W3 | Checkout | `/subscribe`, `/subscribe/success`, `/subscribe/cancel` | buy, start a trial or cancel through Stripe-hosted Checkout and Customer Portal; sells Buildo lead-gen today | MF-47 |
+| W4 | Search | not set (under the nested `(maxbld)` layout) | A2 rendered for the browser from the same descriptor | MF-44 |
+| W5 | Choose your parcel | not set (same) | A3 for the browser | MF-44 |
+| W6 | Report | not set (same) | A4 for the browser, same rules | MF-44 |
+| W7 | Tracked Lots | not set | A5 for the browser | MF-51 |
+| W8 | Account | not set | A6 for the browser; Manage plan opens the Stripe portal directly | MF-52 |
+| W9 | Terms, Privacy | not set | plain pages; the app stores need a privacy link and Stripe needs terms | MF-46 |
+| W10 | Onboarding: builder or realtor | not set | optional, later; not in the first version | none (later) |
+
+**Admin pages that feed MaxBLD.**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| D1 | Report preview | `/admin/report-preview` | shows the report exactly as customers see it; the only page already on the shared report renderer | none (exists) |
+| D2 | Media library | not set | upload report images and advertiser creatives | MF-37 |
+| D3 | Ads and placements | not set | which offer appears in each scenario's ad slot | MF-40 |
+| D4 | Parcel cost | `/admin/parcel-cost` | checks the cost numbers the report shows | none (parked, §11b.3) |
+
+**Connections** (solid = a link the customer follows; content = reaches the page from elsewhere):
+
+- Landing -> Sign in / sign up / reset (front door)
+- Sign in -> Checkout (no plan yet, web)
+- Sign in -> "Subscribe at maxbld.ca" message (no plan yet, app; no purchase in the app)
+- Checkout -> Search (plan bought)
+- Sign in -> Search (has a plan)
+- Search -> Report (one parcel matches)
+- Search -> Choose your parcel (two or more match) -> Report
+- Report -> Tracked Lots (Save) -> Report (open a tracked lot)
+- CoA update on a tracked lot -> Tracked Lots (alert, content)
+- Report -> "Limit reached: upgrade on the web" (monthly limit reached)
+- Search -> Account (menu)
+- Account -> Checkout (manage plan, web only)
+- Account -> Terms / Privacy / Support
+- Admin media library -> Report (report images, content)
+- Admin ads and placements -> Report (ad slot, content)
+
+**Rules from the rulings:**
+
+1. The report detail is the expanded card; there is no separate detail page (A).
+2. Login is on the phone too: buy on the web, sign in once on the phone, and the app keeps the session (B).
+3. No purchase inside the app; plan changes link to the web (D-11, unchanged).
+4. PDF and share come later (C).
+5. The subscription offers a free trial (Stripe trial on the price, MF-47). Owed before MF-47 builds: the trial length, whether a card is required up front, and the report allowance during the trial.
+6. The basic plan allows 15-20 reports a month; the exact number is owed (MF-45).
+7. One Street View photo per report; when none is available the report still shows and the photo space collapses (operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; MF-39).
+8. Delete account and notification settings live in Account (MF-52).
+9. Terms, Privacy and a support contact are required (MF-46 web; linked from Account).
+10. Onboarding (builder or realtor) is optional and later; no row now.
+11. Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35); (2) Report, the card order and highlights only, since the report schema sets its contents (MF-48, MF-44); (3) Landing, Sign in and Checkout (MF-46, MF-47; Stripe supplies the checkout screens); (4) Tracked Lots and Account, once their rows exist (MF-51, MF-52). A rough sketch or an annotated screenshot is enough; the standard components set the look.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): rules 5 and 6 are answered for the report allowance. The basic plan allows 20 reports a month (record "Operator rulings 2026-11-10 (fourth message): report count, expo-linking") and the trial allows 20 (record "Operator rulings 2026-11-10 (second message): MF-53, free trial, report review"). Both numbers are logic variables, `parcel_tool_report_limit_plan` and `parcel_tool_report_limit_trial` (seed group "MaxBLD Plan", min 1, max 1000), listed and edited in the existing Admin Control Panel (operator, verbatim, 2026-11-11, relayed by the orchestrator: "we should be able to change the number of reports per month in the amdin"); the meter reads them and refuses to serve outside the seed bounds (fail closed). The count resets on the billing date, `entitlements.current_period_end`, else on the monthly date of `entitlements.created_at` (D-2 a). A lot counts once per period; re-opening it is free (D-3 a). A `parcel_tool` holder is metered everywhere; a `lead_gen`-only holder keeps the App A shelf unmetered until MF-50 removes that path (D-4 a). A trial takes the trial allowance; active, past due and admin-managed take the plan allowance; there is no unlimited state (D-5 a). Limit reached is the 403 class with code `REPORT_LIMIT_REACHED`, fields `reportsLimit` and `resetsOn`, and no report data (D-6 a). The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05). These rulings also answer small-pages items 6 and 7. The trial length stays with MF-47. Rules 5 and 6 above are unchanged.
+
+> Dated note 2026-11-11 (M-246, prior text kept, nothing above changed; rulings landing · McFrontend queue · lane R; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the 2026-11-11 entries named per item; the working standard §0b items 6 and 8). The operator's 2026-11-11 rulings on the page set, each verbatim. The MF-65, MF-66, MF-70 and MF-72 rows are added by the queue docs commit b7cdf1e3c (not yet on origin):
+>
+> 1. **Rule 3 amended: in-app purchase.** Operator, verbatim: "a" (after the App Store Review Guidelines 3.1.1 / 3.1.3(b) were explained, the operator having asked "1. i dont understand - people will buy from our website and then dowload - is that okay? 2. that's fine"). The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same `parcel_tool` entitlement; Google Play billing policy for Canada is checked first; an MF-49 decision list item, queued as MF-70. Conflict check: this replaces rule 3 "No purchase inside the app" (D-11) and the A6 cell "no purchase in the app" for the app's purchase path; the later operator ruling governs. Until MF-70 lands, the app shows the ruled MF-52 D-5 (a) text. Item 2 ("that's fine"): account deletion offers "delete now" beside the 30-day window, and deleting during the free trial never triggers the first charge (App Store 5.1.1(v)); queued as MF-65.
+> 2. **Rule 5, the trial and checkout (MF-47).** Operator, verbatim: "all a - we should be able to change the number of reports per month in the amdin" (record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, bottom): D-2 yes (the D-8 trigger is met); D-3 (a) a trial only for an account that never had a MaxBLD plan; D-5 (a) the trial length lives in one admin-editable setting (`parcel_tool_trial_months` = 1) and each checkout sends the trial end to Stripe, so the Stripe price carries no trial (this amends rule 5 "Stripe trial on the price"); D-6 (a) Stripe "trialing" maps to `trial` in the one shared mapping, the row-claim rule unchanged; D-7 (a) a check for an existing subscription before checkout, with (b) as the follow-up MF-66; D-1: the operator sets the Stripe values in admin. The reports-per-month allowance is editable in admin. Small-pages item 4, operator "4 y": Stripe's trial-ending email is turned on, and the line "We'll email you before your trial ends" is shown once the Stripe documentation confirms that email fires for a per-checkout trial end.
+> 3. **Rule 9: support, Terms and Privacy.** Operator, verbatim: "We haven't done the landing yet for MAxbld or can show it to me? 1 y 4 y 6 just use [the operator's own address, held out of the repo] for now 7 yes to both 8. you write and validate it with an agent" (record `~/Buildo-scratch/mcfrontend/small-pages-v2/DECISIONS.md`, bottom). Item 6: the Help & Support inbox is ONE admin-editable setting, set by the operator to the address given "for now"; no page, content file or spec types the address. Item 8: the orchestrator drafts Terms and Privacy and an independent agent validates them (`~/Buildo-scratch/mcfrontend/legal-v1`); a lawyer review before launch stays owed (MF-72; MF-58's lawyer check unchanged). Item 1: the tagline "Lot Intelligence" is signed off for every sign-in page and Search (Spec 117 §2.2, OD-B2 dated note of this date).
+> 4. **A3 / W5 choose your lot, and the address-issue states.** Item 7, "yes to both": state (i), no lot linked, as drawn; state (ii), more than ten lots, reads "This address has many lots. Add a unit number or pick a nearby address." Operator, verbatim: "a) - as per where things stand \"choose your lot\" and \"address issues\" screens should be built now and we should only be using the new report obviosuly": both build now (MF-53).
+> 5. **Only the new report.** Same words: the MaxBLD flow uses only the v21 report in the shared renderer (§11a.7, FE-34); the old hand-built report screen is not used in MaxBLD.
+> 6. **Internal live preview (a).** Same words, option (a): an admin-only internal preview of the full flow on real lots, read from the stored Layer 3 results of increments 1-4, behind a switch that is off for customers. Customers see nothing live until MB-44. This pulls an internal admin-only slice of MB-44 forward by operator ruling; the customer-facing MB-44 stays where it is in increment order (McBylaws queue MB-44 dated note of this date).
+> 7. **W1 Landing (MF-46).** Audience: real estate agents (operator, verbatim: "Let's turn our attenention to the landing page - We are targeting real estate agents." ...). The trust lines are ruled: four words or fewer, past tense, true (operator, verbatim: "1-9 these are incredibley long sentences - we need four words each or less"); labels are editable content and the numbers are read from data, changeable without code (operator, verbatim: "looks good we should be able to change these as we go."). The five lines as ruled: "496,536 lots scanned", "4,356 by-law rules searched", "427,077 buildings measured", "194,110 builds examined", "27,759 map areas checked" (operator, verbatim: "Pushing. 1. change review for scanned 2. ok 3. yes 4. builds doesn tmean new builds - it means something is built 5. 27759 map areas checked" and "id like to keep builds for now"; accuracy note kept: active permits and CoA applications include work not built yet). The headline and the line under it are NOT ruled: the operator rejected the draft ("This is the worst landing page ive ever seen. ...") and asked for research on each section and the layout; the options stay pending. The numbers follow FE-05 (read from data, never typed).
+> 8. **One public address.** Operator, verbatim: "Teh web address will just be maxbld.ca - is that okay?" and "5. yes and yes recommend" (record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md`): maxbld.ca (apex only) is the one address of the MaxBLD web product; buildo.com stays the Buildo product (card D-9). MF-46 D-8 is landed (a9f89373a, 0b2964a0c: one same-origin guard `src/lib/auth/safe-redirect.ts`); MF-46 adds only the MaxBLD branch (fallback the search page, §11b.3 `web_login`). D-9 is dropped: no preview host list; the pages are reviewed on maxbld.ca once attached, before announcement. D-3: `src/middleware.ts`, the new `src/lib/auth/host-policy.ts` and the landed `src/lib/auth/safe-redirect.ts` join the protected list in one MB-67 owner commit before the MF-46 middleware commit.
+> 9. **Tracked Lots and Account (MF-51, MF-52).** MF-51, operator "D-A a": MF-51's migration adds only the `favourite_scenario_key` column (record `~/Buildo-scratch/mcfrontend/MF-51/DECISIONS-v2.md`); D-B is answered by MF-48 D-2 (a). MF-52, operator "D-1 a, D-3 y, D-4 y as long as they are complaint and we have grounded the claims" and "a" (D-2) (record `~/Buildo-scratch/mcfrontend/MF-52/DECISIONS.md`): D-1 (a) delete works for every account (the profile row is created if missing, with MF-47 D-4); D-2 (a) the Account form binding honours read-only fields, prefilled from the read contract; D-3 (a) a deleted account cannot open billing (403 `ACCOUNT_DELETED`); D-4 (a) no data-export step, access requests go through Help & Support (PIPEDA Principle 4.9).
+
+> Dated note 2026-11-14 (M-246, prior text kept; MF-47 · McFrontend queue · lane B1; operator, verbatim: "I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded" (2026-11-14); record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, "Ruled 2026-11-14 under the operator's acceptance", and the seat `~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md`; build plan `~/Buildo-scratch/mcfrontend/MF-47/build-plan.md`): **Rule 5 (the trial and checkout, MF-47) as built.** Amends nothing above; it records the second ruling round. (1) One trial setting for both plans: `parcel_tool_trial_months` (1, bounds 1-12) is sent as `subscription_data.trial_end` on each checkout (Stripe's 48-hour floor refused in code); the Stripe price carries no trial (this restates the note above that amended rule 5, "Stripe trial on the price"). (2) Basic and Pro are two Stripe Products; the price ids and the portal configuration id are admin settings, empty until the operator sets them (migration 219 pattern); an unset, non-`price_` or unmapped price refuses with a named code and no Stripe call. (3) HST/GST/PST through Stripe Tax automatic, behind the setting `stripe_tax_enabled` (0 until the operator has added the registrations in the Stripe dashboard). (4) The Customer Portal opens with the MaxBLD configuration (Switch plan on, the two Products listed, trial kept on a plan change; Stripe offers no scheduled downgrade between two Products). (5) Hard stop at the allowance stays (cap 0). The overage row (extras, consent page, cap, reporter) comes after; its first decision is the Stripe mechanism (billing meter vs pending invoice items): the seat found the meter path loses late events, keys events to the customer and blocks plan changes in the portal. No sweep attaches a metered item to live subscriptions. (6) The consent text is versioned content (`src/lib/stripe/overage-consent.content.json`, version PLACEHOLDER; the final sentence is an operator value and the text goes to the lawyer list). (7) Quality: the meter query limit is 5000 ms as a setting (a pool-wide limit only after measuring). Server actions only; the plans, success and cancel pages are a separate ruled row. Locks: `src/tests/migration-322-plan-checkout.infra.test.ts`, `src/tests/parcel-checkout.infra.test.ts`, `src/tests/parcel-webhook.infra.test.ts`, `src/tests/db/mf47-checkout.db.test.ts`.
+
+**Outside the MaxBLD set.** Buildo's lead-gen pages are not MaxBLD pages and are not listed above: web `/dashboard`, `/builders`, `/builders/[id]`, `/permits/[id]`; mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`, `/(app)/map`, `/(app)/settings`, the flight board `/(app)/flight-board` and `/(app)/[flight-job]?id=`; the trade onboarding `/(onboarding)/` screens (`profession`, `path`, `address`, `supplier`, `first-permit`, `terms`, `complete`, `manufacturer-hold`). Admin pages other than D1-D4 are estate admin, not MaxBLD pages.
+
+> Dated sub-note 2026-11-09 — **Report page (W6/A4)** (MaxBLD report page · McFrontend queue · push-17 lane; M-246, prior text kept, nothing above changed). Operator, verbatim: on the agreed brief, "This looks like it"; then "teh rear suite should be an add one to other scenarios". Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md` (last entry); the agreed brief `~/Buildo-scratch/mcfrontend/REPORT-LAYOUT-v2.md` (2026-11-04) and the later rulings listed with it in `~/Buildo-scratch/mcfrontend/layouts/REPORT-STITCH-SUMMARY.md`.
+>
+> 1. **Page.** The lot card, then one card per scenario of the Spec 78 §P5.1 closed set, in catalogue order, as each scenario's rows land.
+> 2. **Rear suite.** An add-on inside the other scenario cards, never its own card (Spec 78 §P5.1 "Rear-suite add-on (every row)"). This replaces "Rear suite (5)" in REPORT-LAYOUT-v2 §A.2; no Spec 78 change.
+> 3. **Card frame** (REPORT-LAYOUT-v2 §C, same for every scenario): headline, confidence badge and reason, as-of-right per option, "+X m² with a CoA" (an estimate, after the as-of-right line, never the headline; §11a and the Q-MF7 a rules), photos, CoA decisions for this scenario, then More detail (collapsed).
+> 4. **Placement** (D0 SIMPLIFIED, 2026-11-09, recorded in the same record): one ordered headline list per scenario in `scripts/surfaces/_schema/report-v2-seed/row-presentation.json`; a row not listed is detail, in catalogue order; no priority numbers and no groups. This replaces the six tiers of REPORT-LAYOUT-v2 §C ("Tier is data").
+> 5. **Field names.** Taken from the field generator `~/Buildo-scratch/mcfrontend/fields/extract-fields.mjs` (read-only on origin) and its summary builder `build-stitch-summary.mjs`; every field binds to a DB field (§11a.1, Q-MF3). The brief and the summary are references, not copied into the repo.
+>
+> Dated note 2026-11-10 (MF-53, prior text kept, items 1-5 unchanged). Operator, verbatim: "they need the address but not a map - they already know where it is..".
+>
+> 6. **Lot card location.** The lot card shows the address and no map. This amends REPORT-LAYOUT-v2 §B row 2 "Address / map pin": the lot-card location fields (`parcel.lot.centroid_lat`, `parcel.lot.centroid_lng`, `parcel.lot.outline_geojson`) and the map embed (the FE-21 `external_embed` map tiles) are dropped from the lot card.
+>
+> Dated note 2026-11-11 (MF-57 page table, brief v4 open items 1-5; M-246, prior text kept, items 1-6 unchanged; rulings landing · McFrontend queue · lane R). Operator, verbatim: "push complete 1.a 2. a 3. did the neighbors build bigger - we can tell the difference between detached homes, houseplexes and rear suites correct? these should be allocated to the right scenario. your question is whether the summary answer should match the cards. We should always have something here correct - reach farther depending on the scenario (houseplexes we need to reach farther - because its relevant althought its farther away - becuas there are fewer of them.  4. yes 5. yes" and "as well as secndary suites". Record: `~/Buildo-scratch/mcfrontend/fields/REPORT-LAYOUT-BRIEF-v4.md`, "Open for the operator" and the two entries at its end; `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the same two entries.
+>
+> 7. **Size panel rows with no stored field (item 1 a).** Lot coverage, floor space index, rear setback, side setbacks and main wall height stay pending parts (FE-34); McBylaws pass-through catalogue rows for them are queued after increment 4 (a McBylaws LATER row in the queue docs commit b7cdf1e3c, not yet on origin). No value is derived in the UI (FE-05).
+> 8. **Houseplex units (item 2 a).** The title, the Units row and "(average of N units)" bind `unit_count`, not `units_max`.
+> 9. **"Did the neighbours build bigger?" (item 3).** The summary answer and the cards use the same per-scenario set: detached, houseplex (2 Unit / 3+ Unit) and rear suite allocated by the stored CoA classification (`coa_applications.structure_type`, `rear_suite_type`), and the house with a secondary suite, found by a classification rule on the description in the existing `scope_tags` pattern, moved out of the detached set. Something is always shown: the server widens the search distance per scenario until the minimum sample is met (the houseplex and the suite reach farther) and the distance is shown. Server counts only (FE-05); queued as MF-71 (b7cdf1e3c).
+> 10. **Lot-level notes (item 4, "yes").** Exception, ravine and heritage notes are shown once, under About this lot; each card's note count covers its card notes only.
+> 11. **Wording set (item 5, "yes").** The unruled wording of brief v4 item 5 is confirmed as drawn; the How? steps keep the lawyer check (MF-58, MF-72). The picture caption is "Illustrative — not this lot" (MF-38, "y to all as built").
+> Dated note 2026-11-12 (M-246, prior text kept, items 1-11 unchanged; MB-94 parts (d)-(e) · McBylaws queue · engine-inputs lane; Spec 135 FE-39 (EI-D5, EI-D7); plan §8 R-5; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §3.4, §4c, §4d, §6 M-5/M-6, §11 D-5, D-7):
+>
+> 12. **Neighbour reach is a fixed admin setting per scenario (applies item 9).** New `logic_variables` keys, admin group "MaxBLD Report", seeded by one settings migration (an operator DB job):
+>     - `nearby_coa_reach_m_detached` 400;
+>     - `nearby_coa_reach_m_secondary_suite` 400;
+>     - `nearby_coa_reach_m_rear_suite` (garden / laneway suite) 750;
+>     - `nearby_coa_reach_m_houseplex` 1000;
+>     - `nearby_coa_since_date` NULL (all years).
+>
+>     The defaults come from the measured CoA density (plan §3.4: within 25 m, 92-100 % of lots have no decided neighbour application). Item 9's "the server widens the search distance until the minimum sample is met" is replaced by the fixed reach as ruled (propose-minimum-first). The expanding ring stays a later option if testing shows too many empty answers. The reach, and any date window, is always printed. "Decided" is keyed on the classified decision text only (approved: `approv|conditional|condition|modified`; refused: `refus`), never on `decision_date`. Counts are server counts (FE-05).
+> 13. **Copy (EI-D7).**
+>     - Neighbours: "At least {approved} nearby applications to build bigger were approved within {reach} m, some with conditions. {refused} were refused."
+>     - Zero case: "We found no decided {family} applications within {reach} m in the City records we could classify."
+>     - "Can you build bigger?" (once filled): "Possibly. Similar homes nearby were approved by the Committee of Adjustment for up to about {size}. Approval is not guaranteed." It shows only after the M-70 fit passes a stated accuracy bar.
+>     - The cost-scope line ("Building only. Excludes land, permits and design.") stays in See details (the 2026-11-11 report-face ruling) and goes to the lawyer list (MF-72).
+
+
+## 12. Phases
+
+**There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
+
+**The rule: guardrails are Phase 1, not Phase 4.** Spec 125 §6 put them last. The estate's own evidence says a guardrail added after the fact guards nothing that already shipped — a 153-line meter with 44 green tests and no caller; a drift checker nothing runs; four workflow headers claiming a `schedule:` was commented out while all four were live.
+
+| Phase | Spec 127 §4.4 id | Deliverable | Gate |
+|---|---|---|---|
+| **P0** | — (pre-batch) | Close the nine unaudited admin mutations: one `writeAdminAudit` call per site, audit-failure fails the request, plus a lock asserting *every* mutating `/api/admin/**` export writes a row. One WF3, nine sites. Adjudicate the six genuinely-uncalled `/api/admin/*` routes in the same pass (`ASK-13`) | `admin_audit_log` covers 15/15; the lock proven both directions |
+| **P0b** | — (pre-batch) | Wire the checkers that already exist: `mobile/scripts/check-spec99-matrix.mjs` into `mobile-ci.yml`; correct the four stale `schedule: committed COMMENTED OUT` workflow headers (all four chain crons are live) | the checker runs somewhere |
+| **P1** | — (foundation) | `surface.schema.json` + `contract.schema.json` + `job.schema.json` with the archetype `allOf` profiles; the archetype registry as data; `surface-validate.mjs` seeded from the three existing mobile lint tests; the golden-PAIR harness; **`seeds/roles.json` + RLS class D**; **the `surface-exports` Storage bucket per Spec 114 §6** (R-31); the boundary lint rules; `generate-spec-mirror.mjs --check` wired into `npm run verify`. **Deliverable is the schema + validator, not a converted surface** | Spec 127 §3 S0–S9 pass on a fixture surface; every RED canary fires |
+| **P2** | **B1 — REPORT** | `parcel_detail` → REPORT (+ SLOT + EXPORT + GATE), full nine-commit form; the generated mobile Zod mirror replacing the four-site transcription; `usage_events`; the single `chk_entitlements_product` widening (`parcel_tool` + `agent_reports`); **`pdf_exports`** and the export parity golden; `app_outputs` declared (its pipeline step is the pipeline programme's slot); `parcel_id_translation` declared with `consumers: "none"` | the pilot's generated scorecard ≥14/17 with S6–S8 full; S-parity and S-schema green |
+| **P2b** | **B1a — the admin generated core** | `admin_surface_registry` → `/admin/surfaces`, 100% generated, staleness lock + RED canary; then fan-out, orphans, drift, role matrix on the same engine | the page is visibly empty or wrong if the descriptor set is incomplete — that *is* the gate |
+| **P3** | **B2 — SEARCH + DETAIL** | `parcel_search` → SEARCH; `admin/parcel-cost` as the third projection of the pilot's contract; `permits/[id]`, `builders/[id]` — **and close the `/builders` auth mismatch first** | per-archetype eligibility declared, not assumed (§12.1) |
+| **P4** | **B3 — DASHBOARD + LIST** | `admin/market-metrics` (the cleanest DASHBOARD member), `admin/users`, `admin/lead-feed` | tiles and lists degrade independently by declaration |
+| **P5** | **B4 — FORM + WIZARD_STEP (rebuild)** | `settings` and the 8 `(onboarding)` screens — resume/skip/advance logic is entirely client-side today, the purest example of business logic max-server-side wants back | S7 full; the rebuilt logic is server-projected |
+| **P6** | **B5 — GATE / SLOT / STATIC / SHELL** | the paywall family, `SponsorSlot`'s remaining placements, the landing page, AuthGate | AuthGate is the sole routing authority and converts last |
+| **P7** | **(web projection)** | the RSC renderer over the same descriptors; the public-route decision; the MaxBLD consumer surface | one contract, three surfaces, visible to a customer |
+| **never** | **(fenced)** | `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines) — they talk to the Supabase Auth SDK, not to our contracts | — |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): **P2-REPORT** = Phase 1 of McFrontend: the catalogue-to-report generator, one REPORT renderer, the goldens and their locks (§11a). It precedes P2b. The admin pilot (P2b) is convert-on-touch: operator verbatim, Q-MF6: "Q-Mf6 a"; card answer: no fixed admin pilot; admin screens convert when changed for a product reason, and `/admin/surfaces` is built when the admin next needs that view. Admin market-metrics stays DASHBOARD (P4 above); its descriptor's REPORT is an error, fixed at its conversion (operator doc-set answer 5).
+
+> Dated note 2026-11-09 (McFrontend Phase 2; prior text kept, M-246; operator, verbatim: "D-0-D-4 approved", D-1; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): McFrontend Phase 2 pulls work forward from P2, P2b, P3 and P5-P7 for the pages of §11b.3 only; the other members of those phases keep their place. The order is in Spec 127 §4.4 (dated note 2026-11-09), the ONE sequence.
+
+### 12.1 What the pilot must carry, because it cannot be deferred
+
+Three things an earlier draft scheduled *after* the pilot and that have to move *with* it, because the pilot cannot be honestly gated without them:
+
+1. **Roles, class D and `seeds/roles.json`** — the pilot ships a SLOT, a SLOT reads `offers`, and `offers` is the first Class-D table. Landing the role model afterwards would mean the pilot's own RLS is unasserted at the moment it is reviewed.
+2. **The Storage bucket** (`ASK-07` ruled → R-31: Supabase Storage, private, created by migration, Spec 114 §6's conventions unchanged) — the pilot declares `render.targets: ["screen","pdf"]`, so S-parity has nowhere to write without it.
+3. **`pdf_exports`** — the same reason: the parity fingerprint needs a row to live on.
+
+**And the honest consequence for R-PACE-1.** The pilot converts `SponsorSlot`, which is the estate's **only** SLOT member today (n=1, §3.1). So after B1 the SLOT archetype has **one** proven member, not two, and the compressed 3-commit form is **not** unlocked for it — the remaining SLOT placements in B5 land in full form unless a second member appears first. The same applies to **SEARCH**: B1 contains no SEARCH member, so SEARCH is not eligible at B2 and `parcel_search` converts in full form. Eligibility is declared data per Spec 127 §4.4, and these two rows are the reason it is declared rather than assumed.
+
+**Placement.** P0–P2b touch no `scripts/` step file and can run on the Admin / Cross-Domain slot in parallel with the pipeline programme's batch conversion. The `app_outputs` pipeline step (§6.3.1) and anything else under `scripts/` waits for the pipeline slot.
+
+</behavior>
+
+---
+
+<testing>
+
+
+## 13. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** `*.logic.test.ts` — archetype profile resolution (each archetype's required-field set, and that a missing required field throws); `platforms[]` gating; the `surface.guards.session` vs `contract.guards.auth_class` cross-check, proven both directions against the measured `/builders` mismatch; `usage_events` PK dedup (same input twice writes one row); the generated Zod mirror set-equalling the engine's `PARCEL_COST_LINES`.
+- **UI:** `*.ui.test.tsx` — every archetype renderer against its golden rendered-tree snapshot, per declared state; the unknown-archetype fallback rendering **and** raising its FAIL check; the `schema_drift` state rendering rather than blanking.
+- **Infra:** `*.infra.test.ts` — `generate-spec-mirror.mjs --check` clean (mirror drift); descriptor↔`surface_descriptors` bidirectional seed drift; the declared-schema ↔ introspected-types drift lock of §6.1 step 4 including the stamped `DECLARED-SCHEMA-SHA256`; declared RLS policies equalling `pg_policies` in both directions; **a RED canary per lock**, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires.
+<!-- TEST_INJECT_END -->
+</testing>
+
+---
+
+<constraints>
+
+
+## 14. Operating Boundaries
+
+### Target Files
+- `docs/specs/02-web-admin/126_maxbld_surface_standard.md` — this spec
+- `docs/specs/02-web-admin/127_surface_conversion_procedure.md` — the procedure
+- `docs/specs/02-web-admin/128_surface_standard_policy.md` — the policy register
+- `scripts/violations/generate-spec-mirror.mjs` — the mirror generator (`--check`, `--self-test`)
+- *(Phase 1, not yet authored)* `src/surfaces/_schema/surface.schema.json`, `src/surfaces/_schema/contract.schema.json`, `src/surfaces/_schema/job.schema.json`, `scripts/surfaces/surface-validate.mjs`, `scripts/seeds/apply-surface-descriptors.js`
+
+### Out-of-Scope Files
+- `scripts/steps/_schema/step.schema.json` — the pipeline's contract; this spec MIRRORS it and must never edit it. "Step" keeps its pipeline meaning; the engine is `SurfaceEngine`.
+- `scripts/manifest.json` and every `scripts/**/*.descriptor.json` — the `app_outputs` step (§6.3.1) is Backend/Pipeline work on the pipeline programme's own slot.
+- `scripts/dispatch-notifications.js` (and `scripts/lib/push-dispatch.js`) and `scripts/classify-lifecycle-phase.js` — named in §3.3 **only** as the two measured members of the JOB archetype `DISPATCH`, to show the archetype is not empty. Both are chained pipeline steps governed by Spec 101 / Spec 84 and the Spec 122 standard; this spec describes their shape and edits neither. A JOB descriptor for either is Backend/Pipeline work on the pipeline programme's slot, gated on `ASK-01`.
+- `migrations/**` — no migration is authored by this spec; §6 specifies the flow, the phase that needs a table writes it.
+- `mobile/app/(auth)/*.tsx` (1,302 lines) — these talk to the Supabase Auth SDK, not to our contracts; a descriptor would be describing someone else's protocol. Deliberately out of scope.
+- `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`'s scope fence — Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.** `lead_parcels` is read by no surface. Only a declared **id-translation seam** exists (`lead_parcels.parcel_id` = `parcels.id` = `parcel_pk`; the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`), declared so a future non-fenced use cannot invent a fifth vocabulary.
+- `src/app/api/quality/**`, `src/lib/quality/**` — held by another programme.
+
+### Cross-Spec Dependencies
+- **Relies on:** Spec 122 (+122a) §1.2/§1.3/§1.10 (the 20-category contract and the archetype-gating mechanism this spec mirrors) · Spec 123 §6/§7 (the gate ladder and commit form Spec 127 mirrors) · Spec 124 §2/§4/§5 (the rules, the ruling protocol and the register Spec 128 mirrors) · Spec 90 §3 (Dumb Glass — the posture this spec makes enforceable) · Spec 99 §2/§3/§4/§7.7/§8.6 (the state matrix that becomes the `state` category) · Spec 100 (the pilot surface and its fence) · Spec 116 §4 N2/N3/N5 + §5 OD3/OD5 (OD5's recommended default is *"fold into `lead_gen`"* with the stated override *"Override if the parcel tool should gate separately from day one"* — R-01 exercises that override, legitimately, and supersedes `DEFAULT_PRODUCT`'s OD5 comment at `src/lib/entitlements/index.ts:42-43`) · Spec 117 (brand; the rename is BREAKING and rides the migration, so the product key is `parcel_tool`, not a brand string) · Spec 26 §3.4 (the 87-table auth/disclosure ruling §4.2 cites) · Spec 113/114 (Supabase infrastructure and the RLS policy catalog §6.2 extends) · Spec 48 §3.6 (the observability rows the admin side lacks)
+- **Consumed by:** Spec 127 (the conversion procedure) · Spec 128 (the policy register) · the product spec that will own offers + EXPORT + metering · Spec 125 (**superseded by this spec**)
+
+</constraints>
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md b/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md
+index aec9ea304..bc7ac7216 100644
+--- a/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md	
++++ b/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md	
+@@ -7,12 +7,14 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-THINROUTE'
+ created_date: '2026-11-20T15:08:00Z'
+-updated_date: '2026-11-20T18:37:00Z'
++updated_date: '2026-11-20T19:10:00Z'
+ labels:
+   - McFix
+   - McFix B
+ milestone: m-1
+ dependencies: []
++references:
++  - docs/reports/lanes/2026-11-20/BL-THINROUTE/REPORT.md
+ type: build
+ ordinal: 83012
+ ---
+@@ -20,7 +22,7 @@ ordinal: 83012
+ ## Description
+ 
+ <!-- SECTION:DESCRIPTION:BEGIN -->
+-Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts
++Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts, src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts, src/tests/parcel-lookup-gate.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts
+ <!-- SECTION:DESCRIPTION:END -->
+ 
+ ## Definition of Done
+@@ -37,10 +39,29 @@ Plan section B3; after the section A fixes settle on these files. Engineering st
+ - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+ <!-- DOD:END -->
+ 
++## Implementation Plan
++
++<!-- SECTION:PLAN:BEGIN -->
++Rule: engineering standards 10.3 (docs/specs/00_engineering_standards.md:229) "API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers."
++Grounder resolution on the task (verified): build as carded, narrowed. Operator 2026-11-20 (MORNING-DECISIONS.md:1476) "Let the grounder resolve them all as long as the result is compliant".
++Facts opened and found true: eng standards 10.3 at :228-229; lookup route holds the whole flow; the gate is written twice (lookup route, lot-size route); the six locks named by the grounder read route.ts as text (consumer-parcel-lookup.infra:36-41,66-90; customer-report-read.logic:344,397; customer-report-compute.logic:245-246; parcel-tool-meter.logic:215-223; parcels-lookup-page.logic:187; parcel-lot-form.logic:165-166); a lapsed-account behavioural test exists (parcel-lookup-gate.infra.test.ts:153). compute-reach.mjs has no ALLOWED_REACHERS on this base (it is only on branch wf1/inc1b-gates); src-sql-ledger.mjs is at scripts/analysis/.
++Build:
++1. src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx) returns 'parcel_tool' | 'lead_gen_transitional' | null; it holds the ACTIVE_SUBSCRIPTION_STATUSES test. Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work; lot-size route calls it after the settings switch (same order as today) and answers forbiddenSubscription() on null.
++2. src/lib/parcels/lookup-flow.ts: runLookupFlow({q, parcelId, semi}) holds resolve, map, the lot row, the lot form, the held/stored/computed page, the response and the boundary parse, and returns {response, body, parcelRef, pageSource, computeMs}. The meter decision, the openReport call, the refusal mapping (reportLimitReached / forbiddenSubscription), the log line, auth, the query parse, the two rate buckets and the catch to internalError STAY in route.ts: RR-0331 (decision-116), operator verbatim 2026-11-20 "2. y" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432) to "leaving it where it is" (the lookup route). The earlier resolution words "resolve through meter and log" are superseded on that point. What remains in the route is a declared deviation from engineering standards 10.3 (descriptor deviations of contract_parcels_lookup).
++3. No response, meter, log key or golden changes.
++4. Tests: re-pointed to the flow file with a plant through the real walk/filter: sole importer of report-compute, report-page importer list, dangling-id miss pin, resolver import pin (route imports no resolver), readLotForm( once-in-flow, gate-before-flow; new locks: the flow imports no logger, entitlement or meter code, the flow holds no non-null assertion; a route test for a thrown gate read (500, nothing metered); a new test file for the helper. NOT re-pointed because they still hold on the route: openReport sole importer, body.page === null guard, log hygiene, lot_form_unsure. parcels-lookup-page:187 import-line pin re-pointed to the flow file; the readLotForm( route token pin replaced by the once-in-flow pin.
++5. Engine reach: compute-reach.mjs exists only on branch wf1/inc1b-gates. Owed to ALLOWED_REACHERS when both branches are on the board (the gates branch file, not edited here): file src/lib/parcels/lookup-flow.ts, since 2026-11-20, reason "STD.ROUTE (task-383): the lookup flow calls report-compute.ts (one hop)"; the src/app/api/parcels/lookup/route.ts entry reworded to two hops (route -> lookup-flow -> report-compute). Whichever branch lands second carries it.
++Principles: standardized, understandable, simple. Nothing added that the card did not name.
++<!-- SECTION:PLAN:END -->
++
+ ## Implementation Notes
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-20 taken on the board at lane launch (lane BL-THINROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-thinroute, branch wf1/inc1b-thinroute), RR-0240
+ 
+ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by a separate grounder 2026-11-20 (the lane verifies each fact first): BUILD as carded, narrowed. Rule: engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229) "API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers." 1. Move the lookup flow (resolve through meter and log) into a new src/lib/parcels flow file; auth, query parse and the two rate buckets stay in the route; one gate helper returning parcel_tool, lead_gen_transitional or null: lookup answers 403 before any DB work, lot-size calls it after the settings switch. No response, meter, log or golden changes. 2. Re-point each REAL lock to the flow file in the same commit, same strength, each with a red-then-green plant (Spec 128 section 4.4): sole importer of report-compute (customer-report-compute.logic.test.ts:245-246), sole importer of openReport (parcel-tool-meter.logic.test.ts:215-223, keep the :214 comment), the report-page.ts importer list (customer-report-read.logic.test.ts T10), the meter guard body.page === null (customer-report-read.logic.test.ts:344), the log-hygiene pins (no q, no answer text), the lot-form log pin. 3. The gate-before-DB pin becomes: the route calls the helper before the flow call and the helper holds the status set; add a behavioural lapsed-account test if none exists. Drop only the exact import-line and token-order text pins (parcels-lookup-page.logic.test.ts:187; the readLotForm( token in parcel-lot-form.logic.test.ts) and say so. 4. Engine reach: the flow file is a new transitive caller: add it to ALLOWED_REACHERS in scripts/analysis/gates/compute-reach.mjs with a dated reason if that file is on the base; if it is only on branch wf1/inc1b-gates, state the owed list edit in the report; check scripts/analysis/gates/src-sql-ledger.mjs. The earlier brief sentence "every existing route test stays green unchanged" was orchestrator text, not a rule, and is withdrawn.
++
++2026-11-20 lane BL-THINROUTE: plan lens round raised RR-0331 (decision-116, operator "2. y", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route). Build narrowed to keep it: the meter decision, openReport call, refusal mapping and log line stay in route.ts; the flow file holds resolve through the boundary parse; the gate helper is shared. This departs from the resolution's words "resolve through meter and log"; grounder to rule. Locks on the route (openReport importer, body.page === null guard, log pins) are not re-pointed because they still hold. parcels-lookup-page:187 import-line pin re-pointed to the flow file (not dropped); readLotForm( route token pin replaced by a once-in-flow pin. Files line extended for the two new lib files and the test files.
++
++2026-11-20 fix round 1 (grounder GROUNDER.md): engine reach owed, written exactly. When wf1/inc1b-gates and wf1/inc1b-thinroute are both on the board, scripts/analysis/gates/compute-reach.mjs ALLOWED_REACHERS must carry: file src/lib/parcels/lookup-flow.ts, since 2026-11-20, reason "STD.ROUTE (task-383): the lookup flow calls report-compute.ts (one hop)"; and the src/app/api/parcels/lookup/route.ts entry reworded to two hops (route -> lookup-flow -> report-compute). Not edited here (the file is on the gates branch only). Declared deviation from engineering standards 10.3 for what remains in the route recorded in the descriptor deviations of contract_parcels_lookup (adjudicated_by the operator "2. y", RR-0331, MORNING-DECISIONS.md:1432).
+ <!-- SECTION:NOTES:END -->
+diff --git a/scripts/surfaces/_schema/census/contracts.json b/scripts/surfaces/_schema/census/contracts.json
+index 5159c8dfb..02f434ef2 100644
+--- a/scripts/surfaces/_schema/census/contracts.json
++++ b/scripts/surfaces/_schema/census/contracts.json
+@@ -22816,9 +22816,15 @@
+     "deviations": [
+       {
+         "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
+-        "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
++        "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line; STD.ROUTE task-383 moved the gate there from route.ts:66-68). Removed by MF-50.",
+         "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+         "date": "2026-11-11"
++      },
++      {
++        "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)",
++        "why": "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets; the flow (resolve through the boundary parse) is in src/lib/parcels/lookup-flow.ts and the gate in src/lib/parcels/tool-gate.ts (STD.ROUTE, task-383). The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331).",
++        "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"",
++        "date": "2026-11-20"
+       }
+     ],
+     "limitations": [
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 6422165a1..dfdc7a4be 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -819,9 +819,15 @@
+   "deviations": [
+     {
+       "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
+-      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
++      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line; STD.ROUTE task-383 moved the gate there from route.ts:66-68). Removed by MF-50.",
+       "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+       "date": "2026-11-11"
++    },
++    {
++      "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)",
++      "why": "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets; the flow (resolve through the boundary parse) is in src/lib/parcels/lookup-flow.ts and the gate in src/lib/parcels/tool-gate.ts (STD.ROUTE, task-383). The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331).",
++      "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"",
++      "date": "2026-11-20"
+     }
+   ],
+   "limitations": [
+diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts
+index 732b5e1dd..0c0cb9dd0 100644
+--- a/src/app/api/parcels/lookup/route.ts
++++ b/src/app/api/parcels/lookup/route.ts
+@@ -46,19 +46,12 @@ import {
+   reportLimitReached,
+   unauthorized,
+ } from '@/features/leads/api/error-mapping';
+-import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, openReport } from '@/lib/entitlements';
++import { openReport } from '@/lib/entitlements';
+ import { logInfo, logWarn } from '@/lib/logger';
+-import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
+-import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
+-import { resolveLotMap } from '@/lib/parcels/lot-map';
+-import { readLotForm } from '@/lib/parcels/lot-form';
+-import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
+-import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
+-import {
+-  ConsumerParcelLookupQuerySchema,
+-  ConsumerParcelLookupResponseSchema,
+-  type ConsumerParcelLookupResponse,
+-} from './types';
++import { hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
++import { runLookupFlow } from '@/lib/parcels/lookup-flow';
++import { parcelToolAccess } from '@/lib/parcels/tool-gate';
++import { ConsumerParcelLookupQuerySchema } from './types';
+ 
+ const TAG = '[api/parcel-lookup]';
+ const SLOW_QUERY_MS = 500;
+@@ -76,11 +69,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   //    parcel_tool first (metered everywhere); else the lead_gen status (ctx.subscription_status, the
+   //    LEAD_GEN_ENTITLEMENT_JOIN) on the transitional App A path, unmetered until MF-50 removes it.
+   //    ACTIVE_SUBSCRIPTION_STATUSES is the one Spec 96 §10 status set, shared by both arms.
+-  const parcelTool = await getEntitlementStatus(pool, ctx.uid, 'parcel_tool');
+-  let access: 'parcel_tool' | 'lead_gen_transitional';
+-  if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) access = 'parcel_tool';
+-  else if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) access = 'lead_gen_transitional';
+-  else return forbiddenSubscription();
++  const access = await parcelToolAccess(pool, ctx);
++  if (access === null) return forbiddenSubscription();
+ 
+   // 3. Validate query — exactly one of q | parcelId.
+   const sp = new URL(request.url).searchParams;
+@@ -101,74 +91,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+ 
+   const t0 = Date.now();
+   try {
+-    // Resolution: direct id (candidate click) bypasses address parsing.
+-    const resolved = parcelId
+-      ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
+-      : await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });
+-
+-    // The map read runs only on the resolver's own seed (never on the parcelId path).
+-    const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
+-
+-    let response: ConsumerParcelLookupResponse = {
+-      match: resolved.match,
+-      candidates: resolved.candidates,
+-      warnings: resolved.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
+-      parcel: null,
+-      resolution: resolved.resolution,
+-      map,
+-      page: null,
+-      lotForm: null,
+-    };
+-
+-    // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
+-    let parcelRef: string | null = null;
+-    let pageSource: 'stored' | 'computed' | 'none' = 'none'; // LOAD.1: where the page came from (logged, never its content)
+-    let computeMs: number | null = null;
+-    if (resolved.match) {
+-      const row = await fetchParcelById(resolved.match.parcelId);
+-      if (!row) {
+-        // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
+-        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
+-      } else {
+-        const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
+-        const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
+-        const { payload, warnings } = assembleConsumerPayload(row, coaProjects);
+-        parcelRef = String(row.parcel_id);
+-        // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
+-        // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
+-        // LOAD.1 (task-266, integrated with the board head): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
+-        // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
+-        // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
+-        const lotForm = await readLotForm(parcelRef);
+-        // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): a page that is sent must be a page that
+-        // is counted, so neither the stored read nor the compute runs for a held lot (the compute can take many seconds) and `page` is null; the meter below labels it
+-        // semi_pending and the app asks the question. `unsure` is the server's own read of the view, never request text; the flag can only make the caller's own lot count.
+-        const held = lotForm?.unsure === true && semi !== 'answered';
+-        let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
+-        if (pageResponse !== null) pageSource = 'stored';
+-        else if (!held) {
+-          const c0 = Date.now();
+-          pageResponse = await computeCustomerPageResponse(parcelRef);
+-          computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
+-          if (pageResponse !== null) pageSource = 'computed';
+-        }
+-        const page = pageResponse === null ? null : mobilePageView(pageResponse);
+-        response = {
+-          match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
+-          candidates: [],
+-          warnings,
+-          parcel: payload,
+-          resolution: 'unique',
+-          map: null,
+-          page,
+-          lotForm,
+-        };
+-      }
+-    }
+-
+-    // Boundary validation of OUR OWN assembled shape — the .strict() parse rejects any Tier-3 leak.
+-    // It runs BEFORE the meter, so a response that fails it charges nothing (MF-45 fold 3).
+-    const body = ConsumerParcelLookupResponseSchema.parse(response);
++    // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
++    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });
+ 
+     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
+     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
+diff --git a/src/app/api/parcels/lot-size/route.ts b/src/app/api/parcels/lot-size/route.ts
+index fd45214b4..f69a97d84 100644
+--- a/src/app/api/parcels/lot-size/route.ts
++++ b/src/app/api/parcels/lot-size/route.ts
+@@ -24,8 +24,8 @@ import { withRateLimit } from '@/lib/auth/rate-limit';
+ import { pool, withTransaction } from '@/lib/db/client';
+ import { ok, err } from '@/features/leads/api/envelope';
+ import { badRequestZod, forbiddenSubscription, internalError, rateLimited, unauthorized } from '@/features/leads/api/error-mapping';
+-import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus } from '@/lib/entitlements';
+ import { logInfo } from '@/lib/logger';
++import { parcelToolAccess } from '@/lib/parcels/tool-gate';
+ import { insertLotSizeEntry, LotSizeRefusal, readLotSizeSettings } from '@/lib/parcels/lot-size-entry';
+ import { LotSizeEntryResponseSchema, parseLotSizeBody } from './types';
+ 
+@@ -53,9 +53,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
+     }
+ 
+     // 3. Entitlement gate (D-4) — before the body is read: the lookup gate's form (parcel_tool, else the transitional lead_gen arm).
+-    const parcelTool = await getEntitlementStatus(pool, ctx.uid, 'parcel_tool');
+-    const entitled = (parcelTool !== null && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) || ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '');
+-    if (!entitled) {
++    if ((await parcelToolAccess(pool, ctx)) === null) {
+       done('forbidden', null);
+       return forbiddenSubscription();
+     }
+diff --git a/src/lib/parcels/lookup-flow.ts b/src/lib/parcels/lookup-flow.ts
+new file mode 100644
+index 000000000..3ca39b1a0
+--- /dev/null
++++ b/src/lib/parcels/lookup-flow.ts
+@@ -0,0 +1,106 @@
++// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (API), §2.6 (a miss is a valid 200), §3.2 (the whitelist, the nullable `page`)
++// SPEC LINK: docs/specs/00_engineering_standards.md §10.3 (API routes are thin: business logic belongs in src/lib)
++//
++// STD.ROUTE (task-383, Increment 1·B) · the lookup flow moved out of src/app/api/parcels/lookup/route.ts (lines moved, no behaviour change):
++// resolve (direct id bypasses address parsing) -> the map read (only on the resolver's own seed) -> the lot's row and its payload -> the lot form -> the page
++// (held for an unsure lot until semi=answered; else the stored read W, else the one-lot compute LOAD.1) -> the response -> the boundary parse.
++// WHAT STAYS IN THE ROUTE (RR-0331, operator 2026-11-20 "2. y", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route): auth, the entitlement
++// gate, the query parse, the two rate buckets, the meter decision and its openReport call, the log line, the refusal mapping and the error boundary.
++// This module imports no meter, entitlement or usage code and writes nothing; a thrown read or compute error propagates to the route's catch (a 500: no page, no meter).
++// The raw q is never logged here or returned beyond the resolver's own fields (Spec 100 §2.8).
++import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
++import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';
++import { resolveLotMap } from '@/lib/parcels/lot-map';
++import { readLotForm } from '@/lib/parcels/lot-form';
++import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
++import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
++import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';
++
++export interface LookupFlowResult {
++  /** The assembled response before the boundary parse (the route logs from it, as before). */
++  response: ConsumerParcelLookupResponse;
++  /** The same shape after the .strict() boundary parse: what the route sends. A parse failure throws, before the meter. */
++  body: ConsumerParcelLookupResponse;
++  /** The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text. Null on a miss. */
++  parcelRef: string | null;
++  /** LOAD.1: where the page came from (logged, never its content). */
++  pageSource: 'stored' | 'computed' | 'none';
++  /** LOAD.1: the compute entry's time when it ran (a compute that ends in a miss is timed too), null when W served the page or the lot was held. */
++  computeMs: number | null;
++}
++
++/** The query schema (ConsumerParcelLookupQuerySchema) guarantees exactly one of q | parcelId, so q is set whenever parcelId is not; this narrows the type without a non-null assertion. */
++function requireQ(q: string | undefined): string {
++  if (q === undefined) throw new Error('lookup-flow: neither q nor parcelId (the query schema guarantees one)');
++  return q;
++}
++
++export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined }): Promise<LookupFlowResult> {
++  const { q, parcelId, semi } = input;
++  // Resolution: direct id (candidate click) bypasses address parsing.
++  const resolved = parcelId
++    ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
++    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true });
++
++  // The map read runs only on the resolver's own seed (never on the parcelId path).
++  const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
++
++  let response: ConsumerParcelLookupResponse = {
++    match: resolved.match,
++    candidates: resolved.candidates,
++    warnings: resolved.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
++    parcel: null,
++    resolution: resolved.resolution,
++    map,
++    page: null,
++    lotForm: null,
++  };
++
++  let parcelRef: string | null = null;
++  let pageSource: 'stored' | 'computed' | 'none' = 'none';
++  let computeMs: number | null = null;
++  if (resolved.match) {
++    const row = await fetchParcelById(resolved.match.parcelId);
++    if (!row) {
++      // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
++      response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
++    } else {
++      const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
++      const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
++      const { payload, warnings } = assembleConsumerPayload(row, coaProjects);
++      parcelRef = String(row.parcel_id);
++      // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot.
++      // LOAD.1 (task-266): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
++      // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the route's catch (500): no page, no meter.
++      // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
++      const lotForm = await readLotForm(parcelRef);
++      // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): neither the stored read nor
++      // the compute runs for a held lot (the compute can take many seconds) and `page` is null. `unsure` is the server's own read of the view, never request text.
++      const held = lotForm?.unsure === true && semi !== 'answered';
++      let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
++      if (pageResponse !== null) pageSource = 'stored';
++      else if (!held) {
++        const c0 = Date.now();
++        pageResponse = await computeCustomerPageResponse(parcelRef);
++        computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
++        if (pageResponse !== null) pageSource = 'computed';
++      }
++      const page = pageResponse === null ? null : mobilePageView(pageResponse);
++      response = {
++        match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
++        candidates: [],
++        warnings,
++        parcel: payload,
++        resolution: 'unique',
++        map: null,
++        page,
++        lotForm,
++      };
++    }
++  }
++
++  // Boundary validation of OUR OWN assembled shape — the .strict() parse rejects any Tier-3 leak. It runs BEFORE the meter (the route's), so a response
++  // that fails it charges nothing (MF-45 fold 3).
++  const body = ConsumerParcelLookupResponseSchema.parse(response);
++  return { response, body, parcelRef, pageSource, computeMs };
++}
+diff --git a/src/lib/parcels/tool-gate.ts b/src/lib/parcels/tool-gate.ts
+new file mode 100644
+index 000000000..34ce117cf
+--- /dev/null
++++ b/src/lib/parcels/tool-gate.ts
+@@ -0,0 +1,17 @@
++// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §5 (the server-side entitlement gate); docs/specs/00_engineering_standards.md §10.3 (API routes are thin)
++//
++// STD.ROUTE (task-383, Increment 1·B) · the ONE parcel-tool gate the lookup route and the lot-size route both use (it was written twice).
++// Per product (MF-45, D-4 a): a parcel_tool entitlement in ACTIVE_SUBSCRIPTION_STATUSES -> 'parcel_tool' (metered); else the lead_gen status
++// (ctx.subscription_status, the LEAD_GEN_ENTITLEMENT_JOIN) in the same set -> 'lead_gen_transitional' (the App A shelf, unmetered until MF-50 removes it);
++// else null, and the caller answers 403 before any parcel DB work. ACTIVE_SUBSCRIPTION_STATUSES is the one Spec 96 §10 status set, shared by both arms.
++// A thrown entitlement read propagates (the caller's catch or the envelope makes it a 500); it is never read as "not entitled". No write.
++import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, type Queryable } from '@/lib/entitlements';
++
++export type ParcelToolAccess = 'parcel_tool' | 'lead_gen_transitional';
++
++export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null }): Promise<ParcelToolAccess | null> {
++  const parcelTool = await getEntitlementStatus(db, ctx.uid, 'parcel_tool');
++  if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) return 'parcel_tool';
++  if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) return 'lead_gen_transitional';
++  return null;
++}
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 9a75fffa7..5df8e0b6f 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -20,6 +20,26 @@ import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
+ const ROUTE = path.resolve(__dirname, '../app/api/parcels/lookup/route.ts');
+ const LIB = path.resolve(__dirname, '../lib/parcels/consumer-lookup.ts');
+ const route = () => fs.readFileSync(ROUTE, 'utf8');
++// STD.ROUTE (task-383, Standard 10.3): the flow lives in src/lib/parcels/lookup-flow.ts and the one gate in tool-gate.ts; the meter, the log and the buckets stay in the route (RR-0331).
++const FLOW = path.resolve(__dirname, '../lib/parcels/lookup-flow.ts');
++const GATE = path.resolve(__dirname, '../lib/parcels/tool-gate.ts');
++const flow = () => fs.readFileSync(FLOW, 'utf8');
++const gate = () => fs.readFileSync(GATE, 'utf8');
++/** The gate lock: the route calls the helper, answers forbiddenSubscription on null, and does so before the flow call (the flow holds every DB read). */
++const gateBeforeFlow = (src: string): boolean => {
++  const g = src.indexOf('await parcelToolAccess(');
++  const f = src.indexOf('await runLookupFlow(');
++  return g > -1 && f > -1 && g < f && /parcelToolAccess\([^)]*\);?\s*\n\s*if \(access === null\) return forbiddenSubscription\(\)/.test(src);
++};
++/** The miss lock: the dangling-id miss (match null, parcel null, resolution no_match) is built in the flow. */
++/** The no-resolver lock: the route imports nothing from the admin resolver module. */
++const importsResolver = (src: string): boolean => src.includes("from '@/lib/admin/parcel-lookup'");
++/** The flow-purity lock: the flow file imports no logger, no entitlement, no meter or usage code (the meter and the log stay in the route, RR-0331). */
++const flowImports = (src: string): string[] => [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1] as string);
++const flowIsPure = (src: string): boolean => flowImports(src).every((m) => !/(^|\/)(logger|entitlements|usage)(\/|$|-)|openReport|meter/.test(m)) && !/\bopenReport\b|\blogInfo\b|\blogWarn\b|\blogError\b/.test(src.replace(/^\s*\/\/.*$/gm, ''));
++/** Eng standards 2.3: the flow holds no non-null assertion (the input is narrowed, not asserted). */
++const hasNonNullAssertion = (src: string): boolean => /[A-Za-z0-9_)\]]!(?=[,.);\]\s])/.test(src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\/.*$/gm, ''));
++const flowHoldsMiss = (src: string): boolean => /match:\s*null[\s\S]*parcel:\s*null[\s\S]*resolution:\s*'no_match'/.test(src);
+ const lib = () => fs.readFileSync(LIB, 'utf8');
+ 
+ describe('route source-shape locks (Spec 100 §3)', () => {
+@@ -35,9 +55,15 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   it('server-side subscription gate — 403 branch present before DB work (Spec 100 §5)', () => {
+     const src = route();
+     expect(src).toContain('forbiddenSubscription');
+-    expect(src).toContain('ACTIVE_SUBSCRIPTION_STATUSES');
+-    // The gate fires before resolveAddress / fetchParcelById (no DB touch for a lapsed account).
+-    expect(src.indexOf('forbiddenSubscription')).toBeLessThan(src.indexOf('resolveAddress'));
++    // The gate fires before the flow call (no DB touch for a lapsed account); the helper holds the one status set (STD.ROUTE).
++    expect(gateBeforeFlow(src)).toBe(true);
++    expect(gate()).toContain('ACTIVE_SUBSCRIPTION_STATUSES');
++    expect(src).not.toContain('ACTIVE_SUBSCRIPTION_STATUSES.has');
++  });
++  it('RED plant: a route that runs the flow before the gate, or drops the 403, is caught', () => {
++    expect(gateBeforeFlow("const access = await parcelToolAccess(pool, ctx);\n  if (access === null) return forbiddenSubscription();\n  await runLookupFlow({});")).toBe(true);
++    expect(gateBeforeFlow("await runLookupFlow({});\n  const access = await parcelToolAccess(pool, ctx);\n  if (access === null) return forbiddenSubscription();")).toBe(false);
++    expect(gateBeforeFlow("const access = await parcelToolAccess(pool, ctx);\n  await runLookupFlow({});")).toBe(false);
+   });
+   it('wrapped in withApiEnvelope + uses the envelope helpers', () => {
+     const src = route();
+@@ -57,7 +83,34 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   it('unknown parcelId is a 200 miss, never a 404 (Spec 100 §2.6)', () => {
+     // The route reserves 404 for nothing — it maps a dangling id to match:null.
+     expect(route()).not.toMatch(/notFound\(/);
+-    expect(route()).toMatch(/match:\s*null[\s\S]*parcel:\s*null/);
++    expect(flow()).not.toMatch(/notFound\(/);
++    expect(flowHoldsMiss(flow())).toBe(true);
++  });
++  it('the flow file holds no non-null assertion (q is narrowed, never q!)', () => {
++    expect(hasNonNullAssertion(flow())).toBe(false);
++  });
++  it('RED plant: a non-null assertion is caught; the control passes', () => {
++    expect(hasNonNullAssertion('await resolveAddress(q!, { a: 1 });')).toBe(true);
++    expect(hasNonNullAssertion('const x = row!.id;')).toBe(true);
++    expect(hasNonNullAssertion('await resolveAddress(requireQ(q), { a: 1 }); if (a !== b && c != d) {}')).toBe(false);
++  });
++  it('the flow file imports no logger, no entitlement and no meter code', () => {
++    expect(flowIsPure(flow())).toBe(true);
++  });
++  it('RED plant: a flow that imports the logger, entitlements or openReport is caught; the control passes', () => {
++    expect(flowIsPure("import { resolveLotMap } from '@/lib/parcels/lot-map';")).toBe(true);
++    expect(flowIsPure("import { logInfo } from '@/lib/logger';")).toBe(false);
++    expect(flowIsPure("import { openReport } from '@/lib/entitlements';")).toBe(false);
++    expect(flowIsPure("import { x } from '@/lib/entitlements';")).toBe(false);
++    expect(flowIsPure("import { a } from '@/lib/parcels/lot-map';\nlogInfo('t', 'm', {});")).toBe(false);
++  });
++  it('RED plant: a route that imports the admin resolver again is caught; the control passes', () => {
++    expect(importsResolver("import { resolveAddress } from '@/lib/admin/parcel-lookup';")).toBe(true);
++    expect(importsResolver("import { runLookupFlow } from '@/lib/parcels/lookup-flow';")).toBe(false);
++  });
++  it('RED plant: a flow with no dangling-id miss is caught', () => {
++    expect(flowHoldsMiss("response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' };")).toBe(true);
++    expect(flowHoldsMiss("response = { match: resolved.match, parcel: payload, resolution: 'unique' };")).toBe(false);
+   });
+ });
+ 
+@@ -81,11 +134,13 @@ describe('consumer lib is read-only + reuses the admin resolver (no fork)', () =
+     expect(lib()).not.toMatch(/\b(INSERT INTO|UPDATE\s+\w+\s+SET|DELETE FROM)\b/);
+   });
+   it('reuses the admin resolver internals — never forks the normalizers', () => {
+-    const src = route();
++    const src = flow();
+     expect(src).toContain("from '@/lib/admin/parcel-lookup'");
+     expect(src).toMatch(/resolveAddress,\s*fetchParcelById,\s*fetchCoaProjects/);
+     // MF-53: the map read is its own import line (src/lib/parcels/lot-map.ts, the one SQL home of the map), never the admin resolver's.
+     expect(src).toContain("import { resolveLotMap } from '@/lib/parcels/lot-map';");
++    // The route imports no resolver at all: it calls the flow (Standard 10.3).
++    expect(importsResolver(route())).toBe(false);
+     // No SQL / normalizer parsing lives in the consumer lib (assembly only).
+     expect(lib()).not.toMatch(/SELECT\s/i);
+     expect(lib()).not.toContain('normalizeAddressNumber');
+diff --git a/src/tests/customer-report-compute.logic.test.ts b/src/tests/customer-report-compute.logic.test.ts
+index 30128632b..9f4d8937d 100644
+--- a/src/tests/customer-report-compute.logic.test.ts
++++ b/src/tests/customer-report-compute.logic.test.ts
+@@ -15,6 +15,7 @@
+ //   C8 types      the rows of the page's own building types are equal when the compute is cut to those types (measurement pinned; the entry runs all types)
+ //   C9 current    a computed ungated lot has freshness verdict `current` and a non-null page
+ import fs from 'node:fs';
++import os from 'node:os';
+ import path from 'node:path';
+ import { createRequire } from 'node:module';
+ import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+@@ -240,10 +241,28 @@ describe('C6 the fence: pool, projection, switch, the miss rule; lazy core and c
+     expect(BAD_IMPORT.test('@/lib/admin/report-preview-live/stored-page')).toBe(true);
+     expect(BAD_IMPORT.test('@/lib/db/client')).toBe(false);
+   });
+-  it('the route is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
+-    const walk = (d: string): string[] => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []));
+-    const importers = walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(read(f)));
+-    expect(importers).toEqual(['src/app/api/parcels/lookup/route.ts']);
++  // The real walk and filter, parameterised by the tree root so the plant runs the same code on a planted tree (Spec 128 section 4.4).
++  const importersOf = (root: string): string[] => {
++    const walk = (d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
++    return walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(fs.readFileSync(path.join(root, f), 'utf8')));
++  };
++  const FLOW_ONLY = ['src/lib/parcels/lookup-flow.ts'];
++  it('the flow file is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
++    expect(importersOf(ROOT)).toEqual(FLOW_ONLY); // STD.ROUTE (task-383): the flow file moved out of the route; the route imports the flow
++  });
++  it('RED plant: a planted second importer fails the lock; the control tree passes it (same walk and filter)', () => {
++    const mk = (extra: boolean): string => {
++      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
++      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
++      put('src/lib/parcels/lookup-flow.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
++      put('src/lib/parcels/report-compute.ts', "export const x = 1;\n");
++      if (extra) put('src/app/api/parcels/other/route.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
++      return tmp;
++    };
++    const control = mk(false); const planted = mk(true);
++    expect(importersOf(control)).toEqual(FLOW_ONLY);
++    expect(importersOf(planted)).not.toEqual(FLOW_ONLY);
++    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
+   });
+ });
+ 
+diff --git a/src/tests/customer-report-read.logic.test.ts b/src/tests/customer-report-read.logic.test.ts
+index 116d667fa..de1244aa5 100644
+--- a/src/tests/customer-report-read.logic.test.ts
++++ b/src/tests/customer-report-read.logic.test.ts
+@@ -15,6 +15,7 @@
+ //   T9 parity      for the same scripted lot, W's page equals the admin preview's page (one resolver)
+ //   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
+ import fs from 'node:fs';
++import os from 'node:os';
+ import path from 'node:path';
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import type { NextRequest } from 'next/server';
+@@ -388,13 +389,32 @@ describe('T9 parity: one resolver for the admin preview and the customer read',
+   });
+ });
+ 
+-describe('T10 importers: report-page.ts is server code, imported by the lookup route and the LOAD.1 compute entry only', () => {
+-  const walk = (d: string): string[] => (fs.existsSync(path.join(ROOT, d)) ? fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
++describe('T10 importers: report-page.ts is server code, imported by the lookup flow file and the LOAD.1 compute entry only', () => {
++  const walkIn = (root: string, d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walkIn(root, path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
+   const IMPORTS = (src: string): boolean => /from '[^']*lib\/parcels\/report-page'/.test(src);
+-  it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
+-    const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
+-    expect(files.length).toBeGreaterThan(500);
+-    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/report-compute.ts']); // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
++  /** The real walk and filter over a tree root (the plant runs it on a planted tree). */
++  const pageImporters = (root: string): { n: number; list: string[] } => {
++    const files = [...walkIn(root, 'src'), ...walkIn(root, 'mobile/src'), ...walkIn(root, 'mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
++    return { n: files.length, list: files.filter((f) => IMPORTS(fs.readFileSync(path.join(root, f), 'utf8'))) };
++  };
++  const EXPECTED = ['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']; // STD.ROUTE (task-383): the lookup flow file, not the route, reads the page; LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
++  it('no component, mobile source or other lib file imports it; the non-test importers are the flow file and the compute entry', () => {
++    const r = pageImporters(ROOT);
++    expect(r.n).toBeGreaterThan(500);
++    expect(r.list).toEqual(EXPECTED);
++  });
++  it('RED plant: a planted route importing report-page fails the lock; the control tree passes it (same walk and filter)', () => {
++    const mk = (extra: boolean): string => {
++      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
++      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
++      for (const f of EXPECTED) put(f, "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
++      if (extra) put('src/app/api/parcels/lookup/route.ts', "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
++      return tmp;
++    };
++    const control = mk(false); const planted = mk(true);
++    expect(pageImporters(control).list).toEqual(EXPECTED);
++    expect(pageImporters(planted).list).not.toEqual(EXPECTED);
++    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
+   });
+   it('the fence is not vacuous', () => {
+     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);
+diff --git a/src/tests/parcel-lookup-gate.infra.test.ts b/src/tests/parcel-lookup-gate.infra.test.ts
+index 4436aeb0a..a7352dce0 100644
+--- a/src/tests/parcel-lookup-gate.infra.test.ts
++++ b/src/tests/parcel-lookup-gate.infra.test.ts
+@@ -158,6 +158,18 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
+     expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+     expect(meterCalls()).toBe(0);
+   });
++  it('a thrown gate read (entitlements read fails) -> 500, no payload, nothing read or metered', async () => {
++    ctx('active');
++    poolQuery.mockImplementation(async (text: string) => {
++      if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) throw new Error('db down');
++      throw new Error(`unexpected pool query: ${text}`);
++    });
++    const r = await call();
++    expect(r.status).toBe(500);
++    expect(r.body.data).toBeNull();
++    expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
++    expect(meterCalls()).toBe(0);
++  });
+   it.each(['trial', 'active', 'past_due', 'admin_managed'])('lead_gen %s, no parcel_tool -> 200 on the transitional path, NO usage write', async (s) => {
+     ctx(s); parcelTool(null);
+     const r = await call();
+diff --git a/src/tests/parcel-lot-form.logic.test.ts b/src/tests/parcel-lot-form.logic.test.ts
+index 6a169ec38..4901422b5 100644
+--- a/src/tests/parcel-lot-form.logic.test.ts
++++ b/src/tests/parcel-lot-form.logic.test.ts
+@@ -161,8 +161,16 @@ describe('the lookup payload', () => {
+     });
+     expect(r.success).toBe(false);
+   });
++  // The once-per-hit lock counts the call sites in the flow file; the plant shows zero and two calls are both seen.
++  const readLotFormCalls = (src: string): number => (src.replace(/^\s*\/\/.*$/gm, '').match(/\breadLotForm\(/g) ?? []).length;
++  it('RED plant: the once-in-flow lock sees no call and a doubled call; the control sees one', () => {
++    expect(readLotFormCalls('const lotForm = await readLotForm(ref);')).toBe(1);
++    expect(readLotFormCalls('const a = 1;')).toBe(0);
++    expect(readLotFormCalls('await readLotForm(a); await readLotForm(b);')).toBe(2);
++  });
+   it('the route reads the view once per hit and logs the outcome, never the answer text', () => {
+-    expect(ROUTE).toContain('readLotForm(');
++    // STD.ROUTE (task-383): the readLotForm( token pin on the route is dropped (the read moved to the flow file, which keeps it once per hit); the log pin stays on the route.
++    expect(readLotFormCalls(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8'))).toBe(1);
+     expect(ROUTE).toMatch(/lot_form_unsure/);
+   });
+ });
+diff --git a/src/tests/parcel-tool-gate.logic.test.ts b/src/tests/parcel-tool-gate.logic.test.ts
+new file mode 100644
+index 000000000..cf8f496fd
+--- /dev/null
++++ b/src/tests/parcel-tool-gate.logic.test.ts
+@@ -0,0 +1,58 @@
++// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §5; docs/specs/00_engineering_standards.md §10.3
++// STD.ROUTE (task-383, Increment 1·B) · the one parcel-tool gate helper (src/lib/parcels/tool-gate.ts) the lookup and lot-size routes share. Red first: the helper did not exist.
++// G1..G4: the arms; G5 a failed read is never "not entitled"; G6 both routes call the helper and neither holds the status set; G7 RED plant.
++import { describe, it, expect, vi } from 'vitest';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++const getEntitlementStatus = vi.fn();
++vi.mock('@/lib/entitlements', async (orig) => ({ ...(await orig<typeof import('@/lib/entitlements')>()), getEntitlementStatus: (...a: unknown[]) => getEntitlementStatus(...a) }));
++import { parcelToolAccess } from '@/lib/parcels/tool-gate';
++
++const DB = {} as never;
++const ROOT = path.resolve(__dirname, '../..');
++const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++
++describe('parcelToolAccess', () => {
++  it.each(['trial', 'active', 'past_due', 'admin_managed'])('G1 parcel_tool %s -> parcel_tool', async (s) => {
++    getEntitlementStatus.mockResolvedValueOnce({ status: s });
++    expect(await parcelToolAccess(DB, { uid: 'u', subscription_status: null })).toBe('parcel_tool');
++  });
++  it.each(['trial', 'active', 'past_due', 'admin_managed'])('G2 no parcel_tool, lead_gen %s -> lead_gen_transitional', async (s) => {
++    getEntitlementStatus.mockResolvedValueOnce(null);
++    expect(await parcelToolAccess(DB, { uid: 'u', subscription_status: s })).toBe('lead_gen_transitional');
++  });
++  it('G2b parcel_tool expired with lead_gen active -> lead_gen_transitional (D-4 a)', async () => {
++    getEntitlementStatus.mockResolvedValueOnce({ status: 'expired' });
++    expect(await parcelToolAccess(DB, { uid: 'u', subscription_status: 'active' })).toBe('lead_gen_transitional');
++  });
++  it.each(['expired', 'cancelled_pending_deletion'])('G3 parcel_tool %s and no lead_gen -> null', async (s) => {
++    getEntitlementStatus.mockResolvedValueOnce({ status: s });
++    expect(await parcelToolAccess(DB, { uid: 'u', subscription_status: null })).toBeNull();
++  });
++  it('G4 nothing at all (no entitlement, no status, empty status) -> null', async () => {
++    getEntitlementStatus.mockResolvedValueOnce(null);
++    expect(await parcelToolAccess(DB, { uid: 'u' })).toBeNull();
++    getEntitlementStatus.mockResolvedValueOnce(null);
++    expect(await parcelToolAccess(DB, { uid: 'u', subscription_status: '' })).toBeNull();
++  });
++  it('G5 a thrown entitlement read propagates; it is never read as not entitled', async () => {
++    getEntitlementStatus.mockRejectedValueOnce(new Error('db down'));
++    await expect(parcelToolAccess(DB, { uid: 'u', subscription_status: 'active' })).rejects.toThrow('db down');
++  });
++});
++
++/** The share lock: a route calls the helper and holds no status set of its own (comment lines are not code). */
++const usesSharedGate = (src: string): boolean => /parcelToolAccess\(/.test(src) && !/ACTIVE_SUBSCRIPTION_STATUSES/.test(src.replace(/^\s*\/\/.*$/gm, ''));
++describe('the two routes share the one gate', () => {
++  it('G6 lookup and lot-size call parcelToolAccess and hold no ACTIVE_SUBSCRIPTION_STATUSES test; the helper holds it', () => {
++    expect(usesSharedGate(read('src/app/api/parcels/lookup/route.ts'))).toBe(true);
++    expect(usesSharedGate(read('src/app/api/parcels/lot-size/route.ts'))).toBe(true);
++    expect(read('src/lib/parcels/tool-gate.ts')).toContain('ACTIVE_SUBSCRIPTION_STATUSES.has');
++  });
++  it('G7 RED plant: a route that writes its own status test again is caught', () => {
++    expect(usesSharedGate('const a = await parcelToolAccess(pool, ctx);')).toBe(true);
++    expect(usesSharedGate("const e = ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '');")).toBe(false);
++    expect(usesSharedGate('await parcelToolAccess(pool, ctx); ACTIVE_SUBSCRIPTION_STATUSES.has(x);')).toBe(false);
++  });
++});
+diff --git a/src/tests/parcels-lookup-page.logic.test.ts b/src/tests/parcels-lookup-page.logic.test.ts
+index 82b8e6a37..c1528e7ed 100644
+--- a/src/tests/parcels-lookup-page.logic.test.ts
++++ b/src/tests/parcels-lookup-page.logic.test.ts
+@@ -184,7 +184,8 @@ describe('T-B3 (7) the meter is unchanged by a page today (owner MB-94 c / MB-44
+ 
+ describe('T-B3 (5) the imports', () => {
+   it('the route reads the page through src/lib/parcels/report-page.ts; that module uses MF-57 core and never the admin preview producer (L1)', () => {
+-    expect(read('src/app/api/parcels/lookup/route.ts')).toContain("import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';");
++    // STD.ROUTE (task-383): the exact import-line pin on the route is dropped (the import moved to src/lib/parcels/lookup-flow.ts); the importer-list lock is customer-report-read.logic.test.ts T10.
++    expect(read('src/lib/parcels/lookup-flow.ts')).toContain("import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';");
+     const lib = read('src/lib/parcels/report-page.ts');
+     expect(lib).toContain("import { buildPage, pageViewOf } from '@/lib/surfaces/report/core';");
+     expect(lib).not.toMatch(/from '[^']*report-preview-live/);
+

@@ -24,8 +24,8 @@ import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, forbiddenSubscription, internalError, rateLimited, unauthorized } from '@/features/leads/api/error-mapping';
-import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus } from '@/lib/entitlements';
 import { logInfo } from '@/lib/logger';
+import { parcelToolAccess } from '@/lib/parcels/tool-gate';
 import { insertLotSizeEntry, LotSizeRefusal, readLotSizeSettings } from '@/lib/parcels/lot-size-entry';
 import { LotSizeEntryResponseSchema, parseLotSizeBody } from './types';
 
@@ -53,9 +53,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     }
 
     // 3. Entitlement gate (D-4) — before the body is read: the lookup gate's form (parcel_tool, else the transitional lead_gen arm).
-    const parcelTool = await getEntitlementStatus(pool, ctx.uid, 'parcel_tool');
-    const entitled = (parcelTool !== null && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) || ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '');
-    if (!entitled) {
+    if ((await parcelToolAccess(pool, ctx)) === null) {
       done('forbidden', null);
       return forbiddenSubscription();
     }

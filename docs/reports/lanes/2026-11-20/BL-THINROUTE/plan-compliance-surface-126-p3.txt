@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.441Z file_sha256=3642785b55e118d225a7afb06b7ea2c5e8bd7fc145e19b055cbc208d642ae64a prompt_sha256=0be3c13a2515b93947eff4165238cafd4c4150156062ae690f1a38061526add0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=none found: no pasted clause is unmet by the plan as written. Findings below are verification gaps and one ruling whose words are not pasted.
+
+DEFER severity=MED — RR-0331, decisions in force in the material, "- RR-0331 Report meter stays in the lookup route" — Lane plan step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the plan moves the meter decision out of src/app/api/parcels/lookup/route.ts into src/lib/parcels/lookup-flow.ts while the material's own decisions list says the meter stays in the lookup route; the ruling's verbatim words are not pasted so the boundary cannot be judged — paste RR-0331 verbatim and either keep the decision call in route.ts or record it as satisfied by the flow-file split.
+
+DEFER severity=MED — 126 §11a.3 FIX.SPECS note 2026-11-20 "the lookup also counts a report only when its `page` is produced (task-334; Spec 100 section 3.2 dated note 2026-11-20)" — NONE, material is a plan with no diff — the preserved meter condition is only asserted ("No response, meter, log key or golden changes."), never shown, so counting-on-production cannot be verified — attach the diff hunk of the meter decision or the meter lock result (parcel-tool-meter.logic:215-223) before plan lock.
+
+DEFER severity=LOW — 126 §11a.3 FIX.SPECS note 2026-11-20 "for cause (c) the report screen shows the loading state until it redirects to the question, not the miss text" — NONE, the held branch is inside the moved flow ("held/stored/compute page") and no code is pasted — response parity for a held lot cannot be seen — cite the held branch lines in lookup-flow.ts and the hold test (task-360) in the report.
+
+DEFER severity=LOW — 126 §11a.9 dated note 2026-11-11 (MF-19) item (4) "signed-in users with an active plan (the lookup's gate)" — Lane plan step 1 "lot-size route calls it after the settings switch (same order as today)" — order parity is asserted, no line of src/app/api/parcels/lot-size/route.ts:56-58 is quoted, so the "same order as today" claim is unshowable from the material — quote both route lines against lot-size/route.ts:56-58 in the report.
+
+DEFER severity=LOW — 126 §11a.9 dated note 2026-11-11 (MF-19) item (3) "D-2/D-3: the range is two logic variables ... the server sends every message" — NONE, plan names only the gate and the settings switch on the lot-size route — nothing in the plan states the five entry checks and their server-sent messages are untouched by the shared-helper change — add one line naming the entry validation as unmoved, or the report cannot show it.
+
+DEFER severity=NIT — engineering standards 10.3 "API routes must be thin" (the clause the change exists to satisfy) — Lane plan rule line, and this clause is not in the pasted context — this review can only judge the change against the preservation clauses of 126 §11a, not against its own governing rule — paste docs/specs/00_engineering_standards.md:228-229 in the next run.
+
+MET — 126 §11a.3 RULES.ACC note 2026-11-20 "A failed compute shows the error screen with Try again and is not counted", Spec 100:123 "a core or query error is the route's existing 500 with no page and no meter" — Lane plan step 2 "the catch to internalError stay in the route" — the failure path and the no-meter rule stay where the clauses put them.
+
+MET — 126 §11a.9 dated note 2026-11-11 (MF-19) item (4) "signed-in users with an active plan (the lookup's gate)" — Lane plan step 1 "src/lib/parcels/tool-gate.ts ... it holds the ACTIVE_SUBSCRIPTION_STATUSES test" — the gate definition stays one active-plan test, called from both routes, which is what the clause names.
+
+MET — 126 §11a.9 dated note 2026-11-11 (MF-19) item (6) "The entry switch stays OFF (D-6)" — Lane plan step 1 "lot-size route calls it after the settings switch (same order as today)" — the switch read and its OFF state are untouched.
+
+MET — 126 §11a.7 "A golden = the pair in Spec 127 §4.3" — Lane plan step 3 "No response, meter, log key or golden changes." — goldens are held fixed, so the state list is untouched by a route-thinning refactor.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  42805ms (42.8s)
+📊 Tokens — total: 31286, input: 23375, output: 7911, reasoning: 6786

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.471Z file_sha256=9d437a9cfa394dcc6af76d576be31b17c17f90a2e3bb03124645d72fc8ae44fc prompt_sha256=748678137c44acde2873b3455be0d7be259e98b0e83da9073831b08524838064
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 126 §6.3 row 3 "the change is **one migration widening `chk_entitlements_product`** to admit **both** new keys, `'parcel_tool'` (R-01) and `'agent_reports'` (R-09), in one statement" and §7.1 "The one event written is `property_view` (product `parcel_tool`, subject_kind `parcel_ref` …)" — plan "src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx) returns 'parcel_tool' | 'lead_gen_transitional' | null" — the plan keys the gate and the meter on `parcel_tool` without naming the migration that admits the key or the two other locked sites ("Each key then needs its `stripe_price_product_map` entry … and its string in `docs/specs/_contracts.json`'s `entitlement_products` array"), so on a base where the CHECK still reads `('lead_gen', 'flight_center')` the entitlement read returns no row and every paying user is refused — name the migration that admits `'parcel_tool'` plus the stripe map and `_contracts.json` entries, or key the gate on `lead_gen` until all three land.
+
+DEFER severity=MED — spec 126 §7 "reading the *global* status rather than a per-product entitlement. Under R-01 it becomes an entitlement lookup **and** gains a meter" — plan "it holds the ACTIVE_SUBSCRIPTION_STATUSES test" — the global-status boolean survives as an authoritative arm with no declared entitlement source and no retirement condition, so the "becomes an entitlement lookup" half is staged rather than met — declare which `entitlements` row the `parcel_tool` arm reads and what retires `lead_gen_transitional`.
+
+DEFER severity=LOW — spec 126 §7 "product TEXT NOT NULL, -- mirrors entitlements.product's CHECK vocabulary" and §6.3 row 2 note "closed CHECKs on `product` (the four entitlement keys)" — plan "'parcel_tool' | 'lead_gen_transitional'" — a third token outside the four closed product keys is introduced; if it reaches `usage_events.product` or `entitlements.product` the CHECK refuses the write — state the token is in-process only, or return the product key plus a separate arm flag.
+
+REJECT — RR-0331 "Report meter stays in the lookup route" — moving the meter decision into `src/lib/parcels/lookup-flow.ts` — the flow is called only from the lookup route and the plan pins "No response, meter, log key or golden changes", so the meter stays on the lookup route's call path.
+
+MET — spec 126 §9 Core Logic 3 "Evaluate `guards` — session, entitlement, flag, permission, rate bucket — before any projection is assembled" — plan "Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work" — the guard resolves before any projection work begins.
+
+MET — spec 126 §11 "Until that step exists, a REPORT surface reads its existing contract (`/api/parcels/lookup`)" — plan "No response, meter, log key or golden changes." — the live lookup route stays the read; no `app_outputs` cutover is smuggled into the refactor.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  63104ms (63.1s)
+📊 Tokens — total: 34874, input: 23042, output: 11832, reasoning: 11069

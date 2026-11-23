@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T19:11:16.132Z file_sha256=78d68c63f140e989a6cb6e81c7dc8ad5d34da6aa15069107d0552b899087a987 prompt_sha256=f816e2ee7a39f9d58a6c16c7f1c92c2a4a6e174d20acb1f5fca47e7a9cd67a11
+🔍 Lens review of docs/reports/reviews/task-383/change-2026-11-20.diff (model: deepseek-reasoner)
+
+REJECT — src/lib/parcels/lookup-flow.ts "return { response, body, parcelRef, pageSource, computeMs };" vs plan "it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription." — Looks like the meter and refusal mapping should have moved into the flow, but the person still gets an identical body and the identical 403/limit responses because the route maps them exactly where it did before. Harmless: the task file's own Implementation Plan records the narrowing under operator RR-0331 ("2. y", the meter stays in the lookup route).
+REJECT — src/lib/parcels/lookup-flow.ts "if (q === undefined) throw new Error('lookup-flow: neither q nor parcelId (the query schema guarantees one)');" — Looks like a valid lookup could now 500 where it used to pass q! straight through, but the route validates the query (exactly one of q | parcelId) before the try/flow, so the person never reaches this throw.
+REJECT — src/lib/parcels/lookup-flow.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — Looks like the unsure-lot hold and the semi question could be dropped in the move, but the held/stored/computed page logic is reproduced verbatim, so the person still sees a null page and the app still asks the one question before the report shows.
+REJECT — src/app/api/parcels/lot-size/route.ts "if ((await parcelToolAccess(pool, ctx)) === null) {" — Looks like wrapping the gate could reorder it ahead of the settings switch, but it sits at the same step 3 (before the body is read, after the settings read), so the person sees the same 403 timing as today.
+
+VERDICT: PASS on the person's experience
+States checked: first view, loading, answered (unique hit with page), empty/miss (unknown parcelId, 200 no_match), held/unsure (null page, semi question), error (compute throw, 500), forbidden (lapsed account, 403), rate limited, repeat visit. The unchanged meter, log and envelope code beyond this diff is not shown, so those exact lines are cannot see.
+Dead ends found: 0
+
+---
+⏱  42597ms (42.6s)
+📊 Tokens — total: 28462, input: 19669, output: 8793, reasoning: 8298

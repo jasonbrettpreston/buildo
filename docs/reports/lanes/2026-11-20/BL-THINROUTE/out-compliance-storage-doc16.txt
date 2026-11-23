@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.601Z file_sha256=1e9f1879346f3a93ce915f4552e9f724802b7a9292d9b3b12d0a08274246d14b prompt_sha256=e08c4ab4dc7a7c1e4595e5be147150a5734389fd8fa739b4c99ffba05bc6ae7d
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-storage-doc16.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — P4 "a record whose stamp differs from the current stamp is never served and is recomputed" — src/lib/parcels/lookup-flow.ts:81 "let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);" — the file that now owns the served read shows no stamp comparison and this diff re-points no stale-stamp red test at it, so the guard cannot be verified in the moved code (cannot see inside readCustomerPageResponse) — cite the line in report-page.ts that compares the stamp, or compare it in the flow, and re-point the red-first stale-stamp test at src/lib/parcels/lookup-flow.ts
+
+DEFER severity=MED — P4 "if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number" — src/lib/parcels/lookup-flow.ts:9 "a thrown read or compute error propagates to the route's catch (a 500: no page, no meter)" — a failed compute exits as an envelope 500, not the closed not_evaluated:<reason>, and the new file documents that as intended — state that the closed reason is the null-miss path and that the throw path is infra-only, or map the compute error to a closed not_evaluated reason
+
+DEFER severity=MED — operator "Each gate or scan: a committed planted-defect test, red first through the real hooks" — src/tests/parcels-lookup-page.logic.test.ts:188 "expect(read('src/lib/parcels/lookup-flow.ts')).toContain(\"import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';\");" — this re-pointed import pin has no planted-defect test in the diff, unlike every other re-pointed lock (T10, the importer walk, the lot-form count) — add a plant that moves the import back to route.ts or drops it and shows the lock red, then green
+
+DEFER severity=LOW — 10.3 "API routes must be thin, validate input, call a lib function, return the result" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:827-829 "why": "...still holds the report meter decision ..., the refusal mapping, the log line and the two rate buckets" / "adjudicated_by": "...asked at ...:1431 \"leave the meter where it is?\"" — the deviation records four residuals but the named adjudication covers only the meter, the log line and refusal mapping rest on the grounder resolution and "2. y" alone — cite both the resolution and RR-0331 in adjudicated_by, or narrow the entry to the meter chain and buckets
+
+DEFER severity=LOW — operator ruling at MORNING-DECISIONS.md:1432 "verbatim" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:829 "verbatim at :1432 \"2. y 1 a\"" vs backlog/tasks/task-383 (Implementation Plan step 2) "operator verbatim 2026-11-20 \"2. y\"" — the same operator line is quoted two different ways, so one record is not verbatim — quote :1432 once, identically in the task and both descriptors, and say what the "1 a" answered
+
+MET — operator RR-0331, MORNING-DECISIONS.md:1432 "the report meter stays in the lookup route" — src/app/api/parcels/lookup/route.ts (@@ -101,74 +91,8 @@) "the meter and the log stay here (RR-0331)" — the meter decision, withTransaction(openReport), refusal mapping and log line remain in the route while the flow holds resolve through the boundary parse
+
+MET — P6/P7 "the trace and the per-field long form are NOT stored" — src/lib/parcels/lookup-flow.ts:9 "This module imports no meter, entitlement or usage code and writes nothing" — no store is added or altered, so P5, P6 and P7 are untouched by the move
+
+MET — P1 "Compute on first open" — src/lib/parcels/lookup-flow.ts:81-85 "if (pageResponse !== null) pageSource = 'stored';" then "pageResponse = await computeCustomerPageResponse(parcelRef);" — the stored read is tried first and the one-lot compute runs on its miss, the same order as before the move
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  96728ms (96.7s)
+📊 Tokens — total: 49720, input: 30031, output: 19689, reasoning: 18661
