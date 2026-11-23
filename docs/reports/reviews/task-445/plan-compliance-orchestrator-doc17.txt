@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.711Z file_sha256=8f79df0a56e889d8b811686608586f8373fa204c2320cfd6547c2a89915a33d5 prompt_sha256=d216cd3303d1d3bf12bcadb1fc386f09ad5720226404656b5fa8eb11ef8c6d13
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-445 card description "This task: the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — PLAN-445-v1 OPERATOR "A (built by this plan): API routes and library code, src/app/api/ and src/lib/." — the recommended option covers the api-lib row only, so the step-pipeline paths the card names are left uncovered and the plan spends its one operator question on a scope the card already sets — add the step-pipeline term (with the row's not list), or record the operator's ruling that closes that row on this card before plan-lock.
+DEFER severity=MED — task-445 card Files line "Files: scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md" — PLAN-445-v1 GENERATED FILES "the lane runs `page --write` and adds docs/reports/generated/rule-lists-by-kind.md to the first Files line of its own task file in that same commit" — a seventh file is written and the task edits its own Files line, the very field the new term reads, on no pasted authority — keep the generated file out until a ruling names it.
+MET — RR-0391 "add it." — PLAN-445-v1 CODE line adding the src/app/api and src/lib term — the API-route gap he was shown (src/app/api/parcels/search/route.ts) now fires at plan and at output.
+MET — task-445 card "keeping the six words as they are" — PLAN-445-v1 CODE keeps `sec = /entitlement|auth|stripe|metered|admin|pii/i` and ORs the new term, with S2 as the both-ways lock.
+MET — task-445 card "NOT in this task: a new lens, a new gate, a change to the lens template" — PLAN-445-v1 FACTS 3 "the template is not changed (as the card says)" and one line in lensSet — no lens file and no gate is added.
+MET — task-445 card "tests first, both directions" — PLAN-445-v1 TESTS S1, S2, S3, S4, B1, B2, C1 "Red today at toEqual (no security)" plus "survive-the-fix lock, green both ways" — each clause has a designed red and a planted-defect red.
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — accused: the theme, lot-view, suite-size and storage readings (RR-0015, RR-0017, RR-0038, RR-0055) are unmet by this change — why: they are readings, and doc-17 forbids feeding them to a review as rulings.
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — accused: changing scripts/analysis/rule-lists.mjs is a new infra task under the freeze — why: RR-0110 is a reading, not a ruling, and RR-0002 records "Lane tooling first".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+Rules met: none
+
+---
+⏱  56296ms (56.3s)
+📊 Tokens — total: 27221, input: 17085, output: 10136, reasoning: 9342

@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.739Z file_sha256=f07cb9ece7ca320407c82c00c370c8b56564435300f4922b58a0afcae9daf1e2 prompt_sha256=26826c06a93f77ebb886293b784229d9cb1a107f56d8b7c992f03a3049847c7a
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-445 card scope: "the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — PLAN-445-v1: "NOT IN SCOPE - Migrations and pipeline steps (see OPERATOR)" and "Recommendation: A now; B only if he wants database policy reviewed by this lens." — the pasted clause names two rows, the plan builds only api-lib and leaves step-pipeline paths uncovered at plan-lock, so a pipeline back-end task still gets no security lens — either extend the term to the step-pipeline globs (copying the row's `not` list) or record the operator's narrowing ruling before lock rather than opening with the unbuilt half.
+
+DEFER severity=MED — task-445 card: "the security lens runs on every back-end and API task" — PLAN-445-v1 S4: "On the API route, types record and '' give plan ['plan-review-deepseek'] and out []." — the renamed type gate leaves non build/fix tasks touching src/lib without the lens (FACT 4: only "42 of those are build or fix" out of 105 resolved), a literal gap against "every" — state this as a deliberate limit in the operator question or add a named-reason line, do not let S4 read as full coverage.
+
+DEFER severity=MED — task-445 card: "tests first, both directions" — PLAN-445-v1 UNVERIFIED: "Nothing was run: none of the reds or greens has been seen." — every red claim ("Red today at toEqual", "Red today (2 names)", "Red today: exit 0") is plan text only, so both-directions proof exists at no point yet — the first build step must record red.out for S1, B1, B2 and C1 before the green line lands, in that order.
+
+DEFER severity=LOW — pasted Implementation Notes: "Dated note 2026-11-22 (M-246, prior text kept; RR-0391 · task-445 · Backlog; operator, verbatim: "add it. ...")" names no README or spec line — PLAN-445-v1: "SPEC 08 NOTE (owed: 00_engineering_standards.md:465 same commit; Spec 137 rule 10, 137_mcqueue.md:125)" — the README :105/:161 edits and the 08_agents.md note rest on Spec 137 rule 10, which is not pasted, and the parallel limit in 00_engineering_standards.md:465 stays stale while 08_agents.md says "now read with this addition", leaving two docs disagreeing — either paste/confirm rule 10 or drop the doc edits from this card.
+
+DEFER severity=LOW — pasted task block: "## Acceptance criteria" (empty) — PLAN-445-v1 ACCEPTANCE: "In memory at the build head: check-tasks resolving build or fix tasks with security move from 9 to 14" — the plan's acceptance bar is self-set and unverifiable from the pasted material, so nothing pinning "done" traces to a pasted clause — carry the 9-to-14 count and the 372/379/380/383/396 list into the operator ruling so the bar is ratified, not invented.
+
+MET — RR-0391 "add it." — PLAN-445-v1 CODE: "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e))" — one line in lensSet widens the lens at the card's named row.
+
+MET — task-445 card "keeping the six words as they are" — PLAN-445-v1 CODE line — the six-word regex is carried unchanged as the left disjunct.
+
+MET — task-445 card "NOT in this task: a new lens ... a change to the lens template" — PLAN-445-v1 FACTS 3: "so the template is not changed (as the card says)" — lens-security.md untouched, existing lens reused.
+
+MET — task-445 card "a new gate" exclusion and RR-0385 "gates already built are kept" (pasted :1915 line) — PLAN-445-v1 FACTS 2: "lensSet is used in exactly three places ... The launch gate (planGateInner, check-lane-close.mjs:613-660) does not read it." — no gate added, one function widened, call sites unchanged.
+
+MET — task-445 card example "example src/app/api/parcels/search/route.ts" — PLAN-445-v1 TESTS S1 and B1: "lensBrief('build','src/app/api/parcels/search/route.ts') contains lens-security.md" — the card's own example path is pinned in both directions.
+
+MET — task-445 card "front-end rows (unless the plan review rules them in with a named reason)" — PLAN-445-v1: "NOT IN SCOPE - Front-end rows, including mobile/src/lib." plus S3 control "mobile/src/lib/analytics.ts" — front end stays out and is tested to stay out.
+
+MET — RR-0385 "Opus plan, three Sonnet seats, compliance and engineering lenses, separate grounder, Opus build, output review" — PLAN-445-v1: "Planner: Opus, read-only." — the process clause is honoured on the plan side.
+
+MET — task-445 card "the smallest change so the security lens runs" — PLAN-445-v1 CODE — one line, no new file, no new tool, no new lens.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  38007ms (38.0s)
+📊 Tokens — total: 19236, input: 12332, output: 6904, reasoning: 5619

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.757Z file_sha256=30782cacea0af1199b30e339b221b19b72bba5ba69dad5147e1cd9937170623c prompt_sha256=b6e4d0ec5d71f5b911edf2675bb81bdfa13c841c7b82e99928b3461255db9d55
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card THIS TASK "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — only the api-lib row's paths fire; the step-pipeline row the card names is left to an open operator question, so the card's named coverage is unmet — add the step-pipeline row's paths (with its not list) to this term, or obtain and paste the ruling before plan-lock
+DEFER severity=MED — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — plan "Recommendation: A now; B only if he wants database policy reviewed by this lens." — plan-lock would ship with scope still undetermined and a question back to the operator, which is not validation without the operator — lock scope A inside this plan and raise migrations and step-pipeline as a separate card
+DEFER severity=LOW — task card "the paths the rule table's api-lib and step-pipeline rows govern" — plan "(the definition is the api-lib row's globs, src/app/api/** and src/lib/**)" — cannot see rule-lists.json, so that the new regex equals the api-lib row is unverified — paste the api-lib row's globs at plan-lock so the equivalence is checked against the table, not asserted
+DEFER severity=LOW — task card "the security lens runs on every back-end and API task" — plan "A Files entry of a bare `src/` or `src/**` does not fire, the same limit `surface` has." — a task whose Files line is the tree root still gets no security review, so "every" is not met — add a bare `src/` entry case to the term or have the ruling record the limit
+MET — task card "keeping the six words as they are" and "tests first, both directions" — S1-S4, B1, B2, C1 with red-first assertions, planted defects (S2 new term only, S3 no anchor and no boundary, S4 dropped code gate) and a green C1 control
+MET — RR-0391 "Teh missing one is security" and "add it" — rule-lists.mjs:186 with B1, B2, C1 — the card's example src/app/api/parcels/search/route.ts now names lens-security.md at brief, plan-prep and close
+MET — task card NOT "a change to the lens template" and NOT "front-end rows" — S3 controls — src/components/report/ReportView.tsx, mobile/src/lib/analytics.ts and mobile/app/(app)/x.tsx stay security-free and lens-security.md is unedited
+MET — "keep it simple; no scope creep" and "we need one plan - we can only execute one plan" — plan BASIS and CODE — one line in lensSet, no new lens or gate, one plan with alternatives rejected one line each
+REJECT — task card NOT "a new gate" — widening lensSet makes the close demand out-security.txt from API and library tasks — the artifact refusal already exists at check-lane-close.mjs:208-216 and lensSet only widens its inputs, no gate is added
+REJECT — task card "keeping the six words as they are" — the new term rewrites line :186 — the six-word regex is kept intact and ORed, and S2 locks it on scripts/pii-scrub.mjs, src/app/admin/page.tsx and src/components/auth/LoginForm.tsx
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: none
+
+---
+⏱  57233ms (57.2s)
+📊 Tokens — total: 17507, input: 6878, output: 10629, reasoning: 9740

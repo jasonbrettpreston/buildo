@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.761Z file_sha256=2465969ccc6841a0f760ff094f9eee1dcc454dffaf81f71e51fd26a042953dc8 prompt_sha256=cbe7fc14c48eb56fa6a6439ef37413d3daa4a41d26648f9eebd2c5b1baca7b2a
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-445 card, THIS TASK: "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — scripts/analysis/rule-lists.mjs:186 (plan CODE) "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — the new term covers the api-lib row only, no step-pipeline path can fire it, and the plan itself parks that half of the clause ("NOT IN SCOPE ... Migrations and pipeline steps (see OPERATOR)") — add the step-pipeline row's globs to the same predicate with the row's `not` list applied, or obtain a pasted ruling narrowing the clause to api-lib before lock.
+
+BUG severity=HIGH — RR-0385 (pasted: Decisions naming this task) "Opus plans and builds, engineering seat, two rounds, validation without the operator" — plan OPERATOR "One question, because \"back-end\" can be read two ways (RR-0385 item 4(ii))" with "Recommendation: A now; B only if he wants database policy reviewed by this lens." — the plan leaves the scope of its own governing clause to a three-way operator choice instead of deciding it — decide against the card text and land api-lib plus step-pipeline in one line, or record the narrower reading as a deviation rather than an open question.
+
+DEFER severity=MED — task-445 card "tests first, both directions" — plan UNVERIFIED "Nothing was run: none of the reds or greens has been seen." and "B2: whether the plan-prep fixture resolves the API route at letter F." / "C1: whether the scenario accepts a Files entry naming a file that was not changed." — every red in S1-S4, B1, B2, C1 is asserted, not observed, and two fixtures are flagged as doubtful — rationale: both-direction proof is the card's own bar, so land the observed reds before claiming any green, and re-shape B2/C1 if their fixtures refuse.
+
+DEFER severity=LOW — task-445 card Files line (six named files) — plan GENERATED FILES "the lane runs `page --write` and adds docs/reports/generated/rule-lists-by-kind.md to the first Files line of its own task file in that same commit" — a seventh path, and a widened Files line, may enter the change though no pasted clause names it — rationale: generated doc only, the plan escalates it for a ruling, bounded blast radius.
+
+REJECT — RR-0391 "Then once these close move on to the Mcfix plan for the closed and built tasks with the new approach." — accused of not sequencing the next McFix plan — that sentence orders a later action after these cards close, it does not bind task-445's own change.
+
+REJECT — task-445 card "the paths the rule table's api-lib and step-pipeline rows govern" — accused of smuggling in database-policy scope via operator option B ("A plus `migrations/`, where row-level security, grants and SECURITY DEFINER live") — it is a question put to the operator, not code in the plan, and nothing in the plan implements it.
+
+MET — task-445 card "keeping the six words as they are" — plan TESTS S2 "scripts/pii-scrub.mjs, src/app/admin/page.tsx, src/components/auth/LoginForm.tsx" — the six words fire unchanged, with a survive-the-fix lock planted against `sec` = the new term only.
+
+MET — task-445 card "NOT in this task: a new lens, a new gate, a change to the lens template" — plan FACTS 3 "It does not make the lens useless, so the template is not changed (as the card says)" and BASIS "no gate is added" — no lens, gate or template wording is touched.
+
+MET — task-445 card "front-end rows (unless the plan review rules them in with a named reason)" — plan alternative (e) "It also fires on mobile/src/lib (34 files)" and S3 control "mobile/src/lib/analytics.ts" — component and mobile front end stay out, with a test pinning it.
+
+MET — task-445 card "at the plan or at the output" — plan "the same 14 at both stages because one term feeds both" with B2 "plan file names equal ['plan-error-paths.txt','plan-plan-review-deepseek.txt','plan-security.txt']" and C1 "refused(scenario({ files: 'src/a.ts, src/app/api/x/route.ts' }), /out-security\.txt/)" — plan stage and close stage are both covered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: none
+
+---
+⏱  29211ms (29.2s)
+📊 Tokens — total: 13085, input: 7668, output: 5417, reasoning: 4321

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T01:58:59.763Z file_sha256=0749a626b7bc180aa594d7762afbdbbaa1c49ba67b258e971e456095473b6c70 prompt_sha256=2508e8b08c6d665349b6206069e1249590418f10acbd5d2dd443f127704be4d3
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 14 Prevention Loop registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan line "SPEC 08 NOTE (owed: 00_engineering_standards.md:465 same commit; Spec 137 rule 10, 137_mcqueue.md:125)" against its Files line "Files: scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md" — the plan names the standards-doc line as owed in the same commit yet neither the Files line nor the LANDING work-commit step ("the code line, the tests, the Spec 08 note (the staged spec satisfies check-spec-diff), the README lines and the task notes") schedules docs/specs/00_engineering_standards.md, so the cited line is left stale by its own admission — add docs/specs/00_engineering_standards.md to the Files line and to work-commit step 1, editing the :465 citation, or state in one line why that citation does not bind.
+
+DEFER severity=MED — 11 Plan Compliance Checklist "Pre-Review Self-Checklist (always applies, every WF)" "Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests" — LANDING/ACCEPTANCE block "S1-S4, B1, B2 and C1 are green, each was red first, and every unchanged test listed above is green" — no plan step commits to emitting the 5-10 item PASS/FAIL walk against the actual diff before the reds, so the always-applies gate has no owner in the plan — add one build step naming the governing spec section (08_agents.md 5.7 plus Spec 137 rule 10) and the PASS/FAIL output before the test run.
+
+DEFER severity=LOW — 5.2 Test File Pattern "*.regression.test.ts | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — "S2 (survive-the-fix lock, green both ways, stated as such)" placed in rule-lists.logic.test.ts — the six-word trigger being altered is pinned in the logic layer, and I cannot see whether the Regression Guardian flags it as a fence — if the Guardian flags the six-word guard, add the pin as a `*.regression.test.ts`; otherwise state that no fence was flagged.
+
+DEFER severity=LOW — 14 Prevention Loop registry "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — "// task-445 (RR-0391): an API route or library path (the api-lib row)" — the new coupling is recorded as a task and ruling comment only, and the plan's note placement "Inserted after 08_agents.md:261, the end of §5.7" plans no Cross-Spec Dependencies update in either direction — cite `08_agents.md §5.7` in the code comment and add the Cross-Spec Dependencies entry both ways, or say why none is owed.
+
+MET — 5.3 Red-Green Test Cycle — "TESTS (red first, each red at its designed assertion; red.out holds each red)" — the plan orders each failing assertion and its planted defect before the code line, and states the red it expects per test.
+
+MET — 5.2 Test File Pattern — "src/tests/backlog/rule-lists.logic.test.ts" — a pure path-derivation function is probed in a `*.logic.test.ts`, which is the row for pure/derivation logic.
+
+MET — 2.3 Assumption Documentation — "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — the optional list is guarded with `?? []` and no non-null assertion is used.
+
+MET — 5.5 Test-Layer Map (parity battery) — "the lane runs `page --write` and adds docs/reports/generated/rule-lists-by-kind.md" plus "`page --check` is current" — the generated-artifact drift guard is scheduled in ACCEPTANCE.
+
+REJECT — 5.1 Typed Factories Only — inline untyped mocks — the plan adds no entity literals, only Files-line path strings passed through existing `scenario()` and `prepFixture()` helpers already in those test files.
+
+REJECT — 10.2 Boundary Rules During Frontend Phase — modifying `scripts/` — this is tooling work on the review pipeline (RR-0391, McFix Final), not a frontend WF, so the frontend-phase freeze on `scripts/` does not reach it.
+
+REJECT — 9.4 Pipeline SDK Mandate — no `pipeline.run` / `withTransaction` use — `rule-lists.mjs` is an `.mjs` analysis tool that opens no pool and writes no DB rows, so the mandate for `scripts/*.js` DB pipeline scripts does not cover it.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  39663ms (39.7s)
+📊 Tokens — total: 25637, input: 18063, output: 7574, reasoning: 6336

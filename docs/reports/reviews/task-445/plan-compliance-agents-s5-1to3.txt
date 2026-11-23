@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.720Z file_sha256=1cbadd2bdfb5a51929cb9b844c1e2d801212755c6598aabfc0116804bfc2e7c3 prompt_sha256=8534043a486869eed1a0039dd42aee50b4a33883ab7c9edf0a48a6e110632a28
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card THIS TASK scope "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — plan-445 OPERATOR/A "**A (built by this plan):** API routes and library code, src/app/api/ and src/lib/." — the plan builds only the api-lib half; step-pipeline paths, which the pasted clause names alongside api-lib, are left to an operator question (option C), so the scope clause is unmet as written — add the step-pipeline rows to this plan with the row's `not` list, or record an operator ruling narrowing the card before plan-lock.
+DEFER severity=MED — card Files line "Files: scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md" — plan "SPEC 08 NOTE (owed: 00_engineering_standards.md:465 same commit; Spec 137 rule 10, 137_mcqueue.md:125)" — an edit owed to a file off the Files line is named with no inserted text and no Files-line amendment, unlike the generated-file contingency — put 00_engineering_standards.md on the Files line with its exact inserted text, or state that this lane edits it not at all.
+DEFER severity=MED — card process clause "McFix Final process (RR-0385): Opus plan, three Sonnet seats, compliance and engineering lenses, separate grounder, Opus build, output review, two rounds at most." — plan LANDING "**Close commit:** the lane records and the status change only." — LANDING and ACCEPTANCE never name the separate grounder, the `GROUNDER.md` the pasted close rule requires, or the output review, so a lane following the plan literally cannot close — add the grounder ruling, GROUNDER.md and the output review to LANDING and ACCEPTANCE.
+DEFER severity=LOW — 5.2 "verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."" — plan "the same limit in the A12 row and the section 3 line, now read with this addition" — the note amends two spec locations the plan never quotes or shows as read at the head, so a drift in either leaves the new note false — quote the A12 row and the section 3 line at the build head and paste their amended wording into the note.
+REJECT — card "NOT in this task: ... front-end rows (unless the plan review rules them in with a named reason)" — accused of pulling in front-end paths — the term is anchored per entry and S3 pins mobile/src/lib, mobile/app and src/components as not firing.
+MET — card "keeping the six words as they are" — rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) ||" — the six-word test is kept verbatim as the left operand and locked by S2.
+MET — card "NOT in this task: a new lens ... a change to the lens template" — plan FACTS 3 "the template is not changed (as the card says)" — no lens or template file is touched.
+MET — card "NOT in this task: ... a new gate" — plan BASIS "reuse what exists (no new lens, gate or tool)" — one term inside lensSet, no gate added.
+MET — card "tests first, both directions" — plan TESTS "Red today at toEqual (no security)." and "Planted defects, each red" — red-first tests plus planted-defect reversals for S1, S2, S3, S4, B1, B2, C1.
+MET — card "it gets no security review at the plan or at the output" remedy — plan FACTS 4 "the same 14 at both stages because one term feeds both" — one term feeds plan and out, so both stages move together.
+MET — 5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round" — plan "Alternatives rejected, one line each: (a) ... (b) ... (c) ... (d) ... (e)" — each rejected alternative carries its reason.
+MET — card Files line (work scope) — plan trailing "Files: scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md" — the planned touched set matches the card listing.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+Rules met: none
+
+---
+⏱  80836ms (80.8s)
+📊 Tokens — total: 25056, input: 10069, output: 14987, reasoning: 13854

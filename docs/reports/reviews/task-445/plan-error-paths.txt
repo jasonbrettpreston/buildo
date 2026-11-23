@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T01:58:59.770Z file_sha256=e1fd4d95b1833e92571949b20da7e2616254463b8b36e3030517aeb912ec829e prompt_sha256=206f1f2ce8d2c4c2ff3dacd72286a2d0744da939cde675bd7eeff44f5b04c4b6
+🔍 Lens review of docs/reports/reviews/task-445/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some(...)" — the `?? []` is the author's own admission that filesEntries can return null, and on null (empty or unparseable Files text) the term collapses to an empty list so a build or fix task silently gets no security lens and nothing is logged, a fail-open on a review gate, with no test covering that input — wrap the parse so an inconclusive result logs and fails closed (add security for a build or fix task) and add S-tests for `files: ''` and `files: undefined`.
+DEFER severity=MED — plan UNVERIFIED "C1: whether the scenario accepts a Files entry naming a file that was not changed." — the close now matches on the task's Files line, so a lane whose Files lists a src/lib path it only read, not modified, is refused at close for a missing out-security.txt, a false refusal on a change with no security content — key the requirement on the changed-file set, or exempt Files entries not touched by the diff.
+DEFER severity=MED — NOT IN SCOPE "A Files entry of a bare `src/` or `src/**` does not fire, the same limit `surface` has." — a task that lists all of src/, the broadest back-end surface, silently gets no security, so the widest case fails open — have the anchor treat bare `src/` and `src/**` as firing, since nothing narrower can be assumed for them.
+DEFER severity=MED — "Cost: one more DeepSeek call at plan-prep and one per diff chunk at output" against README `out-security.txt` — with a fixed file name, N diff chunks each write the same out-security.txt so every chunk but the last overwrites the earlier security findings and they are lost — cannot see the chunk writer, name the output per chunk or append rather than overwrite.
+REJECT — CUT-OVER "So these lanes owe nothing new unless they merge the board before closing; then they owe out-security.txt." — looks like running lanes 372, 383, 396 are handed a new gate mid-flight — because .husky/commit-msg runs the lane's own tree copy and a merge commit returns 0 (:720-721), no un-merged lane is blocked, and the merge case needing out-security.txt is the intended fail-closed.
+REJECT — "the same 14 at both stages because one term feeds both." — the worry that plan and out drift, or that a repeat call double-adds security — lensSet is pure, one term feeds both lists, so a second call is a no-op and the two stages cannot disagree.
+
+VERDICT: FAIL on error-path safety
+Paths walked: null/empty Files parse (fail-open, finding 1), Files-lists-unmodified-path at close (finding 2), bare src/ and src/** (finding 3), multi-chunk output overwrite (finding 4), running-lane cut-over (reject), plan vs out drift and repeat call (reject)   Unguarded: 2
+
+---
+⏱  41100ms (41.1s)
+📊 Tokens — total: 22649, input: 15957, output: 6692, reasoning: 5996

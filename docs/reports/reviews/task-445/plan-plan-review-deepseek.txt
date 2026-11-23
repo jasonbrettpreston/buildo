@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T01:58:59.756Z file_sha256=e1fd4d95b1833e92571949b20da7e2616254463b8b36e3030517aeb912ec829e prompt_sha256=558159dd6adc5a24b59cd66a097e290d27af5f23a2db48fca33d74f82d3c208e
+🔍 Lens review of docs/reports/reviews/task-445/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — CODE (rule-lists.mjs:186) — the new term calls `filesEntries(`Files: ${files}`)`, which assumes every caller passes a *bare* path list; the three consumers (backlog-lane.mjs:179, rule-lists.mjs:653, check-lane-close.mjs:526) may pass already-prefixed text or a task body, in which case the entries parse to `[]` and the new term silently never fires for that surface — verify each caller's `files` argument shape with `grep -n 'lensSet(' scripts/analysis/*.mjs scripts/**/check-lane-close.mjs` before writing tests, and add one test that feeds each caller's real argument through lensSet.
+
+BUG severity=MED — TESTS C1 (check-lane-close.logic.test.ts:213-216) — C1 rests on the close refusing *because the Files line names* `src/app/api/x/route.ts` even though the file is not in the diff; if the close matches Files entries against *changed* files rather than reading the line, C1 goes green for the wrong reason and the close-side gap is never proven — read the close's scenario matcher to confirm it keys off the Files line (as :215 implies, on the refused side only) and, if it keys off the diff, make C1's fixture actually modify the file.
+
+BUG severity=MED — CODE comment "the definition is the api-lib row's globs" — hardcoding `src/(app/api|lib)` copies the row's globs but drops the row's `not` list — the exact defect that made option (d) unacceptable — so if rule-lists.json:22's api-lib row carries any exclusion, the new term over-fires where the row would not — read the api-lib row's `not` (if any); add a control test for the excluded path or narrow the regex.
+
+BUG severity=MED — FACTS 4 / ACCEPTANCE — the "9 → 14" and the five newly-covered IDs are stated "measured in memory," and the ACCEPTANCE line re-asserts the same in-memory figure, so nothing in the plan ever validates the count against the live board — run the real count at build head (apply `lensSet` to every resolved build|fix task from `checkTasks`/`resolveTask`, assert the security set) and paste the IDs into the commit message.
+
+DEFER severity=LOW — GENERATED FILES — the claims "§5.7 is in no rule-list section" and "page prints ... not lens sets, so `page --check` stays current" are unverified; if §5.7 belongs to a section the note changes a list and `page --check` fails post-edit — run `node scripts/analysis/rule-lists.mjs page --check` after staging the 08_agents.md note and treat the plan's `page --write` escape hatch as fallback, not as "none expected."
+
+DEFER severity=LOW — TESTS "Unchanged, and must stay green ... simulated in memory" — backlog-lane tests :386-424/:561-575 use the API route and are asserted to "not assert it is absent," but that is read-from-source, not run; any exact-`toEqual` on a 2-element set for such a fixture breaks — run the full `src/tests/backlog/*.logic.test.ts` suite once post-change (the plan only mandates red-first for the *new* tests).
+
+DEFER severity=LOW — SIBLING (rule-lists.mjs:185) — the existing `surface` regex has the same unanchored-path risk the plan cites (34 `mobile/src/lib` files) as the reason to reject option (e); if any other rule-list regex matches `src/lib` without a `^` anchor it has the identical root cause and would also fire on `mobile/src/lib` — `git grep -n 'src/lib\|app/api' scripts/analysis/rule-lists.mjs` and check each occurrence for `^`/`(?:\/|$)` boundaries.
+
+DEFER severity=LOW — LANDING / rollback — the plan describes the forward two-commit landing but not the rollback: a revert must take the code line, S1-S4/B1/B2/C1 and the Spec 08 note as one bundle (work commit), since reverting only :186 leaves the new tests red — say so explicitly; the close commit is safe to leave.
+
+DEFER severity=LOW — CUT-OVER — a running lane (372/383/396) that merges the board after landing gains the *close* requirement (out-security.txt) but already ran its *output review* against its old base copy without the security lens, so it must run the lens retroactively to synthesize the file — the orchestrator note should say "run the security lens now, retroactively, if you merge," not just "you owe out-security.txt."
+
+DEFER severity=LOW — FACTS 4 cost — "one DeepSeek call per diff chunk at output" is a per-chunk multiplier with the chunk counts for 372/383/396 unstated, so the added call volume is a lower bound — record the per-task diff-chunk counts at build head.
+
+REJECT — FACTS 4 "None of them has plan evidence" — this is checkable and low-risk (`ls docs/reports/reviews/{372,379,380,383,396}`), not a premise worth a BUG-level flag; confirming empty dirs before launch is sufficient.
+
+```
+VERDICT: PASS on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- n/a (PASS)
+Top 3 unverified data premises (regardless of verdict):
+- lensSet's `files` argument is a bare path list for all three callers — verify: `grep -n 'lensSet(' scripts/analysis/rule-lists.mjs scripts/backlog/backlog-lane.mjs scripts/backlog/check-lane-close.mjs` and inspect the argument expression at each.
+- Close refuses on a Files-line *entry* (not a changed file) — verify: read check-lane-close.mjs scenario matcher around :208-216 and confirm whether it keys off the Files line or the diff; if the diff, C1 must modify the file.
+- The "9 → 14" security-set and the 5 IDs are correct against the live board — verify: node one-liner over `checkTasks`/`resolveTask` applying `lensSet` to every resolved build|fix task, assert set == {372,379,380,383,396}; also `ls docs/reports/reviews/{372,379,380,383,396}` for the 0-plan-evidence premise.
+```
+
+---
+⏱  56582ms (56.6s)
+📊 Tokens — total: 26325, input: 16843, output: 9482, reasoning: 8019

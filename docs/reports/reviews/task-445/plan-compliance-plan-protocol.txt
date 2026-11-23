@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.729Z file_sha256=bc9fc0cc1d0fcdcbb3a91b0f51a12ab92c4b82b32c5c044b53d79ed11a653ebd prompt_sha256=0d968c9f75b36b39e1195003b86551a636a1509e464d08373c48fa7d6319e82e
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-445 card scope "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — PLAN-445-v1 "OPERATOR" "**A (built by this plan):** API routes and library code, src/app/api/ and src/lib/." — the plan delivers the api-lib row only and pushes the step-pipeline row the clause names into a question (option C), so half the named scope is unmet — include the step-pipeline row (with the row's own `not` list) in the line and its tests, or obtain the operator's narrowing recorded as a ruling before plan-lock.
+
+BUG severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-445-v1 "One question, because \"back-end\" can be read two ways (RR-0385 item 4(ii)):" and the only search offered is "How the search was done (git grep over src/tests, scripts/tests and tests):" — the question on what "back-end" covers is asked without any quoted search of the decisions record showing none exists — quote the record search over MORNING-DECISIONS.md and the decision log for migrations, scripts and pipeline, and drop the question if it finds a ruling.
+
+DEFER severity=MED — plan-protocol §5 item 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-445-v1 "Cost: one more DeepSeek call at plan-prep and one per diff chunk at output, plus the grounder's ruling on its findings." — this is a call count, not a labelled estimate for task-445 or for each of the 5 newly covered tasks — add one MEASURED-with-source or GUESS-labelled time estimate line per task.
+
+DEFER severity=LOW — plan-protocol §4 step 3 "each push's contents, suite, gates, commit-msg trailers, ids, operator tty step" — PLAN-445-v1 "**Work commit:** the code line, the tests, the Spec 08 note (the staged spec satisfies check-spec-diff), the README lines and the task notes; `Task: task-445`." — contents, suite, gates and trailer are named, the operator tty step is absent from the push review — name the tty step (who runs it, on which tree) or state there is none.
+
+DEFER severity=LOW — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — PLAN-445-v1 "**S1** (rule-lists.logic.test.ts, new describe after :718)." — file:line and red-first test names are given but no exact command is given for running any of S1-S4, B1, B2, C1 — add the exact command per test file (vitest path and filter) under TESTS.
+
+DEFER severity=NIT — pasted principles "accuracy" — PLAN-445-v1 "operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1968 \"Teh missing one is security\" and :1969 \"add it.\"" — the pasted record shows the :1969 line continuing ("add it. Then once these close move on to the Mcfix plan for the closed and built tasks with the new approach."), so the prefix is presented as the line's verbatim text — add an ellipsis or quote :1969 in full.
+
+MET — task-445 card "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the new term is ORed onto the unchanged `/entitlement|auth|stripe|metered|admin|pii/i`, with S2 as the survive-the-fix lock.
+MET — task-445 card "tests first, both directions" — PLAN-445-v1 "Planted defect: `sec` = the new term only. Red." — S2, S3 and S4 each name a planted defect for the reverse direction.
+MET — task-445 card "NOT in this task: a new lens, a new gate, a change to the lens template" — PLAN-445-v1 "It does not make the lens useless, so the template is not changed (as the card says)." — no template, lens or gate is added, only the existing security attach widened.
+MET — task-445 card "front-end rows (unless the plan review rules them in with a named reason)" — PLAN-445-v1 "**NOT IN SCOPE** ... Front-end rows, including mobile/src/lib." and "It also fires on mobile/src/lib (34 files)." — front end is excluded with a named, measured reason.
+MET — plan-protocol §0 bullet 3 "Every new task carries its SOURCE" — PLAN-445-v1 "RR-0391 (MORNING-DECISIONS.md:1966-1970, decision-176)." — the card and line both cite the ruling the change comes from.
+
+REJECT — plan-protocol §2 step C "check.mjs, check-cites, check-quotes PASS" — the change is accused of not running the panel gate — M-246 item 4 routes a single lane task to the Spec 08 §7 lens set, not the nine-seat panel gate.
+REJECT — plan-protocol §4 "Output per increment: .../seq-patch.json ... + SITTING.md + PASS lines" — the change is accused of not producing the increment artifacts — this is one lane task plan under the M-246 narrow-lens ruling, not an increment plan.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 6
+Rules met: none
+
+---
+⏱  62166ms (62.2s)
+📊 Tokens — total: 20232, input: 8492, output: 11740, reasoning: 10453

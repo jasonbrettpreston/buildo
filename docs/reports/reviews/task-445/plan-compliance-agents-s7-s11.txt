@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:58:59.712Z file_sha256=819928cd3bb4b5be7eea7c508e010631c7966c54949aebf14afcebebc04799d3 prompt_sha256=51f00fb73c5bdd5f83d7167a1fa2fc18a40c090f40a688d1353256138cba0e8f
+🔍 Lens review of docs/reports/reviews/task-445/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — PLAN-445-v1 TESTS S1 "Red today at toEqual (no security)." against UNVERIFIED "Nothing was run: none of the reds or greens has been seen." — every red in the plan (S1, S2 "Red.", S3 "Planted defects, each red", S4 "Planted defect: drop `code &&`. Red.", B1 "Red today at toContain.", B2 "Red today (2 names).", C1 "Red today: exit 0.") is a claim about running the current code that was not run, so the §11.3 "proven in BOTH directions ... before red is claimed" state is asserted on paper only — run each new case against the current rule-lists.mjs and paste the actual red output before plan-lock, or restate them as planned reds with no "today".
+
+BUG severity=HIGH — 08_agents.md §7 rule 7 "Security fires only on money/auth/PII/admin" — PLAN-445-v1 SPEC 08 NOTE "the same limit in the A12 row and the section 3 line, now read with this addition" — the note is inserted at 08_agents.md:261 (end of §5.7) and amends the A12 row, the section 3 line and lens-security.md's "Fires only", but not §7 rule 7 in the same file, and agents-s7-s11 (the list that carries rule 7) does not include §5.7, so the pasted clause stays literally false with no amendment naming it — extend the dated note to name §7 rule 7 (and the section 7 line) so the clause reads with this addition.
+
+DEFER severity=MED — task-445 Description "the paths the rule table's api-lib and step-pipeline rows govern" — PLAN-445-v1 OPERATOR "A (built by this plan): API routes and library code, src/app/api/ and src/lib/." with NOT IN SCOPE "Migrations and pipeline steps (see OPERATOR)" — the card names two rows and the option the plan builds covers one, so the step-pipeline paths the card names stay unreviewed until the operator answers A/B/C — record his answer before plan-lock, or add the step-pipeline row to the line.
+
+DEFER severity=MED — task-445 Files line "Files: scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, ... .claude/review-templates/README.md" — PLAN-445-v1 SPEC 08 NOTE "(owed: 00_engineering_standards.md:465 same commit; Spec 137 rule 10, 137_mcqueue.md:125)" — the plan edits a spec file the card's Files line does not name and never adds it to that line, so the change carries work outside the declared scope — add 00_engineering_standards.md to the task Files line in the same change or drop that edit.
+
+DEFER severity=LOW — 08_agents.md §11.2 note 2026-11-21 "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md" — PLAN-445-v1 LANDING "two commits: 1. Work commit ... 2. Close commit" — the plan's landing step names no grounder record (FOLD-CHECK.md beside GROUNDER-PLAN.md) at launch, which the launch check and the plan-prep commit require — name the grounder record in the launch step.
+
+MET — 08_agents.md §11.4 "Tests live in the plan; the plan panel reviews them" — PLAN-445-v1 TESTS — cases, fixtures, red/green expectations and invocation mode (lensBrief, prepFixture, scenario, --dry-run) are written into the plan.
+
+MET — 08_agents.md §7 rule 9 note 2026-11-22 "the seat that writes a task's plan and the lane that builds it run on Opus" — PLAN-445-v1 header "Planner: Opus, read-only".
+
+MET — task-445 Description "keeping the six words as they are" — PLAN-445-v1 CODE keeps "/entitlement|auth|stripe|metered|admin|pii/i.test(files)" and S2 locks the six words from the back end.
+
+MET — task-445 Description "NOT in this task: a new lens, a new gate, a change to the lens template" — PLAN-445-v1 FACTS 3 "so the template is not changed (as the card says)", and no gate is added.
+
+MET — 08_agents.md §7 rule 10(a) "No recommendation goes to the operator without its rule quoted with file:line" — PLAN-445-v1 BASIS "RR-0391 (MORNING-DECISIONS.md:1966-1970, decision-176)".
+
+MET — 08_agents.md §7 rule 2 "validate the spec against reality before checking code against the spec" — PLAN-445-v1 FACTS 1 "rule-lists.mjs:183-192 is `lensSet`" and BASIS "08_agents.md:489 at this head; the card's :462 is stale".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 5
+Rules met: none
+
+---
+⏱  97386ms (97.4s)
+📊 Tokens — total: 36658, input: 17750, output: 18908, reasoning: 17708
