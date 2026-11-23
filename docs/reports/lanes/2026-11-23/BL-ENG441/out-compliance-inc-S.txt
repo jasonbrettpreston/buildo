@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.425Z file_sha256=b127c3336e80ab227f2b5bd112c36f0f5a16500e05a2113aaa6bc1c37fbe6081 prompt_sha256=2824d0786e8153cf4ff136865e555ccee77fa42e61ba0f02aaf89420a20b341f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT/MET lines:
+
+DEFER severity=MED — task-441 card "each test is proven red on a planted defect before it counts" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md (NOTES) "Hook output: docs/reports/reviews/task-441/red.out." — the red proof rests on notes prose plus a red.out that no file in this diff carries, so the artefact itself cannot be seen — commit docs/reports/reviews/task-441/red.out (the Files line already allows that path) or name the commit that holds it.
+
+DEFER severity=MED — task-441 card "## Acceptance criteria" (heading present, no criterion lines pasted) — task-441 (NOTES) "Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1" — an acceptance criterion is recorded as not matching its own expected value, and because the card carries no acceptance lines there is no text to check the deviation against — write the acceptance lines into the card and record the acceptance-2 ruling in the notes.
+
+DEFER severity=LOW — task-441 card "each test is proven red on a planted defect before it counts" — src/tests/non-null-assertion-comment.logic.test.ts "expect(pinProblems({ a: 2 }, { a: 1 })).toHaveLength(1);" — the "above its ceiling" refusal branch is proven only by the test's own pure-function case, since the plant produced task-441 (NOTES) "3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'", so the ceiling-overflow path never failed red on a planted file — plant a second form (a pinned file gaining one more `!`) or state in the notes that the branch is unit-proven only.
+
+DEFER severity=LOW — task-441 card "Every build task of this plan follows the six steps, plan written and built on Opus" — backlog/tasks/task-441 (Task block) "plan written and built on Opus" — the plan text and its model attribution are not in the pasted material, so this clause cannot be seen to be met — attach the plan excerpt or the lane launch record naming the planner and builder.
+
+REJECT — task-441 card "Files: src/tests/no-blocking-dialogs.logic.test.ts, ..." — that the plant src/components/ui/Planted441.ts sits outside the Files line — the notes state it was never committed: "Plant unstaged and deleted right after (git ls-files src/components/ui: Badge.tsx, ScoreBadge.tsx)."
+
+MET — task-441 card "Files:" line — src/tests/no-blocking-dialogs.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts — the change adds exactly the three named test files and the task file, nothing else.
+
+MET — RR-0385 "We just want to focus on getting the right tests that mirror the engineering and compliance." — src/tests/ui-component-isolation.logic.test.ts "// SPEC LINK: docs/specs/00_engineering_standards.md §1.2 (:17-18)" — one test per engineering rule, each file line 1 linked to the clause it mirrors.
+
+MET — task-441 card "Label all realted tasks McFix Final" (RR-0385) — task-441 (frontmatter context) "- McFix Final" — the label is carried on the task file.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — task-441 (NOTES) "2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts" — the lane stopped at the hook refusal and the plant change waited for the grounder's ruling before the red run.
+
+MET — RR-0392 "we don't need any other infastrcuture beyond this" — task-441 (NOTES) "git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing" — no config, hook or script change rides along.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  40715ms (40.7s)
+📊 Tokens — total: 25695, input: 17678, output: 8017, reasoning: 7027

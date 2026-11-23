@@ -3,11 +3,12 @@ id: TASK-441
 title: >-
   FINAL.6 Engineering standards tests: one test per engineering rule that has
   none, a few at a time, each proven to fail first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ENG441'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:31:00Z'
+updated_date: '2026-11-23T15:55:00Z'
+due_date: '2026-11-30'
 labels:
   - McFix
   - McFix Final
@@ -26,6 +27,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/TRIAGE.md
 type: build
 ordinal: 141012
 ---
@@ -306,4 +310,24 @@ rg#2 MED folded do not raise the num
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-ENG441, worktree /Users/brettpreston_macmini/Buildo-wt-eng441, branch wf1/inc1b-eng441), RR-0240
+
+2026-11-23 lane BL-ENG441 build: three tests written (src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts). Ceiling measured at head efaca9109 just before commit 1: 535 files scanned, 166 undocumented ! in 60 files (148 in 49 src files, 18 in 11 mobile files), equal to the plan. npm run typecheck and npm run lint passed with the three tests and the plant present. Red run next: plant src/components/ui/Planted441.tsx staged with the tests, never committed.
+
+2026-11-23 lane BL-ENG441 STOPPED at the red run (brief: a hook refusal for a file not on the Files line stops the lane). The commit attempt with the three tests, the task file and the plan's plant src/components/ui/Planted441.tsx staged was refused by .husky/pre-commit:38 (node scripts/violations/generate-surface-registry.mjs --check), hook text: [surface-registry] DRIFT — docs/reports/generated/127-surface-registry.md is stale. The generator walks src/components on disk for .tsx files (scripts/violations/generate-surface-registry.mjs:229-240, used at :1425 as unowned components), so the plant drifts the registry before typecheck, lint and the related run (:85). The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong. The plant was unstaged and deleted at once; git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. No commit made; no output review run. Ruling owed: e.g. the plant as a .ts file (the walker reads .tsx only, :238), a plan change.
+
+2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts, exporting usePlanted441; the surface-registry generator at .husky/pre-commit:38 walks src/components .tsx files on disk (generate-surface-registry.mjs:229-240); plan 3.4 and its Planted441.tsx references read as the .ts file.
+
+2026-11-23 red (lane BL-ENG441): commit attempt with the three tests, the task file and src/components/ui/Planted441.ts staged, refused by the related run (.husky/pre-commit:85) after typecheck and lint passed: Test Files 3 failed (3), Tests 3 failed | 8 passed (11). 3.1 A: 'src/components/ui/Planted441.ts:6 alert()'; 3.2 A: 'src/components/ui/Planted441.ts:4 useContext()' and ':5 fetch()'; 3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'. Plant unstaged and deleted right after (git ls-files src/components/ui: Badge.tsx, ScoreBadge.tsx). Hook output: docs/reports/reviews/task-441/red.out.
+
+2026-11-23 green and acceptance (lane BL-ENG441): commit 1 = 8cf51f3cc through the real hooks (commit-exit 0); related run: '§1.2: scanned 2 files, 0 hits', '§12.7: scanned 400 files, 0 hits', '§2.3: scanned 535 files, 166 undocumented ! in 60 files, pin sum 166', 'Test Files 3 passed (3) / Tests 11 passed (11)'. Acceptance 1: prints 3. Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1 (the runner prints each failure twice: under the test row, red.out:752, and in the Failed Tests section, red.out:785); the alert, useContext and fetch lines appear as the failure text of 3.1 A (red.out:757-759), 3.2 A (red.out:810-813) and 3.3 A (red.out:783-785) in the related run (Test Files 3 failed (3)), after tsc --noEmit (red.out:126) and next lint (red.out:130). Acceptance 3: git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. Acceptance 4: prints 1. Acceptance 5: all three start with '// SPEC LINK: docs/specs/00_engineering_standards.md'. Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing. Acceptance 7: pin sum 166 over 60 entries equals the measure at efaca9109 (166 in 60 files) and the green run prints the same. Acceptance 8 is the orchestrator's (pre-push suite), not run.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in 8cf51f3cc through the real hooks: three source-scan tests for engineering standards §12.7 (src/tests/no-blocking-dialogs.logic.test.ts), §1.2 (src/tests/ui-component-isolation.logic.test.ts) and §2.3 (src/tests/non-null-assertion-comment.logic.test.ts, a per-file ceiling of 166 undocumented ! in 60 files that only refuses growth). Red first: the related run refused the attempt with the planted src/components/ui/Planted441.ts, 3 failed at the designed assertions (docs/reports/reviews/task-441/red.out); green: Test Files 3 passed (3), Tests 11 passed (11). §2.1 skipped as the plan rules. Acceptance 8 (the pre-push suite) is the orchestrator's. Principles served: accurate, observable, simple.
+
+Review round 1: 2 fixed, 0 task, 0 ruling, 0 wontfix, 6 pile; grounder docs/reports/lanes/2026-11-23/BL-ENG441/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-ENG441/TRIAGE.md
+out-compliance-agents-s7-s11#2 MED fixed 8cf51f3
+out-compliance-plan-protocol#1 MED fixed 8cf51f3
+<!-- SECTION:FINAL_SUMMARY:END -->

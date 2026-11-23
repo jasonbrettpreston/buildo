@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T15:42:39.430Z file_sha256=f728efac4567fc8e10181b18ad1f3a0ae3aef129822b1984f463dac8e646e665 prompt_sha256=2d6fd230770ce502433de7b8d2754d51c6a741dc92974ae86e59b474c4d63a2a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:150 "&& !SKIP.test(f)" — SKIP is a RegExp exercised with .test() inside a loop, so if it carries the g or y flag lastIndex makes the mobile scan order-dependent (a file skipped or scanned non-deterministically) — reset SKIP.lastIndex = 0 before each test, or strip g/y from the pattern (cannot see the flag in mobile-never-do.mjs).
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:159 "const n = findUndocumentedBangs(f, readFileSync(join(ROOT, f), 'utf8')).length;" — a read failure (tracked file removed between git ls-files and the read, or EACCES) throws a bare ENOENT/EACCES with no file or scan context; same shape at src/tests/no-blocking-dialogs.logic.test.ts:58 — wrap the per-file read and fail with the path in the message so the failing file is logged.
+
+NIT — src/tests/non-null-assertion-comment.logic.test.ts:104 "const seen = new Set<number>();" — the pos dedup set is redundant because commentLines already dedups by line number, so dropping it leaves output unchanged — remove seen and the has/continue guard to keep the visitor simple.
+
+NIT — src/tests/no-blocking-dialogs.logic.test.ts:23 "export interface Hit { file: string; line: number; what: string }" — this identical exported Hit shape is redeclared in all three new test files and nothing in the diff imports any of them, so the export keyword is unused public surface — declare it once in a shared test helper, or drop export.
+
+REJECT — src/tests/non-null-assertion-comment.logic.test.ts:119 "if (ts.isNonNullExpression(n)) bangLines.push(lineOf(n.end - 1));" — n.end - 1 looks like a possible off-by-one for the "!" column — it is exact: node.end is exclusive (one past the "!"), so end - 1 is the "!" character.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  116037ms (116.0s)
+📊 Tokens — total: 38044, input: 11329, output: 26715, reasoning: 26225

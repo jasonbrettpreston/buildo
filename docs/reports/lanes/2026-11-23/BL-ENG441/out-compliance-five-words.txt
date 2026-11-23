@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.424Z file_sha256=cacc447fb5ba6ab81628b417d9d468e5159a2b467547ef009257776d35ace396 prompt_sha256=76c97f627f4b435bb1186f2f7e2e6c94ba7ea778dc2cdcc3d1f1d5a35e5b4831
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=HIGH — pasted acceptance record "Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md:319 "Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1 (the runner prints each failure twice, under the test row, red.out:752, and in the Failed Tests section, red.out:785)" — the card's acceptance check returns 2 where it was written as 1 and no operator or grounder ruling re-reading that criterion is pasted, an explanation in the note is not a ruling — paste the criterion or a ruling that reads the doubled print as passing, or make the red run print exactly 1.
+
+DEFER severity=MED — engineering standard §2.3 "If using `!`, you must document why in an inline comment" — src/tests/non-null-assertion-comment.logic.test.ts:26 "UNDOCUMENTED `!` per file, a CEILING (plan review round 1 ruling), measured by the lane at its own head just before commit 1" — the test passes with 166 undocumented `!` in 60 files and only refuses growth, so the pasted sentence is not asserted for any existing line and the round-1 ruling it rests on is not in the pasted context — paste that ruling and say in the header that the 166 are a ratified deferral, or the test's claim to mirror §2.3 is only a ratchet.
+
+DEFER severity=MED — §12.7 "Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser)" — src/tests/no-blocking-dialogs.logic.test.ts:8 "Mobile is out: section 12 is web front end (:304-306)" — the rule's stated harm is the mobile browser, yet mobile/ is outside the scan and the mobile never-do gate it defers to (Spec 90 §5) is not pasted, so mobile alert coverage is unproven — paste that gate's alert coverage or extend the scan to mobile/.
+
+DEFER severity=MED — Files line "Files: src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts, backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md, docs/reports/reviews/task-441/" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md:319 "Hook output: docs/reports/reviews/task-441/red.out." — red.out is the sole red evidence and is not among the change's four paths, so the red-first proof named by the card is not in the change — commit red.out or paste a ruling that it stays untracked.
+
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/no-blocking-dialogs.logic.test.ts:1 "SPEC LINK: docs/specs/00_engineering_standards.md §12.7 (:342-345)" — all three tests name a spec section and no rule id or declared alias, so whether they register as locks is unproven and the rule map is not pasted — add the rule-map id (or declared alias) beside each SPEC LINK.
+
+DEFER severity=LOW — §12.7 "**Never:** Build custom alert banners" — src/tests/no-blocking-dialogs.logic.test.ts:7 ""Build custom alert banners" (:344)." — one clause of the rule the card is mirroring has no test, declared as NOT TESTED but with no ruling pasted — paste a ruling that the banner clause is out of a scan's reach, or the card's one-test-per-rule is met only in part.
+
+MET — Description "each test is proven red on a planted defect before it counts" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md:317 — red run records 3.1 A Planted441.ts:6 alert(), 3.2 A :4 useContext() and :5 fetch(), 3.3 A not in the pin 1, plant deleted after.
+
+MET — plant ruling (Cairn-Ground-P441) "the plant is src/components/ui/Planted441.ts, exporting usePlanted441" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md:315 — the red run used src/components/ui/Planted441.ts and the committed tree holds Badge.tsx and ScoreBadge.tsx only.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md:313 — the lane stopped at the pre-commit refusal and made no commit until the plant ruling at :315.
+
+MET — RR-0385 "We just want to focus on getting the right tests that mirror the engineering and compliance" — src/tests/ui-component-isolation.logic.test.ts:1 — three rule-bearing tests under src/tests, no config change (no-alert and noAlert stay off) per src/tests/no-blocking-dialogs.logic.test.ts:12.
+
+REJECT — QUESTIONS-RULED.md:37 plan fact (the generator reads the census not the disk) — uncorrected plan text — the plan file is not on the Files line, so it is not this lane's to edit, and the grounder's ruling at :315 records the corrected plant path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+Rules met: none
+
+---
+⏱  86382ms (86.4s)
+📊 Tokens — total: 31562, input: 13014, output: 18548, reasoning: 17089

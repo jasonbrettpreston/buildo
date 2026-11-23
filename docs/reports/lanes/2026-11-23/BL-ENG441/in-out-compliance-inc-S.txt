@@ -1,0 +1,601 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:5f2f21de3a31ff54bb26c45a6c7218f02d02faad49bc88fb69f67219efd4a086 part 1 of 1 chunk 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md","src/tests/no-blocking-dialogs.logic.test.ts","src/tests/non-null-assertion-comment.logic.test.ts","src/tests/ui-component-isolation.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md b/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md
+index 661738f0d34cfbfb09e4c923f40fc70d48effadb..bb31dcfc922b8200db123e94522dbd182ae16f6a 100644
+--- a/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md	
++++ b/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md	
+@@ -7,7 +7,7 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-ENG441'
+ created_date: '2026-11-22T20:24:00Z'
+-updated_date: '2026-11-23T15:31:00Z'
++updated_date: '2026-11-23T15:41:00Z'
+ labels:
+   - McFix
+   - McFix Final
+@@ -306,4 +306,14 @@ rg#2 MED folded do not raise the num
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-23 taken on the board at lane launch (lane BL-ENG441, worktree /Users/brettpreston_macmini/Buildo-wt-eng441, branch wf1/inc1b-eng441), RR-0240
++
++2026-11-23 lane BL-ENG441 build: three tests written (src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts). Ceiling measured at head efaca9109 just before commit 1: 535 files scanned, 166 undocumented ! in 60 files (148 in 49 src files, 18 in 11 mobile files), equal to the plan. npm run typecheck and npm run lint passed with the three tests and the plant present. Red run next: plant src/components/ui/Planted441.tsx staged with the tests, never committed.
++
++2026-11-23 lane BL-ENG441 STOPPED at the red run (brief: a hook refusal for a file not on the Files line stops the lane). The commit attempt with the three tests, the task file and the plan's plant src/components/ui/Planted441.tsx staged was refused by .husky/pre-commit:38 (node scripts/violations/generate-surface-registry.mjs --check), hook text: [surface-registry] DRIFT — docs/reports/generated/127-surface-registry.md is stale. The generator walks src/components on disk for .tsx files (scripts/violations/generate-surface-registry.mjs:229-240, used at :1425 as unowned components), so the plant drifts the registry before typecheck, lint and the related run (:85). The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong. The plant was unstaged and deleted at once; git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. No commit made; no output review run. Ruling owed: e.g. the plant as a .ts file (the walker reads .tsx only, :238), a plan change.
++
++2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts, exporting usePlanted441; the surface-registry generator at .husky/pre-commit:38 walks src/components .tsx files on disk (generate-surface-registry.mjs:229-240); plan 3.4 and its Planted441.tsx references read as the .ts file.
++
++2026-11-23 red (lane BL-ENG441): commit attempt with the three tests, the task file and src/components/ui/Planted441.ts staged, refused by the related run (.husky/pre-commit:85) after typecheck and lint passed: Test Files 3 failed (3), Tests 3 failed | 8 passed (11). 3.1 A: 'src/components/ui/Planted441.ts:6 alert()'; 3.2 A: 'src/components/ui/Planted441.ts:4 useContext()' and ':5 fetch()'; 3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'. Plant unstaged and deleted right after (git ls-files src/components/ui: Badge.tsx, ScoreBadge.tsx). Hook output: docs/reports/reviews/task-441/red.out.
++
++2026-11-23 green and acceptance (lane BL-ENG441): commit 1 = 8cf51f3cc through the real hooks (commit-exit 0); related run: '§1.2: scanned 2 files, 0 hits', '§12.7: scanned 400 files, 0 hits', '§2.3: scanned 535 files, 166 undocumented ! in 60 files, pin sum 166', 'Test Files 3 passed (3) / Tests 11 passed (11)'. Acceptance 1: prints 3. Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1 (the runner prints each failure twice: under the test row, red.out:752, and in the Failed Tests section, red.out:785); the alert, useContext and fetch lines appear as the failure text of 3.1 A (red.out:757-759), 3.2 A (red.out:810-813) and 3.3 A (red.out:783-785) in the related run (Test Files 3 failed (3)), after tsc --noEmit (red.out:126) and next lint (red.out:130). Acceptance 3: git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. Acceptance 4: prints 1. Acceptance 5: all three start with '// SPEC LINK: docs/specs/00_engineering_standards.md'. Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing. Acceptance 7: pin sum 166 over 60 entries equals the measure at efaca9109 (166 in 60 files) and the green run prints the same. Acceptance 8 is the orchestrator's (pre-push suite), not run.
+ <!-- SECTION:NOTES:END -->
+diff --git a/src/tests/no-blocking-dialogs.logic.test.ts b/src/tests/no-blocking-dialogs.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..99f2e9d93535c1446167c33cd5b49e9b817b2427
+--- /dev/null
++++ b/src/tests/no-blocking-dialogs.logic.test.ts
+@@ -0,0 +1,89 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §12.7 (:342-345)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :344:
++//   "**Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser)."
++// TESTED: the `alert()`, `confirm()`, `prompt()` sentence, as a call in tracked web code.
++// NOT TESTED (a scan cannot tell a notification or a banner from other UI): "for all success/error/info notifications" (:343) and
++// "Build custom alert banners" (:344).
++// SCOPE: tracked src/**/*.ts(x), minus src/tests/**, *.test.* and *.d.ts. Mobile is out: section 12 is web front end (:304-306) and the
++// phone app has its own never-do list (Spec 90 §5, scripts/analysis/gates/mobile-never-do.mjs).
++// LIMITS (stated, not widened): the finder matches by name only. It misses `window['alert']()` and aliased calls; a local function,
++// an import or a destructured name called alert, confirm or prompt gives a false red and is renamed (none exists in src today).
++// ESLint core `no-alert` and Biome `noAlert` exist but are not turned on; turning one on is a config change the card does not name.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const NAMES = new Set(['alert', 'confirm', 'prompt']);
++const GLOBALS = new Set(['window', 'globalThis', 'self']);
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every call of alert, confirm or prompt, bare or on window, globalThis or self. Pure: path and text in, hits out. */
++export function findBlockingDialogs(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const visit = (n: ts.Node): void => {
++    if (ts.isCallExpression(n)) {
++      const c = n.expression;
++      let what: string | null = null;
++      if (ts.isIdentifier(c) && NAMES.has(c.text)) what = `${c.text}()`;
++      else if (ts.isPropertyAccessExpression(c) && ts.isIdentifier(c.expression) && GLOBALS.has(c.expression.text) && NAMES.has(c.name.text)) {
++        what = `${c.expression.text}.${c.name.text}()`;
++      }
++      if (what) hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++function scannedFiles(): string[] {
++  return execFileSync('git', ['ls-files', '--', 'src/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => /\.tsx?$/.test(f) && !f.startsWith('src/tests/') && !/\.test\./.test(f) && !f.endsWith('.d.ts'));
++}
++
++describe('§12.7: no alert(), confirm() or prompt() in web code', () => {
++  it('A. the real tree has no call of alert, confirm or prompt', () => {
++    const files = scannedFiles();
++    const hits = files.flatMap((f) => findBlockingDialogs(f, readFileSync(join(ROOT, f), 'utf8')));
++    const report = hits.map((h) => `  ${h.file}:${h.line} ${h.what}`).join('\n');
++    console.log(`§12.7: scanned ${files.length} files, ${hits.length} hits`);
++    expect(hits, `§12.7 (00_engineering_standards.md:344) blocking dialog calls in src:\n${report}`).toEqual([]);
++    // 400 files today; a listing that silently shrinks turns this red (vacuous-pass guard).
++    expect(files.length).toBeGreaterThan(300);
++  });
++
++  it('B. RED planted (KNOWN_BAD): each blocking call form gives exactly one hit with its name', () => {
++    const cases: Array<[string, string]> = [
++      ["alert('x');", 'alert()'],
++      ["window.confirm('y');", 'window.confirm()'],
++      ["globalThis.prompt('z');", 'globalThis.prompt()'],
++    ];
++    for (const [code, what] of cases) {
++      const hits = findBlockingDialogs('planted.tsx', code);
++      expect(hits, code).toHaveLength(1);
++      expect(hits[0]?.what, code).toBe(what);
++    }
++  });
++
++  it('C. controls: toasts, methods, comments, strings and JSX text give 0 hits', () => {
++    const controls = [
++      "toast.error('x');",
++      'form.confirm();',
++      "// alert('x')",
++      "const s = 'please confirm (now)';",
++      'const e = <p>alert(1)</p>;',
++    ];
++    for (const code of controls) expect(findBlockingDialogs('control.tsx', code), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/non-null-assertion-comment.logic.test.ts b/src/tests/non-null-assertion-comment.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a3fcd68d62359952d499da9aaa0350615462265d
+--- /dev/null
++++ b/src/tests/non-null-assertion-comment.logic.test.ts
+@@ -0,0 +1,200 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §2.3 (:45-47)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :47:
++//   "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation
++//    step. If using `!`, you must document why in an inline comment."
++// TESTED: "If using `!`, you must document why in an inline comment". DOCUMENTED means a comment (leading or trailing comment ranges,
++// collected over the file) touches the line of the `!` or the line directly above it (plan Q3).
++// NOT TESTED: "mathematically guaranteed" (a judgment). The first sentence of §2.3 (:46) is already compiler-enforced wherever no `!`
++// overrides it (tsconfig.json `strict` and `noUncheckedIndexedAccess`; mobile/tsconfig.json `strict`).
++// OTHER CHECKS: Biome's recommended noNonNullAssertion also covers two folders (src/features/leads and src/lib/observability, biome.json);
++// it warns on every `!`, documented or not. This test is the comment-present half of §2.3, the half no other check reads.
++// SCOPE: tracked src/**/*.ts(x) minus src/tests/**, *.test.* and *.d.ts; plus tracked mobile/**/*.ts(x) minus mobile/__tests__/**, *.test.*
++// and anything SKIP (scripts/analysis/gates/mobile-never-do.mjs) matches. 535 files at the launch head.
++// LIMITS (stated, not widened): any comment counts as "document why"; the test cannot read whether the comment gives a reason.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++import { SKIP } from '../../scripts/analysis/gates/mobile-never-do.mjs';
++
++const ROOT = process.cwd();
++
++/**
++ * UNDOCUMENTED `!` per file, a CEILING (plan review round 1 ruling), measured by the lane at its own head just before commit 1:
++ * 166 in 60 files (148 in 49 src files, 18 in 11 mobile files). Counts are AST nodes (`x!!` counts twice).
++ * A file may hold FEWER than its number: nothing is edited when a `!` is fixed or documented. A file with MORE than its number, or a
++ * file not in this list with any, turns the test red. NO NUMBER IS EVER RAISED: a new undocumented `!` is fixed by writing its why
++ * comment on its line or the line above, which is what §2.3 asks, in the lane's own file. Slack: a file that falls below its number
++ * leaves room for new undocumented `!` up to that number until the next re-measure. Only task-441 edits this list.
++ */
++export const UNDOCUMENTED_BANG_PIN: Readonly<Record<string, number>> = {
++  'mobile/app/(app)/[flight-job].tsx': 1,
++  'mobile/src/components/feed/FlightCard.tsx': 1,
++  'mobile/src/components/surfaces/LotMapBinding.tsx': 2,
++  'mobile/src/components/surfaces/ReportBinding.tsx': 5,
++  'mobile/src/hooks/useFlightJobDetail.ts': 1,
++  'mobile/src/hooks/useLeadDetail.ts': 1,
++  'mobile/src/hooks/useParcelLookup.ts': 1,
++  'mobile/src/lib/debug/stateDebug.ts': 2,
++  'mobile/src/lib/lotMap.ts': 1,
++  'mobile/src/lib/parcelSearchMatch.ts': 2,
++  'mobile/src/lib/trackedLots.ts': 1,
++  'src/app/api/admin/parcels/lookup/route.ts': 1,
++  'src/app/api/admin/pipelines/status/route.ts': 1,
++  'src/app/api/admin/stats/route.ts': 1,
++  'src/app/api/admin/users/[uid]/route.ts': 12,
++  'src/app/api/admin/users/[uid]/subscription/reconcile/route.ts': 1,
++  'src/app/api/admin/users/route.ts': 3,
++  'src/app/api/parcels/lookup/route.ts': 1,
++  'src/app/api/permits/route.ts': 1,
++  'src/app/api/subscribe/exchange/route.ts': 1,
++  'src/app/api/subscribe/portal-session/route.ts': 2,
++  'src/app/api/subscribe/session/route.ts': 2,
++  'src/app/api/user-profile/reactivate/route.ts': 1,
++  'src/app/api/user-profile/route.ts': 3,
++  'src/app/permits/[id]/page.tsx': 2,
++  'src/components/DataQualityDashboard.tsx': 2,
++  'src/components/FreshnessTimeline.tsx': 4,
++  'src/components/admin/LeadDetailInspector.tsx': 1,
++  'src/components/admin/ParcelCostTool.tsx': 2,
++  'src/components/funnel/FunnelPanels.tsx': 5,
++  'src/components/report/ReportPage.tsx': 4,
++  'src/features/admin-users/api/useAdminUsers.ts': 1,
++  'src/lib/admin/github-dispatch.ts': 1,
++  'src/lib/admin/parcel-lookup.ts': 11,
++  'src/lib/auth/get-user-context.ts': 1,
++  'src/lib/auth/verify-admin.ts': 1,
++  'src/lib/builders/enrichment.ts': 1,
++  'src/lib/builders/extract-contacts.ts': 1,
++  'src/lib/classification/classifier.ts': 1,
++  'src/lib/classification/coa-scope-classifier.ts': 1,
++  'src/lib/inspections/parser.ts': 7,
++  'src/lib/leads/build-lifecycle-timeline.ts': 1,
++  'src/lib/leads/lead-inspect-query.ts': 4,
++  'src/lib/market-metrics/queries.ts': 2,
++  'src/lib/massing/geometry.ts': 12,
++  'src/lib/media/contract.ts': 1,
++  'src/lib/parcels/address.ts': 1,
++  'src/lib/parcels/geometry.ts': 19,
++  'src/lib/parcels/lot-map.ts': 1,
++  'src/lib/parcels/lot-size-entry.ts': 2,
++  'src/lib/parcels/lot-view.ts': 1,
++  'src/lib/quality/metrics.ts': 17,
++  'src/lib/quality/types.ts': 1,
++  'src/lib/stripe/parcel-checkout.ts': 1,
++  'src/lib/stripe/parcel-plans.ts': 1,
++  'src/lib/supabase/admin.ts': 1,
++  'src/lib/supabase/browser.ts': 2,
++  'src/lib/supabase/middleware.ts': 2,
++  'src/lib/supabase/server.ts': 2,
++  'src/lib/surfaces/report/core.ts': 1,
++};
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every non-null assertion with no comment on its own line or the line above. Pure: path and text in, hits out. */
++export function findUndocumentedBangs(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const lineOf = (pos: number): number => sf.getLineAndCharacterOfPosition(pos).line;
++  const commentLines = new Set<number>();
++  const seen = new Set<number>();
++  const addRanges = (ranges: ts.CommentRange[] | undefined): void => {
++    for (const r of ranges ?? []) {
++      if (seen.has(r.pos)) continue;
++      seen.add(r.pos);
++      for (let l = lineOf(r.pos); l <= lineOf(r.end); l++) commentLines.add(l);
++    }
++  };
++  const bangLines: number[] = [];
++  const visit = (n: ts.Node): void => {
++    // JSX text is not trivia: `// x` inside it is text, not a comment.
++    if (n.kind !== ts.SyntaxKind.JsxText) {
++      addRanges(ts.getLeadingCommentRanges(text, n.pos));
++      addRanges(ts.getTrailingCommentRanges(text, n.end));
++    }
++    if (ts.isNonNullExpression(n)) bangLines.push(lineOf(n.end - 1));
++    for (const c of n.getChildren(sf)) visit(c);
++  };
++  visit(sf);
++  return bangLines
++    .filter((l) => !commentLines.has(l) && !commentLines.has(l - 1))
++    .map((l) => ({ file: rel, line: l + 1, what: 'undocumented !' }));
++}
++
++export interface PinProblem { file: string; count: number; ceiling: number | null }
++
++/** The ceiling refuses growth only: a file not in the pin with hits, or a count above its pin. A count below, a file at 0 or a gone file is no problem. */
++export function pinProblems(actual: Readonly<Record<string, number>>, pin: Readonly<Record<string, number>>): PinProblem[] {
++  const out: PinProblem[] = [];
++  for (const [file, count] of Object.entries(actual)) {
++    if (count <= 0) continue;
++    const ceiling = pin[file];
++    if (ceiling === undefined) out.push({ file, count, ceiling: null });
++    else if (count > ceiling) out.push({ file, count, ceiling });
++  }
++  return out;
++}
++
++function scannedFiles(): string[] {
++  const ls = (dir: string): string[] =>
++    execFileSync('git', ['ls-files', '--', dir], { cwd: ROOT, stdio: 'pipe' })
++      .toString()
++      .split('\n')
++      .map((s) => s.trim())
++      .filter((f) => /\.tsx?$/.test(f) && !/\.test\./.test(f));
++  const src = ls('src/').filter((f) => !f.startsWith('src/tests/') && !f.endsWith('.d.ts'));
++  const mobile = ls('mobile/').filter((f) => !f.startsWith('mobile/__tests__/') && !SKIP.test(f));
++  return [...src, ...mobile];
++}
++
++describe('§2.3: every non-null assertion carries a why comment (per-file ceiling for the known breaks)', () => {
++  it('A. the real tree holds no undocumented `!` above the ceiling', () => {
++    const files = scannedFiles();
++    const actual: Record<string, number> = {};
++    for (const f of files) {
++      const n = findUndocumentedBangs(f, readFileSync(join(ROOT, f), 'utf8')).length;
++      if (n > 0) actual[f] = n;
++    }
++    const problems = pinProblems(actual, UNDOCUMENTED_BANG_PIN);
++    const pinSum = Object.values(UNDOCUMENTED_BANG_PIN).reduce((a, b) => a + b, 0);
++    const actualSum = Object.values(actual).reduce((a, b) => a + b, 0);
++    console.log(`§2.3: scanned ${files.length} files, ${actualSum} undocumented ! in ${Object.keys(actual).length} files, pin sum ${pinSum}`);
++    const report = problems
++      .map((p) =>
++        p.ceiling === null
++          ? `  ${p.file}: not in the pin, ${p.count}`
++          : `  ${p.file}: ${p.count} undocumented, above its ceiling ${p.ceiling}`,
++      )
++      .join('\n');
++    expect(
++      problems,
++      `§2.3 (00_engineering_standards.md:47) undocumented non-null assertions above the ceiling:\n${report}\n` +
++        'Document the `!` with a why comment on the line or the line above; do not raise the number.',
++    ).toEqual([]);
++    expect(files.length).toBeGreaterThan(400);
++  });
++
++  it('B. RED planted (KNOWN_BAD): each undocumented `!` form gives exactly one hit', () => {
++    for (const code of ['x!.a;', 'const v = m.get(k)!;', 'foo!();']) {
++      expect(findUndocumentedBangs('planted.ts', code), code).toHaveLength(1);
++    }
++  });
++
++  it('C. controls: a comment on the line or the line above, optional chaining and a definite assignment give 0 hits', () => {
++    const controls = ['x!.a; // guarded by parse() above', '// why\nx!.a;', 'x?.a;', 'let y!: number;'];
++    for (const code of controls) expect(findUndocumentedBangs('control.ts', code), code).toEqual([]);
++    // The imported mobile SKIP still matches node_modules, so a rename of the export fails loudly.
++    expect(SKIP.test('mobile/node_modules/x.ts')).toBe(true);
++  });
++
++  it('D. pinProblems refuses growth only', () => {
++    expect(pinProblems({ a: 2 }, { a: 1 })).toHaveLength(1);
++    expect(pinProblems({ a: 0 }, { a: 1 })).toEqual([]);
++    expect(pinProblems({ b: 1 }, {})).toHaveLength(1);
++    expect(pinProblems({ a: 1 }, { a: 1 })).toEqual([]);
++  });
++});
+diff --git a/src/tests/ui-component-isolation.logic.test.ts b/src/tests/ui-component-isolation.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..84ffd86fbc3a290f009f7c5491176236100cde1e
+--- /dev/null
++++ b/src/tests/ui-component-isolation.logic.test.ts
+@@ -0,0 +1,97 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §1.2 (:17-18)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :18:
++//   "Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data
++//    via API calls or rely on global context unless explicitly engineered to do so."
++// TESTED: the second sentence. "unless explicitly engineered to do so" is the ENGINEERED map below: one entry per file, with its reason
++// (the FENCED form of src/tests/script-source-scan.ts). It is empty today.
++// NOT TESTED: "stateless where possible" ("where possible" is a judgment).
++// SCOPE: tracked src/components/ui/**/*.ts(x) (2 files today: Badge.tsx, ScoreBadge.tsx).
++// FINDER: a call of fetch, useContext, use, useQuery, useMutation, useInfiniteQuery or useSuspenseQuery; React.useContext, React.use
++// or window.fetch; an import from '@tanstack/react-query'.
++// LIMITS (stated, not widened): a data read through a custom hook is not seen.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const UI_DIR = 'src/components/ui/';
++
++/**
++ * Files under src/components/ui that are "explicitly engineered" to fetch or read context, each with its reason.
++ * An entry here is a promise the exception was reasoned about, not a place to park a violation.
++ */
++export const ENGINEERED: Record<string, string> = {};
++
++const CALLS = new Set(['fetch', 'useContext', 'use', 'useQuery', 'useMutation', 'useInfiniteQuery', 'useSuspenseQuery']);
++const MEMBER_CALLS = new Set(['React.useContext', 'React.use', 'window.fetch']);
++const QUERY_PACKAGE = '@tanstack/react-query';
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every data fetch or global context read in one file. Pure: path and text in, hits out. */
++export function findUiImpurity(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
++  const visit = (n: ts.Node): void => {
++    if (ts.isCallExpression(n)) {
++      const c = n.expression;
++      if (ts.isIdentifier(c) && CALLS.has(c.text)) hits.push({ file: rel, line: at(n), what: `${c.text}()` });
++      else if (ts.isPropertyAccessExpression(c) && ts.isIdentifier(c.expression)) {
++        const name = `${c.expression.text}.${c.name.text}`;
++        if (MEMBER_CALLS.has(name)) hits.push({ file: rel, line: at(n), what: `${name}()` });
++      }
++    } else if (ts.isImportDeclaration(n) && ts.isStringLiteral(n.moduleSpecifier) && n.moduleSpecifier.text === QUERY_PACKAGE) {
++      hits.push({ file: rel, line: at(n), what: `import from '${QUERY_PACKAGE}'` });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++function uiFiles(): string[] {
++  return execFileSync('git', ['ls-files', '--', UI_DIR], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => /\.tsx?$/.test(f));
++}
++
++describe('§1.2: shared UI components do not fetch data or read global context', () => {
++  it('A. the real tree, minus ENGINEERED, has no fetch or context read in src/components/ui', () => {
++    const files = uiFiles();
++    const hits = files.filter((f) => !(f in ENGINEERED)).flatMap((f) => findUiImpurity(f, readFileSync(join(ROOT, f), 'utf8')));
++    const report = hits.map((h) => `  ${h.file}:${h.line} ${h.what}`).join('\n');
++    console.log(`§1.2: scanned ${files.length} files, ${hits.length} hits`);
++    expect(hits, `§1.2 (00_engineering_standards.md:18) data fetch or context read in a shared UI component:\n${report}`).toEqual([]);
++    expect(files.length).toBeGreaterThan(0);
++  });
++
++  it('B. every ENGINEERED key is a tracked file under src/components/ui (no stale entry)', () => {
++    const files = new Set(uiFiles());
++    expect(Object.keys(ENGINEERED).filter((k) => !files.has(k))).toEqual([]);
++  });
++
++  it('C. RED planted (KNOWN_BAD): each fetch or context form gives exactly one hit', () => {
++    const cases = [
++      "fetch('/api/x');",
++      'useContext(Theme);',
++      'React.useContext(T);',
++      'use(Ctx);',
++      "useQuery({ queryKey: ['k'] });",
++      "import { useQueryClient } from '@tanstack/react-query';",
++    ];
++    for (const code of cases) expect(findUiImpurity('planted.tsx', code), code).toHaveLength(1);
++  });
++
++  it('D. controls: local state, helpers, methods, comments and strings give 0 hits', () => {
++    const controls = ['useState(0);', "cn('a');", 'api.fetch();', "// fetch('/api')", "const s = 'fetch(';"];
++    for (const code of controls) expect(findUiImpurity('control.tsx', code), code).toEqual([]);
++  });
++});
+

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.425Z file_sha256=eccf57801941bd1ec45688983dbc1c0752c5db3df52a09a9c73ab1fceac432b6 prompt_sha256=f3c29657ceba8ef2653176d41ee6028648bd89980ab21b5480faaf80703248f0
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — plan-protocol section 2 step C gate "check.mjs, check-cites, check-quotes PASS" — backlog/tasks/task-441 ... .md:NOTES "The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong." — the step C gate passed a plan fact that is false, and the correction (plant is Planted441.ts) exists only in the task notes, so plan 3.4 still tells the next lane to plant a .tsx and hit the same pre-commit:38 drift; fix: fold the Cairn-Ground-P441 ruling into plan 3.4 and QUESTIONS-RULED.md:37, then re-run check-cites.
+
+DEFER severity=MED — RR-0385 operator verbatim "We just want to focus on getting the right tests that mirror the engineering and compliance." — src/tests/non-null-assertion-comment.logic.test.ts:29 "NO NUMBER IS EVER RAISED" with :33 "export const UNDOCUMENTED_BANG_PIN" — the green test accepts 166 undocumented "!" in 60 files, so §2.3's "If using `!`, you must document why in an inline comment." stays unmet in those files and no task or source line is recorded to close the gap; fix: record a follow-on item with its source for the 60-file cleanup, or state the 166 baseline as a ruling.
+
+DEFER severity=LOW — task Description "tests for the engineering-standards rules ranked by FINAL.5, a few per round" — src/tests/no-blocking-dialogs.logic.test.ts:3 "task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards)" — none of the three headers cites a FINAL.5 rank, so the card's ranking clause is not evidenced in the material; fix: cite the FINAL.5 row for §12.7, §2.3 and §1.2.
+
+DEFER severity=NIT — task card "## Acceptance criteria" (empty in the pasted card) — backlog/tasks/task-441 ... .md:NOTES "Acceptance 8 is the orchestrator's (pre-push suite), not run." — the lane measures itself against eight acceptances that are not on the card and one is not run, so the acceptance gate has no card text to check; fix: put the eight criteria on the card and name AC8's owner.
+
+MET — task Files line — the four diff paths — every touched path (three tests, the task file) is on the Files line and nothing outside it is edited.
+MET — task Description "each test is proven red on a planted defect before it counts" — NOTES "Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" and "git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only" — all three tests were red at the red run, commit 1 8cf51f3cc went green, and the plant was deleted, not committed.
+MET — plan-protocol dated note item 4 (single lane task plus its separate grounder) — NOTES "plant ruling (Cairn-Ground-P441)" — the open plant question was put to the lane's grounder and ruled before the red run.
+MET — RR-0385 "Label all realted tasks McFix Final" — task front matter "labels: - McFix - McFix Final" — the labels are present and unchanged.
+
+REJECT — RR-0392 "Push for all 4. I don't think we need any other infastrcuture beyond this.. we are good to go!" — that UNDOCUMENTED_BANG_PIN is infrastructure beyond the ruling — the pin is a constant inside a named test file and the note says it equals the plan, not a new infrastructure layer.
+REJECT — RR-0359 "Nothing is folded before the grounder has ruled" — that plan 3.4 was changed without a grounder ruling — the note shows "plant ruling (Cairn-Ground-P441)" ruled first, then the plant was rebuilt as .ts.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  127533ms (127.5s)
+📊 Tokens — total: 39348, input: 13838, output: 25510, reasoning: 24576
