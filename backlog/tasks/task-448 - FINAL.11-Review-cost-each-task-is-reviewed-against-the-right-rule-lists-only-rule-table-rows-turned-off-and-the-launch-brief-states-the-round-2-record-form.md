@@ -4,10 +4,11 @@ title: >-
   FINAL.11 Review cost: each task is reviewed against the right rule lists only
   (rule table rows turned off), and the launch brief states the round-2 record
   form
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T21:28:00Z'
+updated_date: '2026-11-23T21:31:00Z'
 labels:
   - McFix
   - McFix Final
@@ -19,6 +20,20 @@ references:
   - docs/reports/reviews/task-448/seat-integration-1.md
   - docs/reports/reviews/task-448/seat-reality-check-1.md
   - docs/reports/reviews/task-448/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 148012
 ---
@@ -501,3 +516,9 @@ rg#3 MED folded the plan grounder it
 rg#4 MED folded RR-0423 item 1 (deci
 rg#5 MED folded the step-pipeline ro
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 taken on the board at lane launch (lane BL-LISTS448, worktree /Users/brettpreston_macmini/Buildo-wt-lists448, branch wf1/inc1b-lists448), RR-0240
+<!-- SECTION:NOTES:END -->
