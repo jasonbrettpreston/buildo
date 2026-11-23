@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENG441'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:31:00Z'
+updated_date: '2026-11-23T15:41:00Z'
 labels:
   - McFix
   - McFix Final
@@ -306,4 +306,12 @@ rg#2 MED folded do not raise the num
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-ENG441, worktree /Users/brettpreston_macmini/Buildo-wt-eng441, branch wf1/inc1b-eng441), RR-0240
+
+2026-11-23 lane BL-ENG441 build: three tests written (src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts). Ceiling measured at head efaca9109 just before commit 1: 535 files scanned, 166 undocumented ! in 60 files (148 in 49 src files, 18 in 11 mobile files), equal to the plan. npm run typecheck and npm run lint passed with the three tests and the plant present. Red run next: plant src/components/ui/Planted441.tsx staged with the tests, never committed.
+
+2026-11-23 lane BL-ENG441 STOPPED at the red run (brief: a hook refusal for a file not on the Files line stops the lane). The commit attempt with the three tests, the task file and the plan's plant src/components/ui/Planted441.tsx staged was refused by .husky/pre-commit:38 (node scripts/violations/generate-surface-registry.mjs --check), hook text: [surface-registry] DRIFT — docs/reports/generated/127-surface-registry.md is stale. The generator walks src/components on disk for .tsx files (scripts/violations/generate-surface-registry.mjs:229-240, used at :1425 as unowned components), so the plant drifts the registry before typecheck, lint and the related run (:85). The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong. The plant was unstaged and deleted at once; git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. No commit made; no output review run. Ruling owed: e.g. the plant as a .ts file (the walker reads .tsx only, :238), a plan change.
+
+2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts, exporting usePlanted441; the surface-registry generator at .husky/pre-commit:38 walks src/components .tsx files on disk (generate-surface-registry.mjs:229-240); plan 3.4 and its Planted441.tsx references read as the .ts file.
+
+2026-11-23 red (lane BL-ENG441): commit attempt with the three tests, the task file and src/components/ui/Planted441.ts staged, refused by the related run (.husky/pre-commit:85) after typecheck and lint passed: Test Files 3 failed (3), Tests 3 failed | 8 passed (11). 3.1 A: 'src/components/ui/Planted441.ts:6 alert()'; 3.2 A: 'src/components/ui/Planted441.ts:4 useContext()' and ':5 fetch()'; 3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'. Plant unstaged and deleted right after (git ls-files src/components/ui: Badge.tsx, ScoreBadge.tsx). Hook output: docs/reports/reviews/task-441/red.out.
 <!-- SECTION:NOTES:END -->
