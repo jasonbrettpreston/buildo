@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:51:00Z'
+updated_date: '2026-11-23T15:57:00Z'
 labels:
   - McFix
   - McFix Final
@@ -64,9 +64,9 @@ Planner and builder: Opus (RR-0385 items 1 and 8, MORNING-DECISIONS.md:1917, :19
 
 ## PRECONDITION (checked; ruled by the plan grounder)
 - The condition is RR-0380 Q1 (:1865-1866): "once the handbook has been updated iwth the critical items". He named them: "these 13 lines" (RR-0384, :1901, decision-169; item 9 a pointer). They are in Spec 136 section 2: fe.45 to fe.57 (136:166-202), fe.53 the pointer (136:190). task-430 is BUILT and folded (06e0e542c), not pushed. Met in the record.
-- 136:28: "57 in force (21 OWED, whose lock is still to land)": the 8 older lines (fe.04, 12, 17, 21, 25, 26, 39, 44) plus the 13. OWED lines are sent; their locks are task-367 (RR-0385 item 6). His condition names the handbook update, not the locks (a reading).
+- 136:28 at 06e0e542c: "57 in force (21 OWED, whose lock is still to land)" (58 and 22 since task-446 added fe.58 for R-22, 2fe7fa150): the 8 older lines (fe.04, 12, 17, 21, 25, 26, 39, 44) plus the 13. OWED lines are sent; their locks are task-367 (RR-0385 item 6). His condition names the handbook update, not the locks (a reading).
 - ORDER. The work commit waits for neither task-430's push nor the renumber of FE-45..FE-57 against task-388: N1 and N2 pin no fe id or size, and :211-222 computes its range from the register. Only this card's push follows task-430's, as the branch carries it (his own y, RR-0385 item 4). A later renumber re-runs `page --write` (card 430, landing checklist).
-- NO LONGER RECEIVED: the text of Specs 126, 127, 128 and 135 (496,038 characters); the reviewer gets the rule lines of Spec 136 section 2. A rule in those specs with no handbook line reaches no front-end review until one is added (RR-0379, :1859). Known (REPORT-429, ungrounded): about 15 lower-rank rules (R-16, R-22, R-23, ASK-10, ASK-19, others) and the per-page rows of Spec 126 section 11b.3 and 11b.7 (fe.53 is a pointer). On three open tasks, 374 and 395 lose nothing and 390 loses R-22. Both notes say it in one sentence.
+- NO LONGER RECEIVED: the text of Specs 126, 127, 128 and 135 (496,038 characters); the reviewer gets the rule lines of Spec 136 section 2. A rule in those specs with no handbook line reaches no front-end review until one is added (RR-0379, :1859). Known (REPORT-429, ungrounded): about 15 lower-rank rules (R-16, R-22, R-23, ASK-10, ASK-19, others; R-22 got fe.58 in task-446, 2fe7fa150) and the per-page rows of Spec 126 section 11b.3 and 11b.7 (fe.53 is a pointer). On three open tasks, 374 and 395 lose nothing and 390 lost R-22 until task-446 gave it fe.58 (2fe7fa150), so it now loses nothing. Both notes say it in one sentence.
 
 ## THE TABLE EDIT (scripts/analysis/rule-lists.json, protected)
 Three rows change, only their `lists` and `why` (specs-web-admin: `why` only):
@@ -135,7 +135,7 @@ Both notes carry the calendar date of the work commit, written once; they name n
   - `--files mobile/src/app/x.tsx` gives 12 lists, none of the four;
   - `--files docs/specs/02-web-admin/128_surface_standard_policy.md` includes all five surface lists;
   - `--files src/lib/parcels/lot-size-entry.ts` still includes surface-126 and surface-128.
-- `check-tasks` exits 0 and reads 308 open, 106 resolve, none FAILED.
+- `check-tasks` exits 0 and none FAILED (at abaee3190 it read 308 open, 106 resolve; the counts move with the board and the lane reports what it reads).
 - Page figures at abaee3190: web kind 11 lists, 226,468; phone kind 12 lists, 307,531. Not pins: they move a few characters if Spec 136 changes first (the renumber).
 - N1, N2 and the two changed tests: red.out holds N1's first red at its designed assertion and each planted defect red; then the lane's own run is green.
 
