@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T14:31:50.330Z file_sha256=54f0cb3e24bdf523ab1497b7baaf0b4553a13bcf1af058949ed5905d32ad3257 prompt_sha256=68e6d83957f6ba40040c9a5a7db7fa565aa6629afead4816def5ba256d0d8164
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — .husky/pre-push-checks.sh:7 "step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" — an unset GATE_MODE expands to nothing so the gate is invoked with no mode flag and, since the list has no fail-fast, the only thing that stops the chain is whatever gate.mjs does with zero args (cannot see gate.mjs); note the asymmetry, a caller that forgets step() fails closed at 127, a caller that forgets GATE_MODE does not — add ": \"${GATE_MODE:?caller must set GATE_MODE --push or --ci}\"" as the first executable line of the list, and the same for SUITE_ARGS with a default.
+
+DEFER severity=MED — .husky/pre-push-checks.sh:3 "# The caller defines step() (step <name> <command...>: run the command, return its status), GATE_MODE and SUITE_ARGS, then sources this file." — the half of the chain that runs outside the repo (the station's step()) is guarded only by this prose comment; a station step such as "step() { shift; \"$@\" 2>&1 | tee -a log; }" returns tee's 0 on every step, so the && chain continues past a failed check and the station silently passes the class of defect 0f6ba8225 was — move the logging step() into the repo as a second sourced file so the station boots no shell logic of its own, or have the station re-use the hook's one-liner verbatim.
+
+DEFER severity=MED — plan: "the push hook and the station both run it, so they cannot differ" — nothing stops one push running the list twice: the station sources it, then its git push triggers .husky/pre-push which sources it again at line 40 ". ./.husky/pre-push-checks.sh", so the 8-fork full suite runs twice (and the operator is prompted by the gate twice); two 8-fork suites is the state the fork-cap comment records as memory-killed — have the station export a sentinel that the list checks and returns 0 on (PRE_PUSH_CHECKS_DONE=1, git passes env to hooks), or push with --no-verify.
+
+DEFER severity=LOW — .husky/pre-push:40 ". ./.husky/pre-push-checks.sh" — the source path is relative to the caller's cwd, so a caller that invokes the hook from anywhere but the worktree root (sh .husky/pre-push by hand, a wrapper, a station that execs the hook) gets ".: cannot open" and every check is skipped, push blocked with an error that does not name the missing file — resolve the list against the hook's own location, d=$(dirname "$0"); . "$d/pre-push-checks.sh".
+
+DEFER severity=LOW — src/tests/hooks-composition.infra.test.ts "spawnSync('sh', ['-c', 'step() { echo \"$1\" >> \"$CALLS\"; [ \"$1\" != \"$FAIL_AT\" ]; }; GATE_MODE=x; SUITE_ARGS=; . \"$LIST\"'], { cwd: dir, env, encoding: 'utf8' })" — no timeout option on the spawnSync, so any future edit that puts a non-step command into the list makes this test block the whole vitest worker with no bound — pass timeout: 30_000 and assert r.status is not null.
+
+REJECT — src/tests/hooks-composition.infra.test.ts "expect(logged, `FAIL_AT=${name}`).toEqual(STEP_NAMES.slice(0, i + 1));" — a && chain inside a sourced file with an out-of-repo step looks like it can run past a failure — handled, T4 fails each of the six names in turn and proves the chain stops exactly at the failing step and never reaches later ones.
+
+REJECT — .husky/pre-push:39 "step() { shift; \"$@\"; }" — if a caller never defines step, the first list line is a command-not-found — handled, that is status 127, the && chain stops and the push fails closed rather than passing silently.
+
+REJECT — src/tests/hooks-composition.infra.test.ts "const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';" — a deleted or renamed list degrades to an empty string, which could let assertions pass vacuously — handled, the empty string fails the positive pins (T2 expects the six LIST_LINES, the moved toContain pins, T5's count of 1), so the suite goes red instead of crashing and instead of green.
+
+VERDICT: PASS on error-path safety
+Paths walked: gate step (fail, operator-no, missing GATE_MODE), step-validate staged/all, spec-split, typecheck, full suite (empty SUITE_ARGS, double run hook+station), missing list file, missing step(), hook cwd, fork-cap live read of the new file   Unguarded: 3
+
+---
+⏱  94427ms (94.4s)
+📊 Tokens — total: 28349, input: 11148, output: 17201, reasoning: 16060

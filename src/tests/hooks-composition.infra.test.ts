@@ -14,6 +14,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import * as budget from '../../scripts/analysis/precommit-budget.mjs';
 
@@ -21,10 +22,14 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
 const PRE_PUSH_PATH = path.join(REPO_ROOT, '.husky/pre-push');
 const COMMIT_MSG_PATH = path.join(REPO_ROOT, '.husky/commit-msg');
+// task-424 (RR-0370 option C): the ONE list of the non-interactive pre-push checks, sourced by .husky/pre-push and the push station.
+const PRE_PUSH_CHECKS_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
 
 const PRE_COMMIT = fs.readFileSync(PRE_COMMIT_PATH, 'utf8');
 const PRE_PUSH = fs.readFileSync(PRE_PUSH_PATH, 'utf8');
 const COMMIT_MSG = fs.readFileSync(COMMIT_MSG_PATH, 'utf8');
+// A missing list fails the named cases instead of crashing the file (task-424 plan section 5).
+const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';
 
 /** Strips `#`-comment lines (and shebang) so a prose mention inside a comment
  * never trips a predicate meant to catch a real, executable invocation. */
@@ -95,11 +100,12 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     for (const [, min, max] of preCommitCaps) {
       expect([min, max]).toEqual(['4', '4']);
     }
-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
+    // task-424: the pre-push suite line lives in the one check list .husky/pre-push-checks.sh (pin moved, same strength).
+    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
+    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
       expect(stripComments(hook)).not.toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/); // R-CQ: never above 10
     }
-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
+    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
     expect(stripComments(PRE_COMMIT)).toMatch(/grep -E '\^\(src\|scripts\)\/\.\*\\\.\(ts\|tsx\|js\|mjs\)\$'/);
@@ -135,24 +141,27 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
   });
 });
 
+// task-424 (RR-0370 option C): the pre-push checks below are read from the one list .husky/pre-push-checks.sh, which
+// .husky/pre-push sources; the pins moved from the hook text to the list text with the same strength.
 describe('hooks-composition (R-AG) — pre-push', () => {
   it('re-runs step-validate --staged --fast, spec-split-check, and typecheck (Spec 123 R-R, unchanged)', () => {
-    expect(PRE_PUSH).toContain('step-validate.mjs --staged --fast');
-    expect(PRE_PUSH).toContain('spec-split-check.mjs --check');
-    expect(PRE_PUSH).toMatch(/\bnpm run typecheck\b/);
+    expect(PRE_PUSH_CHECKS).toContain('step-validate.mjs --staged --fast');
+    expect(PRE_PUSH_CHECKS).toContain('spec-split-check.mjs --check');
+    expect(PRE_PUSH_CHECKS).toMatch(/\bnpm run typecheck\b/);
   });
 
   it('RED — a tampered pre-push raised to twelve forks trips the R-CQ never-above-10 lock', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
+    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
     expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/);
   });
 
   it('GREEN — invokes the full suite exactly once per push', () => {
-    expect(invokesFullSuite(PRE_PUSH)).toBe(true);
+    expect(invokesFullSuite(PRE_PUSH_CHECKS)).toBe(true);
+    expect(stripComments(PRE_PUSH_CHECKS).split('npm run test').length - 1).toBe(1);
   });
 
   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
+    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
     expect(invokesFullSuite(tampered)).toBe(false);
   });
 
@@ -165,11 +174,11 @@ describe('hooks-composition (R-AG) — pre-push', () => {
   // G #39), and `--staged` alone cannot see that.
   // -------------------------------------------------------------------------
   it('GREEN — also re-runs step-validate --all --fast (Fold GC-4, fleet-wide freshness sweep)', () => {
-    expect(stripComments(PRE_PUSH)).toMatch(/step-validate\.mjs --all --fast/);
+    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/step-validate\.mjs --all --fast/);
   });
 
   it('RED — a tampered pre-push with the --all --fast sweep stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/&& node scripts\/analysis\/step-validate\.mjs --all --fast/, '');
+    const tampered = PRE_PUSH_CHECKS.replace(/step step-validate-all node scripts\/analysis\/step-validate\.mjs --all --fast &&\n/, '');
     expect(stripComments(tampered)).not.toMatch(/step-validate\.mjs --all --fast/);
   });
 });
@@ -479,14 +488,17 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
   });
 
   it('GREEN — pre-push runs gate --push exactly once, before step-validate (it reads the ref pairs on stdin)', () => {
-    const code = stripComments(PRE_PUSH);
-    expect(count(PRE_PUSH, `${GATE} --push`)).toBe(1);
-    expect(code.indexOf(`${GATE} --push`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+    // task-424: the gate line is in the one list as `${GATE} $GATE_MODE`; the hook sets GATE_MODE=--push, never --ci.
+    const code = stripComments(PRE_PUSH_CHECKS);
+    expect(count(PRE_PUSH_CHECKS, `${GATE} $GATE_MODE`)).toBe(1);
+    expect(code.indexOf(`${GATE} $GATE_MODE`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+    expect(count(PRE_PUSH, 'GATE_MODE=--push')).toBe(1);
+    expect(stripComments(PRE_PUSH)).not.toContain('--ci');
   });
 
   it('RED — a tampered pre-push with the gate stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/node scripts\/analysis\/mcbylaws\/gate\.mjs --push && /, '');
-    expect(count(tampered, `${GATE} --push`)).toBe(0);
+    const tampered = PRE_PUSH_CHECKS.replace(/step mcbylaws-gate node scripts\/analysis\/mcbylaws\/gate\.mjs \$GATE_MODE &&\n/, '');
+    expect(count(tampered, `${GATE} $GATE_MODE`)).toBe(0);
   });
 
   it('GREEN — commit-msg runs gate --commit-msg with the message file exactly once', () => {
@@ -499,9 +511,99 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
   });
 
   it('no hook sets an environment switch, flag or skip word for the gate (R-KM: no exception path)', () => {
-    for (const hook of [PRE_COMMIT, PRE_PUSH, COMMIT_MSG]) {
-      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE));
+    // task-424: the one list is checked too, and so are the hook's GATE_MODE and SUITE_ARGS assignment lines.
+    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS, COMMIT_MSG]) {
+      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE) || /\b(GATE_MODE|SUITE_ARGS)=/.test(l));
       for (const l of gateLines) expect(l).not.toMatch(/SKIP|BYPASS|MCBYLAWS_|HUSKY=|--no-|\|\| true/);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// task-424 STATION.ONELIST (RR-0370 option C, operator: "one list of push checks kept in the repo, used by both the
+// hook and the station"). The six non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: six
+// `step <name> <command>` lines joined by `&&`, no function and no branch. Each caller defines step(), GATE_MODE
+// and SUITE_ARGS and sources it; .husky/pre-push supplies a plain step(), GATE_MODE=--push and an empty SUITE_ARGS.
+// ---------------------------------------------------------------------------
+describe('task-424 — one list of pre-push checks', () => {
+  const CHECKS = [
+    /mcbylaws\/gate\.mjs/,
+    /step-validate\.mjs/,
+    /spec-split-check\.mjs/,
+    /\bnpm run typecheck\b/,
+    /\bnpm run test\b/,
+    /\bvitest\b/,
+    /\btsc\b/,
+  ];
+  /** PURE — which check commands does this text's executable (comment-stripped) part carry? */
+  const checksIn = (text: string) => CHECKS.filter((re) => re.test(stripComments(text)));
+  /** PURE — the non-blank executable lines of a shell text (comments and shebang stripped). */
+  const execLines = (text: string) => stripComments(text).split('\n').filter((l) => l.trim() !== '');
+
+  const HOOK_LINES = ['step() { shift; "$@"; }', 'GATE_MODE=--push', 'SUITE_ARGS=', '. ./.husky/pre-push-checks.sh'];
+  const LIST_LINES = [
+    'step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&',
+    'step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&',
+    'step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&',
+    'step spec-split node scripts/analysis/spec-split-check.mjs --check &&',
+    'step typecheck npm run typecheck &&',
+    'step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS',
+  ];
+  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'suite'];
+
+  it('T1 — .husky/pre-push runs no check itself: its executable lines are only the step runner, the gate mode, the suite arguments and the source line', () => {
+    expect(checksIn(PRE_PUSH)).toEqual([]);
+    expect(execLines(PRE_PUSH)).toEqual(HOOK_LINES);
+  });
+
+  it('T2 — the list holds exactly the six chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
+    const lines = execLines(PRE_PUSH_CHECKS);
+    expect(lines).toEqual(LIST_LINES);
+    lines.slice(0, -1).forEach((l) => expect(l.endsWith(' &&'), l).toBe(true));
+    expect(lines[lines.length - 1]?.endsWith(' &&')).toBe(false);
+    expect(lines.join('\n').split('npm run test').length - 1).toBe(1);
+  });
+
+  it('T3 (planted) — the predicates catch a check added to the hook, a gate line removed from the list and a broken `&&`', () => {
+    expect(checksIn(`${PRE_PUSH}&& npm run typecheck\n`)).not.toEqual([]);
+    const noGate = PRE_PUSH_CHECKS.split('\n').filter((l) => !l.startsWith('step mcbylaws-gate')).join('\n');
+    expect(execLines(noGate)).not.toEqual(LIST_LINES);
+    const semicolon = PRE_PUSH_CHECKS.replace(' &&', ';');
+    expect(execLines(semicolon)).not.toEqual(LIST_LINES);
+  });
+
+  it('T4 (behaviour, hermetic) — sourced with a recording step(), the chain stops at the first failing step and passes when none fails', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'task424-'));
+    try {
+      const run = (failAt: string | undefined) => {
+        const calls = path.join(dir, 'calls.log');
+        fs.rmSync(calls, { force: true });
+        const env: NodeJS.ProcessEnv = { ...process.env, LIST: PRE_PUSH_CHECKS_PATH, CALLS: calls };
+        delete env.FAIL_AT;
+        if (failAt !== undefined) env.FAIL_AT = failAt;
+        const r = spawnSync('sh', ['-c', 'step() { echo "$1" >> "$CALLS"; [ "$1" != "$FAIL_AT" ]; }; GATE_MODE=x; SUITE_ARGS=; . "$LIST"'], { cwd: dir, env, encoding: 'utf8' });
+        const logged = fs.existsSync(calls) ? fs.readFileSync(calls, 'utf8').split('\n').filter(Boolean) : [];
+        return { status: r.status, logged };
+      };
+      STEP_NAMES.forEach((name, i) => {
+        const { status, logged } = run(name);
+        expect(status, `FAIL_AT=${name}`).toBe(1);
+        expect(logged, `FAIL_AT=${name}`).toEqual(STEP_NAMES.slice(0, i + 1));
+      });
+      const ok = run(undefined);
+      expect(ok.status).toBe(0);
+      expect(ok.logged).toEqual(STEP_NAMES);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('T5 (fork cap, pure) — each fork assignment occurs once in the whole list text, and the parse of the full text equals the parse of its comment-stripped text', async () => {
+    expect(PRE_PUSH_CHECKS.split('VITEST_MIN_FORKS=').length - 1).toBe(1);
+    expect(PRE_PUSH_CHECKS.split('VITEST_MAX_FORKS=').length - 1).toBe(1);
+    const { parseForkCapFromHookText } = (await import('../../scripts/analysis/step-validate.mjs')) as unknown as {
+      parseForkCapFromHookText: (hookText: string) => { min: string; max: string };
+    };
+    expect(parseForkCapFromHookText(PRE_PUSH_CHECKS)).toEqual(parseForkCapFromHookText(stripComments(PRE_PUSH_CHECKS)));
   });
 });

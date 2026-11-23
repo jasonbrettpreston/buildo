@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.316Z file_sha256=843e81da84d4d0491a99e05539e5645ca46a8ccda0dcaadd7a5291211f0c535c prompt_sha256=9ba50caacfec4f9d571ba236dd3b91870d0d39ace6b7e33e330f85f308515f0d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-424 Description "the push hook and the station both run it, so they cannot differ" — .husky/pre-push "+. ./.husky/pre-push-checks.sh" — only one of the two named runners is in the material; the station's source line and its GATE_MODE=--ci/GATE_MODE value cannot see — land the station edit (lane item A5) and paste its source line plus GATE_MODE value in the material so "both run it" is shown, not asserted.
+DEFER severity=MED — task-424 Description "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — Implementation Notes "A5, A6, A7, A8: orchestrator items (station edit after the cp backup, station suite on the final tip, gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — the card's required replay proof is absent from the material; the lane explicitly did not run it — attach both replay outputs (id-no-row at 0f6ba8225, pass at 21adfde8a) to the task before close, and treat plan-lock as waiting on them.
+DEFER severity=LOW — RR-0370 "The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today." — .husky/pre-push-checks.sh "+step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" — the "one line today" on the station (the gate line whose absence refused 0f6ba8225) is not in the material; only the hook side of option C is — confirm A5 adds the station gate line or record in the task that option C supersedes the one-line hotfix.
+MET — task-424 Description "one list of the non-interactive pre-push checks lives in the repo" — .husky/pre-push-checks.sh "+step step-validate-staged ... +step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS" — the six checks now exist in exactly one repo file, in the original order.
+MET — task-424 Description "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push "+GATE_MODE=--push" and "# GATE_MODE=--push (the gate reads git's ref pairs on stdin and may ask the operator)" — the interactive gate mode is chosen solely by the hook, the station takes its own mode.
+MET — task-424 Description "The plan measures the size and names the Files line" — Files: ".husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md" — every path the diff touches is on the Files line, nothing off-list.
+MET — task-424 Description ".husky/pre-push is a protected path" — Implementation Notes "Status stays RUNNING (protected path in this commit; check-lane-close.mjs:35)" — the hook edit is landed by the lane with the task left open for the protected-path close.
+MET — RR-0370 "his rule 'tools live in the repo'" — .husky/pre-push-checks.sh (new repo file, sourced by the hook) — the shared list is a repo artefact, not station-side script.
+MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — diff scope (one new 12-line list, hook wiring, step-validate path, CLAUDE.md phrase, tests) — no new runner, scheduler or service is introduced.
+MET — RR-0385 "tests are the focus" and PLAN-PROTOCOL.md:3 "keep it simple; no scope creep" — src/tests/hooks-composition.infra.test.ts "describe('task-424 — one list of pre-push checks', ...)" — the added behaviour is test coverage of the one list (T1 to T5), not new runtime surface.
+REJECT — PLAN-PROTOCOL.md:3 "keep it simple; no scope creep" — the change is accused of scope creep by adding GATE_MODE and SUITE_ARGS parameters plus five tests — not a real issue, the two parameters are what lets the hook and the station share one unchanged list, and tests are the named focus of this plan.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  70138ms (70.1s)
+📊 Tokens — total: 26168, input: 12026, output: 14142, reasoning: 13062

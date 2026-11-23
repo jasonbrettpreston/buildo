@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.323Z file_sha256=ac3393743441a01ff62a1606fd4f0c795a1837fe49181001369da63e6586eddc prompt_sha256=44bb593bd482edd45192a37cbbfe718b8e1fde1f1f4837414b470e5f69608de0
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-424 card "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — NONE — the card's proof obligation is met by nothing in this diff; the pasted notes state "A5, A6, A7, A8: orchestrator items (station edit after the cp backup, station suite on the final tip, gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — run both replays with the list in place and paste the two outputs before merge.
+
+DEFER severity=MED — task-424 card "the push hook and the station both run it, so they cannot differ" and RR-0370 "option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today" — .husky/pre-push:44 ". ./.husky/pre-push-checks.sh" — only the hook half is in the material; the station file is outside the repo and cannot see, so "both run it" and "the one line today" (the gate line the station lacked) are unproven — confirm the station sources .husky/pre-push-checks.sh with its own step(), GATE_MODE and SUITE_ARGS before merge.
+
+DEFER severity=LOW — task-424 card "the station outside the repo keeps only its plumbing (lock, pass file, tip check); the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push-checks.sh:9 "step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" — the list passes the mode blind, and nothing in the repo shows gate.mjs accepts --ci or that --ci is non-interactive, so the "interactive parts stay in the hook" split rests on an unseen flag — verify gate.mjs supports --ci and never prompts, or state where that is pinned.
+
+REJECT — task-424 card "one list of the non-interactive pre-push checks" — accused of putting the gate (which may prompt the operator in the hook) into the shared list — the card itself keeps the interactive parts in the hook and the list takes the mode from the caller, so the line is the non-interactive invocation in each caller.
+
+MET — task-424 card "one list of the non-interactive pre-push checks lives in the repo (the smallest form: decided by the plan; reuse what exists)" — .husky/pre-push-checks.sh:9-14 — the six checks live in one repo file in their old order, no new machinery beyond it.
+
+MET — task-424 card "the push hook ... run it" — .husky/pre-push:41-44 — the hook defines step(), sets GATE_MODE=--push and SUITE_ARGS=, then sources the one list and holds no check of its own.
+
+MET — task-424 card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push:42 "GATE_MODE=--push" — the hook supplies --push, the station is meant to supply --ci, and the list itself carries neither.
+
+MET — task-424 card "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md" — diff file headers — every named path is touched and no unnamed path is.
+
+MET — CLAUDE.md:33 ".husky/pre-push-checks.sh (the one pre-push check list, run by .husky/pre-push and the push station) is the source of truth and step-validate.mjs parses its value" — scripts/analysis/step-validate.mjs:1290 "const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');" — the doc claim and the parser path agree.
+
+MET — RR-0385 "tests are the focus" — src/tests/hooks-composition.infra.test.ts T1-T5 — the one-list contract gains a planted RED case and a hermetic behaviour case for the && chain, with red seen per the notes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  71667ms (71.7s)
+📊 Tokens — total: 26719, input: 12816, output: 13903, reasoning: 12894

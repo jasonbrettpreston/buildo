@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.328Z file_sha256=01fecfe6a6c8f20f71caff2e382e931a0beb733611ca9088b236a6a90822b069 prompt_sha256=a75dfe5602e3c1189f3d8b4147d8087985933449010ca2a194c688bdfdc93f99
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none — (this line is not a finding) — (removed)
+DEFER severity=MED — task-424 Description "the push hook and the station both run it, so they cannot differ" — .husky/pre-push-checks.sh:8 "the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite." — only the hook half is in the material; the station half exists solely as a comment plus "A5 ... orchestrator items ... NOT run by the lane", so "cannot differ" is unproven at merge — paste the station diff that sources .husky/pre-push-checks.sh with GATE_MODE=--ci and SUITE_ARGS, or land A5 before the push.
+DEFER severity=MED — task-424 Description "a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes" — NONE — no replay output appears in the material and the notes say "A7 ... NOT run by the lane" — attach both replay transcripts (id-no-row stop, 21adfde8a pass) to the push record.
+DEFER severity=LOW — task-424 Description "the smallest form: decided by the plan" and "The plan measures the size and names the Files line" — NONE — the plan text that must measure the size is not pasted; the Files line shown is the card's, not the plan's — paste the plan line giving the measured size and the Files line.
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — adding .husky/pre-push-checks.sh is accused of being new infrastructure under the freeze — doc-17's own header states the readings "never feed a review as a ruling", and RR-0370 names this exact list ("one list of push checks kept in the repo, used by both the hook and the station").
+REJECT — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — the change is accused of touching the frozen permit step conversion — the diff touches only pre-push hook text, the fork-cap parser and tests, no permit-step code, and RR-0111 is a reading, not an operator ruling.
+MET — task-424 Description "one list of the non-interactive pre-push checks lives in the repo" — .husky/pre-push-checks.sh:9 — the six `step` chain lines are the one list, joined by `&&`, last line unwrapped.
+MET — task-424 Description "the push hook and the station both run it" (hook half) — .husky/pre-push:45 — ". ./.husky/pre-push-checks.sh" sources the list, and steps T1/T2 pin that the hook's executable lines are only the runner, mode, args and source line.
+MET — task-424 Description "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push:43 "GATE_MODE=--push" — the hook sets the interactive gate mode and hooks-composition asserts `expect(stripComments(PRE_PUSH)).not.toContain('--ci')`.
+MET — task-424 Files line — src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, scripts/analysis/step-validate.mjs, CLAUDE.md, .husky/pre-push, .husky/pre-push-checks.sh — the diff touches exactly the six named paths and nothing else.
+MET — RR-0385 "tests are the focus" — src/tests/hooks-composition.infra.test.ts:520 — "describe('task-424 — one list of pre-push checks'" adds T1 to T5 (structure, planted, hermetic behaviour, fork-cap purity) alongside the ten moved pins.
+MET — RR-0392 "no other infrastructure beyond this" — .husky/pre-push-checks.sh — the only added artefact is the named list file; the rest is pin moves and the existsSync guard.
+MET — task-424 Description ".husky/pre-push is a protected path" — implementation notes "Status stays RUNNING (protected path in this commit; check-lane-close.mjs:35)" — the protected-path edit is named in Files and the lane did not close over it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  77298ms (77.3s)
+📊 Tokens — total: 37162, input: 22233, output: 14929, reasoning: 13925

@@ -1,0 +1,6 @@
+# TRIAGE BL-ONE424 (task-424), output round 1. Outcome lines from the grounder Cairn-Ground-O424: 4 CONFIRMED, all LOW, piled; no CRITICAL, HIGH or MED stands (RR-0385 item 3).
+out-code-review-p1#1 pile:"the T4 assertion message omits stderr so a shell-level failure reads as a bare status mismatch; test message only, the shipped list and hook are unaffected, LOW is piled (RR-0385)"
+out-compliance-plan-protocol#3 pile:"the card carries a size estimate in lines but no labelled time estimate (plan-protocol section 5 item 5); a card record gap that is the orchestrator's, no code defect, LOW is piled (RR-0385)"
+out-compliance-queue-137#3 pile:"no M-246 dated note for RR-0370 is on the task file, though the card quotes the ruling verbatim; the note is the orchestrator's through backlog-decision.mjs, not code, LOW is piled (RR-0385)"
+out-engineering-eng-all#1 pile:"the six-item self-check walk is not recorded in the task notes or the report; the grounder walked it and item 3 waits for the station edit, record gap only, LOW is piled (RR-0385)"
+No fix round is owed; the lane may close. Reminder, not a fix: the close commit holds records only and the status commit (BUILT) must carry no protected path.

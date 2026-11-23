@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.340Z file_sha256=2b444f37f259224a998fff2246198bcc18369180fafa5f2776c6b9e4376fd55d prompt_sha256=36ac49d877a11351e0eb0643e101e09294edc7efe6ddd8d8e5b9974dd4395ba4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — RR-0370 "the push hook and the station both run it, so they cannot differ" — .husky/pre-push-checks.sh:4 "the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite." — the station side is asserted only by a comment (and by CLAUDE.md:33 "run by `.husky/pre-push` and the push station"); nothing in the material changes the station, and the task's own notes record "A5, A6, A7, A8: orchestrator items (station edit after the cp backup, ...). NOT run by the lane.", so as it stands the two lists still differ and the 0f6ba8225 refusal can recur — land the station edit (source the list, keep lock/pass-file/tip-check, gate in --ci on origin/<br>) in the same push and paste it.
+DEFER severity=MED — RR-0370 "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — Implementation Notes "gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — the card's stated proof is absent from the material; the only evidence offered is a hermetic sh fixture (hooks-composition T4) that spawns a recording step(), not the real gate — run and paste both replays before the task leaves RUNNING.
+DEFER severity=LOW — plan-protocol section 5 item 5 "TIME: every task carries an estimate (MEASURED with source, or GUESS labelled)" — task-424 header "status: RUNNING · milestone: m-1 · assignee: @lane-BL-ONE424 · labels: McFix, McFix V2, McFix Final" — the task carries no estimate, so the integration pass has nothing to put on the critical path for it — add one labelled line ("MEASURED, lane A1 137 tests" or "GUESS").
+MET — RR-0370 "one list of the non-interactive pre-push checks lives in the repo" — .husky/pre-push-checks.sh:8 "step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" — the six former checks now live in one in-repo file, in the former order, chained with `&&`.
+MET — RR-0370 "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push:41 "GATE_MODE=--push" — the hook supplies the interactive mode and hooks-composition pins "expect(stripComments(PRE_PUSH)).not.toContain('--ci')".
+MET — card Files line ".husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md" — the diff touches exactly those six paths, nothing outside.
+MET — RR-0370 "plus the one line today" / "tools live in the repo" — .husky/pre-push-checks.sh new file mode 100644 — no new out-of-repo infrastructure is introduced; the station keeps its own plumbing.
+MET — CLAUDE.md:33 "`.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value" — scripts/analysis/step-validate.mjs:1290 "const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');" — the fork cap is parsed out of the single list, doc and code agree.
+MET — hooks-composition R-CQ lock "never above 10" / "VITEST_MAX_WORKERS is ignored" — src/tests/hooks-composition.infra.test.ts "for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {" — the never-above-10 and no-VITEST_MAX_WORKERS pins now cover the new list too.
+MET — plan-protocol section 2 step D "red-first tests named, exact commands" — Implementation Notes "red seen (lane red.out, rc=1, 13 failed | 49 passed)" — red run precedes the build, with the named failing cases.
+MET — RR-0385 "tests are the focus" — src/tests/hooks-composition.infra.test.ts "describe('task-424 — one list of pre-push checks', () => {" — five new cases (T1-T5) including a planted-case check and a hermetic behaviour run.
+REJECT — RR-0392 "no other infastrcuture beyond this" — adding one 12-line in-repo list plus its tests — the file is named on the card's Files line and replaces a duplicated chain, it is not new infrastructure.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+```
+
+---
+⏱  61864ms (61.9s)
+📊 Tokens — total: 25257, input: 13640, output: 11617, reasoning: 10450

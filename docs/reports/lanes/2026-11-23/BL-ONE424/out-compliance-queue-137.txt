@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.341Z file_sha256=afd8dc79a345bc77ed3ba6f85139d4f01af504c9082d184a33071012766dedce prompt_sha256=878ae6b3ee022405b08149857320cea3878d48d5699776b45c2efc97434764b4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG/DEFER/MET/REJECT lines as specified, no prose outside the format.
+
+DEFER severity=MED — RR-0370 "The station: option C (one list of push checks kept in the repo, used by both the hook and the station)" — task-424 note "A5, A6, A7, A8: orchestrator items (station edit after the cp backup, station suite on the final tip, gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — the station half of the ruling is not in the material: nothing pasted shows the push station sourcing .husky/pre-push-checks.sh, so "they cannot differ" is proven only on the hook side — land the station source line and record its suite result before the close commit.
+
+DEFER severity=MED — task-424 "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — task-424 note "gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — the proof the card names is absent from the diff and from the notes, A2/A3 only prove the hook text shape — run the two replays at the station and paste both results into the lane report before the close commit.
+
+DEFER severity=LOW — Spec 137 §1 "the M-246 dated note is appended to each task the ruling names" — task-424 "Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's ruling (RR-0370, verbatim: ..." — the row shows the G2 decision entry but no `Dated note <date> (M-246, prior text kept; task-424 · Backlog · lane BL-ONE424; operator, verbatim: ...)` line; the rest of the task file is cannot see — have backlog-decision.mjs re-append the M-246 note or paste the task file whole in the close material.
+
+MET — RR-0370 "option C (one list of push checks kept in the repo)" — .husky/pre-push-checks.sh:10 "step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" — the six non-interactive checks now live in one repo file, in order, chained with &&.
+MET — task-424 "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push:43 "GATE_MODE=--push" — the hook supplies the interactive push mode while the shared list takes $GATE_MODE.
+MET — RR-0370 "tools live in the repo" — CLAUDE.md:33 "the one pre-push check list, run by `.husky/pre-push` and the push station" — the tool is named as a repo file, not a scratch script.
+MET — Spec 137 §2 "Checked by `ids/check.mjs` before a push command" — .husky/pre-push-checks.sh:14 "step spec-split node scripts/analysis/spec-split-check.mjs --check &&" — the non-interactive checks carried over unchanged, none dropped in the move.
+MET — Spec 137 Rule 3 (task-410 note) two-commit close for a lane build task — task-424 "Status stays RUNNING (protected path in this commit; check-lane-close.mjs:35)." — the build commit does not move the status line, the close commit does.
+MET — spec single-source-of-truth contract, CLAUDE.md:33 "`step-validate.mjs` parses its value" — scripts/analysis/step-validate.mjs:1290 "const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');" — the parser follows the list, not the hook.
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — .husky/pre-push-checks.sh:3 "The caller defines step() (step <name> <command...>: run the command, return its status)" — one sourced list plus test pins, no new tool or job.
+MET — Spec 137 Rule 2 "One task, one row, in one home." — task-424 "task-424 STATION.ONELIST ... status: RUNNING · milestone: m-1 · assignee: @lane-BL-ONE424" — the change is registered on its Backlog row.
+
+REJECT — Spec 137 Rule 3 "The status line changes in the same commit as the work." — the diff does not move task-424's status line — the Rule 3 note of 2026-11-20 amends Rule 3 to the two-commit close for lane build and fix tasks ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."), and the lane note records that reason.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: Rule 2, Rule 3, Rule 6, Rule 9
+
+---
+⏱  74596ms (74.6s)
+📊 Tokens — total: 36504, input: 21732, output: 14772, reasoning: 13605
