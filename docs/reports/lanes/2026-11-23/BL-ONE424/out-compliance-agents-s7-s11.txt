@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.342Z file_sha256=39dadcdbded9782d031735bf394727b6d84188d211b2eb26f90a43e9261108ce prompt_sha256=a71919c847af0eb2e20b5ab29665e4c307591000e9633c358df458d43febc6a7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG findings: none. The material complies with the clauses it can satisfy in-repo; the shortfalls below are deferred, not broken.
+
+DEFER severity=MED — RR-0370 "The station: option C (one list of push checks kept in the repo, used by both the hook and the station)" — .husky/pre-push-checks.sh:4 "#   the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite." — the station half of the ruling is evidenced only by that comment; no station file is in the change and A5 is unrun, so "used by both" is unmet and the copies can still differ — run A5 and record the station sourcing this list (its diff or a run log) in the lane folder before the push.
+DEFER severity=MED — 11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — card "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." with Implementation Notes "A5, A6, A7, A8: orchestrator items ... NOT run by the lane" — the card's proof is an executable claim and it has not been executed — run A7's two detached-worktree replays and record both rcs in the lane folder before the push.
+DEFER severity=LOW — 11.3 "Survive-the-fix locks (green-both) are stated as such per case." — "T3 green (not in the failed list)" against the test title "the predicates catch a check added to the hook, a gate line removed from the list and a broken `&&`" — T3 passed before and after the change, and pre-change it passes on an empty PRE_PUSH_CHECKS, so it is green-both and unlabelled — mark T3 green-both (a predicate self-test on fixtures) so it is not read as a lock on the live list.
+DEFER severity=LOW — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — .husky/pre-push:44 "SUITE_ARGS=" and .husky/pre-push-checks.sh:12 "npm run test $SUITE_ARGS" — SUITE_ARGS is added surface (the station's json reporter arguments) that no pasted clause or ruling names — either name it in the card or add it with the A5 station edit.
+DEFER severity=LOW — TKT-1 "`Done-condition:` (the task's acceptance criteria) ... come from the task" — "## Acceptance criteria" (empty in the pasted card) — the card carries no acceptance criteria, so the brief cannot generate a Done-condition and this diff's done-condition is unstated — fill the card's acceptance criteria with the six-check list and the two replays.
+REJECT — rule 10 note (RR-0232/RR-0235) "The lane close step copies the lane's `REPORT.md` ... into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — accused: no docs/reports/lanes copy in this change — the copy is due in the lane's LAST commit and this is the build commit ("Status stays RUNNING (protected path in this commit)"), so it is not yet due.
+MET — card "reuse what exists" — old .husky/pre-push line "node scripts/analysis/mcbylaws/gate.mjs --push && node scripts/analysis/step-validate.mjs --staged --fast && ... VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test" — the six list lines are the same commands in the same order, nothing new runs.
+MET — RR-0370 "one list of push checks kept in the repo" — .husky/pre-push-checks.sh:7 "step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&" and .husky/pre-push:45 ". ./.husky/pre-push-checks.sh" — one repo list, sourced by the hook.
+MET — card "the interactive parts of the gate ... stay in the hook" — .husky/pre-push:43 "GATE_MODE=--push" and the case asserting the hook never carries --ci — the hook supplies --push, the list takes the mode as a variable.
+MET — card "The plan measures the size and names the Files line" — pasted "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md" — the change touches exactly those six paths.
+MET — CLAUDE.md "`.husky/pre-push-checks.sh` ... is the source of truth and `step-validate.mjs` parses its value" — scripts/analysis/step-validate.mjs:1290 "const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');" — the doc claim and the parse source agree.
+MET — 11.3 "Red must land at the DESIGNED assertion" — Implementation Notes "T1 'expected [ Array(5) ] to deeply equal []' ... T5 'expected +0 to be 1'" — each recorded red names the assertion it was written to trip.
+MET — 11.1 "a line citation is read, not remembered" — .husky/pre-push-checks.sh:12 "VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8" — the cap the hook and the tests read is the cap the list carries.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+Rules met: none
+
+---
+⏱  91911ms (91.9s)
+📊 Tokens — total: 41287, input: 22898, output: 18389, reasoning: 17088

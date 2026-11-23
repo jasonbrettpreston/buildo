@@ -1,0 +1,539 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:7ae2ed155f77794b7e5d44b98676648bfb828991889f787b8114410a36729fee part 1 of 1 chunk 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".husky/pre-push",".husky/pre-push-checks.sh","CLAUDE.md","scripts/analysis/step-validate.mjs","src/tests/hooks-composition.infra.test.ts","src/tests/step-validate-vitest-fork-cap.infra.test.ts"]
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.husky/pre-push b/.husky/pre-push
+index 39a855007f32d18f455e968967c91fb2a1e2af7f..93a905e49c457d2504956b14c19f2bf6fca0d9d4 100755
+--- a/.husky/pre-push
++++ b/.husky/pre-push
+@@ -38,4 +38,8 @@
+ #
+ # MB-67 (R-KM, R-KP, R-LF): the McBylaws gate runs FIRST, because it reads git's ref pairs on stdin (nothing else in
+ # this hook reads stdin). It prints the summary and asks the operator before the 71 s suite, so a "no" costs nothing.
+-node scripts/analysis/mcbylaws/gate.mjs --push && node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test
++# task-424 (RR-0370 option C): the checks above run from ONE list, .husky/pre-push-checks.sh, which the push station sources too; this hook supplies the plain step runner and the gate mode.
++step() { shift; "$@"; }
++GATE_MODE=--push
++SUITE_ARGS=
++. ./.husky/pre-push-checks.sh
+diff --git a/.husky/pre-push-checks.sh b/.husky/pre-push-checks.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..3eec7dded9dc8fd36f2f1cb02750ed9fc6b31c1a
+--- /dev/null
++++ b/.husky/pre-push-checks.sh
+@@ -0,0 +1,12 @@
++#!/bin/sh
++# task-424 (RR-0370, option C): the ONE list of the non-interactive pre-push checks, in order; the chain stops at the first failure.
++# The caller defines step() (step <name> <command...>: run the command, return its status), GATE_MODE and SUITE_ARGS, then sources this file.
++#   .husky/pre-push: a plain step(), GATE_MODE=--push (the gate reads git's ref pairs on stdin and may ask the operator), SUITE_ARGS empty.
++#   the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite.
++# Fork cap: R-CQ; scripts/analysis/step-validate.mjs parses it from THIS file, so no comment here may carry a fork assignment.
++step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&
++step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&
++step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&
++step spec-split node scripts/analysis/spec-split-check.mjs --check &&
++step typecheck npm run typecheck &&
++step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 464a3853fde3d6797d6b029133a8730ed72c03a0..ba90979f258949f29d709e75f56af8a8304c6cac 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -30,7 +30,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
+ 2. **System Map Authority:** `docs/specs/00-architecture/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
+ 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
+ 4. **Verification:** Never declare a task done until `npm run test` passes.
+-5. **Automated Gate (Spec 124 R-AG, 2026-09-14):** Husky pre-commit runs the cheap gates + `npm run typecheck && npm run lint && npx vitest related <staged files>`; pre-push runs the FULL `npm run test` (`VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` since Spec 124 R-CQ, 2026-10-15, Mac mini — two clean 8-fork suites, 68 s each; pre-commit `related` and the J2 steps run at 4; never above 10. Both variables are needed — they are what vitest's forks pool reads, and on a 12-CPU host a lone max throws a min/max conflict; `VITEST_MAX_WORKERS` is ignored. History: 1 fork, then 2 under R-BV on the Windows PC, whose WSL VM OS-killed a 4-fork run — `.husky/pre-push` is the source of truth and `step-validate.mjs` parses its value). **Host concurrency (R-CQ):** no heavy lane — only dev-DB writers, full suites and programme-branch landings run one at a time; everything else runs in parallel; memory floor = `memory_pressure` free ≥ 25 % (`ai-env-check` Host memory line); set-up: `docs/runbook/dev_host_setup.md`. Live-DB tests run under `npm run test:db`. Composition is locked by `src/tests/hooks-composition.infra.test.ts`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
++5. **Automated Gate (Spec 124 R-AG, 2026-09-14):** Husky pre-commit runs the cheap gates + `npm run typecheck && npm run lint && npx vitest related <staged files>`; pre-push runs the FULL `npm run test` (`VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` since Spec 124 R-CQ, 2026-10-15, Mac mini — two clean 8-fork suites, 68 s each; pre-commit `related` and the J2 steps run at 4; never above 10. Both variables are needed — they are what vitest's forks pool reads, and on a 12-CPU host a lone max throws a min/max conflict; `VITEST_MAX_WORKERS` is ignored. History: 1 fork, then 2 under R-BV on the Windows PC, whose WSL VM OS-killed a 4-fork run — `.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value). **Host concurrency (R-CQ):** no heavy lane — only dev-DB writers, full suites and programme-branch landings run one at a time; everything else runs in parallel; memory floor = `memory_pressure` free ≥ 25 % (`ai-env-check` Host memory line); set-up: `docs/runbook/dev_host_setup.md`. Live-DB tests run under `npm run test:db`. Composition is locked by `src/tests/hooks-composition.infra.test.ts`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
+ 6. **Pre-Flight:** Run `node scripts/ai-env-check.mjs` before starting any task.
+ 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
+ 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
+diff --git a/scripts/analysis/step-validate.mjs b/scripts/analysis/step-validate.mjs
+index ef597fc41cfd6a49bc1682cf82606ccd6e433f07..b7426eed50144f2b38b5169603bed38693f63964 100644
+--- a/scripts/analysis/step-validate.mjs
++++ b/scripts/analysis/step-validate.mjs
+@@ -1287,11 +1287,11 @@ function packageTestScript() {
+   return pkg.scripts?.test ?? '';
+ }
+ 
+-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
++const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
+ 
+ /**
+  * PURE over an already-read hook string. Operator ruling 2026-09-21: the
+- * step-validate default fork cap must EQUAL `.husky/pre-push`'s own
++ * step-validate default fork cap must EQUAL the pre-push check list's own
+  * `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values, parsed out rather than
+  * re-typed, so the two can never drift apart (single source of truth). Throws
+  * if either var is missing from the hook text — a silent fallback would
+@@ -1301,7 +1301,7 @@ export function parseForkCapFromHookText(hookText) {
+   const minMatch = /\bVITEST_MIN_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+   const maxMatch = /\bVITEST_MAX_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+   if (!minMatch || !maxMatch) {
+-    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
++    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push-checks.sh — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
+   }
+   return { min: minMatch[1], max: maxMatch[1] };
+ }
+@@ -1310,17 +1310,17 @@ export function parseForkCapFromHookText(hookText) {
+  * The fork cap `runVitest()`'s spawned child inherits. Uncapped, vitest's
+  * `forks` pool defaults to one fork per CPU (~12 on this host); `--all --write`
+  * over 18 steps was OS/harness-killed for memory twice (2026-09-21, worked
+- * around by 17 sequential single-step runs). `.husky/pre-push` already solved
++ * around by 17 sequential single-step runs). The pre-push check list already solved
+  * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
+  * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
+  * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
+- * The cap is whatever `.husky/pre-push` carries — MIN=8/MAX=8 since Spec 124
++ * The cap is whatever the pre-push check list carries — MIN=8/MAX=8 since Spec 124
+  * R-CQ (2026-10-15, Amends R-BV, Mac mini 24 GB / 12 cores; never above ten).
+  * Before that, MIN=2/MAX=2 under R-BV (2026-10-11) on the Windows PC, whose
+  * "never above two" came from the 2026-09-21 WSL memory kill.
+  * DEFAULT only — an operator (or CI) who already set either var in the env this
+  * process inherited is never clobbered, so a caller can still widen the cap.
+- * `hookText` is injectable (default: a live read of `.husky/pre-push`) so
++ * `hookText` is injectable (default: a live read of the pre-push check list) so
+  * `selfTest()`/a vitest suite can exercise both directions — including a
+  * tampered hook fixture — without touching `process.env` or the real file.
+  * Never mutates `baseEnv`.
+diff --git a/src/tests/hooks-composition.infra.test.ts b/src/tests/hooks-composition.infra.test.ts
+index 114edf5e5ae4d6e0e21f0e3286488568ebd9caf0..a0d93996336774bdd009c91dee14e95e7cec4050 100644
+--- a/src/tests/hooks-composition.infra.test.ts
++++ b/src/tests/hooks-composition.infra.test.ts
+@@ -14,6 +14,7 @@
+ import { describe, it, expect } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
++import os from 'node:os';
+ import { spawnSync } from 'node:child_process';
+ import * as budget from '../../scripts/analysis/precommit-budget.mjs';
+ 
+@@ -21,10 +22,14 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
+ const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
+ const PRE_PUSH_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+ const COMMIT_MSG_PATH = path.join(REPO_ROOT, '.husky/commit-msg');
++// task-424 (RR-0370 option C): the ONE list of the non-interactive pre-push checks, sourced by .husky/pre-push and the push station.
++const PRE_PUSH_CHECKS_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
+ 
+ const PRE_COMMIT = fs.readFileSync(PRE_COMMIT_PATH, 'utf8');
+ const PRE_PUSH = fs.readFileSync(PRE_PUSH_PATH, 'utf8');
+ const COMMIT_MSG = fs.readFileSync(COMMIT_MSG_PATH, 'utf8');
++// A missing list fails the named cases instead of crashing the file (task-424 plan section 5).
++const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';
+ 
+ /** Strips `#`-comment lines (and shebang) so a prose mention inside a comment
+  * never trips a predicate meant to catch a real, executable invocation. */
+@@ -95,11 +100,12 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
+     for (const [, min, max] of preCommitCaps) {
+       expect([min, max]).toEqual(['4', '4']);
+     }
+-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
+-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
++    // task-424: the pre-push suite line lives in the one check list .husky/pre-push-checks.sh (pin moved, same strength).
++    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
+       expect(stripComments(hook)).not.toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/); // R-CQ: never above 10
+     }
+-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
+       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
+     }
+     expect(stripComments(PRE_COMMIT)).toMatch(/grep -E '\^\(src\|scripts\)\/\.\*\\\.\(ts\|tsx\|js\|mjs\)\$'/);
+@@ -135,24 +141,27 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
+   });
+ });
+ 
++// task-424 (RR-0370 option C): the pre-push checks below are read from the one list .husky/pre-push-checks.sh, which
++// .husky/pre-push sources; the pins moved from the hook text to the list text with the same strength.
+ describe('hooks-composition (R-AG) — pre-push', () => {
+   it('re-runs step-validate --staged --fast, spec-split-check, and typecheck (Spec 123 R-R, unchanged)', () => {
+-    expect(PRE_PUSH).toContain('step-validate.mjs --staged --fast');
+-    expect(PRE_PUSH).toContain('spec-split-check.mjs --check');
+-    expect(PRE_PUSH).toMatch(/\bnpm run typecheck\b/);
++    expect(PRE_PUSH_CHECKS).toContain('step-validate.mjs --staged --fast');
++    expect(PRE_PUSH_CHECKS).toContain('spec-split-check.mjs --check');
++    expect(PRE_PUSH_CHECKS).toMatch(/\bnpm run typecheck\b/);
+   });
+ 
+   it('RED — a tampered pre-push raised to twelve forks trips the R-CQ never-above-10 lock', () => {
+-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
++    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
+     expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/);
+   });
+ 
+   it('GREEN — invokes the full suite exactly once per push', () => {
+-    expect(invokesFullSuite(PRE_PUSH)).toBe(true);
++    expect(invokesFullSuite(PRE_PUSH_CHECKS)).toBe(true);
++    expect(stripComments(PRE_PUSH_CHECKS).split('npm run test').length - 1).toBe(1);
+   });
+ 
+   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
++    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
+     expect(invokesFullSuite(tampered)).toBe(false);
+   });
+ 
+@@ -165,11 +174,11 @@ describe('hooks-composition (R-AG) — pre-push', () => {
+   // G #39), and `--staged` alone cannot see that.
+   // -------------------------------------------------------------------------
+   it('GREEN — also re-runs step-validate --all --fast (Fold GC-4, fleet-wide freshness sweep)', () => {
+-    expect(stripComments(PRE_PUSH)).toMatch(/step-validate\.mjs --all --fast/);
++    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/step-validate\.mjs --all --fast/);
+   });
+ 
+   it('RED — a tampered pre-push with the --all --fast sweep stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/&& node scripts\/analysis\/step-validate\.mjs --all --fast/, '');
++    const tampered = PRE_PUSH_CHECKS.replace(/step step-validate-all node scripts\/analysis\/step-validate\.mjs --all --fast &&\n/, '');
+     expect(stripComments(tampered)).not.toMatch(/step-validate\.mjs --all --fast/);
+   });
+ });
+@@ -479,14 +488,17 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+   });
+ 
+   it('GREEN — pre-push runs gate --push exactly once, before step-validate (it reads the ref pairs on stdin)', () => {
+-    const code = stripComments(PRE_PUSH);
+-    expect(count(PRE_PUSH, `${GATE} --push`)).toBe(1);
+-    expect(code.indexOf(`${GATE} --push`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
++    // task-424: the gate line is in the one list as `${GATE} $GATE_MODE`; the hook sets GATE_MODE=--push, never --ci.
++    const code = stripComments(PRE_PUSH_CHECKS);
++    expect(count(PRE_PUSH_CHECKS, `${GATE} $GATE_MODE`)).toBe(1);
++    expect(code.indexOf(`${GATE} $GATE_MODE`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
++    expect(count(PRE_PUSH, 'GATE_MODE=--push')).toBe(1);
++    expect(stripComments(PRE_PUSH)).not.toContain('--ci');
+   });
+ 
+   it('RED — a tampered pre-push with the gate stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/node scripts\/analysis\/mcbylaws\/gate\.mjs --push && /, '');
+-    expect(count(tampered, `${GATE} --push`)).toBe(0);
++    const tampered = PRE_PUSH_CHECKS.replace(/step mcbylaws-gate node scripts\/analysis\/mcbylaws\/gate\.mjs \$GATE_MODE &&\n/, '');
++    expect(count(tampered, `${GATE} $GATE_MODE`)).toBe(0);
+   });
+ 
+   it('GREEN — commit-msg runs gate --commit-msg with the message file exactly once', () => {
+@@ -499,9 +511,99 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+   });
+ 
+   it('no hook sets an environment switch, flag or skip word for the gate (R-KM: no exception path)', () => {
+-    for (const hook of [PRE_COMMIT, PRE_PUSH, COMMIT_MSG]) {
+-      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE));
++    // task-424: the one list is checked too, and so are the hook's GATE_MODE and SUITE_ARGS assignment lines.
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS, COMMIT_MSG]) {
++      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE) || /\b(GATE_MODE|SUITE_ARGS)=/.test(l));
+       for (const l of gateLines) expect(l).not.toMatch(/SKIP|BYPASS|MCBYLAWS_|HUSKY=|--no-|\|\| true/);
+     }
+   });
+ });
++
++// ---------------------------------------------------------------------------
++// task-424 STATION.ONELIST (RR-0370 option C, operator: "one list of push checks kept in the repo, used by both the
++// hook and the station"). The six non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: six
++// `step <name> <command>` lines joined by `&&`, no function and no branch. Each caller defines step(), GATE_MODE
++// and SUITE_ARGS and sources it; .husky/pre-push supplies a plain step(), GATE_MODE=--push and an empty SUITE_ARGS.
++// ---------------------------------------------------------------------------
++describe('task-424 — one list of pre-push checks', () => {
++  const CHECKS = [
++    /mcbylaws\/gate\.mjs/,
++    /step-validate\.mjs/,
++    /spec-split-check\.mjs/,
++    /\bnpm run typecheck\b/,
++    /\bnpm run test\b/,
++    /\bvitest\b/,
++    /\btsc\b/,
++  ];
++  /** PURE — which check commands does this text's executable (comment-stripped) part carry? */
++  const checksIn = (text: string) => CHECKS.filter((re) => re.test(stripComments(text)));
++  /** PURE — the non-blank executable lines of a shell text (comments and shebang stripped). */
++  const execLines = (text: string) => stripComments(text).split('\n').filter((l) => l.trim() !== '');
++
++  const HOOK_LINES = ['step() { shift; "$@"; }', 'GATE_MODE=--push', 'SUITE_ARGS=', '. ./.husky/pre-push-checks.sh'];
++  const LIST_LINES = [
++    'step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&',
++    'step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&',
++    'step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&',
++    'step spec-split node scripts/analysis/spec-split-check.mjs --check &&',
++    'step typecheck npm run typecheck &&',
++    'step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS',
++  ];
++  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'suite'];
++
++  it('T1 — .husky/pre-push runs no check itself: its executable lines are only the step runner, the gate mode, the suite arguments and the source line', () => {
++    expect(checksIn(PRE_PUSH)).toEqual([]);
++    expect(execLines(PRE_PUSH)).toEqual(HOOK_LINES);
++  });
++
++  it('T2 — the list holds exactly the six chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
++    const lines = execLines(PRE_PUSH_CHECKS);
++    expect(lines).toEqual(LIST_LINES);
++    lines.slice(0, -1).forEach((l) => expect(l.endsWith(' &&'), l).toBe(true));
++    expect(lines[lines.length - 1]?.endsWith(' &&')).toBe(false);
++    expect(lines.join('\n').split('npm run test').length - 1).toBe(1);
++  });
++
++  it('T3 (planted) — the predicates catch a check added to the hook, a gate line removed from the list and a broken `&&`', () => {
++    expect(checksIn(`${PRE_PUSH}&& npm run typecheck\n`)).not.toEqual([]);
++    const noGate = PRE_PUSH_CHECKS.split('\n').filter((l) => !l.startsWith('step mcbylaws-gate')).join('\n');
++    expect(execLines(noGate)).not.toEqual(LIST_LINES);
++    const semicolon = PRE_PUSH_CHECKS.replace(' &&', ';');
++    expect(execLines(semicolon)).not.toEqual(LIST_LINES);
++  });
++
++  it('T4 (behaviour, hermetic) — sourced with a recording step(), the chain stops at the first failing step and passes when none fails', () => {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'task424-'));
++    try {
++      const run = (failAt: string | undefined) => {
++        const calls = path.join(dir, 'calls.log');
++        fs.rmSync(calls, { force: true });
++        const env: NodeJS.ProcessEnv = { ...process.env, LIST: PRE_PUSH_CHECKS_PATH, CALLS: calls };
++        delete env.FAIL_AT;
++        if (failAt !== undefined) env.FAIL_AT = failAt;
++        const r = spawnSync('sh', ['-c', 'step() { echo "$1" >> "$CALLS"; [ "$1" != "$FAIL_AT" ]; }; GATE_MODE=x; SUITE_ARGS=; . "$LIST"'], { cwd: dir, env, encoding: 'utf8' });
++        const logged = fs.existsSync(calls) ? fs.readFileSync(calls, 'utf8').split('\n').filter(Boolean) : [];
++        return { status: r.status, logged };
++      };
++      STEP_NAMES.forEach((name, i) => {
++        const { status, logged } = run(name);
++        expect(status, `FAIL_AT=${name}`).toBe(1);
++        expect(logged, `FAIL_AT=${name}`).toEqual(STEP_NAMES.slice(0, i + 1));
++      });
++      const ok = run(undefined);
++      expect(ok.status).toBe(0);
++      expect(ok.logged).toEqual(STEP_NAMES);
++    } finally {
++      fs.rmSync(dir, { recursive: true, force: true });
++    }
++  });
++
++  it('T5 (fork cap, pure) — each fork assignment occurs once in the whole list text, and the parse of the full text equals the parse of its comment-stripped text', async () => {
++    expect(PRE_PUSH_CHECKS.split('VITEST_MIN_FORKS=').length - 1).toBe(1);
++    expect(PRE_PUSH_CHECKS.split('VITEST_MAX_FORKS=').length - 1).toBe(1);
++    const { parseForkCapFromHookText } = (await import('../../scripts/analysis/step-validate.mjs')) as unknown as {
++      parseForkCapFromHookText: (hookText: string) => { min: string; max: string };
++    };
++    expect(parseForkCapFromHookText(PRE_PUSH_CHECKS)).toEqual(parseForkCapFromHookText(stripComments(PRE_PUSH_CHECKS)));
++  });
++});
+diff --git a/src/tests/step-validate-vitest-fork-cap.infra.test.ts b/src/tests/step-validate-vitest-fork-cap.infra.test.ts
+index f6201f06d5c632de730ceda93d8d0b0657fb7571..5ee6d5454bd7b89cf24b91e0e0802d983f5eef36 100644
+--- a/src/tests/step-validate-vitest-fork-cap.infra.test.ts
++++ b/src/tests/step-validate-vitest-fork-cap.infra.test.ts
+@@ -7,17 +7,20 @@
+ // host), and `--all --write` over 18 steps was OS/harness-killed for memory
+ // twice (2026-09-21), worked around by 17 sequential single-step runs.
+ //
+-// Operator ruling (2026-09-21, same day): the default must EQUAL
+-// `.husky/pre-push`'s own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values. The cap
+-// is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124 R-BV
++// Operator ruling (2026-09-21, same day): the default must EQUAL the pre-push
++// check list's own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values — since task-424
++// (RR-0370 option C, 2026-11-23) that is `.husky/pre-push-checks.sh`, the one
++// list `.husky/pre-push` and the push station both source (before it, the hook
++// text itself). The cap is whatever the pre-push check list carries — MIN=8/MAX=8
++// since Spec 124 R-CQ (2026-10-15); before that MIN=2/MAX=2 under Spec 124 R-BV
+ // (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
+ // (`review_followups.md` HIGH row, measured dying in
+ // `src/tests/step-conformance.infra.test.ts`, one of `runVitest()`'s own
+ // `VITEST_TARGETS`) was cured by suite-speed step 1 (feafc74c), measured by two
+ // clean 2-fork full suites; never above two (the 2026-09-21 memory kill). So
+ // `vitestChildEnv()` PARSES the
+-// cap out of `.husky/pre-push` (single source of truth) instead of
+-// re-typing it, per `parseForkCapFromHookText()` — this suite proves that
++// cap out of the pre-push check list `.husky/pre-push-checks.sh` (single source
++// of truth) instead of re-typing it, per `parseForkCapFromHookText()` — this suite proves that
+ // parsing is genuinely load-bearing (a tampered hook fixture changes the
+ // default), not merely a hardcoded literal in disguise, alongside the
+ // explicit-caller-wins contract and the pre-fix defect — proven both
+@@ -30,8 +33,9 @@ import { pathToFileURL } from 'url';
+ 
+ const REPO_ROOT = path.resolve(__dirname, '../../');
+ const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+-const LIVE_PRE_PUSH = fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8');
++// task-424: the fork cap's one source is the pre-push check list; a missing list fails the cases, not the import.
++const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
++const LIVE_PRE_PUSH = fs.existsSync(PRE_PUSH_HOOK_PATH) ? fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8') : '';
+ 
+ type VitestChildEnvFn = (
+   baseEnv: Record<string, string | undefined>,
+@@ -47,13 +51,13 @@ async function loadModule() {
+   return mod;
+ }
+ 
+-describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on .husky/pre-push)', () => {
+-  it('GREEN — the live .husky/pre-push carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
++describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on the pre-push check list .husky/pre-push-checks.sh)', () => {
++  it('GREEN — the live pre-push check list .husky/pre-push-checks.sh carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
+     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=8\b/);
+     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=8\b/);
+   });
+ 
+-  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=8/MAX=8, R-CQ)', async () => {
++  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE pre-push check list .husky/pre-push-checks.sh (MIN=8/MAX=8, R-CQ)', async () => {
+     const { vitestChildEnv } = await loadModule();
+     const out = vitestChildEnv({ PATH: '/usr/bin' });
+     expect(out.VITEST_MIN_FORKS).toBe('8');
+

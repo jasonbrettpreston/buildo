@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T14:31:50.325Z file_sha256=228010e1f5510d1bc50f22147735ecb4137dbe50a15fe1348fe802edcee3059c prompt_sha256=3a66b2e63a6e60ec596c3d53629ce907941d30b4d588d3bfb0f08f792757ef63
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — task card "## Acceptance criteria" (empty; the only verification pasted is the Implementation Notes A1-A9 list) — no 5-10 item self-skeptical PASS/FAIL checklist is present in the pasted material; A1-A9 are acceptance runs, not the pre-test checklist — add the 5-10 item checklist (or its pointer) to the task notes before GREEN, since this rule is "always applies, every WF".
+DEFER severity=LOW — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — task card "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md" — CLAUDE.md:33 is updated, but Spec 124 R-CQ and docs/runbook/dev_host_setup.md (both cited by that same CLAUDE.md line as carrying the fork-cap/R-CQ rule) are not in the Files line and not in the diff; whether they name `.husky/pre-push` as the source of truth is cannot see — grep `docs/specs/` and `docs/runbook/` for `.husky/pre-push` and update or record "unaffected" in the same commit.
+MET — §5.3 — Implementation Notes "2026-11-23 BL-ONE424 red seen (lane red.out, rc=1, 13 failed | 49 passed)" — a failing run of the new T1/T2/T4/T5 and the moved pins is recorded before the list file was written, so Red precedes Green.
+MET — §2.1 — src/tests/hooks-composition.infra.test.ts "T4 (behaviour, hermetic) — sourced with a recording step(), the chain stops at the first failing step" — the .infra.test.ts forcing a failure at each of the six steps and asserting the stop point is an unhappy-path test, not only success.
+MET — §2.3 — src/tests/hooks-composition.infra.test.ts "expect(lines[lines.length - 1]?.endsWith(' &&')).toBe(false);" — optional chaining used for the possibly-undefined element and no non-null assertion `!` is introduced anywhere in the diff.
+MET — §8.2 — src/tests/hooks-composition.infra.test.ts "/\bvitest\b/" and "const PRE_PUSH_CHECKS = fs.existsSync(...)" — no regex `s` flag, no `NODE_ENV` assignment, no `globalThis.google` access; ES2017-safe constructs only.
+MET — §5.2 — src/tests/hooks-composition.infra.test.ts file path (`.infra.test.ts`) and "task-424: the pre-push suite line lives in the one check list .husky/pre-push-checks.sh (pin moved, same strength)" — the gate-composition surface stays in the infra layer and every pin moved with the behaviour it locks, none dropped.
+MET — §14 — CLAUDE.md:33 "`.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth" — the prime-directive prose naming the old source of truth is corrected in the same commit as the move.
+REJECT — §10.2 — modifying `scripts/analysis/step-validate.mjs` under the "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" ban — this is push-tooling work (labels McFix/McFix Final, no frontend feature), so the frontend-phase boundary rule does not reach it.
+REJECT — §12.11 rule 1 silent-catch-fallback — "const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';" — the rule's own scope is "Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`", and the empty string makes the named T1/T2/T5 pins fail rather than hide a missing list.
+REJECT — §5.1 typed factories — inline fixtures "const HOOK_LINES = ['step() { shift; \"$@\"; }', ...]" — these are expected shell-text lines, not an untyped object mock of a DB entity that `src/tests/factories.ts` could supply.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 34   Unmet: 0
+
+---
+⏱  73615ms (73.6s)
+📊 Tokens — total: 37065, input: 23211, output: 13854, reasoning: 12776

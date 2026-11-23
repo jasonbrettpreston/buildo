@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:29:00Z'
+updated_date: '2026-11-23T14:35:00Z'
 labels:
   - McFix
   - McFix V2
@@ -309,4 +309,15 @@ rg#3 MED folded the parse of its com
 2026-11-23 BL-ONE424 build: tests first (plan section 5): T1-T5 added to src/tests/hooks-composition.infra.test.ts and the ten pins moved to the list text; fork-cap test reads .husky/pre-push-checks.sh with the existsSync guard. Red attempt: a commit with only the two test files and this task file staged (red.out in the lane dir).
 
 2026-11-23 BL-ONE424 red seen (lane red.out, rc=1, 13 failed | 49 passed): T1 'expected [ Array(5) ] to deeply equal []', T2 'expected [] to deeply equal [ …(6) ]', T4 'FAIL_AT=mcbylaws-gate: expected [] to deeply equal [ 'mcbylaws-gate' ]', T5 'expected +0 to be 1'; T3 green (not in the failed list); the moved pins red on the absent list. Build: .husky/pre-push-checks.sh (the plan's exact text), .husky/pre-push line 41 replaced by the plan's five lines, step-validate.mjs PRE_PUSH_HOOK_PATH and error text and doc comments, CLAUDE.md:33 phrase. Status stays RUNNING (protected path in this commit; check-lane-close.mjs:35).
+
+2026-11-23 BL-ONE424 acceptance (lane items, build commit 0c948a01d):
+A1 (lane, run through the real pre-commit related run, never the runner directly): commit.out ' ✓ src/tests/hooks-composition.infra.test.ts (54 tests)', ' ✓ src/tests/step-validate-*-fork-cap.infra.test.ts (8 tests)', 'Test Files  8 passed (8)', 'Tests  137 passed (137)', rc=0.
+A2: grep -v '^#' .husky/pre-push | grep -cE 'gate\.mjs|step-validate|spec-split|npm run' -> 0.
+A3: sh -n .husky/pre-push-checks.sh; echo $? -> 0; grep -cE '^step ' .husky/pre-push-checks.sh -> 6.
+A4 (full suite): NOT run by the lane (the brief forbids a full suite from a lane; it runs at the push station as A6). WAITS orchestrator.
+A5, A6, A7, A8: orchestrator items (station edit after the cp backup, station suite on the final tip, gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane.
+A9: operator push. NOT run.
+Extra check: the hook's step() passes stdin to the command: printf 'refs/heads/x 111 refs/heads/x 000\n' | sh -c 'step() { shift; "$@"; }; step mcbylaws-gate cat' printed the line, rc=0.
+
+2026-11-23 BL-ONE424 output review round 1 (context-r3.md, fresh): 8 compliance lists, engineering eng-all, code-review, error-paths on DeepSeek; 40 finding lines listed untriaged in docs/reports/lanes/2026-11-23/BL-ONE424/FINDINGS.md. Task stays RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->

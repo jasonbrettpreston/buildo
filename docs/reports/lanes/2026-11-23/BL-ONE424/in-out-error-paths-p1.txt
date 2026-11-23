@@ -1,0 +1,374 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:7ae2ed155f77794b7e5d44b98676648bfb828991889f787b8114410a36729fee part 1 of 1 chunk 1 of 1
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".husky/pre-push",".husky/pre-push-checks.sh","CLAUDE.md","scripts/analysis/step-validate.mjs","src/tests/hooks-composition.infra.test.ts","src/tests/step-validate-vitest-fork-cap.infra.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.husky/pre-push b/.husky/pre-push
+index 39a855007f32d18f455e968967c91fb2a1e2af7f..93a905e49c457d2504956b14c19f2bf6fca0d9d4 100755
+--- a/.husky/pre-push
++++ b/.husky/pre-push
+@@ -38,4 +38,8 @@
+ #
+ # MB-67 (R-KM, R-KP, R-LF): the McBylaws gate runs FIRST, because it reads git's ref pairs on stdin (nothing else in
+ # this hook reads stdin). It prints the summary and asks the operator before the 71 s suite, so a "no" costs nothing.
+-node scripts/analysis/mcbylaws/gate.mjs --push && node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test
++# task-424 (RR-0370 option C): the checks above run from ONE list, .husky/pre-push-checks.sh, which the push station sources too; this hook supplies the plain step runner and the gate mode.
++step() { shift; "$@"; }
++GATE_MODE=--push
++SUITE_ARGS=
++. ./.husky/pre-push-checks.sh
+diff --git a/.husky/pre-push-checks.sh b/.husky/pre-push-checks.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..3eec7dded9dc8fd36f2f1cb02750ed9fc6b31c1a
+--- /dev/null
++++ b/.husky/pre-push-checks.sh
+@@ -0,0 +1,12 @@
++#!/bin/sh
++# task-424 (RR-0370, option C): the ONE list of the non-interactive pre-push checks, in order; the chain stops at the first failure.
++# The caller defines step() (step <name> <command...>: run the command, return its status), GATE_MODE and SUITE_ARGS, then sources this file.
++#   .husky/pre-push: a plain step(), GATE_MODE=--push (the gate reads git's ref pairs on stdin and may ask the operator), SUITE_ARGS empty.
++#   the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite.
++# Fork cap: R-CQ; scripts/analysis/step-validate.mjs parses it from THIS file, so no comment here may carry a fork assignment.
++step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&
++step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&
++step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&
++step spec-split node scripts/analysis/spec-split-check.mjs --check &&
++step typecheck npm run typecheck &&
++step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 464a3853fde3d6797d6b029133a8730ed72c03a0..ba90979f258949f29d709e75f56af8a8304c6cac 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -30,7 +30,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
+ 2. **System Map Authority:** `docs/specs/00-architecture/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
+ 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
+ 4. **Verification:** Never declare a task done until `npm run test` passes.
+-5. **Automated Gate (Spec 124 R-AG, 2026-09-14):** Husky pre-commit runs the cheap gates + `npm run typecheck && npm run lint && npx vitest related <staged files>`; pre-push runs the FULL `npm run test` (`VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` since Spec 124 R-CQ, 2026-10-15, Mac mini — two clean 8-fork suites, 68 s each; pre-commit `related` and the J2 steps run at 4; never above 10. Both variables are needed — they are what vitest's forks pool reads, and on a 12-CPU host a lone max throws a min/max conflict; `VITEST_MAX_WORKERS` is ignored. History: 1 fork, then 2 under R-BV on the Windows PC, whose WSL VM OS-killed a 4-fork run — `.husky/pre-push` is the source of truth and `step-validate.mjs` parses its value). **Host concurrency (R-CQ):** no heavy lane — only dev-DB writers, full suites and programme-branch landings run one at a time; everything else runs in parallel; memory floor = `memory_pressure` free ≥ 25 % (`ai-env-check` Host memory line); set-up: `docs/runbook/dev_host_setup.md`. Live-DB tests run under `npm run test:db`. Composition is locked by `src/tests/hooks-composition.infra.test.ts`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
++5. **Automated Gate (Spec 124 R-AG, 2026-09-14):** Husky pre-commit runs the cheap gates + `npm run typecheck && npm run lint && npx vitest related <staged files>`; pre-push runs the FULL `npm run test` (`VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` since Spec 124 R-CQ, 2026-10-15, Mac mini — two clean 8-fork suites, 68 s each; pre-commit `related` and the J2 steps run at 4; never above 10. Both variables are needed — they are what vitest's forks pool reads, and on a 12-CPU host a lone max throws a min/max conflict; `VITEST_MAX_WORKERS` is ignored. History: 1 fork, then 2 under R-BV on the Windows PC, whose WSL VM OS-killed a 4-fork run — `.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value). **Host concurrency (R-CQ):** no heavy lane — only dev-DB writers, full suites and programme-branch landings run one at a time; everything else runs in parallel; memory floor = `memory_pressure` free ≥ 25 % (`ai-env-check` Host memory line); set-up: `docs/runbook/dev_host_setup.md`. Live-DB tests run under `npm run test:db`. Composition is locked by `src/tests/hooks-composition.infra.test.ts`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
+ 6. **Pre-Flight:** Run `node scripts/ai-env-check.mjs` before starting any task.
+ 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
+ 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
+diff --git a/scripts/analysis/step-validate.mjs b/scripts/analysis/step-validate.mjs
+index ef597fc41cfd6a49bc1682cf82606ccd6e433f07..b7426eed50144f2b38b5169603bed38693f63964 100644
+--- a/scripts/analysis/step-validate.mjs
++++ b/scripts/analysis/step-validate.mjs
+@@ -1287,11 +1287,11 @@ function packageTestScript() {
+   return pkg.scripts?.test ?? '';
+ }
+ 
+-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
++const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
+ 
+ /**
+  * PURE over an already-read hook string. Operator ruling 2026-09-21: the
+- * step-validate default fork cap must EQUAL `.husky/pre-push`'s own
++ * step-validate default fork cap must EQUAL the pre-push check list's own
+  * `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values, parsed out rather than
+  * re-typed, so the two can never drift apart (single source of truth). Throws
+  * if either var is missing from the hook text — a silent fallback would
+@@ -1301,7 +1301,7 @@ export function parseForkCapFromHookText(hookText) {
+   const minMatch = /\bVITEST_MIN_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+   const maxMatch = /\bVITEST_MAX_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+   if (!minMatch || !maxMatch) {
+-    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
++    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push-checks.sh — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
+   }
+   return { min: minMatch[1], max: maxMatch[1] };
+ }
+@@ -1310,17 +1310,17 @@ export function parseForkCapFromHookText(hookText) {
+  * The fork cap `runVitest()`'s spawned child inherits. Uncapped, vitest's
+  * `forks` pool defaults to one fork per CPU (~12 on this host); `--all --write`
+  * over 18 steps was OS/harness-killed for memory twice (2026-09-21, worked
+- * around by 17 sequential single-step runs). `.husky/pre-push` already solved
++ * around by 17 sequential single-step runs). The pre-push check list already solved
+  * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
+  * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
+  * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
+- * The cap is whatever `.husky/pre-push` carries — MIN=8/MAX=8 since Spec 124
++ * The cap is whatever the pre-push check list carries — MIN=8/MAX=8 since Spec 124
+  * R-CQ (2026-10-15, Amends R-BV, Mac mini 24 GB / 12 cores; never above ten).
+  * Before that, MIN=2/MAX=2 under R-BV (2026-10-11) on the Windows PC, whose
+  * "never above two" came from the 2026-09-21 WSL memory kill.
+  * DEFAULT only — an operator (or CI) who already set either var in the env this
+  * process inherited is never clobbered, so a caller can still widen the cap.
+- * `hookText` is injectable (default: a live read of `.husky/pre-push`) so
++ * `hookText` is injectable (default: a live read of the pre-push check list) so
+  * `selfTest()`/a vitest suite can exercise both directions — including a
+  * tampered hook fixture — without touching `process.env` or the real file.
+  * Never mutates `baseEnv`.
+diff --git a/src/tests/hooks-composition.infra.test.ts b/src/tests/hooks-composition.infra.test.ts
+index 114edf5e5ae4d6e0e21f0e3286488568ebd9caf0..a0d93996336774bdd009c91dee14e95e7cec4050 100644
+--- a/src/tests/hooks-composition.infra.test.ts
++++ b/src/tests/hooks-composition.infra.test.ts
+@@ -14,6 +14,7 @@
+ import { describe, it, expect } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
++import os from 'node:os';
+ import { spawnSync } from 'node:child_process';
+ import * as budget from '../../scripts/analysis/precommit-budget.mjs';
+ 
+@@ -21,10 +22,14 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
+ const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
+ const PRE_PUSH_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+ const COMMIT_MSG_PATH = path.join(REPO_ROOT, '.husky/commit-msg');
++// task-424 (RR-0370 option C): the ONE list of the non-interactive pre-push checks, sourced by .husky/pre-push and the push station.
++const PRE_PUSH_CHECKS_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
+ 
+ const PRE_COMMIT = fs.readFileSync(PRE_COMMIT_PATH, 'utf8');
+ const PRE_PUSH = fs.readFileSync(PRE_PUSH_PATH, 'utf8');
+ const COMMIT_MSG = fs.readFileSync(COMMIT_MSG_PATH, 'utf8');
++// A missing list fails the named cases instead of crashing the file (task-424 plan section 5).
++const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';
+ 
+ /** Strips `#`-comment lines (and shebang) so a prose mention inside a comment
+  * never trips a predicate meant to catch a real, executable invocation. */
+@@ -95,11 +100,12 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
+     for (const [, min, max] of preCommitCaps) {
+       expect([min, max]).toEqual(['4', '4']);
+     }
+-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
+-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
++    // task-424: the pre-push suite line lives in the one check list .husky/pre-push-checks.sh (pin moved, same strength).
++    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
+       expect(stripComments(hook)).not.toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/); // R-CQ: never above 10
+     }
+-    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {
+       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
+     }
+     expect(stripComments(PRE_COMMIT)).toMatch(/grep -E '\^\(src\|scripts\)\/\.\*\\\.\(ts\|tsx\|js\|mjs\)\$'/);
+@@ -135,24 +141,27 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
+   });
+ });
+ 
++// task-424 (RR-0370 option C): the pre-push checks below are read from the one list .husky/pre-push-checks.sh, which
++// .husky/pre-push sources; the pins moved from the hook text to the list text with the same strength.
+ describe('hooks-composition (R-AG) — pre-push', () => {
+   it('re-runs step-validate --staged --fast, spec-split-check, and typecheck (Spec 123 R-R, unchanged)', () => {
+-    expect(PRE_PUSH).toContain('step-validate.mjs --staged --fast');
+-    expect(PRE_PUSH).toContain('spec-split-check.mjs --check');
+-    expect(PRE_PUSH).toMatch(/\bnpm run typecheck\b/);
++    expect(PRE_PUSH_CHECKS).toContain('step-validate.mjs --staged --fast');
++    expect(PRE_PUSH_CHECKS).toContain('spec-split-check.mjs --check');
++    expect(PRE_PUSH_CHECKS).toMatch(/\bnpm run typecheck\b/);
+   });
+ 
+   it('RED — a tampered pre-push raised to twelve forks trips the R-CQ never-above-10 lock', () => {
+-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
++    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
+     expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/);
+   });
+ 
+   it('GREEN — invokes the full suite exactly once per push', () => {
+-    expect(invokesFullSuite(PRE_PUSH)).toBe(true);
++    expect(invokesFullSuite(PRE_PUSH_CHECKS)).toBe(true);
++    expect(stripComments(PRE_PUSH_CHECKS).split('npm run test').length - 1).toBe(1);
+   });
+ 
+   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
++    const tampered = PRE_PUSH_CHECKS.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
+     expect(invokesFullSuite(tampered)).toBe(false);
+   });
+ 
+@@ -165,11 +174,11 @@ describe('hooks-composition (R-AG) — pre-push', () => {
+   // G #39), and `--staged` alone cannot see that.
+   // -------------------------------------------------------------------------
+   it('GREEN — also re-runs step-validate --all --fast (Fold GC-4, fleet-wide freshness sweep)', () => {
+-    expect(stripComments(PRE_PUSH)).toMatch(/step-validate\.mjs --all --fast/);
++    expect(stripComments(PRE_PUSH_CHECKS)).toMatch(/step-validate\.mjs --all --fast/);
+   });
+ 
+   it('RED — a tampered pre-push with the --all --fast sweep stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/&& node scripts\/analysis\/step-validate\.mjs --all --fast/, '');
++    const tampered = PRE_PUSH_CHECKS.replace(/step step-validate-all node scripts\/analysis\/step-validate\.mjs --all --fast &&\n/, '');
+     expect(stripComments(tampered)).not.toMatch(/step-validate\.mjs --all --fast/);
+   });
+ });
+@@ -479,14 +488,17 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+   });
+ 
+   it('GREEN — pre-push runs gate --push exactly once, before step-validate (it reads the ref pairs on stdin)', () => {
+-    const code = stripComments(PRE_PUSH);
+-    expect(count(PRE_PUSH, `${GATE} --push`)).toBe(1);
+-    expect(code.indexOf(`${GATE} --push`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
++    // task-424: the gate line is in the one list as `${GATE} $GATE_MODE`; the hook sets GATE_MODE=--push, never --ci.
++    const code = stripComments(PRE_PUSH_CHECKS);
++    expect(count(PRE_PUSH_CHECKS, `${GATE} $GATE_MODE`)).toBe(1);
++    expect(code.indexOf(`${GATE} $GATE_MODE`)).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
++    expect(count(PRE_PUSH, 'GATE_MODE=--push')).toBe(1);
++    expect(stripComments(PRE_PUSH)).not.toContain('--ci');
+   });
+ 
+   it('RED — a tampered pre-push with the gate stripped is caught', () => {
+-    const tampered = PRE_PUSH.replace(/node scripts\/analysis\/mcbylaws\/gate\.mjs --push && /, '');
+-    expect(count(tampered, `${GATE} --push`)).toBe(0);
++    const tampered = PRE_PUSH_CHECKS.replace(/step mcbylaws-gate node scripts\/analysis\/mcbylaws\/gate\.mjs \$GATE_MODE &&\n/, '');
++    expect(count(tampered, `${GATE} $GATE_MODE`)).toBe(0);
+   });
+ 
+   it('GREEN — commit-msg runs gate --commit-msg with the message file exactly once', () => {
+@@ -499,9 +511,99 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+   });
+ 
+   it('no hook sets an environment switch, flag or skip word for the gate (R-KM: no exception path)', () => {
+-    for (const hook of [PRE_COMMIT, PRE_PUSH, COMMIT_MSG]) {
+-      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE));
++    // task-424: the one list is checked too, and so are the hook's GATE_MODE and SUITE_ARGS assignment lines.
++    for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS, COMMIT_MSG]) {
++      const gateLines = stripComments(hook).split('\n').filter((l) => l.includes(GATE) || /\b(GATE_MODE|SUITE_ARGS)=/.test(l));
+       for (const l of gateLines) expect(l).not.toMatch(/SKIP|BYPASS|MCBYLAWS_|HUSKY=|--no-|\|\| true/);
+     }
+   });
+ });
++
++// ---------------------------------------------------------------------------
++// task-424 STATION.ONELIST (RR-0370 option C, operator: "one list of push checks kept in the repo, used by both the
++// hook and the station"). The six non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: six
++// `step <name> <command>` lines joined by `&&`, no function and no branch. Each caller defines step(), GATE_MODE
++// and SUITE_ARGS and sources it; .husky/pre-push supplies a plain step(), GATE_MODE=--push and an empty SUITE_ARGS.
++// ---------------------------------------------------------------------------
++describe('task-424 — one list of pre-push checks', () => {
++  const CHECKS = [
++    /mcbylaws\/gate\.mjs/,
++    /step-validate\.mjs/,
++    /spec-split-check\.mjs/,
++    /\bnpm run typecheck\b/,
++    /\bnpm run test\b/,
++    /\bvitest\b/,
++    /\btsc\b/,
++  ];
++  /** PURE — which check commands does this text's executable (comment-stripped) part carry? */
++  const checksIn = (text: string) => CHECKS.filter((re) => re.test(stripComments(text)));
++  /** PURE — the non-blank executable lines of a shell text (comments and shebang stripped). */
++  const execLines = (text: string) => stripComments(text).split('\n').filter((l) => l.trim() !== '');
++
++  const HOOK_LINES = ['step() { shift; "$@"; }', 'GATE_MODE=--push', 'SUITE_ARGS=', '. ./.husky/pre-push-checks.sh'];
++  const LIST_LINES = [
++    'step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs $GATE_MODE &&',
++    'step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&',
++    'step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&',
++    'step spec-split node scripts/analysis/spec-split-check.mjs --check &&',
++    'step typecheck npm run typecheck &&',
++    'step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS',
++  ];
++  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'suite'];
++
++  it('T1 — .husky/pre-push runs no check itself: its executable lines are only the step runner, the gate mode, the suite arguments and the source line', () => {
++    expect(checksIn(PRE_PUSH)).toEqual([]);
++    expect(execLines(PRE_PUSH)).toEqual(HOOK_LINES);
++  });
++
++  it('T2 — the list holds exactly the six chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
++    const lines = execLines(PRE_PUSH_CHECKS);
++    expect(lines).toEqual(LIST_LINES);
++    lines.slice(0, -1).forEach((l) => expect(l.endsWith(' &&'), l).toBe(true));
++    expect(lines[lines.length - 1]?.endsWith(' &&')).toBe(false);
++    expect(lines.join('\n').split('npm run test').length - 1).toBe(1);
++  });
++
++  it('T3 (planted) — the predicates catch a check added to the hook, a gate line removed from the list and a broken `&&`', () => {
++    expect(checksIn(`${PRE_PUSH}&& npm run typecheck\n`)).not.toEqual([]);
++    const noGate = PRE_PUSH_CHECKS.split('\n').filter((l) => !l.startsWith('step mcbylaws-gate')).join('\n');
++    expect(execLines(noGate)).not.toEqual(LIST_LINES);
++    const semicolon = PRE_PUSH_CHECKS.replace(' &&', ';');
++    expect(execLines(semicolon)).not.toEqual(LIST_LINES);
++  });
++
++  it('T4 (behaviour, hermetic) — sourced with a recording step(), the chain stops at the first failing step and passes when none fails', () => {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'task424-'));
++    try {
++      const run = (failAt: string | undefined) => {
++        const calls = path.join(dir, 'calls.log');
++        fs.rmSync(calls, { force: true });
++        const env: NodeJS.ProcessEnv = { ...process.env, LIST: PRE_PUSH_CHECKS_PATH, CALLS: calls };
++        delete env.FAIL_AT;
++        if (failAt !== undefined) env.FAIL_AT = failAt;
++        const r = spawnSync('sh', ['-c', 'step() { echo "$1" >> "$CALLS"; [ "$1" != "$FAIL_AT" ]; }; GATE_MODE=x; SUITE_ARGS=; . "$LIST"'], { cwd: dir, env, encoding: 'utf8' });
++        const logged = fs.existsSync(calls) ? fs.readFileSync(calls, 'utf8').split('\n').filter(Boolean) : [];
++        return { status: r.status, logged };
++      };
++      STEP_NAMES.forEach((name, i) => {
++        const { status, logged } = run(name);
++        expect(status, `FAIL_AT=${name}`).toBe(1);
++        expect(logged, `FAIL_AT=${name}`).toEqual(STEP_NAMES.slice(0, i + 1));
++      });
++      const ok = run(undefined);
++      expect(ok.status).toBe(0);
++      expect(ok.logged).toEqual(STEP_NAMES);
++    } finally {
++      fs.rmSync(dir, { recursive: true, force: true });
++    }
++  });
++
++  it('T5 (fork cap, pure) — each fork assignment occurs once in the whole list text, and the parse of the full text equals the parse of its comment-stripped text', async () => {
++    expect(PRE_PUSH_CHECKS.split('VITEST_MIN_FORKS=').length - 1).toBe(1);
++    expect(PRE_PUSH_CHECKS.split('VITEST_MAX_FORKS=').length - 1).toBe(1);
++    const { parseForkCapFromHookText } = (await import('../../scripts/analysis/step-validate.mjs')) as unknown as {
++      parseForkCapFromHookText: (hookText: string) => { min: string; max: string };
++    };
++    expect(parseForkCapFromHookText(PRE_PUSH_CHECKS)).toEqual(parseForkCapFromHookText(stripComments(PRE_PUSH_CHECKS)));
++  });
++});
+diff --git a/src/tests/step-validate-vitest-fork-cap.infra.test.ts b/src/tests/step-validate-vitest-fork-cap.infra.test.ts
+index f6201f06d5c632de730ceda93d8d0b0657fb7571..5ee6d5454bd7b89cf24b91e0e0802d983f5eef36 100644
+--- a/src/tests/step-validate-vitest-fork-cap.infra.test.ts
++++ b/src/tests/step-validate-vitest-fork-cap.infra.test.ts
+@@ -7,17 +7,20 @@
+ // host), and `--all --write` over 18 steps was OS/harness-killed for memory
+ // twice (2026-09-21), worked around by 17 sequential single-step runs.
+ //
+-// Operator ruling (2026-09-21, same day): the default must EQUAL
+-// `.husky/pre-push`'s own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values. The cap
+-// is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124 R-BV
++// Operator ruling (2026-09-21, same day): the default must EQUAL the pre-push
++// check list's own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values — since task-424
++// (RR-0370 option C, 2026-11-23) that is `.husky/pre-push-checks.sh`, the one
++// list `.husky/pre-push` and the push station both source (before it, the hook
++// text itself). The cap is whatever the pre-push check list carries — MIN=8/MAX=8
++// since Spec 124 R-CQ (2026-10-15); before that MIN=2/MAX=2 under Spec 124 R-BV
+ // (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
+ // (`review_followups.md` HIGH row, measured dying in
+ // `src/tests/step-conformance.infra.test.ts`, one of `runVitest()`'s own
+ // `VITEST_TARGETS`) was cured by suite-speed step 1 (feafc74c), measured by two
+ // clean 2-fork full suites; never above two (the 2026-09-21 memory kill). So
+ // `vitestChildEnv()` PARSES the
+-// cap out of `.husky/pre-push` (single source of truth) instead of
+-// re-typing it, per `parseForkCapFromHookText()` — this suite proves that
++// cap out of the pre-push check list `.husky/pre-push-checks.sh` (single source
++// of truth) instead of re-typing it, per `parseForkCapFromHookText()` — this suite proves that
+ // parsing is genuinely load-bearing (a tampered hook fixture changes the
+ // default), not merely a hardcoded literal in disguise, alongside the
+ // explicit-caller-wins contract and the pre-fix defect — proven both
+@@ -30,8 +33,9 @@ import { pathToFileURL } from 'url';
+ 
+ const REPO_ROOT = path.resolve(__dirname, '../../');
+ const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+-const LIVE_PRE_PUSH = fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8');
++// task-424: the fork cap's one source is the pre-push check list; a missing list fails the cases, not the import.
++const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
++const LIVE_PRE_PUSH = fs.existsSync(PRE_PUSH_HOOK_PATH) ? fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8') : '';
+ 
+ type VitestChildEnvFn = (
+   baseEnv: Record<string, string | undefined>,
+@@ -47,13 +51,13 @@ async function loadModule() {
+   return mod;
+ }
+ 
+-describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on .husky/pre-push)', () => {
+-  it('GREEN — the live .husky/pre-push carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
++describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on the pre-push check list .husky/pre-push-checks.sh)', () => {
++  it('GREEN — the live pre-push check list .husky/pre-push-checks.sh carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
+     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=8\b/);
+     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=8\b/);
+   });
+ 
+-  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=8/MAX=8, R-CQ)', async () => {
++  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE pre-push check list .husky/pre-push-checks.sh (MIN=8/MAX=8, R-CQ)', async () => {
+     const { vitestChildEnv } = await loadModule();
+     const out = vitestChildEnv({ PATH: '/usr/bin' });
+     expect(out.VITEST_MIN_FORKS).toBe('8');
+

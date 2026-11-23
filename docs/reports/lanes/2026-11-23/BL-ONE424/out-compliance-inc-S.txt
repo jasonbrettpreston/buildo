@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:31:50.322Z file_sha256=47586c4ec358369109bf8cf76f2aa22cc509af598561e3f588828ced57b04385 prompt_sha256=91989eddef033d0ad058064510ff7c04d93e0621d573b9794860b6049b98db87
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0370 "The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today." — .husky/pre-push-checks.sh:5 "the push station (outside the repo): its logging step(), the gate in --ci mode on origin/<br>, the json reporter arguments for the suite." — the station half of the ruling is satisfied only by a comment: no pasted station edit, and the notes record A5/A8 as "NOT run by the lane", so the station sourcing the list and the one line today cannot be seen — land the station edit and paste its run, or state in the prompt that it lands in this same push.
+BUG severity=HIGH — task-424 "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — NONE, the notes say "A5, A6, A7, A8: orchestrator items (station edit after the cp backup, station suite on the final tip, gate replays in detached worktrees at 0f6ba8225 and 21adfde8a). NOT run by the lane." — the card's own named proof is absent from the material, so the fix the card exists to prove is unverified — run both replays at the final tip and paste the two outputs before the push.
+DEFER severity=MED — task-424 "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — .husky/pre-push-checks.sh:5 "the gate in --ci mode on origin/<br>, the json reporter arguments for the suite." — the `--ci` gate mode and the json-reporter `SUITE_ARGS` are new contract points no pasted clause names, and no pasted text shows gate.mjs accepting `--ci` — confirm the gate has a `--ci` mode or have the station pass a mode the gate already accepts.
+MET — task-424 "one list of the non-interactive pre-push checks lives in the repo" — .husky/pre-push-checks.sh:7-12 — one 12-line file holds the six step lines joined by `&&`, and the hook's old inline chain is gone.
+MET — task-424 "the push hook ... run[s] it" — .husky/pre-push:45 ". ./.husky/pre-push-checks.sh" — the hook sources the one list instead of carrying checks (hook half only, station half is finding 1).
+MET — task-424 "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — .husky/pre-push:42 "step() { shift; \"$@\"; }" — a plain passthrough step leaves the gate's stdin and prompts in the hook.
+MET — task-424 "The plan measures the size and names the Files line" — src/tests/hooks-composition.infra.test.ts "const HOOK_LINES = ['step() { shift; \"$@\"; }', 'GATE_MODE=--push', 'SUITE_ARGS=', '. ./.husky/pre-push-checks.sh'];" — T1 pins the four wiring lines, and A2 greps the hook to zero check commands.
+MET — CLAUDE.md PD5 ".husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value" — scripts/analysis/step-validate.mjs:1290 "const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');" — the fork cap is still parsed, not re-typed, from the list.
+MET — CLAUDE.md PD5 "never above 10" and "`VITEST_MAX_WORKERS` is ignored" — src/tests/hooks-composition.infra.test.ts "for (const hook of [PRE_COMMIT, PRE_PUSH, PRE_PUSH_CHECKS]) {" — the lock now covers the list text too.
+MET — RR-0385 "tests are the focus" — src/tests/hooks-composition.infra.test.ts "describe('task-424 — one list of pre-push checks', () => {" — T1-T5 added, plus the ten moved pins and the fork-cap suite retargeted.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: RR-0385, RR-0392
+
+---
+⏱  100579ms (100.6s)
+📊 Tokens — total: 36795, input: 17480, output: 19315, reasoning: 18301

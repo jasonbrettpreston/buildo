@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T14:31:50.319Z file_sha256=54f0cb3e24bdf523ab1497b7baaf0b4553a13bcf1af058949ed5905d32ad3257 prompt_sha256=2a03273fd919da991550250638904446a122979c491000b26b7221349545aade
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ONE424/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — src/tests/hooks-composition.infra.test.ts "const r = spawnSync('sh', ['-c', 'step() { echo \"$1\" >> \"$CALLS\"; [ \"$1\" != \"$FAIL_AT\" ]; }; GATE_MODE=x; SUITE_ARGS=; . \"$LIST\"'], { cwd: dir, env, encoding: 'utf8' });" — r.stderr is captured by encoding:'utf8' but never asserted or printed, so a shell-level failure (cannot open $LIST, step not found) reaches the operator only as "expected 2 to be 1" — pass it as the assertion message: expect(r.status, r.stderr).toBe(1)
+DEFER severity=MED — src/tests/hooks-composition.infra.test.ts "const PRE_PUSH_CHECKS = fs.existsSync(PRE_PUSH_CHECKS_PATH) ? fs.readFileSync(PRE_PUSH_CHECKS_PATH, 'utf8') : '';" — a missing list is silently converted to '' with no log and no named failure, so the diagnosis is an array diff that never says the file is missing (same pattern in step-validate-vitest-fork-cap.infra.test.ts "const LIVE_PRE_PUSH = fs.existsSync(PRE_PUSH_HOOK_PATH) ? fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8') : '';") — keep the guard but add an explicit case, expect(fs.existsSync(PRE_PUSH_CHECKS_PATH)).toBe(true), so the cause is named
+DEFER severity=LOW — src/tests/hooks-composition.infra.test.ts "const { parseForkCapFromHookText } = (await import('../../scripts/analysis/step-validate.mjs')) as unknown as {" — the double cast removes all checking, while the neighbouring suite types the same module ("type VitestChildEnvFn = (", "async function loadModule()") — reuse that loader or declare the module shape once instead of a local `as unknown as`
+DEFER severity=LOW — .husky/pre-push ". ./.husky/pre-push-checks.sh" — relative to the caller's cwd, so any cwd other than the repo root makes the source fail and blocks the push with a bare "cannot open" and zero steps run — anchor it: SELF_DIR=$(dirname "$0"); . "$SELF_DIR/pre-push-checks.sh"
+DEFER severity=LOW — src/tests/hooks-composition.infra.test.ts "expect(count(PRE_PUSH, 'GATE_MODE=--push')).toBe(1);" — count runs over the unstripped hook text, so any future comment mentioning GATE_MODE=--push makes the pin report two and the test fail falsely, whereas the sibling assertions use stripComments — count(stripComments(PRE_PUSH), 'GATE_MODE=--push')
+DEFER severity=NIT — src/tests/hooks-composition.infra.test.ts "/\bvitest\b/, /\btsc\b/," — no assertion path can ever match these two entries (the list carries "npm run test" and "npm run typecheck"), so they are unreachable test surface — drop them or widen the existing test/typecheck patterns instead
+REJECT — .husky/pre-push-checks.sh "step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS" — the unquoted $SUITE_ARGS looks like a missing-quote defect — it is deliberate word splitting for the station's reporter flags, and expands to nothing in the hook where SUITE_ARGS is empty
+REJECT — .husky/pre-push "step() { shift; \"$@\"; }" — the shift looks like it discards an argument the command needs — it removes only the step label, so step mcbylaws-gate node ... gate.mjs $GATE_MODE runs "node ..." with stdin intact, as the plan's cat check confirmed
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none
+```
+
+---
+⏱  63768ms (63.8s)
+📊 Tokens — total: 23374, input: 11131, output: 12243, reasoning: 11346
