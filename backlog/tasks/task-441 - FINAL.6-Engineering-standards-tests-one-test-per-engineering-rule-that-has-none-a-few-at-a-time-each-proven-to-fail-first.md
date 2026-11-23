@@ -3,11 +3,12 @@ id: TASK-441
 title: >-
   FINAL.6 Engineering standards tests: one test per engineering rule that has
   none, a few at a time, each proven to fail first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ENG441'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:41:00Z'
+updated_date: '2026-11-23T15:55:00Z'
+due_date: '2026-11-30'
 labels:
   - McFix
   - McFix Final
@@ -26,6 +27,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-ENG441/TRIAGE.md
 type: build
 ordinal: 141012
 ---
@@ -317,3 +321,13 @@ rg#2 MED folded do not raise the num
 
 2026-11-23 green and acceptance (lane BL-ENG441): commit 1 = 8cf51f3cc through the real hooks (commit-exit 0); related run: '§1.2: scanned 2 files, 0 hits', '§12.7: scanned 400 files, 0 hits', '§2.3: scanned 535 files, 166 undocumented ! in 60 files, pin sum 166', 'Test Files 3 passed (3) / Tests 11 passed (11)'. Acceptance 1: prints 3. Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1 (the runner prints each failure twice: under the test row, red.out:752, and in the Failed Tests section, red.out:785); the alert, useContext and fetch lines appear as the failure text of 3.1 A (red.out:757-759), 3.2 A (red.out:810-813) and 3.3 A (red.out:783-785) in the related run (Test Files 3 failed (3)), after tsc --noEmit (red.out:126) and next lint (red.out:130). Acceptance 3: git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. Acceptance 4: prints 1. Acceptance 5: all three start with '// SPEC LINK: docs/specs/00_engineering_standards.md'. Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing. Acceptance 7: pin sum 166 over 60 entries equals the measure at efaca9109 (166 in 60 files) and the green run prints the same. Acceptance 8 is the orchestrator's (pre-push suite), not run.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in 8cf51f3cc through the real hooks: three source-scan tests for engineering standards §12.7 (src/tests/no-blocking-dialogs.logic.test.ts), §1.2 (src/tests/ui-component-isolation.logic.test.ts) and §2.3 (src/tests/non-null-assertion-comment.logic.test.ts, a per-file ceiling of 166 undocumented ! in 60 files that only refuses growth). Red first: the related run refused the attempt with the planted src/components/ui/Planted441.ts, 3 failed at the designed assertions (docs/reports/reviews/task-441/red.out); green: Test Files 3 passed (3), Tests 11 passed (11). §2.1 skipped as the plan rules. Acceptance 8 (the pre-push suite) is the orchestrator's. Principles served: accurate, observable, simple.
+
+Review round 1: 2 fixed, 0 task, 0 ruling, 0 wontfix, 6 pile; grounder docs/reports/lanes/2026-11-23/BL-ENG441/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-ENG441/TRIAGE.md
+out-compliance-agents-s7-s11#2 MED fixed 8cf51f3
+out-compliance-plan-protocol#1 MED fixed 8cf51f3
+<!-- SECTION:FINAL_SUMMARY:END -->
