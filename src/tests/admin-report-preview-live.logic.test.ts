@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05 (the server formats; no maths in the report folders), FE-34 (the v21
-//            page contract); docs/specs/01-pipeline/69a_mcbylaw_register.md M-384 (Layer 3 stored tables); docs/specs/02-web-admin/126_maxbld_surface_standard.md
-//            11a.7; docs/specs/02-web-admin/33_web_admin_engineering_protocol.md section 8.
+//            page contract), FE-18 (every displayed field binds to a source in the closed set); docs/specs/01-pipeline/69a_mcbylaw_register.md M-384
+//            (Layer 3 stored tables); docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.7; docs/specs/02-web-admin/33_web_admin_engineering_protocol.md section 8.
 //
 // MB-93 · the internal preview producer (operator 2026-11-11 "D-1 b and D-2 to D-8 a"; plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md sections 3-6
 // with the section 9 folds). Locks, red first (docs/reports/red-evidence/MB-93/producer-red.txt):
@@ -11,6 +11,9 @@
 //   INV the cross-field invariants on the 25 (fold 7);
 //   L3/L6 the DB side: an invalid id or the switch off / missing / garbage / errored reads no lot data; id resolution parcel_id -> parcels.id;
 //   L1  the import fence: no customer route or mobile file imports the producer; the producer imports no meter, entitlement or consumer lookup.
+// task-442 (FINAL.7, plan section 3; operator RR-0385 "interface between the frontend and databse"), red first through the real hooks:
+//   B1  fe.05, fe.18: every number in an option section is a McBylaws row the engine writes for that section's building type.
+//   B2  fe.05: no number reaches the page through a content text of the `page` block, except the three listed entries.
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -140,6 +143,102 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
     for (const d of dirs) { expect(DIR.startsWith(d)).toBe(false); expect(PROJ.startsWith(d)).toBe(false); }
     expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/^\s*import\b|require\(/m);
     expect(fs.existsSync(`${PROJ}/format.ts`)).toBe(true);
+  });
+});
+
+// B1 (task-442 T1; fe.05 "every number from McBylaws", fe.18 the closed binding set, 136:46 and 136:85). The rows are the engine's own stored rows
+// from this file's harness (storedRowsOf), so the check copies no rule of the generator and reads no switch. pageBindings emits three source kinds:
+// catalogue (checked here), parcels (task-442 T2, customer-report-read.logic.test.ts) and user_input (the lot-size entry, a design exception by fe.18).
+// Not checked here: the declared half (RS-1 and RS-3, scripts/analysis/report-schema.mjs:148-203), one declared field per effective-ON row
+// (src/tests/surfaces/report-generator-fields.logic.test.ts:83), and the design option of o1 and o2 (the type before the slash only, as project.ts does).
+type Bindings = ReturnType<typeof pageBindings>;
+/** One finding `<section> <field_id> <building_type>` per catalogue-bound option pair whose row the engine did not write, or wrote switched off. */
+const unwritten = (bindings: Bindings, rows: StoredRow[]): { findings: string[]; checked: number } => {
+  const pairs = new Map<string, { field_id: string; building_type: string }>();
+  for (const b of bindings) {
+    if (b.building_type === null || b.source.kind !== 'catalogue') continue;
+    pairs.set(`${b.section} ${b.source.field_id} ${b.building_type}`, { field_id: b.source.field_id, building_type: b.building_type });
+  }
+  const findings: string[] = [];
+  for (const [pair, p] of pairs) {
+    const r = rows.find((x) => x.building_type === p.building_type && x.field_id === p.field_id);
+    // no row: the catalogue row is missing, does not list the type, or is off with an increment other than 1 (rows.js:511 drops it);
+    // switched_off: an increment-1 row that is off is still written, as not_evaluated (rows.js:402)
+    if (!r || String(r.reason ?? '').startsWith('switched_off:')) findings.push(pair);
+  }
+  return { findings, checked: pairs.size };
+};
+
+describe('B1: every number in an option section is a McBylaws row the engine writes for that section\'s building type (fe.05, fe.18)', () => {
+  const k = KEY[0] as Json;
+  it('(a) control: the committed page and seeds give no finding, over at least 17 checked pairs (non-vacuous)', () => {
+    const rows = storedRowsOf(k);
+    const { findings, checked } = unwritten(pageBindings(), rows);
+    expect(findings).toEqual([]);
+    expect(checked).toBeGreaterThanOrEqual(17);
+  });
+  it('(b) a copy of the rows without the gfa_max_m2 row of detached_houseplex gives exactly one finding, in o3', () => {
+    const rows = storedRowsOf(k).filter((r) => !(r.building_type === 'detached_houseplex' && r.field_id === 'gfa_max_m2'));
+    expect(unwritten(pageBindings(), rows).findings).toEqual(['o3 gfa_max_m2 detached_houseplex']);
+  });
+  it('(c) a copy of the rows whose storeys_max row of detached_house is switched off gives a finding for o1 and o2', () => {
+    const rows = storedRowsOf(k).map((r) => (r.building_type === 'detached_house' && r.field_id === 'storeys_max' ? { ...r, status: 'not_evaluated', value: null, reason: 'switched_off:formula:storeys_max' } : r));
+    expect(unwritten(pageBindings(), rows).findings).toEqual(['o1 storeys_max detached_house', 'o2 storeys_max detached_house']);
+  });
+  it('(d) a copy of the rows without any detached_houseplex row gives one finding per o3 pair', () => {
+    const o3Pairs = new Set(pageBindings().flatMap((b) => (b.section === 'o3' && b.source.kind === 'catalogue' ? [b.source.field_id] : []))).size;
+    const rows = storedRowsOf(k).filter((r) => r.building_type !== 'detached_houseplex');
+    const { findings } = unwritten(pageBindings(), rows);
+    expect(o3Pairs).toBeGreaterThanOrEqual(1);
+    expect(findings).toHaveLength(o3Pairs);
+    expect(findings.every((f) => f.startsWith('o3 ') && f.endsWith(' detached_houseplex'))).toBe(true);
+  });
+});
+
+// B2 (task-442 T3; fe.05 "every number from McBylaws", 136:46). Every key of the presentation registry's `page` block is scanned (all 90 today),
+// so a key no page part names is covered too. A text holding a digit is a finding keyed by its content key, counted in digit runs. The list below
+// is fail-closed both ways (the nav-by-route.logic.test.ts form): a finding no entry explains fails, and an entry whose count differs (a stale
+// entry: 0) fails; the list only shrinks. Limits: digits only (a number written in words passes); the other registry blocks (status_text,
+// display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and
+// ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4. No renderer code is scanned (task-367, fe.45).
+interface DigitText { key: string; count: number; kind: 'legal' | 'input_hint' | 'exception'; why: string }
+const DIGIT_TEXTS: DigitText[] = [
+  { key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' },
+  { key: 'sheet.width_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' },
+  { key: 'sheet.depth_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' },
+];
+/** Every problem of a `page` text block against the list: an unexplained digit text, or an entry whose count does not match (stale = 0). */
+const digitAudit = (texts: Record<string, string>, list: DigitText[]): { problems: string[]; scanned: number } => {
+  const found = new Map<string, number>();
+  for (const [key, text] of Object.entries(texts)) {
+    const runs = String(text).match(/\d+/g)?.length ?? 0;
+    if (runs > 0) found.set(key, runs);
+  }
+  const problems: string[] = [];
+  for (const [key, runs] of found) if (!list.some((e) => e.key === key)) problems.push(`unexplained: ${key} (${runs} digit run${runs === 1 ? '' : 's'})`);
+  for (const e of list) if ((found.get(e.key) ?? 0) !== e.count) problems.push(`stale: ${e.key} (listed ${e.count}, found ${found.get(e.key) ?? 0})`);
+  return { problems, scanned: Object.keys(texts).length };
+};
+const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;
+
+describe('B2: no number reaches the page through a content text, except the listed entries (fe.05)', () => {
+  it('(a) every digit text is explained by an entry, every entry matches exactly its count, and every key of `page` is scanned', () => {
+    const texts = { ...PAGE_TEXT };
+    const { problems, scanned } = digitAudit(texts, DIGIT_TEXTS);
+    expect(problems).toEqual([]);
+    expect(scanned).toBe(Object.keys(PAGE_TEXT).length);
+    expect(scanned).toBeGreaterThanOrEqual(90);
+  });
+  it('(b) a page-text copy with "5 m" added to row.unit_size_basis fails, naming that key; a stale entry fails too', () => {
+    const planted = { ...PAGE_TEXT, 'row.unit_size_basis': `${PAGE_TEXT['row.unit_size_basis']} 5 m` };
+    expect(digitAudit(planted, DIGIT_TEXTS).problems).toEqual(['unexplained: row.unit_size_basis (1 digit run)']);
+    const stale: DigitText = { key: 'row.unit_size_basis', count: 1, kind: 'legal', why: 'planted stale entry' };
+    expect(digitAudit(PAGE_TEXT, [...DIGIT_TEXTS, stale]).problems).toEqual(['stale: row.unit_size_basis (listed 1, found 0)']);
+  });
+  it('(c) the list holds exactly three entries, none of kind exception, each with a why (the list only shrinks)', () => {
+    expect(DIGIT_TEXTS.map((e) => e.key)).toEqual(['legal.line', 'sheet.width_placeholder', 'sheet.depth_placeholder']);
+    expect(DIGIT_TEXTS.filter((e) => e.kind === 'exception')).toEqual([]);
+    for (const e of DIGIT_TEXTS) expect(e.why.length, e.key).toBeGreaterThan(20);
   });
 });
 

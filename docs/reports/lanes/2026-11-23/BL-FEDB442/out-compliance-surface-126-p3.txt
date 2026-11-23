@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:19:16.415Z file_sha256=21a054ccf10606228fd0290da0c93aab6617ab94a673fd3b64c31d65e9968fd0 prompt_sha256=0571337b78623930c743fbff4e49067f8c158c5900a999b4e2d13076c1b7dfd6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-r2-p3.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none
+(no CRIT findings; format line omitted below)
+
+DEFER severity=MED — 126 §6.1 "the golden `source_fingerprint` over `fingerprint_files[]` pins the descriptor" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "      \"scripts/surfaces/_schema/report-presentation.json\": \"34b0addce2ad502e\"," — the sample's pinned-input map re-baselines report-presentation.json and report-v2.decl.json but does not carry the third file this same commit edits by hand, `scripts/surfaces/_schema/report-v2-seed/page-text.json`, so a future edit to the seed the card calls "one hand edit at scripts/surfaces/_schema/report-v2-seed/page-text.json" moves no pin on this descriptor and only the generator's `--check` catches it — add page-text.json and its digest to the `files` map, or state in the decl that the sample is not seeded from it.
+
+DEFER severity=MED — panel item approved text "T3 (fe.05: no digit reaches the page through a content text except three listed entries)" — src/tests/admin-report-preview-live.logic.test.ts "// the other registry blocks (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4." — the delivered B2 scans only the presentation registry's `page` block (90 keys), while the item it closes over claims digits reaching the page through a content text are limited to three entries, and the test's own comment records one shown status text still carrying a digit — narrow the item text to "the `page` block" or add that shown status text to the three-entry list before this row closes.
+
+MET — RR-0405 "the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json "    \"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"," — the ruled wording is committed verbatim in all three copies (report-presentation.json, report-v2-seed/page-text.json, web_landing.sample.json).
+
+MET — RR-0402 "a" (option A: drop the percent, words only) — src/tests/surfaces/report-honest-k2.logic.test.ts "    expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\\d/);" and "    expect(t).toBe('the basement, not shared stairs and halls');" — the percent is gone and a test pins both the absence of any digit and the exact words.
+
+MET — task-442 card "each test is proven red on a planted defect before it counts" — src/tests/admin-report-preview-live.logic.test.ts "    expect(findings).toEqual(['o1 storeys_max detached_house', 'o2 storeys_max detached_house']);" with the red records "AssertionError: expected [ …(2) ] to deeply equal []" (T1), "AssertionError: promise resolved \"{ …(2), …(1) }\" instead of rejecting" (T2) and "unexplained: row.unit_size_basis_value (1 digit run)" (T3) — each of the three tests carries a planted-defect case and a recorded red at its designed assertion.
+
+MET — 126 §6.2 rule 5 "Admin-only columns are excluded by the contract's response projection, not by a second table." — src/tests/customer-report-read.logic.test.ts "      expect(parcelsColumns().length).toBeGreaterThan(0);" and "      expect(Object.keys(lot?.columns ?? {}).sort()).toEqual(parcelsColumns());" — T11 fails at load when a bound parcels column is not in the one static read, so projection and binding set cannot silently diverge.
+
+MET — 126 §6.3.1 "the cutover to `app_outputs` is a descriptor edit plus a recapture, which is exactly the property the golden fingerprint exists to force." — scripts/surfaces/_schema/report-v2.decl.json "    \"inputs_sha256_16\": \"bba92098d6e301c6\"" — the descriptor fingerprint and the consuming sample's pinned file digests are re-baselined in the same commit as the descriptor edit, not in a later one.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  94011ms (94.0s)
+📊 Tokens — total: 53381, input: 34034, output: 19347, reasoning: 18315

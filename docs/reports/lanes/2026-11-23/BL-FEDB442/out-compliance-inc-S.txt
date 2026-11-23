@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:15:15.471Z file_sha256=45450b12f2ff8aa292cb0c429711cbaf84b3eba228db0c89b40c8afe0eab6bec prompt_sha256=30bf18012f951b5536906f0fe245c7594aa1ef12709982dcf43022912f2bcad1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-inc-S-r2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — pasted Implementation Notes "the 15 CONFIRMED LOW and NIT are piled (RR-0385 item 3)" — the round-1 output review's CRIT 2 and HIGH 5 have no disposition recorded anywhere in the pasted notes or the diff (only one CONFIRMED MED is named), so the change cannot be seen to resolve them — record the grounder's ruling for each CRITICAL and each HIGH in docs/reports/lanes/2026-11-23/BL-FEDB442/GROUNDER.md before the closing commit sets task-442 BUILT.
+DEFER severity=LOW — task-442 "Front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts "an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)" — the B2 test hard-codes sheet.width_placeholder and sheet.depth_placeholder as page texts allowed to keep a digit, an exception no pasted clause or ruling names (the list is designed never to grow, so it becomes a standing exemption) — name the two placeholders as an exception on the card or in prereg-MF-97-1.json rules, or bind them to a source in the closed set.
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json "row.unit_size_basis_value": "the basement, not shared stairs and halls" — the ruling's exact words sit in report-presentation.json, report-v2-seed/page-text.json and web_landing.sample.json, asserted verbatim by the K2 test.
+MET — RR-0402 "circulation text: option A, drop the percent; card opened" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — the percent is gone and the text is words only, with a test that fails on any digit.
+MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — .cursor/MCFRONTEND-QUEUE.md "and the houseplex circulation text in words only" — the text fix lands inside the task-442 row and no task-447 row is added.
+MET — task-442 "each test is proven red on a planted defect before it counts" — pasted Implementation Notes "A1 red-T1.out: ... expected [ …(2) ] to deeply equal [] ... A1 red-T2.out: ... promise resolved ... instead of rejecting ... A1 red-T3.out" — T1, T2 and T3 each have a red proof at the designed assertion through the real hooks before the green run (137 passed).
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit, which sets task-442 BUILT after the output review and its grounder" — the round-1 fix follows the grounder ruling and the row stays RUNNING with the closing commit named next.
+MET — RR-0401 "This needs to be investigated - it looks like an error to be corrected" — scripts/surfaces/_schema/report-v2-seed/page-text.json "-    \"row.unit_size_basis_value\": \"the basement; 10 % circulation\"" — the flagged typed text is the change this diff corrects.
+MET — RR-0388 "McFixReborn waits until the new tests are in place" — src/tests/customer-report-read.logic.test.ts "describe('T11 fe.27: a parcels column the page binds but the static parcels read does not select fails at load (task-442)'" — the new interface tests are in place, the stated precondition.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: RR-0359, RR-0388, RR-0401, RR-0402, RR-0403, RR-0405
+
+---
+⏱  109680ms (109.7s)
+📊 Tokens — total: 51983, input: 27633, output: 24350, reasoning: 23368

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:20:50.515Z file_sha256=3737aa2d6fd226c982ab536c04b9eaf40807439b648acf6ad55173672af8fe4c prompt_sha256=2ff0eca86e1e609bd0d283e651f179965aa4f0a9b0aab4f244a97511138b26c2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-r2-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card T3 "T3 (fe.05: no digit reaches the page through a content text except three listed entries)" — src/tests/admin-report-preview-live.logic.test.ts "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — only one of the two copies of the page text is audited, the seed copy this same diff hand-edits (scripts/surfaces/_schema/report-v2-seed/page-text.json:41) is not, so a digit typed into the seed would reach the seeded page with no assertion — audit the seed copy too, or assert the two copies are equal and audit once
+DEFER severity=MED — queue rule "naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135" — .cursor/MCFRONTEND-QUEUE.md "  - FE rows owned: none." — the row's own tests are named for fe.05, fe.18 and fe.27 (the SPEC LINK lines this diff adds) yet it declares none and, unlike the MF-96 row, states no reason in the row — declare FE-05, FE-18, FE-27 or record in the row why none is honest
+DEFER severity=MED — card "the houseplex text row.unit_size_basis_value becomes exactly: the basement, not shared stairs and halls (RR-0405)" — src/tests/surfaces/report-honest-k2.logic.test.ts "describe('K2 unit-size tile: See details says the figure includes the basement, not shared stairs and halls, in words only (M-496 formula unchanged; RR-0402, RR-0405)'" — the diff drops the only assertion tying the shown basis to the stored houseplex_circulation_share while the test's own title keeps the formula unchanged, so nothing now checks that the page's claim about the basis matches what the engine adds — record the ruling on the setting, or keep an assertion tying the new words to the unchanged formula
+DEFER severity=LOW — card Files line "src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — no golden or fixture file appears anywhere in this change (chunk 1 of 1), so the stated reason for listing FE-24 and FE-29 cannot be confirmed — commit the regenerated goldens or drop FE-24 and FE-29 from rules[] and the comment
+MET — RR-0405 — scripts/surfaces/_schema/report-presentation.json and scripts/surfaces/_schema/report-v2-seed/page-text.json "the basement, not shared stairs and halls" — the ruled words appear exactly in both registry copies and in the landing sample
+MET — RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the percent is dropped and its absence is asserted
+MET — card "each test is proven red on a planted defect before it counts" — Implementation Notes "T1 B1 (a) toEqual([]) received ["o1 storeys_max detached_house", "o2 storeys_max detached_house"]" — T1, T2 and T3 each have red evidence at the designed assertion
+MET — card "T1 and T3 in src/tests/admin-report-preview-live.logic.test.ts, T2 in src/tests/customer-report-read.logic.test.ts" — diff hunks — B1 and B2 land in the first file and T11 in the second, as the row's Done-condition states
+MET — queue rule "Next free id: **MF-98** (ids are never reused)" — .cursor/MCFRONTEND-QUEUE.md — the first value advances to MF-98 with the MF-97 row and its dated note claiming the id
+MET — spec 11b.7 item 7 "No value is derived in the UI (FE-05)" — scripts/surfaces/_schema/report-presentation.json — the typed 10 % figure is removed from the page text and no value is added in its place
+MET — card "No renderer, engine, setting or workflow change" — diff paths — no renderer, engine, setting or workflow file is touched by this chunk
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: RR-0402, RR-0403, RR-0405
+
+---
+⏱  92093ms (92.1s)
+📊 Tokens — total: 52561, input: 32922, output: 19639, reasoning: 18584

@@ -1,0 +1,3 @@
+check-lane-close: task-442: the task's references lack the repo copy docs/reports/lanes/2026-11-23/BL-FEDB442/GROUNDER.md: backlog task edit task-442 --add-ref docs/reports/lanes/2026-11-23/BL-FEDB442/GROUNDER.md
+check-lane-close: task-442: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-FEDB442/ (a build or fix task always needs a separate grounder verdict)
+exit=1
