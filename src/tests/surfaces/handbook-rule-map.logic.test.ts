@@ -327,6 +327,7 @@ describe('task-446 — the R-22 line (RR-0395)', () => {
   it('T2 RED: one row holds the R-22 lock, OWED with exactly that lock, its headline the exact text, no placeholder left, its Spec 136 line OWED; planted: a duplicated lock is seen, control: one', () => {
     const hit = realRows().filter((r: Row) => r.locks.includes(R22_LOCK));
     expect(hit).toHaveLength(1);
+    // the ! is safe: the toHaveLength(1) above proves hit holds one row
     const r = hit[0]!;
     expect(r.status).toBe('OWED');
     expect(r.locks).toEqual([R22_LOCK]);

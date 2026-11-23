@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:39:00Z'
+updated_date: '2026-11-23T15:00:00Z'
 labels:
   - McFix
   - McFix Final
@@ -413,4 +413,6 @@ Item 7: the pre-commit related run of commit 2905df62d ran src/tests/surfaces/ha
 2026-11-23 lane BL-HB446: out-compliance-policy-124-s2-s5-p1.txt re-run once (its first run printed no VERDICT line; the close check refused it); FINDINGS.md relisted (134 findings); lane REPORT.md copied to docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md. Grounder owed; the task stays RUNNING.
 
 2026-11-23 lane BL-HB446: real check-lane-close.mjs on a throwaway clone at 337b627ac with the task staged BUILT refuses only on GROUNDER.md and its reference (grounder owed); pasted in docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md.
+
+2026-11-23 lane BL-HB446 round 1 fix commit (the grounder Cairn-Ground-O446 fix list, RR-0385 round 1 resolves MED): out-compliance-surface-126-p4#1, the FE-58 Status and Lock cell cite .cursor/MCFRONTEND-QUEUE.md:713 becomes :719 (the MF-31 status line at the lane HEAD, re-read before the commit); out-engineering-eng-all-p1#1, one inline comment above const r = hit[0]! in handbook-rule-map.logic.test.ts. generate-surface-handbook.mjs --check: up to date (58 rules); rule-lists.mjs page --check: current; nothing regenerated. Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
