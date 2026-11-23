@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T19:18:00Z'
+updated_date: '2026-11-23T19:43:00Z'
 labels:
   - McFix
   - McFix Final
@@ -541,4 +541,6 @@ Item 7 own green: the related run of commit d5e3695b9 passed: register-locks-res
 2026-11-23 lane BL-HB367 output review round 1 (context docs/reports/reviews/task-367/context-r3.md, made by backlog-brief.mjs with --board ~/Buildo-wt-board): 78 lens inputs made by rule-lists.mjs lens-input (15 compliance lists, engineering eng-all, code-review, ux, error-paths, security); 43 outputs ran, 35 failed at DeepSeek with 402 Insufficient Balance (operator-only blocker: top up). Findings of the 43, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (174: 1 CRIT, 42 HIGH, 71 MED, 60 LOW). Task stays RUNNING, grounder owed.
 
 2026-11-23 lane BL-HB367 output review round 1 completed after the DeepSeek top-up (operator: "deepseek is updated", relayed by the orchestrator): the 35 missing outputs ran under their names at concurrency 3, 0 failed; 78 of 78 outputs present. Findings, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (285: 2 CRIT, 73 HIGH, 115 MED, 95 LOW). Task stays RUNNING, grounder owed (RR-0359).
+
+2026-11-23 lane BL-HB367 output round 1 fix (grounder Cairn-Ground-O367, parts A to H): RR-0417, operator, verbatim: "yes. worktrees removed" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2134), put to him as "may FE-51 read RULED with its two named exceptions, yes or no?". The plan YES branch now applies: fe.51 reads RULED with its two named, owned tab-push exceptions and leaves FLIP_PENDING; the three Six cells read P pass; the fe.49 and fe.54 notes cite MORNING-DECISIONS.md:2108; the fe.54 note gives the 32 out-of-scope contract readers (8 would fail the finder); the MF-98 row owns fe.49, fe.51 and fe.54; the panel record carries RR-0417 and no blocker. Acceptance 3 now reads 19 (grep -c Status: OWED on Spec 136); generate-surface-handbook.mjs --check and rule-lists.mjs page --check exit 0. Task stays RUNNING; output round 2 is owed.
 <!-- SECTION:NOTES:END -->

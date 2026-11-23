@@ -815,7 +815,7 @@
     {
       "id": "FE-51",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.51",
       "source": {
         "register": true,
