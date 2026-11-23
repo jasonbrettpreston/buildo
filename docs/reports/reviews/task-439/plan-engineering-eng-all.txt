@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T02:56:39.345Z file_sha256=bf629bc61b9dcf0d65d25db61411d82df6b6b9681c0a93b55c3a7c977617ef4b prompt_sha256=c3dedb925b463d2181c1fa5e00612f012dc345e12d4d6fc7a0f0ccf1fb4be6cb
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11 Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests." — plan "#### ACCEPTANCE (read-only)" then straight to "#### TESTS (rule-lists-table.logic.test.ts only; written first, red seen at the designed assertion in red.out" — no 5-10 item PASS/FAIL self-check is walked against the edit before the test section — add the 5-10 item checklist (row membership, why texts, note wording, page regen, cut-over lanes) with PASS/FAIL per item above ACCEPTANCE
+
+BUG severity=MED — 5.3 Red-Green Test Cycle "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — plan "That each test is red, then green (nothing was run)." contradicting "written first, red seen at the designed assertion in red.out" — the plan claims red evidence and simultaneously records the whole cycle as unrun, so red is asserted, not shown — paste the red.out line for N1 at the designed assertion, and the two planted defects, before the table edit lands
+
+DEFER severity=MED — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — plan "#### THE TABLE EDIT (scripts/analysis/rule-lists.json, protected)" — the plan edits a file under scripts/ and never states that this WF is a tooling WF rather than a front-end WF, so the boundary clause is left unresolved — add one line classifying task-439 as tooling (naming the ruling) so the §10.2 prohibition is shown not to bind
+
+DEFER severity=MED — 5.2 Test File Pattern (regression row) "Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard)" mandated "When altering/deleting code the Regression Guardian flags as a fence" — plan "This loosens the old lock on purpose. The not-four lock moves to N1." — the change retires an existing lock at rule-lists-table.logic.test.ts:183 and plans no `*.regression.test.ts` and no Guardian clearance — either record the Guardian clears the fence because N1 re-pins it, or add the regression test in the same commit
+
+MET — 5.2 Test File Pattern — plan "#### TESTS (rule-lists-table.logic.test.ts only; written first" — the pure resolution derivation is tested in a `.logic.test.ts`, the layer §5.2 names for pure/derivation logic
+
+MET — 5.2 Parity battery (generated doc, generator) — plan "So the notes are written first and `node scripts/analysis/rule-lists.mjs page --write` runs last. .husky/pre-commit:44 runs `page --check`." — regeneration ordered after the notes and locked by the pre-commit drift check
+
+MET — 14 Prevention Loop registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan "1. Work commit: the table, the test file, both notes, the page and the task notes, with `Task: task-439`." — both cited specs (08 and 137) are updated in the same commit as the table edit
+
+MET — 5.3 Red-Green Test Cycle — plan ":165. The golden path resolves `['surface-136','eng-all','five-words','plan-protocol','inc-S','ms-S']` (measured). The new value is red today." — the rewritten existing assertion is red against the current table, so it drives the change rather than trailing it
+
+REJECT — 3.2 Migration Rollback Safety — plan accused of landing a schema change with no DOWN block — no migration file is created or altered, the edit is a JSON table, a logic test and docs
+
+REJECT — 12.1 Biome — plan accused of skipping Biome on touched files — §12.1 is scoped to `src/features/leads/`, and the touched files are scripts/analysis JSON, a src/tests logic test and spec docs
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  44493ms (44.5s)
+📊 Tokens — total: 27274, input: 19279, output: 7995, reasoning: 7030

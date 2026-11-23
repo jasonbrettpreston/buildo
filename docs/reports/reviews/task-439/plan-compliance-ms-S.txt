@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.349Z file_sha256=a6546e099bfff60c5f8dfb3e69278f13225d62eb895b3c6298e73990d866e37b prompt_sha256=b3c42fdb69bd121d44204b3ae61bc1db1d2be9ec619a03b4354efdc03b65ac85
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "Measured by the task-431 plan grounder: a front-end review goes from about 558,000 to about 83,000 characters" — plan "The card's "558,000 to 83,000" is replaced by these figures." NONE, the replacement is the plan's own table "web kind (page) | 15 lists, 722,506, 20 parts | 11 lists, 226,468, 11 parts" — the card's stated outcome of about 83,000 is not reached (226,468 web, 307,531 phone) and the gap is left UNVERIFIED, so the stated measure is unmet — fix: reproduce the task-431 grounder numbers and either name the exact cause of the 83,000 gap (Spec 135/136 growth) or record the operator's acceptance of the new figure before plan-lock
+
+DEFER severity=MED — RR-0378 verbatim "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols." — plan "surfaces (:145) after: ["surface-136","eng-all"]" — the plan never shows whether eng-all carries Spec 08 infrastructure rules into a front-end review (cannot see which lists hold Spec 08), so the named exclusion is unproven — fix: state which lists contain Spec 08 and attach only the non-08 engineering sections to the surfaces and mobile rows, or record why eng-all stays
+
+DEFER severity=MED — card "Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — plan "Planner: Opus, read-only" — the plan records the planner only, nothing states the builder or names the six steps, so the built-by-Opus ruling is unmet on the record — fix: add a Build line naming Opus and list the six steps in the plan header
+
+DEFER severity=MED — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, docs/reports/generated/rule-lists-by-kind.md" — plan "Work commit: the table, the test file, both notes, the page and the task notes, with `Task: task-439`." — a sixth path (the task notes) is written under a five-file Files line the card says is set at plan review — fix: name the task-note file on the Files line or move that edit out of the work commit
+
+DEFER severity=LOW — plan "written first, red seen at the designed assertion in red.out" — plan "That each test is red, then green (nothing was run)" — the acceptance section claims red.out evidence that the UNVERIFIED list says does not exist — fix: run the red, paste the failing assertion, or strike the red.out claim
+
+MET — card "the specs-web-admin row keeps them" — plan "specs-web-admin (:218)" new why sentence and N2 "The specs-web-admin row equals exactly ["surface-136","surface-126","surface-127","surface-128","surface-135"]" — the row keeps all five surface lists and a test pins it
+MET — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items" — plan "task-430 is BUILT and folded (06e0e542c)" — the switch is gated on the handbook text landing, and that precondition is checked
+MET — RR-0378 step 3 "Specs 126, 127, 128 and 135 are no longer sent whole" — plan "surfaces (:145)" and "mobile (:151)" after-values — the four specs leave both the front-end and the phone rows
+MET — RR-0385 item 6 "tests are the focus" — plan "New describe "task-439"" and "The 21 OWED locks (task-367 / task-434)." — tests are added and the owed locks are left to the named task
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — plan "No new gate, tool, lens, list or row." — no infrastructure is added
+MET — card "one table edit after task-430 lands" — plan "Two rows change, and only their `lists` and `why`" — one table edit, precondition satisfied
+
+REJECT — RR-0376 entry "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — the plan adds dated notes to 08_agents.md and 137_mcqueue.md — that ruling dropped task-427's proposed edit, and the card's Files line, set at plan review, now names both files, so the note additions are in scope
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: none
+
+---
+⏱  55537ms (55.5s)
+📊 Tokens — total: 18440, input: 8094, output: 10346, reasoning: 9221

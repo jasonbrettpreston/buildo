@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.342Z file_sha256=8ae1844e635ff09b5cdf4bfe41c41ddd3e7e9cf81eaf659b831d6c8d5061691b prompt_sha256=5e63b5afb5dfd42b3b47c71b77f3afbdfb1692367568e79b018cf719aed73b70
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't: a data claim carries its query **run**" — plan BASIS "Every figure below was computed in memory with the table's own functions (resolveTask, validateTable, renderPage, listBlocks) on a copy of the table. No file was written and nothing was run under the test runner." and UNVERIFIED "That each test is red, then green (nothing was run)." — the whole MEASURE table and the N1 red claim ("Red today at the first `not.toContain('surface-126')` (measured: all three resolve the four)") are executable claims never executed, "measured" and "nothing was run" in the same document — fix: run `rule-lists.mjs validate`, `page --check`, `resolve --files` for the four ACCEPTANCE paths and the two tests (red on the current tree) before plan-lock, or strike the word "measured" and the per-row figures.
+
+BUG severity=HIGH — 08_agents.md §7 rule 4 note "a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`)" — plan CUT-OVER "The orchestrator tells such a lane to keep its per-list outputs." and "That extra per-list outputs are accepted: I found no refusal of them in the close-check code (grep), but did not run it (UNVERIFIED)." — the advised end state is exactly the refused state, a joined `out-compliance-rules` set plus per-list outputs at one stage, and per the task-438 note the names are per seat (`out-compliance-<id>` / `out-engineering-<id>`), which the guidance never names — fix: instruct such a lane to drop the joined set and re-make every input with `rule-lists.mjs lens-input` plus every lens output under the per-list, per-seat names, and verify with `check-lane-close.mjs --outcomes` before plan-lock.
+
+DEFER severity=MED — 08_agents.md §7 rule 10 note (2026-11-19) "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — plan COMMITS "Close commit: the lane records and the status line only." — the close commit as scoped carries no repo copy, and the Files line names no `docs/reports/lanes/` path, so the reference resolves outside the repo as it did at fa08e8f24 — the copy is one commit step but the plan is the only place that scopes it, so name the target path there.
+
+DEFER severity=MED — 08_agents.md §11.2 note (2026-11-21) "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it)" — NONE — the plan's two commits are "Work commit" and "Close commit" and no GROUNDER-PLAN.md or FOLD-CHECK.md record appears anywhere in it — a launch refused at plan-prep costs a round, naming the grounder record costs one line in COMMITS.
+
+DEFER severity=MED — 08_agents.md §7 rule 6 note (2026-11-20) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — plan ACCEPTANCE "N1, N2 and the two changed tests are green, and red.out holds N1 red and each planted defect red." — ACCEPTANCE lists validate, page --check, resolve, check-tasks and the tests, but not `check-lane-close.mjs --outcomes <lane dir>` and no TRIAGE.md outcome line, so the acceptance set cannot prove the close will pass — add the outcomes run to ACCEPTANCE and the TRIAGE.md outcomes to the close commit.
+
+DEFER severity=LOW — 08_agents.md §7 rule 10 note (C3) "every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none" — plan "Two table lines, three why sentences, about 40 test lines, two notes and a page regeneration: about 1.5 hours." — the plan ends on the estimate and carries no four-line compliance block, its OPERATOR section only says "None" — the block is four lines and is the one form the operator named by number.
+
+MET — §7 rule 4 note (task-438/431) "The phone row gets `eng-front` and `eng-shared`" — plan THE TABLE EDIT mobile "after: ["mobile-90","mobile-98","mobile-99","mobile-100","mobile-96","surface-136","eng-front","eng-shared"]" — the engineering sections per row are preserved.
+MET — RR-0383 "the specs-web-admin row keep[s] Specs 126, 127, 128 and 135 attached" — plan N2 "the specs-web-admin row equals exactly ["surface-136","surface-126","surface-127","surface-128","surface-135"]" — the row keeps all five and a test locks it.
+MET — §11.3 "Every lock is proven in BOTH directions" — plan N2 "SURVIVE-THE-FIX, labelled: green before and after" plus the planted-defect cases for N1 — both directions are stated at the designed assertion.
+MET — §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — plan TESTS gives the cases, the temp-tree fixture pattern and red/green expectations — tests are in the plan, not deferred to the build.
+MET — §7 rule 9 note (2026-11-22) "the seat that writes a task's plan and the lane that builds it run on Opus" — plan "Planner: Opus, read-only, board ~/Buildo-wt-board at 06e0e542c" — the plan seat is Opus as ruled.
+MET — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan BASIS ":1865-1866, decision-165" for RR-0380 and ":1895-1896, decision-168" for RR-0383 — every ruling the edit rests on is quoted with file:line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: none
+
+---
+⏱  54152ms (54.2s)
+📊 Tokens — total: 29529, input: 18966, output: 10563, reasoning: 9044

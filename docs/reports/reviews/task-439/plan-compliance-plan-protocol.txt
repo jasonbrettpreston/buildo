@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.350Z file_sha256=0c515c32d558c47d7dd072c5de8a562e154818296fc22b908df05b05df7fd793 prompt_sha256=272a9cfb07c679e79fad0dab6840387cf91bcfb00f819b1f8078d07aad8e67a4
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "Measured by the task-431 plan grounder: a front-end review goes from about 558,000 to about 83,000 characters." — PLAN-439-v1 MEASURE "Its likely gap is the growth of Spec 135 and Spec 136 in task-430 (UNVERIFIED)." — the card's stated measure is not met by any figure the plan prints (task-374 112,873, web kind page 226,468), the plan rebaselines the card's numbers itself, and the cause is left UNVERIFIED with the named task-431 grounder never run — run the task-431 grounder on one front-end task after the edit and either reach 83,000 or log an operator ruling that rebaselines the card figures.
+
+DEFER severity=MED — plan-protocol section 4 item 3 "3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)." — PLAN-439-v1 COMMITS "1. Work commit: the table, the test file, both notes, the page and the task notes, with `Task: task-439`." — the push review names the two commits but not the single shared push and its order that RR-0392 and RR-0393 rule (430, 445, 439, 440), and OPERATOR "None." waives the tty step with no ruling quoted — add one push line: single push, members in the ruled order, contents, suite commands, gates, trailer ids, and why no operator step is owed.
+
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items" — PLAN-439-v1 PRECONDITION "OWED means the rule line is in the handbook and is sent to the reviewer, but its test (lock) has not been written yet." — the edit removes 496,038 characters of surface specs while 21 of the handbook lines that replace them carry no lock, and "updated" is read as text only with no ruling quoted for that reading (plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted.") — quote a ruling that OWED locks do not hold the switch, or hold the table edit behind task-367 and task-434.
+
+DEFER severity=LOW — plan-protocol dated note 2026-11-20 item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — PLAN-439-v1 BASIS "Every figure below was computed in memory with the table's own functions (resolveTask, validateTable, renderPage, listBlocks) on a copy of the table. No file was written and nothing was run under the test runner." — the plan carries no Spec 08 section 7 lens verdict and no separate grounder PASS line for this lane task — name the section 7 lens outputs and the grounder command with its PASS line, or state which gate runs them.
+
+DEFER severity=NIT — card Description "THIS TASK: one table edit after task-430 lands" — PLAN-439-v1 "Two rows change, and only their `lists` and `why`" against "Three `why` texts gain one sentence each" — the diff summary understates the edit, three rows' why text changes, so scope and diff disagree — state three rows change and name them.
+
+REJECT — card Description "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — that dropping the four specs from the phone row strips mobile reviews of surface rules — the ruling names the phone row explicitly and the five mobile specs (mobile-90, 98, 99, 100, 96) stay on it.
+
+MET — plan-protocol dated note 2026-11-20 item 3 "the board is the plan" — PLAN-439-v1 "Planner: Opus, read-only, board ~/Buildo-wt-board at 06e0e542c (task-430 folded, BUILT)." — the plan is made against the board at a named commit.
+MET — plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-439-v1 BASIS "It finds only the entries above (decisions 161, 163, 165 and 168). There is no other ruling on which documents a front-end review gets." — the search is stated and its result quoted.
+MET — plan-protocol section 5 item 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-439-v1 "ESTIMATE (GUESS) ... about 1.5 hours" — the estimate is present and labelled GUESS.
+MET — RR-0380 Q1 "once the handbook has been updated iwth the critical items" — 136:191 "Spec 136 section 2 now holds 57 lines." — the handbook precondition is checked and shown on the board.
+MET — RR-0384 "these 13 lines" — 136:191 "fe.45 to fe.57 are the 13 approved items" — the 13 approved lines are verified present.
+MET — RR-0383 "the specs-web-admin row keep[s] Specs 126, 127, 128 and 135 attached" — PLAN-439-v1 N2 "The specs-web-admin row equals exactly ["surface-136","surface-126","surface-127","surface-128","surface-135"]." — the surface-edit row keeps all five lists and is tested in both directions.
+MET — RR-0393 "order 430, 445, 439, 440" — PLAN-439-v1 CUT-OVER "If 439's work commit lands first, 445 owes a fresh plan review of those two lists before launch." — the 439 and 445 ordering interaction is handled.
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — PLAN-439-v1 NOT IN SCOPE "No new gate, tool, lens, list or row." — no infrastructure is added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 5
+Rules met: none
+
+---
+⏱  86670ms (86.7s)
+📊 Tokens — total: 26118, input: 9708, output: 16410, reasoning: 15029

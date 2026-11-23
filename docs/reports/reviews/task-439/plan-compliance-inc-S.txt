@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.344Z file_sha256=7caa4ea9d334b72f750f74a6a44e7b807a3a39926a6f47452e7a5af79790ad81 prompt_sha256=ee56099e7c2c01602a7b66fb75e60737ed9da8726e7586f9b2254af5cc24bef7
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — plan "1. Spec 08, one new line directly after :353" and "2. Spec 137, a blank line and one paragraph directly after :134" — the plan writes new text into the two files the pasted ruling says to leave as they are, and the BASIS never reconciles that ruling, its only authority ("engineering standards :465", "Spec 137 Rule 10 :125") is not in the pasted context — either drop both SPEC NOTES from this card, or paste the operator ruling that names them and quote it in BASIS beside RR-0376.
+
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items" — plan "Spec 136 section 2 now holds 57 lines. fe.45 to fe.57 are the 13 approved items" — the gate that authorises the whole switch rests on the planner's own line count, and 136:28, 136:191 and the fe.45 to fe.57 lines cannot be seen in the pasted context, so the switch may be premature — quote 136:191 and 136:28 verbatim in the plan, or attach the precondition check output.
+
+DEFER severity=LOW — card "a front-end review goes from about 558,000 to about 83,000 characters" — plan "The card's 558,000 to 83,000 is replaced by these figures. Its likely gap is the growth of Spec 135 and Spec 136 in task-430 (UNVERIFIED)" — the stated cause accounts for the before figure rising to 571,341, not for the after figure falling to 75,303, so the card's measurement is set aside without a consistent account — re-measure both figures at 06e0e542c and say which task-430 change moved each, or record the card figure as pre-430.
+
+DEFER severity=LOW — card "Every build task of this plan follows the six steps, plan written and built on Opus" — plan "Planner: Opus, read-only" — only the planning seat is named, nothing in the material states the build seat or the six steps, so built-on-Opus is unaddressed — add a header line naming Opus as builder and listing the six steps this card will run.
+
+DEFER severity=LOW — RR-0393 "yes we move on to the McfixReborn. Continue this after 424 and 386 as we agreed" — plan "If 439's work commit lands first, 445 owes a fresh plan review of those two lists before launch" — the plan allows a 439-before-445 landing and puts a fresh plan review obligation on task-445 that no pasted ruling names — state that 439 lands after 445 per the order and drop the contingency.
+
+MET — RR-0383 — plan "The specs-web-admin row equals exactly ['surface-136','surface-126','surface-127','surface-128','surface-135']" and "surface-importers, surface-contract-routes, panel-records and generated-127 rows are unchanged" — tasks that edit the four surface specs still resolve all five surface lists, locked by N2.
+
+MET — RR-0378 step 3 — plan surfaces "after: ['surface-136','eng-all']" and mobile "after: ['mobile-90','mobile-98','mobile-99','mobile-100','mobile-96','surface-136','eng-front','eng-shared']" — Specs 126, 127, 128 and 135 are no longer sent whole to the front-end and phone rows.
+
+MET — card scope "Specs 126, 127, 128 and 135 leave the front-end and phone rows; the specs-web-admin row keeps them" — plan "Two rows change, and only their `lists` and `why`: surfaces (:145) ... mobile (:151)" — the four leave both rows and the specs-web-admin row keeps all five.
+
+MET — RR-0385 item "tests are the focus" — plan "New describe 'task-439'. FOUR = surface-126, 127, 128 and 135." — N1 and N2 are added in the card's test file with red and planted-defect proofs.
+
+MET — RR-0392 "I don't think we need any other infastrcuture beyond this" — plan "No new gate, tool, lens, list or row." and "lensSet is untouched" — no infrastructure is added.
+
+MET — RR-0379 "we will add to the rules overtime" — plan "The 21 OWED locks (task-367 / task-434)" under NOT IN SCOPE — the switch does not wait on the locks.
+
+MET — RR-0376 attribution — plan "The card attributes this quote to RR-0376, but RR-0376 is :1836." — matches the pasted RR-0376 verbatim at :1836, which is not the handbook quote.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+Rules met: none
+
+---
+⏱  72154ms (72.2s)
+📊 Tokens — total: 26894, input: 13548, output: 13346, reasoning: 12223

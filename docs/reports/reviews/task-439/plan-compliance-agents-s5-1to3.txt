@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.344Z file_sha256=7a71be169f8a1d739e804fa9a491330d3b303ca501b951afd7fa08cabd2c3769 prompt_sha256=4b7d43b0af1152bc685d113b839042cb84d0f9eb5668471c27faa6ee7fdbb6d3
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §5.3, dated note 2026-11-21 (task-423 PROTOCOL.SIMPLE) "a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`)" — plan CUT-OVER "That extra per-list outputs are accepted: I found no refusal of them in the close-check code (grep), but did not run it (UNVERIFIED)" — the cut-over tells a lane that already holds a joined `out-compliance-rules` set to keep its per-list outputs, which is exactly the stage holding both forms that the pasted clause refuses, and the plan rests this on an unrun grep — fix: instruct such lanes to discard the old joined file and either re-join from the new set or keep per-list only, and cite the both-forms refusal in CUT-OVER.
+
+DEFER severity=MED — 08_agents.md §5.3, dated note 2026-11-20 (task-366 COMPLY.2) "refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — plan COMMITS "2. Close commit: the lane records and the status line only." — the plan never names the per-list compliance outputs or the separate `GROUNDER.md` its own five-path Files line owes at close, so the close as described is refusable — fix: name in the close commit one compliance output per list resolved for rule-lists.json, the test, 08_agents.md, 137_mcqueue.md and the generated page, plus a GROUNDER.md whose Grounder is neither the lane nor task-439.
+
+DEFER severity=MED — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — plan SPEC NOTES "1. Spec 08, one new line directly after :353" and "2. Spec 137, a blank line and one paragraph directly after :134" — the plan edits precisely the two specs this pasted ruling names, and the Spec 08 note amends a sentence of the earlier §5.3 note ("now hold for those rows only"), so the ruling is unmet as written — fix: record the later operator word that authorizes dated notes in these two files, or say in OPERATOR why RR-0376 does not bar an additive note.
+
+DEFER severity=MED — plan BASIS ":1853 ... \"Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.\"" — plan SPEC NOTES date note "`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1853 \"Just send the handbook rules for the task\"" — the note presents a cut sentence as the verbatim :1853 words, and the dropped member of it is the infrastructure exception covering Spec 08, which is the very file the note is written into, so the ruling it records is not verbatim — fix: quote :1853 in full in both dated notes, exception included.
+
+DEFER severity=MED — RR-0385 "tests are the focus" — plan TESTS "written first, red seen at the designed assertion in red.out" against plan UNVERIFIED "That each test is red, then green (nothing was run)." — the plan claims a seen red file and its own UNVERIFIED says nothing was run, so the red evidence the test-first claim rests on does not exist at plan time — fix: state red.out will be produced in the work commit before any green run, name the command, and move the claim out of TESTS until it holds.
+
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — scripts/analysis/rule-lists.json:218 — the specs-web-admin row keeps surface-136, 126, 127, 128, 135 and N2 locks it, including the mobile-plus-128 path.
+
+MET — 08_agents.md §5.3, correction note round 2 "`base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref" — plan THE TABLE EDIT "Two rows change, and only their `lists` and `why`" — the edit moves none of the four deciding keys and does not repoint the base.
+
+MET — 08_agents.md §5.3, dated note 2026-11-21 (task-423) "The default stays one compliance run per rule list" — plan CUT-OVER "No gate, lens or code change; lensSet is untouched" — no join is ordered and no list is trimmed.
+
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — plan NOT IN SCOPE "No new gate, tool, lens, list or row" — the change adds only the table edit, the test file, two spec notes and the page regeneration.
+
+REJECT — 08_agents.md §5.3, task-366 note "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" — that the plan reverses a standing operator ruling — not a real issue, RR-0380 Q1 and RR-0383 are pasted operator words that supersede it, and the plan records the change rather than defying it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  108381ms (108.4s)
+📊 Tokens — total: 31288, input: 11285, output: 20003, reasoning: 18769

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.342Z file_sha256=427185b1b0f380961c993c047632eb7c6fb3b1ce155ec021c19c7eff26d4b689 prompt_sha256=cd1c6f1debea5a530b018e76838931a874c0fc3bb4be3b34ed8862a027dd7ff9
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0376 "Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — PLAN-439-v1 SPEC NOTES: "1. Spec 08, one new line directly after :353" and "2. Spec 137, a blank line and one paragraph directly after :134" — the plan edits both specs a pasted operator ruling tells it to leave as they are, and no line anywhere reconciles or names a later ruling that lifts it — either drop the two spec notes from this commit or add one sentence quoting RR-0376 and the ruling that supersedes it before plan-lock
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — PLAN-439-v1 THE TABLE EDIT: "surfaces: Spec 136 section 2 (28,690) plus eng-all (46,613)" and "eng-front and eng-shared (40,686)" — the second half of the same ruling, dropping the full engineering, is neither done nor declared out of scope — state in NOT IN SCOPE which ruling defers the engineering drop, or show why eng-all stays
+DEFER severity=LOW — card "a front-end review goes from about 558,000 to about 83,000 characters" — PLAN-439-v1 MEASURE: "| web kind (page) | 15 lists, 722,506, 20 parts | 11 lists, 226,468, 11 parts |" — the card's approved outcome figure is neither reached nor reconciled, the ~83,000 gap is left "UNVERIFIED" — resolve the 558,000 figure against the 722,506 baseline before the acceptance line is fixed at 226,468
+DEFER severity=LOW — card attribution "Operator, verbatim (RR-0376): "Just send the handbook rules for the task"" — PLAN-439-v1 SPEC NOTES 1: ":1853 "Just send the handbook rules for the task"" — the plan moves the citation to :1853 and calls the card wrong, but the pasted context shows RR-0378 at :1852 with different words and RR-0376 at :1836 with different words, so :1853 cannot be seen to hold this quote and it would be printed verbatim into Spec 08 — verify the line in MORNING-DECISIONS.md or cite the decision id alone
+DEFER severity=LOW — card "Every build task of this plan follows the six steps" — PLAN-439-v1 header: "Planner: Opus, read-only, board ~/Buildo-wt-board at 06e0e542c" — the six steps are not pasted, cannot see them, and the plan presents no step structure that could be checked against them — write the six steps as headings in the plan, or name the spec that defines them
+REJECT — card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — that the plan leaves surface-importers on 126/128 and generated-127 on 127 — the card scopes the removal to the front-end and phone rows only, and the plan names those rows as unchanged on purpose
+REJECT — card "THIS TASK: one table edit" — that two spec notes and a test file exceed a one table edit — the card Files line itself names docs/specs/00-architecture/08_agents.md, 137_mcqueue.md and the test file
+MET — card "after task-430 lands" — PLAN-439-v1 PRECONDITION — "task-430 is BUILT and folded (06e0e542c)"
+MET — card "the specs-web-admin row keeps them" — PLAN-439-v1 THE TABLE EDIT — "specs-web-admin (:218) ... keeps all five surface lists", asserted exactly in N2
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — PLAN-439-v1 ACCEPTANCE — "--files docs/specs/02-web-admin/128_surface_standard_policy.md includes all five surface lists"
+MET — RR-0380 "once the handbook has been updated iwth the critical items" — PLAN-439-v1 THE TABLE EDIT — surfaces after ["surface-136","eng-all"] and mobile drops the four, with task-430's 57 lines in 136 as the stated condition
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — PLAN-439-v1 CUT-OVER — "No gate, lens or code change; lensSet is untouched"
+MET — RR-0393 "Continue this after 424 and 386 as we agreed" (order 430, 445, 439, 440) — PLAN-439-v1 CUT-OVER — 445 launching before 439 and both landing orders are handled for evidence
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — PLAN-439-v1 PRECONDITION — "fe.53 is the item-9 pointer (136:191)"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+Rules met: none
+
+---
+⏱  81552ms (81.6s)
+📊 Tokens — total: 27509, input: 18301, output: 9208, reasoning: 8058

@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T02:56:39.344Z file_sha256=a12c0c13c7e6c95e15e1e0a5adc5cfc3326b1685266f863c3f5a54245f13db35 prompt_sha256=85ebb701c3f5e8db71c756a81631819fea051e299ab9a74d6134754ddfcaa05c
+🔍 Lens review of docs/reports/reviews/task-439/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §CUT-OVER ("takes the table from the merge-base (check-lane-close.mjs:765, :842)") vs ("A lane that merges the board before it closes resolves fewer lists") — the plan asserts both that the close reads the table from the merge-base AND that a merged lane resolves fewer lists; if :765/:842 actually read the *worktree* table, the 10 RUNNING lanes owe per-list outputs the close may not accept ("no refusal… UNVERIFIED"), blocking lane closes — read :765/:842 to determine the ref, and run `check-lane-close` against a lane that merged a board carrying the new table *before* landing 439; if merged-tree, sequence 439's work commit after the 10 RUNNING lanes close.
+
+BUG severity=HIGH — §ACCEPTANCE / §MEASURE ("558,000 to 83,000 is replaced by these figures") — the operator's promise is 558K→83K but the plan delivers 722K→226K (2.7× the "after"), deferring the gap to "task-430 growth (UNVERIFIED)"; a plausible alternative explanation the plan omits is that 83K requires task-445's "drop the full engineering" (RR-0380) too — reproduce the task-431 grounder's exact file-set measure at HEAD (or state 439 alone yields 226K and 83K needs 445), and get explicit operator acknowledgement of the deliverable number before plan-lock.
+
+BUG severity=MED — §SPEC NOTES (task-439 dated note) / §COMMITS ("No Spec-diff trailer is needed: check-spec-diff.mjs triggers only on steps, compute or descriptor paths") — the work commit edits two spec files (08_agents.md, 137_mcqueue.md); if check-spec-diff.mjs's trigger set includes `docs/specs/00-architecture/*.md` the commit is blocked at pre-commit — read check-spec-diff.mjs trigger list and confirm neither spec path fires it before implementing.
+
+BUG severity=MED — §CUT-OVER ("None of the 16 tasks has a plan folder holding plan-compliance outputs, so none is refused") — asserted, not demonstrated against the filesystem for tasks 354,373,374,378,381,384,389,390,395,411,345,382,391,392,393,394 — `for t in 354 373 374 378 381 384 389 390 395 411 345 382 391 392 393 394; do ls backlog/lanes/*/task-$t/plan-compliance* 2>/dev/null; done` and confirm empty.
+
+BUG severity=MED — §CUT-OVER (task-445) — if 439's work commit lands before 445 launches, the launch gate (check-lane-close.mjs:413) rebuilds agents-s7-s11/queue-137 from the new board and mismatches 445's committed input; RR-0393 orders 430→445→439→440 but no guardrail enforces it — confirm 445's committed plan input does *not* list agents-s7-s11 or queue-137, or gate 439's work commit on 445 having launched.
+
+BUG severity=MED — §SPEC NOTES item 1 ("one new line directly after :353 … The words … in the task-366 note of section 5.3 above now hold") — the prior claim is at Spec 08:229 (per §BASIS) but the amendment is placed at :353; a front-end reviewer reading :229 still sees the unamended sentence unless the note's cross-ref actually lands on section 5.3 — read Spec 08 around :229, section 5.3, and :353 to confirm the amendment targets the true location, else edit :229 in place.
+
+BUG severity=MED — §PRECONDITION ("Spec 136 section 2 … fe.45 to fe.57 are the 13 approved items") — the plan's rationale rests on `surface-136` resolving Spec 136 section 2 (28,690 chars); if `surface-136` in rule-lists.json points to a different section or the wrong file, the whole "handbook holds the rules" claim is wrong — `grep -n 'surface-136' scripts/analysis/rule-lists.json` and `wc -c` the referenced section at HEAD.
+
+DEFER severity=MED — §MEASURE ("except 378 and 384, which keep surface-127 through generated-127") — two front-end RUNNING tasks still resolve surface-127 via generated-127, so the operator's "front-end reviews stop sending 127" leaks for them; the plan notes it but doesn't rule — bounded to two lanes and 50,606 chars; raise to the operator whether generated-127 should drop 127 for front-end tasks or is intentionally kept.
+
+DEFER severity=MED — §THE TABLE EDIT ("Unchanged rows, on purpose: … panel-records (128, 126; Spec 128:182)") / rule-lists.logic.test.ts:65-73 (`specs-mobile`) — panel-records and specs-mobile keep 126/128; if either fires for a front-end-record or mobile-spec-editing task the operator's intent leaks — confirm via `resolve --files` on a representative record/mobile-spec path that no front-end task resolves these rows before deferring.
+
+DEFER severity=LOW — §GENERATED FILE (four places: web, phone, tooling, spec-only) — `page --write` determinism and HEAD staleness of rule-lists-by-kind.md are unverified; if the page is already stale at HEAD (unrelated diff) the work commit ships extra section churn — run `node scripts/analysis/rule-lists.mjs page --check` at HEAD before starting; a nonzero exit means pre-existing drift must be folded or explained.
+
+DEFER severity=LOW — §MEASURE / §THE TABLE EDIT byte baselines (496,038; 200,585; 28,690; 46,613) — sizes were measured on a copy at 06e0e542c; if any spec was edited between 06e0e542c and implement the arithmetic drifts and the acceptance "web kind reads 226,468 / phone 307,531" may fail with a confusing count — `wc -c` the four specs, the five mobile specs, and Spec 136 section 2 at implement time and re-run the acceptance resolve.
+
+DEFER severity=LOW — §ACCEPTANCE (only re-checks web/phone kind counts) — the "Of 308 open tasks, 105 resolve. 16 change their set; … 3 change list order only" blast radius is not re-verified after the edit; an unexpected 17th task could silently change — add an acceptance step that diffs `resolveTask` output across all open tasks at HEAD vs pre-edit and asserts exactly 16 set-changes and 3 order-only.
+
+DEFER severity=NIT — §THE TABLE EDIT / §SPEC NOTES (the three `why` sentences; `<date of the work commit>` placeholder) — `validate` does not assert `why` text, so the provenance sentences can rot or be mis-keyed silently; and the date placeholder is a manual fill-risk — low-cost to guard with a `grep -c` in an existing test, or at minimum accept the risk; replace the date at commit.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Close-check ref ambiguity (§CUT-OVER): whether the 10 RUNNING lanes are judged on old vs new table is unresolved — could block lane closes and strands per-list outputs if the edit is later reverted.
+- Acceptance figure mismatch (§ACCEPTANCE): 226K delivered vs 83K promised, with the gap guessed (UNVERIFIED); needs reproduction or operator sign-off before lock.
+- check-spec-diff trailer premise (§COMMITS): a wrong trigger assumption blocks the whole work commit at pre-commit; and the 16-task "no plan-compliance outputs" claim is asserted, not demonstrated.
+
+Top 3 unverified data premises (regardless of verdict):
+- "the close reads the table from the merge-base" — verify: read `check-lane-close.mjs:765` and `:842` (or `git grep -n "rule-lists.json" scripts/analysis`) to see the ref the table is loaded from.
+- "None of the 16 tasks has a plan folder holding plan-compliance outputs" — verify: `for t in 354 373 374 378 381 384 389 390 395 411 345 382 391 392 393 394; do ls backlog/lanes/*/task-$t/plan-compliance* 2>/dev/null; done` (expect empty).
+- "surface-136 resolves Spec 136 section 2 at 28,690 chars, and the four specs sum to 496,038" — verify: `grep -n 'surface-136' scripts/analysis/rule-lists.json` and `wc -c` the referenced section plus `docs/specs/02-web-admin/{126,127,128,135}_*.md`.
+
+---
+⏱  97030ms (97.0s)
+📊 Tokens — total: 36732, input: 19195, output: 17537, reasoning: 15543

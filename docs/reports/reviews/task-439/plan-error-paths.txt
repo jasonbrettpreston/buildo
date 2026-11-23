@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T02:56:39.361Z file_sha256=a12c0c13c7e6c95e15e1e0a5adc5cfc3326b1685266f863c3f5a54245f13db35 prompt_sha256=ca2994cfbcfec18fbb866549d437709e638c9587a39d5607cbbe4d190a90a88c
+🔍 Lens review of docs/reports/reviews/task-439/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — check-lane-close: "That extra per-list outputs are accepted: I found no refusal of them in the close-check code (grep), but did not run it (UNVERIFIED)." — a lane that merges the board before closing re-resolves the surfaces and mobile rows to fewer lists, so its launch-time per-list outputs for surface-126/127/128/135 become extras, and the close check's treatment of extras is read not run; either a finished lane is refused at close (work blocked) or a mixed set passes silently — run check-lane-close.mjs against a fixture lane holding one now-removed per-list output before plan-lock and record the exit and the message.
+
+BUG severity=HIGH — plan CUT-OVER: "A joined `out-compliance-rules` set made from the old set would not match the new join. The orchestrator tells such a lane to keep its per-list outputs." — the only key that reconciles a pre-merge joined set with the post-edit resolve is a human instruction, for all ten RUNNING lanes "RUNNING (10): 354, 373, 374, 378, 381, 384, 389, 390, 395, 411"; if the instruction is missed on any one the join is stitched from old and new lists with nothing to detect it — make the reconciliation a written step of the board-merge or close output so it is keyed, not remembered.
+
+DEFER severity=MED — plan CUT-OVER: "If 439's work commit lands first, 445 owes a fresh plan review of those two lists before launch." with "None of the 16 tasks has a plan folder holding plan-compliance outputs, so none is refused for the table edit." — RR-0393 launches 445 before 439, so the only moment 445 could hold plan outputs before 439 lands is the reordering case, and check-lane-close.mjs:413 rebuilds each list and compares it to the committed input, refusing the launch with no stated remedy; write the remedy (rebuild the list, re-review agents-s7-s11 and queue-137) into the cut-over note.
+
+DEFER severity=LOW — plan THE TABLE EDIT: "Three `why` texts gain one sentence each" with "`validate` on the edited copy returns []." — a second application of the same edit (rebase resolution, cherry-pick, re-run of the commit) appends the sentence again, and neither validate nor page --check notices a doubled why; assert the sentence appears exactly once in the task-439 describe so a double apply goes red.
+
+DEFER severity=LOW — plan ACCEPTANCE: "the page web kind reads 11 lists, 226,468; the phone kind reads 12 lists, 307,531 (at 06e0e542c; they move if Spec 136 changes first)." — the expected numbers are a snapshot, so a re-run of acceptance after any concurrent Spec 136 commit reports a false failure and cannot be told from a real break; derive the expectation from `page --check` output instead of hardcoding.
+
+REJECT — ".husky/pre-commit:44 runs `page --check`." — the notes and table could ship without the regenerated page — handled closed: a stale generated page fails the pre-commit check, so the write cannot land un-regenerated.
+
+REJECT — "The table rows surfaces and mobile contain surface-136 and no FOUR id." — dropping four lists from a row could leave a front-end review with nothing — handled: N1 asserts surface-136 present and each of the four absent on both rows and on three resolved paths, so an empty or re-filled row goes red.
+
+VERDICT: FAIL on error-path safety
+Paths walked: close-check re-resolve after a board merge with extra per-list outputs, joined compliance set reconciliation across 10 RUNNING lanes, prepped task-445 launch-gate mismatch on reorder, double application of the table and why edit, acceptance re-run after a concurrent Spec 136 commit, pre-commit page --check, empty or re-filled front-end row   Unguarded: 3
+
+---
+⏱  43957ms (44.0s)
+📊 Tokens — total: 25660, input: 18309, output: 7351, reasoning: 6469

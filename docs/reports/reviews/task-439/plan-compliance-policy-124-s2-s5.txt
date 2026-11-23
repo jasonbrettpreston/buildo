@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.363Z file_sha256=f4d49cff3c1be7d1c0859039836f1fdfcb9a94b9afbca59573b65f1597cb3c69 prompt_sha256=dbe61d5c05c58475c636225f1af65c5bf82aa9860d3319e150d4c2ae68a2d5a3
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-policy-124-s2-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Files line "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, docs/reports/generated/rule-lists-by-kind.md" — plan COMMITS "1. Work commit: the table, the test file, both notes, the page and the task notes, with `Task: task-439`." — the work commit writes task-note files (the notes that "change agents-s7-s11 and queue-137 text") that the card's Files line does not name, so the declared scope understates the diff — add the two note paths to the Files line at plan review, or hold the notes to their own card.
+
+DEFER severity=MED — RR-0393 (as the plan reads it) "RR-0393 (:1983): order 430, 445, 439, 440." — plan CUT-OVER "RR-0393 launches 445 before 439. If 439's work commit lands first, 445 owes a fresh plan review of those two lists before launch." — the plan accepts a 439-before-445 landing that its own cited ruling forbids and books the cost instead of holding the order — make 445's launch, or an operator waiver, a stated precondition of the work commit.
+
+DEFER severity=MED — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan CUT-OVER "That extra per-list outputs are accepted: I found no refusal of them in the close-check code (grep), but did not run it (UNVERIFIED)." — a new cut-over allowance handed to the orchestrator rests on a grep that was never run and on no pasted ruling — run the lane-close check against a lane that merged the board, or record the allowance as a rider ruling before the work commit.
+
+DEFER severity=LOW — card "Measured by the task-431 plan grounder: a front-end review goes from about 558,000 to about 83,000 characters." — plan MEASURE "surfaces: Spec 136 section 2 (28,690) plus eng-all (46,613), which is 75,303 against 571,341 before." — the card's figure is replaced by two different after numbers on two units (75,303 row, 226,468 page) with no file line named, so the card's own measure cannot be confirmed at acceptance — name the exact `--files` line the 558,000 figure came from and report that one.
+
+DEFER severity=NIT — card "THIS TASK: one table edit after task-430 lands: Specs 126, 127, 128 and 135 leave the front-end and phone rows; the specs-web-admin row keeps them." — plan "Tasks 267, 317 and 357 change list order only." — the edit changes review-input order for three tasks, behaviour the card does not name and no assertion pins — assert set-equality for those three tasks inside N2 so the order change is proved harmless.
+
+REJECT — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — adding dated notes to docs/specs/00-architecture/08_agents.md and 137_mcqueue.md — that ruling dropped task 427's rewrite of those specs, not the citation update the same commit owes; the plan writes a dated note under M-246 with the prior text kept, so the specs' rules are left as they are.
+
+MET — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items" — plan PRECONDITION "task-430 is BUILT and folded (06e0e542c)." — the switch is taken only after the handbook text carries the critical items, as ruled.
+
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — plan "specs-web-admin (:218)" and N2 "The specs-web-admin row equals exactly ["surface-136","surface-126","surface-127","surface-128","surface-135"]." — the row keeps all five surface lists and the assertion pins it against removal.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — plan "No change to the handbook text or its generator." — the 13 approved lines and the item-9 pointer are left untouched.
+
+MET — RR-0385 "tests are the focus" — plan "New describe \"task-439\"." — four tests plus two changed assertions are the whole code work, no new gate.
+
+MET — RR-0392 "we are good to go!" — plan "No new gate, tool, lens, list or row." — no further infrastructure is added by the change.
+
+MET — RR-0378 "handbook plus relevant engineering sections" — plan "after: ["surface-136","eng-all"]" and "eng-front","eng-shared" — the handbook list and the engineering lists stay attached to the two edited rows.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  74028ms (74.0s)
+📊 Tokens — total: 48862, input: 34762, output: 14100, reasoning: 12936

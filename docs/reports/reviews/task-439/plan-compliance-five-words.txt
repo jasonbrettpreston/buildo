@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:56:39.349Z file_sha256=db7736125dbf4a117efd22dd113bb999ff61b0a4624685ddcd41447f3fd8aa93 prompt_sha256=d5bbed2196bf4d864f04bdc692161748e60bfa8e605514b60140ce160add433d
+🔍 Lens review of docs/reports/reviews/task-439/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." (MORNING-DECISIONS.md:1836) — plan SPEC NOTES "Spec 08, one new line directly after :353, indented three spaces:" and "Spec 137, a blank line and one paragraph directly after :134:" — the plan edits both files the operator ruling says to leave as they are, and the note rewrites what Spec 08:229 asserts ("now hold for those rows only"); the plan's authority lines (engineering standards :465, Spec 137 Rule 10 :125) are not pasted, so no pasted clause authorises the edit — drop both spec notes from the work commit, or attach a pasted superseding ruling for Spec 08 :353 and Spec 137 :134
+
+DEFER severity=MED — "**OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — plan "OWED means the rule line is in the handbook and is sent to the reviewer, but its test (lock) has not been written yet." — the plan redefines OWED for untested handbook rules, and its precondition "RR-0380 makes the switch wait on the handbook text, not on the locks" leans on that redefinition — restate the 21 lines as untested handbook rules and cite the lock clause and #44 (h) instead of the term OWED
+
+DEFER severity=MED — "**lock / lock-db / check / hook**: A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — ":200 and :204 would go red without this change. This loosens the old lock on purpose. The not-four lock moves to N1." — N1 and N2 live in a describe named "task-439" and cite RR-0380 Q1 and RR-0383, not a rule id or declared alias, so what the plan calls a lock is not a lock under the pasted definition — name the rule id or declared alias in each new test title and assertion
+
+DEFER severity=MED — RR-0385 "valida…tests are the focus" — plan "written first, red seen at the designed assertion in red.out" against plan "That each test is red, then green (nothing was run)." — the plan claims an observed red and an AC that "red.out holds N1 red and each planted defect red" while declaring nothing was run, so the tests-first evidence the ruling asks for is unverified — state plainly whether red.out was produced and, if not, replace the AC with "red to be seen at the designed assertion"
+
+DEFER severity=MED — card "Measured by the task-431 plan grounder: a front-end review goes from about 558,000 to about 83,000 characters." — plan "The card's \"558,000 to 83,000\" is replaced by these figures." with "The cause of the card's 558,000 figure." under UNVERIFIED — the plan substitutes its own measure for the card's stated one without a pasted ruling and leaves the gap cause unverified — re-run the task-431 grounder on the landed table and record both figures, or paste the ruling that replaces the card's numbers
+
+DEFER severity=LOW — RR-0393 "yes we move on to the McfixReborn. Continue this after 424 and 386 as we agreed" — "RR-0393 (:1983): order 430, 445, 439, 440." — the pasted RR-0393 entry names no such order, so the 445-before-439 sequencing that drives the CUT-OVER note rests on text not pasted — quote :1983 verbatim for the order, or mark the sequencing cannot see
+
+MET — RR-0383 "1. what is your recommendation. I approve it" (tasks that edit the surface specs keep them attached) — specs-web-admin after ["surface-136","surface-126","surface-127","surface-128","surface-135"] — all five surface lists stay on the specs-web-admin row and RESOLVE shows both a spec-only and a mixed mobile/spec file set still carrying all four
+
+MET — RR-0378 "(Specs 126, 127, 128 and 135 are no longer sent whole)" — surfaces after ["surface-136","eng-all"] — the front-end row sends the handbook plus engineering lists only
+
+MET — RR-0392 "I don't think we need any other infastrcuture beyond this" — NOT IN SCOPE "No new gate, tool, lens, list or row." — the change adds no gate, lens or list
+
+MET — "**#NN**: Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — no #NN fast-invariant number is cited anywhere in the plan
+
+MET — "**RE-FREEZE #N**: A field is added or deleted only by one." — the change is a rule-lists.json lists/why edit, no descriptor or frozen-vocabulary field is added or deleted
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+Rules met: none
+
+---
+⏱  65000ms (65.0s)
+📊 Tokens — total: 21352, input: 8884, output: 12468, reasoning: 11298
