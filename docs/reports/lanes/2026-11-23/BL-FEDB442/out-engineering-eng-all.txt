@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T18:41:21.193Z file_sha256=de215c1dd0162b98cc0a2b839fdb135a64f0593dc85394f21c828c7a4f55ae97 prompt_sha256=d00e82c673746f2b1d4ae4bb6b1ef27e552cc0876b48d2b7381883ff73afb525
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=<none>
+
+DEFER severity=MED — 5. Testing Standards (§5.5 Parity battery) "Any dual-surface or generated artifact (drift guard) ... Consequence of skipping: Silent divergence" — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "expect(t).toBe('the basement, not shared stairs and halls');" — the change regenerates four committed artifacts (report-v2-seed/page-text.json, report-presentation.json, report-v2.decl.json inputs_sha256_16, web_landing.sample.json) yet the added tests pin only the report-presentation value; nothing in the diff pins page-text.json or the landing sample to the generator, so drift between the hand-edited seed and its copies is unguarded in `npm run test` — the parity proof is three manual runs recorded in the task note ("seed-report-v2 --check exit 0, report-capture --check ... exit 0"), not a test — add one parity test that regenerates page-text.json, report-presentation.json and web_landing.sample.json to a buffer and diffs the committed files, per §5.5's "regenerate to a buffer, diff the committed file"
+
+DEFER severity=MED — 5. Testing Standards (§5.1 Typed Factories Only) "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/customer-report-read.logic.test.ts:407 "const PLANTED: Binding = { section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } };" — new domain-object fixtures (PLANTED Binding, the `stale: DigitText` literal, the `{ ...r, status: 'not_evaluated', value: null, reason: 'switched_off:formula:storeys_max' }` row copies in admin-report-preview-live.logic.test.ts) are built inline instead of from `src/tests/factories.ts`, so the mandatory factory import is bypassed — add `makeBinding`/`makeDigitText` (and a row-override helper for StoredRow) to `src/tests/factories.ts` and construct the fixtures from them
+
+DEFER severity=MED — 5. Testing Standards (§5.2 Test File Pattern) "`*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation" — src/tests/customer-report-read.logic.test.ts:421 "await expect(import('@/lib/report-projection/read-stored')).rejects.toThrow('MB-93: page field source parcels:max_build_fsi is not in the static parcels read');" — T11 proves a query-shape/load-time-throw claim about the static parcels read `readLotFacts`, which §5.5 classes as the infra layer ("API envelope / query shape / error paths"), but it is filed in a `*.logic.test.ts` file whose mandate is "Pure functions, scoring, classification" — move T11's query-shape case to an `*.infra.test.ts` (or record why the layer map places a DB-read contract in the logic file)
+
+DEFER severity=LOW — 10. Frontend/Backend Boundary (§10.2) "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/_schema/report-presentation.json:322 "\"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"" — a McFrontend lane (MF-97, lane BL-FEDB442) edits `scripts/surfaces/_schema/` and adds `scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json`, literally inside the forbidden tree — record in the row that these are surface registries and a prereg record, not pipeline data entry, so the ban's second bullet ("do not change how data enters the database") is not engaged
+
+DEFER severity=LOW — 11. Plan Compliance Checklist (Pre-Review Self-Checklist, always applies) "WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply)" — NONE (no sibling-bug list appears in the pasted plan notes; only "Self-check before the green commit (5 items): binding closure PASS ...") — if this card is run under the WF3 variant, the 3-5 sibling-bug sweep for the same root cause (unbound page values) is absent from the record — append the sibling list to the lane note or state that the WF3 variant does not apply
+
+MET — 5. Testing Standards (§5.3 Red-Green Test Cycle) — task-442 note "T1 red attempt ... the commit is expected to be refused at (a) toEqual([]) (red-T1.out)" and A1 "no digit in the basis text (RR-0402): expected 'the basement; 10 % circulation' not to match /\d/" — a failing run at the designed assertion is recorded for each of T1, T2 and T3 before the green commit
+
+MET — 2. Error Handling & Stability (§2.3 Assumption Documentation) — src/tests/admin-report-preview-live.logic.test.ts "if (!r || String(r.reason ?? '').startsWith('switched_off:'))" and "expect(Object.keys(lot?.columns ?? {}).sort())" — nested access goes through `??` and optional chaining, no non-null assertion is introduced
+
+MET — 11. Plan Compliance Checklist (Cross-Layer Contracts Check) — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" replacing "- const pct = Math.round(Number(LV.houseplex_circulation_share.default) * 100);" — the displayed figure is no longer duplicated as a literal derived from a seed default, it is removed from the copy
+
+MET — 5. Testing Standards (§5.2 non-vacuity / control cases) — "(a) control: the committed page and seeds give no finding, over at least 17 checked pairs (non-vacuous)" — each new audit test carries a live control plus a planted-defect case, so the lock is not vacuous
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  50150ms (50.1s)
+📊 Tokens — total: 43239, input: 33150, output: 10089, reasoning: 8608

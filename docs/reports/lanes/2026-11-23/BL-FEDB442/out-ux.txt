@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T18:42:07.375Z file_sha256=615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 prompt_sha256=02799e621db0b518f81432065e2eda74637f019e1cbc7b814d48aafb2ea96116
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-ux.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/_schema/report-v2-seed/page-text.json "+    \"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"" — the customer reads "Size per unit includes: the basement, not shared stairs and halls" while the size figure is unchanged and still carries the circulation share the old copy disclosed as "10 % circulation", so the person is told what the figure leaves out and no longer told what it still adds — the wording is the operator's own (RR-0405 "option a"), the engine is out of this row's scope and the test title still says "M-496 formula unchanged", so only the output grounder can rule whether the unchanged figure matches the new words; safe to defer.
+
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "+// ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4. No renderer code is scanned (task-367, fe.45)." — a customer can still be shown a status line that cites the internal ruling id "Q-4", and this change writes that down as an accepted exception rather than closing it, so the person keeps seeing internal bookkeeping language — pre-existing, named as the next round of this card for fe.05, bounded to one status text, safe to defer.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "+  { key: 'sheet.width_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' }," — the person typing a lot size sees a fixed example number, and this list pins it as allowed so it sits permanently outside the fe.05 number-from-McBylaws check — the number is an example hint, not the lot's own value, and the pasted design text is silent on placeholder examples, so it is not a departure.
+
+REJECT — src/tests/surfaces/report-honest-k2.logic.test.ts "+    expect(t).toBe('the basement, not shared stairs and halls');" — the terse negative clause looks odd on the page next to "Size per unit includes" — it matches the approved design text RR-0405 "option a" (the basement, not shared stairs and halls) character for character, so it is the operator's wording, not a copy defect.
+
+REJECT — src/tests/admin-report-preview-live.logic.test.ts "+  { key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' }," — a digit in the legal line looks like a report number slipping past the check — legal copy is not a value of the lot and fe.18 treats content fields as text sources, so the exemption serves the person and is harmless.
+
+VERDICT: PASS on the person's experience
+States checked: houseplex option result (first view and answered, the only state this change draws), customer report page, admin preview page, lot-size entry hint, legal line; loading, error, empty, offline, back and repeat visit not drawn by this change; other building types' option panels cannot see   Dead ends found: 0
+
+---
+⏱  39129ms (39.1s)
+📊 Tokens — total: 28336, input: 20778, output: 7558, reasoning: 6824

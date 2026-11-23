@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:39:30.975Z file_sha256=a14ab387987a92adda0c816b001b284f39fa1736b538f346c7c3ae659fbbf1d5 prompt_sha256=24e508423546c4ee6f5e0216a5304766bbedcc8b33ac2fc81e59f53c28682e69
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-442 T1 definition (card, panel MF-97.json) "T1 (fe.05, fe.18: every number in an option section is a McBylaws row the engine writes for that section's building type)" — src/tests/admin-report-preview-live.logic.test.ts:157 "if (b.building_type === null || b.source.kind !== 'catalogue') continue;" — every parcels-bound and user_input-bound option binding is skipped, so a number in an option section that is not a McBylaws row cannot fail the very test the card defines; the exclusion is justified only by the test's own comment ("user_input (the lot-size entry, a design exception by fe.18)") — assert positively that an option-section binding must be catalogue-kind except for exceptions named in a ruled list the test checks by id
+
+DEFER severity=MED — spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does" — src/tests/admin-report-preview-live.logic.test.ts:161 "if (!r || String(r.reason ?? '').startsWith('switched_off:')) findings.push(pair);" — the written / not-written classification duplicates the row writer's semantics, which are cited only in comments ("rows.js:511 drops it", "rows.js:402") — export the engine predicate that decides a row is written and import it, so a change in the writer cannot leave B1 silently green
+
+DEFER severity=MED — MF-97 Done-condition "the text of row.unit_size_basis_value reads exactly: the basement, not shared stairs and halls (one hand edit at scripts/surfaces/_schema/report-v2-seed/page-text.json, every copy regenerated ...)" — src/tests/admin-report-preview-live.logic.test.ts:226 "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — T3 (B2) scans only the presentation registry and the new K2 assertion reads text() from PRESENTATION, so the seed copy page-text.json, which the Done-condition names as the one hand-edited source, is covered by neither — have B2 read both copies and assert they are equal, or assert the seed words in K2 as well
+
+DEFER severity=MED — prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json:2 "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — no file under "src/tests/fixtures/report-page/" or "src/tests/fixtures/surfaces/report/" (card Files line) appears in the diff — either the goldens were not refreshed, leaving the Done-condition "every copy regenerated ... each --check exit 0" unproven in the change, or the prereg claim is wrong — state which, and drop FE-24 and FE-29 from rules[] if no golden path is touched
+
+REJECT — RR-0402 "circulation text: option A, drop the percent" — that the change removes the circulation disclosure the M-496 figure rests on — the operator ruled the words and only the displayed figure is dropped, the formula is unchanged and K2 still records "M-496 formula unchanged"
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 — the string reads exactly the ruled words in the presentation registry, the seed and the landing sample
+MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — the percent assertion is replaced by an exact-words assertion plus a no-digit assertion
+MET — RR-0403 "the text fix is done inside task-442; task-447 merged into it" — .cursor/MCFRONTEND-QUEUE.md:660 — the fix lands as the MF-97 row with its panel record and prereg, not as a separate task
+MET — RR-0385 "This is the focus for both compliance and engineering standards and interface between the frontend and databse" — src/tests/admin-report-preview-live.logic.test.ts:163 — T1 and T3 exercise page bindings against the engine's stored rows and the real registry read, T2 against the static parcels read
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json:32 — verdict is "PLAN RULED; OUTPUT owed" and the output grounder is still owed, nothing folded
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 1
+Rules met: none
+
+---
+⏱  94097ms (94.1s)
+📊 Tokens — total: 52807, input: 33236, output: 19571, reasoning: 18508

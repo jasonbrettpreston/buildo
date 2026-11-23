@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.899Z file_sha256=8163414101a917f07a0be9861c0b0f616db6c246d9ab19520164b0d0cff9b247 prompt_sha256=17830a6fdf50fb43a0f96e3a1029e5793bf6efe4a7ac07d4608910022cef284a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task card "task-442 FINAL.7 Front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts B2 header "the other registry blocks (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and" — B2 proves no digit only for the presentation registry's `page` block, and its own comment names a shown status text citing Q-4, so the panel record's claim "T3 (fe.05: no digit reaches the page through a content text except three listed entries)" is broader than the check — either scan every content block of the registry or amend the panel item to the `page` block and record the deferral as a named round.
+DEFER severity=LOW — queue done-condition "src/tests/surfaces/report-honest-k2.logic.test.ts asserts no digit and the exact words" — NONE in chunk 1 (cannot see) — the K2 exact-words change and the regenerated report fixtures named in the row's done-condition are not in this chunk, so the exact-words guarantee is unverified here — confirm both in chunk 2.
+DEFER severity=LOW — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds" — docs/reports/panels/MF-97.json "integration, reality-check and regression seats (plan)" — the plan-round seat list names no engineering seat; engineering appears only in the output lens set — record the engineering seat for the plan rounds or state it sat inside the plan lens set.
+DEFER severity=LOW — m.515 "McIncrement (MCINC-8): one ID ledger." — .cursor/MCFRONTEND-QUEUE.md "MF-97 is taken by the FINAL.7 row (id claimed in ~/Buildo-scratch/ids/MF-97)" — the ledger entry and the check.mjs exit are not in the material (cannot see), so the single-ledger claim is unverified — paste the ledger check exit 0.
+REJECT — m.496 "The houseplex per-unit area rests on two settings: the circulation share 0.10 ..." — accused of hiding the circulation share by dropping "10 % circulation" from the shown text — not a real issue: m.496 homes the setting in a logic variable with its label, RR-0402 and RR-0405 fix the homeowner words, and no setting value changes in this diff.
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 and scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — both homes carry exactly those words, and web_landing.sample.json:1555 shows the same text.
+MET — RR-0402 "circulation text: option A, drop the percent" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "text": "the basement, not shared stairs and halls" — no percent or digit remains in the shown copy.
+MET — RR-0403 "circulation text fix merged into task-442" — docs/reports/panels/MF-97.json "the text fix is done inside task-442; task-447 merged into it".
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" with the row left "Status stays RUNNING: output review and its grounder owed".
+MET — RR-0392 "no other infrastructure beyond this" — .cursor/MCFRONTEND-QUEUE.md row "Not in this row: any other live break ... any renderer, engine, setting or workflow change".
+MET — task card "each test is proven red on a planted defect before it counts" — Implementation Notes "T1 B1 (a) toEqual([]) received [\"o1 storeys_max detached_house\", \"o2 storeys_max detached_house\"] (red-T1.out)" and "T2 T11 (a) rejects.toThrow, \"promise resolved ... instead of rejecting\" (red-T2.out)".
+MET — lc.53 "Verified by named lock; no partial green." — src/tests/customer-report-read.logic.test.ts:421 and src/tests/admin-report-preview-live.logic.test.ts:229 — each new describe failed at its designed assertion before the fix, then green.
+MET — lc.52 "Disclosure wording is plain. Each P5.12 code has one template of at most 45 words in a homeowner's words." — scripts/surfaces/_schema/report-presentation.json:322 — six plain words, no jargon or digit.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: lc.52, lc.53
+
+---
+⏱  115033ms (115.0s)
+📊 Tokens — total: 57837, input: 32723, output: 25114, reasoning: 23993

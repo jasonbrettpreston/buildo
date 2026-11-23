@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:39:24.979Z file_sha256=ad0535ec45ecb0aa66298c6b774b02ac27cbef7bab7f665318ead5602ae197b1 prompt_sha256=be989370d26447f09df94cb0247b5278b9bb53959614f6ee858bf1daf0bfb43b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 126 §0b item 9 "Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling" — src/tests/admin-report-preview-live.logic.test.ts "+  { key: 'sheet.width_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box…" — three page texts (legal.line, both placeholders) are carved out of fe.05 "every number from McBylaws" by the lane, and no pasted ruling names them: docs/reports/panels/MF-97.json cites RR-0385, RR-0402, RR-0403, RR-0405 only — put the three entries to the operator as a ruling and cite it, or land them as a card question before the list is relied on.
+DEFER severity=MED — 126 §0b item 6 "cited by every commit, prereg and lock that relies on it … the `Operator-Ruling:` line, as on the landed lane commits" — task-442 acceptance block, trailer set "McFrontend-Task: MF-97" — the pasted trailer set carries Rule, Red, Task and McFrontend-Task and no Operator-Ruling line, though the K2 lock and the MF-97 row rest on RR-0402, RR-0403 and RR-0405 — amend the commit message with "Operator-Ruling: RR-0402, RR-0403, RR-0405" plus the record paths before the row flips DONE.
+DEFER severity=LOW — 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited" — docs/reports/panels/MF-97.json "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915)" — RR-0401 (MORNING-DECISIONS.md:2028), the ruling that opened the 10 percent investigation, is cited in no landed file of this change, so the investigate-to-correct chain is not on the record — add RR-0401 and the investigation outcome to the MF-97 dated note and the panel cards.
+MET — 126 §0a principle 4 and §0b item 5 "The server formats every value; the UI does no maths" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the stored-setting percentage computation is deleted and the page text carries no digit.
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json "row.unit_size_basis_value": "the basement, not shared stairs and halls" — the exact words land in the presentation registry, the seed copy and the landing sample.
+MET — 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — .cursor/MCFRONTEND-QUEUE.md "+**MF-97 FINAL.7: front-end-to-database tests for fe.05, fe.18 and fe.27" — the row exists, the id is claimed once, and the next free id moves to MF-98.
+MET — 126 §0b item 2 "red first, each lock proven in both directions" — task-442 acceptance block "740:AssertionError: expected [ …(2) ] to deeply equal []" at "src/tests/admin-report-preview-live.logic.test.ts:177:22" — T1 is refused at the designed assertion before the green commit.
+
+VERDICT: PASS
+Clauses checked: 16   Unmet: 3
+Rules met: none
+
+---
+⏱  96690ms (96.7s)
+📊 Tokens — total: 53278, input: 32382, output: 20896, reasoning: 20041

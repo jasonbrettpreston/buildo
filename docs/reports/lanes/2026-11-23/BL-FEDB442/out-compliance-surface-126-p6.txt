@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:21.243Z file_sha256=30ec35214dc0f008a34beeaafa282ffdde6116d49a8b53af142ed21de4fe70a2 prompt_sha256=90f13aa4a3398a9e49ea97988c031f68b2ca88ec3f80af8a97d48a183e0bd2f6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none identified.
+
+DEFER severity=MED — queue rule "a DONE heading's block (to the next `**MF-nn` heading or any `#` line) holds exactly one bullet `  - FE rows owned: none.` or `  - FE rows owned: FE-nn, FE-mm.` ... naming the Spec 135 rows whose lock that task builds" — .cursor/MCFRONTEND-QUEUE.md:661 "  - FE rows owned: none." — the row builds assertions for the rules its own prereg lists as RULED ("FE-05", "FE-18", "FE-27" in prereg-MF-97-1.json), so "none" understates what the task's locks cover, and the note's justification ("they extend two existing test files, so this row owns none") is a definition the rule does not give — name FE-05, FE-18 and FE-27 in the bullet, or have the owner record at the DONE flip why extending an existing lock path owns no row.
+
+DEFER severity=MED — task card "every number on a screen is bound to a database field and available" and the row's own "T3 (fe.05: no digit reaches the page through a content text except three listed entries)" — src/tests/admin-report-preview-live.logic.test.ts:205 "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — both the digit audit and the K2 exact-words assertion read report-presentation.json only, while this same diff edits the twin copy scripts/surfaces/_schema/report-v2-seed/page-text.json:44 "row.unit_size_basis_value": "the basement, not shared stairs and halls", so a digit or a drift typed only into the seed copy reaches the page with no red in this row — scan the seed's `page` block in digitAudit (or assert the two blocks are equal in the same test), and add the seed to the K2 exact-words assertion.
+
+DEFER severity=LOW — task card "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:196 "{ key: 'sheet.width_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' }" — two typed example numbers and the legal line are whitelisted as digit texts and no pasted ruling names those exceptions, so the clause is enforced only where the test grants itself leave — replace the example digits with non-numeric wording, or record the three exceptions in a ruling before the list is called closed.
+
+MET — RR-0405 "option a" (the basement, not shared stairs and halls) — scripts/surfaces/_schema/report-presentation.json:322 and scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — the value is exactly "the basement, not shared stairs and halls" in both registries.
+MET — RR-0402 "a" (drop the percent, words only) and RR-0401 "This needs to be investigated - it looks like an error to be corrected" — scripts/surfaces/_schema/report-presentation.json:322 — "the basement; 10 % circulation" is gone and no digit remains in the text.
+MET — queue row done-condition "src/tests/surfaces/report-honest-k2.logic.test.ts asserts no digit and the exact words" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" and "expect(t).toBe('the basement, not shared stairs and halls');".
+MET — queue row done-condition "three tests in the two existing test files (T1 and T3 in src/tests/admin-report-preview-live.logic.test.ts, T2 in src/tests/customer-report-read.logic.test.ts)" — src/tests/admin-report-preview-live.logic.test.ts:149, :205 and src/tests/customer-report-read.logic.test.ts:405 — describe B1, describe B2 and describe T11 land in exactly those two files.
+MET — task card "each test is proven red on a planted defect before it counts" — docs/reports/panels/MF-97.json "Tests first: red commit attempts recorded in the lane red.out" and the pasted acceptance "A1 red-T1.out ... 751: src/tests/admin-report-preview-live.logic.test.ts:177:22" — red evidence is cited per test at its designed assertion.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json "every finding ruled by the separate plan grounder in docs/reports/reviews/task-442/GROUNDER-PLAN.md ... the fold checked in FOLD-CHECK.md" — the fold is gated on the grounder.
+MET — queue id rule "Next free id: **MF-98** (ids are never reused)" — .cursor/MCFRONTEND-QUEUE.md:5 — MF-97 is claimed and the first value on the line moves to MF-98 with the matching note.
+MET — prereg "Pre-registered moves: none ... no by-law, cost or engine path is touched" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "expected_moves": [] and the before/after totals identical — no by-law total moves, as declared.
+
+REJECT — task card "Files: ... scripts/surfaces/_schema/report-v2.decl.json" — the change to that file's "inputs_sha256_16" is accused of being an unexplained hash bump — it is one of the copies the row's done-condition requires regenerated ("every copy regenerated by seed-report-v2.mjs, report-capture.ts and report-page-capture.ts"), and the paired sample hash moves with it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  106047ms (106.0s)
+📊 Tokens — total: 55111, input: 32708, output: 22403, reasoning: 21032

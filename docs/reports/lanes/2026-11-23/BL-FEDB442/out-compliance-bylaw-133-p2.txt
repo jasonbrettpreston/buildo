@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.899Z file_sha256=2b3ea612e88e8e9c835978f11195b71c62c7630b5335314bfb953cd560060067 prompt_sha256=8b16c69cc3167fc339abf6824f18fde64d1155f042083b6bbde54deb805423c8
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card Description "each test is proven red on a planted defect before it counts" — src/tests/admin-report-preview-live.logic.test.ts "expect(scanned).toBe(Object.keys(PAGE_TEXT).length);" — this assertion can never fail, digitAudit is handed PAGE_TEXT itself, so "every key of `page` is scanned" is not a demonstrable claim — pass a filtered copy to digitAudit or delete the tautology and let the count assertion carry the claim
+DEFER severity=LOW — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves" — src/tests/admin-report-preview-live.logic.test.ts "kind: 'legal' | 'input_hint' | 'exception'" — the 'exception' member is never populated, no entry carries it and the only reader asserts the set empty, so it names no mistake — drop the member or declare the entry and the defect it would catch
+DEFER severity=LOW — Task "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts "kind: 'input_hint'" — the two placeholder entries keep literal dimensions on the page with no database binding, and no pasted ruling names those two exceptions — name the ruling that permits the placeholder digits or queue them under the next fe.05 round
+MET — RR-0405 — scripts/surfaces/_schema/report-v2-seed/page-text.json — "row.unit_size_basis_value" now reads exactly "the basement, not shared stairs and halls"
+MET — RR-0402 — scripts/surfaces/_schema/report-presentation.json — the percent and every digit are gone from the basis text, the wording is words only
+MET — RR-0401 — scripts/surfaces/_schema/report-v2-seed/page-text.json — the typed 10 percent circulation text is corrected, item 1 of the plan section 4 breaks, not left named only
+MET — RR-0403 — docs/reports/panels/MF-97.json — "the text fix is done inside task-442; task-447 merged into it", no separate process for task-447
+MET — RR-0359 — docs/reports/panels/MF-97.json — "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT", verdict stays "PLAN RULED; OUTPUT owed"
+MET — m.321 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json — "expected_moves": [] committed alone and first, with expected totals and floors declared for the 172, 4d and cumulative sets
+MET — m.305 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json — the round data stays in the coa-* family and is passed by path, no reader or scorecard logic moved
+MET — RR-0392 — src/tests/admin-report-preview-live.logic.test.ts — the work extends the two existing test files, "The tests add no new lock path", no infrastructure beyond the four
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: m.246, m.305, m.321
+
+---
+⏱  67290ms (67.3s)
+📊 Tokens — total: 52428, input: 37938, output: 14490, reasoning: 13766

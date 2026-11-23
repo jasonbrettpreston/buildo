@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T18:42:11.429Z file_sha256=615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 prompt_sha256=66c5ab699cc386a5726d43926e704111e9649bad7112da6d12c724cb579d1a35
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-error-paths.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" plus "expect(t).toBe('the basement, not shared stairs and halls');" — the old test tied the words to the live LV.houseplex_circulation_share default, the new one pins a frozen string, so a later change to the circulation setting or to the M-496 basis can silently make the explanation disagree with the computed figure while K2 still passes — keep one assertion that binds the words to the math (for example assert the basement-only size plus its circulation share reproduces the shown tile figure) so any drift fails closed.
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const runs = String(text).match(/\d+/g)?.length ?? 0;" — a `page` value that is not a string (null, object, array) stringifies to digit-free text and is scored clean while still counted in `scanned`, so a structurally corrupted registry entry fails open through the digit scan — assert `typeof text === 'string'` (or a type pass over Object.values) before counting.
+DEFER severity=LOW — scripts/surfaces/_schema/report-v2.decl.json "inputs_sha256_16": "bba92098d6e301c6" — cannot see whether a stale or miscomputed hash here fails closed (re-render/--check fails) or serves a previously seeded surface, so the degrade behaviour of the cache key is unverified — grounder to confirm the reader treats a mismatch as re-seed, not as reuse.
+REJECT — src/tests/customer-report-read.logic.test.ts "await expect(import('@/lib/report-projection/read-stored')).rejects.toThrow('MB-93: page field source parcels:max_build_fsi is not in the static parcels read');" — a parcels binding absent from the static read looks like it could render an undefined column — handled, read-stored throws at module load (fail closed, no wrong number), and the `finally` runs `vi.doUnmock` plus `vi.resetModules()` so the failing case leaves no mocked module behind for the later (b) case.
+REJECT — src/tests/admin-report-preview-live.logic.test.ts "expect(checked).toBeGreaterThanOrEqual(17);" and "expect(o3Pairs).toBeGreaterThanOrEqual(1);" — an empty `pageBindings()` would pass a bare `toEqual([])` and hide the defect — handled, the floors of 17 pairs and 1 o3 pair make the empty path fail, so the B1 checks are non-vacuous.
+
+VERDICT: PASS on error-path safety
+Paths walked: import-throw fail-closed in read-stored (caught), empty pageBindings / empty page block (floored, non-vacuous), regenerated content copies and hash (assumed --check idempotent, hash reader cannot see), no network, no retry/timeout, no write or counted event so no double-submit or idempotency key applies   Unguarded: 1 (non-string `page` value under the digit scan)
+
+---
+⏱  41506ms (41.5s)
+📊 Tokens — total: 29213, input: 20779, output: 8434, reasoning: 7723

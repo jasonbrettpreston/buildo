@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:05.152Z file_sha256=0d09409197cd81ffe2fa9832653dee407aae3e5d99aef3e0e6d76e3e8cfc949b prompt_sha256=f8023956e28a177605ef23448f9715dab0b14fd43afa6219fcd512207a794275
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.05 "every number from McBylaws; no maths in the UI" — src/tests/admin-report-preview-live.logic.test.ts "{ key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' }," — the B2 fail-closed list licenses one digit in legal copy without naming it, so "every number from McBylaws" is not demonstrated for that text — name the digit and record why it is non-value copy (a citation or registration), or bind it if it is a value.
+DEFER severity=LOW — task-442 Files line "src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/" — the diff header "paths: [\".cursor/MCFRONTEND-QUEUE.md\",...]" names neither fixture directory — cannot see whether the 40 report-page goldens carry the old "the basement; 10 % circulation", so RR-0405's exact words are unverified there — include the regenerated fixtures in the commit or state that no golden contains row.unit_size_basis_value.
+MET — fe.18 — src/tests/admin-report-preview-live.logic.test.ts "if (b.building_type === null || b.source.kind !== 'catalogue') continue;" — B1 checks every catalogue-bound option pair against the engine's stored rows, and the basis text stays a content part.
+MET — fe.27 — src/tests/customer-report-read.logic.test.ts "await expect(import('@/lib/report-projection/read-stored')).rejects.toThrow('MB-93: page field source parcels:max_build_fsi is not in the static parcels read')" — a parcels column bound but not selected fails at load, and the control asserts the read returns exactly the bound columns.
+MET — fe.56 — src/tests/admin-report-preview-live.logic.test.ts "expect(digitAudit(planted, DIGIT_TEXTS).problems).toEqual(['unexplained: row.unit_size_basis (1 digit run)'])" — each new check is proven red on a planted defect (missing row, switched-off row, added digit), matching the recorded red commits.
+MET — fe.03 — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "\"scripts/surfaces/_schema/report-presentation.json\": \"34b0addce2ad502e\"" — the golden input hashes are regenerated and the --check chain is recorded.
+MET — RR-0405 — scripts/surfaces/_schema/report-v2-seed/page-text.json "+    \"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"," — the text is exactly the operator's words.
+MET — RR-0402 — scripts/surfaces/_schema/report-presentation.json "-    \"row.unit_size_basis_value\": \"the basement; 10 % circulation\"," — the percent is dropped, words only.
+REJECT — RR-0405 — the change hand-edits report-presentation.json as well as page-text.json, against the card's "one hand edit at ... page-text.json" — report-presentation.json is a generated copy (its hash and report-v2.decl.json inputs_sha256_16 are regenerated together in web_landing.sample.json), so this is one hand edit plus a regenerated copy.
+REJECT — fe.05 — the B2 exceptions for legal.line and the two placeholders are accused of letting numbers through — fe.18 makes labels, help text and legal copy content fields, so those digits are content text, not displayed lot values (subject to the LOW above for legal.line).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: fe.01, fe.03, fe.18, fe.27, fe.56
+
+---
+⏱  118236ms (118.2s)
+📊 Tokens — total: 56122, input: 29270, output: 26852, reasoning: 25993

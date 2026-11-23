@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:39:22.170Z file_sha256=e44005232d076eae0fb11e97f97721d39586a5845feeb438ff4a8bca81e75a33 prompt_sha256=75fa4e47bf07c7140e66f447687edc5948e368b2d80256431d988aaa1683c721
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 (task-410) "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — .cursor/MCFRONTEND-QUEUE.md:662 "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the work commit" — the row that must later reach BUILT lives in .cursor/MCFRONTEND-QUEUE.md, a path the pasted close clause does not list, so the MF-97 close is refused as written — confirm the queue file counts as a task file for check-lane-close.mjs, or move the row's BUILT flip into the orchestrator's next docs commit (rule 4), before the close is attempted
+DEFER severity=LOW — Spec 137 §4 rule 2 source "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — .cursor/MCFRONTEND-QUEUE.md:665 "id claimed in ~/Buildo-scratch/ids/MF-97 (owner: lane BL-FEDB442)" — the claim is satisfied only by prose in the row and in the prereg comment "In-file round 202 (claimed in ~/Buildo-scratch/ids/round-202"; the LOCAL ledger cannot see, so the clause rests on a comment — cite the ledger check output in the lane report or the prereg so the claim is evidenced, not asserted
+DEFER severity=LOW — Operator RR-0405 "option a" (the text reads: the basement, not shared stairs and halls) and RR-0402 "a" (drop the percent, words only) name the circulation text only — src/tests/admin-report-preview-live.logic.test.ts:207 "{ key: 'sheet.width_placeholder', count: 1, kind: 'input_hint'" — the B2 allowlist admits digit-bearing texts (legal.line and the two entry hints) that no pasted ruling names, new permissive behaviour added on the test's own authority — name the ruling or register line permitting them in the row's Done-condition, or drop the two placeholder entries
+DEFER severity=LOW — Spec 137 §4 rule 4 "The orchestrator writes each ruling into the row's status line the same day" — .cursor/MCFRONTEND-QUEUE.md:665 "RR-0402, operator, verbatim: \"a\" ... RR-0403, operator, verbatim: \"a\" ... RR-0405, operator, verbatim: \"option a\"" — RR-0404 (MORNING-DECISIONS.md:2046, pasted as naming task-442) is recorded only in the task's Implementation Notes, not in the MF-97 status note — add the RR-0404 verbatim line to the row's dated note
+MET — Spec 137 §3 Rule 1 — .cursor/MCFRONTEND-QUEUE.md:662 — one replaced Status line with word RUNNING (closed nine), since, expires, next and ruling, no appended second line
+MET — Spec 137 §4 Rule 3 (2026-11-20 two-commit close note) — .cursor/MCFRONTEND-QUEUE.md:662 — the work commit leaves the row "RUNNING", status not set to BUILT or DONE
+MET — Spec 137 §4 Rule 7 — .cursor/MCFRONTEND-QUEUE.md:662 — "since 2026-11-23 ... expires 2026-11-30", exactly seven days, no operator-set exception claimed
+MET — Spec 137 §4 Rule 10 — .cursor/MCFRONTEND-QUEUE.md:665 — dated note in M-246 form, operator words quoted verbatim with row, queue, lane and RR cites, prior text kept
+MET — Spec 137 §2 (McFrontend home and heading form) — .cursor/MCFRONTEND-QUEUE.md:661 — "**MF-97 FINAL.7: ... — RUNNING** (E)" sits in Phase 2 of the named home with the MF-nn heading form
+MET — Operator RR-0405 — scripts/surfaces/_schema/report-presentation.json:322 — "the basement, not shared stairs and halls", exact words, and the same in report-v2-seed/page-text.json:44
+MET — Operator RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)", percent dropped and no stored-setting figure left in the text
+MET — Operator RR-0403 — docs/reports/panels/MF-97.json:11 — the fix is done inside task-442, matching "the text fix is done inside task-442; task-447 merged into it"
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: Rule 1, Rule 3, Rule 7, Rule 10
+
+---
+⏱  118944ms (118.9s)
+📊 Tokens — total: 58420, input: 31897, output: 26523, reasoning: 25374

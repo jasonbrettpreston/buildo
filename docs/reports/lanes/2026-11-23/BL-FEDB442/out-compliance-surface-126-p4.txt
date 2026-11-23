@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:16.318Z file_sha256=3e75bc53734688f96bfdc8073b3873763753d425150aa8abc4d5211620e7a74f prompt_sha256=2edcc711bfba62c73103eba295994a3b0c34055b01bf982561a42ba40be89b72
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-442 card "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:197 "the other registry blocks (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — the digit lock is scoped to the `page` block only, so the one admitted shown status text with a digit passes unbound — list that shown status text as an explicit entry with its own fix row, or run digitAudit over the status_text block too
+
+DEFER severity=LOW — 126 §11a.7 "A golden = the pair in Spec 127 §4.3 (API fixture + rendered tree; 126:435-439, 127:129-134)" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json:5 "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — no file under src/tests/fixtures/report-page/ or src/tests/fixtures/surfaces/report/ appears in this material, so the golden refresh the prereg names cannot be seen — confirm the 40 page goldens carry only the content key for that part and no text, or add the refreshed goldens to the change
+
+DEFER severity=LOW — 126 §11a.1 "A field with any other source fails the check." — src/tests/admin-report-preview-live.logic.test.ts:151 "Not checked here: the declared half (RS-1 and RS-3, scripts/analysis/report-schema.mjs:148-203)" — the closed-source-set half of FE-18, which acceptance A2 attests for this row, rests on a pre-existing lock outside this material and only on a header claim inside it — point the acceptance row at that lock by path, or add the closed-set assertion to B1
+
+MET — 126 §11a.1 "`content` | the label, help-text and legal-copy table" — scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — the edited string is a `page` content text, hand-edited at the seed table and regenerated into report-presentation.json
+
+MET — RR-0405 "option a (the text reads: the basement, not shared stairs and halls)" — scripts/surfaces/_schema/report-presentation.json:322 — the words are identical in the seed, the generated copy and the sample
+
+MET — RR-0402 "a (drop the percent, words only)" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);"
+
+MET — 126 §11a.1 "never into the generated `report-v2.decl.json` (its header is re-checked at build)" — scripts/surfaces/_schema/report-v2.decl.json:14 — only "inputs_sha256_16" changed, no field added to the generated file
+
+MET — "each test is proven red on a planted defect before it counts" (task-442) — implementation notes, red-T1/T2/T3 — each test refused at its designed assertion ("expected [ …(2) ] to deeply equal []", "promise resolved … instead of rejecting", "expected 'the basement; 10 % circulation' not to match /\d/")
+
+MET — 126 §11a.7 dated note MF-14 (5) "no rounding (Spec 128 Rule 16)" — src/tests/surfaces/report-honest-k2.logic.test.ts — the removed "Math.round(Number(LV.houseplex_circulation_share.default) * 100)" assertion no longer pins a rounded percent
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 0
+Rules met: none
+
+---
+⏱  134723ms (134.7s)
+📊 Tokens — total: 63747, input: 35057, output: 28690, reasoning: 27775

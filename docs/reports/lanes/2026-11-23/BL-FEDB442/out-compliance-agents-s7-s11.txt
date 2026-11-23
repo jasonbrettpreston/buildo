@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.900Z file_sha256=08e6219ecf63b779bfa07a8cc688649d0b2b5db2863203b0865d629ab441e05b prompt_sha256=4d80a78baf497163ae1919b6c165b9210659c29f97352ea3c334c6ecda0de73c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §11.1 "a line citation is read, not remembered" — docs/reports/panels/MF-97.json "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915): \"This is the focus for both compliance and engineering standards and interface between the frontend and databse\"" against the pasted decisions entry "- RR-0385 ... \"proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept\" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915)" — two different verbatim quotes are anchored to the same line 1915, so one of the two citations was not read — re-read :1915 and correct the panel's anchor or quote, or cite decision-170 instead of a line.
+
+DEFER severity=MED — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — no golden file appears in the change although the card Files line names "src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/", so either the stated basis for FE-24 and FE-29 is false or the change omits the refreshed goldens — run the stat of the work commit and either drop the "refreshes the goldens" basis or add the refreshed golden files.
+
+DEFER severity=LOW — §11.3 "Survive-the-fix locks (green-both) are stated as such per case." — src/tests/admin-report-preview-live.logic.test.ts "// task-442 (FINAL.7, plan section 3; operator RR-0385 \"interface between the frontend and databse\"), red first through the real hooks:" — B1 (b), (c), (d), B2 (b), (c) and T11 (b) pass both before and after the text fix and none is stated as a survive-the-fix lock, only red-first is claimed — label each green-both case as such, per case.
+
+DEFER severity=LOW — §11.1 "a claim that COULD be executed but wasn't" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "prereg 1, committed alone and first, before the MF-97 work commit" against the card note "commit 0 (plan section 6, alone and first): the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json ... and docs/reports/panels/MF-97.json" — the prereg was not committed alone, commit 0 carries three files — change the $comment to state only that it precedes the work commit.
+
+MET — RR-0405 "option a" — scripts/surfaces/_schema/report-presentation.json "row.unit_size_basis_value": "the basement, not shared stairs and halls" (identical string in report-v2-seed/page-text.json and parcel_product/F06/surfaces/web_landing.sample.json) — the ruled words are carried in every copy.
+MET — RR-0402 "a" (drop the percent, words only) — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — no figure remains and the no-digit state is locked.
+MET — §11.3 "Red must land at the DESIGNED assertion" — card note "T2 T11 (a) rejects.toThrow, \"promise resolved ... instead of rejecting\" (red-T2.out)" — red is recorded at the designed assertion for T1 (line 177), T2 (line 421) and T3 (lines 229, 235, K2 line 55).
+MET — §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — docs/reports/panels/MF-97.json "PLAN-442-v1 on the task-442 card (Implementation Plan), reviewed ... every finding ruled by the separate plan grounder" — T1, T2 and T3 are plan section 3 tests, ruled before the code existed.
+MET — §11.9 task-375 note "Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head" — docs/reports/panels/MF-97.json "integration, reality-check and regression seats (plan)" — all three tool seats are named for this launch.
+MET — §11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/admin-report-preview-live.logic.test.ts "expect(scanned).toBeGreaterThanOrEqual(90)" — every key of the page block is scanned, not a sample.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 33   Unmet: 4
+Rules met: MCINC-8
+
+---
+⏱  121028ms (121.0s)
+📊 Tokens — total: 59879, input: 33239, output: 26640, reasoning: 25444

@@ -1,0 +1,730 @@
+LIST surface-126 sha256:5fe2c8712891b821624f9688e01e2e202aa978f70fe53d584d501deae2f36b77 material sha256:615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 part 3 of 6 chunk 1 of 1
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 3 of 6. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".cursor/MCFRONTEND-QUEUE.md","docs/reports/panels/MF-97.json","scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json","scripts/surfaces/_schema/report-presentation.json","scripts/surfaces/_schema/report-v2-seed/page-text.json","scripts/surfaces/_schema/report-v2.decl.json","scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json","src/tests/admin-report-preview-live.logic.test.ts","src/tests/customer-report-read.logic.test.ts","src/tests/surfaces/report-honest-k2.logic.test.ts"]
+
+## 6. Building the schemas directly in Supabase
+
+> This section is the detailed answer to *"how do we build the schemas straight in Supabase?"* Every table the surfaces need is specified here as a **declare-and-assert** flow, not a generated migration. Spec 127 §2 turns it into PH-0/PH-1 procedure steps.
+
+### 6.1 The declare-and-assert flow — the five steps, in order
+
+For **every** table below, without exception:
+
+| # | Step | Artifact | Gate |
+|---:|---|---|---|
+| **1** | **Declare** the table in git, as descriptor data — `database.tables[]` inside the owning CONTRACT (or JOB) descriptor: table name · every column with its SQL type, nullability and default · PK · FK targets · CHECK vocabularies as closed enums · the indexes, each with the declared read that justifies it · the RLS role matrix (§6.2) | `contracts/<slug>.descriptor.json` | AJV at construction; a descriptor that declares an unknown column type **refuses** |
+| **2** | **Hand-author the SQL migration** under the existing `scripts/migrate.js` conventions — `NNN_[feature].sql` (the `schema_migrations` key is the **filename**, not a version; `migrate.js:44-49`), an `-- UP` marker, a **comment-only `-- DOWN`** (`-- UP`/`-- DOWN` are *comments*, not section directives — `migrate.js` runs the whole file as one transaction), a `WHY THIS EXISTS` header and `SPEC LINK:` lines; `-- ALLOW-DESTRUCTIVE` where Rule 1 demands it, `CONCURRENTLY` (or `-- CONCURRENTLY-EXEMPT`) for an index on a large table, and a `DEFAULT` on any `ADD COLUMN … NOT NULL`. The header **names the descriptor it implements** (`contracts/<slug>.descriptor.json#database.tables[i]`) — a path, not a hash | `migrations/NNN_*.sql` | `scripts/hooks/validate-migrations.sh` (marker existence, fail-closed on the **staged blob**) → `scripts/validate-migration.js` Rules 1/2/3/5/6 → `scripts/hooks/check-migration-down-comments.sh` (awk scan for uncommented DDL under `-- DOWN`). All three already run in `.husky/pre-commit` |
+| **3** | **Apply and introspect** — `npm run migrate`, then `npm run db:generate` (which is `drizzle-kit introspect`, DB → TS, output `src/lib/db/generated/`) | `src/lib/db/generated/schema.ts` | migrate is idempotent and filename-keyed; re-running is safe |
+| **4** | **Assert the round trip** — a `*.infra.test.ts` drift lock proving the **introspected TS types equal the declared schema**: every declared column exists with the declared type and nullability; every declared index exists; no column outside the declared set appears in the contract's response projection. Proven **both directions** with a RED canary (a fixture descriptor declaring a column that does not exist must fail) | `src/tests/surface-schema-drift.infra.test.ts` | `npm run verify` |
+| **5** | **Seed the projection** — descriptor rows mirrored into Supabase by a seed script on the `apply-logic-variables.js` model, with a drift lock that the table equals the committed files (§6.4) | `scripts/seeds/apply-surface-descriptors.js` | run at deploy; drift-locked in CI |
+
+**Why not generate the migration.** Measured: `npm run db:generate` is `drizzle-kit introspect` (`package.json:17`; `drizzle.config.ts:5` `out: './src/lib/db/generated'`) — the arrow already runs **DB → TS**, producing `schema.ts` (2,327 lines) + `relations.ts` (389). Reversing it would collide with three live hook gates and hand a generator authority over 244 files of hand-reviewed schema history whose `schema_migrations` key is the filename and whose integrity is a per-file SHA-256 (`migrate.js:60`, CRLF-normalised) surfaced by `migrate.js --verify`. Declare-and-assert is strictly cheaper, strictly more truthful, and reuses two mechanisms that already work. (`ASK-04` re-opens this only if a future table count makes hand-authoring the bottleneck.)
+
+**⚠️ No new fingerprint is invented.** An earlier draft stamped a `DECLARED-SCHEMA-SHA256` into the migration header; it is dropped. This estate already has **two** integrity mechanisms and a third would be a third thing to keep in sync: `schema_migrations.checksum` (a per-file SHA-256, CRLF-normalised, `migrate.js:60`, surfaced by `migrate.js --verify` as DRIFT/MISSING) pins the **migration file**, and the golden `source_fingerprint` over `fingerprint_files[]` pins the **descriptor**. Between them, a migration that changed and a descriptor that changed are both already detectable. What was actually missing is the **assertion**, not another hash — which is why step 4 is the gate and the header comment is only a pointer.
+
+The vocabulary half already has a strong precedent: `docs/specs/_contracts.json` mirrors SQL `CHECK` vocabularies (`entitlement_products`, `entitlement_statuses`, `scrape_outcomes`) and `src/tests/db/236_permit_scrape_outcomes.db.test.ts:117-130` already asserts *the live `pg_constraint` definition equals the JSON list*. Step 4 generalises that assertion from CHECK vocabularies to whole table shapes.
+
+**⚠️ Migration numbering.** The highest migration on disk at authoring is **247** (`247_parcels_autovacuum_storage_params.sql`, 244 files total); the next free number is **248**. Spec 122 §7.5's reservation for the four pipeline state tables (`pipeline_intervals`, `published_batch`, `step_error`, `step_quarantine`) has been broken **three times** and its own text now says so — *"the next consumer should stop treating '245–248' (or '247–248') as license and instead run `ls migrations/ | tail -1` before claiming a number."* This spec inherits that instruction verbatim: every migration claims its number in the commit that writes it, after re-measuring.
+
+### 6.2 RLS as descriptor data — classes, roles, and the role matrix
+
+**Start from what Spec 114 actually says, not from an invented vocabulary.** Measured:
+
+- Spec 114 is **class-based, not row-per-policy**. A table is **Class A** only if it is one of the **10** named user-owned tables the spec enumerates (§3.1's 8 + §3.2's 2), **Class C** only if it is `profiles`, and *"everything else is Class B by default — including tables added after this spec is written"* (§2, `:52`). Class B is `ENABLE ROW LEVEL SECURITY` with **zero policies** — deny-all — which is why *"Class B needs no per-table catalog entry beyond 'it's Class B'"* (`:189`).
+- The Postgres role vocabulary is **`anon` · `authenticated` (owner / not-owner) · `service_role` · table owner** (§9 matrix, `:419-424`). **There is no `admin` Postgres role.** "Admin" is a *column flag* — `profiles.is_admin BOOLEAN` (`migrations/226_profiles_admin_bootstrap.sql:27`) — checked inside the policy predicate.
+- Policy naming is fixed (§8, `:388`): `` `<table>_<operation>_<scope>` ``, lowercase snake_case, operation ∈ `select|insert|update|delete`, scope ∈ `own | own_admin | admin`.
+- Live today: **26 `CREATE POLICY` statements** — **2** in `migrations/226` (`profiles_select_own`, `profiles_update_own`) and **24** in `migrations/230`; `231` declares **none** (it enables RLS on `admin_backup_codes` with zero policies, which is Class B by construction). **87** `ENABLE ROW LEVEL SECURITY` lines, 69 of them the Class-B default-deny sweep in `227` (whose own header records that its table list was **generated, not hand-authored** — *"Re-generate rather than hand-edit if the table list drifts"*: the precedent this spec's §4.3 flow extends).
+
+**What is net-new, and it is exactly two things:**
+
+| Role token | Exists today? | Disposition |
+|---|---|---|
+| `anon` | yes | unchanged |
+| `user` (`authenticated` + `auth.uid()`) | yes | unchanged |
+| **`agent`** | **no** | **NOT a DB role — an entitlement product** (`agent_reports`). A realtor sending a PDF to a client is a `user` holding one more product. It needs **zero** new policies: one widened `chk_entitlements_product` CHECK, one `stripe_price_product_map` entry, one string in `docs/specs/_contracts.json` — the same three grep-locked sites `parcel_tool` costs. A DB role for a billing distinction is a category error. (`R-09`) |
+| **`advertiser`** | **no** | **A real role, and the reason a fourth class must exist.** It is the first principal scoped by a key that is *not* `auth.uid()` — `advertiser_id` via a membership row. **Class D** = *owner-scoped by a non-user key*, policies generated as `USING (advertiser_id = current_advertiser_id())`. (`R-10`) |
+| `admin` | yes, as a flag | unchanged — `profiles.is_admin`, checked in-predicate, scope token `admin` / `own_admin` |
+
+**The matrix is a seed file, on the `logic_variables.json` model** — `scripts/seeds/roles.json`, mirrored into `docs/specs/_contracts.json` under `schema.roles` and grep-pinned exactly as `entitlement_products` already is (`src/tests/contracts.infra.test.ts`). It declares, per table: its class (A/B/C/**D**), its owner column, and the per-role verb grants. Each new table in §6.3 carries its row.
+
+**Per-table descriptor shape** (AJV-validated, and it names the class rather than re-deriving a predicate):
+
+```
+"rls": {
+  "enabled": true,
+  "class": "A",                       // A | B | C | D
+  "owner_col": "user_id",
+  "grants": { "user": ["select","insert"], "agent": ["select"], "admin": ["select"], "anon": "none" },
+  "why_none": { "anon": "no unauthenticated read of usage" }
+}
+```
+
+**Rules that are not negotiable:**
+1. **`rls.enabled: false` is legal only with a stated `why`** plus a `checks[]` entry at `severity: FAIL` naming what protects the table instead. Silence is omission, and omission is a build failure (Spec 128 rule 6).
+2. **Every role in the closed set appears**, including the ones whose answer is `none` — §4.2's rule applied to access control, where an unwritten `"none"` is most dangerous.
+3. **The assertion reads the LIVE catalog, never the migration text** — `pg_policies` for the policy set, `pg_class.relrowsecurity` for the enable flag, `pg_roles` for the roles, plus a re-execution of `classifyRoute()` over all 61 route paths. It FAILS on: a table with RLS enabled and no declared class · a policy live but not in the seed · a seed row with no live policy · `surface.guards.session ≠ contract.guards.auth_class`. **Bidirectional**, like `generate-logic-variable-groups.mjs`.
+4. **The generator EMITS a migration for human review; it does not apply one.** `seeds/roles.json` → a draft `migrations/NNN_rls_<scope>.sql` → the same hand review, the same `validate-migrations.sh` / down-comment gates, the same filename-keyed `migrate.js`. This is the easy mistake and the constraint that prevents it.
+5. **The admin reads the same tables through RLS**, not around it — an `own_admin`/`admin`-scope policy per table, so the admin surface declares `guards.session: "admin"` and the *same* CONTRACT descriptor serves it. Admin-only columns are excluded by the contract's **response projection**, not by a second table. That is what makes "one contract, N projections" hold across the trust boundary and not merely across renderers.
+6. **`docs/specs/00-architecture/114_rls_policy_catalog.md` stays the catalog of record.** New tables add rows there through the generated path, never by hand.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch item 1); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): rule 6 has one ruled, explicit departure until `scripts/seeds/roles.json` and its generator exist: `media_assets`, `offers` and `advertisers` carry a hand-written `ENABLE ROW LEVEL SECURITY` + one `<table>_select_admin` policy and no write policy (Spec 114 §2 dated note 2026-11-09). Their CONTRACT descriptors carry `guards.rls_class` B with the ruled pattern; the full `rls` block of this section (grants, `why_none`) is not representable in `surface.schema.json` yet and waits for the schema and `roles.json`. The db test reads the live catalog (rule 3).
+
+**⚠️ Two measured gaps this spec inherits rather than closes:**
+- **The existing RLS suite is not wired to CI.** `supabase/tests/rls_class_{a,b,c}.test.sql` run under `supabase test db`, which appears in no `package.json` script and no workflow — the runbook records it as *release-gating, NOT per-commit*. The `rls-matrix.db.test.ts` lock above therefore lands as a **vitest `.db` test under `BUILDO_TEST_DB=1` / `npm run test:db`**, which does run, rather than as a pgTAP file that does not. (`ASK-08`)
+- **`migrations/226`'s own comment records that the `prevent_is_admin_self_escalation` trigger is bypassable by the table owner**, with the proper fix (*"a dedicated non-owner elevated role with `REVOKE UPDATE(is_admin) FROM app_role`"*) filed as post-launch **D5**. A role-matrix page that renders a guarantee the DB does not enforce is worse than no page: D5 renders as a declared **`OPEN`** row on `/admin/roles`, never as an omission. (`R-11`)
+
+### 6.3 The tables the surfaces need
+
+Each row below is a **declaration to be authored**, not a schema shipped by this spec. Column lists are the recommended starting shape; the migration is written at the phase that needs it.
+
+| # | Table | Why it exists | Key shape | RLS posture | Indexes justified by |
+|---:|---|---|---|---|---|
+| 1 | **`app_outputs`** | the materialised projection — the **ONLY** seam the app reads (§6.3.1) | `PK (subject_kind, subject_key, projection, version)`; `payload JSONB NOT NULL`; `built_at`; `source_fingerprint`; `pipeline_run_id` | writes are service-role only (the pipeline step writes it, **no client insert/update**); reads: `anon` select only where the public flag is set (the teaser path), `user` select, `admin` select | the REPORT surface's declared read: exact match on `(subject_kind, subject_key, projection)`; plus a partial index on the public flag for the anon teaser |
+| 2 | **`usage_events`** | the one generic meter + observability spine (§7) | `PK (event_id)`; `user_id` **NULLABLE** alongside `session_id`; full shape and rationale in §7 | **Class A** on `user_id` for signed-in rows, plus **one** `anon` insert policy narrowed to `event = 'offer_impression'` (§7.1) | the quota read (`COUNT(*)` filtered by `user_id, product` over a computed period window) and the registry's 7-day usage column |
+| 3 | **`entitlements`** *(widened, not new)* | the product gate | existing `PK (user_id, product)`; the change is **one migration widening `chk_entitlements_product`** to admit **both** new keys, `'parcel_tool'` (R-01) and `'agent_reports'` (R-09), in one statement | unchanged — Class A, `entitlements_select_own` | unchanged |
+| 4 | **`advertisers`** | the advertiser principal — the membership row the `advertiser` role is scoped by | `PK (advertiser_id)`; `name`, `contact_user_id`, `active BOOLEAN` | **Class D** — `advertiser` select own (`advertiser_id = current_advertiser_id()`); `admin` select/insert/update; everyone else `none` | lookup by `advertiser_id` at policy-evaluation time |
+| 5 | **`placements`** | the closed placement vocabulary — where a SLOT may render | `PK (placement_key)`; `surface_archetype`, `max_slots`, `disclosure_required BOOLEAN NOT NULL` | `anon` / `user` / `advertiser` select; `admin` all | read by placement key at projection time |
+| 6 | **`offers`** | the inventory a SLOT renders — **a table, never a literal** | `PK (offer_id)`; `advertiser_id FK`, `placement_key FK`, `targeting JSONB`, `flight_start`, `flight_end`, `active BOOLEAN` | **Class D** — `advertiser` select/update own; `user` / `anon` select only active, in-flight rows; `admin` all | the targeting read declared by the SLOT surface: placement + active + flight window |
+| 7 | **`pdf_exports`** | one row per generated export, and the share model | `PK (export_id)`; `user_id`, `subject_kind`, `subject_key`, `storage_path`, `bytes`, `parity_fingerprint`, `expires_at`, `recipient` | **Class A** — `user` select own; `agent` (a `user` holding `agent_reports`) select rows where they are `recipient`; `admin` all; `anon` `none` | lookup by `export_id` for the share route; `user_id + created_at` for the user's own list |
+| 8 | **`surface_descriptors`** | the **seeded projection** of the git descriptors (§6.4) | `PK (surface_id)`; `archetype`, `platforms TEXT[]`, `descriptor JSONB`, `git_sha`, `seeded_at` | `admin` select; everyone else `none` — an admin registry, not product data | read by `surface_id`; listed by `archetype` for the registry page |
+| 9 | **`contract_descriptors`** | same, for CONTRACT — and its `descriptor->'consumers'` is where the fan-out graph's edges live | `PK (contract_id)`; `archetype`, `descriptor JSONB`, `git_sha`, `seeded_at` | as above | the fan-out and orphan joins, both derived from `consumers[]` |
+| 10 | **`archetype_registry`** | the closed archetype vocabulary, and which component renders it per platform | `PK (archetype, platform)`; `component_path` | `admin` select | the registry page; the unknown-archetype check (§3.5) |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "Mf-D1 - we will just input the ads via the admin" and "Mf-40 agreed"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: MF-40 D-1" and "Operator ruling 2026-11-10: MF-40 D-3, D-6, D-7"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.md` section 12): rows 4, 5 and 6 as MF-40 builds them (migration `302_admin_ads_placements.sql`, written; the operator's DB job applies it).
+> - Row 4 `advertisers`: the RLS posture is not Class D. Ads are entered by the admin only and no advertiser principal is planned, so the table carries the admin-read pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10): RLS on, `advertisers_select_admin`, no write policy; writes go through the admin API's owner connection. Minimal shape (D-3): `advertiser_id`, `name`, `contact_user_id` (nullable, unused for now, kept for this row's shape), `active`, `created_at`, `updated_at`. An advertiser is entered on the admin placements page; there is no advertiser LIST or DETAIL surface (`admin_advertiser_accounts` stays parked).
+> - Row 5 `placements`: Class E (Spec 114 §2 amendment (b)). The migration seeds exactly the slots of `scripts/surfaces/_schema/ad-contract.json` (`detail_footer`, `renovation_section`, `scenario_card`), `surface_archetype` `REPORT`, `max_slots` equal to `report-presentation.json` `ad_placements[].max_slots`. `disclosure_required` carries `CHECK (disclosure_required)` (R-17, R-34 (i)). The table is seed-only: no admin route writes it, so "admin all" is served by the migration, not by a form. `max_slots` keeps its one home in `ad_placements`; a drift lock joins the seed to it, and a new slot is a contract change plus a placement migration.
+> - Row 6 `offers`: the admin-read pattern, not Class D (as row 4). Added columns: `creative_text` (the text an offer shows; v1 creatives are text, `ad-contract.json`), a nullable `creative_asset_id` FK to `media_assets` (D-6; not rendered until ad contract v2), `created_at` and `updated_at` (the form's optimistic concurrency). `offer_id` is client-generated, so an upsert is idempotent. CHECKs: `flight_end >= flight_start` when both are set; `targeting` is a JSON object. The `user` / `anon` read of active, in-flight rows is not a policy: it belongs to the serving follow-up row (D-7), which also brings the targeting-read index. MF-40 is admin authoring and preview only.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "y recommendation: C, with the four trims. approved"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: the shared binding standard"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md` sections 5 and 8): rows 4 and 6 as the MF-40 admin page writes them. `offers.targeting` holds at most `building_type` and `design_option`, the keys each placement accepts in `report-presentation.json` `ad_placements[].targeting`; a `scenario_card` offer needs both, and the pair must be a key of `ad-contract.json` `scenario_fields`. `zone_class` targeting is not written until the serving row (D-7). `offers.active` is false on create and changes only through the list-row toggle; `offers.creative_asset_id` is not written until ad contract v2. `advertisers.active` is true on create and is not changed in v1.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 OUTPUT panel · McFrontend queue · lane MF-40 build; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"; security and compliance seat M1, M3): two corrections to the 2026-11-10 notes above. (1) The home of `max_slots` is the `placements` table (Spec 128 R-34 (i)), not `report-presentation.json` `ad_placements`: `ad_placements[].max_slots` is the joined copy, and the drift lock (`src/tests/admin-placements-seed.logic.test.ts`, the DB test arm (d)) keeps the two equal. The over_cap read uses the table (`src/lib/placements/over-cap.ts`). The row-5 sentence "`max_slots` keeps its one home in `ad_placements`" is superseded by this note; no admin route edits `placements` yet. (2) An offer may run without an end date (`flight_end` is optional); `admin_placement_max_horizon_days` bounds only a given end.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): row 2 `usage_events` lands in the narrow form (D-1 a), in migration 303 (written by MF-45, applied by the operator's DB job): the section 7 shape verbatim, closed CHECKs on `product` (the four entitlement keys), `event` (the section 7 list) and `subject_kind` (R-04), the quota index `(user_id, product, event, subject_kind, occurred_at)`, RLS on with exactly one policy, `usage_events_select_own` (Class A, Spec 114 section 2 dated note 2026-11-11). The row's "plus **one** `anon` insert policy" is NOT built here: it lands with the row that serves offers (MF-61, section 7.1), the one row allowed to relax the no-anon lock. Rows are server-written through the owner connection (D1), so there is no insert policy for `authenticated` either. The one event written is `property_view` (product `parcel_tool`, subject_kind `parcel_ref`, subject_key the matched `parcels.parcel_id`, `meta` `{}`; the raw search text is never stored). Deletion follows the account: `user_id` cascades from `auth.users` (the migration 235 sweep). The quota read is `COUNT(DISTINCT subject_key)` over a period computed at query time (section 7); no partial unique index, because a per-period index needs a stored period, which section 7 forbids. The row text above is unchanged.
+
+**No `required_fields` column on `archetype_registry`** (R-27): the required-field profile has **one** home — the surface schema's `allOf` blocks, rendered into §3.1 by the generator. A copy in a table is a copy to keep in sync.
+
+**Ten rows — and the count is that enumeration, not a number typed beside it.** Nine are net-new, each verified absent from `migrations/`, `src/` and `scripts/`: `app_outputs` · `usage_events` · `advertisers` · `placements` · `offers` · `pdf_exports` · `surface_descriptors` · `contract_descriptors` · `archetype_registry`. The tenth, `entitlements`, exists and changes by one widened CHECK. Every one follows §6.1's five steps: declared in git, hand-migrated, introspected, drift-asserted. **Names are fixed here, before the first migration** (`ASK-09` closed): `placements`, not `offer_placements`; `pdf_exports`, not `exports`. `migrate.js` is filename-keyed and DOWN blocks are comment-only, so renaming a table after it ships costs a new migration plus a data move.
+
+#### 6.3.1 `app_outputs` — written by a converted pipeline step
+
+`app_outputs` is **not** written by an API route. It is a **materialised projection written by a converted pipeline step at the end of chain `sources`** — a new step under the Spec 122 standard, with its own descriptor, its own `checks[]`, its own golden capture, and `outputs.write_discipline` declared per target. That gives the projection everything a route could not: an AJV-validated declaration, a run ledger row, a verdict derived from its own audit rows, and a golden differential when its shape changes.
+
+Consequences, stated:
+- The app reads **one** table for a projection, so a REPORT surface's contract is an exact-match lookup rather than a multi-table assembly at request time. That is the strongest form of MAX-SERVER-SIDE available.
+- Freshness becomes a declared property: `app_outputs.built_at` plus the surface's `staleness` block, with a `checks[]` freshness entry — the pipeline's `checks[] { kind: "freshness" }`, reused.
+- **The chain-position ruling is load-bearing**: the step runs at the END of `sources`, after enrichment, so the projection is never built from a half-enriched corpus. Registering it in `scripts/manifest.json` `chains.sources` is a Backend/Pipeline change and is **out of scope for this spec's Target Files** — it is Phase 2 work under the pipeline programme's own slot.
+- Until that step exists, a REPORT surface reads its existing contract (`/api/parcels/lookup`) and declares `inputs.projection_source: "live"`; the cutover to `app_outputs` is a descriptor edit plus a recapture, which is exactly the property the golden fingerprint exists to force.
+
+### 6.4 The seeded-projection tables and their drift lock
+
+**Git is the source of truth; Supabase holds a projection. Nobody edits the table by hand.**
+
+The mechanism exists: `scripts/seeds/logic_variables.json` → `scripts/seeds/apply-logic-variables.js` → the `logic_variables` table, invoked at the end of `npm run migrate`. Copy it, and copy the two lessons it paid for:
+
+1. **LM-D15** (`2ced0763`) — a declared variable with no row now **throws**; the seed file is bootstrap only. Applied here: a descriptor with no `surface_descriptors` row fails the deploy gate.
+2. **The DO-NOTHING blind spot** (WF3 cloud-parity FIX 1) — `ON CONFLICT DO NOTHING` can only ever INSERT a genuinely new key; a pre-existing row holding the wrong value survives silently with the same success line. **Therefore `apply-surface-descriptors.js` does NOT use `DO NOTHING`.** Descriptors are machine-owned, not operator-tuned, so the seed is `ON CONFLICT (surface_id) DO UPDATE` keyed on `git_sha`, and it **logs every row whose `git_sha` changed** — a value diff, not a count.
+
+The drift lock is bidirectional, per §5.0: the table equals the committed files, and the committed files equal the table. A `surface_descriptors` row with no committed descriptor is as red as the reverse.
+
+### 6.5 Supabase Storage — the PDF bucket
+
+**Where the conventions live, measured:** Spec 113 (Supabase infrastructure) does **not** cover Storage — every occurrence is a service-name list, a topology sentence, a retired Firebase env var, or an off-Supabase backup target; the nearest thing to a convention is a *negative* (`:83`, "Supabase Storage bucket names are referenced per-call, not a global env var"). The conventions live in **Spec 114 §6** (`:310-344`), which states plainly at `:312`: *"**No Buildo feature uses Supabase Storage — or GCS signed URLs for user-facing file storage — today.**"* This spec is therefore the **first consumer** of Spec 114 §6, and it adopts that section's rules verbatim rather than inventing any:
+
+| Aspect | Declaration | Source |
+|---|---|---|
+| Bucket | one bucket per render target, `surface-exports`, created **private** (`public: false` stated explicitly) | Spec 114 §6 `:320` — *"every bucket is created **private** (never `public: true`)"* |
+| Creation | **via a tracked migration, never via the dashboard** — Spec 114 `:482-487` records dashboard creation as a named failure mode | Spec 114 §6 / D5 |
+| Path template | `{auth.uid()}/{subject_kind}/{subject_key}/{export_id}.pdf` — **owner-namespaced first segment**, matching Spec 114's `<bucket>/<auth.uid()>/<filename>` shape; declared in the EXPORT contract's `storage` block, never string-built at the call site | Spec 114 §6 `:320` |
+| Bucket policy | `bucket_id = 'surface-exports' AND (storage.foldername(name))[1] = auth.uid()::text` — Spec 114's template, unchanged | Spec 114 §6 `:325-336` |
+| Access | **signed URLs with a declared TTL**, issued by the EXPORT contract; the `pdf_exports` row is the authority on who may request one. A bucket policy alone is not the gate — the route is, and the row is its record. The recipient is a `user` holding the `agent_reports` entitlement (R-09), not a new DB role |
+| Retention | `expires_at` on the row + a SCHEDULED JOB that deletes expired objects and their rows; the JOB declares its `idempotency` and `audit_row` like any other |
+| Ledger | every issue and every download writes a `usage_events` row (`event: pdf_send` / `export`), so the share path is metered and observable on day one — the opposite of the dead-meter defect |
+| Parity | `pdf_exports.parity_fingerprint` is the golden fingerprint of the projection the PDF was rendered from. "100% data parity" is asserted by comparing it to the screen projection's fingerprint, not by discipline |
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch items 2, 4); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): a second bucket, `surface-media` (admin media library, MF-37), follows the same private-by-migration rule with an `admin` scope instead of the owner path (on an instance without the Storage tables the migration's Storage half skips itself with a NOTICE, and the db test fails unless that gap is named): path `<kind>/<asset_id>.<ext>`, three `surface_media_*_admin` policies, signed URLs minted by the admin list call with the TTL as a `logic_variables` row (Spec 114 §6 dated note 2026-11-09). Uploads arrive as a data URL in the RJSF form, cap at most 3 MB (item 2), stored as `media_upload_max_bytes`. Its ledger is deferred; user-facing signing is owed by MF-38 (item 4).
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-7, stale cites only, no rule change): at `0d90d92a7` Spec 114 §6 is 114:333-372. The 114 cites in this section map :310-344 → :333-372, :312 → :335, :320 → :343, :325-336 → :347-358, :482-487 → :505-510. R-31 is recorded on 114 §6 by its own dated note.
+
+**Measured caveat:** `@aws-sdk/client-s3` is already a dependency of this repo, so S3 is an alternative substrate. Supabase Storage is recommended because the auth model (`auth.uid()` in a bucket policy) is the same one every other table uses, which keeps one role vocabulary rather than two. This is `ASK-07`.
+
+### 6.6 Indexes — justified by a declared read, never by intuition
+
+Every index in §6.3 names the surface-declared read it serves. The rule is the pipeline's P3 discipline (*disk I/O is adjudicated with numbers, never assumed*) applied to the surface estate, including EP-D17's extension to **read** cost: a declared check's scan cost is part of its price, and that price is stated against the target it actually runs on — production scale, production heap state — never a local sample. An index proposed with no declared read is rejected; a declared read with no index is a `checks[]` WARN with a measured `duration_ms` and a retighten condition.
+
+
+## 7. The usage ledger — meter and observability spine
+
+**There is no working meter to extend.** `POST /api/leads/view` holds the repo's only one — an atomic CTE inserting `lead_view_events` and incrementing `user_profiles.lead_views_count`, triple-gated to `action='view'` AND `lead_type='permit'` AND `subscription_status='trial'`. Its table is `lead_view_events(user_id, permit_num, revision_num, viewed_at, PK(user_id, permit_num, revision_num))` and **it structurally cannot hold a parcel id** — the route's own comment says so. And it has **no caller**. So model the new meter on the *shape* that was designed correctly (ledger + PK dedup + CTE) and add the two things the old one lacked: **a live caller, and a registry column that makes its absence visible on day one.**
+
+**One generic table, not a second permit-shaped one:**
+
+```sql
+CREATE TABLE usage_events (
+  event_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID            NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  session_id   TEXT            NULL,   -- anonymous principal; exactly one of user_id / session_id
+  product      TEXT        NOT NULL,   -- mirrors entitlements.product's CHECK vocabulary
+  event        TEXT        NOT NULL,   -- closed: property_view | pdf_send | offer_impression | offer_click | export | parcel_id_translated
+  subject_kind TEXT        NOT NULL,   -- closed: parcel_ref | parcel_pk | permit_rev | offer_id
+  subject_key  TEXT        NOT NULL,
+  occurred_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  meta         JSONB       NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT chk_usage_events_principal
+    CHECK ((user_id IS NULL) <> (session_id IS NULL))
+);
+```
+
+**Four properties earn their keep, each from a measured incident or a measured requirement:**
+
+- **`user_id` is NULLABLE, paired with `session_id`.** A SLOT impression is the one event that happens before anyone signs in — the marketing landing page and the public teaser path both render offers to `anon`. A `NOT NULL user_id` would make anonymous impressions unrecordable, which is how an advertiser's impression count silently becomes "signed-in users only". The CHECK makes the principal **exactly one of the two**, so a row is never ambiguous about who it belongs to.
+- **The PK is an event id, not a composite.** An earlier draft made the PK `(user_id, product, event, subject_kind, subject_key, period)` so a replay would write zero rows. That is right for a *view* and wrong for an *impression*: **impressions are counted per event**, and two impressions of the same offer by the same viewer in the same period are two facts, not one. A composite PK would silently collapse them and under-report what an advertiser is billed for. Dedup, where a given event needs it, is a **partial unique index scoped to that event kind**, declared per event in `seeds/usage-events.json` — not a property of the whole table.
+- **`period` is derived at query time, never stored.** Storing a billing bucket in the PK bakes one billing calendar into every historical row; a quota read is `COUNT(*)` over a computed window on `occurred_at` (`date_trunc`, or the period the entitlement declares). This is the same lesson as the derived counter, one level up: a denormalised bucket is a second source of truth about *when*, exactly as `lead_views_count` was a second source of truth about *how many*.
+- **`subject_kind` is required and closed** because this estate has two different things named `parcel_id`: `parcels.id` is `SERIAL` and `parcels.parcel_id` is `VARCHAR(20) UNIQUE` (the municipal id) — and the consumer API's `parcelId` is the *second* while `lead_parcels.parcel_id INTEGER REFERENCES parcels(id)` is the *first*. A bare `subject_key TEXT` would silently blend them. **R-04:** `parcel_ref` = the municipal string, `parcel_pk` = the serial.
+
+**And the counter stays derived** — `COUNT(*)` over the window, never a column — which is the `lead_views_count` lesson and the reason R-23 exists.
+
+### 7.1 The one `anon` write in the estate
+
+`usage_events` carries exactly one insert policy for `anon`, and it is **narrowed to `event = 'offer_impression'` with `session_id IS NOT NULL`**. Nothing else may be written unauthenticated. This is stated here rather than left implicit because an `anon` INSERT is the kind of policy that, granted broadly, becomes a write endpoint nobody remembers granting — and §4.2's rule is that a permissive answer must be written down where it is most dangerous.
+
+**Retire the dead meter.** `lead_view_events` / `user_profiles.lead_views_count` / `useLeadView` / `POST /api/leads/view` / the `PaywallScreen.tsx:153` branch are **one finding with two legal dispositions** — revive, or knowingly retire — and *neither has been chosen*, which is the defect. Under this spec the disposition is **knowingly-retired in favour of `usage_events`** (R-08), and per Spec 124 §4.2 a different party adjudicates it in its own WF3, with the paywall copy re-pointed at a `usage_events` count in the same commit.
+
+**Entitlement side, measured:** `migrations/228_entitlements.sql:32-33` declares `CONSTRAINT chk_entitlements_product CHECK (product IN ('lead_gen', 'flight_center'))`. **One migration widens it to four, adding `'parcel_tool'` (R-01) and `'agent_reports'` (R-09) together** — they land in the same statement because they are the same change and splitting them would mean two migrations against one CHECK. Each key then needs its `stripe_price_product_map` entry (a JSONB logic variable seeded `'{}'` at `228:45-49`) and its string in `docs/specs/_contracts.json`'s `entitlement_products` array, which `src/tests/contracts.infra.test.ts` grep-pins against `src/lib/entitlements/index.ts:39` `PRODUCTS`. **Three sites, all already mechanically locked.** That is the whole change; `src/lib/entitlements/index.ts:42-43`'s `DEFAULT_PRODUCT = 'lead_gen'` comment, which records OD5's superseded default, is corrected in the same commit.
+
+**The parcel gate today is not a meter:** `src/app/api/parcels/lookup/route.ts:46-59` is a boolean — `subscription_status ∉ {trial, active, past_due, admin_managed}` → 403, unlimited lookups otherwise, reading the *global* status rather than a per-product entitlement. Under R-01 it becomes an entitlement lookup **and** gains a meter.
+
+</architecture>
+
+---
+
+<security>
+
+
+## 8. Auth Matrix
+
+| Role | Access |
+|------|--------|
+| Anonymous (`anon`) | May render only surfaces declaring `guards.session: "none"` **with a stated `why`** and a `disclosure` block. May read `app_outputs` rows flagged public (the teaser path) and active in-flight `offers`. **May INSERT into `usage_events` for `event = 'offer_impression'` only** (§7.1), keyed by `session_id`, because a SLOT impression can precede sign-in. No other `usage_events` write, no read of anyone's rows, no `pdf_exports`, no descriptor tables. |
+| Authenticated (`user`) | Surfaces whose declared `guards.entitlement` matches a live `entitlements` row in an allowed status. Reads and inserts **own** `usage_events` rows; reads own `pdf_exports`. No descriptor tables. |
+| Agent | **Not a DB role** (R-09) — a `user` holding the `agent_reports` entitlement product, plus read access to `pdf_exports` rows where they are the declared `recipient`, via a signed URL with a declared TTL. |
+| Advertiser | **A real role, RLS class D** (R-10) — reads/updates own `offers`/`advertisers` rows scoped by `advertiser_id` (not `auth.uid()`); reads aggregate impression counts for own offers. No user-level `usage_events` rows. It is the first principal admitted to an admin-shaped surface (`advertiser_self_metrics`) **by RLS scope rather than by `is_admin`**. |
+| Admin | All tables, **through an `own_admin`/`admin`-scope RLS policy rather than around RLS**. "Admin" is the `profiles.is_admin` column flag checked in-predicate, not a Postgres role. Admin-only fields are excluded by the CONTRACT's response projection, not by a second table. |
+
+**The cross-check that does not exist today (§4.2):** `surface.guards.session` must agree with the auth class of every contract in `inputs.contract_ref[]`, as a `checks[]` entry at `severity: FAIL`. Measured live mismatch: `/builders` pages are `authenticated` by fail-closed while `/api/builders` is public.
+
+</security>
+
+---
+
+<behavior>
+
+
+## 9. Behavioral Contract
+
+- **Inputs:** a SURFACE descriptor, its referenced CONTRACT descriptors, the archetype registry, and (at request time) the projected payload.
+- **Core Logic:**
+  1. AJV-validate the descriptor against `surface.schema.json` **before** anything renders — `additionalProperties: false`, all categories required, archetype profile applied. An invalid descriptor **refuses**, the way `pipeline.step()` does.
+  2. Resolve `identity.archetype` in the registry for each declared platform; an unresolved archetype renders the declared fallback **and** raises a `checks[]` FAIL (§3.4).
+  3. Evaluate `guards` — session, entitlement, flag, permission, rate bucket — before any projection is assembled.
+  4. Assemble the projection **server-side** (RSC on web; a projection endpoint for mobile); apply `inputs.field_whitelist`, which must equal the contract's.
+  5. Render through the archetype component set. No business logic executes client-side beyond the five named exceptions (§5.3).
+  6. Write the declared `emits` — analytics events, breadcrumbs, and the `usage_events` ledger row where `metering` is declared.
+  7. Run the declared `checks[]`; derive the verdict **from the resulting rows**, never a parallel boolean.
+- **Outputs:** a rendered surface on each declared platform; a `usage_events` row where metered; a `surface_ledger` row; the golden PAIR when captured.
+- **Edge Cases:**
+  - *Unknown archetype* → fallback card + FAIL check (§3.4).
+  - *Schema drift* (payload fails the generated Zod mirror) → declared `schema_drift` state, an error class in `errors`, and a FAIL check; never a blank screen.
+  - *Entitlement missing* → the declared `on_missing` (402 \| 403 \| paywall), covering every value of the governing closed set.
+  - *Offline* → the MMKV projection renders; `states[]` must include `offline` on LIST.
+  - *Metered action replayed* → the `usage_events` PK absorbs it; zero rows written, no error.
+
+
+## 10. Observability and visualisation
+
+**The surface registry page — `/admin/surfaces`, generated from descriptors.** One row per surface, every column derived, nothing typed:
+
+| Column | Source |
+|---|---|
+| surface · archetype · `platforms` · projection | `identity` |
+| contracts read/written | `inputs.contract_ref[]` / `outputs.contract_ref[]` |
+| tables (transitively) | the referenced CONTRACT descriptors' `database` |
+| entitlement + statuses | `guards.entitlement` |
+| declared states · golden freshness | `states[]` + fingerprint freshness |
+| checks pass/fail | last `surface-validate` run |
+| events emitted | `emits` |
+| **usage, last 7 d** | `SELECT count(*) FROM usage_events WHERE …` |
+| unconsumed? | a contract with zero `sharing.surfaces` entries renders **red** |
+
+**Three visualisations the census says are worth building:**
+1. **The contract fan-out graph** — 61 contracts × their consumers, with the *idiom* labelled per edge. This is where a transcription, or a bypassed mutation hook, is *seen* rather than discovered.
+2. **The orphan panel** — the 17 zero-call-site contracts and the 13 no-contract surfaces, produced by one join. One row on it (`/api/leads/view`) is this programme's headline finding.
+3. **The state-ownership matrix, rendered** — Spec 99 §3 as data with the `check-spec99-matrix.mjs` verdict attached. It has a checker; it has never had a reader.
+
+**Deferred:** the React Flow node-graph (§0.2). Re-opens as `ASK-05`.
+
+
+## 11. The pilot — `parcel_detail` (REPORT)
+
+`mobile/app/(app)/parcel-tool/[parcelId].tsx` (231L), with its web and admin twins.
+
+1. **Lowest risk in the estate** — `outputs: "none"`, no Layer-3 store (`:5` — *"Read-only; NO Layer-3 store"*), one query key with one param, zero writes, zero migrations, zero pipeline change. The same reason `assert_schema` — the archetype that forces three categories to `"none"` — was pilot 1 on the pipeline side.
+2. **The server-side projection already exists** — `CONSUMER_HEADLINE_COLS`, 16 named columns, an explicit pick-by-name assembler at `src/lib/parcels/consumer-lookup.ts:33`, with tier-stratified degradation. Max-server-side is a *short* move here.
+3. **It proves `sharing` on day one** — three renderings of one payload already exist (mobile search 115L, mobile detail 231L, admin tool 425L = **771 hand-written lines**), which is the fastest possible refutation of "one contract, N projections" if it is wrong.
+4. **It is the operator's own metered product**, so `metering`, `offers` and `usage_events` land where they are needed rather than on a surface that will never bill.
+5. **It has a real, unguarded defect to close** — `src/tests/parcel-cost-line-keys.logic.test.ts:4-13` records that the admin tool shipped broken from its first commit (`4b1712ff`): three cost lines rendered *"n/a — not computable"* on 100% of 486K parcels with a green UI suite, because the fixture was authored against the wrong keys. That test closed the admin side; **the mobile side is today in exactly the pre-fix state.**
+6. **It is the only surface where the archetype is genuinely new** — REPORT does not exist in the pipeline's 8, so the pilot also proves the UI-only-archetype ruling.
+
+**Pilot scope:** REPORT + SLOT + EXPORT + GATE — the property preview surface, its sponsor slot, its PDF render target, and the entitlement gate in front of it. Four archetypes, one screen, one contract.
+
+**Budget, stated up front (the P3 discipline).** No descriptor in this repo is under 200 lines; the smallest real one is **388** (`scripts/compute-centroids.descriptor.json`), the largest **8,225**. Fifty-three surfaces at 388 lines is ~20,000 lines of declaration. **The archetype required-field profiles are the only mechanism that keeps that from being 53 × 400 lines of `"none"`.** A REPORT should answer perhaps 12 of the categories in substance and `"none"` the rest in one line each. **Kill criterion, declared before commit 1: if the pilot descriptor lands over ~250 lines, the profile design is wrong.**
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.cursor/MCFRONTEND-QUEUE.md b/.cursor/MCFRONTEND-QUEUE.md
+index b979656e63acfb6e64bd24506adc0345d678ff7f..f27a058d047e1f99ec9ae3499ed79639d30fe5c8 100644
+--- a/.cursor/MCFRONTEND-QUEUE.md
++++ b/.cursor/MCFRONTEND-QUEUE.md
+@@ -2,7 +2,7 @@
+ 
+ Pointer 2026-11-14 (M-246, prior text kept; McQueue · McFrontend queue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): the homes of every queue, the status line form and the queue rules are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). This file stays the home of its own rows.
+ 
+-This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-97** (ids are never reused). Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993`)): the line read "Next free id: **MF-96**" before this note. MF-96 is taken by the FINAL.9 row (id claimed in ~/Buildo-scratch/ids/MF-96); next free id **MF-97**, now also the first value on the line, the one tools read. Dated note 2026-11-22 (M-246, prior text kept; MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384, operator, verbatim: "Approved" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1903`)): the line read "Next free id: **MF-94**" before this note. MF-94 is held by lane BL-MFRULES (task-388, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-94) and MF-95 is taken by the INPUTS.2 row (id claimed in ~/Buildo-scratch/ids/MF-95); next free id **MF-96**, now also the first value on the line, the one tools read. Dated note 2026-11-19 (M-246, prior text kept; MF-93 · McFrontend queue · lane BL-SEMI2; operator, verbatim: "Mock looks good - just the questions \"Is this house one half of a semi\" should extend out as far as the boxes beneath - from a width perspective." (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1188`; orchestrator reading, flagged and not the operator's words: the mock draws Q1, Q2 and Q4, so "Mock looks good" is taken to answer those three as drawn; Q3, curly apostrophes, is a copy change the mock does not draw and is NOT answered)): the line read "Next free id: **MF-93**" before this note. MF-93 is taken by the SRCH.SEMI stage 2 row (id claimed in ~/Buildo-scratch/ids/MF-93); next free id **MF-94**, now also the first value on the line, the one tools read. Dated note 2026-11-13 (M-246, prior text kept; MF-85 · McFrontend queue · lane HON; operator, verbatim: "all recommendations accepted. proceed with the plan"): the line read "Next free id: **MF-85**" before this note. MF-85 is taken by the report honesty row; next free id **MF-86**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; McTest · McFrontend queue · lane R; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's", McTest D-10 a; ids by orchestrator D-53 and the id ledger ~/Buildo-scratch/ids): the line read "Next free id: **MF-78**" before this note (MF-77 is the R-18 declarations row of the MF-46 follow-up). MF-78..MF-82 are taken by the five McTest rows; next free id **MF-83**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; MF-46 follow-up · McFrontend queue · lane E; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's"): the line read "Next free id: **MF-77**" before this note; MF-77 is taken by the R-18 declarations row, so the first value on the line is MF-78. Dated note 2026-11-11 (M-246, prior text kept; MF-46 · McFrontend queue · lane E; operator, verbatim: "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y", item 1): the line read "Next free id: **MF-76**" before this note; MF-76 is taken by the MaxBLD landing row split from MF-46, so the first value on the line is MF-77. Dated note 2026-11-11 (M-246, prior text kept; MF-62 · McFrontend queue · lane E; operator, verbatim: "Mf-62 - yes"): the line read "Next free id: **MF-62**" before this note; MF-62 is taken by the "What we checked" row, so the first value on the line is MF-63. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**. Dated note 2026-11-09 (prior text kept; operator, verbatim: "yes Shall I add the search-pair conversion as a queue row placed after MF-15"): MF-35 is taken by the search-pair conversion row; next free id **MF-36**. Dated note 2026-11-09 (prior text kept; MF-16 · McFrontend queue · lane T): MF-36 is taken by the MF-16 split (budget and variants); next free id **MF-37**. Dated note 2026-11-09 (prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): MF-37..MF-50 are taken by the McFrontend Phase 2 rows; next free id **MF-51**. MF-27..MF-29 stay unused. Dated note 2026-11-09 (M-246, prior text kept; MaxBLD page set · McFrontend queue · lane R; operator, verbatim: "add teh two queue rows"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator direction 2026-11-09: the MaxBLD page set"; D-08 form): the line read "Next free id: **MF-34**" before this note (the first value had not followed the notes after it, whose last value was MF-51). MF-51 and MF-52 are taken by the MaxBLD page set rows (Tracked Lots and CoA alerts; Account); next free id **MF-53**, now also the first value on the line, the one tools read. Dated note 2026-11-09 (M-246, prior text kept; choose-your-lot map page · McFrontend queue · push-17 lane; operator, verbatim: "recommendation accepted let's add this to the task list. Are we missing any other web pages? The outstanding web page is the report itself?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the same answer, item 2; D-08 form): the line read "Next free id: **MF-53**" before this note. MF-53 is taken by the map "choose your lot" row; next free id **MF-54**, now also the first value on the line, the one tools read. Dated note 2026-11-10 (M-246, prior text kept; MF-40 OUTPUT panel · McFrontend queue · lane MF-40 build; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter", answer c; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"): the line read "Next free id: **MF-54**" before this note. MF-54 is taken by the 409 error-class row; next free id **MF-55**, now also the first value on the line, the one tools read. Dated note 2026-11-10 (M-246, prior text kept; heart an option and share link · McFrontend queue · lane R; operator, verbatim: "Let's add 4 to the queue." and "share link b"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-10 shell items + heart" and "2026-11-10 share link"): the line read "Next free id: **MF-55**" before this note. MF-55 is taken by the favourite-option row and MF-56 by the share-link row; next free id **MF-57**, now also the first value on the line, the one tools read. Dated note 2026-11-11 (M-246, prior text kept; tonight McFrontend tasks · McFrontend queue · lane R; operator, verbatim: "did we add some new tasks from the McFrontend - I dont care about the McFrontend queue review - I want tasks added for tongihts run that are ready - McFront-end tasks.  Teh report page should be ready as well"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 tonight McFrontend tasks"): the line read "Next free id: **MF-57**" before this note. MF-57 is taken by the report page v21 row, MF-58 by the mobile search legal line, MF-59 by CoA alert delivery, MF-60 by the intersection follow-up and MF-61 by serving offers into reports; next free id **MF-62**, now also the first value on the line, the one tools read. Dated note 2026-11-11 (M-246, prior text kept; navigation lock · McFrontend queue · lane R; operator, verbatim: "yes" to the navigation lock, record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the 2026-11-11 navigation entries): the line read "Next free id: **MF-62**" before this note. MF-62..MF-74 are held by unpushed lanes and MF-75 is taken by the navigation lock row; next free id **MF-76**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; queue review · McFrontend queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the line read "Next free id: **MF-83**" before this note. MF-63..MF-71 land by this commit, the rows of the never-landed queue-owed commit `c941c7761` (wf1/queue-owed-1111b) re-cut unchanged onto the tip and claimed in the id ledger. **MF-72 (the lawyer review of Terms and Privacy) is discarded by the operator on 2026-11-12** (the verbatim word above, "discard the layer review", recorded as the lawyer review row): its row is not added and the id stays retired, never reused. MF-73 is the admin preview wiring row; MF-74 is held by MF-48 Stage B (claimed in the id ledger by wf1/mf48b-1112) and its row lands with that commit; MF-83 is the report Daylight B row; next free id **MF-84**, now also the first value on the line, the one tools read. Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McFrontend queue · lane MQ): the first value on this line read "**MF-86**" before this note. MF-86 and MF-87 are claimed in the id ledger (`~/Buildo-scratch/ids/MF-86`, `MF-87`) and their rows are added below MF-85; next free id **MF-88**.
++This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-98** (ids are never reused). Dated note 2026-11-23 (M-246, prior text kept; MF-97 · McFrontend queue · lane BL-FEDB442, task-442; RR-0405, operator, verbatim: "option a" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2052`)): the line read "Next free id: **MF-97**" before this note. MF-97 is taken by the FINAL.7 row (id claimed in ~/Buildo-scratch/ids/MF-97); next free id **MF-98**, now also the first value on the line, the one tools read. Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993`)): the line read "Next free id: **MF-96**" before this note. MF-96 is taken by the FINAL.9 row (id claimed in ~/Buildo-scratch/ids/MF-96); next free id **MF-97**, now also the first value on the line, the one tools read. Dated note 2026-11-22 (M-246, prior text kept; MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384, operator, verbatim: "Approved" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1903`)): the line read "Next free id: **MF-94**" before this note. MF-94 is held by lane BL-MFRULES (task-388, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-94) and MF-95 is taken by the INPUTS.2 row (id claimed in ~/Buildo-scratch/ids/MF-95); next free id **MF-96**, now also the first value on the line, the one tools read. Dated note 2026-11-19 (M-246, prior text kept; MF-93 · McFrontend queue · lane BL-SEMI2; operator, verbatim: "Mock looks good - just the questions \"Is this house one half of a semi\" should extend out as far as the boxes beneath - from a width perspective." (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1188`; orchestrator reading, flagged and not the operator's words: the mock draws Q1, Q2 and Q4, so "Mock looks good" is taken to answer those three as drawn; Q3, curly apostrophes, is a copy change the mock does not draw and is NOT answered)): the line read "Next free id: **MF-93**" before this note. MF-93 is taken by the SRCH.SEMI stage 2 row (id claimed in ~/Buildo-scratch/ids/MF-93); next free id **MF-94**, now also the first value on the line, the one tools read. Dated note 2026-11-13 (M-246, prior text kept; MF-85 · McFrontend queue · lane HON; operator, verbatim: "all recommendations accepted. proceed with the plan"): the line read "Next free id: **MF-85**" before this note. MF-85 is taken by the report honesty row; next free id **MF-86**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; McTest · McFrontend queue · lane R; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's", McTest D-10 a; ids by orchestrator D-53 and the id ledger ~/Buildo-scratch/ids): the line read "Next free id: **MF-78**" before this note (MF-77 is the R-18 declarations row of the MF-46 follow-up). MF-78..MF-82 are taken by the five McTest rows; next free id **MF-83**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; MF-46 follow-up · McFrontend queue · lane E; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's"): the line read "Next free id: **MF-77**" before this note; MF-77 is taken by the R-18 declarations row, so the first value on the line is MF-78. Dated note 2026-11-11 (M-246, prior text kept; MF-46 · McFrontend queue · lane E; operator, verbatim: "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y", item 1): the line read "Next free id: **MF-76**" before this note; MF-76 is taken by the MaxBLD landing row split from MF-46, so the first value on the line is MF-77. Dated note 2026-11-11 (M-246, prior text kept; MF-62 · McFrontend queue · lane E; operator, verbatim: "Mf-62 - yes"): the line read "Next free id: **MF-62**" before this note; MF-62 is taken by the "What we checked" row, so the first value on the line is MF-63. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**. Dated note 2026-11-09 (prior text kept; operator, verbatim: "yes Shall I add the search-pair conversion as a queue row placed after MF-15"): MF-35 is taken by the search-pair conversion row; next free id **MF-36**. Dated note 2026-11-09 (prior text kept; MF-16 · McFrontend queue · lane T): MF-36 is taken by the MF-16 split (budget and variants); next free id **MF-37**. Dated note 2026-11-09 (prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): MF-37..MF-50 are taken by the McFrontend Phase 2 rows; next free id **MF-51**. MF-27..MF-29 stay unused. Dated note 2026-11-09 (M-246, prior text kept; MaxBLD page set · McFrontend queue · lane R; operator, verbatim: "add teh two queue rows"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator direction 2026-11-09: the MaxBLD page set"; D-08 form): the line read "Next free id: **MF-34**" before this note (the first value had not followed the notes after it, whose last value was MF-51). MF-51 and MF-52 are taken by the MaxBLD page set rows (Tracked Lots and CoA alerts; Account); next free id **MF-53**, now also the first value on the line, the one tools read. Dated note 2026-11-09 (M-246, prior text kept; choose-your-lot map page · McFrontend queue · push-17 lane; operator, verbatim: "recommendation accepted let's add this to the task list. Are we missing any other web pages? The outstanding web page is the report itself?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the same answer, item 2; D-08 form): the line read "Next free id: **MF-53**" before this note. MF-53 is taken by the map "choose your lot" row; next free id **MF-54**, now also the first value on the line, the one tools read. Dated note 2026-11-10 (M-246, prior text kept; MF-40 OUTPUT panel · McFrontend queue · lane MF-40 build; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter", answer c; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"): the line read "Next free id: **MF-54**" before this note. MF-54 is taken by the 409 error-class row; next free id **MF-55**, now also the first value on the line, the one tools read. Dated note 2026-11-10 (M-246, prior text kept; heart an option and share link · McFrontend queue · lane R; operator, verbatim: "Let's add 4 to the queue." and "share link b"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-10 shell items + heart" and "2026-11-10 share link"): the line read "Next free id: **MF-55**" before this note. MF-55 is taken by the favourite-option row and MF-56 by the share-link row; next free id **MF-57**, now also the first value on the line, the one tools read. Dated note 2026-11-11 (M-246, prior text kept; tonight McFrontend tasks · McFrontend queue · lane R; operator, verbatim: "did we add some new tasks from the McFrontend - I dont care about the McFrontend queue review - I want tasks added for tongihts run that are ready - McFront-end tasks.  Teh report page should be ready as well"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 tonight McFrontend tasks"): the line read "Next free id: **MF-57**" before this note. MF-57 is taken by the report page v21 row, MF-58 by the mobile search legal line, MF-59 by CoA alert delivery, MF-60 by the intersection follow-up and MF-61 by serving offers into reports; next free id **MF-62**, now also the first value on the line, the one tools read. Dated note 2026-11-11 (M-246, prior text kept; navigation lock · McFrontend queue · lane R; operator, verbatim: "yes" to the navigation lock, record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the 2026-11-11 navigation entries): the line read "Next free id: **MF-62**" before this note. MF-62..MF-74 are held by unpushed lanes and MF-75 is taken by the navigation lock row; next free id **MF-76**, now also the first value on the line, the one tools read. Dated note 2026-11-12 (M-246, prior text kept; queue review · McFrontend queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the line read "Next free id: **MF-83**" before this note. MF-63..MF-71 land by this commit, the rows of the never-landed queue-owed commit `c941c7761` (wf1/queue-owed-1111b) re-cut unchanged onto the tip and claimed in the id ledger. **MF-72 (the lawyer review of Terms and Privacy) is discarded by the operator on 2026-11-12** (the verbatim word above, "discard the layer review", recorded as the lawyer review row): its row is not added and the id stays retired, never reused. MF-73 is the admin preview wiring row; MF-74 is held by MF-48 Stage B (claimed in the id ledger by wf1/mf48b-1112) and its row lands with that commit; MF-83 is the report Daylight B row; next free id **MF-84**, now also the first value on the line, the one tools read. Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McFrontend queue · lane MQ): the first value on this line read "**MF-86**" before this note. MF-86 and MF-87 are claimed in the id ledger (`~/Buildo-scratch/ids/MF-86`, `MF-87`) and their rows are added below MF-85; next free id **MF-88**.
+ 
+ Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b; MF-24a): the tables below are now in that form: one heading `**MF-nn <task> — <STATUS>** (lane)` per task, then one bullet that keeps every table cell (the status cell as it was, WAITS, Done-condition). A DONE heading cites `MF-nn@sha`: MF-01, MF-05 and MF-07 landed in the McFrontend Phase 0 documents commit a95246407, MF-09 in the McBylaws queue note 7f04f5b6a. Arm Q reads this file (prefix MF) at push and CI for a range that changes it or a surface path. Bullets never start with `- MF-` (that is the DONE-list form). Dated note 2026-11-09 (M-246, prior text kept; MF-34 · McFrontend queue · lane G; operator, verbatim: "approve D-1 - D-8 as recommended"): a DONE heading's block (to the next `**MF-nn` heading or any `#` line) holds exactly one bullet `  - FE rows owned: none.` or `  - FE rows owned: FE-nn, FE-mm.` (those words, ids with two digits, a closing full stop; no other prose on the line) naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135. `none` means the task builds no lock (MF-01 and MF-07 landed rulings; the locks for FE-16 and FE-20..22 belong to later tasks). Whether a declaration is complete and honest is judged by the McBylaws owner review at each DONE flip. Dated note 2026-11-19 (M-246, prior text kept; task-1 BL.0 · McIncrement plan · lane BL-R4 · stage R4; operator, verbatim, RR-0205: "yes of course"; RR-0219: "approved. ensure that all the relevant specs are updated"): where the work is a task of the increment plan (`backlog/`, Spec 137 McLane note), the reference practice gains `task-N` beside the row: `task-N · MF-nn (item) · McFrontend queue · lane X · stage N`. The row stays the record for MF-nn; the pilot board parser tolerates the added token (FLAGS.md).
+ 
+@@ -657,6 +657,12 @@ Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the clos
+   - FE rows owned: none.
+   - Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993`); RR-0396, operator, verbatim: "Question1 yes. push complete" and "Question2 No" (:1999, :2002)): row added by this commit; id claimed in ~/Buildo-scratch/ids/MF-96 (owner: lane BL-HB446). The card title named three rules (R-22, R-03, R-04), but R-03 and R-04 are already handbook lines (FE-49, FE-52, added by task-430), so this row adds the R-22 line only. Prereg: scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json (round 201, documents only, nothing moves). Panel record: docs/reports/panels/MF-96.json. The new register row is OWED, so this row owns none (arm Q, Spec 128 section 4.11 item 7).
+ 
++**MF-97 FINAL.7: front-end-to-database tests for fe.05, fe.18 and fe.27, and the houseplex circulation text in words only — RUNNING** (E)
++Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the work commit (tests T1, T2 and T3, the K2 change, the text and its regenerated copies) after the red attempts (lane BL-FEDB442, task-442) · ruling: "option a"
++  - Lane E. Done-condition: three tests in the two existing test files (T1 and T3 in src/tests/admin-report-preview-live.logic.test.ts, T2 in src/tests/customer-report-read.logic.test.ts), each seen red at its designed assertion through the real hooks, then green; the text of row.unit_size_basis_value reads exactly: the basement, not shared stairs and halls (one hand edit at scripts/surfaces/_schema/report-v2-seed/page-text.json, every copy regenerated by seed-report-v2.mjs, report-capture.ts and report-page-capture.ts, each --check exit 0); src/tests/surfaces/report-honest-k2.logic.test.ts asserts no digit and the exact words. Not in this row: any other live break of the task-442 plan section 4, any renderer, engine, setting or workflow change, the OWED handbook locks (task-367), the engineering rows (task-441).
++  - FE rows owned: none.
++  - Dated note 2026-11-23 (M-246, prior text kept; MF-97 · McFrontend queue · lane BL-FEDB442, task-442; RR-0402, operator, verbatim: "a" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2034`); RR-0403, operator, verbatim: "a" (:2040); RR-0405, operator, verbatim: "option a" (:2052)): row added by this commit; id claimed in ~/Buildo-scratch/ids/MF-97 (owner: lane BL-FEDB442). The tests add no new lock path: they extend two existing test files, so this row owns none. Prereg: scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json (round 202, no by-law path, nothing moves). Panel record: docs/reports/panels/MF-97.json.
++
+ ## Later: convert-on-touch
+ 
+ **MF-87 Free-text admin setting card: the Stripe price ids and portal id the admin panel cannot save — LATER** (E)
+diff --git a/docs/reports/panels/MF-97.json b/docs/reports/panels/MF-97.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ef4b28712133b4dc4f5f1c2899925ee415f6d6bb
+--- /dev/null
++++ b/docs/reports/panels/MF-97.json
+@@ -0,0 +1,34 @@
++{
++  "task": "MF-97",
++  "item": "FINAL.7 (task-442): front-end-to-database tests T1 (fe.05, fe.18: every number in an option section is a McBylaws row the engine writes for that section's building type), T2 (fe.27: a parcels column the page binds but the stored read does not select fails at load) and T3 (fe.05: no digit reaches the page through a content text except three listed entries); the houseplex text row.unit_size_basis_value becomes exactly: the basement, not shared stairs and halls (RR-0405), with its generated copies regenerated and the K2 test changed. No renderer, engine, setting or workflow change.",
++  "class": "T",
++  "stage": 8,
++  "date": "2026-11-23",
++  "head": "prereg 1 (round 202); commits 0, 1",
++  "cards": [
++    "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915): \"This is the focus for both compliance and engineering standards and interface between the frontend and databse\".",
++    "Operator, verbatim (RR-0402, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2034): \"a\" (drop the percent, words only).",
++    "Operator, verbatim (RR-0403, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2040): \"a\" (the text fix is done inside task-442; task-447 merged into it).",
++    "Operator, verbatim (RR-0405, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2052): \"option a\" (the text reads: the basement, not shared stairs and halls).",
++    "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only."
++  ],
++  "plan": "PLAN-442-v1 on the task-442 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-442/context-r1.md and context-r2.md (plan lens set and three seats); every finding ruled by the separate plan grounder in docs/reports/reviews/task-442/GROUNDER-PLAN.md, the open questions in QUESTIONS-RULED.md, the fold checked in FOLD-CHECK.md. Tests first: red commit attempts recorded in the lane red.out; sections 3, 6 and 7b of the plan govern.",
++  "output": "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, compliance once per governing rule list, engineering) on the whole task diff, filed in docs/reports/lanes/2026-11-23/BL-FEDB442/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).",
++  "seats": [
++    "DeepSeek plan lens set, rounds 1 and 2 (grounded)",
++    "integration, reality-check and regression seats (plan)",
++    "separate plan grounder (docs/reports/reviews/task-442/GROUNDER-PLAN.md)",
++    "DeepSeek output lens set (owed at output)"
++  ],
++  "verdict": "PLAN RULED; OUTPUT owed",
++  "blockers": [],
++  "followups": [
++    "task-367: the OWED handbook locks (fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44, fe.39, fe.15, fe.58); if it moves fe.05 checks into a surfaces lock, T1 and T3 can move with them",
++    "task-441: the engineering-standards rows",
++    "later rounds of this card: fe.24, fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 and the other content-registry blocks for fe.05"
++  ],
++  "evidence": "docs/reports/lanes/2026-11-23/BL-FEDB442/",
++  "notes": [
++    "Live breaks named, not fixed (task-442 plan section 4): item 2 (the S-001 whitelist paths, ruled not a break by the plan grounder Q4) and item 3 (the main-only db tests of fe.19, fe.20, fe.27 and fe.38; a workflow change, not opened, RR-0392). Item 1 (the typed 10 % circulation text) is fixed in this task."
++  ]
++}
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..847d44d7e7f5ecf262ca871150213dbff6bea84a
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+@@ -0,0 +1,89 @@
++{
++ "$comment": "Pre-registration, task MF-97 (FINAL.7, task-442: front-end-to-database tests T1, T2 and T3 in two existing test files, and the houseplex circulation text in words only (RR-0402, RR-0403, RR-0405) with its generated copies regenerated), prereg 1, committed alone and first, before the MF-97 work commit. Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-96 prereg total. rules[] holds RULED rows only: FE-05 (every number from McBylaws; T1 and T3), FE-18 (the closed binding set; T1), FE-27 (parcels source; T2), FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens). In-file round 202 (claimed in ~/Buildo-scratch/ids/round-202; MF-96 used 201).",
++ "schema": "coa-round-prereg-v1",
++ "round": 202,
++ "task": "MF-97",
++ "rules": [
++  "FE-05",
++  "FE-18",
++  "FE-24",
++  "FE-27",
++  "FE-29"
++ ],
++ "plan_ref": "backlog task-442 Implementation Plan (PLAN-442-v1 as folded after plan review rounds 1 and 2, sections 3, 6 and 7b); docs/reports/reviews/task-442/GROUNDER-PLAN.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2034, :2040, :2052",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/report-presentation.json b/scripts/surfaces/_schema/report-presentation.json
+index 13006484d46a6c00ee9217ff00a1f386c0ee1157..a70ddf45327117d31e6fbe30b025dd24a02fe3e2 100644
+--- a/scripts/surfaces/_schema/report-presentation.json
++++ b/scripts/surfaces/_schema/report-presentation.json
+@@ -319,7 +319,7 @@
+     "row.units": "Units",
+     "row.unit_size": "Size per unit (average)",
+     "row.unit_size_basis": "Size per unit includes",
+-    "row.unit_size_basis_value": "the basement; 10 % circulation",
++    "row.unit_size_basis_value": "the basement, not shared stairs and halls",
+     "row.basement": "Basement",
+     "row.bedrooms": "Bedrooms",
+     "row.roof": "Roof",
+diff --git a/scripts/surfaces/_schema/report-v2-seed/page-text.json b/scripts/surfaces/_schema/report-v2-seed/page-text.json
+index fa993d28a0df296065f8992fb618c4a44f31529b..251e861ce756111e0f1bfff86e2940cc4f376bf1 100644
+--- a/scripts/surfaces/_schema/report-v2-seed/page-text.json
++++ b/scripts/surfaces/_schema/report-v2-seed/page-text.json
+@@ -41,7 +41,7 @@
+     "row.units": "Units",
+     "row.unit_size": "Size per unit (average)",
+     "row.unit_size_basis": "Size per unit includes",
+-    "row.unit_size_basis_value": "the basement; 10 % circulation",
++    "row.unit_size_basis_value": "the basement, not shared stairs and halls",
+     "row.basement": "Basement",
+     "row.bedrooms": "Bedrooms",
+     "row.roof": "Roof",
+diff --git a/scripts/surfaces/_schema/report-v2.decl.json b/scripts/surfaces/_schema/report-v2.decl.json
+index fc9e445e3f275baa14d037dadaf6623b9571879b..1d903e383f2414d644d482e6149a1717ffc9a239 100644
+--- a/scripts/surfaces/_schema/report-v2.decl.json
++++ b/scripts/surfaces/_schema/report-v2.decl.json
+@@ -11,7 +11,7 @@
+     },
+     "review": "scratchpad/report-review/REVIEW.md §6",
+     "seeded": "2026-10-20",
+-    "inputs_sha256_16": "33b2343a03c6accc"
++    "inputs_sha256_16": "bba92098d6e301c6"
+   },
+   "inputs": {
+     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json b/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
+index 64c9563b9690c1f9936c7b433c18178935c78186..f398a80e71a5ebbbad7a328ddad8e2ba1b0d9818 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
+@@ -1552,7 +1552,7 @@
+             "brief": "B9.5",
+             "kind": "content",
+             "content": "row.unit_size_basis_value",
+-            "text": "the basement; 10 % circulation"
++            "text": "the basement, not shared stairs and halls"
+           },
+           {
+             "role": "size.row.label",
+@@ -1993,9 +1993,9 @@
+     "files": {
+       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
+-      "scripts/surfaces/_schema/report-presentation.json": "24063195dd8e1fbd",
++      "scripts/surfaces/_schema/report-presentation.json": "34b0addce2ad502e",
+       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
+-      "scripts/surfaces/_schema/report-v2.decl.json": "2d447d5c81933b29",
++      "scripts/surfaces/_schema/report-v2.decl.json": "869b4827190a3180",
+       "scripts/surfaces/_schema/report-page.json": "5831e85c75fed373",
+       "scripts/surfaces/_schema/report-page.schema.json": "e76a40a88ad58031"
+     }
+diff --git a/src/tests/admin-report-preview-live.logic.test.ts b/src/tests/admin-report-preview-live.logic.test.ts
+index b8e94bf519434a88da7cc52eb9bc21288bd88488..a2cd071342a5f1dfd032fd7072da264997798db5 100644
+--- a/src/tests/admin-report-preview-live.logic.test.ts
++++ b/src/tests/admin-report-preview-live.logic.test.ts
+@@ -1,6 +1,6 @@
+ // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05 (the server formats; no maths in the report folders), FE-34 (the v21
+-//            page contract); docs/specs/01-pipeline/69a_mcbylaw_register.md M-384 (Layer 3 stored tables); docs/specs/02-web-admin/126_maxbld_surface_standard.md
+-//            11a.7; docs/specs/02-web-admin/33_web_admin_engineering_protocol.md section 8.
++//            page contract), FE-18 (every displayed field binds to a source in the closed set); docs/specs/01-pipeline/69a_mcbylaw_register.md M-384
++//            (Layer 3 stored tables); docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.7; docs/specs/02-web-admin/33_web_admin_engineering_protocol.md section 8.
+ //
+ // MB-93 · the internal preview producer (operator 2026-11-11 "D-1 b and D-2 to D-8 a"; plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md sections 3-6
+ // with the section 9 folds). Locks, red first (docs/reports/red-evidence/MB-93/producer-red.txt):
+@@ -11,6 +11,9 @@
+ //   INV the cross-field invariants on the 25 (fold 7);
+ //   L3/L6 the DB side: an invalid id or the switch off / missing / garbage / errored reads no lot data; id resolution parcel_id -> parcels.id;
+ //   L1  the import fence: no customer route or mobile file imports the producer; the producer imports no meter, entitlement or consumer lookup.
++// task-442 (FINAL.7, plan section 3; operator RR-0385 "interface between the frontend and databse"), red first through the real hooks:
++//   B1  fe.05, fe.18: every number in an option section is a McBylaws row the engine writes for that section's building type.
++//   B2  fe.05: no number reaches the page through a content text of the `page` block, except the three listed entries.
+ import { describe, expect, it, vi, beforeEach } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -143,6 +146,102 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', ()
+   });
+ });
+ 
++// B1 (task-442 T1; fe.05 "every number from McBylaws", fe.18 the closed binding set, 136:46 and 136:85). The rows are the engine's own stored rows
++// from this file's harness (storedRowsOf), so the check copies no rule of the generator and reads no switch. pageBindings emits three source kinds:
++// catalogue (checked here), parcels (task-442 T2, customer-report-read.logic.test.ts) and user_input (the lot-size entry, a design exception by fe.18).
++// Not checked here: the declared half (RS-1 and RS-3, scripts/analysis/report-schema.mjs:148-203), one declared field per effective-ON row
++// (src/tests/surfaces/report-generator-fields.logic.test.ts:83), and the design option of o1 and o2 (the type before the slash only, as project.ts does).
++type Bindings = ReturnType<typeof pageBindings>;
++/** One finding `<section> <field_id> <building_type>` per catalogue-bound option pair whose row the engine did not write, or wrote switched off. */
++const unwritten = (bindings: Bindings, rows: StoredRow[]): { findings: string[]; checked: number } => {
++  const pairs = new Map<string, { field_id: string; building_type: string }>();
++  for (const b of bindings) {
++    if (b.building_type === null || b.source.kind !== 'catalogue') continue;
++    pairs.set(`${b.section} ${b.source.field_id} ${b.building_type}`, { field_id: b.source.field_id, building_type: b.building_type });
++  }
++  const findings: string[] = [];
++  for (const [pair, p] of pairs) {
++    const r = rows.find((x) => x.building_type === p.building_type && x.field_id === p.field_id);
++    // no row: the catalogue row is missing, does not list the type, or is off with an increment other than 1 (rows.js:511 drops it);
++    // switched_off: an increment-1 row that is off is still written, as not_evaluated (rows.js:402)
++    if (!r || String(r.reason ?? '').startsWith('switched_off:')) findings.push(pair);
++  }
++  return { findings, checked: pairs.size };
++};
++
++describe('B1: every number in an option section is a McBylaws row the engine writes for that section\'s building type (fe.05, fe.18)', () => {
++  const k = KEY[0] as Json;
++  it('(a) control: the committed page and seeds give no finding, over at least 17 checked pairs (non-vacuous)', () => {
++    const rows = storedRowsOf(k);
++    const { findings, checked } = unwritten(pageBindings(), rows);
++    expect(findings).toEqual([]);
++    expect(checked).toBeGreaterThanOrEqual(17);
++  });
++  it('(b) a copy of the rows without the gfa_max_m2 row of detached_houseplex gives exactly one finding, in o3', () => {
++    const rows = storedRowsOf(k).filter((r) => !(r.building_type === 'detached_houseplex' && r.field_id === 'gfa_max_m2'));
++    expect(unwritten(pageBindings(), rows).findings).toEqual(['o3 gfa_max_m2 detached_houseplex']);
++  });
++  it('(c) a copy of the rows whose storeys_max row of detached_house is switched off gives a finding for o1 and o2', () => {
++    const rows = storedRowsOf(k).map((r) => (r.building_type === 'detached_house' && r.field_id === 'storeys_max' ? { ...r, status: 'not_evaluated', value: null, reason: 'switched_off:formula:storeys_max' } : r));
++    expect(unwritten(pageBindings(), rows).findings).toEqual(['o1 storeys_max detached_house', 'o2 storeys_max detached_house']);
++  });
++  it('(d) a copy of the rows without any detached_houseplex row gives one finding per o3 pair', () => {
++    const o3Pairs = new Set(pageBindings().flatMap((b) => (b.section === 'o3' && b.source.kind === 'catalogue' ? [b.source.field_id] : []))).size;
++    const rows = storedRowsOf(k).filter((r) => r.building_type !== 'detached_houseplex');
++    const { findings } = unwritten(pageBindings(), rows);
++    expect(o3Pairs).toBeGreaterThanOrEqual(1);
++    expect(findings).toHaveLength(o3Pairs);
++    expect(findings.every((f) => f.startsWith('o3 ') && f.endsWith(' detached_houseplex'))).toBe(true);
++  });
++});
++
++// B2 (task-442 T3; fe.05 "every number from McBylaws", 136:46). Every key of the presentation registry's `page` block is scanned (all 90 today),
++// so a key no page part names is covered too. A text holding a digit is a finding keyed by its content key, counted in digit runs. The list below
++// is fail-closed both ways (the nav-by-route.logic.test.ts form): a finding no entry explains fails, and an entry whose count differs (a stale
++// entry: 0) fails; the list only shrinks. Limits: digits only (a number written in words passes); the other registry blocks (status_text,
++// display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and
++// ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4. No renderer code is scanned (task-367, fe.45).
++interface DigitText { key: string; count: number; kind: 'legal' | 'input_hint' | 'exception'; why: string }
++const DIGIT_TEXTS: DigitText[] = [
++  { key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' },
++  { key: 'sheet.width_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' },
++  { key: 'sheet.depth_placeholder', count: 1, kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)' },
++];
++/** Every problem of a `page` text block against the list: an unexplained digit text, or an entry whose count does not match (stale = 0). */
++const digitAudit = (texts: Record<string, string>, list: DigitText[]): { problems: string[]; scanned: number } => {
++  const found = new Map<string, number>();
++  for (const [key, text] of Object.entries(texts)) {
++    const runs = String(text).match(/\d+/g)?.length ?? 0;
++    if (runs > 0) found.set(key, runs);
++  }
++  const problems: string[] = [];
++  for (const [key, runs] of found) if (!list.some((e) => e.key === key)) problems.push(`unexplained: ${key} (${runs} digit run${runs === 1 ? '' : 's'})`);
++  for (const e of list) if ((found.get(e.key) ?? 0) !== e.count) problems.push(`stale: ${e.key} (listed ${e.count}, found ${found.get(e.key) ?? 0})`);
++  return { problems, scanned: Object.keys(texts).length };
++};
++const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;
++
++describe('B2: no number reaches the page through a content text, except the listed entries (fe.05)', () => {
++  it('(a) every digit text is explained by an entry, every entry matches exactly its count, and every key of `page` is scanned', () => {
++    const texts = { ...PAGE_TEXT };
++    const { problems, scanned } = digitAudit(texts, DIGIT_TEXTS);
++    expect(problems).toEqual([]);
++    expect(scanned).toBe(Object.keys(PAGE_TEXT).length);
++    expect(scanned).toBeGreaterThanOrEqual(90);
++  });
++  it('(b) a page-text copy with "5 m" added to row.unit_size_basis fails, naming that key; a stale entry fails too', () => {
++    const planted = { ...PAGE_TEXT, 'row.unit_size_basis': `${PAGE_TEXT['row.unit_size_basis']} 5 m` };
++    expect(digitAudit(planted, DIGIT_TEXTS).problems).toEqual(['unexplained: row.unit_size_basis (1 digit run)']);
++    const stale: DigitText = { key: 'row.unit_size_basis', count: 1, kind: 'legal', why: 'planted stale entry' };
++    expect(digitAudit(PAGE_TEXT, [...DIGIT_TEXTS, stale]).problems).toEqual(['stale: row.unit_size_basis (listed 1, found 0)']);
++  });
++  it('(c) the list holds exactly three entries, none of kind exception, each with a why (the list only shrinks)', () => {
++    expect(DIGIT_TEXTS.map((e) => e.key)).toEqual(['legal.line', 'sheet.width_placeholder', 'sheet.depth_placeholder']);
++    expect(DIGIT_TEXTS.filter((e) => e.kind === 'exception')).toEqual([]);
++    for (const e of DIGIT_TEXTS) expect(e.why.length, e.key).toBeGreaterThan(20);
++  });
++});
++
+ describe('the current seed hashes equal the step\'s own (twin parity)', () => {
+   it('catalogue and switchboard', () => {
+     const cat = req(path.join(ROOT, 'scripts/lib/compute/maxbld/catalogue.js')) as Json;
+diff --git a/src/tests/customer-report-read.logic.test.ts b/src/tests/customer-report-read.logic.test.ts
+index 116d667fa760a1ef4a1cb41cfcdce5cd76a40df4..6e2a541d7f3fdde8eb352585530e1bf23d4455d2 100644
+--- a/src/tests/customer-report-read.logic.test.ts
++++ b/src/tests/customer-report-read.logic.test.ts
+@@ -1,6 +1,7 @@
+ // SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2 (the nullable `page`); docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7,
+ //            §11b.2 dated note 2026-11-11 (never a second resolver); docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-38, FE-39 (no legacy
+-//            value ever reaches a user); backlog/docs/doc-16 (McStorage policy v2: a stale record is never served).
++//            value ever reaches a user), FE-27 (fe.27: parcels is a source in the closed binding set; a column the read does not select fails);
++//            backlog/docs/doc-16 (McStorage policy v2: a stale record is never served).
+ //
+ // MB-44 W (task-123, 1.3) · the customer read module `readCustomerPageResponse` in src/lib/parcels/report-page.ts. Red first (Spec 08 08_agents.md:490),
+ // written from docs/reports/lanes/2026-11-19/BL-W/PLAN.md section 4 (T1 to T10). No database: the pool is a scripted fake, as in the tests beside this one.
+@@ -14,6 +15,7 @@
+ //   T8 no legacy   no key outside the declared page fields, none inside `values` outside the declared bindings, no legacy column name anywhere
+ //   T9 parity      for the same scripted lot, W's page equals the admin preview's page (one resolver)
+ //   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
++//   T11 fe.27      (task-442, FINAL.7 plan section 3 T2) a parcels column the page binds but the one static parcels read does not select fails at load
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+@@ -57,7 +59,7 @@ import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-p
+ import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
+ import { CONSUMER_WITHHELD_LEGACY_COLS } from '@/lib/parcels/consumer-lookup';
+ import { storedPageResponse } from '@/lib/admin/report-preview-live/stored-page';
+-import { pageBindings } from '@/lib/report-projection/project';
++import { pageBindings, type Binding } from '@/lib/report-projection/project';
+ import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+ import { buildPage } from '@/lib/surfaces/report/core';
+ import { reportCtx } from '@/lib/surfaces/report/data';
+@@ -400,3 +402,33 @@ describe('T10 importers: report-page.ts is server code, imported by the lookup r
+     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);
+   });
+ });
++
++// T11 stays the LAST describe of this file: case (a) resets the module registry and plants a mock of the projection module; its finally undoes
++// both, and every describe above uses static imports bound at load (the doMock form of src/tests/maxbld-web-pages.logic.test.ts:113-119).
++// Gates 4 and 5 of the task-442 plan section 0 (the src SQL ledger catalog membership, consumer-registry declared writers) are not repeated here.
++describe('T11 fe.27: a parcels column the page binds but the static parcels read does not select fails at load (task-442)', () => {
++  const PROJECT = '@/lib/report-projection/project';
++  const PLANTED: Binding = { section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } };
++  const parcelsColumns = (): string[] => [...new Set(pageBindings().flatMap((b) => (b.source.kind === 'parcels' ? [b.source.column] : [])))].sort();
++  it('(a) planted binding: importing the read module throws, naming the column', async () => {
++    try {
++      expect(parcelsColumns()).not.toContain('max_build_fsi'); // the planted column is not one of the four selected columns (read-stored.ts:28)
++      vi.resetModules();
++      vi.doMock(PROJECT, async (orig) => {
++        const real = await orig<typeof import('@/lib/report-projection/project')>();
++        return { ...real, pageBindings: () => [...real.pageBindings(), PLANTED] };
++      });
++      await expect(import('@/lib/report-projection/read-stored')).rejects.toThrow('MB-93: page field source parcels:max_build_fsi is not in the static parcels read');
++    } finally {
++      vi.doUnmock('@/lib/report-projection/project');
++      vi.resetModules();
++    }
++  });
++  it('(b) control: the real module imports, and the scripted read returns exactly the parcels columns the page binds', async () => {
++    const mod = await import('@/lib/report-projection/read-stored');
++    expect(typeof mod.readLotFacts).toBe('function');
++    const lot = await mod.readLotFacts({ query: script(CURRENT_LOT) as never }, REF);
++    expect(parcelsColumns().length).toBeGreaterThan(0);
++    expect(Object.keys(lot?.columns ?? {}).sort()).toEqual(parcelsColumns());
++  });
++});
+diff --git a/src/tests/surfaces/report-honest-k2.logic.test.ts b/src/tests/surfaces/report-honest-k2.logic.test.ts
+index deb578e7ad7a7dc370516a5df847faac44d6c4d4..780b5e3fb1a0141b2a1df5429012e7a07ba10ed4 100644
+--- a/src/tests/surfaces/report-honest-k2.logic.test.ts
++++ b/src/tests/surfaces/report-honest-k2.logic.test.ts
+@@ -15,7 +15,6 @@ const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROO
+ const PAGE = readJson('scripts/surfaces/_schema/report-page.json');
+ const PRESENTATION = readJson('scripts/surfaces/_schema/report-presentation.json');
+ const SEED_TEXT = readJson('scripts/surfaces/_schema/report-v2-seed/page-text.json');
+-const LV = readJson('scripts/seeds/logic_variables.json');
+ const options = (): Json[] => (PAGE.sections as Json[]).filter((s) => s.kind === 'option');
+ const text = (key: string): string => String(PRESENTATION.page[key] ?? '');
+ 
+@@ -43,8 +42,8 @@ describe('K2 Q1: our settings are explained in See details; the O-17 label is no
+   });
+ });
+ 
+-describe('K2 unit-size tile: See details says the figure includes the basement and the circulation share (M-496 formula unchanged)', () => {
+-  it('the houseplex panel has a row naming the basement and the circulation percent, and the percent is the stored setting', () => {
++describe('K2 unit-size tile: See details says the figure includes the basement, not shared stairs and halls, in words only (M-496 formula unchanged; RR-0402, RR-0405)', () => {
++  it('the houseplex panel has a row naming the basement and the shared stairs and halls it leaves out, with no figure', () => {
+     const o3 = options().find((o) => o.scenario === 'detached_houseplex') as Json;
+     const parts = o3.parts as Json[];
+     const i = parts.findIndex((p) => p.role === 'size.row.label' && p.content === 'row.unit_size_basis');
+@@ -53,7 +52,7 @@ describe('K2 unit-size tile: See details says the figure includes the basement a
+     expect([v.role, v.content]).toEqual(['size.row.value', 'row.unit_size_basis_value']);
+     const t = text('row.unit_size_basis_value');
+     expect(t).toMatch(/basement/i);
+-    const pct = Math.round(Number(LV.houseplex_circulation_share.default) * 100);
+-    expect(t).toContain(`${pct} % circulation`);
++    expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);
++    expect(t).toBe('the basement, not shared stairs and halls');
+   });
+ });
+

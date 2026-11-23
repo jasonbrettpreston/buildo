@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T18:41:35.759Z file_sha256=615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 prompt_sha256=87d6b10efa384be425538ca10e4e7630f190804b3cd623ff8a8ab1e3cdacb6a2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "expect(scanned).toBe(Object.keys(PAGE_TEXT).length);" — scanned is Object.keys of the spread copy `const texts = { ...PAGE_TEXT }`, so this assertion can never fail and the "every key is scanned" claim is unproven — compare against the registry read afresh (or drop it and keep the `>= 90` guard).
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — the unchecked cast asserts every page value is a string, and digitAudit's `String(text)` renders a nested object as "[object Object]", so a digit inside it is silently missed in a fail-closed audit — type the read as Record<string, unknown> and flag or stringify non-string values explicitly.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const k = KEY[0] as Json;" — the cast is either redundant or hides that KEY[0] may be undefined, so a missing first entry reaches storedRowsOf unchecked — assert KEY.length > 0 (or type the access) instead of casting.
+
+DEFER severity=LOW — src/tests/customer-report-read.logic.test.ts "{ query: script(CURRENT_LOT) as never }" — casting the scripted pool to never disables all checking of the fake's shape, so a change in the read's query interface cannot be caught by the type checker — cast to the expected pool/query type or give script() that return type.
+
+DEFER severity=NIT — src/tests/admin-report-preview-live.logic.test.ts "kind: 'legal' | 'input_hint' | 'exception'" — the 'exception' member can never be used, its only reference is the test asserting no entry has it, so it is a dead union value — drop it and keep the exact-key assertion as the guard.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  119881ms (119.9s)
+📊 Tokens — total: 46915, input: 20762, output: 26153, reasoning: 25705

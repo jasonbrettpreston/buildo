@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:38:28.533Z file_sha256=00da53c3d4767c2957d0e0a0a0bfbb24f74a0ac621f662709c82f292d5d918fb prompt_sha256=2b11dcb49a458abafaec3651f45f427c86630ff1eb9db5107764355d4cedd4d7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=MED — task-442 "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:167 "if (!r || String(r.reason ?? '').startsWith('switched_off:')) findings.push(pair);" — a stored row that exists and is not switched off passes T1 even when its value is null (not_evaluated, no answer), so "available" is asserted nowhere, only that the row was written — add one red-proven case per option section asserting the stored value of each catalogue-bound pair is present, not only that the row exists.
+
+BUG severity=MED — task-442 "every number on a screen is bound to a database field" — src/tests/admin-report-preview-live.logic.test.ts:208 "{ key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' }," — the audit ships an allowlist of three on-screen digit texts that are not bound to a database field, and the only authority quoted for them (fe.18, 136:85) is not in the pasted context, so no pasted clause or ruling grants the exemption — record an operator ruling for the three exemptions in the MF-97 row, or bind the three texts to a source the audit can check.
+
+DEFER severity=LOW — task-442 "every number on a screen is bound to a database field" — src/tests/admin-report-preview-live.logic.test.ts:200 "plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — the status_text block, which does reach the page, is knowingly outside the digit audit and deferred to "the next round of this card", a deferral no pasted ruling names — extend digitAudit to the status_text block or record the deferral ruling in the row and panel.
+
+DEFER severity=LOW — pasted card note "2026-11-23 work commit (plan sections 3, 6, 7b)" — .cursor/MCFRONTEND-QUEUE.md:662 "next: Land the work commit (tests T1, T2 and T3, the K2 change, the text and its regenerated copies) after the red attempts" — the row's next step still names the work commit that this same chunk lands, so the record misstates what remains (the output review and its grounder) — point the next field at the output review and its grounder, as the panel verdict already does.
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 and scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — both now read exactly "the basement, not shared stairs and halls", the landing sample copy carries the same text, and the K2 test asserts that exact string.
+
+MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — the test asserts "no digit in the basis text (RR-0402)" with not.toMatch(/\d/), and the pasted red output shows the old "the basement; 10 % circulation" failing that assertion.
+
+MET — RR-0403 "the text fix is done inside task-442; no separate process for task-447" — docs/reports/panels/MF-97.json:16 — "(the text fix is done inside task-442; task-447 merged into it)", and no separate task-447 row appears anywhere in the chunk.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json:31 — "verdict": "PLAN RULED; OUTPUT owed", with a separate grounder named before BUILT and the queue row left RUNNING.
+
+MET — task-442 Description "each test is proven red on a planted defect before it counts" — pasted A1 note, red-T1.out:740, red-T2.out:741, red-T3.out:791 — three red outputs at the designed assertions with the planted defect named for each (dropped storeys_max rows, deleted read-stored guard, added digit).
+
+MET — RR-0392 "no other infrastructure beyond this" — .cursor/MCFRONTEND-QUEUE.md:663 "The tests add no new lock path: they extend two existing test files, so this row owns none." — no workflow, gate or infrastructure file is in the chunk.
+
+MET — task-442 Files line — every changed path in this chunk — all eleven paths (queue row, panel, prereg, four surface schema/sample files, three test files) are named in the card's Files line, so nothing outside the card scope was added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+Rules met: none
+
+---
+⏱  92768ms (92.8s)
+📊 Tokens — total: 41625, input: 21965, output: 19660, reasoning: 18564
