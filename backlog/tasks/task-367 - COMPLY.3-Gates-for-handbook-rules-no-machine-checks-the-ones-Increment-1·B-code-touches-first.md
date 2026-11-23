@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T20:38:00Z'
+updated_date: '2026-11-23T20:51:00Z'
 labels:
   - McFix
   - McFix Final
@@ -546,3 +546,14 @@ Item 7 own green: the related run of commit d5e3695b9 passed: register-locks-res
 
 2026-11-23 lane BL-HB367 output review round 2 (RR-0385 item 3, the last round): fresh context docs/reports/reviews/task-367/context-r4.md; 90 lens inputs re-made by rule-lists.mjs lens-input on the diff cf5c7be06..9f47c3454 under the round-1 base names; 90 of 90 outputs; findings untriaged in docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (round 2: 315;  36 severity=HIGH; 146 severity=LOW; 125 severity=MED; 6 severity=NIT;). Task stays RUNNING; the grounder rules round 2.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-367 (COMPLY.3, MF-98): three locks for the handbook rules fe.54 (failure-state-declared), fe.49 (scope-fence) and fe.51 (nav-tab-switch) at their reserved src/tests/surfaces paths, each seen red at its designed assertion then green; fe.49, fe.51 and fe.54 read RULED (RR-0413, RR-0417); Spec 136, the rule map and the rule-lists page regenerated (19 OWED); commits 7dc3b9132 (records), d5e3695b9 (work), 9f47c3454 (round 1 fix); red in docs/reports/reviews/task-367/red.out
+
+Review round 1: 4 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb367-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 3cb6f98d6); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb367-lane/grounder/r1/TRIAGE.md
+out-compliance-policy-124-s2-s5-p6#1 MED fixed 9f47c34
+out-compliance-surface-126-p7#2 MED fixed 9f47c34
+out-compliance-surface-135-p7#1 MED fixed 9f47c34
+<!-- SECTION:FINAL_SUMMARY:END -->
