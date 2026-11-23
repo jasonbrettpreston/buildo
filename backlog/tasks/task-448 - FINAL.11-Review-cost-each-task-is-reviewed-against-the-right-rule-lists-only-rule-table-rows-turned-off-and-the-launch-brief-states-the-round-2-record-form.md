@@ -4,11 +4,11 @@ title: >-
   FINAL.11 Review cost: each task is reviewed against the right rule lists only
   (rule table rows turned off), and the launch brief states the round-2 record
   form
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T21:55:00Z'
+updated_date: '2026-11-23T22:15:00Z'
 labels:
   - McFix
   - McFix Final
@@ -35,6 +35,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-LISTS448/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-LISTS448/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-LISTS448/TRIAGE.md
 type: build
 ordinal: 148012
 ---
@@ -543,3 +545,11 @@ Green: work commit b2591b815 hook tail 'Tests  373 passed (373)'. A8-A11, A13, A
 
 2026-11-23 BL-LISTS448: output review round 1 done on b2591b815 with fresh context context-r3.md: 28 DeepSeek lens outputs (8 compliance lists in 19 parts, eng-all in 7 parts, code-review, error-paths), 61 finding lines (HIGH 3, MED 19, LOW 33, NIT 4, NONE 2), listed untriaged in docs/reports/lanes/2026-11-23/BL-LISTS448/FINDINGS.md. Grounder owed. Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed: the table now attaches only the ruled lists (RR-0418, RR-0421); the brief and the close refusal clause state the round-2 same-names form (RR-0424); the record-only comment corrected (RR-0426); three short dated notes; page regenerated; work commit b2591b815, hook tail Tests 373 passed (373); red in docs/reports/lanes/2026-11-23/BL-LISTS448/red.out
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 18 pile; grounder docs/reports/lanes/2026-11-23/BL-LISTS448/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-LISTS448/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
