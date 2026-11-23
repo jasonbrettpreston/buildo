@@ -3,10 +3,11 @@ id: TASK-441
 title: >-
   FINAL.6 Engineering standards tests: one test per engineering rule that has
   none, a few at a time, each proven to fail first
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-ENG441'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:28:00Z'
+updated_date: '2026-11-23T15:31:00Z'
 labels:
   - McFix
   - McFix Final
@@ -18,6 +19,13 @@ references:
   - docs/reports/reviews/task-441/seat-integration-1.md
   - docs/reports/reviews/task-441/seat-reality-check-1.md
   - docs/reports/reviews/task-441/seat-regression-1.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 141012
 ---
@@ -293,3 +301,9 @@ in#1 MED folded it is a CEILING, not
 rg#1 MED folded this test is the com
 rg#2 MED folded do not raise the num
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 taken on the board at lane launch (lane BL-ENG441, worktree /Users/brettpreston_macmini/Buildo-wt-eng441, branch wf1/inc1b-eng441), RR-0240
+<!-- SECTION:NOTES:END -->
