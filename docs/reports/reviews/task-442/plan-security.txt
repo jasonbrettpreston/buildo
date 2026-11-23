@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T15:04:46.284Z file_sha256=677c9b3882c2b3845581cb406d4bb919fb82082394a1e999aff4b8542aaa1794 prompt_sha256=b3bca17a86f87d6f70f03981f914dbf6da78a2e3a070418fb99aaf0923663799
+🔍 Lens review of docs/reports/reviews/task-442/context-r1.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: the change adds tests to two `*.logic.test.ts` files only; it alters no route, session, entitlement, price, or stored record, and cannot be reached by any request.
+
+REJECT — "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts" — an "admin" filename suggests a privileged admin surface — it is a test asserting page-to-field bindings against seeded data; no route, caller identity, or privileged action exists in it.
+
+REJECT — "T2. A parcels column the page binds but the stored read does not select fails at load (fe.27)" / "read-stored.ts is touched only by the uncommitted plant in T2." — a module-level guard being removed to prove a test red looks like a tamper — the line is restored before the green commit and never committed (A4 checks `git diff --stat ... -- src/lib` is empty), and the guard is a fail-closed load throw, not an authz or input check.
+
+VERDICT: PASS on exploitability (nothing to exploit; test-only)
+Surfaces touched: none
+
+---
+⏱  6444ms (6.4s)
+📊 Tokens — total: 18919, input: 18068, output: 851, reasoning: 603

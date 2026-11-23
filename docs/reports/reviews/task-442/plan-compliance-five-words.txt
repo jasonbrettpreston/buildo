@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:04:46.283Z file_sha256=5b4ff6256eb82e21c8f030a18e9a372475e061c6eca404ad074024e08faff5c5 prompt_sha256=9f72d8e78aa566dc4ffae2e2993009d0fbed15e245012b554222ceed354bfc79
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — clause "each test is proven red on a planted defect before it counts" — plan §3 T3 "the lane first writes the test without the `row.unit_size_basis_value` entry. The commit attempt fails on the live tree at (a), naming that key. This is a real red on real data." — no defect is planted for T3, the red is the live break itself, so T3 does not meet the planted-defect bar — record T3's red through case (b) with a planted digit added to a page-text copy, and file the live-tree failure as break evidence only
+
+DEFER severity=MED — clause "I want this plan for each task and built by opus" — plan header "Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)", section 6 Landing names no build seat — the build half of the ruling is unrecorded, so nothing binds the build to Opus — add "Build seat: Opus" to section 6 and an acceptance row asserting the build run's model
+
+DEFER severity=MED — clause "This is the focus for both compliance and engineering standards and interface between the frontend and databse" — plan §1 Out "Engineering rows (task-441)." and Q1 "I read them as task-441's. Is that right" — only the compliance half lands; the engineering-standards half is excluded on the plan's own admission that the cards do not settle it, with no pasted ruling assigning those rows to task-441 — cite the ruling that assigns engineering rows to task-441, or take one engineering row into this task
+
+DEFER severity=MED — clause "each test is proven red on a planted defect before it counts" — plan §3 T1 "the lane adds one temporary line to the test that sets `formula:units_max` off in the loaded switchboard" against case (c) "A switchboard copy with `formula:storeys_max` off gives findings for o1, o2 and o3" — the planted switch is not the one the plan proved yields findings, so the plant may leave (a) green and produce no red — plant the switch the plan already validated (storeys_max off) or show a section binds a units_max field
+
+DEFER severity=LOW — clause "Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — plan §6 "Other tasks: task-367 and task-441 share no file with this task." — file overlap is recorded but no kept/updated/deleted disposition is, and RR-0388 "Let's wait for the McFixReborn until the new tests are in place" is never reflected — add one line per named task (task-367, task-441, task-446 kept; McFixReborn held until this commit lands)
+
+REJECT — Files clause "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts" — accused of T2 editing src/lib/report-projection/read-stored.ts outside the Files line — plan §8 "The lane restores it with `git checkout -- src/lib/report-projection/read-stored.ts` before the green commit; A4 proves it", so nothing outside the Files line is ever committed
+
+MET — Files clause "Scope and Files line at its plan review" — plan §5 "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts" — identical to the card's Files line
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — plan §6 "then a separate grounder before any fold (RR-0359, MD:1687)" — the grounder precedes any fold, and the open questions are routed to it
+
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — plan §1 Out "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — the db-tests workflow gap is raised as a question (Q3), not performed
+
+MET — RR-0385 "two rounds" — plan §6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919)" — the two-round bound is adopted
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  70488ms (70.5s)
+📊 Tokens — total: 23482, input: 9511, output: 13971, reasoning: 12975

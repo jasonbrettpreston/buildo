@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:04:46.272Z file_sha256=35ec618a9c74559fbf9ce94ecfe8488caf51b814e43ad397338731c211ec67d0 prompt_sha256=518b04f6b2e78ff57b60ab1f7951179148f55a0833e565febbf544cd818b08f7
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "each test is proven red on a planted defect before it counts" — plan section 3 T3 "the lane first writes the test without the `row.unit_size_basis_value` entry. The commit attempt fails on the live tree at (a), naming that key. This is a real red on real data." — T3's recorded red is the live tree failing, not a planted defect, so T3 does not meet the card's red-proof clause, and its own case (b) plant sits unused — record red.out for T3 from case (b) ("A page-text copy with "5 m" added to `row.unit_size_basis`") and leave the live break to section 4.
+
+BUG severity=HIGH — card "plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — plan header "Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)" — only the plan seat is named, no line names the build seat, so the built-on-Opus half of the ruling is unmet by the plan text — add "Build seat: Opus" to section 6 and to A2.
+
+BUG severity=MED — card "Every build task of this plan follows the six steps" — plan sections 0-8 list no mapping and never name the six steps, so compliance cannot be checked from the pasted material — add a one-line map from each of the six steps to the section that discharges it.
+
+DEFER severity=MED — operator verbatim (plan-protocol header) "Dont make more ungrounded recommendations." — plan section 0 "Where the design rule "the schema binds to DB fields; the only exceptions are user inputs and ads" is written in the repo. A grep of docs, .cursor, backlog and the memory folder did not find it." — 2 of T3's 4 exception entries (the two `input_hint` placeholders) rest on a rule the plan itself could not ground — ground the rule to a file:line or raise the two placeholders as findings rather than exceptions.
+
+DEFER severity=MED — card title "Front end to database tests: every number on a screen is bound to a database field and available" — plan section 3 T3 "That is 4 entries, of which 1 is a live break." — the card's own subject number is accepted as a counted permanent exception, with no pasted ruling authorising it and no owning card — settle Q6 (owner line in the entry or an orchestrator ruling recorded) before plan-lock.
+
+DEFER severity=MED — card "tests of the interface between the front end and the database as ranked by FINAL.5" — plan section 2 "39-45 | fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 | later rounds | Left for this task." — eight ranked rows (24, 30-42) are deferred with no ruling, and "Left for this task" is the card, not a later round, so the plan narrows the card silently — record a grounder or operator line that this card runs in rounds covering only fe.05, fe.18, fe.27.
+
+DEFER severity=LOW — plan-protocol "Rulings: only when a search of the record finds none; the search is quoted." — plan section 9 Q6 "because no card exists and this task may not open one (RR-0392)" — no search of the record is quoted for Q6 — quote the grep/backlog search that shows no card, or drop Q6 into the section 4 break list.
+
+REJECT — card "Scope and Files line at its plan review" — accused: T2's plant edits src/lib/report-projection/read-stored.ts, outside the Files line — not a real issue: section 5 discloses it ("read-stored.ts is touched only by the uncommitted plant in T2") and A4 proves the diff empty for src/lib.
+
+MET — RR-0359 — plan section 6 "then a separate grounder before any fold (RR-0359, MD:1687)" — folding is gated on the grounder, as ruled.
+MET — RR-0392 — plan section 1 "Out: - Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — no infrastructure beyond the four is added.
+MET — card "what exists is reused first" — plan section 3 T1 "Reuses: `pageBindings` (project.ts:100), the file's `SEEDS` (:44-52) and the `PAGE` constant (:40). No new file and no new read."
+MET — card "Scope and Files line at its plan review" — plan section 5 "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts" — identical to the card's Files line.
+MET — RR-0385 (two rounds) — plan section 6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919)."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: RR-0359, RR-0392
+
+---
+⏱  71658ms (71.7s)
+📊 Tokens — total: 23513, input: 10335, output: 13178, reasoning: 11998

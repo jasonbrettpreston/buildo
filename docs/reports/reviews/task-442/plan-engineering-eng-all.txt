@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T15:04:46.277Z file_sha256=68c0b9716cf4414c07f741534cc9a8c65df744bd1efe1627908a7ec041df5633 prompt_sha256=f00d7e16d46614557e24bfdb2de9b70a568dff082b9368a69e0ed28f7424abf0
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — Implementation Plan T2 "(a) Planted binding: `vi.resetModules()`, then `vi.doMock('@/lib/report-projection/project', orig)` so that `pageBindings` returns the real bindings plus one `{ section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } }`" — the planted binding is an inline untyped mock literal and the plan names no factory and no `src/tests/factories.ts` step, so §5.1 is unmet — add a typed binding factory (or typed builder) to `src/tests/factories.ts` and have T2 build the planted binding through it, naming that file in the landing step.
+
+BUG severity=HIGH — 5.2 Test File Pattern, Parity battery "Any dual-surface or generated artifact (drift guard)" and "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write." — Implementation Plan §8 "**T1 repeats two lines of the generator's rule.** If the rule changes, the two can drift. The comment cites seed-report-v2.mjs:70 and :82" — T1 re-implements the generator's effective-ON predicate and ties it to `seed-report-v2.mjs` by a comment only, which is a dual surface with no parity assertion, so the parity rule is unmet — assert the test's predicate equals the generator's output over the same seeds so drift turns T1 red (Q2 answered as parity, not comment).
+
+BUG severity=HIGH — 11. Plan Compliance Checklist, Pre-Review Self-Checklist (always applies, every WF) "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" with §11 "the plan MUST address each applicable item below. These are not optional" — "| A1 | lane | read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out |" — the acceptance section is command output after the fact; the plan contains no self-skeptical PASS/FAIL checklist walked before any test run, so §11 is unmet — add a 5-10 item checklist (binding closure, effective-ON, parcels column set, exception counts, seed vacuity) with PASS/FAIL per item to be reported before the red run.
+
+DEFER severity=LOW — 14. The Prevention Loop, registry row "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — "The file header already cites FE-05 (:1); add FE-18 to the SPEC LINK." — the landing step adds rule ids to the SPEC LINK but names no section number and no Cross-Spec Dependencies update — state the §N section and the both-directions entry in the landing step.
+
+MET — 5.2 Test File Pattern — "**File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe \"B1\"" — T1 and T3 test pure derivation over committed seeds, the layer §5.2 names for pure/derivation logic.
+MET — 5.3 Red-Green Test Cycle — "Red evidence is recorded first: three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion." — every test is shown failing before it is made green, and no feature code precedes the red.
+MET — 10.2 Boundary Rules During Frontend Phase — "the pre-commit related run (.husky/pre-commit:85) fails at (a)'s `toEqual([])`" with A4 "`git diff --stat <launch>..HEAD -- src/lib src/app scripts mobile migrations .github`" — the `src/lib/report-projection/read-stored.ts` plant goes through the related-test run and A4 proves it is not committed.
+
+REJECT — 5.2 "`*.infra.test.ts` | API routes, DB queries, external calls" — T2 should live in an infra test — T2's claim is a module-load guard on a static column list with no API route or live DB call, and the target file already hosts the scripted read tests it reuses.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 38   Unmet: 4
+
+---
+⏱  49920ms (49.9s)
+📊 Tokens — total: 29456, input: 19906, output: 9550, reasoning: 8488

@@ -1,0 +1,241 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:8fa11412c9645c863060e49c597df849e33c2a0622f764793e53143d5004f98b part 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "This is the focus for both compliance and engineering standards and interface between the frontend and databse". THIS TASK: tests of the interface between the front end and the database as ranked by FINAL.5 (what exists is reused first); each test is proven red on a planted defect before it counts. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-442-v1
+
+Task: task-442 (FINAL.7, build). Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). Board ~/Buildo-wt-board, read at 18cc2752e. The brief named cc584b87b. The five commits since then are task-424's and touch none of the files below (`git diff --stat cc584b87b..HEAD`). Commands run: git, grep, sed, the backlog viewer and small read-only node scripts. No test runner was run and nothing was written. Paths are relative to the board. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md.
+
+#### 0. Facts verified
+
+What I searched first (the operator: "you are probaley rebuilding stuff that already exists"):
+- The six files the brief named.
+- src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts and src/tests/surfaces/report-page.logic.test.ts.
+- src/lib/report-projection/{project,read-stored}.ts and src/lib/parcels/consumer-lookup.ts.
+- scripts/analysis/report-schema.mjs and scripts/analysis/src-sql-ledger.mjs.
+- scripts/analysis/gates/consumer-registry.mjs and scripts/steps/_schema/consumer-registry.json.
+- scripts/surfaces/_schema/seed-report-v2.mjs and the MaxBLD descriptors.
+- `git grep` for: "not in the static parcels read", PARCEL_SELECTED, migrationColumns, vi.doMock, "shrink-only".
+
+The chain from a page number to the database, and the check that exists for each link:
+1. A page value part names a declared field. Checked: report-page.logic.test.ts:45 (P1).
+2. That field's source is in the closed set and resolves (catalogue row, parcels migration column). Checked: report-schema.mjs:148-203 (RS-1, RS-3), locked by report-binding.logic.test.ts:63-155.
+3. Every parcels column the page binds is in the one static parcels read. Checked only by a throw when the module loads: read-stored.ts:21-28. No test proves that throw red (grep of its message in src/tests: 0 hits).
+4. Every column a src/ SQL reads is in the committed catalog snapshot. Checked: src-sql-ledger.mjs:42-48 `--check`, run in pre-commit (.husky/pre-commit:23).
+5. Every such column has a declared writer step. Checked: consumer-registry.mjs:24 (gate D, "unproduced" reads). It holds read-stored.ts rows, for example `parcels.is_corner_lot` with producer enrich_centreline.
+6. The engine writes the catalogue field for the page section's building type. No static check. The G25 case (admin-report-preview-live.logic.test.ts:154-205) compares the golden-25 key with the producer payload only where the key states a value.
+7. Every number shown comes from McBylaws, not from typed text (fe.05). report-no-maths.logic.test.ts scans for arithmetic only. No check covers content texts.
+
+Other facts:
+- The live REPORT page is report-page.json, bound through report-v2.decl.json. The producer reads `catalogue:` from parcel_maxbld_scenarios and `parcels:` from the parcels row (project.ts:8-10). The S-001 hand screen is retired (report-fields.decl.json `$comment`).
+- `pageBindings(page, fields)` takes injected copies (project.ts:98-100). The admin test already loads the catalogue and switchboard seeds (admin-report-preview-live.logic.test.ts:44-52) and already holds the FE-05 page-rule case (:121).
+- Effective-ON is defined in seed-report-v2.mjs:81-82: the row's formula switch and the type's switch are both on, and off beats on. The page producer reads a row by (building_type, field_id) (project.ts:199).
+- Dry run (node, read-only) over the 17 (option section, catalogue field) pairs of the committed page: each row lists the section's type, its formula switch is on and the type switch is on. 0 misses.
+- Content texts the page can show: 90 keys (report-presentation.json:281 `page`). Exactly 4 hold a digit:
+  - :322 `row.unit_size_basis_value` "the basement; 10 % circulation" (used by o3, report-page.json:1580);
+  - :336 `legal.line` "not 100% accurate";
+  - :342 and :344, the input placeholders "e.g. 50" and "e.g. 120".
+- The engine reads circulation from the setting `houseplex_circulation_share`, default 0.1, min 0.1, max 0.1 (logic_variables.json:2), through lv() (layer3-catalogue.json:264-268).
+- The repo's form for known exceptions is a fail-closed list: each entry has a count and a kind, the reason reads "owed: <row>", a stale entry fails, and the list only shrinks (src/tests/surfaces/nav-by-route.logic.test.ts:13-16, :296-311).
+- The repo's form for planting a defect at module load is `vi.resetModules` + `vi.doMock(orig)` + a dynamic import, then `vi.doUnmock` (src/tests/maxbld-web-pages.logic.test.ts:113-119).
+- McFrontend trailers apply only to `frontend` paths (mcbylaws/protected-paths.json:20-31, which includes src/tests/surfaces/**; cite-arms.mjs:173-178). The two test files below are not frontend, layer23 or protected paths.
+
+UNVERIFIED:
+- What the engine writes for a row whose switch is off. switchOf returns off, and a missing switch reads on (compute-maxbld-scen*.js:213-216). I did not trace this further.
+- Where the design rule "the schema binds to DB fields; the only exceptions are user inputs and ads" is written in the repo. A grep of docs, .cursor, backlog and the memory folder did not find it. I take it from the brief and from MD:638.
+
+#### 1. Scope
+
+In:
+- Three tests, each red on a planted defect, then green.
+- Two existing test files are extended. No code changes, no fixes.
+
+Out:
+- Any fix of a live break (section 4).
+- Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976).
+- OWED handbook locks (task-367).
+- Engineering rows (task-441).
+- Anything that needs a database.
+
+#### 2. Rows chosen, in the look's rank, and who owns each skipped row
+
+The rank is from docs/reports/reviews/task-440/RULE-CHECKS.md:169-215. I did not re-rank. A row is skipped only when another task owns it or cannot be tested without a database.
+
+| Rank | Row | Taken? | Owner or reason |
+|---|---|---|---|
+| 1-7 | fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44 | no | OWED, lock path reserved: task-367 (RR-0385 item 6, MD:1922: "Task 367 is the key card"; task-434 merged into it; FE-45 row 135:67 "the lock is task-434's"). fe.58 (task-446) is OWED too; its lock is task-367's (task-446 plan, acceptance 6). |
+| 8 | fe.05 | **yes, T1 and T3** | |
+| 9 | fe.09 | no | Not a front-end to database rule. "Lock column" (136:58) is a column of the register table; it entered group 3 only through the keyword test (RULE-CHECKS.md:177). Enforced in group 1 (:136). |
+| 10 | fe.40 | no | Its Available side runs against a local test stack, which is a database (136:151). Lanes may not connect. |
+| 11-29, 46, 47 | §2.1 … §14 rows 1-2 | no | Engineering rows. Group 2 lists them with Feeds task-441 (RULE-CHECKS.md:39 onward). See Q1. |
+| 30 | fe.39 | no | OWED (136:149): task-367. |
+| 31 | fe.13 | no, this round | A file-only Available check needs descriptor `tables[].columns` read against the migrations. Dry run on parcel_product: 12 misses of 286, all false or unbuilt: a view (parcel_lot_form, types.ts:132), a rename (imagery_roof_*, migrations/201), an unbuilt table (user_tracked_lots). migrationColumns reads neither views nor renames, so this would need new parsing. |
+| 32 | fe.15 | no | Its Available side is canary f, owned by FE-25 (OWED, 135:37): task-367. |
+| 33 | fe.18 | **yes, T1** | |
+| 34, 35 | fe.19, fe.20 | no | User inputs are the design exception. Their Available side is a db test that runs on main only (see section 4, item 3). |
+| 36 | fe.22 | no | Ads are the design exception. |
+| 37 | fe.24 | later round | |
+| 38 | fe.27 | **yes, T2** | |
+| 39-45 | fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 | later rounds | Left for this task. fe.38 is already file-checked by customer-report-read.logic.test.ts:366-374 (T8). |
+
+Rule texts, quoted:
+- fe.05 (136:46): "P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI."
+- fe.18 (136:85): "every displayed field binds to a source in the closed set … Labels, help text and legal copy are content fields, not an exception."
+- fe.27 (136:112): "parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails."
+- Earlier ruling (MD:638): "the report fields and the details and the search pages to the databse and ensure they are available."
+
+#### 3. The tests
+
+#### T1. Every number in an option section is a McBylaws row the engine writes for that section's building type (fe.05, fe.18)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B1". The file header already cites FE-05 (:1); add FE-18 to the SPEC LINK.
+- **Checker:** a pure helper in the test, `unwritten(page, catalogue, switchboard)`. For each `pageBindings(page)` entry with `building_type !== null` and `source.kind === 'catalogue'`, it reports a finding when:
+  - the catalogue row is missing; or
+  - the row's `building_type` list does not hold the section's type; or
+  - the row is not effective-ON for that type.
+- **Effective-ON:** the test repeats the generator's two lines (seed-report-v2.mjs:70 and :82) with a comment citing them. The generator is a script with side effects and exports nothing (Q2).
+- **Cases:**
+  - (a) Control: the committed page and seeds give `[]`, and the checked (section, field) pairs number at least 17 (non-vacuous).
+  - (b) A catalogue copy with `detached_houseplex` removed from `gfa_max_m2.building_type` gives a finding naming `o3 gfa_max_m2 detached_houseplex`.
+  - (c) A switchboard copy with `formula:storeys_max` off gives findings for o1, o2 and o3.
+  - (d) A switchboard copy with `building_type:detached_houseplex` off gives a finding for every o3 catalogue part.
+- **Red through the hooks:** while writing (a), the lane adds one temporary line to the test that sets `formula:units_max` off in the loaded switchboard. It stages the file and commits. The pre-commit related run (.husky/pre-commit:85) fails at (a)'s `toEqual([])`. The lane records red.out, removes the line and commits green.
+- **Reuses:** `pageBindings` (project.ts:100), the file's `SEEDS` (:44-52) and the `PAGE` constant (:40). No new file and no new read.
+
+#### T2. A parcels column the page binds but the stored read does not select fails at load (fe.27)
+
+- **File:** src/tests/customer-report-read.logic.test.ts, a new describe "T11". Add fe.27 / FE-27 to the SPEC LINK (:1-3).
+- **Cases:**
+  - (a) Planted binding: `vi.resetModules()`, then `vi.doMock('@/lib/report-projection/project', orig)` so that `pageBindings` returns the real bindings plus one `{ section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } }`. Then `await import('@/lib/report-projection/read-stored')` rejects with the message "MB-93: page field source parcels:max_build_fsi is not in the static parcels read". Then `vi.doUnmock` and `vi.resetModules()`.
+  - (b) Control: the real module imports, `readLotFacts` is a function, and the scripted read (the file's `script()`, :87-95) returns `columns` keys equal to the parcels columns of `pageBindings()`.
+- **Red through the hooks:** the lane temporarily deletes the guard line in read-stored.ts:28. src/lib/report-projection is not a frontend path, and the SQL text is unchanged, so src-sql-ledger `--check` stays green. The commit attempt fails at (a)'s `rejects.toThrow`. The lane records red.out, restores the line (never committed) and commits green.
+- **Reuses:** the existing guard, the file's hoisted mocks and scripted pool, and the doMock form of maxbld-web-pages.logic.test.ts:113-119. Gates 4 and 5 of section 0 already cover catalog membership and declared writers; T2 does not repeat them.
+
+#### T3. No number reaches the page through a content text, except the listed exceptions (fe.05)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B2", beside F (:101).
+- **Checker:** every text the page table can show from content, that is each part's `content` key and each `pending_texts` key (report-page.json:4-7), is looked up in report-presentation.json `page`. Each text matching `/\d/` is a finding keyed by the content key.
+- **Fail-closed list** (the nav-by-route form), keyed by content key, each with a count, a kind and a `why`:
+  - `legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85).
+  - `sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`. Why: an input hint of the user lot-size entry, the user-input exception.
+  - `row.unit_size_basis_value`, count 1, kind `exception`. Why: "owed: bind houseplex_circulation_share (logic_variables.json:2); named to the orchestrator by task-442, no card".
+  - That is 4 entries, of which 1 is a live break.
+- **Cases:**
+  - (a) Every finding is explained by an entry, and every entry matches exactly its count. A stale entry (0 matches) fails.
+  - (b) A page-text copy with "5 m" added to `row.unit_size_basis` fails at (a)'s assertion and names `row.unit_size_basis`.
+  - (c) The list has exactly 4 entries, and exactly 1 of kind `exception`. The list only shrinks.
+- **Red through the hooks:** the lane first writes the test without the `row.unit_size_basis_value` entry. The commit attempt fails on the live tree at (a), naming that key. This is a real red on real data. The lane records it, adds the entry and commits green.
+- **Reuses:** `PAGE` and the presentation registry the file already reads, and the exception-list form of nav-by-route. No scan of renderer code: digits in mobile or web code belong to task-367 (its card, item b) and to fe.45.
+
+#### 4. Live breaks found (not fixed here; named for the orchestrator)
+
+1. **The houseplex option shows "10 % circulation" as typed content** (report-presentation.json:322, used at report-page.json:1580). The engine reads the same number from `houseplex_circulation_share` (logic_variables.json:2; layer3-catalogue.json:264-268). So a number on the screen is not bound to its database field. This breaks fe.05 ("every number from McBylaws") and the binding ruling (MD:638). The setting is pinned at 0.1 (min = max), so the text is true today. It stops being true as soon as the setting is refitted, and its own description says a refit is owed. T3 lands with this as a counted `exception` entry (count 1 of 4 entries).
+2. **A possible mismatch, UNVERIFIED as a break.** The S-001 consumer whitelist lists `parcel.parcelId` and three `parcel.lot.*` paths (mobile_parcel_detail.descriptor.json `inputs.field_whitelist`). The strict consumer payload has no key for any of them (src/app/api/parcels/lookup/types.ts:80-96). RS-2 passes because it reads the whitelist (report-schema.mjs:185-195). The three lot values do reach the page, through `readLotFacts` (read-stored.ts:48-55) and the `page` block of the lookup route. Whether fe.27's words "the consumer payload reads" cover that path is a reading, not a fact (Q4). No test is planned on it.
+3. **Main only.** The Available evidence for fe.19, fe.20, fe.27 and fe.38 rests on db tests that CI runs on a PR only when the PR touches the filter paths (db-tests.yml:9-17; test.yml:66-67 excludes src/tests/db/**). Closing that gap needs a workflow change. This is a question for the orchestrator, not part of this plan (Q3).
+
+#### 5. Files
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts
+
+The backlog task file and the lane records under docs/reports/ are always allowed (check-task-files.mjs:10). read-stored.ts is touched only by the uncommitted plant in T2.
+
+#### 6. Landing
+
+The same order as task-424 (task-424 plan section 7).
+- **Commit 1 (work):**
+  - Subject: `test(136_mcfrontend_handbook): front end to database tests for fe.05, fe.18 and fe.27 (task-442)`. validate-commit-msg wants type(NN_spec); precedent: ba0892689.
+  - Trailer: `Task: task-442`. No FE-nn token in the message; name the rules fe.05, fe.18, fe.27.
+  - No `McFrontend-Task` trailer and no MF queue row, prereg or panel record: neither file is a frontend, layer23 or protected path (protected-paths.json:20-31; cite-arms.mjs:173-178).
+  - The task file goes in the same diff, status RUNNING (137:84, :100).
+  - Red evidence is recorded first: three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion. The runner is never run directly.
+- **Output review:**
+  - DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687).
+  - Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919).
+- **Close:** the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT. The lane never pushes.
+- **Other tasks:** task-367 and task-441 share no file with this task. If task-367 later moves fe.05 checks into a surfaces lock, T1 and T3 can move with them.
+
+#### 7. Acceptance
+
+| # | Who | Command | Expected |
+|---|---|---|---|
+| A1 | lane | read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out | each holds the pre-commit related-run failure at the named assertion: T1 (a) `toEqual([])`; T2 (a) `rejects.toThrow`; T3 (a), naming `row.unit_size_basis_value` |
+| A2 | lane | `git log -1 --format=%B <work sha>` | holds `Task: task-442` and no FE-nn token; the commit passed the hooks |
+| A3 | orchestrator | `npx vitest run src/tests/admin-report-preview-live.logic.test.ts src/tests/customer-report-read.logic.test.ts` | all pass |
+| A4 | orchestrator | `git diff --stat <launch>..HEAD -- src/lib src/app scripts mobile migrations .github` | empty |
+| A5 | orchestrator | `grep -c "kind: 'exception'" src/tests/admin-report-preview-live.logic.test.ts` | 1 |
+| A6 | orchestrator | `git diff <launch>..HEAD -- src/tests/customer-report-read.logic.test.ts \| grep -c "vi.doUnmock('@/lib/report-projection/project')"` | 1 |
+| A7 | orchestrator | the pre-push check list at push (.husky/pre-push-checks.sh) | PASS |
+
+#### 8. Risks and rollback
+
+- **T2 module reset.** The reset could leak into later describes. Mitigation: T2 runs last in the file, and it calls `vi.doUnmock` and `vi.resetModules()` in a `finally`. The later cases use static imports bound at load (the maxbld-web-pages precedent).
+- **T1 repeats two lines of the generator's rule.** If the rule changes, the two can drift. The comment cites seed-report-v2.mjs:70 and :82; see Q2.
+- **T3 catches digits only.** A number written in words passes. This is stated in the test header.
+- **The T2 plant touches src/lib.** It is never committed. The lane restores it with `git checkout -- src/lib/report-projection/read-stored.ts` before the green commit; A4 proves it.
+- **Rollback:** revert commit 1. Nothing else depends on it.
+
+#### 9. Questions for the plan grounder
+
+- **Q1.** Group 3 repeats the engineering rows that group 2 gives to task-441 (RULE-CHECKS.md:39 onward: "task-441"; group 3 says "task-442"). I read them as task-441's. Is that right, or does task-442 own the front-end to database engineering rows (§4.3, §10.3, §14 row 1)? The cards do not settle it. If it is not plain, the orchestrator reads both cards; the operator's word is needed only if the cards conflict (RR-0385 item 4(ii), MD:1920).
+- **Q2.** Is repeating two lines of the generator's effective-ON rule in T1 acceptable reuse? The alternative is exporting a helper from seed-report-v2.mjs, which is code and scope creep.
+- **Q3.** The main-only Available gap (section 4, item 3) can be closed only by a CI workflow change (db-tests.yml path filter). The card does not name one. This needs the operator's word under RR-0385 item 4(ii) if it is to be done at all.
+- **Q4.** Section 4, item 2: does fe.27's "a DB field the consumer payload reads" cover values sent through the lookup route's `page` block? If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii)).
+- **Q5.** T1 and T3 sit in src/tests/admin-report-preview-live.logic.test.ts, which already holds the FE-05 case (:121), and not in src/tests/surfaces/report-page.logic.test.ts. If the grounder wants them in the surfaces file, the landing adds an MF id, a commit 0 with prereg, panel record and queue row, and a `McFrontend-Task` trailer (the task-446 form, section 7 of its plan).
+- **Q6.** T3's `exception` entry cites no owner row, because no card exists and this task may not open one (RR-0392). Is "named to the orchestrator by task-442" an acceptable `why`, or must the orchestrator open a card first?
+
