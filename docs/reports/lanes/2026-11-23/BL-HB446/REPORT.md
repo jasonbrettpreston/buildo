@@ -43,6 +43,14 @@ No closing commit, no BUILT, no push, no merge or rebase of the board. The clone
 - After the fix the close check refused every list and lens output: "is not what git diff prints for its paths (first difference at character 42044 ...)". Its proof reads base names only (check-lane-close.mjs:385-394), so, on the orchestrator decision, the base-named files were re-made by lens-input on the diff 240e559e3..390c54261 with context-r4.md and 49 outputs re-run; out-compliance-bylaw-133-p1 kept (input byte-identical, cmp). Round 1 stays at 22b1e36b0. Details at the top of FINDINGS.md.
 - Round 2 findings, untriaged: 120 ids, HIGH 7, MED 34, LOW 65, NIT 13, 1 blank; no CRITICAL.
 
-CLOSE-CHECK-R2
+Close check after round 2: real scripts/hooks/check-lane-close.mjs in a throwaway shared clone at 3ee92e2cb, task set BUILT in the clone index only, no grounder files, output whole:
+
+```
+check-lane-close: task-446: the task's references lack the repo copy docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md: backlog task edit task-446 --add-ref docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md
+check-lane-close: task-446: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-HB446/ (a build or fix task always needs a separate grounder verdict)
+exit=1
+```
+
+Only the GROUNDER.md refusals remain; the kept out-compliance-bylaw-133-p1 (context-r3) is accepted.
 
 STATUS: built-awaiting-grounder — round 2 filed untriaged at the base names; the task stays RUNNING, grounder owed for round 2 (RR-0359).
