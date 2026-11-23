@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.577Z file_sha256=8b35c9d97b5c7642cb40f5679f0c6f38f1684414ad11a9cd429fc85689e45ec4 prompt_sha256=ea7a1c3238e393d57e75216ec2beb7e2d360f989a9fa2038737c23c0a9403970
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.18 "Labels, help text and legal copy are content fields, not an exception." — plan T3: "`legal.line`, count 1, kind `legal` ... `sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each" plus "The list only shrinks." — T3 files permanent content (legal copy, input hints) in a shrink-only fail-closed exception list, the inverse of FE-18's "not an exception", so a later prune could delete legitimate content or the assertion can never reach zero — restate these as permanent content categories excluded from the digit rule, not shrink-only exception entries.
+
+DEFER severity=LOW — fe.05 "every number from McBylaws; no maths in the UI." — plan T3: "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so." — T3 scans only the presentation `page` block, so a digit in another block rendered on the page would evade it — say in T3 that non-`page` rendered blocks are covered by FE-05's own lock, or add them to the scan.
+
+DEFER severity=LOW — fe.11 "no MF task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40)." — plan section 6: "the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98" — the plan adds MF-97 to the Phase 2 queue without showing `mcfrontend-queue.infra.test.ts` green against it; read as an admin task (it edits an admin preview test) the "admin tasks only as listed" assertion would fail, caught only at push (A7) — run or cite the queue lock green before landing MF-97.
+
+REJECT — fe.27 — T2 does not exercise fe.27's "not in the migrations" or "not on the whitelist" failures — the plan shows those locked by report-binding.logic.test.ts (RS-1/RS-2/RS-3) at section 0 item 2, and T2 validly tests the "a DB field the consumer payload reads" facet through the static read throw.
+
+MET — fe.01 — section 6 "the same `McFrontend-Task: MF-97` line" — the surface work commit carries the trailer the FE-01 lock requires.
+
+MET — fe.02 — section 1 "No code change and no fix except the circulation text fix" — screens stay descriptors, no archetype code added.
+
+MET — fe.13 — section 1 Out "Any CI workflow change, new tool, gate, hook or card (RR-0392)" — no wiring added, existing hooks reused.
+
+MET — fe.14 — T1 "Reuses: `pageBindings` (project.ts:100), the file's `storedRowsOf` (:84-90) and `KEY`" — back-end machinery reused, no parallel infra built.
+
+MET — fe.27 — T2 "rejects with the message \"MB-93: page field source parcels:max_build_fsi is not in the static parcels read\"" — a page-bound parcels column absent from the static read is proven to throw.
+
+MET — fe.30 — section 0 "each row lists the section's type, its formula switch is on and the type switch is on. 0 misses." — T1 checks effective-ON page fields against the engine's own rows without copying the generator rule.
+
+MET — fe.38 — section 2 "fe.38 is already file-checked by customer-report-read.logic.test.ts:366-374 (T8)" — the legacy-hide lock is untouched by this task.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: fe.01, fe.02, fe.13, fe.14, fe.27, fe.30, fe.38
+
+---
+⏱  189403ms (189.4s)
+📊 Tokens — total: 61504, input: 34862, output: 26642, reasoning: 25758

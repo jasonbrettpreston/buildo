@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.583Z file_sha256=8e2d088de88109b178f32e5b9c893bfc45d2533bd34da763db1c616e7e1149e3 prompt_sha256=05bcf15506e55179a47046f79064a331c2003c6177870d7b2e24b0a13d5f66e6
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card scope "Front end to database tests: every number on a screen is bound to a database field and available" — plan §3 T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so." — the shipped fe.05 lock is silent about every presentation block but `page`, so a digit added to a shown string elsewhere passes green while the card's "every number on a screen" is only half covered — scan every block of the presentation registry, or add one fail-closed entry per block with its count today so it fails closed.
+
+BUG severity=MED — (pasted) "A row that is ruled and whose lock is not yet built reads OWED with its lock path." — plan §6 commit 1 "Spec-diff: one content text changed; generated copies regenerated; no spec rule text moves" — three new locks land (T1 and T3 for fe.05 and fe.18, T2 for fe.27) with no register Lock cell naming them, and the Files line holds no register file, so the rows keep reading OWED and the resolver cannot see the locks — add the register path to the Files line and write each row's Lock cell in commit 0.
+
+BUG severity=MED — (pasted) "A DONE heading in `.cursor/MCFRONTEND-QUEUE.md` must hold one `- FE rows owned: none.` or `- FE rows owned: FE-nn, FE-mm.` bullet ... a missing bullet is `done-fe-undeclared`" — plan §6 "It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98" and close "task BUILT" — neither commit 0 nor the close states the required `- FE rows owned:` bullet when MF-97 turns DONE, so the push that touches the queue is refused by arm Q — write the bullet in the MF-97 row in commit 0 and repeat it in the close step.
+
+DEFER severity=MED — Spec 128 B2 "The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size), never hand-computed once and forgotten." — plan §7b "Checks after: `seed-report-v2.mjs --check`, `report-capture.ts --check` and `report-page-capture.ts --check`, each exit 0." — the footprint measure is absent from the check set and from A8/A10 although this change moves descriptor bytes, 72 golden fingerprints, 32 page goldens and the landing sample — add the surface-validate footprint check to §7b and to the acceptance table.
+
+DEFER severity=LOW — RR-0404 "planner redirect approved: task-447 planner returns a section for task-442" — plan §7b "(RR-0402, RR-0403, RR-0405; folded by the plan grounder from the plan seat's section ...)" — the ruling that authorises carrying the task-447 section into task-442 is cited in neither §7b nor commit 0's `Operator-Ruling:` trailer, so the section's provenance is unreachable from the record — add RR-0404 to §7b and to the trailer list.
+
+DEFER severity=LOW — (pasted) "the OWED exception also needs the lock added or modified in the SAME commit AND a new file under docs/reports/red-evidence/ (existence only)" — plan A1 "read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out" — the three red artefacts land outside `docs/reports/red-evidence/`, the only location the register resolver reads, so a later commit citing an OWED row cannot use them — write the three under docs/reports/red-evidence/MF-97/ or state why the lanes path is the path the resolver reads.
+
+MET — fe.05 "every number from McBylaws; no maths in the UI" — plan §3 T1 "the engine wrote no row for (building_type, field_id)" — each catalogue-sourced page field is proven to have an engine row for that section's building type, red on a dropped row.
+
+MET — fe.18 "every displayed field binds to a source in the closed set" — plan §3 T2 "pageBindings returns the real bindings plus one ... source: { kind: 'parcels', column: 'max_build_fsi' }" — the parcels binding is proven against the declared static read and fails at load.
+
+MET — Spec 128 B4 "goldens refresh on fingerprint, never on request" — plan §7b "`npx tsx scripts/surfaces/report-capture.ts` rewrites the fingerprints of the 72 goldens" — recapture is fingerprint-driven over the presentation and decl, then `--check`.
+
+MET — Spec 128 Rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI ...)" — plan §7b "One hand-edited source: scripts/surfaces/_schema/report-v2-seed/page-text.json:44" then `seed-report-v2.mjs --write`, with GEN-HAND-EDIT guarding the generated copy.
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" and A9's per-file count of 1.
+
+MET — RR-0402 "circulation text: option A, drop the percent" — A8 "the grep prints nothing" for "10 % circulation" plus the K2 no-digit assertion.
+
+MET — RR-0392 "no other infrastructure beyond this" — plan §1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — the main-only DB gap is named and not closed.
+
+MET — RR-0388 "McFixReborn waits until the new tests are in place" — plan §6 "McFixReborn waits for the tests (RR-0388)".
+
+REJECT — fe.05 lock's allow-list entries for `legal.line`, `sheet.width_placeholder`, `sheet.depth_placeholder` — accused of keeping unbound numbers on the screen with no deviation row — fe.18's own text "Labels, help text and legal copy are content fields, not an exception" puts all three inside the closed binding set, so no adjudicator is owed.
+
+REJECT — T2's uncommitted plant on src/lib/report-projection/read-stored.ts outside the card's Files line — accused of a scope breach — plan §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged" and A4 verifies the tree afterwards.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 6
+Rules met: fe.05, fe.18, fe.27
+
+---
+⏱  146515ms (146.5s)
+📊 Tokens — total: 63581, input: 32811, output: 30770, reasoning: 29218

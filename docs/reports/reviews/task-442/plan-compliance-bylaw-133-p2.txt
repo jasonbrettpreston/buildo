@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.636Z file_sha256=36721ecf605ee189c382a7709a6d4f83c73da993077bc97ec16da0d60e56b018 prompt_sha256=b62e204be5d1d9101275857706fac5e82030f4012494e5fa4b9c4fa3829164ad
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.05 (plan quoting 136:46) "every number from McBylaws; no maths in the UI." — plan T1 "it reports a finding when the engine wrote no row for (building_type, field_id)" — T1 proves a row exists for the pair, never that the number on the page equals that row's value, and the plan itself limits the only value comparison to "only where the key states a value" (section 0, item 6) — add a T1 case that compares each option-section value with its stored row where the golden key states one, plus a counted fail-closed list for the keys that state none.
+
+DEFER severity=MED — task card "Every build task of this plan follows the six steps" — plan header "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the pasted card names no step list and section 6 lists four phases (commit 0, work commit, output review, close), so the six-step order is met by cross-reference only and cannot be checked against anything pasted — write the six steps out in section 6, or cite the MORNING-DECISIONS line where they are written.
+
+DEFER severity=LOW — fe.05 (plan quoting 136:46) "every number from McBylaws" — plan T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so." — a digit added to a web or mobile content block is untested, and the exclusion rests on task-367 card item b, whose text is not pasted — extend the digit scan to every presentation block a surface renders, or name the owning card line in the test header.
+
+REJECT — fe.05 "the front end may show more, never derive differently" — that dropping the percent now shows the homeowner less than before — RR-0402 verbatim "a" rules the drop and "may show more" is permissive, not a floor.
+
+REJECT — m.45 "Absent and stale rows are pending, never failed." — T3 "A stale entry (0 matches) fails." — m.45 binds by-law provision rows under G-SHAPE, not a test-side shrink-only content list (the nav-by-route.logic.test.ts:296-311 form).
+
+REJECT — fe.18 (plan quoting 136:85) "Labels, help text and legal copy are content fields, not an exception." — T3 carrying three entries for legal copy and input hints as though they needed an exception — the entries are kind legal and input_hint, not exception (A5 expects 0 of that kind), so the carve-out is honoured.
+
+MET — RR-0402 — plan 7b (page-text.json:44) — the text drops the percent, as ruled.
+MET — RR-0405 — plan 7 A9 — the landed wording is exactly the ruled one.
+MET — RR-0403 — plan section 6 — task-447 is merged in and gets no lane, no separate process.
+MET — RR-0359 — plan section 6 — a separate grounder runs before any fold.
+MET — m.1 — plan 7b "node scripts/surfaces/_schema/seed-report-v2.mjs --write" — the presentation is regenerated from its seed with GEN-HAND-EDIT refusing a hand edit, so the committed generated JSON stays the single source.
+MET — m.68 — plan 7b "scripts/seeds/logic_variables.json:2" — the circulation figure stays an admin logic variable and the typed copy is removed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: m.1, m.68
+
+---
+⏱  100847ms (100.8s)
+📊 Tokens — total: 57634, input: 36484, output: 21150, reasoning: 20337

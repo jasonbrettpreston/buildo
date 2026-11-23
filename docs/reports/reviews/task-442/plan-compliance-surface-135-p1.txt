@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.579Z file_sha256=edeb168cb1bd23eed60ddc0f3c534e214c51b1b2a0f05e2b8384a6cb98af3869 prompt_sha256=b4d37246628d3ce7d7441ae9fc0df304b48003dbb35def3ce724c4979b139d9d
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 5 "a `.db.test.ts` lock must be named in a CI step (test.yml)" — plan §4 item 3 "test.yml:66-67 excludes src/tests/db/**" and "Ruled by the grounder (Q3): not done here" — the fe.27 Available evidence this task claims rests on a db test that no test.yml step names, so the lock condition of the clause is unmet and the plan knowingly ships it — name that db test in a test.yml step before fe.27 is claimed, or keep fe.27's Available side out of this task and record it OWED with that lock path.
+
+DEFER severity=MED — Spec 135 rule 2 "ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)" — plan §9 Q5 "T1 and T3 stay in the admin test file (the card names it)" — the plan builds checks for fe.05, fe.18 and fe.27 in src/tests/admin-report-preview-live.logic.test.ts and src/tests/customer-report-read.logic.test.ts and never states the register status or Lock cell for any of those rows, so the arm C cell keeps an unbuilt path while the rules read tested — state per row whether this task writes the Lock cell and status, and note that neither file is a `src/tests/surfaces/*.test.ts` as rule 5 requires of an OWED lock path.
+
+DEFER severity=MED — task card Files line "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, ..." — plan §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds)" — T2's red needs an edit to a path the card's Files line does not name, and the plan relies on the gate reading staged paths rather than on the scope — add src/lib/report-projection/read-stored.ts to the card's Files line at the plan review, or plant the defect through a mock so no unnamed file is edited.
+
+DEFER severity=MED — task card description "each test is proven red on a planted defect before it counts" — plan §3 T1 "the lane adds one temporary line inside (a)'s control that drops the `storeys_max` rows of `detached_house` from a local copy of the rows" — for T1 and T3 the plant is a temporary line inside the test's own control case, not a defect in the source under test, so the red run does not show the test catches a regression in the engine rows or the page text — plant the defect where the harness reads it (a row-source or page-text copy the checked case consumes) so the red path is the production read.
+
+DEFER severity=MED — task card description "Every build task of this plan follows the six steps" — plan §0 "Six steps: the card names them and does not list them; section 6 holds the lane's order" — the six steps are neither enumerated nor mapped to plan sections, so this clause cannot be shown met from the plan or the pasted card — list the six steps and name the plan section that carries each.
+
+DEFER severity=LOW — RR-0385 operator verbatim "Label all realted tasks McFix Final" — plan §6 "task-447 is merged into this task (RR-0403) and gets no lane" — the plan records no label step for task-442 or for the merged task-447, so the ruling's label instruction is not shown met — state the McFix Final label for both in commit 0's records.
+
+DEFER severity=NIT — Spec 135 role line "**Role: authority register.** The live register of McFrontend rulings (`FE-nn` rows)." — plan §6 "subject `docs(135_mcfrontend_decisions_register): MF-97 queue row, prereg and panel record`" — commit 0 names the register spec while no register text moves, so the register's own trail gains nothing from the commit — name the queue spec in the subject, or include the row this commit is actually recording.
+
+MET — RR-0405 — plan §7b — "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls.", the operator's wording verbatim, and A9 greps exactly that string in both files.
+
+MET — RR-0402 — plan §7b and A8 — "the grep prints nothing", the percent and its digit leave the shown text.
+
+MET — RR-0403 — plan §1 and §7b — "task-447 is merged into it and gets no lane", the fix is inside this task with no separate process.
+
+MET — RR-0388 — plan §6 — "McFixReborn waits for the tests (RR-0388)", nothing is fixed ahead of the tests.
+
+MET — RR-0359 — plan §6 — "DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687)", no fold precedes the grounder.
+
+MET — RR-0392 — plan §1 — "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" is out of scope and Q3 declines the workflow change.
+
+MET — task card description "what exists is reused first" — plan §3 T1 — "Reuses: `pageBindings` (project.ts:100), the file's `storedRowsOf` (:84-90) and `KEY`. No new file and no new read."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 6
+Rules met: none
+
+---
+⏱  78260ms (78.3s)
+📊 Tokens — total: 31257, input: 14248, output: 17009, reasoning: 15738

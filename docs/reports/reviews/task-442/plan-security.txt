@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T15:39:27.697Z file_sha256=1e94902823aaa99405787e3618b6f768cc4e015e02aad82730f4819a3668f849 prompt_sha256=6df8f3b17afbaf8eaaebabddb5f700519776979db0a5350847ec3a42afb875cb
+🔍 Lens review of docs/reports/reviews/task-442/context-r2.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: the change is two test files, one customer-facing content string and its regenerated fixtures; no money, auth, entitlement, PII or admin authorisation surface changes (the "admin" file is a test, not a runtime admin route).
+
+```
+Surface: "src/tests/admin-report-preview-live.logic.test.ts" (test only), "scripts/surfaces/_schema/report-v2-seed/page-text.json:44" (content string), no request path altered.
+```
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  7616ms (7.6s)
+📊 Tokens — total: 23907, input: 22879, output: 1028, reasoning: 905

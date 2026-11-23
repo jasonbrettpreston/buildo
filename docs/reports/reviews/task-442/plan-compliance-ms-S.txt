@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.612Z file_sha256=7627b923df77b71c56fcdf95562eccfc1bc9675415928a2a21b4dbfe5ba72343 prompt_sha256=b8bace9f8ea4888642a9258b576a585a214c1559085cdcfb8681a31f1703d3d0
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — PLAN-442-v1 section 9 "Q4. ... If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii))." set against section 4 item 2 "Ruled by the grounder (Q4): ... so fe.27 is met as written. Not a break" — the plan records a Q4 grounder ruling and leaves Q4 open awaiting the operator in the same document, so the fe.27 reading it folds on is claimed ruled and unruled at once — quote the grounder's Q4 ruling verbatim in section 9 and close the question, or strike the "met as written" claim from section 4 item 2
+
+DEFER severity=MED — task card "every number on a screen is bound to a database field and available" — PLAN-442-v1 section 3 T3 "`legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85)" — three texts carrying digits on the screen (legal.line "not 100% accurate", the two placeholders "e.g. 50" and "e.g. 120") stay unbound by design, and the authority cited for the exemption, 136:85, is not in the pasted context, so the card's "every number" clause is met only through an unpasted exception — record the operator's word for the three exemptions in the plan, or cite a pasted clause that authorizes them
+
+DEFER severity=MED — task card "task-442 FINAL.7 Front end to database tests ... as ranked by FINAL.5 (what exists is reused first)" — PLAN-442-v1 section 2 "The rank is from docs/reports/reviews/task-440/RULE-CHECKS.md:169-215. I did not re-rank." — the plan never ties the cited look to FINAL.5, so the ordering the card binds cannot be confirmed from the material (cannot see that task-440's RULE-CHECKS is FINAL.5's output) — name FINAL.5 and its artefact path in section 2 and state that the rank in the table is that order
+
+DEFER severity=LOW — RR-0404 "task-447 planner returns a section for task-442" — PLAN-442-v1 section 7b "folded by the plan grounder from the plan seat's section" — RR-0404 is never cited and 7b credits the plan seat, so it cannot be seen that the section the task-447 planner returned was the one incorporated — cite RR-0404 in 7b and record the returned section as its source
+
+DEFER severity=NIT — task card "each test is proven red on a planted defect before it counts" — PLAN-442-v1 section 3 T3 (b) "A page-text copy with `5 m` added to `row.unit_size_basis`" against section 0 ":322 `row.unit_size_basis_value`" — the planted key in case (b) and the live digit key in section 0 differ, so if the registry holds only `row.unit_size_basis_value` case (b) plants nothing and A1 cannot name it — name in case (b) the key the registry actually holds
+
+REJECT — task card "Scope and Files line at its plan review" — T2 deletes read-stored.ts:29, a path not on the Files line — the plant is never staged, check-task-files reads staged paths, and A4 proves it with `git status --short -- src/lib`, so the Files line holds
+
+MET — RR-0402 and RR-0405 — PLAN-442-v1 section 7b — "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls", percent dropped, A9 greps the exact wording once per file
+MET — RR-0403 — PLAN-442-v1 section 7b — "task-447 is merged into it and gets no lane", so the fix sits inside task-442 with no separate process
+MET — RR-0385 — PLAN-442-v1 header and section 6 — "Plan seat: Opus, read-only" and "Build seat: Opus" with "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH"
+MET — RR-0392 — PLAN-442-v1 section 1 Out — "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)", no new infrastructure opened
+MET — RR-0388 — PLAN-442-v1 section 6 — "McFixReborn waits for the tests (RR-0388)", the hold is carried
+MET — task card "each test is proven red on a planted defect before it counts" — PLAN-442-v1 A1 — each red.out must hold the pre-commit related-run failure at the named assertion for T1, T2 and T3
+MET — task card "Scope and Files line at its plan review" — PLAN-442-v1 section 5 — the Files line carries the twelve paths of the card verbatim
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 5
+Rules met: none
+
+---
+⏱  115615ms (115.6s)
+📊 Tokens — total: 28522, input: 12866, output: 15656, reasoning: 14479

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.599Z file_sha256=2438572feadb8c57cfbdc8c934ca9b4e8d624ed88114207b6db9d87813470a9c prompt_sha256=57399617d26dc1a14b070adfd546b5c8967db79c2e34681de079c112e27aca16
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none identified.
+DEFER severity=MED — task-442 "every number on a screen is bound to a database field and available" — plan T3 list "`sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`. Why: an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)." — two on-screen digits stay permanently whitelisted as content, not bound to a database field, and no pasted ruling names them, so the card clause is enforced only outside those two keys — bind the hint text to a page-block content key that carries no digit, or get an operator ruling for the exemption before plan-lock.
+DEFER severity=MED — task-442 "every number on a screen is bound to a database field and available" — plan T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so." — a digit reaching the screen from any non-`page` presentation block is outside T3, so the guarantee rests on a header comment rather than a check — either scan every block the renderer can show or list the excluded blocks in the fail-closed list with counts, so a future digit there fails.
+DEFER severity=MED — task-442 "every number on a screen is bound to a database field and available" — plan section 4 item 3 "The Available evidence for fe.19, fe.20, fe.27 and fe.38 rests on db tests that CI runs on a PR only when the PR touches the filter paths" — the "available" half of the card clause is not proven in this lane and is left to main-only runs, documented against RR-0392 — add an acceptance row owned by the orchestrator for the main-only availability run, or obtain the filter-path workflow word before merge.
+DEFER severity=LOW — RR-0385 "Every build task of this plan follows the six steps, plan written and built on Opus" — plan "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the pasted card names "the six steps" without enumerating them, so steps 1 to 6 cannot be traced here; section 6 gives only the landing order — paste the six-step list into the plan so each step has a line the reviewer can check.
+REJECT — task-442 "every number on a screen is bound to a database field" — the plan is accused of leaving `legal.line` "not 100% accurate" unbound via a fail-closed entry — the pasted spec itself mandates that legal text (doc-2 A.10 "Legal line: This is an estimate, not 100% accurate."), so the content binding is the design, not a gap.
+MET — RR-0402 — plan 7b "RR-0402 (MD:2034) dropped the percent" — the percent leaves the text and A8 greps it out of scripts and src.
+MET — RR-0405 — plan 7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" — the exact ruled wording, pinned by the K2 assertion and A9.
+MET — RR-0403 — plan section 6 "task-447 is merged into this task (RR-0403) and gets no lane" — one lane holds the fix, no separate process.
+MET — RR-0388 — plan section 6 "McFixReborn waits for the tests (RR-0388)" — the new tests land before McFixReborn.
+MET — RR-0392 — plan section 1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — no workflow, gate or card is added and none is on the Files line.
+MET — task-442 "each test is proven red on a planted defect before it counts" — plan T1, T2, T3 each carry a red-through-the-hooks section and A1 names the failing assertion per test.
+MET — task-442 Files line — plan section 5 repeats the twelve pasted paths verbatim and touches src/lib only by an unstaged plant (A4 proves it).
+MET — RR-0359 — plan section 6 "DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687)" — no fold precedes the grounder.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  78224ms (78.2s)
+📊 Tokens — total: 34694, input: 18320, output: 16374, reasoning: 15360

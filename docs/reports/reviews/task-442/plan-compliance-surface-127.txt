@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.626Z file_sha256=107ce60c56190f558e116af77af233bf090918d219447e55454a87908b990a11 prompt_sha256=c5855a9eacc5ce56e1d27ec5ac1bb354c0cb9a60fa44cdf5579d2b5489c04075
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 127 §4.3 dated note 2026-11-04 "Goldens are protected paths: a refresh needs red-evidence and a register cite" — PLAN-442-v1 §6 "The work commit holds T1, T2, T3, the K2 change, the text and every regenerated copy" — the work commit rewrites 72 + 32 + 5 goldens (§7b) and carries no register cite anywhere in its trailers or acceptance rows, and its only red evidence is the T1/T2/T3 assertions, not a refresh red; the clause is unmet. — Add the protected-path red evidence for the recapture and a register cite (the FE-24 form) to the work commit, or split the recapture into its own protected-path commit carrying both, with an acceptance row that reads the cite.
+
+BUG severity=HIGH — spec 127 §2 item 1 source of truth "`git ls-files` + the import graph, **from the MAIN tree** (a worktree-isolated reviewer cannot see untracked files)" — PLAN-442-v1 §0 "Board ~/Buildo-wt-board, read at 18cc2752e." — every file and line anchor the plan rests on (script() at :87-95, T8 at :366-374, "T11 stays the last describe") was read from a board worktree at a stale sha, while wf1/inc1b-thinroute and wf1/inc1b-areafactor are unlanded and edit those same two files, so the inventory is not verified from the MAIN tree. — Re-verify each cited anchor from the MAIN tree at the launch head after the two branches fold, and re-anchor every line reference before plan-lock.
+
+BUG severity=MED — spec 127 §4.3 dated note 2026-11-09 MF-14 "The capture script `scripts/surfaces/report-capture.mjs` lands with the MF-14 code commit." — PLAN-442-v1 A10 "`npx tsx scripts/surfaces/report-capture.ts --check` and `npx tsx scripts/surfaces/report-page-capture.ts --check`" — the acceptance command and all three regeneration commands in §7b name a capture script path the governing spec does not, so A10's two exit-0 claims cannot be confirmed against the clause. — Name the spec's path, or record a dated note superseding the .mjs path before plan-lock, and make A10 assert the file exists.
+
+BUG severity=MED — spec 127 §6 item 4 "`npm run typecheck`, `npm run lint`, and `npx vitest related <changed files> --run` pass (the admin Pre-Commit Gauntlet)" — PLAN-442-v1 A3 "read green.out in the lane folder, the hook tail of the work commit" — the acceptance table A1-A10 asserts the related run and the hooks but never runs or asserts typecheck and lint, so two of item 4's three commands are unproven. — Add acceptance rows running `npm run typecheck` and `npm run lint` on the work commit.
+
+BUG severity=MED — task-442 card "Scope and Files line at its plan review." — PLAN-442-v1 §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds)." — T2's red deletes line 29 of src/lib/report-projection/read-stored.ts, a file on neither the card's nor the plan's Files line, so the reviewed scope does not cover a write into production source. — List src/lib/report-projection/read-stored.ts on the Files line with the never-staged note, or get the red from a plant inside a file already on the line.
+
+BUG severity=MED — task-442 card "Every build task of this plan follows the six steps, plan written and built on Opus" — PLAN-442-v1 §0 "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the six steps are not pasted anywhere I can see, and section 6 has five headings (Commit 0, Commit 1, Output review, Close, Other tasks) that name no step, so compliance with the six steps cannot be read off the plan. — Enumerate the six steps and map each to a section 6 item, or cite the document that defines them.
+
+BUG severity=MED — spec 127 §4.3 "The non-determinism inventory is declared BEFORE the first diff." — PLAN-442-v1 §7b "(2) `npx tsx scripts/surfaces/report-capture.ts` rewrites the fingerprints of the 72 goldens in src/tests/fixtures/surfaces/report/" — the work commit changes the bytes of 109 golden files and no non-determinism inventory is declared in the commit form; the claim "none holds the text" is a post-hoc prose assertion instead. — Declare the inventory in the commit-1 red evidence and assert per golden that rendered_tree is byte-identical across the recapture.
+
+BUG severity=MED — RR-0392 "Push for all 4. I don't think we need any other infastrcuture beyond this.. we are good to go!" — PLAN-442-v1 §6 "the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98, prereg-MF-97-1.json" — the plan reads RR-0392 as barring "any ... card" (§1 Out, and Q6 "this task may not open one (RR-0392)") yet commit 0 opens an MF-97 queue row, a prereg and a panel record, and no pasted ruling authorises those records. — Cite the ruling that authorises the MF-97 records, or drop them from commit 0.
+
+MET — RR-0402 — PLAN-442-v1 §7b "the text drops the percent (section 7b), and T3 lands with 3 entries and no exception" — the digit is removed from the row and A8 greps the old text out.
+MET — RR-0405 — PLAN-442-v1 §7b "expect(t).toBe('the basement, not shared stairs and halls');" — the operator's wording is asserted verbatim, and A9 counts it in both sources.
+MET — RR-0403 — PLAN-442-v1 §6 "task-447 is merged into this task (RR-0403) and gets no lane" — no separate process is opened for task-447.
+MET — RR-0385 — PLAN-442-v1 §6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH" — Opus plans and builds, two-round cap, tests are the deliverable.
+MET — RR-0359 — PLAN-442-v1 §6 "then a separate grounder before any fold (RR-0359, MD:1687)" — the grounder rules before the fold, and Q1-Q6 carry its rulings.
+MET — RR-0388 — PLAN-442-v1 §6 "McFixReborn waits for the tests (RR-0388)" — no McFixReborn work is pulled in.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 8
+Rules met: RR-0359, RR-0385, RR-0388, RR-0402, RR-0403, RR-0405
+
+---
+⏱  104769ms (104.8s)
+📊 Tokens — total: 48223, input: 25639, output: 22584, reasoning: 20920

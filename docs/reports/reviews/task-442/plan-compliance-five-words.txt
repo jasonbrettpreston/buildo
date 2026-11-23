@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.633Z file_sha256=63cec36d013784f07ebc2b19880b7035fa78ca8f4ceadfcabffba137564a06c2 prompt_sha256=330dfdf9db60e09e584c626293dcf6f56813435a963084b5e6701b372d212d04
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 "Every build task of this plan follows the six steps, plan written and built on Opus" — plan:6 "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the pasted card names no six steps and section 6 carries five bullets (Commit 0, Commit 1, Output review, Close, Other tasks), so the six-step requirement is neither enumerated nor traceable — enumerate the six steps by name in section 6 and map each landing bullet to one.
+
+BUG severity=HIGH — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — plan:9 "Q4. Section 4, item 2: does fe.27's ... cover values sent through the lookup route's `page` block? If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii))." against plan:4 "Ruled by the grounder (Q4): ... so fe.27 is met as written. Not a break; no test is planned on it." — Q4 is still posed as open in section 9 while section 4 treats it as ruled, so a conclusion is folded with no pasted grounder ruling behind it — cite the Q4 ruling record in section 9 the way Q1, Q2, Q3, Q5 and Q6 are cited, or mark item 2 open and out of scope.
+
+BUG severity=HIGH — card Files "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json" (src/lib/report-projection/read-stored.ts absent) — plan:5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds)." — the plan edits a file outside the declared Files set by design and rests the justification on the checker reading only staged paths, so the Files clause is not met — add src/lib/report-projection/read-stored.ts to the Files line with the operator's word, or plant the defect by mocking the module instead of deleting read-stored.ts:29.
+
+DEFER severity=MED — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan:6 "The lane never pushes." — the ruling orders a push and the plan names no step or owner that performs it — name the orchestrator as the pusher in section 6 Close against RR-0392.
+
+DEFER severity=MED — RR-0385 "This is the focus for both compliance and engineering standards and interface between the frontend and databse" — plan:2 "Q1 ... Ruled by the grounder: they are task-441's; the cards do not conflict" and plan:2 "| 11-29, 46, 47 | §2.1 … §14 rows 1-2 | no | Engineering rows. Group 2 lists them with Feeds task-441" — the operator's verbatim puts engineering standards in this focus and every engineering row is deferred on a grounder ruling whose text is not in the pasted context — paste the Q1 ruling line beside the plan, or take the front end to database engineering rows (§4.3, §10.3, §14 row 1) in this task.
+
+DEFER severity=MED — glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — plan:3 "The file header already cites FE-05 (:1); add FE-18 to the SPEC LINK." — the new describes B1, B2 and T11 name no rule id themselves, the id sits only in a file-header comment, which the walk counts as not enough for the lock to carry its name — title the new describes (B1, B2, T11) with FE-05, FE-18 and FE-27.
+
+DEFER severity=LOW — RR-0404 "approved" (planner redirect: task-447 planner returns a section for task-442) — plan:7b "folded by the plan grounder from the plan seat's section" and plan:6 "`Operator-Ruling:` RR-0402 (MD:2034, verbatim: a), RR-0403 (MD:2040, verbatim: a) and RR-0405 (MD:2052, verbatim: option a)" — the ruling under which section 7b reached this task is cited nowhere, including the commit 0 trailer — add RR-0404 (MD:2046) to section 7b and to the Operator-Ruling trailer.
+
+MET — RR-0402 "a" (circulation text: option A, drop the percent) — plan:7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls", the percent removed and A9/A8 greps pin it.
+MET — RR-0405 "option a" — plan:7b "the row then reads: Size per unit includes: the basement, not shared stairs and halls" and A9 "grep -c \"the basement, not shared stairs and halls\"" — the ruled wording is the exact string in the one hand-edited source.
+MET — RR-0403 "a" (circulation text fix merged into task-442; no separate process for task-447) — plan:6 "task-447 is merged into this task (RR-0403) and gets no lane".
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — plan:6 "McFixReborn waits for the tests (RR-0388)".
+MET — card "each test is proven red on a planted defect before it counts" — plan:3 "each red.out file ... from a blocked commit through the real hooks, each failing at its designed assertion", with T1 (a) toEqual([]), T2 (a) rejects.toThrow and T3 (a) planted digit named.
+MET — RR-0385 "plan written and built on Opus (his words: \"I want this plan for each task and built by opus\")" — plan:0 "Plan seat: Opus, read-only ... Build seat: Opus (RR-0385 items 1 and 8)".
+MET — card "Scope and Files line at its plan review" — plan:1 Scope and plan:5 Files, both present and reconciled line by line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  76217ms (76.2s)
+📊 Tokens — total: 30310, input: 13656, output: 16654, reasoning: 15152

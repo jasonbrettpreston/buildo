@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.630Z file_sha256=eb1c35664a94678120ffc97aae37f5b6b42b6179e104b5b3ea72f1ae9f22a828 prompt_sha256=06231bc1e98d4a48dba03749d8f3fe55322c29fec2637afdfabbb6d80b45c5d0
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-bylaw-133-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "Scope and Files line at its plan review" — plan §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds)" — src/lib/report-projection/read-stored.ts is not on the card's Files line, and the plan's compliance argument is the checker's blindness, so an out-of-scope edit sits in the working tree through a real commit attempt — put src/lib/report-projection/read-stored.ts on the Files line at this plan review (the card places the Files line here), or prove T2 red without editing src/lib
+
+BUG severity=MED — m.465 "height_m, main_wall_height_m and upper_storey_setback_m are stored for a flat or shallow roof and for a pitched roof, with the clause's own flat-or-shallow threshold beside them; Layer 3 headlines the larger" — plan §3 T1 "the design option of o1 and o2 is not checked (the type before the slash only, as project.ts does)" — the per-option half of the o1/o2 page binding is unverified, so a section labelled as one roof form can display the other form's stored row and T1 passes — add a case asserting each o1/o2 section's (building_type, field_id) key at project.ts:199 resolves to that option's stored row
+
+BUG severity=MED — fe.05 "every number from McBylaws; no maths in the UI" — plan §3 T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so" — a digit added to any shown string outside the page block is not caught, so fe.05 is locked for one block only and the "no digit today" claim is never re-checked — scan every shown block of report-presentation.json and extend the fail-closed list (empty today, so no new entries)
+
+BUG severity=MED — fe.27 "A column that is not in the migrations, or a path not on the whitelist, fails" — plan §3 T2 "Gates 4 and 5 of section 0 already cover catalog membership and declared writers; T2 does not repeat them" — T2's red-proven case exercises read-stored's select guard, so neither of fe.27's two named failure conditions has a red-proven test in this task, only an existing green lock (report-binding.logic.test.ts:63-155) which the card's red rule does not count — add one fe.27 case (parcels column absent from the migrations, or binding path not on the whitelist) red on a planted defect, or record the existing lock and its red evidence by name in §3
+
+DEFER severity=MED — m.322 "Accuracy floors only go up." — plan §6 "prereg-MF-97-1.json (round 202, totals copied from the newest prereg, the form of prereg-MF-96-1.json)" — the prereg content cannot be seen and the plan states no comparison against the current floors, so the non-decreasing floor cannot be verified from the plan — add one line saying the round-202 totals are equal to or above round-201's, naming the prereg they were copied from
+
+DEFER severity=LOW — fe.05 "every number from McBylaws" — plan §8 "T3 catches digits only. A number written in words passes." — a spelled-out figure in shown copy is a number not bound to a database field and no test sees it — add a word-number arm (one to ninety, half, quarter, per cent) to the same fail-closed list
+
+MET — RR-0405 — plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" — the ruled wording is the exact replacement text
+MET — RR-0403 — plan §7b "task-447 is merged into it and gets no lane" — the circulation fix sits inside task-442 and task-447 gets no lane
+MET — RR-0392 — plan §1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — no new infrastructure is opened and the main-only gap is named, not built
+MET — m.360 "merge order" — plan §6 "both are built and unfolded, so they fold onto the board first and this lane then branches from the board head" — the landing order is stated against the two unlanded branches and task-446's commit 0
+MET — card "each test is proven red on a planted defect before it counts" — plan §6 "three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion" — T1, T2 and T3 each carry a planted-defect red through the real hooks
+
+REJECT — m.431 — the plan does not key the PERM precedent route for 10.20.20.10 — the plan changes no by-law unit and no keyed row, bylaw-133 reaches it only through the coa-expected prereg record
+REJECT — fe.40 — the plan skips the Available side of fe.40 — the skip carries a reason in the rank table (a lane may not connect to a local stack, 136:151) and the plan opens no infrastructure for it under RR-0392
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 4
+Rules met: m.360
+
+---
+⏱  123401ms (123.4s)
+📊 Tokens — total: 55037, input: 28819, output: 26218, reasoning: 25005

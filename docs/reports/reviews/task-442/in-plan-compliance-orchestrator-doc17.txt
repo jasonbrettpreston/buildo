@@ -1,0 +1,376 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:05f4e21ee2abd09ec136b70cd6f9df5874267482b015c7abff0da0c06dcefbb0 part 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "This is the focus for both compliance and engineering standards and interface between the frontend and databse". THIS TASK: tests of the interface between the front end and the database as ranked by FINAL.5 (what exists is reused first); each test is proven red on a planted defect before it counts. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/report-v2.decl.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/, src/tests/surfaces/report-honest-k2.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-442-v1
+
+Task: task-442 (FINAL.7, build). Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). Build seat: Opus (RR-0385 items 1 and 8, MORNING-DECISIONS.md:1907-1926). Six steps: the card names them and does not list them; section 6 holds the lane's order. Scope amended at the plan review: RR-0402 (MD:2034), RR-0403 (MD:2040) and RR-0405 (MD:2052, verbatim: option a) put the circulation text fix inside this task; section 7b holds it. Board ~/Buildo-wt-board, read at 18cc2752e. The brief named cc584b87b. The five commits since then are task-424's and touch none of the files below (`git diff --stat cc584b87b..HEAD`). Commands run: git, grep, sed, the backlog viewer and small read-only node scripts. No test runner was run and nothing was written. Paths are relative to the board. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md.
+
+#### 0. Facts verified
+
+What I searched first (the operator: "you are probaley rebuilding stuff that already exists"):
+- The six files the brief named.
+- src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts and src/tests/surfaces/report-page.logic.test.ts.
+- src/lib/report-projection/{project,read-stored}.ts and src/lib/parcels/consumer-lookup.ts.
+- scripts/analysis/report-schema.mjs and scripts/analysis/src-sql-ledger.mjs.
+- scripts/analysis/gates/consumer-registry.mjs and scripts/steps/_schema/consumer-registry.json.
+- scripts/surfaces/_schema/seed-report-v2.mjs and the MaxBLD descriptors.
+- `git grep` for: "not in the static parcels read", PARCEL_SELECTED, migrationColumns, vi.doMock, "shrink-only".
+
+The chain from a page number to the database, and the check that exists for each link:
+1. A page value part names a declared field. Checked: report-page.logic.test.ts:45 (P1).
+2. That field's source is in the closed set and resolves (catalogue row, parcels migration column). Checked: report-schema.mjs:148-203 (RS-1, RS-3), locked by report-binding.logic.test.ts:63-155.
+3. Every parcels column the page binds is in the one static parcels read. Checked only by a throw when the module loads: read-stored.ts:21-29 (the throw is line 29; line 28 is the PARCEL_SELECTED list). No test proves that throw red (grep of its message in src/tests: 0 hits).
+4. Every column a src/ SQL reads is in the committed catalog snapshot. Checked: src-sql-ledger.mjs:42-48 `--check`, run in pre-commit (.husky/pre-commit:23).
+5. Every such column has a declared writer step. Checked: consumer-registry.mjs:24 (gate D, "unproduced" reads). It holds read-stored.ts rows, for example `parcels.is_corner_lot` with producer enrich_centreline.
+6. The engine writes the catalogue field for the page section's building type. No static check. The G25 case (admin-report-preview-live.logic.test.ts:154-205) compares the golden-25 key with the producer payload only where the key states a value.
+7. Every number shown comes from McBylaws, not from typed text (fe.05). report-no-maths.logic.test.ts scans for arithmetic only. No check covers content texts.
+
+Other facts:
+- The live REPORT page is report-page.json, bound through report-v2.decl.json. The producer reads `catalogue:` from parcel_maxbld_scenarios and `parcels:` from the parcels row (project.ts:8-10). The S-001 hand screen is retired (report-fields.decl.json `$comment`).
+- `pageBindings(page, fields)` takes injected copies (project.ts:98-100). The admin test already loads the catalogue and switchboard seeds (admin-report-preview-live.logic.test.ts:44-52) and already holds the FE-05 page-rule case (:121).
+- Effective-ON is defined in seed-report-v2.mjs:81-82: the row's formula switch and the type's switch are both on, and off beats on. The page producer reads a row by (building_type, field_id) (project.ts:199).
+- Dry run (node, read-only) over the 17 (option section, catalogue field) pairs of the committed page: each row lists the section's type, its formula switch is on and the type switch is on. 0 misses.
+- Content texts the page can show: 90 keys (report-presentation.json:281 `page`). Exactly 4 hold a digit:
+  - :322 `row.unit_size_basis_value` "the basement; 10 % circulation" (used by o3, report-page.json:1580);
+  - :336 `legal.line` "not 100% accurate";
+  - :342 and :344, the input placeholders "e.g. 50" and "e.g. 120".
+- The engine reads circulation from the setting `houseplex_circulation_share`, default 0.1, min 0.1, max 0.1 (logic_variables.json:2), through lv() (layer3-catalogue.json:264-277: basement_livable_m2, units_flat, units_pitched_a and b, unit_area_m2 at :271, units_fit at :277).
+- The repo's form for known exceptions is a fail-closed list: each entry has a count and a kind, the reason reads "owed: <row>", a stale entry fails, and the list only shrinks (src/tests/surfaces/nav-by-route.logic.test.ts:13-16, :296-311).
+- The repo's form for planting a defect at module load is `vi.resetModules` + `vi.doMock(orig)` + a dynamic import, then `vi.doUnmock` (src/tests/maxbld-web-pages.logic.test.ts:113-119).
+- McFrontend trailers apply only to `frontend` paths (mcbylaws/protected-paths.json:20-31, which includes src/tests/surfaces/**; cite-arms.mjs:173-178). The two test files below are not frontend, layer23 or protected paths.
+
+UNVERIFIED:
+- Traced by the grounder: the engine writes a row whose switch is off as not_evaluated with reason switched_off:<id> (maxbld/rows.js:402); only a row with an increment other than 1 that is off and not_evaluated is dropped (rows.js:511); a missing switch reads on (compute-maxbld-scen*.js:213-216). T1 reads the engine rows, so it copies none of these rules.
+- Found by the grounder: the closed binding set is fe.18 (136:85) and scripts/surfaces/_schema/binding-sources.json: catalogue, content (the label, help-text and legal-copy registry), user_input, ad_slot, external_embed and parcels. Labels, help text and legal copy are content fields, not an exception.
+
+#### 1. Scope
+
+In:
+- Three tests, each red on a planted defect, then green.
+- Two existing test files are extended for T1, T2 and T3. No code change and no fix except the circulation text fix of section 7b (RR-0402, RR-0403, RR-0405), which also changes the K2 test.
+
+Out:
+- Any fix of a live break other than the circulation text (section 4 item 1).
+- Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976).
+- OWED handbook locks (task-367): the task-367 card (:69) says it is the KEY card and that task-434 is merged into it, and task-434 (:43) records the merge; the look's Feeds column for ranks 1-7 reads task-442 and is stale against these cards. If the task-367 plan review finds a rule it does not carry, that gap is task-367's to take; this task takes none.
+- Engineering rows (task-441): the card of task-441 (FINAL.6) is the engineering-standards tests, RULE-CHECKS.md:163 lists the group 3 engineering rows again, not counted twice, and group 2 gives them Feeds task-441.
+- Anything that needs a database (a lane may not connect to one; the database side of fe.19, fe.20, fe.27 and fe.38 is the main-only db tests of section 4 item 3).
+
+#### 2. Rows chosen, in the look's rank, and who owns each skipped row
+
+The rank is from docs/reports/reviews/task-440/RULE-CHECKS.md:169-215. I did not re-rank. A row is skipped only when another task owns it or cannot be tested without a database.
+
+| Rank | Row | Taken? | Owner or reason |
+|---|---|---|---|
+| 1-7 | fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44 | no | OWED, lock path reserved: task-367 (RR-0385 item 6, MD:1922: "Task 367 is the key card"; task-434 merged into it; FE-45 row 135:67 "the lock is task-434's"). fe.58 (task-446) is OWED too; its lock is task-367's (task-446 plan, acceptance 6). |
+| 8 | fe.05 | **yes, T1 and T3** | |
+| 9 | fe.09 | no | Not a front-end to database rule. "Lock column" (136:58) is a column of the register table; it entered group 3 only through the keyword test (RULE-CHECKS.md:177). Enforced in group 1 (:136). |
+| 10 | fe.40 | no | Its Available side runs against a local test stack, which is a database (136:151). Lanes may not connect. |
+| 11-29, 46, 47 | §2.1 … §14 rows 1-2 | no | Engineering rows. Group 2 lists them with Feeds task-441 (RULE-CHECKS.md:39 onward). Q1 ruled by the grounder: they are task-441's. |
+| 30 | fe.39 | no | OWED (136:149): task-367. |
+| 31 | fe.13 | no, this round | A file-only Available check needs descriptor `tables[].columns` read against the migrations. Dry run on parcel_product: 12 misses of 286, all false or unbuilt: a view (parcel_lot_form, types.ts:132), a rename (imagery_roof_*, migrations/201), an unbuilt table (user_tracked_lots). migrationColumns reads neither views nor renames, so this would need new parsing. |
+| 32 | fe.15 | no | Its Available side is canary f, owned by FE-25 (OWED, 135:37): task-367. |
+| 33 | fe.18 | **yes, T1** | |
+| 34, 35 | fe.19, fe.20 | no | User inputs are the design exception. Their Available side is a db test that runs on main only (see section 4, item 3). |
+| 36 | fe.22 | no | Ads are the design exception. |
+| 37 | fe.24 | later round | |
+| 38 | fe.27 | **yes, T2** | |
+| 39-45 | fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 | later rounds | Left for later rounds of this card, taken in the look's rank order, each round with its own plan review (the search surfaces fe.31, fe.32, fe.37 and fe.38 are in those rounds). fe.38 is already file-checked by customer-report-read.logic.test.ts:366-374 (T8). |
+
+Rule texts, quoted:
+- fe.05 (136:46): "P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI."
+- fe.18 (136:85): "every displayed field binds to a source in the closed set … Labels, help text and legal copy are content fields, not an exception."
+- fe.27 (136:112): "parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails."
+- Earlier ruling (MD:638): "the report fields and the details and the search pages to the databse and ensure they are available."
+
+#### 3. The tests
+
+#### T1. Every number in an option section is a McBylaws row the engine writes for that section's building type (fe.05, fe.18)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B1". The file header already cites FE-05 (:1); add FE-18 to the SPEC LINK.
+- **Checker:** a pure helper in the test, `unwritten(bindings, rows)`. The rows are the engine's own stored rows from the file's harness, `storedRowsOf(KEY[0])` (:84-90). The helper reads no switch and copies no rule of the generator. pageBindings emits three source kinds: catalogue (this test), parcels (T2) and user_input (the lot-size entry, a design exception by fe.18). For each `pageBindings()` entry with `building_type !== null` and `source.kind === 'catalogue'`, it reports a finding when:
+  - the engine wrote no row for (building_type, field_id) (a catalogue row that is missing, does not list the type, or is switched off with an increment other than 1 leaves no row); or
+  - the written row carries a reason starting `switched_off:` (rows.js:402: an increment-1 row that is off is still written, as not_evaluated).
+  - Not checked, and stated in the test header: RS-1 and RS-3 (report-schema.mjs:148-203) already hold the declared half, report-generator-fields.logic.test.ts:83 holds one field per effective-ON row, and the design option of o1 and o2 is not checked (the type before the slash only, as project.ts does).
+- **No copy of a rule:** the test repeats no line of seed-report-v2.mjs; it asserts on what the engine wrote (Q2 ruled by the grounder).
+- **Cases:**
+  - (a) Control: the committed page and seeds give `[]`, and the checked (section, field) pairs number at least 17 (non-vacuous).
+  - (b) A copy of the rows without the `gfa_max_m2` row of `detached_houseplex` gives exactly one finding, naming `o3 gfa_max_m2 detached_houseplex` (gfa_max_m2 is bound in o3 only).
+  - (c) A copy of the rows in which the `storeys_max` row of `detached_house` has reason `switched_off:formula:storeys_max` gives findings for o1 and o2 (both detached_house).
+  - (d) A copy of the rows without any `detached_houseplex` row gives one finding per o3 pair; the count equals the o3 pair count (7) and is at least 1.
+- **Red through the hooks:** while writing (a), the lane adds one temporary line inside (a)'s control that drops the `storeys_max` rows of `detached_house` from a local copy of the rows (never from SEEDS: other cases read it). It stages the file and commits. The pre-commit related run (.husky/pre-commit:85) fails at (a)'s `toEqual([])`. The lane records red.out, removes the line and commits green.
+- **Reuses:** `pageBindings` (project.ts:100), the file's `storedRowsOf` (:84-90) and `KEY`. No new file and no new read.
+
+#### T2. A parcels column the page binds but the stored read does not select fails at load (fe.27)
+
+- **File:** src/tests/customer-report-read.logic.test.ts, a new describe "T11". Add fe.27 / FE-27 to the SPEC LINK (:1-3).
+- **Cases:**
+  - (a) Planted binding: `vi.resetModules()`, then `vi.doMock('@/lib/report-projection/project', async (orig) => ({ ...(await orig<typeof import('@/lib/report-projection/project')>()), pageBindings: () => [...] }))` so that `pageBindings` returns the real bindings plus one `{ section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } }`. Then `await import('@/lib/report-projection/read-stored')` rejects with the message "MB-93: page field source parcels:max_build_fsi is not in the static parcels read". The planted object is typed `Binding` (project.ts:75), and max_build_fsi is checked absent from the four selected columns (read-stored.ts:28) before the import. The whole case body (doMock, import, assertion) sits in a `try`; `vi.doUnmock('@/lib/report-projection/project')` and then `vi.resetModules()` run once, in its `finally`. A comment says T11 stays the last describe.
+  - (b) Control: the real module imports, `readLotFacts` is a function, and the scripted read (the file's `script()`, :87-95) returns `columns` keys equal to the parcels columns of `pageBindings()`.
+- **Red through the hooks:** the lane temporarily deletes the throwing line, read-stored.ts:29 (not :28, the PARCEL_SELECTED list: deleting that fails the whole file at collection). src/lib/report-projection is not a frontend path, and the SQL text is unchanged, so src-sql-ledger `--check` stays green. The commit attempt fails at (a)'s `rejects.toThrow`. The lane records red.out, puts the line back with the edit tool, character for character from `git show HEAD:src/lib/report-projection/read-stored.ts`, proves it with `git diff --quiet -- src/lib/report-projection/read-stored.ts` (exit 0), never stages that file, and commits green.
+- **Reuses:** the existing guard, the file's hoisted mocks and scripted pool, and the doMock form of maxbld-web-pages.logic.test.ts:113-119. Gates 4 and 5 of section 0 already cover catalog membership and declared writers; T2 does not repeat them.
+
+#### T3. No number reaches the page through a content text, except the listed exceptions (fe.05)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B2", beside F (:101).
+- **Checker:** every key of the report-presentation.json `page` block is scanned, all 90 today, so a key no part names (the lot-size error texts with {lo} and {hi}, summary.not_evaluated) is covered too. Each text matching `/\d/` is a finding keyed by the content key. The test asserts the scanned count equals the key count of `page` and is at least 90. The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so.
+- **Fail-closed list** (the nav-by-route form), keyed by content key, each with a count, a kind and a `why`:
+  - `legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85).
+  - `sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`. Why: an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85).
+  - No entry for `row.unit_size_basis_value`: the circulation text fix of section 7b removes its digit in the same work commit, so T3 lands with no entry of kind `exception` and needs no owner row.
+  - That is 3 entries, none of kind `exception`.
+- **Cases:**
+  - (a) Every finding is explained by an entry, and every entry matches exactly its count. A stale entry (0 matches) fails.
+  - (b) A page-text copy with "5 m" added to `row.unit_size_basis` fails at (a)'s assertion and names `row.unit_size_basis`.
+  - (c) The list has exactly 3 entries (`legal.line`, `sheet.width_placeholder`, `sheet.depth_placeholder`), 0 of kind `exception`, and each has a `why`. The list only shrinks.
+- **Red through the hooks:** the lane stages T3 (3 entries) and the K2 change of section 7b together, before the text fix, in one commit attempt, with one temporary line in (a)'s control that checks the planted page-text copy of case (b) (a digit added to `row.unit_size_basis`). The related run fails at T3 (a), naming `row.unit_size_basis` (the planted defect) and `row.unit_size_basis_value` (the live tree, break evidence), and at the K2 no-digit assertion. The lane records red-T3.out, removes the temporary line and commits green with the text fix.
+- **Reuses:** `PAGE` and the presentation registry the file already reads, and the exception-list form of nav-by-route. No scan of renderer code: digits in mobile or web code belong to task-367 (its card, item b) and to fe.45.
+
+#### 4. Live breaks found (item 1 is fixed in this task, section 7b; the others are named for the orchestrator)
+
+1. **The houseplex option shows "10 % circulation" as typed content** (report-presentation.json:322, used at report-page.json:1580). The engine reads the same number from `houseplex_circulation_share` (logic_variables.json:2; layer3-catalogue.json:264-268). So a number on the screen is not bound to its database field. This breaks fe.05 ("every number from McBylaws") and the binding ruling (MD:638). The setting is pinned at 0.1 (min = max), so the text is true today. It stops being true as soon as the setting is refitted, and its own description says a refit is owed. FIXED IN THIS TASK (RR-0402, RR-0403, RR-0405): the text drops the percent (section 7b), and T3 lands with 3 entries and no exception.
+2. **A possible mismatch, UNVERIFIED as a break.** The S-001 consumer whitelist lists `parcel.parcelId` and three `parcel.lot.*` paths (mobile_parcel_detail.descriptor.json `inputs.field_whitelist`). The strict consumer payload has no key for any of them (src/app/api/parcels/lookup/types.ts:80-96). RS-2 passes because it reads the whitelist (report-schema.mjs:185-195). The three lot values do reach the page, through `readLotFacts` (read-stored.ts:48-55) and the `page` block of the lookup route. Ruled by the grounder (Q4): fe.27 fails a column that is not in the migrations and a path that is not on the whitelist; the four paths are on the whitelist (RS-2; report-binding.logic.test.ts:145), so fe.27 is met as written. Not a break; no test is planned on it.
+3. **Main only.** The Available evidence for fe.19, fe.20, fe.27 and fe.38 rests on db tests that CI runs on a PR only when the PR touches the filter paths (db-tests.yml:9-17; test.yml:66-67 excludes src/tests/db/**). Closing that gap needs a workflow change. Ruled by the grounder (Q3): not done here, RR-0392 (MD:1975-1976) opens no new infrastructure without his word; the gap stays named here.
+
+#### 5. Files
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/report-v2.decl.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/, src/tests/surfaces/report-honest-k2.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+
+The backlog task file and the lane records under docs/reports/ are always allowed (check-task-files.mjs:10). read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds). The ten added paths widen the resolved rule lists from 5 to 15 (resolveTask run in memory by the grounder adds surface-136, surface-126, surface-127, surface-128, surface-135, queue-137, agents-s7-s11, bylaw-133, agents-s5-1to3 and orchestrator-doc17): the orchestrator runs the plan compliance lens for each added list on a committed context holding this folded plan before launch.
+
+#### 6. Landing
+
+The same order as task-424 (task-424 plan section 7).
+- **Commit 0 (records, alone and first):** subject `docs(135_mcfrontend_decisions_register): MF-97 queue row, prereg and panel record` (the precedents 62b2ffed6 and 0ae43e69c name 135, not 136). It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98, prereg-MF-97-1.json (round 202, totals copied from the newest prereg, the form of prereg-MF-96-1.json), docs/reports/panels/MF-97.json (the MF-95.json form) and the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes. Trailers: `Task: task-442`, `McFrontend-Task: MF-97`, `Operator-Ruling:` RR-0402 (MD:2034, verbatim: a), RR-0403 (MD:2040, verbatim: a) and RR-0405 (MD:2052, verbatim: option a), and `Spec-diff: queue row and records only, no spec rule text moves` (the form of 0ae43e69c). The orchestrator claims MF-97 and round-202 in ~/Buildo-scratch/ids before launch (MF-96 and round-201 are BL-HB446's). Commit 0 is the parent of the work commit, because the gate reads the prereg from the parent tree.
+- **Commit 1 (work):**
+  - Subject: `test(136_mcfrontend_handbook): front end to database tests for fe.05, fe.18 and fe.27 (task-442)`. validate-commit-msg wants type(NN_spec); precedent: ba0892689.
+  - Trailer: `Task: task-442`. No FE-nn token in the message; name the rules fe.05, fe.18, fe.27.
+  - Trailers on the work commit: `Task: task-442`, `McFrontend-Task: MF-97`, the same `Operator-Ruling:` line and `Spec-diff: one content text changed; generated copies regenerated; no spec rule text moves`. The work commit touches frontend paths (scripts/surfaces/**, src/tests/surfaces/**, src/tests/fixtures/surfaces/**: protected-paths.json:20-31), so the McFrontend arm runs (cite-arms.mjs:173-178) and the owner is prompted at push. No hook is bypassed.
+  - The task file goes in the same diff, status RUNNING (137:84, :100).
+  - Red evidence is recorded first: three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion. The runner is never run directly. T3's attempt also stages the K2 change (section 7b). Before the red run the lane writes a 5-item PASS or FAIL self-check in its reply: binding closure, the 17 rows present, the parcels column set, no unlisted digit, the three seed reads non-vacuous. The work commit holds T1, T2, T3, the K2 change, the text and every regenerated copy; T1 and T2 may land in a commit before it.
+- **Output review:**
+  - DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687).
+  - Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919).
+- **Close:** the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT. The lane never pushes.
+- **Other tasks:** task-367 and task-441 share no file with this task and are kept; task-446 is kept; task-447 is merged into this task (RR-0403) and gets no lane; McFixReborn waits for the tests (RR-0388). Landing order, from a diff of the unlanded branches against the board: wf1/inc1b-thinroute (task-383, RUNNING) edits the end of customer-report-read.logic.test.ts (T9 and T10) and wf1/inc1b-areafactor (task-411, RUNNING) edits describe F of the admin test and the formatter names in report-presentation.json; both are built and unfolded, so they fold onto the board first and this lane then branches from the board head. wf1/inc1b-hb446 (task-446) edits .cursor/MCFRONTEND-QUEUE.md line 5 (next free id MF-97), so its commit 0 (0ae43e69c, MF-96) folds before this task's commit 0 (MF-97). If task-367 later moves fe.05 checks into a surfaces lock, T1 and T3 can move with them.
+
+#### 7. Acceptance
+
+| # | Who | Command | Expected |
+|---|---|---|---|
+| A1 | lane | read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out | each holds the pre-commit related-run failure at the named assertion: T1 (a) `toEqual([])`; T2 (a) `rejects.toThrow`; T3 (a), naming `row.unit_size_basis` (the planted digit), and the K2 no-digit assertion |
+| A2 | lane | `git log -1 --format=%B <work sha>` | holds `Task: task-442`, `McFrontend-Task: MF-97` and no FE-nn token; the commit passed the hooks |
+| A3 | orchestrator | read green.out in the lane folder, the hook tail of the work commit | the related run passes both test files and the K2 test |
+| A4 | orchestrator | `git diff --stat <launch>..HEAD -- src/lib src/app mobile migrations .github` and `git status --short -- src/lib` | both empty (scripts is left out: the text fix regenerates files under scripts/surfaces, section 7b) |
+| A5 | orchestrator | `grep -c "kind: 'exception'" src/tests/admin-report-preview-live.logic.test.ts` | 0 (T3 lands with no entry of that kind) |
+| A6 | orchestrator | `git diff <launch>..HEAD -- src/tests/customer-report-read.logic.test.ts \| grep -c "vi.doUnmock('@/lib/report-projection/project')"` | 1 (written once, in the finally of T2 (a)) |
+| A7 | orchestrator | the pre-push check list at push (.husky/pre-push-checks.sh) | PASS |
+| A8 | orchestrator | `git grep -l -F "10 % circulation" -- scripts src` and `node scripts/surfaces/_schema/seed-report-v2.mjs --check` | the grep prints nothing; the check exits 0 |
+| A9 | orchestrator | `grep -c "the basement, not shared stairs and halls" scripts/surfaces/_schema/report-presentation.json scripts/surfaces/_schema/report-v2-seed/page-text.json` | 1 for each file |
+| A10 | orchestrator | `npx tsx scripts/surfaces/report-capture.ts --check` and `npx tsx scripts/surfaces/report-page-capture.ts --check` | both exit 0 |
+
+#### 7b. The circulation text fix (RR-0402, RR-0403, RR-0405; folded by the plan grounder from the plan seat's section, checked against the repo)
+
+The operator ruled the wording (RR-0405, MD:2052, verbatim: option a): the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls. The row then reads: Size per unit includes: the basement, not shared stairs and halls. RR-0402 (MD:2034) dropped the percent and RR-0403 (MD:2040) put the fix inside task-442; task-447 is merged into it and gets no lane.
+- **One hand-edited source:** scripts/surfaces/_schema/report-v2-seed/page-text.json:44 (checked: the only source line).
+- **Regenerate, in this order, each with its own check:** (1) `node scripts/surfaces/_schema/seed-report-v2.mjs --write` rewrites report-presentation.json:322 and the provenance hash of report-v2.decl.json (seed-report-v2.mjs:21-22, :540, :674; a hand edit of the presentation fails with GEN-HAND-EDIT, :699). (2) `npx tsx scripts/surfaces/report-capture.ts` rewrites the fingerprints of the 72 goldens in src/tests/fixtures/surfaces/report/ (FP_FILES holds the presentation and the decl, report-checks.mjs:22-28); none holds the text. (3) `npx tsx scripts/surfaces/report-page-capture.ts` rewrites the 32 page goldens and the view of the 5 props goldens in src/tests/fixtures/report-page/ and the landing sample scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json (header :10-15). Checks after: `seed-report-v2.mjs --check`, `report-capture.ts --check` and `report-page-capture.ts --check`, each exit 0.
+- **Copies (checked by `git grep -l -F` of the old text):** 1 source, 1 presentation, 1 landing sample, 32 page goldens and 5 props goldens; the rest are records under docs/reports and the task cards, which stay. No renderer types its own copy: a grep of circulation over src, mobile and scripts finds engine code and tests only.
+- **K2 test (src/tests/surfaces/report-honest-k2.logic.test.ts):** delete the LV const at :18 (its only use is :56, and an unused const fails lint); retitle the describe and the it at :46-47 to name the basement and the words, with no figure; replace :56-57 with `expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);` and `expect(t).toBe('the basement, not shared stairs and halls');`. Lines 48-55 stay as the control. No other test pins the old string; report-generated-only.infra.test.ts and report-golden-parity.logic.test.ts check that the copies are fresh and run in the pre-push suite.
+- **Unchanged:** the engine, scripts/seeds/logic_variables.json:2, the catalogue, report-page.json and every other content key.
+- **T3 and the text move together:** T3 lands with 3 entries and no exception (section 3, T3). The text, the regenerated copies, the K2 change and T3 land in the same work commit; the red attempt is the one of T3 (section 3).
+- UNVERIFIED: that the hooks accept commit 0 and the McFrontend arm on the trailers alone (precedents 62b2ffed6 and 0ae43e69c); the three regeneration commands were read, not run.
+
+#### 8. Risks and rollback
+
+- **T2 module reset.** The reset could leak into later describes. Mitigation: T2 runs last in the file, and it calls `vi.doUnmock` and `vi.resetModules()` in a `finally`. The later cases use static imports bound at load (the maxbld-web-pages precedent).
+- **T1 repeats no rule.** It reads the engine's rows, so no copy of the generator's rule can drift (Q2 ruled by the grounder). Its stated limit: the design option of o1 and o2 is not checked.
+- **T3 catches digits only.** A number written in words passes. This is stated in the test header.
+- **The T2 plant touches src/lib.** It is never staged or committed. The lane puts the line back with the edit tool, character for character from `git show HEAD:src/lib/report-projection/read-stored.ts`, and A4 proves it with `git status --short -- src/lib`.
+- **Rollback:** revert the work commit and the close commit, return the task to its prior status, and revert commit 0 if the MF-97 row should go. Nothing else depends on them.
+
+#### 9. Questions for the plan grounder
+
+- **Q1.** Group 3 repeats the engineering rows that group 2 gives to task-441 (RULE-CHECKS.md:39 onward: "task-441"; group 3 says "task-442"). I read them as task-441's. Is that right, or does task-442 own the front-end to database engineering rows (§4.3, §10.3, §14 row 1)? The cards do not settle it. If it is not plain, the orchestrator reads both cards; the operator's word is needed only if the cards conflict (RR-0385 item 4(ii), MD:1920). Ruled by the grounder: they are task-441's; the cards do not conflict (RULE-CHECKS.md:163 lists them again, not counted twice, and group 2 gives §4.3, §10.3 and §14 row 1 Feeds task-441).
+- **Q2.** Ruled by the grounder: moot. T1 asserts on the engine's rows from the file's own harness and repeats no rule; no export and no copy.
+- **Q3.** The main-only Available gap (section 4, item 3) can be closed only by a CI workflow change (db-tests.yml path filter). The card does not name one. Ruled by the grounder: not done here; RR-0392 (MD:1975-1976) opens no new infrastructure without his word, and the gap stays named in section 4 item 3.
+- **Q4.** Section 4, item 2: does fe.27's "a DB field the consumer payload reads" cover values sent through the lookup route's `page` block? If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii)).
+- **Q5.** T1 and T3 sit in src/tests/admin-report-preview-live.logic.test.ts, which already holds the FE-05 case (:121), and not in src/tests/surfaces/report-page.logic.test.ts. Ruled by the grounder: T1 and T3 stay in the admin test file (the card names it). The merged text fix does bring this task inside the frontend paths, so commit 0 and the MF-97 trailer of section 6 apply for that reason, not for T1 and T3. If the grounder wanted them in the surfaces file, the landing adds an MF id, a commit 0 with prereg, panel record and queue row, and a `McFrontend-Task` trailer (the task-446 form, section 7 of its plan).
+- **Q6.** T3's `exception` entry cites no owner row, because no card exists and this task may not open one (RR-0392). Ruled by the grounder: moot. The operator ruled the correction (RR-0402, MD:2034) and RR-0403 (MD:2040) puts it in this task, so there is no entry and no card is needed.
+

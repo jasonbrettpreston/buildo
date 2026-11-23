@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.620Z file_sha256=13f6eb0b192e48d1a55575d424563dbde1462a2b01aac05d7dd1addeff38dd28 prompt_sha256=9ae23002d6f43d6d6325d83cec2691ca4897ec6683dc840677a6760ba0ae6de6
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — agents-s7-s11, 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — plan §7b "the three regeneration commands were read, not run." and plan §0 "No test runner was run and nothing was written." — the landing, the golden counts it rewrites (72 and 32 plus 5 props) and the hook acceptance of commit 0 are executable claims that no one executed before lock — run the three generators plus their three --check commands in a throwaway worktree and a commit-0 dry attempt (hook rc), and record the rc and diff in the plan.
+
+BUG severity=HIGH — agents-s7-s11, 11.2 dated note 2026-11-21 "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it)" — plan §7b "folded by the plan grounder from the plan seat's section, checked against the repo" and commit 0 "It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md ... prereg-MF-97-1.json ... docs/reports/panels/MF-97.json ... and the task file" — this plan is itself a fold (RR-0402, RR-0403, RR-0405) yet no step, file list entry or commit 0 item produces the launch-required FOLD-CHECK.md — add FOLD-CHECK.md under docs/reports/reviews/task-442/ to commit 0 and name the grounder who writes it.
+
+DEFER severity=MED — agents-s7-s11, 7.4 dated note 2026-11-21 "The default stays one compliance run per rule list" and "a list is never trimmed in either form" — plan §5 "the orchestrator runs the plan compliance lens for each added list on a committed context holding this folded plan before launch." — plan altitude runs are named only for the 10 added lists, the 5 lists resolved before the Files amendment get no named plan run — name a plan run (or the joined per-seat form) for every resolved list before launch.
+
+DEFER severity=MED — agents-s7-s11, 7.6 dated note 2026-11-20 "after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names" — plan §6 "the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT." — no step re-makes the in- inputs and re-runs the out- outputs after the round-1 fix commits, so the close cannot show them equal to the range diff at HEAD — add the re-make and re-run step to the landing before the close commit.
+
+DEFER severity=MED — agents-s7-s11, 7.10 dated note 2026-11-19 "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — plan §6 "the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs" — no repo copy step is named and A1 and A3 read "docs/reports/lanes/<date>/<lane>/red-T1.out" with no statement that this path is in the repo — add the copy into docs/reports/lanes/<date>/<lane>/ in the lane's last commit and point A1 and A3 at that copy.
+
+DEFER severity=LOW — agents-s7-s11, 11.9 TKT-1 "`Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number" — plan header "Task: task-442 (FINAL.7, build). Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)." — the plan carries no Ticket:, Rule:, Scope:, Done-condition: or max_fix_rounds: line, and the task's "## Acceptance criteria" block is empty — add the TKT-1 header lines, with max_fix_rounds: 2 and the task's acceptance criteria as Done-condition.
+
+DEFER severity=LOW — agents-s7-s11, 11.9 TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped`" — plan §9 ends "Ruled by the grounder: moot. The operator ruled the correction (RR-0402, MD:2034) and RR-0403 (MD:2040) puts it in this task, so there is no entry and no card is needed." — the material under review ends with no STATUS line — close the plan with one STATUS line.
+
+MET — agents-s7-s11, 11.4 "The failing tests ... cases, fixtures, red/green expectations, invocation mode ... are written INTO the plan" — §3 T1, T2, T3 — every case, the fixture and the hook invocation are in the plan before any code.
+MET — agents-s7-s11, 11.3 "Every lock is proven in BOTH directions" — §3 T2 red deletes read-stored.ts:29 so (a)'s rejects.toThrow fails on the old shape and passes on the restored line, proven with git diff --quiet.
+MET — agents-s7-s11, 7.6 dated note 2026-11-22 "round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings ... and round 2 ... resolves CRITICAL and HIGH only; two rounds at most" — §6 "round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH".
+MET — RR-0405 "option a" — §7b "the basement, not shared stairs and halls" is the exact ruled wording.
+MET — RR-0402 "a" — §7b "the text drops the percent (section 7b), and T3 lands with 3 entries and no exception".
+MET — agents-s7-s11, 7.4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — §6 "then a separate grounder before any fold (RR-0359, MD:1687)".
+MET — agents-s7-s11, 11.9 TKT-1 dated note 2026-11-19 "A code commit names its task by the trailer `Task: task-N`" — §6 "Trailer: `Task: task-442`".
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this.. we are good to go!" — §1 Out "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 7
+Rules met: none
+
+---
+⏱  67601ms (67.6s)
+📊 Tokens — total: 38807, input: 23738, output: 15069, reasoning: 13461

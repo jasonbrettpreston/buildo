@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.671Z file_sha256=98452e981f325151357532cdc05edf447d6066e5df32eefa303f084504cb3cf7 prompt_sha256=f0f210991854c29bc26b59e65db8f152e6b895fa598ddff7b18e8cd7707f9175
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG/DEFER list first, then MET lines, then the verdict block.
+
+DEFER severity=MED — card Description "tests of the interface between the front end and the database as ranked by FINAL.5 (what exists is reused first)" — PLAN-442 §2 "The rank is from docs/reports/reviews/task-440/RULE-CHECKS.md:169-215. I did not re-rank." — the plan takes its taken/skipped set from RULE-CHECKS.md and never shows that document is FINAL.5's rank, so the selection is tied to an unpasted report rather than to the clause the card names — fix: state that FINAL.5 resolves to RULE-CHECKS.md:169-215 (or cite FINAL.5's own line) once, before the table.
+DEFER severity=MED — RR-0359 "Nothing is folded before the grounder has ruled" — PLAN-442 §4 item 2 "Ruled by the grounder (Q4): fe.27 fails a column that is not in the migrations and a path that is not on the whitelist ... Not a break; no test is planned on it." against §9 "Q4. Section 4, item 2: ... If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii))." — the plan folds the four whitelist paths out of scope on a ruling its own question list still records as open and possibly needing the operator's word, so the no-fold-before-ruling record is not closed — fix: paste the grounder's Q4 answer into §9 or take the operator's word before locking §4 item 2.
+DEFER severity=MED — RR-0385 "Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — PLAN-442 §6 "Other tasks: task-367 and task-441 share no file with this task and are kept; task-446 is kept; task-447 is merged into this task (RR-0403) and gets no lane; McFixReborn waits for the tests (RR-0388)." — only task-367, task-441, task-446 and task-447 plus McFixReborn get a disposition, and the pasted card names no full set, so kept/updated/deleted for the rest cannot be checked (cannot see) — fix: list every previously named task with its disposition in one line.
+DEFER severity=LOW — card Description "each test is proven red on a planted defect before it counts" — PLAN-442 T1 "the lane adds one temporary line inside (a)'s control that drops the `storeys_max` rows of `detached_house` ... fails at (a)'s `toEqual([])`" — T1's red is proven through case (a)'s control with a temporary line, while the committed planted-defect cases (b), (c) and (d) are never shown failing, so A1 records red for (a) only — fix: drive the red run from one committed case (b) so its own assertion is the one that fails.
+DEFER severity=LOW — card Files line "src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json" (no src/lib path) — PLAN-442 §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds)." — the Files clause is met only by leaning on a staged-path check while the red run edits a file the line does not name, and no pasted clause authorizes that edit — fix: name src/lib/report-projection/read-stored.ts in the Files line at the plan review, or record the plant as a lane artifact with the restore proof in the same record.
+DEFER severity=LOW — card Description "Every build task of this plan follows the six steps" — PLAN-442 "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the pasted card lists no six steps, so compliance with each named step can only be judged against §6's commit order (cannot see the step list) — fix: reproduce the six steps with the section or acceptance row that discharges each.
+
+MET — RR-0402 — PLAN-442 §7b "RR-0402 (MD:2034) dropped the percent" — the percent leaves the shown text and A8 greps the old string to nothing in scripts and src.
+MET — RR-0405 — PLAN-442 §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" with the K2 assertion "expect(t).toBe('the basement, not shared stairs and halls');" and A9 grepping that wording once per file.
+MET — RR-0403 — PLAN-442 §6 "task-447 is merged into this task (RR-0403) and gets no lane", and §7b "task-447 is merged into it and gets no lane".
+MET — RR-0404 — PLAN-442 §7b "folded by the plan grounder from the plan seat's section", so the task-447 planner's section lands inside task-442.
+MET — RR-0392 — PLAN-442 §1 Out "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)", and §4 item 3 keeps the main-only gap named instead of closing it with a workflow change.
+MET — RR-0388 — PLAN-442 §6 "McFixReborn waits for the tests (RR-0388)".
+MET — orchestrator-doc17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — PLAN-442 "RR-0405, MD:2052, verbatim: option a" — every citation in the plan is a RULED or decision entry quoted with the operator's words, no register reading is used as a ruling.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  85144ms (85.1s)
+📊 Tokens — total: 41167, input: 23073, output: 18094, reasoning: 16733

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.593Z file_sha256=fd6995c0378924a5503c6effa8aa57e67449d180f466742a334614ebe3287c53 prompt_sha256=609f74df85cf11f6bf630f0a32841c4ceb0083dabd870458194dc8d1884208a3
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0359 "Nothing is folded before the grounder has ruled (names RR-0359) — "That's ridiculous to fold before the grounder review - the focus is on getting it right"" — PLAN-442-v1 section 4 item 2 "Ruled by the grounder (Q4): ... so fe.27 is met as written. Not a break; no test is planned on it." against section 9 "Q4. Section 4, item 2: does fe.27's ... cover values sent through the lookup route's `page` block? ... the reading needs the operator's word (item 4(ii))." — section 4 closes Q4 on a grounder ruling that section 9 Q4 never records, unlike Q1, Q2, Q3, Q5 and Q6 which each carry a "Ruled by the grounder" note, so the fold on four report bindings rests on a ruling that is not in the plan — fix: append the Q4 ruling to section 9 Q4, or reopen section 4 item 2 and hold the "not a break" finding until the grounder rules.
+
+DEFER severity=MED — card "task-442 FINAL.7 Front end to database tests: every number on a screen is bound to a database field and available" — PLAN-442-v1 section 3 T3 "`legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85)." and "`sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`" — three digit-bearing page texts, one of them "not 100% accurate", are excepted permanently with no owner row and no card, on a basis (fe.18 at 136:85) that is not in the pasted context — fix: cite the pasted clause each entry rests on and name who retires it, or route the three texts to the orchestrator.
+
+DEFER severity=MED — card "every number on a screen is bound to a database field and available" — PLAN-442-v1 section 3 T1 "user_input (the lot-size entry, a design exception by fe.18)" against section 0 "the closed binding set is fe.18 (136:85) and scripts/surfaces/_schema/binding-sources.json: catalogue, content ..., user_input, ad_slot, external_embed and parcels" — T1 calls user_input a design exception while the plan's own note puts user_input inside the closed binding set, so the lot-size binding is left untested on a contradiction — fix: state which clause makes user_input an exception, or add the user_input case to T1.
+
+DEFER severity=MED — pasted list header "The register marks work still owed on these rows (a lock, a step commit, a ruling)." — PLAN-442-v1 section 1 Out "OWED handbook locks (task-367): ... If the task-367 plan review finds a rule it does not carry, that gap is task-367's to take; this task takes none" — all 222 pasted OWED rows and ranks 1-7 of the card's rank (fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44) are excluded on RR-0385 item 6, whose text at MD:1922 is not pasted, so the exclusion cannot be checked from the material under review — fix: quote RR-0385 item 6 (MD:1922) and the task-367 card lines inside the plan.
+
+DEFER severity=LOW — RR-0385 ""Label all realted tasks McFix Final."" — PLAN-442-v1 section 6 "task-367 and task-441 share no file with this task and are kept; task-446 is kept" — the kept related tasks are named but no plan step or acceptance row records the McFix Final label on them, and their labels are not pasted — fix: add an acceptance row or an orchestrator note confirming task-367, task-441 and task-446 carry McFix Final.
+
+DEFER severity=LOW — RR-0404 "RR-0404 planner redirect approved: task-447 planner returns a section for task-442" — PLAN-442-v1 section 7b "folded by the plan grounder from the plan seat's section" — the folded section is attributed to the plan seat and RR-0404 is cited nowhere, so the ruling's provenance cannot be traced — fix: cite RR-0404 at section 7b and name the task-447 planner section as its source.
+
+DEFER severity=LOW — card "Every build task of this plan follows the six steps" — PLAN-442-v1 header "Six steps: the card names them and does not list them; section 6 holds the lane's order." — section 6 lists commit 0, commit 1, output review, close and other tasks, which is not a six-step list, and the six steps are not pasted, so the mapping cannot be verified — fix: number the six steps in section 6 against the card's list.
+
+MET — RR-0402 — PLAN-442-v1 section 7b and A8 — the percent is dropped and `git grep -l -F "10 % circulation"` prints nothing.
+MET — RR-0403 — PLAN-442-v1 section 6 — "task-447 is merged into this task (RR-0403) and gets no lane".
+MET — RR-0405 — PLAN-442-v1 section 7b — the text becomes exactly "the basement, not shared stairs and halls", matching the pasted ruling's wording.
+MET — RR-0388 — PLAN-442-v1 section 6 — "McFixReborn waits for the tests (RR-0388)".
+MET — RR-0392 — PLAN-442-v1 section 1 Out — no CI workflow change, new tool, gate, hook or card is added.
+MET — card Files line — PLAN-442-v1 section 5 — the Files line matches the card's line path for path.
+MET — card "each test is proven red on a planted defect before it counts" — PLAN-442-v1 A1 and section 3 — T1, T2 and T3 each carry a red.out from a blocked commit at a named assertion.
+
+REJECT — card title clause "every number on a screen is bound to a database field and available" — accused of deleting the circulation number instead of binding it to houseplex_circulation_share — not a real issue, the operator ruled the replacement wording in RR-0405 option a, which itself contains no figure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+Rules met: none
+
+---
+⏱  81770ms (81.8s)
+📊 Tokens — total: 35280, input: 17424, output: 17856, reasoning: 16389

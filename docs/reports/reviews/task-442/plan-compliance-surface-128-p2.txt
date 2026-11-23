@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.585Z file_sha256=29a0221dccdc753a0ab89d2f799febc6ba0855301bfe4c0ab5301bb67c9df2e8 prompt_sha256=f5c0971a65005eb10ded4c8b02e3c242c8d39bbb9e7423f091a20204753edbe1
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 "Push for all 4. I don't think we need any other infastrcuture beyond this.. we are good to go!" — plan §6 "The lane never pushes." — the ruling's push half (one push for all four) has no plan step, and nothing names which four tasks go in that push or who pushes — add a section 6 line naming the four tasks and the single push owner, with an acceptance step that shows one push.
+DEFER severity=MED — surface-128 §8 "scripts/reconcile-runs.js, the Step-0 reaper of the sources chain. NOT a target of this spec and never edited by a surface conversion" — plan A4 "both empty (scripts is left out: the text fix regenerates files under scripts/surfaces, section 7b)" — the only whole-tree guard drops all of scripts, so nothing in the plan proves reconcile-runs.js untouched by this conversion — narrow A4 to `scripts ':!scripts/surfaces'` or add an explicit empty diff on scripts/reconcile-runs.js.
+DEFER severity=MED — card "each test is proven red on a planted defect before it counts" — plan T2 "The lane temporarily deletes the throwing line, read-stored.ts:29 ... never stages that file" — T2's red rests on the pre-commit related run reading an unstaged edit, a hook behaviour the plan asserts and never checks, while staging the file would breach the Files line — verify the hook's working-tree/stash behaviour before build, or record how the red is produced if the unstaged edit is invisible to the run.
+DEFER severity=LOW — card "Every build task of this plan follows the six steps" — plan preamble "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the six steps are not pasted and section 6 names four stages (commit 0, work, output review, close), so the clause is asserted, not shown — list the six step names beside the plan section that discharges each.
+DEFER severity=LOW — card "tests of the interface between the front end and the database as ranked by FINAL.5" — plan §2 "A row is skipped only when another task owns it or cannot be tested without a database." against "| 37 | fe.24 | later round |" and "| 39-45 | ... | later rounds |" — ranks 37 and 39-45 are deferred with no named owner, no database block and no round, which is not one of the plan's own skip grounds — name the round that takes rank 37 and ranks 39-45, or record the owner or database block that justifies the deferral.
+MET — RR-0405 "option a" — plan §7b — "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls", with A9 checking exactly one occurrence in each of page-text.json and report-presentation.json.
+MET — RR-0402 "a" — plan §7b — the adopted text carries no figure, and A8 greps the old string absent from scripts and src.
+MET — RR-0403 "a" — plan §6 — "task-447 is merged into this task (RR-0403) and gets no lane", so no separate process is opened.
+MET — RR-0404 "approved" — plan §7b — "folded by the plan grounder from the plan seat's section", the task-447 planner section landing inside task-442.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — plan §6 — "then a separate grounder before any fold (RR-0359, MD:1687)".
+MET — RR-0385 "Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — plan §6 — "task-367 and task-441 share no file with this task and are kept; task-446 is kept; task-447 is merged into this task".
+MET — surface-128 §8 "frozen at C3 by the pipeline programme" and "this spec records rulings about schema, never schema" — plan A4 — "`git diff --stat <launch>..HEAD -- src/lib src/app mobile migrations .github` ... both empty", and no plan step edits step.schema.json or adds a migration.
+MET — card Files line "Files: src/tests/admin-report-preview-live.logic.test.ts, ... prereg-MF-97-1.json" — plan §5 — reproduces the card's paths verbatim, and every path the plan writes (hand-edited source, regenerated presentation and decl, goldens, landing sample, K2 test, queue row, panel, prereg) is on it.
+
+VERDICT: PASS
+Clauses checked: 24   Unmet: 5
+Rules met: none
+
+---
+⏱  105352ms (105.4s)
+📊 Tokens — total: 35493, input: 12703, output: 22790, reasoning: 21735

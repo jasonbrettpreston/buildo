@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.598Z file_sha256=dda2c0097ad0db2b9942d6c3ea79173a654a6f50a14b6313c22da70bae05dd46 prompt_sha256=d119e54866911bd7da565cea8c59a341ed77b15106e7bef0f80eebd245d8311c
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.05 "every number from McBylaws; no maths in the UI" — plan §3 T3 "No number reaches the page through a content text, except the listed exceptions (fe.05)" — The plan creates three content-text exceptions (`legal.line` "not 100% accurate", `sheet.width_placeholder` "e.g. 50", `sheet.depth_placeholder` "e.g. 120"), so numbers still reach the screen from content, not McBylaws, and no pasted ruling authorizes that exception. — Remove the digits from those three texts or bind them to a declared source and obtain an operator ruling.
+
+BUG severity=HIGH — fe.27 "a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist)" — plan §4 item 2 "The strict consumer payload has no key for any of them (src/app/api/parcels/lookup/types.ts:80-96)" — The plan admits the four whitelist paths (`parcel.parcelId` and three `parcel.lot.*`) are not read by the consumer payload, so fe.27's requirement is unmet even though the plan declares it met because the whitelist names them. — Add those keys to the consumer payload or bind the four values through a source the payload reads, and add a test.
+
+BUG severity=MED — task-442 "every number on a screen is bound to a database field and available" — plan §3 T1 "the written row carries a reason starting `switched_off:`" — T1 only flags rows whose reason starts `switched_off:`, so a row written as `not_evaluated` for any other reason, for example a missing input, is not flagged even though the number is not available. — Flag every row whose status is not evaluated, or every not_evaluated reason, not only `switched_off:`.
+
+DEFER severity=LOW — fe.05 "every number from McBylaws; no maths in the UI" — plan §3 T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so" — T3 scans only the `page` block, so a digit added to another shown content block would not fail the test, and the test header comment is the only thing covering it. — Scan every shown content block or name the owning row for the other blocks.
+
+DEFER severity=MED — task-442 Files "Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/report-v2.decl.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/, src/tests/surfaces/report-honest-k2.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json" — plan §5 "read-stored.ts is touched only by the uncommitted plant in T2, which is never staged" — The plan edits `src/lib/report-projection/read-stored.ts`, a path not in the task's Files line, and relies on the staged-path check to keep the scope; a failed restore would leave an out-of-scope change. — Add read-stored.ts to the Files line at plan review, or plant the defect by mocking the guard in the test without editing the file.
+
+MET — RR-0402 — plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" — the percent is dropped as ruled.
+
+MET — RR-0403 — plan §7b "task-447 is merged into it and gets no lane" — no separate process for task-447.
+
+MET — RR-0405 — plan §7b "the basement, not shared stairs and halls" — exact wording.
+
+MET — RR-0392 — plan §1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)" — no new infrastructure is added.
+
+MET — RR-0388 — plan §6 "McFixReborn waits for the tests (RR-0388)" — the wait is kept.
+
+MET — fe.18 — plan §0 "catalogue, content (the label, help-text and legal-copy registry), user_input, ad_slot, external_embed and parcels" — the plan binds displayed fields to that closed set.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+Rules met: fe.18
+
+---
+⏱  162044ms (162.0s)
+📊 Tokens — total: 73205, input: 33770, output: 39435, reasoning: 38359

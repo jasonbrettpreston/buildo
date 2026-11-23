@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T15:39:27.673Z file_sha256=1e94902823aaa99405787e3618b6f768cc4e015e02aad82730f4819a3668f849 prompt_sha256=8c62e0b0773e5f53654ac08f5303fe7b3dcd48f09e1c631d41ce3e9f2ecb790a
+🔍 Lens review of docs/reports/reviews/task-442/context-r2.md (model: deepseek-reasoner)
+
+DEFER severity=MED — plan section 7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" — a person told shared stairs and halls are not included sees a size per unit that still adds a 10 % circulation share, and the removed "10 % circulation" was the only text explaining the gap between their measured basement and the figure shown — the wording is the operator's (RR-0405 "option a") and `houseplex_circulation_share` is pinned at 0.1, min 0.1, max 0.1 (logic_variables.json:2, layer3-catalogue.json:271), so no figure moves today; the disclosure gap opens only on a refit.
+
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "the design option of o1 and o2 is not checked (the type before the slash only, as project.ts does)" — a person who picks the design option (o1 or o2) can see a number the new check never proved the engine wrote for that option's building type, and T1 reports clean — the plan states the limit and RS-1/RS-3 hold the declared half, so the exposure is bounded to two options.
+
+DEFER severity=LOW — acceptance A8 "`git grep -l -F "10 % circulation" -- scripts src`" — a phone screen could keep the old basis wording while web shows the new one and A8 still prints nothing, because the grep does not scan mobile — the plan's own sentence "a grep of circulation over src, mobile and scripts finds engine code and tests only" says mobile holds no copy, so what is missing is proof, not a known stale string.
+
+DEFER severity=LOW — plan section 8 "**T3 catches digits only.** A number written in words passes. This is stated in the test header." — a figure typed into content as a word, for example "ten per cent", reaches the person while T3 reports the page clean — an admitted, stated limit confined to content keys, with no figure moving today.
+
+DEFER severity=LOW — plan T3 "`sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`" — if the lot-size entry box is named only by this placeholder, a screen-reader user loses the box's name once they type and the hint is the only example seen — design text is silent on the renderer and I cannot see whether a persistent label exists, so this stays a defer.
+
+REJECT — plan T3 "`legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85)." — the person still sees "not 100% accurate" with a figure in it, which reads as an unbound number — fe.18 rules "Labels, help text and legal copy are content fields, not an exception", so keeping it matches the design.
+
+REJECT — plan section 0 "catalogue, content (the label, help-text and legal-copy registry), user_input, ad_slot, external_embed and parcels" — the person's own typed lot size and ad slots show numbers that come from no database field, which looks like the rule is broken — the closed binding set names user_input and ad_slot as sources, so the design allows them.
+
+VERDICT: PASS on the person's experience
+States checked: report answered with the houseplex option (the changed row), report answered with other building types (row absent), admin report preview (same seeds), phone surface (cannot see), module-load error of read-stored (cannot see), repeat visit, back, offline (not drawn by this change)   Dead ends found: 0
+
+---
+⏱  54997ms (55.0s)
+📊 Tokens — total: 33571, input: 22888, output: 10683, reasoning: 9884

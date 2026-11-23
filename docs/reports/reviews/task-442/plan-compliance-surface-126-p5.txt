@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.585Z file_sha256=0a0149e308de18bd7b76626320845baa424669b055b6308f6b015aba0b177b7b prompt_sha256=206867894d5c24208bd79f92f71dfe3ecc96d897268e4cc2676608d65cc31128
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — surface-126 §13 "`generate-spec-mirror.mjs --check` clean (mirror drift)" — task-442 plan §7b "(1) `node scripts/surfaces/_schema/seed-report-v2.mjs --write` rewrites report-presentation.json:322 and the provenance hash of report-v2.decl.json" — the work commit regenerates mirror files under scripts/surfaces/_schema but no §7b check and no acceptance row (A8, A10) runs the mirror generator §14 names, so mirror drift is unverified for this change — add `node scripts/violations/generate-spec-mirror.mjs --check` to §7b's post-regeneration checks and to A8/A10 expecting exit 0.
+
+BUG severity=HIGH — surface-126 §13 "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires." — task-442 plan §3 T1 "The lane records red.out, removes the line and commits green." — every red proof is a temporary line deleted before commit, so no committed case ever shows the load-time throw at read-stored.ts:29 or the effective-ON row set firing; §13's model is a committed tampered-file canary, not a lane record — add one committed canary case per lock (a tampered rows copy for T1, a tampered pageBindings copy for T2) on the logic-variable-groups model.
+
+DEFER severity=MED — surface-126 §13 "descriptor↔`surface_descriptors` bidirectional seed drift" — task-442 plan §7b "(3) `npx tsx scripts/surfaces/report-page-capture.ts` rewrites the 32 page goldens and the view of the 5 props goldens ... and the landing sample scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json" — the commit rewrites a file in the surface sample tree while §1 excludes everything needing a database, and no owner is named for the descriptor seed drift check — name the main-only owner of that lock in §4 item 3 beside the fe.19/fe.20/fe.27 gap.
+
+DEFER severity=MED — surface-126 §13 "the declared-schema ↔ introspected-types drift lock of §6.1 step 4 including the stamped `DECLARED-SCHEMA-SHA256`; declared RLS policies equalling `pg_policies` in both directions" — task-442 plan §1 "Anything that needs a database (a lane may not connect to one; the database side of fe.19, fe.20, fe.27 and fe.38 is the main-only db tests of section 4 item 3)." — the carve-out names only the four fe rows, so both §13 locks end up with no run and no owner — add both locks to the section 4 item 3 named gap with their owner.
+
+DEFER severity=MED — surface-126 §13 "archetype profile resolution (each archetype's required-field set, and that a missing required field throws); `platforms[]` gating" and "`usage_events` PK dedup" and "the generated Zod mirror set-equalling the engine's `PARCEL_COST_LINES`" — task-442 plan §1 "Three tests, each red on a planted defect, then green." — none of the five mandated logic cases is added and §2's ownership table names no owner for them, although the plan edits src/tests/surfaces/report-honest-k2.logic.test.ts and scripts/surfaces/_schema/** — add a §2 row per §13 case naming its owner, or take the cases here.
+
+DEFER severity=LOW — surface-126 §13 "every archetype renderer against its golden rendered-tree snapshot, per declared state" — task-442 plan §7b "rewrites the 32 page goldens and the view of the 5 props goldens" — the goldens are recaptured and self-checked but no `*.ui.test.tsx` renders them per declared state and no owner is named — record in §2 that the renderer snapshot set is not this task's, with the owning card.
+
+MET — surface-126 §14 "no migration is authored by this spec" — A4 "`git diff --stat <launch>..HEAD -- src/lib src/app mobile migrations .github` and `git status --short -- src/lib`" — the migrations path is required empty, so no migration lands.
+
+MET — surface-126 §14 "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — task-442 plan §4 item 2 "mobile_parcel_detail.descriptor.json `inputs.field_whitelist`" — the descriptor is cited as read-only evidence and appears in no Files line, no descriptor is edited.
+
+MET — surface-126 §14 "`mobile/app/(auth)/*.tsx`" — task-442 plan §5 Files line — no mobile path is listed and A4 requires an empty mobile diff.
+
+MET — surface-126 §14 "`scripts/dispatch-notifications.js` (and `scripts/lib/push-dispatch.js`) and `scripts/classify-lifecycle-phase.js`" — task-442 plan §5 Files line — neither file is edited and no JOB descriptor is authored.
+
+MET — surface-126 §14 "`lead_parcels` is read by no surface." — task-442 plan §3 T2 "`{ section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } }`" — the added binding reads parcels columns only, the Spec 100 fence holds.
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — task-442 plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls." — the ruled wording is the exact target of the fix.
+
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this.. we are good to go!" — task-442 plan §1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)." — no new infrastructure is opened.
+
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — task-442 plan §6 "McFixReborn waits for the tests (RR-0388)." — the rebuild is held behind these tests.
+
+REJECT — surface-126 §14 Target Files — editing src/lib/report-projection/read-stored.ts — task-442 plan §3 T2 "puts the line back with the edit tool, character for character" plus A4 "`git status --short -- src/lib`" and A6 already prove no lib line and no retained plant reach the branch.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 6
+Rules met: none
+
+---
+⏱  77128ms (77.1s)
+📊 Tokens — total: 29909, input: 13564, output: 16345, reasoning: 14773

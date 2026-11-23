@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.611Z file_sha256=0dbc41105cc5e2887507227cfb7d70637acef8db01cfbf12d0363d3fa2bc7b74 prompt_sha256=08181f15b1b8a95cbf5682b939916c0d50fec306e70adad75f1069f7a241955d
+🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling 2026-11-20, reviewer inputs "the same chunks for code-review, error-paths, ux and security (the split the operator kept)" — Implementation Plan §6 "DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687)." — only the compliance and engineering inputs are scheduled, the four reviewer inputs the operator kept are never run, on a change that rewrites a user-facing string and 109 goldens — add code-review, error-paths, ux and security lens outputs to the output review and to the close's lens output set before plan-lock
+
+BUG severity=HIGH — check-lane-close, launch commit "the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD)" — Task block "assignee: none" and §6 "this lane then branches from the board head" — the plan never puts a lane assignee on the board copy of the task file before the work, so no launch commit L exists and the close is refused whatever the work does — have the orchestrator set the lane assignee on the board task file in the commit that becomes L, name L in §6, and launch from it
+
+DEFER severity=MED — check-lane-close, close form "with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs" — §6 Close "REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT." — the close step names GROUNDER.md but not the one-line-per-BUG/DEFER form, so a well-meant close is refused at the commit-msg hook — write the required GROUNDER.md line form into §6 Close
+
+DEFER severity=MED — §5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8)" — §6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919)." — no step records a rejected finding with its reason, so rejected findings can return in round 2 or in a later round of this card — add: every rejected finding written to TRIAGE.md (or the plan) with its reason at round 1
+
+DEFER severity=MED — §5.2 "For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift" — §7b "UNVERIFIED: that the hooks accept commit 0 and the McFrontend arm on the trailers alone (precedents 62b2ffed6 and 0ae43e69c); the three regeneration commands were read, not run." — the whole §7b landing rests on three regeneration commands and a commit-0 hook path that were read, not exercised, and A8-A10 cannot see a wrong write order — run the three commands and their `--check`s on a scratch worktree and dry-run commit 0's message through the hooks, then record both, before launch
+
+DEFER severity=LOW — §5.2 "For each load-bearing claim in the spec, verify it against the live code / DB / behavior" — §0 "UNVERIFIED:" first bullet "the engine writes a row whose switch is off as not_evaluated with reason switched_off:<id> (maxbld/rows.js:402)" — T1 case (a) expects `[]` from the engine's own stored rows for the 17 pairs while §0's only dry run read the seeds, so the engine-output premise under T1 (a) is unverified — print `storedRowsOf(KEY[0])` for the 17 pairs once read-only and record the count in §0
+
+MET — §5.3 second pass — §6 "then a separate grounder before any fold (RR-0359, MD:1687)" — the grounder runs on the lenses' findings, not the code, and Q1-Q6 carry its rulings with reasons
+MET — task-366 note "The lane that wrote the work leaves the task RUNNING with 'grounder owed'" — §6 "The task file goes in the same diff, status RUNNING (137:84, :100)."
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — §1 "Out: Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)."
+MET — RR-0402 / RR-0405 — §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls."
+MET — RR-0388 — §6 "McFixReborn waits for the tests (RR-0388)."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+Rules met: none
+
+---
+⏱  105828ms (105.8s)
+📊 Tokens — total: 38516, input: 16057, output: 22459, reasoning: 21335

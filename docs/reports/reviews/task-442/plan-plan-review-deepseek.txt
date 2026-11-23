@@ -1,0 +1,51 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T15:39:27.683Z file_sha256=1e94902823aaa99405787e3618b6f768cc4e015e02aad82730f4819a3668f849 prompt_sha256=9e8c50987214edddd49653c993276bf532f06c6fd2975cc49af0c7e1f382ef62
+🔍 Lens review of docs/reports/reviews/task-442/context-r2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 T3 "the lot-size error texts with {lo} and {hi} … covered too" — T3 scans the raw template (placeholders carry no digit) and declares the key covered, but the rendered page substitutes real numbers; if those are typed constants this is the same typed-number class the task exists to catch, and T3 stays green — trace the substitution site (`git grep -n '{lo}\|{hi}' -- scripts src mobile`) and either verify the substituted values come from a seed/DB field and note that in the test header, or add a finding so T3 covers the *rendered* value.
+
+BUG severity=HIGH — §3 T1 helper (row EXISTENCE) + §3 T2 guard (column EXISTENCE) — neither asserts VALUE non-null, so an engine row `evaluated:true, value:null` (or a nullable parcels column NULL for the lot) passes both tests while the page shows blank/zero — add a value-non-null assertion on the written row in T1, and a non-vacuous assertion in T2 case (b) that the parcels columns the page binds are NOT NULL in the migrations, else name the gap.
+
+BUG severity=MED — §3 T1 cases (b)/(c)/(d) — the expected counts rest on unverified per-section binding facts (gfa_max_m2 bound in o3 only; o1+o2 both detached_house; o3 has exactly 7 catalogue pairs) not confirmed by the §0 dry run — verify with `jq '.sections[] | select(.id=="o3") | .fields[] | select(.source.kind=="catalogue") | .field' scripts/surfaces/_schema/report-v2-seed/report-page.json` (and for o1/o2) before implementation, else the "expected 1 finding / 7 findings" numbers are guesses.
+
+BUG severity=MED — §3 T1 filter `source.kind === 'catalogue'` — pageBindings may also emit `content`, `ad_slot` or `external_embed` (closed set per §0, binding-sources.json) which T1 skips silently — assert the observed set of `source.kind` values equals `{catalogue, parcels, user_input}` (no ad_slot/external_embed) or name the omission in the test header.
+
+BUG severity=MED — §3 T3 exception list — once `legal.line` / `sheet.width_placeholder` / `sheet.depth_placeholder` are on the list, ANY future digit change to those keys passes; the nav-by-route form pins count, not content — pin each excepted key's current string (`toEqual('e.g. 50')` etc.) so a content change that adds a figure is caught.
+
+BUG severity=MED — §3 T2 + §8 "T2 stays the last describe" — task-383's T9/T10 add describes to the same file's end and are said to fold ahead (§6), but if that fold is deferred, the `vi.resetModules()` leak lands on a later describe — enforce the invariant rather than relying on convention (sentinel test asserting nothing follows, or move T11 to its own file `src/tests/surfaces/report-read-stored.logic.test.ts`).
+
+BUG severity=MED — §7b regeneration vs task-411 — task-411 (wf1/inc1b-areafactor) edits formatter names in report-presentation.json and is said to fold ahead; if deferred, this lane's `seed-report-v2.mjs --write` overwrites its edits or the reverse — add a pre-flight `git log --oneline <board>..HEAD -- scripts/surfaces/_schema/report-presentation.json` that must be empty (or rebase) before regenerate.
+
+BUG severity=MED — §3 T2 plant on read-stored.ts:29 + `.husky/pre-commit` — the plan relies on the src/lib plant never being staged, but a lint-staged or `git add -u` in the pre-commit path would sweep the deleted throw into the work commit and A4 would only catch it *after* a poisoned commit — read `.husky/pre-commit` and verify it does not run lint-staged/`add -u` over `src/lib/**`, or revert the plant before any hook run (prove red via `git stash`, not a staged plant).
+
+BUG severity=MED — §3 T2 case (b) — "columns keys equal to the parcels columns of pageBindings()" is trivially true if pageBindings ever returns 0 parcels columns (empty==empty) — add `expect(parcelsColumns.length).toBeGreaterThan(0)` inside (b) so the control is non-vacuous.
+
+BUG severity=MED — §0 item 3 / §3 T2 — T2 proves red only the one throw at read-stored.ts:29; verify there are no other module-load or load-time invariant throws in `src/lib/report-projection` also unproven — `git grep -n 'throw new Error' src/lib/report-projection/` and note whether each is tested.
+
+BUG severity=MED — §4 item 2 / readLotFacts (read-stored.ts:48-55) — the load-time throw checks `pageBindings`' parcels columns; `readLotFacts` reaches `parcel.lot.*` paths through a separate probe and the plan cites them as whitelisted but not gated — verify each `parcel.lot.*` path read by the probe is also in PARCEL_SELECTED (or name it as an uncaught path).
+
+DEFER severity=MED — §3 T3 "blocks outside `page` … out of scope" — a digit in `summary.*` or a legal block outside the `page` block passes T3, and fe.05 ("every number on a screen") covers those screens too — record as a named fe.05 gap for a later round rather than silently accepted scope.
+
+DEFER severity=LOW — §3 T1 "reason starting `switched_off:`" — couples the helper to maxbld/rows.js:402's reason format; a future rename silently empties the finding set — note as a known coupling in the test header.
+
+DEFER severity=LOW — §7b mobile rebuild — verify the mobile app reads `report-presentation.json` via API rather than a bundled copy of the seed text (`git grep -l 'report-presentation\|circulation' -- mobile`), else the text fix ships stale until a mobile release.
+
+REJECT — §1 "Anything that needs a database … Out" — this plan has no DB writes, no migrations, no network, and no writers to contended rows, so the classic data-integrity / network / concurrent / deploy-failure modes do not apply — the real residual modes are test-integrity (false-green) and filesystem/fold residue, which the findings above target.
+
+REJECT — §8 rollback "revert the work commit and the close commit, return the task … revert commit 0" — adequate for a test-only + content-text change; no migration DOWN, no data to restore; blast radius is the touched test files + regenerated goldens + one content text, all restored by the reverts.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers:
+- The `{lo}` / `{hi}` runtime substitution — treated by the plan as "covered" by T3 yet unverified; if the bounds are typed constants this is exactly the class of bug the task exists to catch and T3 will not see it.
+- Row/column existence vs value null-ness — T1 and T2 verify the pipe exists and is selected, not that the pipe carries a value; a null value yields a blank/zero page with both tests green.
+- Fold-order dependence of T2-last and of the 7b regeneration (task-383 T9/T10; task-411 formatter names) — two failure modes hinge on a fold that the plan says is guaranteed but that can slip, and neither has a pre-flight check.
+
+Top 3 unverified data premises:
+- `gfa_max_m2` bound in o3 only (T1 case b expects exactly 1 finding) — verify with `jq '.sections[] | select(.id=="o3") | .fields[] | select(.source.kind=="catalogue") | .field' scripts/surfaces/_schema/report-v2-seed/report-page.json`, and again across all sections to prove uniqueness.
+- `o1` and `o2` are both `detached_house` and each binds `storeys_max` (T1 case c expects findings on both) — verify with `jq '.sections[] | select(.id=="o1" or .id=="o2") | {id, building_type, s: [.fields[] | select(.field=="storeys_max")]}' …`.
+- Parcels columns bound by the page are NOT NULL in the migrations (T1/T2 do not test the value, only selection) — verify with `git grep -n 'NOT NULL' migrations/ | grep -Ei '<bound-column>'` across the parcels-bound columns listed by `pageBindings` (e.g. `max_build_fsi` and the four selected columns at read-stored.ts:28).
+
+---
+⏱  111104ms (111.1s)
+📊 Tokens — total: 45310, input: 23775, output: 21535, reasoning: 19528

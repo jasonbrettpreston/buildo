@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T15:39:27.659Z file_sha256=1e94902823aaa99405787e3618b6f768cc4e015e02aad82730f4819a3668f849 prompt_sha256=bea921b08e00c517db458a00a11e2467e378b63dc3eafc6a0d74b9c3ff6f8e4e
+🔍 Lens review of docs/reports/reviews/task-442/context-r2.md (model: deepseek-reasoner)
+
+BUG severity=MED — plan §3 T1 "the written row carries a reason starting `switched_off:`" — a row the engine writes as not_evaluated with any other reason (or with an absent value) is treated as written, so a pair whose number the screen cannot show passes unwritten() and T1 stays green — report every row whose status is not_evaluated regardless of reason, or whose value is null or missing, and add a case for it.
+
+DEFER severity=MED — plan §8 "T3 catches digits only. A number written in words passes." — the guard fails open for spelled numerics, so a later "ten per cent" copy reaches the page with T3 green and no entry owed — add a number-word pattern to the same scan and a planted "ten m" case beside case (b).
+
+DEFER severity=LOW — plan §3 T2 (b) "returns `columns` keys equal to the parcels columns of `pageBindings()`" — no floor on the parcels column count, so if pageBindings() yields zero parcels bindings the control passes on an empty set — assert the parcels column set length is at least 1 before the equality.
+
+DEFER severity=LOW — plan §3 T1 "For each `pageBindings()` entry with `building_type !== null` and `source.kind === 'catalogue'`" — a catalogue binding with a null building type is skipped silently, so a future type-independent field escapes T1 with the 17-pair floor still met — count the skipped catalogue bindings and assert that count is zero, or list them.
+
+DEFER severity=LOW — plan §7b "Regenerate, in this order, each with its own check" — no rule for a step that fails part way, so a retry runs the write chain on a half written tree and the plan never says whether the generator converges or the paths must be reverted first — add: on a failed step, `git checkout --` the regenerated paths and rerun from step 1.
+
+REJECT — plan §3 T2 (a) "vi.doMock('@/lib/report-projection/project', async (orig) => ...)" — if the mock fails to intercept the relative ./project import the guard never fires and the case could look satisfied — the import then resolves the real bindings, `rejects.toThrow` fails and the test goes red, so the miss cannot go green.
+
+REJECT — plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls." — the 10 % figure is removed from the screen rather than bound to `houseplex_circulation_share`, so a number that exists in the engine is now shown nowhere — RR-0405 option a rules that wording and logic_variables.json:2 pins the setting min = max = 0.1, so no wrong number can show and no refit can make the text false.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (T2 dynamic import rejection, the load-time throw at read-stored.ts:29), empty (zero engine rows, zero parcels bindings, zero unexplained digits, a missing row per pair), retry (rerunning the seed and capture chain, rerunning the related suite), time-out (none in the change; the only async path is the bounded import), double-submit (commit 0 and the MF-97 claim, T2's doMock registered once with one doUnmock in finally), degrade-safe (not_evaluated rows in T1, spelled numbers in T3, the basis text after a setting refit), idempotency (T3 shrink-only exception list, the K2 revert, the read-stored.ts restore)   Unguarded: 2
+
+---
+⏱  61139ms (61.1s)
+📊 Tokens — total: 33849, input: 22889, output: 10960, reasoning: 10157

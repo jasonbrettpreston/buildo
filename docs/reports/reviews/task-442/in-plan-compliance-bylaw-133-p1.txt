@@ -1,0 +1,994 @@
+LIST bylaw-133 sha256:4d2357fe7b378d2ba4d5fb2b3af126d225dfdc25406fb9c0e50c8d22cb529ea0 material sha256:05f4e21ee2abd09ec136b70cd6f9df5874267482b015c7abff0da0c06dcefbb0 part 1 of 3
+RULE LIST bylaw-133 (docs/specs/01-pipeline/133_bylaw_handbook.md, sections 2. Rules by provision family; 3. Rows with an OWED marker), part 1 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules by provision family
+
+
+### 20.10 — Permitted Use
+
+First clause cited: 10.20.20.10.
+
+- **m.431** PERM reading: a residential building type is permitted only through 10.20.20.10(1) read with 10.20.20.40(1) (R zone 10.10.20.10 / 10.10.20.40) and its own lot condition.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the step reads the stored permission word with its lot condition; the PERM worked examples…
+
+
+### 20.20 — Permitted Use - with Conditions
+
+First clause cited: 10.10.20.20.
+
+- **m.81** Operator rulings on the A1–A3 agreed-unit findings R1–R11 (2026-10-08 16:05).
+  Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-XREF, G-SHAPE, G-TEXT (slicer literals and defects); vocab dsl_target,… · +5 dated notes
+
+
+### 20.40 — Permitted Building Types
+
+First clause cited: 10.20.20.40.
+
+- **m.369** Four use-scope output findings: split RM 253/475, 600.60 units bind only the Sixplex Overlay, one description corrected, one reason precedence.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+- **m.401** Houseplex 5-6 units have a permission route on every relevant lot (SIX-COA, O-18).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: A0277 route test; oracle C (MB-27/MB-31); record: chat-rulings-register.logic.test.ts ›…
+
+- **m.394** Routes are Phase 2's and complete (R4-01).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: route fixture A0277 coa_required on 10.20.20.40(1) (MB-27/MB-31); record:…
+
+- **m.395** Varied clauses are a list, per option (R4-02).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: varied-clause list fixture (MB-27/MB-31); record: chat-rulings-register.logic.test.ts ›…
+
+- **lc.17** Semi-detached houseplex only on half of an existing semi
+  Status: RULED · OWED · Enforced by: P5.13 vector; O-4 sample
+
+
+### 30.1 — General
+
+First clause cited: x.30.1, 10.20.30.1, 10.80.30.1.
+
+- **m.180** Chapter 900 exceptions and houseplexes: the detached-house substitution and "more permissive prevails".
+  Status: RATIFIED 2026-10-18 · Enforced by: vocab exception_type_alias; M-75 corrections on the 15 PROCEDURAL units; effective() rule 4 branch + red…
+
+- **m.187** Q1–Q15 dispositions. Each recommendation is adopted as written there: Q1: the three RD null verdicts (10.20.30.1(2), 10.20.40.1(6)(A), 10.20.40.1(7)) are recorded wrong → M-180; the 10.5 ones stay as ruled; the four suite notes ride the M-177 lane.
+  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (F06, F08, F10, F22) and the keyer A + B re-keys (Q13) (OWED, keying lane); review-page… · +4 dated notes
+
+- **m.252** An exception clause that names the building type is not displaced by "the more permissive regulation prevails"; duplex / triplex read as a 2- / 3-unit houseplex.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-8 / M-252 — …" (red first: docs/repo…
+
+
+### 30.10 — Lot Area
+
+First clause cited: 10.80.30.10, 10.60.30.10.
+
+- **m.174** RM review batch (operator 2026-10-15): restrictive design choices are disclosed, not bound (applies M-172 / M-173).
+  Status: RATIFIED 2026-10-15 · Enforced by: M-75 corrections (5 applied, 5 held); vocab design_choice_disclosure.unit_sentences · +1 dated note
+
+- **m.181** The semi-detached houseplex's 50 % lot area and frontage apply; a semi-detached house on two lots stays a disclosed site fact.
+  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (area: 3 units); keyer A + B re-key (frontage: RS/RM (A)/(B)); G-EVAL red vector, semi… · +2 dated notes
+
+
+### 30.20 — Lot Frontage
+
+First clause cited: 10.20.30.20, 10.40.30.20.
+
+- **m.145** The 1.0 m-per-unit driveway reduction is a relief arm: the unit is UNUSUAL.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
+
+- **lc.56** A share of a cited requirement displaces it (2026-10-19).
+  Status: RULED 2026-10-19 · Enforced by: bylaw-unfixed-keying.logic.test.ts; G-XREF
+
+
+### 30.40 — Lot Coverage
+
+First clause cited: x.30.40.
+
+- **m.182** "A residential building with a secondary suite" matches the suite class.
+  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (~14 units); applies() suite match + red test (OWED, P2-10 with M-177(1)(b))
+
+- **m.191** Garden-suite coverage: (A) counts the suite's footprint, (B) excludes it, and x.30.40(1)(D) applies under both.
+  Status: RATIFIED 2026-10-18 · Enforced by: G-EVAL vector garden lot LC 35 (OWED, P2-10); Spec 78 P5.13 · +1 dated note
+
+- **m.221** Keying defect: the M-182 secondary-suite release is unkeyed (reality check §5.2).
+  Status: APPLIED 2026-10-18 · Enforced by: M-182 corrections: bylaw-evaluator-fixes.logic.test.ts › "M-221 / M-182 — …" (green; red at 7a782801^); the…
+
+
+### 40.1 — General
+
+First clause cited: 10.80.40.1.
+
+- **m.173** Three operator review rulings (2026-10-15).
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab scenario_class_units, lot_condition.no_individual_private_driveway,…
+
+- **m.176** MaxBLD answers the maximum-build case.
+  Status: RATIFIED 2026-10-15 · Enforced by: M-172 classes (vocab.design_choice_disclosure, vocab.undetermined_condition_disclosure); main-wall model:…
+
+
+### 40.10 — Height
+
+First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10, 10.20.40.10.
+
+- **m.184** Q-MW1: compute both roof forms and headline the larger.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 §Phase-5 roof-form arms + red vectors (RD HT 10.0 flat vs pitched; R 5:3 cap) (OWED, P2-10 / Spec 78…
+
+- **m.185** Q-MW2: the maximum takes dormers at 40 % of the wall width.
+  Status: RATIFIED 2026-10-18 · Enforced by: element_width_pct units re-keyed partially_modelled (OWED, keying lane); Spec 78 §Phase-5 red vector (OWED,… · +2 dated notes
+
+- **m.186** Q-MW3: RT has no main-wall rule.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 §Phase-5 RT vector: walls = height (OWED, Spec 78 §Phase-5 commit ①)
+
+- **m.190** The main-wall family is mapped by provision; an RM houseplex has no main-wall cap.
+  Status: RATIFIED 2026-10-18 · Enforced by: family map (OWED, keying lane); M-29 sample entries; Spec 78 P5.13 vectors (OWED, step commit ①) · +1 dated note
+
+- **m.200** R has a flat-roof set-back storey: 10.10.40.10(11) and (12).
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2 item 5; P5.13 (OWED, ①); upper_storey_setback_m target (OWED, keying lane, M-223)
+
+- **m.201** An unlabelled RM lot gives a houseplex 12.0 m.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①); Layer 2 height_m by class (OWED, Layer 2 step)
+
+- **m.217** Evaluator defect: the zone-category scope of M-159(1) is not enforced.
+  Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — no applied unit comes from a non-residential chapter…
+
+- **m.218** Evaluator defect: main_wall_height_m is not_evaluated:no_candidate in R/RD/RS/RM (reality check §5.2).
+  Status: APPLIED 2026-10-18 · Enforced by: INV-19 (M-218 arm): bylaw-evaluator-fixes.logic.test.ts › "INV-19 — …" › "M-218: …" (green 2026-10-20; red… · +3 dated notes
+
+- **m.237** M-220 absent-article arm (19 cells)
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-8 / rule 7a / M-186 — …"; bylaw-evaluator-fixes.logic.test.ts › "INV-19…
+
+- **m.260** The by-law handbook is Spec 133 — By-law Handbook, a generated reading spec.
+  Status: RULED 2026-10-21 · Enforced by: spec133-bylaw-handbook.logic; generate-bylaw-handbook.mjs --check (pre-commit); spec-split-check --check…
+
+- **m.391** Storeys: Phase 2 decides the cap, S-1 only converts height (R3-08).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: houseplex fixture: storey cap not_applicable stored, S-1 used only where no cap is stored…
+
+- **m.404** S-1: storeys from height use cited logic variables (2.3 m ceiling, 212 mm floor assembly, roof allowance one assembly plus 0.3 m).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: each S-1 variable is seeded with its value and citation (MB-31);…
+
+- **m.457** Increment 2 builds the roof forms: increment 6b's flat set-back storey and pitched roof with attic move into increment 2, with the main-wall share caps; the larger is headlined.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the increment-2 rows tagged "2", locked by src/tests/st…
+
+- **m.459** Storeys under the main-wall limit use the S-1 floor-to-floor, with no parapet deducted.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the wall-storeys row and its examples, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.461** The pitched roof is taken at the steepest pitch the height limit allows, capped in R by the stored roof slope cap.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the pitch row, reading the stored roof_slope_max, locked by layer3-catalogue.logic.test.ts…
+
+- **m.465** Roof form is a labelled design option in Phase 2 (M-400's first option): height_m, main_wall_height_m and upper_storey_setback_m are stored for a flat or shallow roof and for a pitched roof, with the clause's own flat-or-shallow threshold beside them; Layer 3 headlines the larger.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the Phase 2 build (red first, prereg), locked by src…
+
+- **m.468** Both x.40.10(2) wall pairs are computed as labelled arms; the larger is headlined and the other shown.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the two arm rows and their labels, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.469** Dormers are taken at 40 % inside the attic test; the free share of the held pair is undecided until its geometry is ruled, so the headline reads "at least X" with headline_lower_bound: free_share.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the dormer closed form inside the attic rows, the four defaults and their disclosures, locked…
+
+- **m.470** The free share of the held pair is modelled in the pitched form as a full-span end block at its maximal share; each arm takes the larger of its with-block and without-block figure; the flat form keeps the plain set-back plate.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the two arm rows with the max(), the flat plate and the disclosure, locked by…
+
+- **m.471** "Despite regulation x.40.10(2)" in the flat-roof main-wall clauses replaces the held-pair route on a flat roof: RD (4)(A) literally, and R (11)/(12), RS (6), RM (6) taken the same way; the union of both routes is not computed.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the Phase 2 lock (operator, :294): on the RD flat-roof design-option row…
+
+- **m.473** Increment 2 discloses RD 10.20.40.10(8) (a qualifying attic of 20 m² or less used for mechanical equipment is not a storey) and keeps 382.494 on A0182, A0203, A0205, A0229 and A0277.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the disclosure word and the five golden cells, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.482** Phase 2 stores principal roof_slope_max as unregulated by absence in RD, RS, RM and RT for every class, and in R for detached_houseplex, semi_detached_house and semi_detached_houseplex; R detached_house and house_with_secondary_suite keep 5:3 (10.10.40.10(4)).
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 (lane E): the red-first lock src/tests/bylaw-mb27l2-roof-slope.logic.test.ts (new,…
+
+- **m.484** The 1:4 roof test of the RD Chapter 900 exceptions is keyed as the design-choice token flat_or_shallow_roof (the 1:4 re-key, its own MB-27.L2 sub-task before the axis night); on those lots the pitched option is taken at a slope of at least 1:4 and the 1:10 to 1:4 band is shown not evaluated.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the red-first lock src/tests/bylaw-mb27l2-1in4.logic.test.ts (new,…
+
+- **lc.59** Review-page rulings, batch 4 (2026-10-19).
+  Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts (1); INV-21 (2)
+
+
+### 40.20 — Building Length
+
+First clause cited: 10.20.40.20, 10.40.40.20, 10.10.40.20.
+
+- **m.206** The one-storey 2.0 m extension is applied to renovations only.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +2 dated notes
+
+- **m.230** RS 10.40.40.20(4): "Despite regulation 10.20.40.20(1)" is read as RS's own 10.40.40.20(1).
+  Status: RULED 2026-10-20 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-230 — …" (red first: 2 of 3); bylaw-golden-lots.logic.test.ts…
+
+- **m.240** Rule 7a v2: absence is decided per (zone, building type, target); a definition or another type's limit is not a limit.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "R-7a-v2 / M-240 — …" (red first: docs/rep…
+
+- **m.255** Clauses the City enforces are keyed where the text gives a value.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-13/14 / M-255 — …" (red first: docs/…
+
+
+### 40.30 — Building Depth
+
+First clause cited: 10.10.40.30.
+
+- **m.204** Houseplex depth and length releases.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2 item 1, P5.10 gain_reasons (OWED, ①)
+
+
+### 40.40 — Floor Area
+
+First clause cited: x.40.40, 10.20.40.40, 10.10.40.40.
+
+- **m.183** An exemption that removes every candidate answers "does not apply", never "not evaluated".
+  Status: RATIFIED 2026-10-18 · Enforced by: effective() rules 2/7 + regulated(); red vectors houseplex FSI and houseplex storeys (OWED, P2-0 seat)
+
+- **m.189** Max-build scenarios are a net-new V3 step, one row per parcel × scenario.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.11 / P5.13 (red vectors, checks, census row with owner_specs 78 and admin registration, all OWED… · +2 dated notes
+
+- **m.214** Forms not modelled are disclosed.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.12, P5.14 (OWED, ①) · +1 dated note
+
+- **m.215** Two scope statements. (1) R FSI default 0.6: 10.10.40.40(1)(B), *"if the zone label does not include a "d" value … the permitted maximum floor space index is 0.6"*; RD/RS/RT/RM say "not limited".
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
+
+- **m.455** MB-80 (2): post-signing edits to the MB-64 increment-1 key from the McProof sign-off, as one ledger row (cases PERM-10, FY-1, FY-3, FY-4, FY-5, FY-14, FY-29, FOOT-14, FOOT-16, FOOT-18, ST-5, ST-9, ST-10, ST-11, ST-12, GFA-5, GFA-8, UN-1, UN-4, LV-1, LV-3, LV-6).
+  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): the edits of ~/Buildo-scratch/mcbylaws/MB-64/m… · +1 dated note
+
+
+### 40.50 — Decks and Platforms
+
+First clause cited: 10.20.40.50.
+
+- **m.280** Platform area, platform height and common-wall distance are platform element targets.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-1 / M-280"; red first docs/reports/r…
+
+
+### 40.70 — Setbacks
+
+First clause cited: 10.20.40.70, 10.10.40.70, 10.80.40.70, x.40.70.
+
+- **m.91** lot_condition token building_length_band.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE vocab membership; bylaw-s5 token → input check
+
+- **m.107** A LIMIT may be partly modelled when its inexpressible arm is a lot-condition branch.
+  Status: RATIFIED 2026-10-14 · Enforced by: vocab literal_not_expressed_reason; G-SHAPE (bylaw-s6g M-107 fixtures); G-CLAUSE; evaluator (Phase 3,… · +1 dated note
+
+- **m.147** "All portions of the main wall exceeding a building length of 25.0 metres" is a portion reading.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
+
+- **m.219** Evaluator defect: the garden suite inherits the principal building's setbacks (reality check §5.2).
+  Status: APPLIED 2026-10-18 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-219 — Article x.40 …" (the x.40 scope part, green); the…
+
+- **m.248** A dotted range "regulations X(1) to (n)" displaces every regulation in the range.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-3 / M-248 — …" (red first: docs/repo…
+
+- **m.249** RM apartment side yard on a major street is keyed in the parallel form.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-4 / M-249 — …" (red first: docs/repo…
+
+- **m.257** RD side-yard band: the City examiner's actual-frontage reading is followed only where the text supports it.
+  Status: RULED 2026-10-21 · Enforced by: none (no code change)
+
+- **m.259** The 0.45 m blank-wall side-yard reduction holds only for a side wall without windows or doors: condition token blank_side_wall, taken as met by default.
+  Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-5.logic.test.ts › "F-SC-5 / M-259 — …" (red first: docs/repo…
+
+- **m.283** The apartment primary-windows arm is behind a design token, primary_windows, taken as absent.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-4 / M-283"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
+
+- **m.289** The 0.45 m versus 0.9 m side wall is the existing blank_side_wall design input.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-17 / M-289"
+
+- **m.373** OWED to Phase 3: cumulative 10.80.40 answered.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+- **m.435** R-zone main-building side yard: the stored maximum uses 0.9 m; the 0.45 m blank-wall reduction is a disclosure.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18: item (l), the stored R-zone cell re-keyed 0.45 -> 0.9 with pre-registered moves…
+
+- **m.499** The Layer 2 content of the increment-3 night is settled for five items: the RM houseplex no-candidate cells are re-stored as unregulated by absence (no pitched RM option); the A0399 side yard is keyed red-first; the two frozen oracle tests that Q12-S moves are changed by name; D5 writes class…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27.L2 (the increment-3 night): the red-first locks for the RM absence re-store, the A0399 keying…
+
+
+### 40.71 — Setbacks Exemptions
+
+First clause cited: 10.10.40.71.
+
+- **m.244** The Eglinton transportation-use exemption is scoped to its use.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "D-1 / M-244 — …" (red first: docs/reports…
+
+
+### 40.80 — Separation
+
+First clause cited: 10.10.40.80.
+
+- **m.282** Separation between facing main walls follows the openings to dwelling units: design tokens main_wall_openings and main_wall_openings_each, taken as absent.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-3 / M-282"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
+
+
+### 60.20 — Setbacks
+
+First clause cited: 10.10.60.20.
+
+- **m.241** A private-garage rule binds the ancillary building that is the garage.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "N-2 / M-241 — …" (red first: docs/reports…
+
+
+### 60.70 — Lot Coverage
+
+First clause cited: 10.10.60.70.
+
+- **m.287** R-zone ancillary lot coverage stays at 5 percent: reading B.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-12 / M-287"
+
+- **lc.54** Review-page rulings (2026-10-19).
+  Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts; INV-25; LC-52 lint
+
+
+### 5.10.1.30
+
+First clause cited: 5.10.1.30.
+
+- **lc.32** Renovation readings: conversion within the building, and the by-law limits that touch a basement (5.10.1.30(3), the entrance ≤ 1.2 m, 800.50(80), headroom being a Building Code matter).
+  Status: RULED 2026-10-18 · Enforced by: P5.12 disclosure codes
+
+
+### 5.10.40.70
+
+First clause cited: 5.10.40.70.
+
+- **m.170** Triangular lots get a lot-condition token; a DEFINE unit's M-169 disclosure is a closed per-unit sentence.
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.no_rear_lot_line, undetermined_condition_disclosure.{define_effect, condition_override,…
+
+- **m.376** Phase 3 scope and model values: semis and townhouses are a recorded future build, engine choices are checked against their clause, every model value is a keyed by-law value or an externalized variable.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)" · +1 dated note
+
+
+### 5.10.175.1
+
+First clause cited: 5.10.175.1.
+
+- **m.88** vocab.requirement members. One member per distinct non-numeric obligation in the R5 card list, with the proposed merges: located_within_building, principal_residence_occupation, occupy_entire_building, regulated_or_supervised, waste_storage_in_building (also the wholly-enclosed form),…
+  Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_required_missing, G-SHAPE vocab membership
+
+- **m.90** An exemption / "unless" arm that cites no regulation is a PERMIT.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_required_missing
+
+
+### 10.5.1.10 — Interpretation
+
+First clause cited: 10.5.1.10.
+
+- **m.54** unregulated value and label letter au
+  Status: RATIFIED 2026-10-07 · Enforced by: DSL parser fixtures + G-EVAL (bylaw-s6-dsl, bylaw-s6b-eval) · +2 dated notes
+
+- **lc.55** Label letters and the semi-detached houseplex (2026-10-19).
+  Status: RULED 2026-10-19 · Enforced by: bylaw-unfixed-keying.logic.test.ts; G-EVAL; INV-25
+
+
+### 10.5.20.40 — Conversion of Lawfully Existing Buildings
+
+First clause cited: 10.5.20.40.
+
+- **m.94** Disapply to an absent target is a counted disclosure; "will prevent" is a backward trigger.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-XREF (displaces_unresolved, refs_target_absent count, trigger_unaccounted), bylaw-rulings.logic
+
+- **m.196** Renovation readings: conversion within the building and the by-law limits that touch a basement.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vectors (OWED, step commit ①) · +3 dated notes
+
+
+### 10.5.30.20 — Lot Frontage
+
+First clause cited: 10.5.30.20.
+
+- **m.207** Lot viability gates the new-build rows.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
+
+- **m.228** Through lot: the front lot line is the street line the neighbouring lots front on.
+  Status: RULED 2026-10-20 · Enforced by: keyed corrections + P5.12 code (applied; bylaw-answers-batch-5.logic.test.ts); Layer 3 lot-line…
+
+
+### 10.5.30.40 — Lot Coverage
+
+First clause cited: 10.5.30.40.
+
+- **m.169** A condition no data can decide is taken as not holding, and its impact is disclosed.
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab undetermined_condition_disclosure (bylaw-rulings M-169 test); M-75 corrections (10.5.40.10(4)(B));… · +4 dated notes
+
+
+### 10.5.40.10 — Height
+
+First clause cited: 10.5.40.10.
+
+- **m.212** Site-fact disclosures: established grade, triangular lots, shoreline.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.12 codes; triangular detector (OWED, ①)
+
+
+### 10.5.40.11 — Height Exemptions
+
+First clause cited: 10.5.40.11.
+
+- **m.405** S-2: first floor above established grade is 0 m, disclosed.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: s2_first_floor_above_grade_m is seeded as 0 with the disclosure…
+
+
+### 10.5.40.40 — Floor Area
+
+First clause cited: 10.5.40.40.
+
+- **m.171** A deduction from a measure that needs building facts is disclosed, never evaluated.
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab measure_deduction_disclosure (bylaw-rulings M-171 test); evaluator rendering (P2-0 seat, owed) · +2 dated notes
+
+- **m.203** The attic test decides inclusion in GFA; a failing attic is free floor area, not zero.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①); attic-test keying (OWED, keying lane)
+
+- **m.210** Suite GFA takes the 10.5.40.40 reductions.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
+
+- **m.229** Mechanical attic area is left out of GFA by default.
+  Status: RULED 2026-10-20 · Enforced by: keyed correction + P5.12 code (applied; bylaw-answers-batch-5.logic.test.ts); keying of 10.5.40.40(2) (OWED,… · +1 dated note
+
+- **m.239** O-7 main-wall share tiers and attic test target shape
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-9 / O-7 / M-223(3) — …"; bylaw-eval-perf re-pin · +1 dated note
+
+- **m.398** The basement is read, not assumed (R4-05).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: basement read-from-rows fixture (MB-31); record: chat-rulings-register.logic.test.ts ›…
+
+- **m.463** Roof thickness is measured vertically: depth × √(1 + pitch²).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the vertical-thickness row, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.464** In 10.5.40.40(1)'s "80% of the area", the area is the attic floor with vertical clearance over 1.4 m; test (B) applies to that portion.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the reading lock for the Phase 1-2 attic targets (a red-first test naming this row, beside…
+
+- **m.472** M-229 is applied in increment 2: the mechanical-equipment area X is reported outside GFA beside the counted GFA, as three labelled figures; the headline GFA is unchanged.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the X row and the three display fields, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.477** Attic headroom in 10.5.40.40(1) ("between the ceiling joists and the roof rafters") is measured from the top of the attic-floor joists at c0 = Hw − n_w × 2.512; disclosed.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the datum in the attic rows and the disclosure, locked by layer3-catalogue.logic.test.ts and…
+
+
+### 10.5.40.50 — Decks, Platforms and Amenities
+
+First clause cited: 10.5.40.50.
+
+- **m.290** Platform side setback near a side wall, City 1.1 m versus ours 0.9 m (A0396/26TEY): a scorer reading, not an evaluator fault.
+  Status: RULED 2026-10-21 · Enforced by: scorer copy ~/Buildo-scratch/fix-round-4d/B/scorer
+
+- **m.365** Missing rules MR-Q1 to MR-Q4: one verdict per side, both arms for unknown design facts, platform wall input, landscaping share of a base.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+
+### 10.5.40.60 — Permitted Encroachments
+
+First clause cited: 10.5.40.60.
+
+- **m.128** lot_condition token side_yard_abuts_street.
+  Status: RATIFIED 2026-10-14 · Enforced by: vocab lot_condition (bylaw-rulings M-128 test); G-CLAUSE; G-SHAPE · +5 dated notes
+
+- **m.243** Encroachments: one LIMIT may carry a max projection and a min clearance; each projecting element has its own targets.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "D-3 / M-243 — …" (red first: docs/reports…
+
+- **m.254** Platforms meet the zone setbacks; the 10.5.40.60 family takes the declared-bound form.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-11/12 / M-254 — …" (red first: docs/…
+
+
+### 10.5.40.70 — Setbacks
+
+First clause cited: 10.5.40.70.
+
+- **m.205** The main building's setbacks are explicit, by-law-derived fields.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2, P5.10 (OWED, ①); front averaging in Layer 2 (OWED, Layer 2 step) · +2 dated notes
+
+- **m.245** No zone-default floor under the averaged front yard.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "M-205(1)-floor / M-245 — …"; bylaw-front-setback-reliability.logic.test.ts…
+
+- **m.256** Averaging with a missing or excluded neighbour estimate answers "needs survey", never the zone default.
+  Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "front yard / M-256 — …" (red first: docs/…
+
+- **m.387** Front-yard chain: law stays in Phases 1-2 (R3-03).
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: worked examples, one per step of the chain (MB-31); record:…
+
+- **m.414** Front-yard step 2: strict reading of 10.5.40.70(1) for A0553.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: front-yard worked example for A0553 (strict reading) (MB-64); record:…
+
+- **m.423** RL-7 (a): the 10.5.40.70(1) 15.0 m is keyed into Phase 2 averaging_distance_m; decided and built with FS-SB2a as one change set.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18 item (k): the three corrections and the read-as-if-token-held hook, built with M-422 and…
+
+- **m.456** A neighbouring house at exactly 15.0 m qualifies: "15.0 metres or less" is inclusive (10.5.40.70(1)).
+  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): FY-5 Status and Basis cite this row (the key shows the boundary) and Part A for FY-5…
+
+
+### 10.5.40.71 — Setbacks Exemptions
+
+First clause cited: 10.5.40.71.
+
+- **m.192** Renovation: 10.5.40.71(3) applies; every other lawfully-existing relief is disclosed.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying… · +3 dated notes
+
+- **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +7 dated notes
+
+- **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+
+### 10.5.50.10 — Landscaping
+
+First clause cited: 10.5.50.10.
+
+- **m.99** dsl_target front_yard_soft_landscaping_pct.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE, G-SHAPE
+
+- **m.258** Rear-yard soft landscaping on lots 6.0 m wide or less stays 25 %: the text does not support the City examiner's 50 %.
+  Status: RULED 2026-10-21 · Enforced by: none (no code change)
+
+
+### 10.5.60.20 — Setbacks
+
+First clause cited: 10.5.60.20.
+
+- **m.175** A unit scoped to an accessory-structure use never limits the principal building.
+  Status: RATIFIED 2026-10-15 · Enforced by: evaluate.mjs applies() + makeContext().accessoryUses; vocab.mjs evaluatorVocab() carries…
+
+- **m.281** A ground-mounted heating or air-conditioning device has its own targets, energy_device_front_setback_m and energy_device_side_clearance_m.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-1 / M-281"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json;…
+
+- **m.291** Ancillary-building inputs (parking space, distance to residential) for non-suite buildings are out of scope: disclosure only.
+  Status: RULED 2026-10-21 · Enforced by: none (no code change)
+
+
+### 10.5.60.50 — Floor Area
+
+First clause cited: 10.5.60.50.
+
+- **m.242** "In all other cases" takes the condition of the arm it complements.
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "N-3 / M-242 — …" (red first: docs/reports…
+
+
+### 10.5.75.1 — General
+
+First clause cited: 10.5.75.1.
+
+- **m.87** Phrasing-variant licence patterns.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE variable_unlicensed, G-SHAPE vocab_synonym (no pattern shared)
+
+- **m.92** Citation to a target absent from the pinned City text is a counted source_defect ref_target_absent.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-XREF (refs_target_absent count), bylaw-rulings.logic
+
+- **m.102** A LIMIT unit carrying a real limit the DSL cannot express is UNUSUAL.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE, G-SHAPE · +1 dated note
+
+
+### 10.5.80.1 — General
+
+First clause cited: 10.5.80.1.
+
+- **m.95** By-law-wide override is a PERMIT; an INCLUDE of "Chapter 900" is a phase2_exception ref.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-XREF trigger_unaccounted, include_unresolved, ref_unresolved; G-READ external arm
+
+- **m.98** A mixed-direction LIMIT is UNUSUAL — M-83 Q6 extended.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_must_be_none, G-CLAUSE
+
+- **m.225** Keying defect being fixed: 10.5.80.1(2)(A) leaks into the suite separation citywide.
+  Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — …" › "M-225: …" (green 2026-10-20; red at a0d5b41e^) · +1 dated note
+
+
+### 10.5.100.1 — General
+
+First clause cited: 10.5.100.1.
+
+- **m.366** Missing rules MR-Q5 to MR-Q9 and the ancillary floor area target.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+
+### Chapter 150
+
+First clause cited: 150.15, 150.7, 150.50, 150.48, 150.10, 150.8.
+
+- **m.47** Page set, second application. In: the 23 residential TOC entries S0.5 found unmapped — 1.20, 1.40, 150.15, 150.20, 150.22, 150.25, 150.30, 150.45, 150.48, 150.50, 200.10, 200.15, 200.20, 200.25, Ch.220, Ch.230, 970.30, Ch.990 (the zone map, by a map rule: labels come from the zoning dataset,…
+  Status: RATIFIED 2026-10-07 · Enforced by: G-UNIVERSE · +2 dated notes
+
+- **m.63** A closed scenario catalogue; every scenario is computed for every parcel; no user choice.
+  Status: RATIFIED 2026-10-07 · Enforced by: G-DRIFT (catalogue pinned; entry condition); G-UNIVERSE scenario-totality arm; step checks: one status per…
+
+- **m.66** Parking is a scenario axis K = {none, integral garage, detached garage}, applying only the rules that change buildable size.
+  Status: RATIFIED 2026-10-07 · Enforced by: catalogue pin (M-63); collapse equalities (fixtures + per-parcel check); G-EVAL vectors per K value incl. a…
+
+- **m.96** driveway_width_m licence pattern "the driveway is no more than".
+  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym
+
+- **m.106** An encroachment maximum paired with a clearance minimum is UNUSUAL — M-102 "mixed bound directions" reaches the M-73 pair.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE shape_must_be_none, G-CLAUSE; the re-type card
+
+- **m.159** A unit governs only its own subject.
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab zone_category_chapter, accessory_structure_use, specific_use, non_accessory_use, uses (bylaw-rulings… · +1 dated note
+
+- **m.177** Ancillary and secondary suites: priority and max-build assumptions.
+  Status: RATIFIED 2026-10-16 · Enforced by: scenario-classes.json pin (A axis, P suite variants) in P2-10 (phase2-plan-v2 §P2-10); structure dimension… · +2 dated notes
+
+- **m.178** The 24 July 2025 suite transition is a lawfully-existing cut-off; its permit-history arms are a site fact.
+  Status: RATIFIED 2026-10-16 · Enforced by: vocab lawfully_existing_caveat.cutoff.suite_transition, lot_condition.suite_transition_permit,…
+
+- **m.179** Two suite keying rulings the review surfaced.
+  Status: RATIFIED 2026-10-16 · Enforced by: vocab dsl_target.ancillary_coverage_pct; M-75 corrections (150.7.60.70(1)(A)/(B), (2)(A), 150.8.60.70(1)(B),…
+
+- **m.193** The Coxwell-area 5.0 m separation is digitized as a map area; until then 7.5 m applies, disclosed.
+  Status: RATIFIED 2026-10-18 · Enforced by: map seed + migration (OWED, Spec 58 lane); re-key (OWED, keying lane)
+
+- **m.197** Suite setbacks: the openings choice defaults to none, so the smallest lawful setback leads.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 setback vectors (OWED, step commit ①) · +1 dated note
+
+- **m.198** Suite setbacks where a lot fact is not held.
+  Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①) · +5 dated notes
+
+- **m.199** A secondary suite may be up to 45 % of the interior floor area of the WHOLE house it sits in; the stricter reading is disclosed.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①) · +2 dated notes
+
+- **m.208** Suite soft landscaping is disclosed, not binding.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
+
+- **m.209** Laneway eligibility uses all three arms of 150.8.30.20(1), measured from the centreline.
+  Status: RATIFIED 2026-10-18 · Enforced by: lane_abutting_length_m derivation (OWED, Spec 130 / enrich_centreline WF3); INV-15 (OWED, ①)
+
+- **m.216** Suite parking and bicycle rules are disclosures.
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.12 code (OWED, ①)
+
+- **m.222** Evaluator defect: the Coxwell map area makes the garden-suite separation not_evaluated:map_area_not_held on every lot (reality check §5.2).
+  Status: APPLIED 2026-10-18 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-222 / M-224 — the Coxwell area unit takes the literal reading …"…
+
+- **m.224** Coxwell area: the generous (purposive) reading of 150.7.60.30(1)(C).
+  Status: RATIFIED 2026-10-18 · Enforced by: the polygon (OWED, Spec 58 lane); one written City question, which would also settle exception 900.2.10(736)…
+
+- **m.235** 150.7.60.20(6)(A) mis-citation
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-6 — …" (red first: docs/reports/red-… · +1 dated note
+
+- **m.236** M-219 remainder: laneway suite step-back above 4.0 m
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-7 / M-198(4) / M-219 — …"; bylaw-eval-perf re-pin
+
+- **m.253** Garden-suite lots carry the 20 % ancillary cap; the 45 % all-buildings path is disclosed.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-9 / M-253 — …" (passes at base: no change needed)
+
+- **m.284** The garden suite one-storey 60 m2 arm is chosen by a design token, suite_one_storey, taken as false.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-5 / M-284"; golden 150.7.60.50(4)(A)/(B);…
+
+- **m.286** Suite separation and height use the distance to the max-build envelope (new build) or the isolated suite; a laneway suite with an EXISTING house carries a disclosure; no user-input field for distance.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-11 / M-286"
+
+- **m.288** Further clauses: the laneway platform floor level is keyed; the rest are held with a reason.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-15 / M-288"
+
+- **m.360** Floor discipline: a test never asserts a red floor, the --accept door counts RULED rows, a pool re-base for one cause, accept moves only named lines, merge order.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+- **lc.22** The rear suite is jointly optimized with the main building:
+  Status: RULED · OWED · Enforced by: P5.11 suite_lt_main, coverage_consistent
+
+- **lc.33** With vs without. The house_with_secondary_suite row (and the houseplex rows) carry their gain over the same parcel's detached_house row on the same roof-form basis: GFA, footprint, storeys, and closed gain_reasons (fsi_not_applicable, coverage_45, storeys_not_applicable, height_houseplex,…
+  Status: RULED · OWED · Enforced by: Spec 78 P5.2 item 11, P5.10; P5.13 vectors
+
+- **lc.35** Suite openings default: none. The smallest lawful setback leads: garden side 150.7.60.20(5)(B); no (2)(C) rear increase; laneway rear 150.8.60.20(2)(A) and side (3)(A) at 0.0 m where the line abuts no street or lane.
+  Status: RULED · OWED · Enforced by: Spec 78 P5.5, P5.10; P5.13 vectors
+
+- **lc.36** Suite setbacks read lot facts from data; an unknown fact takes the larger setback, disclosed.
+  Status: RULED 2026-10-18 · OWED · Enforced by: Spec 78 P5.5 lot-fact table; INV-9
+
+
+### Chapter 800
+
+First clause cited: 800.50.
+
+- **m.166** lot_area_m2 is licensed by "floor space index".
+  Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE variable_unlicensed
+
+- **m.194** Houseplex cap: 4 units, 6 only inside a confirmed 600.60 area; disputed membership is not evaluated.
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vectors (OWED, step commit ①)
+
+- **m.202** Houseplex unit cap, corrected.
+  Status: RATIFIED 2026-10-18 · Enforced by: INV-11; P5.13 vectors (OWED, ①)
+
+- **m.313** A survey frontage measured along a CURVED front lot line is not preferred by the CoA scorer; the calculated frontage stays.
+  Status: RULED 2026-10-21 · Enforced by: coa-scorecard.logic.test.ts › "CHAT-46", "A0385", "F-4D-SC-245", "the regression lock is live",…
+
+- **m.458** On a corner lot whose zone has no street-side clause, the street-side yard is the ordinary side yard.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the buildable_width_m edit and STS-n examples (only A0375 moves; through McProof first),…
+
+
+### Chapter 900
+
+First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
+
+- **m.29** Expert sample audit. Exactly 50 stratified rows — ≥ 20 whose verbatim contains a numeric literal, ≥ 1 per archetype present, every external row, the 900.1.10 precedence rows (the expert explicitly confirms the implicit-override reading of 900.1.10(3)), adjudicated rows eligible — by a City of…
+  Status: RATIFIED 2026-10-06 · Enforced by: G-AUDIT · +1 dated note
+
+- **m.101** A prevailing former by-law with no fetchable official page is a counted source_defect instrument_not_published_online.
+  Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE (PREVAILING), vocab disclosure_reason.source_defect, adjudication_kind, bylaw-rulings.logic
+
+- **m.133** A [PBS] item that states its own number and names no instrument is UNUSUAL, for now.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
+
+- **m.134** Phrasing-variant licence patterns, W1 round 2.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym (bylaw-rulings M-134 test)
+
+- **m.135** A former-by-law section cited inside a [PBS] PREVAILING item is not a 569-2013 reference.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-XREF; counts.refs_target_absent (interim); extractRefs (owed, unbuilt) · +3 dated notes
+
+- **m.136** A setback from "the lot line that abuts \<named road\>", with no centreline measure, is UNUSUAL.
+  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; G-SHAPE · +1 dated note
+
+- **m.142** lot_condition threshold tokens storey_count_band and platform_height_band.
+  Status: RATIFIED 2026-10-14 · Enforced by: vocab lot_condition (bylaw-rulings M-142 test)
+
+- **m.157** building_type.detached_house licence pattern "detached dwelling".
+  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE evidence_pattern_mismatch (bylaw-rulings M-157 test) · +1 dated note
+
+- **m.158** A lawfully existing building defaults to "new build"; an answer comes with a caveat, and the existing size is an optional input.
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.lawfully_existing.user_input and lawfully_existing_caveat phrase map (built 2026-10-15;…
+
+- **m.161** Street-side licence patterns, W1 round 4a.
+  Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym
+
+- **m.162** rear_setback_m licence pattern "from a rear lot line".
+  Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE
+
+- **m.163** A street name that spells a building type ("575-583 Duplex Ave.").
+  Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE any_with_named_type
+
+- **m.164** The slicer's list-unit propagation is a follow-up WF3; 900.6.10(473) keeps both forms.
+  Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE; follow-up WF3 (not built)
+
+- **m.247** Exceptions that have no units, or whose units leave the lot unauthored, are keyed.
+  Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-1 / M-247 (2) — …" (red first: docs/…
+
+- **m.250** Exception RD 42's GFA takes its own FSI cap.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-6 / M-250 — …" (red first: docs/repo…
+
+- **m.251** Exception RD 70's side yard binds the residential building and keeps its storey increment.
+  Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-7 / M-251 — …" (red first: docs/repo…
+
+- **m.297** vocab.exception_chapter maps a zone to its Chapter 900 article.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-layer2-vocab.logic.test.ts › "L2-CHAPTERS" (red first: docs/repo…
+
+- **m.266** A "Despite" that restates the displaced regulation as still applying keeps its limit: RD 18 (D), 21 (B), 37 (B) keep the 19 m building depth.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-6 …"
+
+- **m.267** Exception RD 155 (D) and RD 340 (B) side yard 0.9 m bind the residential building, not a garden or laneway suite.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-SC-155 / F-4D-SC-340 …"
+
+- **m.285** abuts_named_street is joined from the parcel's primary frontage street name to the street the unit names.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-7 / M-285"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
+
+- **m.306** The scorer does not read a definition distance as the City limit: "within 0.3 m of the (rear) main wall" is dropped like "within 0.3 m of a building".
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-13 …" (red first: docs/r…
+
+- **m.314** The type-less side-yard units of the newly keyed exceptions bind the principal building, not a garden or laneway suite.
+  Status: RULED 2026-10-21 · Enforced by: bylaw-chat49-suite-side-yard.logic.test.ts (red first: docs/reports/re…
+
+- **m.315** The lane-A M-75 corrections: the six on exception 528 are ratified, the seven gate fixes are re-recorded as lane mechanical work.
+  Status: RULED 2026-10-21 · Enforced by: agree.mjs correction_supersedes_unknown / correction_supersede_duplicate
+
+- **m.316** OWED: exception 1397's 0.69 pre-1953 arm waits for an existing-building input.
+  Status: OWED · Enforced by: none yet (OWED)
+
+- **m.322** Accuracy floors only go up. Operator approved 2026-10-22 (chat, "y C-1...C-10 - on the ocndition that it meets the overall goal standardized approach, observable, accurate, scalable and understandable ie simple and doesnt expand scope as best as possible." evidence-rulings card C-5;…
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the floors file and its pin)
+
+- **m.336** Two scope decisions stay with named uses.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none (a scope rule)
+
+- **m.347** 900.5.10(324)(J)(i) is keyed UNUSUAL as a whole, with a disclosure (option B).
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+
+- **m.350** The 26 pending exception units are settled by 11 family readings.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+
+- **m.357** Each new CoA notice batch is scored blind first, then folded into one cumulative headline set.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED: the cumulative set and the blind-round door, built when the next batch arrives)
+
+- **m.374** OWED to Phase 3: cumulative pooled articles answered.
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
+
+- **m.478** Where a roof row's stored height is below its main-wall limit, the wall limit is not binding and the walls are bounded by the height; disclosed main_wall_limit_above_height.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the reading and the disclosure word in the Phase 2 build, locked red-first by a test lane…
+
+- **m.485** 900.3.10(971)(B)'s "if 3 storeys is permitted" condition is keyed with its 1:4 token in the 1:4 re-key (F-1).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the lock src/tests/bylaw-mb27l2-1in4.logic.test.ts, every moving lot in its…
+
+- **m.486** 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form, with its 1:4 token, in the 1:4 re-key (F-2).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the lock src/tests/bylaw-mb27l2-1in4.logic.test.ts, every moving lot in its…
+
+- **m.497** A rule for the portion of a building with a parking space is portion-scoped: applies_to.part gains portion; a portion rule is set aside for the whole-building setback and disclosed in the M-169 form; 900.3.10(812) (D)(ii) is split into a whole-building unit (4.5 m) and a portion unit (6.0 m).
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 (the increment-3 night): the red-first lock src/tests…
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "This is the focus for both compliance and engineering standards and interface between the frontend and databse". THIS TASK: tests of the interface between the front end and the database as ranked by FINAL.5 (what exists is reused first); each test is proven red on a planted defect before it counts. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/report-v2.decl.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/, src/tests/surfaces/report-honest-k2.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-442-v1
+
+Task: task-442 (FINAL.7, build). Plan seat: Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). Build seat: Opus (RR-0385 items 1 and 8, MORNING-DECISIONS.md:1907-1926). Six steps: the card names them and does not list them; section 6 holds the lane's order. Scope amended at the plan review: RR-0402 (MD:2034), RR-0403 (MD:2040) and RR-0405 (MD:2052, verbatim: option a) put the circulation text fix inside this task; section 7b holds it. Board ~/Buildo-wt-board, read at 18cc2752e. The brief named cc584b87b. The five commits since then are task-424's and touch none of the files below (`git diff --stat cc584b87b..HEAD`). Commands run: git, grep, sed, the backlog viewer and small read-only node scripts. No test runner was run and nothing was written. Paths are relative to the board. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md.
+
+#### 0. Facts verified
+
+What I searched first (the operator: "you are probaley rebuilding stuff that already exists"):
+- The six files the brief named.
+- src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts and src/tests/surfaces/report-page.logic.test.ts.
+- src/lib/report-projection/{project,read-stored}.ts and src/lib/parcels/consumer-lookup.ts.
+- scripts/analysis/report-schema.mjs and scripts/analysis/src-sql-ledger.mjs.
+- scripts/analysis/gates/consumer-registry.mjs and scripts/steps/_schema/consumer-registry.json.
+- scripts/surfaces/_schema/seed-report-v2.mjs and the MaxBLD descriptors.
+- `git grep` for: "not in the static parcels read", PARCEL_SELECTED, migrationColumns, vi.doMock, "shrink-only".
+
+The chain from a page number to the database, and the check that exists for each link:
+1. A page value part names a declared field. Checked: report-page.logic.test.ts:45 (P1).
+2. That field's source is in the closed set and resolves (catalogue row, parcels migration column). Checked: report-schema.mjs:148-203 (RS-1, RS-3), locked by report-binding.logic.test.ts:63-155.
+3. Every parcels column the page binds is in the one static parcels read. Checked only by a throw when the module loads: read-stored.ts:21-29 (the throw is line 29; line 28 is the PARCEL_SELECTED list). No test proves that throw red (grep of its message in src/tests: 0 hits).
+4. Every column a src/ SQL reads is in the committed catalog snapshot. Checked: src-sql-ledger.mjs:42-48 `--check`, run in pre-commit (.husky/pre-commit:23).
+5. Every such column has a declared writer step. Checked: consumer-registry.mjs:24 (gate D, "unproduced" reads). It holds read-stored.ts rows, for example `parcels.is_corner_lot` with producer enrich_centreline.
+6. The engine writes the catalogue field for the page section's building type. No static check. The G25 case (admin-report-preview-live.logic.test.ts:154-205) compares the golden-25 key with the producer payload only where the key states a value.
+7. Every number shown comes from McBylaws, not from typed text (fe.05). report-no-maths.logic.test.ts scans for arithmetic only. No check covers content texts.
+
+Other facts:
+- The live REPORT page is report-page.json, bound through report-v2.decl.json. The producer reads `catalogue:` from parcel_maxbld_scenarios and `parcels:` from the parcels row (project.ts:8-10). The S-001 hand screen is retired (report-fields.decl.json `$comment`).
+- `pageBindings(page, fields)` takes injected copies (project.ts:98-100). The admin test already loads the catalogue and switchboard seeds (admin-report-preview-live.logic.test.ts:44-52) and already holds the FE-05 page-rule case (:121).
+- Effective-ON is defined in seed-report-v2.mjs:81-82: the row's formula switch and the type's switch are both on, and off beats on. The page producer reads a row by (building_type, field_id) (project.ts:199).
+- Dry run (node, read-only) over the 17 (option section, catalogue field) pairs of the committed page: each row lists the section's type, its formula switch is on and the type switch is on. 0 misses.
+- Content texts the page can show: 90 keys (report-presentation.json:281 `page`). Exactly 4 hold a digit:
+  - :322 `row.unit_size_basis_value` "the basement; 10 % circulation" (used by o3, report-page.json:1580);
+  - :336 `legal.line` "not 100% accurate";
+  - :342 and :344, the input placeholders "e.g. 50" and "e.g. 120".
+- The engine reads circulation from the setting `houseplex_circulation_share`, default 0.1, min 0.1, max 0.1 (logic_variables.json:2), through lv() (layer3-catalogue.json:264-277: basement_livable_m2, units_flat, units_pitched_a and b, unit_area_m2 at :271, units_fit at :277).
+- The repo's form for known exceptions is a fail-closed list: each entry has a count and a kind, the reason reads "owed: <row>", a stale entry fails, and the list only shrinks (src/tests/surfaces/nav-by-route.logic.test.ts:13-16, :296-311).
+- The repo's form for planting a defect at module load is `vi.resetModules` + `vi.doMock(orig)` + a dynamic import, then `vi.doUnmock` (src/tests/maxbld-web-pages.logic.test.ts:113-119).
+- McFrontend trailers apply only to `frontend` paths (mcbylaws/protected-paths.json:20-31, which includes src/tests/surfaces/**; cite-arms.mjs:173-178). The two test files below are not frontend, layer23 or protected paths.
+
+UNVERIFIED:
+- Traced by the grounder: the engine writes a row whose switch is off as not_evaluated with reason switched_off:<id> (maxbld/rows.js:402); only a row with an increment other than 1 that is off and not_evaluated is dropped (rows.js:511); a missing switch reads on (compute-maxbld-scen*.js:213-216). T1 reads the engine rows, so it copies none of these rules.
+- Found by the grounder: the closed binding set is fe.18 (136:85) and scripts/surfaces/_schema/binding-sources.json: catalogue, content (the label, help-text and legal-copy registry), user_input, ad_slot, external_embed and parcels. Labels, help text and legal copy are content fields, not an exception.
+
+#### 1. Scope
+
+In:
+- Three tests, each red on a planted defect, then green.
+- Two existing test files are extended for T1, T2 and T3. No code change and no fix except the circulation text fix of section 7b (RR-0402, RR-0403, RR-0405), which also changes the K2 test.
+
+Out:
+- Any fix of a live break other than the circulation text (section 4 item 1).
+- Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976).
+- OWED handbook locks (task-367): the task-367 card (:69) says it is the KEY card and that task-434 is merged into it, and task-434 (:43) records the merge; the look's Feeds column for ranks 1-7 reads task-442 and is stale against these cards. If the task-367 plan review finds a rule it does not carry, that gap is task-367's to take; this task takes none.
+- Engineering rows (task-441): the card of task-441 (FINAL.6) is the engineering-standards tests, RULE-CHECKS.md:163 lists the group 3 engineering rows again, not counted twice, and group 2 gives them Feeds task-441.
+- Anything that needs a database (a lane may not connect to one; the database side of fe.19, fe.20, fe.27 and fe.38 is the main-only db tests of section 4 item 3).
+
+#### 2. Rows chosen, in the look's rank, and who owns each skipped row
+
+The rank is from docs/reports/reviews/task-440/RULE-CHECKS.md:169-215. I did not re-rank. A row is skipped only when another task owns it or cannot be tested without a database.
+
+| Rank | Row | Taken? | Owner or reason |
+|---|---|---|---|
+| 1-7 | fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44 | no | OWED, lock path reserved: task-367 (RR-0385 item 6, MD:1922: "Task 367 is the key card"; task-434 merged into it; FE-45 row 135:67 "the lock is task-434's"). fe.58 (task-446) is OWED too; its lock is task-367's (task-446 plan, acceptance 6). |
+| 8 | fe.05 | **yes, T1 and T3** | |
+| 9 | fe.09 | no | Not a front-end to database rule. "Lock column" (136:58) is a column of the register table; it entered group 3 only through the keyword test (RULE-CHECKS.md:177). Enforced in group 1 (:136). |
+| 10 | fe.40 | no | Its Available side runs against a local test stack, which is a database (136:151). Lanes may not connect. |
+| 11-29, 46, 47 | §2.1 … §14 rows 1-2 | no | Engineering rows. Group 2 lists them with Feeds task-441 (RULE-CHECKS.md:39 onward). Q1 ruled by the grounder: they are task-441's. |
+| 30 | fe.39 | no | OWED (136:149): task-367. |
+| 31 | fe.13 | no, this round | A file-only Available check needs descriptor `tables[].columns` read against the migrations. Dry run on parcel_product: 12 misses of 286, all false or unbuilt: a view (parcel_lot_form, types.ts:132), a rename (imagery_roof_*, migrations/201), an unbuilt table (user_tracked_lots). migrationColumns reads neither views nor renames, so this would need new parsing. |
+| 32 | fe.15 | no | Its Available side is canary f, owned by FE-25 (OWED, 135:37): task-367. |
+| 33 | fe.18 | **yes, T1** | |
+| 34, 35 | fe.19, fe.20 | no | User inputs are the design exception. Their Available side is a db test that runs on main only (see section 4, item 3). |
+| 36 | fe.22 | no | Ads are the design exception. |
+| 37 | fe.24 | later round | |
+| 38 | fe.27 | **yes, T2** | |
+| 39-45 | fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 | later rounds | Left for later rounds of this card, taken in the look's rank order, each round with its own plan review (the search surfaces fe.31, fe.32, fe.37 and fe.38 are in those rounds). fe.38 is already file-checked by customer-report-read.logic.test.ts:366-374 (T8). |
+
+Rule texts, quoted:
+- fe.05 (136:46): "P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI."
+- fe.18 (136:85): "every displayed field binds to a source in the closed set … Labels, help text and legal copy are content fields, not an exception."
+- fe.27 (136:112): "parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails."
+- Earlier ruling (MD:638): "the report fields and the details and the search pages to the databse and ensure they are available."
+
+#### 3. The tests
+
+#### T1. Every number in an option section is a McBylaws row the engine writes for that section's building type (fe.05, fe.18)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B1". The file header already cites FE-05 (:1); add FE-18 to the SPEC LINK.
+- **Checker:** a pure helper in the test, `unwritten(bindings, rows)`. The rows are the engine's own stored rows from the file's harness, `storedRowsOf(KEY[0])` (:84-90). The helper reads no switch and copies no rule of the generator. pageBindings emits three source kinds: catalogue (this test), parcels (T2) and user_input (the lot-size entry, a design exception by fe.18). For each `pageBindings()` entry with `building_type !== null` and `source.kind === 'catalogue'`, it reports a finding when:
+  - the engine wrote no row for (building_type, field_id) (a catalogue row that is missing, does not list the type, or is switched off with an increment other than 1 leaves no row); or
+  - the written row carries a reason starting `switched_off:` (rows.js:402: an increment-1 row that is off is still written, as not_evaluated).
+  - Not checked, and stated in the test header: RS-1 and RS-3 (report-schema.mjs:148-203) already hold the declared half, report-generator-fields.logic.test.ts:83 holds one field per effective-ON row, and the design option of o1 and o2 is not checked (the type before the slash only, as project.ts does).
+- **No copy of a rule:** the test repeats no line of seed-report-v2.mjs; it asserts on what the engine wrote (Q2 ruled by the grounder).
+- **Cases:**
+  - (a) Control: the committed page and seeds give `[]`, and the checked (section, field) pairs number at least 17 (non-vacuous).
+  - (b) A copy of the rows without the `gfa_max_m2` row of `detached_houseplex` gives exactly one finding, naming `o3 gfa_max_m2 detached_houseplex` (gfa_max_m2 is bound in o3 only).
+  - (c) A copy of the rows in which the `storeys_max` row of `detached_house` has reason `switched_off:formula:storeys_max` gives findings for o1 and o2 (both detached_house).
+  - (d) A copy of the rows without any `detached_houseplex` row gives one finding per o3 pair; the count equals the o3 pair count (7) and is at least 1.
+- **Red through the hooks:** while writing (a), the lane adds one temporary line inside (a)'s control that drops the `storeys_max` rows of `detached_house` from a local copy of the rows (never from SEEDS: other cases read it). It stages the file and commits. The pre-commit related run (.husky/pre-commit:85) fails at (a)'s `toEqual([])`. The lane records red.out, removes the line and commits green.
+- **Reuses:** `pageBindings` (project.ts:100), the file's `storedRowsOf` (:84-90) and `KEY`. No new file and no new read.
+
+#### T2. A parcels column the page binds but the stored read does not select fails at load (fe.27)
+
+- **File:** src/tests/customer-report-read.logic.test.ts, a new describe "T11". Add fe.27 / FE-27 to the SPEC LINK (:1-3).
+- **Cases:**
+  - (a) Planted binding: `vi.resetModules()`, then `vi.doMock('@/lib/report-projection/project', async (orig) => ({ ...(await orig<typeof import('@/lib/report-projection/project')>()), pageBindings: () => [...] }))` so that `pageBindings` returns the real bindings plus one `{ section: 'lot', building_type: null, key: 'lot.fsi', unitPart: false, rule: 'int', field: 'max_build_fsi', source: { kind: 'parcels', column: 'max_build_fsi' } }`. Then `await import('@/lib/report-projection/read-stored')` rejects with the message "MB-93: page field source parcels:max_build_fsi is not in the static parcels read". The planted object is typed `Binding` (project.ts:75), and max_build_fsi is checked absent from the four selected columns (read-stored.ts:28) before the import. The whole case body (doMock, import, assertion) sits in a `try`; `vi.doUnmock('@/lib/report-projection/project')` and then `vi.resetModules()` run once, in its `finally`. A comment says T11 stays the last describe.
+  - (b) Control: the real module imports, `readLotFacts` is a function, and the scripted read (the file's `script()`, :87-95) returns `columns` keys equal to the parcels columns of `pageBindings()`.
+- **Red through the hooks:** the lane temporarily deletes the throwing line, read-stored.ts:29 (not :28, the PARCEL_SELECTED list: deleting that fails the whole file at collection). src/lib/report-projection is not a frontend path, and the SQL text is unchanged, so src-sql-ledger `--check` stays green. The commit attempt fails at (a)'s `rejects.toThrow`. The lane records red.out, puts the line back with the edit tool, character for character from `git show HEAD:src/lib/report-projection/read-stored.ts`, proves it with `git diff --quiet -- src/lib/report-projection/read-stored.ts` (exit 0), never stages that file, and commits green.
+- **Reuses:** the existing guard, the file's hoisted mocks and scripted pool, and the doMock form of maxbld-web-pages.logic.test.ts:113-119. Gates 4 and 5 of section 0 already cover catalog membership and declared writers; T2 does not repeat them.
+
+#### T3. No number reaches the page through a content text, except the listed exceptions (fe.05)
+
+- **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B2", beside F (:101).
+- **Checker:** every key of the report-presentation.json `page` block is scanned, all 90 today, so a key no part names (the lot-size error texts with {lo} and {hi}, summary.not_evaluated) is covered too. Each text matching `/\d/` is a finding keyed by the content key. The test asserts the scanned count equals the key count of `page` and is at least 90. The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so.
+- **Fail-closed list** (the nav-by-route form), keyed by content key, each with a count, a kind and a `why`:
+  - `legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85).
+  - `sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`. Why: an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85).
+  - No entry for `row.unit_size_basis_value`: the circulation text fix of section 7b removes its digit in the same work commit, so T3 lands with no entry of kind `exception` and needs no owner row.
+  - That is 3 entries, none of kind `exception`.
+- **Cases:**
+  - (a) Every finding is explained by an entry, and every entry matches exactly its count. A stale entry (0 matches) fails.
+  - (b) A page-text copy with "5 m" added to `row.unit_size_basis` fails at (a)'s assertion and names `row.unit_size_basis`.
+  - (c) The list has exactly 3 entries (`legal.line`, `sheet.width_placeholder`, `sheet.depth_placeholder`), 0 of kind `exception`, and each has a `why`. The list only shrinks.
+- **Red through the hooks:** the lane stages T3 (3 entries) and the K2 change of section 7b together, before the text fix, in one commit attempt, with one temporary line in (a)'s control that checks the planted page-text copy of case (b) (a digit added to `row.unit_size_basis`). The related run fails at T3 (a), naming `row.unit_size_basis` (the planted defect) and `row.unit_size_basis_value` (the live tree, break evidence), and at the K2 no-digit assertion. The lane records red-T3.out, removes the temporary line and commits green with the text fix.
+- **Reuses:** `PAGE` and the presentation registry the file already reads, and the exception-list form of nav-by-route. No scan of renderer code: digits in mobile or web code belong to task-367 (its card, item b) and to fe.45.
+
+#### 4. Live breaks found (item 1 is fixed in this task, section 7b; the others are named for the orchestrator)
+
+1. **The houseplex option shows "10 % circulation" as typed content** (report-presentation.json:322, used at report-page.json:1580). The engine reads the same number from `houseplex_circulation_share` (logic_variables.json:2; layer3-catalogue.json:264-268). So a number on the screen is not bound to its database field. This breaks fe.05 ("every number from McBylaws") and the binding ruling (MD:638). The setting is pinned at 0.1 (min = max), so the text is true today. It stops being true as soon as the setting is refitted, and its own description says a refit is owed. FIXED IN THIS TASK (RR-0402, RR-0403, RR-0405): the text drops the percent (section 7b), and T3 lands with 3 entries and no exception.
+2. **A possible mismatch, UNVERIFIED as a break.** The S-001 consumer whitelist lists `parcel.parcelId` and three `parcel.lot.*` paths (mobile_parcel_detail.descriptor.json `inputs.field_whitelist`). The strict consumer payload has no key for any of them (src/app/api/parcels/lookup/types.ts:80-96). RS-2 passes because it reads the whitelist (report-schema.mjs:185-195). The three lot values do reach the page, through `readLotFacts` (read-stored.ts:48-55) and the `page` block of the lookup route. Ruled by the grounder (Q4): fe.27 fails a column that is not in the migrations and a path that is not on the whitelist; the four paths are on the whitelist (RS-2; report-binding.logic.test.ts:145), so fe.27 is met as written. Not a break; no test is planned on it.
+3. **Main only.** The Available evidence for fe.19, fe.20, fe.27 and fe.38 rests on db tests that CI runs on a PR only when the PR touches the filter paths (db-tests.yml:9-17; test.yml:66-67 excludes src/tests/db/**). Closing that gap needs a workflow change. Ruled by the grounder (Q3): not done here, RR-0392 (MD:1975-1976) opens no new infrastructure without his word; the gap stays named here.
+
+#### 5. Files
+
+Files: src/tests/admin-report-preview-live.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/report-v2-seed/page-text.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/report-v2.decl.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/, src/tests/surfaces/report-honest-k2.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json
+
+The backlog task file and the lane records under docs/reports/ are always allowed (check-task-files.mjs:10). read-stored.ts is touched only by the uncommitted plant in T2, which is never staged (check-task-files reads the staged paths, so the Files line holds). The ten added paths widen the resolved rule lists from 5 to 15 (resolveTask run in memory by the grounder adds surface-136, surface-126, surface-127, surface-128, surface-135, queue-137, agents-s7-s11, bylaw-133, agents-s5-1to3 and orchestrator-doc17): the orchestrator runs the plan compliance lens for each added list on a committed context holding this folded plan before launch.
+
+#### 6. Landing
+
+The same order as task-424 (task-424 plan section 7).
+- **Commit 0 (records, alone and first):** subject `docs(135_mcfrontend_decisions_register): MF-97 queue row, prereg and panel record` (the precedents 62b2ffed6 and 0ae43e69c name 135, not 136). It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98, prereg-MF-97-1.json (round 202, totals copied from the newest prereg, the form of prereg-MF-96-1.json), docs/reports/panels/MF-97.json (the MF-95.json form) and the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes. Trailers: `Task: task-442`, `McFrontend-Task: MF-97`, `Operator-Ruling:` RR-0402 (MD:2034, verbatim: a), RR-0403 (MD:2040, verbatim: a) and RR-0405 (MD:2052, verbatim: option a), and `Spec-diff: queue row and records only, no spec rule text moves` (the form of 0ae43e69c). The orchestrator claims MF-97 and round-202 in ~/Buildo-scratch/ids before launch (MF-96 and round-201 are BL-HB446's). Commit 0 is the parent of the work commit, because the gate reads the prereg from the parent tree.
+- **Commit 1 (work):**
+  - Subject: `test(136_mcfrontend_handbook): front end to database tests for fe.05, fe.18 and fe.27 (task-442)`. validate-commit-msg wants type(NN_spec); precedent: ba0892689.
+  - Trailer: `Task: task-442`. No FE-nn token in the message; name the rules fe.05, fe.18, fe.27.
+  - Trailers on the work commit: `Task: task-442`, `McFrontend-Task: MF-97`, the same `Operator-Ruling:` line and `Spec-diff: one content text changed; generated copies regenerated; no spec rule text moves`. The work commit touches frontend paths (scripts/surfaces/**, src/tests/surfaces/**, src/tests/fixtures/surfaces/**: protected-paths.json:20-31), so the McFrontend arm runs (cite-arms.mjs:173-178) and the owner is prompted at push. No hook is bypassed.
+  - The task file goes in the same diff, status RUNNING (137:84, :100).
+  - Red evidence is recorded first: three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion. The runner is never run directly. T3's attempt also stages the K2 change (section 7b). Before the red run the lane writes a 5-item PASS or FAIL self-check in its reply: binding closure, the 17 rows present, the parcels column set, no unlisted digit, the three seed reads non-vacuous. The work commit holds T1, T2, T3, the K2 change, the text and every regenerated copy; T1 and T2 may land in a commit before it.
+- **Output review:**
+  - DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359, MD:1687).
+  - Two rounds at most: round 1 fixes CRITICAL, HIGH and MED; round 2 CRITICAL and HIGH (RR-0385 item 3, MD:1919).
+- **Close:** the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT. The lane never pushes.
+- **Other tasks:** task-367 and task-441 share no file with this task and are kept; task-446 is kept; task-447 is merged into this task (RR-0403) and gets no lane; McFixReborn waits for the tests (RR-0388). Landing order, from a diff of the unlanded branches against the board: wf1/inc1b-thinroute (task-383, RUNNING) edits the end of customer-report-read.logic.test.ts (T9 and T10) and wf1/inc1b-areafactor (task-411, RUNNING) edits describe F of the admin test and the formatter names in report-presentation.json; both are built and unfolded, so they fold onto the board first and this lane then branches from the board head. wf1/inc1b-hb446 (task-446) edits .cursor/MCFRONTEND-QUEUE.md line 5 (next free id MF-97), so its commit 0 (0ae43e69c, MF-96) folds before this task's commit 0 (MF-97). If task-367 later moves fe.05 checks into a surfaces lock, T1 and T3 can move with them.
+
+#### 7. Acceptance
+
+| # | Who | Command | Expected |
+|---|---|---|---|
+| A1 | lane | read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out | each holds the pre-commit related-run failure at the named assertion: T1 (a) `toEqual([])`; T2 (a) `rejects.toThrow`; T3 (a), naming `row.unit_size_basis` (the planted digit), and the K2 no-digit assertion |
+| A2 | lane | `git log -1 --format=%B <work sha>` | holds `Task: task-442`, `McFrontend-Task: MF-97` and no FE-nn token; the commit passed the hooks |
+| A3 | orchestrator | read green.out in the lane folder, the hook tail of the work commit | the related run passes both test files and the K2 test |
+| A4 | orchestrator | `git diff --stat <launch>..HEAD -- src/lib src/app mobile migrations .github` and `git status --short -- src/lib` | both empty (scripts is left out: the text fix regenerates files under scripts/surfaces, section 7b) |
+| A5 | orchestrator | `grep -c "kind: 'exception'" src/tests/admin-report-preview-live.logic.test.ts` | 0 (T3 lands with no entry of that kind) |
+| A6 | orchestrator | `git diff <launch>..HEAD -- src/tests/customer-report-read.logic.test.ts \| grep -c "vi.doUnmock('@/lib/report-projection/project')"` | 1 (written once, in the finally of T2 (a)) |
+| A7 | orchestrator | the pre-push check list at push (.husky/pre-push-checks.sh) | PASS |
+| A8 | orchestrator | `git grep -l -F "10 % circulation" -- scripts src` and `node scripts/surfaces/_schema/seed-report-v2.mjs --check` | the grep prints nothing; the check exits 0 |
+| A9 | orchestrator | `grep -c "the basement, not shared stairs and halls" scripts/surfaces/_schema/report-presentation.json scripts/surfaces/_schema/report-v2-seed/page-text.json` | 1 for each file |
+| A10 | orchestrator | `npx tsx scripts/surfaces/report-capture.ts --check` and `npx tsx scripts/surfaces/report-page-capture.ts --check` | both exit 0 |
+
+#### 7b. The circulation text fix (RR-0402, RR-0403, RR-0405; folded by the plan grounder from the plan seat's section, checked against the repo)
+
+The operator ruled the wording (RR-0405, MD:2052, verbatim: option a): the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls. The row then reads: Size per unit includes: the basement, not shared stairs and halls. RR-0402 (MD:2034) dropped the percent and RR-0403 (MD:2040) put the fix inside task-442; task-447 is merged into it and gets no lane.
+- **One hand-edited source:** scripts/surfaces/_schema/report-v2-seed/page-text.json:44 (checked: the only source line).
+- **Regenerate, in this order, each with its own check:** (1) `node scripts/surfaces/_schema/seed-report-v2.mjs --write` rewrites report-presentation.json:322 and the provenance hash of report-v2.decl.json (seed-report-v2.mjs:21-22, :540, :674; a hand edit of the presentation fails with GEN-HAND-EDIT, :699). (2) `npx tsx scripts/surfaces/report-capture.ts` rewrites the fingerprints of the 72 goldens in src/tests/fixtures/surfaces/report/ (FP_FILES holds the presentation and the decl, report-checks.mjs:22-28); none holds the text. (3) `npx tsx scripts/surfaces/report-page-capture.ts` rewrites the 32 page goldens and the view of the 5 props goldens in src/tests/fixtures/report-page/ and the landing sample scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json (header :10-15). Checks after: `seed-report-v2.mjs --check`, `report-capture.ts --check` and `report-page-capture.ts --check`, each exit 0.
+- **Copies (checked by `git grep -l -F` of the old text):** 1 source, 1 presentation, 1 landing sample, 32 page goldens and 5 props goldens; the rest are records under docs/reports and the task cards, which stay. No renderer types its own copy: a grep of circulation over src, mobile and scripts finds engine code and tests only.
+- **K2 test (src/tests/surfaces/report-honest-k2.logic.test.ts):** delete the LV const at :18 (its only use is :56, and an unused const fails lint); retitle the describe and the it at :46-47 to name the basement and the words, with no figure; replace :56-57 with `expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);` and `expect(t).toBe('the basement, not shared stairs and halls');`. Lines 48-55 stay as the control. No other test pins the old string; report-generated-only.infra.test.ts and report-golden-parity.logic.test.ts check that the copies are fresh and run in the pre-push suite.
+- **Unchanged:** the engine, scripts/seeds/logic_variables.json:2, the catalogue, report-page.json and every other content key.
+- **T3 and the text move together:** T3 lands with 3 entries and no exception (section 3, T3). The text, the regenerated copies, the K2 change and T3 land in the same work commit; the red attempt is the one of T3 (section 3).
+- UNVERIFIED: that the hooks accept commit 0 and the McFrontend arm on the trailers alone (precedents 62b2ffed6 and 0ae43e69c); the three regeneration commands were read, not run.
+
+#### 8. Risks and rollback
+
+- **T2 module reset.** The reset could leak into later describes. Mitigation: T2 runs last in the file, and it calls `vi.doUnmock` and `vi.resetModules()` in a `finally`. The later cases use static imports bound at load (the maxbld-web-pages precedent).
+- **T1 repeats no rule.** It reads the engine's rows, so no copy of the generator's rule can drift (Q2 ruled by the grounder). Its stated limit: the design option of o1 and o2 is not checked.
+- **T3 catches digits only.** A number written in words passes. This is stated in the test header.
+- **The T2 plant touches src/lib.** It is never staged or committed. The lane puts the line back with the edit tool, character for character from `git show HEAD:src/lib/report-projection/read-stored.ts`, and A4 proves it with `git status --short -- src/lib`.
+- **Rollback:** revert the work commit and the close commit, return the task to its prior status, and revert commit 0 if the MF-97 row should go. Nothing else depends on them.
+
+#### 9. Questions for the plan grounder
+
+- **Q1.** Group 3 repeats the engineering rows that group 2 gives to task-441 (RULE-CHECKS.md:39 onward: "task-441"; group 3 says "task-442"). I read them as task-441's. Is that right, or does task-442 own the front-end to database engineering rows (§4.3, §10.3, §14 row 1)? The cards do not settle it. If it is not plain, the orchestrator reads both cards; the operator's word is needed only if the cards conflict (RR-0385 item 4(ii), MD:1920). Ruled by the grounder: they are task-441's; the cards do not conflict (RULE-CHECKS.md:163 lists them again, not counted twice, and group 2 gives §4.3, §10.3 and §14 row 1 Feeds task-441).
+- **Q2.** Ruled by the grounder: moot. T1 asserts on the engine's rows from the file's own harness and repeats no rule; no export and no copy.
+- **Q3.** The main-only Available gap (section 4, item 3) can be closed only by a CI workflow change (db-tests.yml path filter). The card does not name one. Ruled by the grounder: not done here; RR-0392 (MD:1975-1976) opens no new infrastructure without his word, and the gap stays named in section 4 item 3.
+- **Q4.** Section 4, item 2: does fe.27's "a DB field the consumer payload reads" cover values sent through the lookup route's `page` block? If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii)).
+- **Q5.** T1 and T3 sit in src/tests/admin-report-preview-live.logic.test.ts, which already holds the FE-05 case (:121), and not in src/tests/surfaces/report-page.logic.test.ts. Ruled by the grounder: T1 and T3 stay in the admin test file (the card names it). The merged text fix does bring this task inside the frontend paths, so commit 0 and the MF-97 trailer of section 6 apply for that reason, not for T1 and T3. If the grounder wanted them in the surfaces file, the landing adds an MF id, a commit 0 with prereg, panel record and queue row, and a `McFrontend-Task` trailer (the task-446 form, section 7 of its plan).
+- **Q6.** T3's `exception` entry cites no owner row, because no card exists and this task may not open one (RR-0392). Ruled by the grounder: moot. The operator ruled the correction (RR-0402, MD:2034) and RR-0403 (MD:2040) puts it in this task, so there is no entry and no card is needed.
+
