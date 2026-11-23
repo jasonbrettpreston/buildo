@@ -3,10 +3,11 @@ id: TASK-424
 title: >-
   STATION.ONELIST One list of pre-push checks kept in the repo, used by the push
   hook and the push station
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:21:00Z'
+updated_date: '2026-11-23T14:22:00Z'
 labels:
   - McFix
   - McFix V2
@@ -302,4 +303,6 @@ rg#3 MED folded the parse of its com
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-ONE424, worktree /Users/brettpreston_macmini/Buildo-wt-one424, branch wf1/inc1b-one424), RR-0240
+
+2026-11-23 taken on the board at lane launch (lane BL-ONE424, worktree /Users/brettpreston_macmini/Buildo-wt-one424b, branch wf1/inc1b-one424b), RR-0240
 <!-- SECTION:NOTES:END -->
