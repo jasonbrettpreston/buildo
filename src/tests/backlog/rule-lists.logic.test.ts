@@ -718,6 +718,42 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
   });
 });
 
+// task-445 (FINAL.8, RR-0391): the security lens also runs when a Files entry is under src/app/api/ or src/lib/ (the api-lib row of rule-lists.json); the six words stay (D11b above is their survive-the-fix lock).
+describe('task-445: the security lens runs on an API route or library path (lensSet)', () => {
+  const lens = async (type: string, files: string) => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
+  };
+  it('S1(a): a src/lib path adds security on both phases, for build and fix (exact sets)', async () => {
+    for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts']) {
+      const r = await lens(type, f);
+      expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
+      expect(r.out, `${type} ${f}`).toEqual(['code-review', 'error-paths', 'security']);
+    }
+  });
+  it('S1(b): an API route adds security on both phases, for build and fix (toContain: the route also gets ux today, not pinned here)', async () => {
+    for (const type of ['build', 'fix']) for (const f of ['src/app/api/parcels/search/route.ts', 'src/app/api/']) {
+      const r = await lens(type, f);
+      expect(r.plan, `${type} ${f}`).toContain('security');
+      expect(r.out, `${type} ${f}`).toContain('security');
+    }
+  });
+  it('S3 controls (green before and after; each proven by a planted defect): no security for front-end, near-miss and other paths', async () => {
+    for (const f of ['src/components/report/ReportView.tsx', 'mobile/src/lib/analytics.ts', 'mobile/app/(app)/x.tsx', 'src/library.ts', 'src/app/apiary/x.ts', 'scripts/analysis/x.mjs', 'docs/specs/03-mobile/x.md', 'src/tests/x.test.ts']) {
+      const r = await lens('build', f);
+      expect(r.plan, f).not.toContain('security');
+      expect(r.out, f).not.toContain('security');
+    }
+  });
+  it('S4 (survive-the-fix, green both ways): the type gate is unchanged; on an API route a record task and an empty type get no lens beyond the plan review', async () => {
+    for (const type of ['record', '']) {
+      const r = await lens(type, 'src/app/api/parcels/search/route.ts');
+      expect(r.plan, `type '${type}'`).toEqual(['plan-review-deepseek']);
+      expect(r.out, `type '${type}'`).toEqual([]);
+    }
+  });
+});
+
 describe('task-375 A4: lens-input takes the reviewer context, counts it in the room and can cut the plan material from it', () => {
   const base = (f: ReturnType<typeof fixture>, extra: string[]) => {
     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);

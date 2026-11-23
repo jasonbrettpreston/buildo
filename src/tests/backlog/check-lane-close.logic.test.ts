@@ -214,6 +214,17 @@ describe('close check: the lens set (AC #3)', () => {
     refused(scenario({ files: 'src/components/x.tsx' }), /out-ux\.txt/);
     refused(scenario({ files: 'src/lib/stripe/x.ts' }), /out-security\.txt/);
   });
+  // task-445 (FINAL.8, RR-0391): an API route or library path on the Files line also requires out-security.txt
+  it('C1(a): a src/lib path on the Files line requires out-security.txt', () => {
+    refused(scenario({ files: 'src/a.ts, src/lib/x.ts' }), /out-security\.txt/);
+  });
+  it('C1(b): an API route on the Files line requires out-security.txt (it needs out-ux.txt as well, as before)', () => {
+    refused(scenario({ files: 'src/a.ts, src/app/api/x/route.ts' }), /out-security\.txt/);
+  });
+  it('C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes', () => {
+    const r = scenario({ files: 'src/a.ts, src/lib/x.ts', mutate: (l, d) => ({ ...l, 'out-security.txt': hdr('lens-security.md', fs.readFileSync(path.join(d, '.git/material.txt'), 'utf8')) + body(false) }) });
+    expect(r.status, r.stderr).toBe(0);
+  });
   it('split parts: -p1..-pK with no gap pass; a gap, or parts beside an unsuffixed file, are refused', () => {
     // the fixture list is tiny (one section), so a single part is the honest shape here; the gap and both-forms refusals are what is pinned
     refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-first-p1.txt': l['out-compliance-first.txt'] as string }) }), /both exist|-pN/);

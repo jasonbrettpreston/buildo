@@ -183,7 +183,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
 export function lensSet({ type, files }) {
   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
-  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);
+  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e)); // task-445 (RR-0391, 08_agents.md section 5.7): an API route or library path (the api-lib row)
   return {
     code,
     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],

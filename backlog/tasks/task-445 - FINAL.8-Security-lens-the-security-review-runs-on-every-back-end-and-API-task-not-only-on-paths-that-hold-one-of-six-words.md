@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SEC445'
 created_date: '2026-11-23T01:50:00Z'
-updated_date: '2026-11-23T12:29:00Z'
+updated_date: '2026-11-23T13:19:00Z'
 labels:
   - McFix
   - McFix Final
@@ -226,4 +226,8 @@ rg#4 MED folded hdr takes the materi
 Dated note 2026-11-22 (M-246, prior text kept; RR-0391 · task-445 · Backlog; operator, verbatim: "add it. Then once these close move on to the Mcfix plan for the closed and built tasks with the new approach.")
 
 2026-11-23 taken on the board at lane launch (lane BL-SEC445, worktree /Users/brettpreston_macmini/Buildo-wt-sec445, branch wf1/inc1b-sec445), RR-0240
+
+2026-11-23 build (BL-SEC445): tests S1(a), S1(b), S3, S4 (rule-lists.logic.test.ts), B1, B2 (backlog-lane.logic.test.ts), C1(a), C1(b), C1(c) (check-lane-close.logic.test.ts) written first per the plan's TESTS section; red attempt follows (red.out).
+
+2026-11-23 red (BL-SEC445, lane red.out): commit attempt with only the three test files and the task file staged: 'Test Files 3 failed (3)', 'Tests 6 failed | 338 passed (344)', exit=1. Reds at the designed assertions: S1(a) toEqual (rule-lists.logic.test.ts:730), S1(b) toContain (:737), B1 toContain (backlog-lane.logic.test.ts:377), B2 toEqual (:747), C1(a) status toBe(1), C1(b) toMatch; S3, S4, C1(c) and D11b green. Planted defects (commit attempts, no trailer, all exit 1): P1 no anchor -> S3 red 'mobile/src/lib/analytics.ts: expected ... to not include security'; P2 no boundary -> S3 red 'src/library.ts'; P3 scripts/ -> S3 red 'scripts/analysis/x.mjs' (plus 4 existing tests); P4 drop code && -> S4 red "type 'record': expected [ 'plan-review-deepseek', 'security' ] to deeply equal [ 'plan-review-deepseek' ]"; P5 new term only -> D11b red 'src/app/admin/page.tsx: expected ... to include security'. Each run: 1 failed | 343 passed (344) except P3 (5 failed).
 <!-- SECTION:NOTES:END -->

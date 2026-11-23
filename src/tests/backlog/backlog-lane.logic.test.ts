@@ -372,6 +372,11 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(e).toContain('lens-compliance.md');
     for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
   });
+  // task-445 (FINAL.8, RR-0391): the launch brief names the security lens for an API route or library path
+  it('B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not', () => {
+    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).toContain('lens-security.md');
+    expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');
+  });
 });
 
 // task-366 (COMPLY.2): the launch resolves the task's Files line through scripts/analysis/rule-lists.json (data decides) and attaches the governing rule lists.
@@ -734,6 +739,12 @@ describe('plan-prep review: the calls and what they leave', () => {
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-plan-review-deepseek.txt']);
     expect(names(f, /^in-/)).toEqual([]);
+  });
+  it('B2 (task-445): a fix task on a src/lib path also writes plan-security.txt', () => {
+    const f = prepFixture({ type: 'fix', files: 'src/lib/massing/geometry.ts' });
+    const r = review(f);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-plan-review-deepseek.txt', 'plan-security.txt']);
   });
   it('git environment: a foreign GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE (as in a commit hook) still gives a successful review', () => {
     const f = prepFixture();
