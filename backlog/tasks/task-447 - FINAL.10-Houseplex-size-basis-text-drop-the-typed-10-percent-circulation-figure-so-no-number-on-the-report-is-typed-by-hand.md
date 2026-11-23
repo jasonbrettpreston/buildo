@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-23T15:16:00Z'
+updated_date: '2026-11-23T15:18:00Z'
 labels:
   - McFix
   - McFix Final
@@ -34,3 +35,9 @@ Card opened 2026-11-23 by the orchestrator, Spec 137 rule 2, on the operator's r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23: merged into task-442 on the operator's ruling RR-0403 (MORNING-DECISIONS.md:2040, option A). No lane is launched for this card; it is withdrawn once the folded task-442 plan carries the fix.
+<!-- SECTION:NOTES:END -->
