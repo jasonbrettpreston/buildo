@@ -3,7 +3,7 @@
     "COMPLY.2 (task-366): the path to rule-list table. DATA, not code, decides which rule lists govern a task: scripts/analysis/backlog-lane.mjs resolves a task's `Files:` line through it at launch, scripts/hooks/check-lane-close.mjs resolves it again at close. Operator, verbatim, 2026-11-20: \"Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort.\" (record ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, the 2026-11-20 entries).",
     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
-    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
     "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
     "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
@@ -85,14 +85,15 @@
       "id": "step-pipeline",
       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
       "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-back", "eng-shared"],
-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
+      "lists": ["step-132", "eng-back", "eng-shared"],
+      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
     },
     {
       "id": "bylaw",
       "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "layer23" },
+      "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
       "lists": ["bylaw-133"],
-      "why": "by-law rows and the by-law engine: the paths the McBylaws gate already classifies as by-law code (protected-paths.json layer23, Spec 133 R-LD) are governed by the by-law handbook rules"
+      "why": "by-law rows and the by-law engine: the paths the McBylaws gate already classifies as by-law code (protected-paths.json layer23, Spec 133 R-LD) are governed by the by-law handbook rules. task-448 (RR-0418, decision-203): an MF pre-registration (coa-expected/prereg-MF-**, a front-end record) is excluded by not and takes no by-law list"
     },
     {
       "id": "api-lib",
@@ -117,106 +118,107 @@
       "id": "surface-importers",
       "globs": ["src/lib/**", "src/app/api/**"],
       "imports_from": ["src/lib/surfaces", "scripts/surfaces"],
-      "lists": ["surface-126", "surface-128"],
-      "why": "ADDED by COMPLY.2: a library or API file that imports from src/lib/surfaces or scripts/surfaces (resolved module path, anchored) serves a McFrontend surface and is governed by the surface contract (Spec 126) and the surface policy (Spec 128)"
+      "lists": [],
+      "why": "ADDED by COMPLY.2: a library or API file that imports from src/lib/surfaces or scripts/surfaces (resolved module path, anchored) serves a McFrontend surface and was governed by the surface contract (Spec 126) and the surface policy (Spec 128) until task-448 (RR-0421 item 1 a, decision-205, reverses RR-0383): Specs 126 and 128 are off; this row attaches no list"
     },
     {
       "id": "surface-contract-routes",
       "globs": ["src/app/api/admin/media/[asset_id]/route.ts", "src/app/api/admin/media/route.ts", "src/app/api/admin/parcels/lookup/route.ts", "src/app/api/admin/parcels/lot-size/revert/route.ts", "src/app/api/admin/placements/advertisers/route.ts", "src/app/api/admin/placements/offers/route.ts", "src/app/api/admin/placements/route.ts", "src/app/api/parcels/entitlement/route.ts", "src/app/api/parcels/lookup/route.ts", "src/app/api/parcels/lot-size/route.ts"],
-      "lists": ["surface-126", "surface-128", "surface-135", "surface-136"],
-      "why": "V2.LIST (task-406, round 4; operator, 2026-11-20, \"yes, ground it and resolve it. don't makr the task complete until it actually works.\", MORNING-DECISIONS.md:1517): the API routes the surface census (scripts/surfaces/_schema/census/contracts.json) names for scopes parcel_product and parcel_admin are contracts of the programme and get the surface standard (Spec 126) and the surface standard policy (Spec 128). Spec 126:115 lists the CONTRACT as \"one API route\"; Spec 126:135 scope A parcel_product: \"This is the programme.\"; Spec 126:136 scope B parcel_admin: \"An unobservable product is not shipped.\"; Spec 128:29: \"The client is just glass\" and \"everything else is server-projected\". estate_other is not attached (Spec 126:138 scope D). Scope platform_shared (36 census entries, 20 of them admin routes) is left out for Increment 1·B on the operator's word: item 5 was put to him as \"5. The 36 shared-platform routes. My recommendation: leave out for 1·B.\"; operator, verbatim: \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\" (MORNING-DECISIONS.md:1520, entry \"2026-11-20 · Operator RULES on five more items\"). Specs 135 and 136 are attached to these routes: item 2 was put to him as \"2. Attach Specs 135 and 136 to the contract routes. My recommendation: yes.\" (same entry, same answer). The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ"
+      "lists": ["surface-136"],
+      "why": "V2.LIST (task-406, round 4; operator, 2026-11-20, \"yes, ground it and resolve it. don't makr the task complete until it actually works.\", MORNING-DECISIONS.md:1517): the API routes the surface census (scripts/surfaces/_schema/census/contracts.json) names for scopes parcel_product and parcel_admin are contracts of the programme and got the surface standard (Spec 126) and the surface standard policy (Spec 128) until task-448 (see the end of this text). Spec 126:115 lists the CONTRACT as \"one API route\"; Spec 126:135 scope A parcel_product: \"This is the programme.\"; Spec 126:136 scope B parcel_admin: \"An unobservable product is not shipped.\"; Spec 128:29: \"The client is just glass\" and \"everything else is server-projected\". estate_other is not attached (Spec 126:138 scope D). Scope platform_shared (36 census entries, 20 of them admin routes) is left out for Increment 1·B on the operator's word: item 5 was put to him as \"5. The 36 shared-platform routes. My recommendation: leave out for 1·B.\"; operator, verbatim: \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\" (MORNING-DECISIONS.md:1520, entry \"2026-11-20 · Operator RULES on five more items\"). Specs 135 and 136 were attached to these routes (Spec 135 until task-448): item 2 was put to him as \"2. Attach Specs 135 and 136 to the contract routes. My recommendation: yes.\" (same entry, same answer). The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ. task-448 (RR-0421 item 1 a, decision-205; it takes off what the operator answer 1-5 y, MORNING-DECISIONS.md:1520 item 2, attached to these routes, and reverses RR-0383): Specs 126, 128 and 135 are off; this row attaches surface-136 only"
     },
     {
       "id": "storage",
       "globs": ["src/lib/parcels/**", "src/lib/report-projection/**", "src/app/api/parcels/**"],
-      "lists": ["storage-doc16"],
-      "why": "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)"
+      "lists": [],
+      "why": "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels was governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds) until task-448 (RR-0421 item 3 a, decision-205): doc-16 is off; this row attaches no list"
     },
     {
       "id": "compute-import",
       "globs": ["src/**/*.ts", "src/**/*.tsx"],
       "imports_from": ["scripts/lib/compute"],
-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a"],
-      "why": "a src file that imports from scripts/lib/compute gets the step standard and Airtight lists, because the compute gates scan scripts/lib/compute by path only"
+      "lists": ["step-132"],
+      "why": "a src file that imports from scripts/lib/compute gets the step standard list (Spec 132) because the compute gates scan scripts/lib/compute by path only; until task-448 it also got the four Airtight lists (RR-0421 item 3 a, decision-205: off)"
     },
     {
       "id": "surfaces",
       "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
       "lists": ["surface-136", "eng-all"],
-      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule); until task-439 they were also governed by the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)"
+      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule); until task-439 they were also governed by the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edited one of those specs got them through the specs-web-admin row until task-448 (RR-0383, decision-168); RR-0421 item 1 a (decision-205) reverses RR-0383, so no row attaches them now"
     },
     {
       "id": "mobile",
       "globs": ["mobile/**"],
-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "eng-front", "eng-shared"],
-      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)"
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"],
+      "why": "the mobile app is governed by Specs 90, 98, 99 and Spec 136 (Specs 100 and 96 were attached until task-448; RR-0421 item 2 a, decision-205, keeps the three protocols); until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edited one of those specs got them through the specs-web-admin row until task-448 (RR-0383, decision-168); RR-0421 item 1 a (decision-205) reverses RR-0383, so no row attaches them now"
     },
     {
       "id": "queue-records",
       "globs": ["backlog/**", ".cursor/*QUEUE*", "docs/specs/00-architecture/**"],
-      "lists": ["queue-137", "agents-s7-s11"],
-      "why": "queue, board and records are governed by Spec 137 and Spec 08 sections 7 and 11"
+      "lists": [],
+      "why": "queue, board and records were governed by Spec 137 and Spec 08 sections 7 and 11 until task-448 (RR-0418, decision-203; RR-0421 item 4 a, decision-205): Spec 137 and Spec 08 are off on this row and on the record-only default; this row attaches no list (the every-task lists still apply)"
     },
     {
       "id": "lane-tools",
       "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
+      "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
       "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all)"
+      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them"
     },
     {
       "id": "generated-reports",
       "globs": ["docs/reports/generated/**"],
       "not": ["docs/reports/generated/127-*"],
-      "lists": ["policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "V2.LIST (task-406, round 2): generated reports (docs/reports/generated, except the 127-* files) are governed by Spec 124 Rule 13 (every generated doc has a generator with a drift check, gate J: scripts/analysis/gates/generated-docs.mjs) and the role banner rule R-GW (list policy-124-s2-s5: sections 2 and 5 of Spec 124), with the lane-tools lists as before"
+      "lists": ["eng-all"],
+      "why": "V2.LIST (task-406, round 2): generated reports (docs/reports/generated, except the 127-* files) are governed by Spec 124 Rule 13 (every generated doc has a generator with a drift check, gate J: scripts/analysis/gates/generated-docs.mjs) and the role banner rule R-GW; until task-448 (RR-0421 item 4 a, decision-205) the review also got the list policy-124-s2-s5 (sections 2 and 5 of Spec 124) and the lane-tools lists, which are off: this row attaches eng-all only (Rule 13 stays enforced by gate J)"
     },
     {
       "id": "generated-127",
       "globs": ["docs/reports/generated/127-*"],
-      "lists": ["surface-127", "policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "V2.LIST (task-406, round 2): the generated 127-* reports (the surface registry and review queue) keep the surface conversion procedure (Spec 127: surface-127) and also get the Spec 124 Rule 13 list and the lane-tools lists"
+      "lists": ["eng-all"],
+      "why": "V2.LIST (task-406, round 2): the generated 127-* reports (the surface registry and review queue) kept the surface conversion procedure (Spec 127: surface-127) and also got the Spec 124 Rule 13 list and the lane-tools lists until task-448 (RR-0421 items 1 a and 4 a, decision-205): surface-127, the Spec 124 list and the lane-tools lists are off; this row attaches eng-all only"
     },
     {
       "id": "policy-reports",
       "globs": ["docs/reports/policy/**"],
-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). The lane-tools lists are attached as the nearest and are NOT presented as governing"
+      "lists": ["eng-all"],
+      "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). Until task-448 the lane-tools lists were attached as the nearest and were NOT presented as governing (RR-0421 item 4 a, decision-205: they are off; this row attaches eng-all only)"
     },
     {
       "id": "reference-docs",
       "globs": ["docs/reference/**"],
-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "V2.LIST (task-406, round 3): docs/reference holds generated reference files (the logic-variable registry, the report field inventory, the by-law provisions): nearest lists, no governing spec found: operator ruling owed. Found because task-406 itself regenerates two of them (a Files path that matched no row); the lane-tools lists are attached as the nearest and are NOT presented as governing"
+      "lists": ["eng-all"],
+      "why": "V2.LIST (task-406, round 3): docs/reference holds generated reference files (the logic-variable registry, the report field inventory, the by-law provisions): nearest lists, no governing spec found: operator ruling owed. Found because task-406 itself regenerates two of them (a Files path that matched no row); until task-448 the lane-tools lists were attached as the nearest and were NOT presented as governing (RR-0421 item 4 a, decision-205: they are off; this row attaches eng-all only)"
     },
     {
       "id": "panel-records",
-      "globs": ["docs/reports/panels/**"],
-      "lists": ["surface-128", "surface-126", "agents-s7-s11", "queue-137"],
-      "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 govern it"
+      "globs": ["docs/reports/panels/**", "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json"],
+      "lists": [],
+      "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 governed it until task-448 (RR-0421 items 1 a and 4 a, decision-205): they are off; this row attaches no list and also matches the MF pre-registration files (coa-expected/prereg-MF-*.json) so they resolve"
     },
     {
       "id": "review-followups",
       "globs": ["docs/reports/review_followups.md"],
-      "lists": ["agents-s7-s11", "queue-137"],
-      "why": "task-412 (RR-0336, RR-0338): Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\") names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) govern it; before this row a lane could not write the file"
+      "lists": [],
+      "why": "task-412 (RR-0336, RR-0338): Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\") names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) governed it until task-448 (RR-0421 item 4 a, decision-205): they are off and this row attaches no list; the row still lets a lane write the file (before this row a lane could not write the file)"
     },
     {
       "id": "specs-docs",
       "globs": ["docs/specs/**"],
-      "lists": ["eng-all", "agents-s7-s11", "queue-137"],
-      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
+      "lists": ["eng-all"],
+      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them); until task-448 (RR-0421 item 4 a, decision-205) it was also governed by Spec 08 sections 7 and 11 and Spec 137, which are off on this row, so it attaches eng-all only; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
     },
     {
       "id": "specs-mobile",
       "globs": ["docs/specs/03-mobile/**"],
-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136"],
-      "why": "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136"],
+      "why": "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict). task-448 (RR-0421 item 2 a, decision-205): Specs 100 and 96 are off; this row attaches mobile-90, mobile-98, mobile-99 and surface-136"
     },
     {
       "id": "specs-web-admin",
       "globs": ["docs/specs/02-web-admin/**"],
-      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
-      "why": "ADDED by COMPLY.2: editing a web-admin (McFrontend surface) spec is also governed by the surface lists (at that time the same lists as the surfaces row). task-439 (RR-0383, decision-168): this row keeps all five surface lists after the surfaces and mobile rows drop the four specs, so an edit to a surface spec is reviewed with that spec"
+      "lists": ["surface-136"],
+      "why": "ADDED by COMPLY.2: editing a web-admin (McFrontend surface) spec is also governed by the surface lists (at that time the same lists as the surfaces row). task-439 (RR-0383, decision-168): this row kept all five surface lists after the surfaces and mobile rows dropped the four specs, so an edit to a surface spec was reviewed with that spec until task-448 (RR-0421 item 1 a, decision-205, reverses RR-0383): Specs 126, 127, 128 and 135 are off; this row attaches surface-136 only"
     },
     {
       "id": "tests",

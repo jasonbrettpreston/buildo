@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T21:31:00Z'
+updated_date: '2026-11-23T21:41:00Z'
 labels:
   - McFix
   - McFix Final
@@ -521,4 +521,8 @@ rg#5 MED folded the step-pipeline ro
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-LISTS448, worktree /Users/brettpreston_macmini/Buildo-wt-lists448, branch wf1/inc1b-lists448), RR-0240
+
+2026-11-23 BL-LISTS448: test edits of plan section 4 written first (rule-lists.logic, rule-lists-table.logic, backlog-lane.logic); red attempt through the real pre-commit hook, output saved as red.out in the lane dir.
+
+2026-11-23 BL-LISTS448: STOPPED before the work commit. Red attempt seen at the designed assertions (red.out: 21 failed, the three A1 strings present). The work commit was refused by the pre-commit related run: two tests the plan does not edit went red because of the plan's exact texts: (1) src/tests/backlog/backlog-lane.logic.test.ts:280 expect(e).not.toContain('TRIAGE.md') against the new brief sentence of plan 3.3 ('then a new GROUNDER.md and TRIAGE.md'); (2) src/tests/backlog/rule-lists.logic.test.ts:986 (task-423 (e) counts pinned at most): joined compliance files at material 29700 are 4, bound 3, after the Spec 08 and Spec 137 dated notes of 3.4-3.6 grow the agents-s7-s11 and queue-137 lists. Edits are staged, not committed; plan amendment owed. Task stays RUNNING.
 <!-- SECTION:NOTES:END -->

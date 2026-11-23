@@ -35,8 +35,7 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { rows: { id: string; lists: string[] }[] };
     for (const row of ['mobile', 'api-lib', 'storage']) for (const l of t.rows.find((x) => x.id === row)!.lists) expect(ids(res), `${row}: ${l}`).toContain(l);
     expect(ids(res)).toContain('inc-S');
-    const doc16 = res.lists.find((l) => l.id === 'storage-doc16');
-    expect(doc16?.status).toMatch(/draft, operator to confirm it binds/);
+    expect(ids(res)).not.toContain('storage-doc16'); // task-448 (RR-0421 item 3 a)
   });
   // task-431 D2 (survive-the-fix): the phone row sends eng-front + eng-shared and the tests row eng-all; the de-dup line keeps the whole list only (planted defect: the line removed gives eng-all, eng-front and eng-shared)
   it('task-431 D2: a phone file plus a test file get exactly eng-all among the lists on the engineering standards file (whole wins)', () => {
@@ -46,31 +45,33 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     const engFile = t.lists['eng-all']!.file;
     expect((JSON.parse(r.stdout) as Res).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all']);
   });
-  it('a src file that imports from scripts/lib/compute gets the step and Airtight lists (import row)', () => {
+  it('a src file that imports from scripts/lib/compute gets the step handbook list and no Airtight list (import row; task-448, RR-0421 item 3 a)', () => {
     const r = script(CLI, ['resolve', '--files', 'src/lib/parcels/report-compute.ts', '--type', 'build', '--letter', 'S']);
     const res = JSON.parse(r.stdout) as Res;
     expect(ids(res)).toContain('step-132');
-    expect(ids(res)).toContain('airtight-v3-122');
+    for (const l of ['airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a']) expect(ids(res)).not.toContain(l);
   });
-  it('ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer gets Specs 126 and 128', () => {
+  it('ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer no longer gets Specs 126 and 128 (task-448, RR-0421 item 1 a)', () => {
     for (const p of ['src/components/report/X.tsx', 'src/app/(maxbld)/page.tsx', 'src/middleware.ts', 'package.json', '.github/workflows/test.yml']) {
       const r = script(CLI, ['resolve', '--files', p, '--type', 'build', '--letter', 'S']);
       expect(r.status, `${p}: ${r.stderr}`).toBe(0);
     }
     const imp = JSON.parse(script(CLI, ['resolve', '--files', 'src/lib/parcels/lot-size-entry.ts', '--type', 'build', '--letter', 'S']).stdout) as Res;
-    expect(ids(imp)).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
+    for (const l of ['surface-126', 'surface-128']) expect(ids(imp)).not.toContain(l);
     console.log(`ATTACK 12: RESOLVES: src/components, src/app, src/middleware.ts, package.json, .github ; importer lists ${ids(imp).join(',')}`);
   });
   it('task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface\'s own lists', () => {
     const lists = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', '1']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
     const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json');
-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
+    for (const l of ['eng-all', 'mobile-90', 'mobile-98', 'mobile-99', 'surface-136']) expect(mobile).toContain(l);
+    for (const l of ['agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-96']) expect(mobile).not.toContain(l);
     const web = lists('docs/specs/02-web-admin/128_surface_standard_policy.md');
-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
+    for (const l of ['eng-all', 'surface-136']) expect(web).toContain(l);
+    for (const l of ['agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).not.toContain(l);
     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
+    expect(pipe).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-1', 'ms-1']);
     expect(pipe).not.toContain('mobile-100');
-    expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).toContain('queue-137');
+    expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).not.toContain('queue-137');
   });
   it('an unmatched path is refused and named (exit 3)', () => {
     const r = script(CLI, ['resolve', '--files', 'zzz-unknown/dir/file.txt', '--type', 'build', '--letter', 'S']);
