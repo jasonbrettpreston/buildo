@@ -3,11 +3,11 @@ id: TASK-439
 title: >-
   FINAL.4 Front-end reviews stop sending the four surface specs once the
   handbook holds their rules (after task-430)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SURF439'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T16:08:00Z'
+updated_date: '2026-11-23T16:17:00Z'
 labels:
   - McFix
   - McFix Final
@@ -34,6 +34,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-SURF439/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-SURF439/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-SURF439/TRIAGE.md
 type: build
 ordinal: 139012
 ---
@@ -250,3 +252,11 @@ N1, N2 and the changed tests: red.out refused (2 failed, N1 at :339 and golden p
 
 2026-11-23 (lane BL-SURF439): REPORT.md in docs/reports/lanes/2026-11-23/BL-SURF439; close dry run on a throwaway clone shows only the REPORT ref (added now) and the grounder's GROUNDER.md missing; no refusal about the review material. Grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed (work commit 48f251d38): the surfaces and mobile rows of scripts/analysis/rule-lists.json no longer attach surface-126, surface-127, surface-128 and surface-135 and send Spec 136 section 2 instead; specs-web-admin keeps all five; Spec 08 and Spec 137 dated notes; page regenerated; tests N1 and N2 red first (red.out), green in the hooks (Tests 28 passed). Output review round 1: 29 findings, 3 LOW piled, 26 rejected (grounder Cairn-Ground-O439).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 3 pile; grounder docs/reports/lanes/2026-11-23/BL-SURF439/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-SURF439/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
