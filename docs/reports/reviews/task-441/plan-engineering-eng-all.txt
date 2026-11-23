@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T14:57:09.525Z file_sha256=a88b094411a705fc65594e48c06fc28f8c4b293710449de316303d44b870b0a1 prompt_sha256=8193254b156b46ab9194ff803d86bfc3889296d31a53fca6a08aeabef9e13cdf
+🔍 Lens review of docs/reports/reviews/task-441/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests." — plan §3.4/§6 "DeepSeek runs the compliance and engineering lenses on the output (RR-0385 item 2), then a separate grounder runs BEFORE any fold" — no step in the build sequence or landing section produces the mandatory 5-10 item PASS/FAIL self-skeptical checklist before the red run or Green Light, and §11 states these items are "not optional" and "must appear in the plan" — add a step to §3.4/§6 requiring the 5-10 item PASS/FAIL checklist derived from §12.7, §1.2 and §2.3 to be output before the red hook run and again against the actual diff before Green Light.
+
+DEFER severity=LOW — 12. Seven? no. 12. Frontend Foundation Tooling §12.7 "**Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()`" — plan §3.4 "  alert('planted-441');" — the staged plant under src/components/ui/ is itself a §12.7 violation, held only by the pre-commit refusal plus acceptance 3 "git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only" — bounded: never committed, the hook refuses, and acceptance 3 catches a leak, so defer.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed ... If using `!`, you must document why in an inline comment." — plan §3.4 "  return <span>{v!.n + c}</span>;" — the plant carries an undocumented `!` that would itself breach §2.3 if it ever landed — same never-committed guarantee and acceptance 3 protect it, defer.
+
+MET — 5. Testing Standards §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — plan §3.4 "The lane saves the hook output to docs/reports/reviews/task-441/red.out" then "Passing control" — tests are proven red on planted defects in a refused hook run before commit 1.
+
+MET — 5. Testing Standards §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan "The name pattern is `<subject>.logic.test.ts`, like the source-scan locks resolve-db-adoption.logic.test.ts" — the finders are pure (rel, text) => Hit[] functions and sit in the logic layer with the repo's existing source-scan precedent.
+
+MET — 10. Frontend/Backend Boundary §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — acceptance 6 "git diff --stat <launch>..HEAD -- eslint.config.mjs biome.json scripts .husky docs/specs src mobile ':!src/tests' prints nothing" — the mobile-never-do.mjs SKIP export is imported, not modified, and the acceptance check locks it.
+
+MET — 14. The Prevention Loop registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — plan §3 "First line `// SPEC LINK: docs/specs/00_engineering_standards.md §N.M (:line)`" — each new test file carries the spec path and section number.
+
+REJECT — 11. Plan Compliance Checklist (Cross-Layer Contracts Check) "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`" — the 166-in-60 `UNDOCUMENTED_BANG_PIN` accused of being an unsourced threshold — the pin lives in one test file and crosses no spec, SQL, Zod or migration surface, so the clause does not reach it.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  62522ms (62.5s)
+📊 Tokens — total: 32839, input: 20266, output: 12573, reasoning: 11617

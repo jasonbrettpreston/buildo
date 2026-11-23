@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T14:57:09.525Z file_sha256=4142b9540644f7212051d6fc70b9d7e2f77aa28f381e41460846ccf35d2d5dc1 prompt_sha256=a9d092d3c3a8c75c8a104f316da8c6d62a61588b019cf9ee4635ccf8350cbb69
+🔍 Lens review of docs/reports/reviews/task-441/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3.4 step 1 + Acceptance #2 — The whole "proven red through the real hook" deliverable rests on the section-0 claim "A staged test file therefore runs itself" (.husky/pre-commit:85), but the command is never shown; if :85 is an import-graph `vitest related` (not `--changed`), a brand-new test file with no importers is never executed — step 1 commits GREEN, red.out never contains the designed failures, and Acceptance #2's `grep -c 'Planted441'` can false-pass on any lint/typecheck line that merely names the file — (1) `sed -n '50,90p' .husky/pre-commit` to confirm the invocation; (2) if related-based, pass the three test files explicitly; (3) change Acceptance #2 to grep the specific failure text ("not in the pin", the `toEqual([])` file:line), not the bare filename.
+
+BUG severity=MED — Acceptance #6 vs §0 UNVERIFIED (system-map) — The plan marks "a new SPEC LINK test needs no system-map edit" UNVERIFIED and defers to `system-map.infra.test.ts` at pre-commit, but Acceptance #6 asserts `git diff --stat … docs/specs …` prints nothing; if that test demands a `00_system_map.md` row the lane must edit docs/specs, which Acceptance #6 forbids — the lane is stuck between a green build and a failing acceptance — pre-run `src/tests/system-map.infra.test.ts` against a stub SPEC LINK before staging, or relax #6 to permit the single map row if the test requires it.
+
+BUG severity=MED — §0 "§12.7: no call to alert/confirm/prompt … (git grep)" — The verified-zero grep (`noAlert|no-alert|window\.alert|'alert'`) does not cover `globalThis.alert`, `self.alert`, `globalThis.confirm`, `window['alert']`, which the §3.1 finder (window/globalThis/self PropertyAccess) does match; a stray such call fails the *green control* in step 2, not the red step — run `git grep -nE '(window|globalThis|self)\s*\.\s*(alert|confirm|prompt)\b' -- src` now before declaring §12.7 live-clean.
+
+BUG severity=MED — §3.1–3.3 (test files) vs §8 "Lint on the plant" — The plan verifies the *plant* passes typecheck+lint but never the three new test files themselves; a rule tripping on the `Hit` fixture, the `pinProblems` signature, an unused `rel`, or the .mjs `SKIP` import fails at the typecheck/lint step *before* the related run, polluting red.out with wrong-step failures (violating §3.4 "a red for any other reason is a test defect") — run `npx eslint` + `npx tsc --noEmit` on the three files (or confirm they mirror the accepted `surface-conformance.logic.test.ts:24` pattern) before staging.
+
+BUG severity=MED — Acceptance #7 "sum to the count the lane measures at its launch head (166 at 81882a1e3)" — §8 models only "the lander who lands second" re-measuring; if *task-441* lands second and another lane introduced a `!` between launch and step-2, the pin is stale and the green control fails mid-build, while #7's "launch head (166 at 81882a1e3)" no longer describes the committed pin — change #7 to "re-measure at current HEAD immediately before commit; the pin must equal that measurement", and `git rev-parse --short HEAD` at lane launch to confirm 81882a1e3 is still current.
+
+DEFER severity=LOW — §3.4 plant vs structural tests — `src/components/ui/Planted441.tsx` is a new src file with no importer; if any dir-enumerating/coverage test (e.g., a "every ui component is rendered" or system-map scan) runs in the related set it will fail for an unrelated reason, adding noise to red.out (tolerated by the `>=3` count but muddying the "designed assertion only" discipline) — `git grep -l 'components/ui' src/tests | xargs grep -l 'ls-files\|readdir'` to see whether any structural test enumerates src/components/ui.
+
+DEFER severity=LOW — §3.3 finder (ts.isNonNullExpression) — `x!!` is two `NonNullExpression` nodes, so one visual `!!` inflates a file's pin entry; internally consistent with the AST-measured pin but surprising to a maintainer lowering it by hand — note in the pin comment that counts are AST nodes, not `!` glyphs.
+
+DEFER severity=LOW — §0 "§1.2 … (git grep, 0 hits)" — the grep pattern that produced this is not shown, so coverage of `React.useContext`, `use(Ctx)` and the `@tanstack/react-query` import (all in the §3.2 finder) is unknown — `git grep -nE 'fetch\(|useContext|\buse\(|useQuery|useMutation|from .@tanstack/react-query' -- src/components/ui`.
+
+REJECT — §3.4 plant `void fetch('/api/planted-441')` — appears to imply a live network call during the red run — it never executes; nothing imports Planted441 and the three tests only AST-parse its text, so "No DB, no network" (§3 preamble) holds — no network failure mode.
+
+REJECT — §8 proxy limits (`window['alert']`, custom-hook data reads, any comment as "document why") — already stated in-file as deliberate bounds — re-raising them would be duplicating the plan's own acknowledgments.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- Verify .husky/pre-commit:85 actually executes newly-added test files (not import-graph-only related run), and strengthen Acceptance #2 to grep the specific designed-failure text rather than the bare filename.
+- Resolve the system-map UNVERIFIED vs Acceptance #6 (no docs/specs edits) contradiction before staging, so a correct build isn't failed by a required 00_system_map.md row.
+- Pre-verify the three test files pass lint + tsc so red.out reflects only the three designed assertions, not wrong-step failures.
+Top 3 unverified data premises (regardless of verdict):
+- Pre-commit run mechanism: `sed -n '50,90p' .husky/pre-commit` — confirm `vitest related` vs `--changed` and whether a new importer-less test file is exercised.
+- §12.7 true-zero across all finder forms: `git grep -nE '(window|globalThis|self)\s*\.\s*(alert|confirm|prompt)\b' -- src` (the plan's grep omits globalThis/self).
+- System-map requirement: `grep -n '00_engineering_standards' docs/specs/00_system_map.md` — expect 0 rows per precedent; a hit means Acceptance #6 must be relaxed.
+
+---
+⏱  73179ms (73.2s)
+📊 Tokens — total: 33795, input: 19304, output: 14491, reasoning: 12880

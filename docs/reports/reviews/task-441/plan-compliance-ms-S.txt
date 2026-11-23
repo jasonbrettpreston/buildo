@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:57:09.525Z file_sha256=39d800c52f7294ba242085ae78377006e0f9f3a553cf0e13fff120a5ed4e56a1 prompt_sha256=b0212bebe15190f7b73a802d180a1daf33804721acffedd95726b54fe2bfb6a2
+🔍 Lens review of docs/reports/reviews/task-441/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=<none, see DEFER> — n/a
+
+DEFER severity=MED — card "tests for the engineering-standards rules ranked by FINAL.5, a few per round; each test is proven red on a planted defect before it counts. Scope and Files line at its plan review." — plan 2 item 3 "§2.1, rank 5: not machine-testable as written, so it is skipped." — rank 5, a rule the card says has no test, is dropped and the authority cited for the drop (RR-0385 item 4(ii), MORNING-DECISIONS.md:1920) is not pasted, so the card clause is unmet for that rule — decide Q1 in the plan body: include the §2.1 ratchet, or record an operator or grounder exclusion in writing before lock
+DEFER severity=MED — card "Scope and Files line at its plan review." — plan Q4 "§2.3 scope: src and mobile (recommended; §2 is not path-scoped, :35-47), or src only?" and Q5 "§12.7 scope: all of src (recommended, and clean today) against the section 12 status line" — the scope the Files line fixes is still open in Q4 and Q5, so the line that is supposed to be reviewed cannot be approved as written — settle Q3, Q4 and Q5 in the plan body and leave only the grounder's ruling open
+DEFER severity=MED — card "Every build task of this plan follows the six steps, plan written and built on Opus" — plan NONE, the six steps are never named in any of sections 0 to 9 — cannot see the six steps, so the plan's compliance with them cannot be checked from the material under review — add one line mapping the plan's steps to the six named steps so the gate can verify them
+DEFER severity=LOW — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan 8 "The lander who lands second re-measures and edits the pin in its own commit." — the §2.3 shrink-only pin creates a cross-lane dependency inside the one-push bundle with no named owner, which can turn the shared pre-push test red after one of the four lands — name the owner or the landing order for the re-measure in section 6
+DEFER severity=LOW — operator verbatim in the card "We just want to focus on getting the right tests that mirror the engineering and compliance." — plan 3.3 "It holds the 60 files and their exact counts (166 total), copied from the lane's own measurement." — the §2.3 test lands green while the rule is broken 166 times, so it mirrors drift rather than compliance — acceptable because the pin is the repo pattern and section 4 names the breaks to the orchestrator; keep it unless the grounder rules otherwise
+DEFER severity=NIT — card "Files: src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts, backlog/tasks/task-441..." — plan 5 "The plant src/components/ui/Planted441.tsx is never committed." — a path outside the card's Files line is staged, though never committed and checked by acceptance 3 — no action, the plan already states the plant is untracked
+
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — plan 6 "then a separate grounder runs BEFORE any fold (RR-0359, MORNING-DECISIONS.md:1687)"
+MET — RR-0385 "proceed. Are there any more questions - Label all realted tasks McFix Final." — plan 6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED, round 2 fixes CRITICAL and HIGH (RR-0385 item 3, :1919)."
+MET — card "plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — plan header "Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)."
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place - does that make sense?" — plan 1 Out, no McFixReborn work, tests only
+MET — RR-0392 "no other infastrcuture beyond this" — plan 1 Out "No edit to eslint.config.mjs, biome.json, scripts/ast-grep-rules, hooks, gates or the standards doc."
+MET — card "each test is proven red on a planted defect before it counts" — plan 3.4 and acceptance 2, three designed assertions red in one refused pre-commit run saved to red.out
+MET — card Files line — plan 5 lists exactly the card's five paths, no more
+MET — project objective "keep it simple; no scope creep" — plan 1 Out "No fix of any live break: the 166 `!` in section 4 stay as they are."
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  44973ms (45.0s)
+📊 Tokens — total: 18252, input: 9081, output: 9171, reasoning: 7988

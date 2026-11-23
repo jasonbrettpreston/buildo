@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:57:09.525Z file_sha256=1cc1a20567a0ef5327d91900f901c6c90cce9256e54a86975d7b70accc36f8ec prompt_sha256=37b6ca6b2c69e0950dcf12c319e4f19f80e3b45646b1fa4200a9397a2ca2a010
+🔍 Lens review of docs/reports/reviews/task-441/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "one test per engineering rule that has none, a few at a time, each proven to fail first" — plan §2 "**§2.1, rank 5: not machine-testable as written, so it is skipped.**" against plan §1 "§2.1 is not planned this round (section 2, Q1)." — rank 5 sits inside this round's own window (ranks 3, 4 and 6 are all planned), and the two plan lines disagree on whether it is deferred or dropped, so §2.1 ends the round with neither a test nor a recorded ruling, only an open question to the grounder — fix: at plan-lock record Q1's answer in the plan as either a §2.1 ratchet test with its grandfather pin, or a named future round that carries it.
+
+DEFER severity=MED — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan §9 Q2 "§12.7: test (recommended), or turn on ESLint core `no-alert`" — turning the lint rule on is config infrastructure RR-0392 rules out and the card's Files line never names (eslint.config.mjs is also in plan §1 Out), so §12.7's route is left undecided at plan-lock — fix: strike the lint alternative in Q2 and state the test as the only route under RR-0392.
+
+DEFER severity=MED — card "plan written and built on Opus" — plan "**Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)." — only the plan seat is declared; no line in §1 or §6 names the build seat, so the build half of the clause is unaddressed — fix: name Opus as the build seat in section 1 or 6.
+
+DEFER severity=LOW — card "one test per engineering rule that has none" — plan §0 "Whether Biome's recommended set turns on `noAlert`." — the premise that §12.7 has no existing check is left UNVERIFIED at plan-lock, so the card's selection test is unproven for rank 3 — fix: resolve the biome recommended-set question and write the answer into §0 before lock.
+
+DEFER severity=LOW — card "Every build task of this plan follows the six steps" — plan §6 lists "Commit 1 (work)", "Output review", "Close" and names no steps 1 to 6 — the clause cannot be checked on the page, since the plan never says which six steps it claims to follow — fix: name the six steps in §6 and map each landing section onto one.
+
+MET — card "each test is proven red on a planted defect before it counts" — plan §3.4 "It turns case A red at `toEqual([])` with the plant's file:line." — all three real-tree cases are shown red on the staged plant through the real pre-commit hook, then green in commit 1.
+
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — plan §6 "a separate grounder runs BEFORE any fold (RR-0359, MORNING-DECISIONS.md:1687)" — the grounder precedes any fold.
+
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this.." — plan §1 "No new helper file. No card." and "No edit to eslint.config.mjs, biome.json, scripts/ast-grep-rules, hooks, gates or the standards doc." — no infrastructure beyond the three tests, the task file and the records directory is introduced.
+
+MET — card "two rounds, validation without the operator" — plan §6 "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED, round 2 fixes CRITICAL and HIGH" — the round cap matches.
+
+MET — card "Scope and Files line at its plan review" — plan §1 "**In:**" and §5 "Files:" — both are present and the §5 list matches the card's Files list item for item.
+
+MET — Glossary "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — plan §3 "First line `// SPEC LINK: docs/specs/00_engineering_standards.md §N.M (:line)`" — each new file sits under src/tests, carries the rule pointer and asserts the rule.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  63025ms (63.0s)
+📊 Tokens — total: 23191, input: 9871, output: 13320, reasoning: 12282

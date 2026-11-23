@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:57:09.526Z file_sha256=7ee53634d84e0292bdd7442d54fee96e8c74770ee8b8c0e31380b456c86c31db prompt_sha256=96f7ab4ff5798c1fff06b1efbe5f441cca17aa900448182bf25059358cb7aafa
+🔍 Lens review of docs/reports/reviews/task-441/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11.9 TKT-1 dated note 2026-11-21 (task-375) "the tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate ... requires their Seat lines in GROUNDER-PLAN.md" — PLAN-441-v1 §6 "then a separate grounder runs BEFORE any fold (RR-0359, MORNING-DECISIONS.md:1687)" and §9 "Questions for the plan grounder" — the plan's roster names no Integration, Reality-Check or Regression seat at plan altitude although its Files line names tracked paths (src/tests/*.ts, src/components/ui/*.tsx), so no Seat line can exist at launch — add the three plan-altitude seats (Sonnet, with tools) and their GROUNDER-PLAN.md Seat lines to the plan.
+
+DEFER severity=MED — 7.4 dated note 2026-11-22 (task-431) "the per-list rule asks for one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`" — PLAN-441-v1 §6 "DeepSeek runs the compliance and engineering lenses on the output (RR-0385 item 2)" — no resolved list ids and no output file names are planned, so the close has nothing to match against out-engineering-<id> or out-compliance-<id> — name the lists `rule-lists.mjs resolveTask` gives for task-441 and the exact out- file names per seat.
+
+DEFER severity=MED — 7.6 dated note 2026-11-20 (task-399 fix round 1) "after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names" — PLAN-441-v1 §6 "Fixes are new commits with the same trailer." — no re-make or re-run follows a fix commit, so the close's whole-range-at-HEAD equality fails after round 1 — add the re-make and re-run step after each fix round.
+
+DEFER severity=MED — 7.6 dated note 2026-11-20 (task-399 FOLD.ADOPT) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — PLAN-441-v1 §6 "a separate closing commit holds the records only (red.out, the lens outputs, GROUNDER.md, REPORT.md)" — TRIAGE.md and its outcome lines are absent from the close records, so the close will refuse — add TRIAGE.md with one outcome line per finding id and the round-2 MED `ruling:RR-0385` form.
+
+DEFER severity=MED — 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — PLAN-441-v1 §3.1 "ESLint core `no-alert` and Biome `noAlert` exist but are not turned on." against §0 "Whether its recommended set turns it on is UNVERIFIED" — the "not turned on" fact is asserted and used to frame Q2 without being run — run biome under its recommended config or read the recommended set and record the result before Q2 goes anywhere.
+
+DEFER severity=MED — 7.6 "DEFER → `review_followups.md` with reasons" — PLAN-441-v1 §2.3 "**§2.1, rank 5: not machine-testable as written, so it is skipped.**" — a ranked rule is dropped with no recorded deferral (no review_followups row, no `task:task-N`, no outcome line) — record the skip as a DEFER with its reason and a task id, or take rank 5 this round.
+
+DEFER severity=LOW — 7.10 dated note 2026-11-19 (task-308) "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/`" — PLAN-441-v1 §5 "Files: ..., docs/reports/reviews/task-441/" — no repo copy under docs/reports/lanes/ is planned, so the task's reference will not resolve from the board — add the copy step and the docs/reports/lanes/<date>/<lane>/ path to the Files line.
+
+DEFER severity=LOW — card, "Every build task of this plan follows the six steps, plan written and built on Opus", and 7.9 dated note 2026-11-22 (task-436) "the lane that builds it run on Opus" — PLAN-441-v1 "**Plan seat:** Opus, read-only" — only the plan seat's model is stated, the building lane's is not — state the building lane runs on Opus and carry it to the AGENT-MODEL line and brief.
+
+MET — 11.3 — "**Planted defect:** `alert('planted-441')` in the shared plant file ... It turns case A red at `toEqual([])`" plus "the same hook runs them green (commit 1)" — red and green both proven through the real pre-commit hook.
+MET — 11.4 — §3 lists cases, fixtures, invocation mode and the plant text — the failing tests are written into the plan for plan-altitude review.
+MET — 7.6 dated note 2026-11-22 (task-437) — "Two rounds at most: round 1 fixes CRITICAL, HIGH and MED, round 2 fixes CRITICAL and HIGH (RR-0385 item 3, :1919)" — matches the round rule and the two-round cap.
+MET — RR-0359 — "then a separate grounder runs BEFORE any fold" — folding is gated on the grounder, as ruled.
+MET — 7.9 dated note 2026-11-22 (task-436) — "**Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)" — plan seat on Opus.
+MET — 11.1 — "All counts below were measured at 81882a1e3 with read-only node scripts." — counts (166, 60, 535, 400, 2) carry their measurement point.
+MET — 7.10 (a) — "§12.7, rank 3 ... :343" and "§1.2 ... :18" — recommendations cite the rule text with file:line.
+MET — RR-0392 — "A fix card, if any, is the orchestrator's call; this card opens none (RR-0392)." — no infrastructure beyond the tests is added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 8
+Rules met: none
+
+---
+⏱  102078ms (102.1s)
+📊 Tokens — total: 41860, input: 19953, output: 21907, reasoning: 20357

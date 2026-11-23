@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:57:09.525Z file_sha256=c5f846108c89d37cb4b3a3905ecf1d4ebcfd97101183219c8bec3fd5f24cb9af prompt_sha256=baf20c6513b9f66429ed8dd6689aff2cb4fb2c84fcc30d8d9116f4b2019912bf
+🔍 Lens review of docs/reports/reviews/task-441/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-441 card "THIS TASK: tests for the engineering-standards rules ranked by FINAL.5, a few per round" — PLAN-441-v1 §0 "The look's group 2 top three are §12.7, §1.2 and §2.1, "the first three live none rows by rank"." — the plan orders the work by the task-440 look/rank only, no line names FINAL.5 or shows §12.7, §1.2 and §2.3 are its top rows, so the mandated ranking basis is unshown — cite the FINAL.5 rank rows (file:line) for the three chosen rules, or re-rank the round to match FINAL.5.
+
+BUG severity=MED — task-441 title "one test per engineering rule that has none" — PLAN-441-v1 §1 Out "§2.1 is not planned this round (section 2, Q1)." — a ranked rule that has no test is dropped on an internal judgment the plan itself leaves open ("Recommended: skip. This is the grounder's call"), and no pasted ruling grants that exemption — record the grounder's written ruling on Q1 before plan-lock, or plan the §2.1 ratchet it describes (34 route-importing .infra tests, 13-file grandfather list).
+
+BUG severity=MED — plan-protocol 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — NONE — no line of PLAN-441-v1 carries an estimate for task-441, neither MEASURED with a source nor labelled GUESS — add an estimate line to the plan and to the task file.
+
+BUG severity=MED — M-246 note "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder" — PLAN-441-v1 §6 "DeepSeek runs the compliance and engineering lenses on the output (RR-0385 item 2), then a separate grounder runs BEFORE any fold" — the Landing names two lenses and a grounder, never the Spec 08 section 7 set the close check enforces, for a task the plan treats as a single lane — name the section 7 lens set and the close check in the Landing.
+
+BUG severity=MED — M-246 note "the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file...) is superseded by Spec 137 ...: the board is the plan" — PLAN-441-v1 §0 "Not on the card or the board: the task has no separate queue row. `git grep task-441 -- .cursor docs/specs/00-architecture/137_mcqueue.md` finds nothing, so the backlog task file is the row." — under the ruling the plan lives on the board, and the plan substitutes a backlog file for a missing board row without citing the authorizing clause — add the board row for task-441, or cite the Spec 137 rule 2 line that opens the card.
+
+DEFER severity=MED — task-441 card "plan written and built on Opus (his words: "I want this plan for each task and built by opus")" — PLAN-441-v1 header "**Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917)." — only the planning half of the operator's words is stated, no line names the build seat, and the plan file is to be "written per task" as well — state in the Landing or the task file that the build pass and the plan file for this task run on Opus.
+
+DEFER severity=LOW — plan-protocol 3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-441-v1 §9 Q2 "If the grounder prefers the lint rule, it needs the operator's word (RR-0385 item 4(ii))." — a fresh operator word is contemplated with no quoted search of the record on the eslint no-alert question — quote the record search for Q2, or drop Q2's operator path and test §12.7 as the card's DoD #4 already names.
+
+MET — RR-0359 "That's ridiculous to fold before the grounder review" — PLAN-441-v1 §6 "then a separate grounder runs BEFORE any fold (RR-0359, MORNING-DECISIONS.md:1687)" — the grounder precedes every fold.
+MET — RR-0392 "I don't think we need any other infastrcuture beyond this" — PLAN-441-v1 §1 "No edit to eslint.config.mjs, biome.json, scripts/ast-grep-rules, hooks, gates or the standards doc." — no infrastructure is added by the plan.
+MET — task-441 card "each test is proven red on a planted defect before it counts" — PLAN-441-v1 §3.4 "Run `git commit` with the three tests and the plant staged ... The related run (.husky/pre-commit:85) then fails" — red on a planted file first, green control second.
+MET — task-441 card "a few per round" — PLAN-441-v1 §2 "§12.7, rank 3", "§1.2, rank 4", "§2.3, rank 6" — three rules, three tests, this round.
+MET — task-441 card "Scope and Files line at its plan review" — PLAN-441-v1 §5 "Files: src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts, backlog/tasks/task-441 ... md, docs/reports/reviews/task-441/" — Files line present and matched to the card.
+MET — RR-0385 "Label all realted tasks McFix Final" — pasted card header "labels: McFix, McFix Final" — the label is carried on the card.
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — PLAN-441-v1 §1 "Three new test files under src/tests/, one per rule" with no McFixReborn item in Scope — nothing is sequenced ahead of the tests.
+MET — plan-protocol 2 step D "red-first tests named, exact commands" — PLAN-441-v1 §7 "1. Lane: `git ls-files src/tests | grep -cE '^src/tests/(no-blocking-dialogs|ui-component-isolation|non-null-assertion-comment)\.logic\.test\.ts$'` prints `3`." — red-first cases named and exact commands given.
+
+REJECT — M-246 note 4 and plan-protocol 2 step C — the plan runs no nine-seat panel (R,C,I,D,G,O,W,X then F) — not a real issue, the same pasted note supersedes that roster for a single lane task: "a single lane task takes the Spec 08 section 7 lens set".
+REJECT — plan-protocol 0 first bullet "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — the plan works from a backlog card and lane files, not sequence.json — not a real issue, the dated note supersedes that bullet: "the first bullet of section 0 below ... is superseded by Spec 137".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 7
+Rules met: none
+
+---
+⏱  54076ms (54.1s)
+📊 Tokens — total: 22628, input: 10695, output: 11933, reasoning: 10222
