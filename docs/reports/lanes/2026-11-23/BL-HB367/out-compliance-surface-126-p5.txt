@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:03:30.178Z file_sha256=f13256bf6ec841cc38e189c2dbb369da985166db1e327d3ae5abb97a6c18b0a1 prompt_sha256=e80939207b91c90f7080197a0a68615b87b2a582e880185fa4897e537bd6f16c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the pasted ruling covers three rows; the change lands two, lists only "- FE rows owned: FE-49, FE-54." and parks the third on a Q-D the pasted record does not name — record Q-D's exact wording and answer in the card, or flip fe.51 under RR-0413
+DEFER severity=LOW — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" — the only generated-line change visible in this chunk is a 60-character growth, and the OWED count 20 exists only in lane prose pasted as context, not as a checked diff — state the OWED before and after in the panel evidence field, or land the register diff in this chunk
+DEFER severity=LOW — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/reports/panels/MF-98.json "Tests first: the red commit attempt is recorded in docs/reports/reviews/task-367/red.out; section 6 of the plan governs." — red-then-green rests on a cited path this chunk does not contain, so it is a citation here, not a check — cite the failing test names and assertion lines in the panel evidence field
+MET — queue id line, one source of ids — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-99**" page text "MF-97 is held by lane BL-FEDB442 (task-442, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-97) and MF-98 is taken by the COMPLY.3 row" — line advanced by dated note, prior note text kept, both claimed ids accounted for
+MET — "A task not listed here is not done" — .cursor/MCFRONTEND-QUEUE.md "**MF-98 COMPLY.3: three tests for McFrontend handbook rules no machine checks" — the row exists in Phase 2 with id claimed
+MET — Acceptance #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list" — the three-row list is operator-confirmed before build
+MET — Spec 126 11b.5 "Spec 08 PLAN and OUTPUT panels per row" — docs/reports/panels/MF-98.json ""verdict": "PLAN RULED; OUTPUT owed"" — panel filed with the output review named as owed
+MET — Spec 126 11b.6 "tasks in `.cursor/MCFRONTEND-QUEUE.md`" — .cursor/MCFRONTEND-QUEUE.md MF-98 row — one home for the task kept
+MET — generated page current by its generator — docs/reports/generated/rule-lists-by-kind.md "| total | 12 lists | | 307,977 | 12 |" beside "| total | 11 lists | | 226,914 | 11 |" — both totals move by the same 60, arithmetic consistent
+MET — nothing beyond named scope — docs/reports/panels/MF-98.json "No app, descriptor, mobile or gate-script change." — diff touches only the queue, the generated rule-lists page and the panel
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  42919ms (42.9s)
+📊 Tokens — total: 35101, input: 25965, output: 9136, reasoning: 8255

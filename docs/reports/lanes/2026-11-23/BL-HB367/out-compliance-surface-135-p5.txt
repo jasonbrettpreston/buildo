@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:12:06.502Z file_sha256=ae6a1953d51d991018f17f45548c0ab240d605f58bdea6728fac349c75ea5aaf prompt_sha256=d8025bef7094a507766a4494c46f0d3be1d132d6a490733611d815ef7a9287b8
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p5.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — src/tests/surfaces/handbook-rule-map.logic.test.ts "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" (with "expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);") — FE-51 (nav-tab-switch) still reads OWED in the register while this same change makes its lock file tracked and whitelists it on FLIP_PENDING, so the register holds an OWED row whose lock exists, which rule 5 forbids, and the FE-09 gate is quieted by a list rather than by the register — fix: flip FE-51 to RULED 2026-11-23 with its lock in the same cell, or leave nav-tab-switch.logic.test.ts untracked and out of BUILT_BY_367 until Q-D is ruled
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" / verbatim "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row (unchanged context line) "| FE-51 | ... | OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" — only two of the three ruled flips are made (FE-49, FE-54); FE-51 keeps OWED and the handbook therefore shrinks 22 to 20 instead of 22 to 19 against "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" and AC #3 "The handbook no-check lists shrink by the rules gated, by their generators"; the NOT-YES branch rests on Q-D, which is not pasted — fix: record the FE-51 flip with its dated note and regenerate, or land the Q-D answer as a pasted ruling that keeps it OWED
+
+DEFER severity=MED — FE-54 Ruling cell "An unhandled state is a FAIL, not a blank screen." (128:39, quoted in the row being flipped) — src/tests/surfaces/failure-state-declared.logic.test.ts "the known break at mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here" — the row reads RULED 2026-11-23 on a declaration-only lock while the clause's own live violation remains in the tree — the register dated note records the limit as owned by task-343 leftovers, so the flip is documented; treat the code half as still owed by task-343 rather than by this row
+
+DEFER severity=LOW — Spec 135 rule 2 "A rule without a lock is not yet a rule" — 135 diff FE-49 note "The platform_shared standing exception is outside the lock ... so it stays out of the scope-fence test with this note as its record" — the sentence "`lead_parcels` is read by no surface" has one live mention and no check, and the dated note is its only record — the mention is a notes string at contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, so the fence holds; the widening is already named as a later task-367 batch row
+
+DEFER severity=LOW — Spec 135 rule 4 "`pass`/`n/a`/`FAIL`" — 135 diff FE-49/FE-54 row "D pass, P owed, F n/a, S pass, H n/a, E n/a" — the two rows now reading RULED carry a Six value (`owed`) that rule 4 does not list, so a ruled row shows an unmet principle slot — the cell is prior text untouched by this diff and every row shows it, so the fix belongs to a register-wide pass, not this task
+
+MET — Spec 135 rule 3 "Status words: `RULED <date>` · `OWED` · `PROPOSED` · `RETIRED`" — 135 diff "+| RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`" — both flips use the RULED <date> form with the lock path in the last cell
+
+MET — Spec 135 rule 5 "a RULED row's lock paths must exist" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);" — the FE-49 and FE-54 locks are asserted tracked by git ls-files
+
+MET — Spec 135 rule 3 "Never an OWED marker with no lock path" — 135 diff "OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet" — the retained prior OWED text carries its lock path
+
+MET — Task AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory)" and "A. the real tree" — the lock carries both a planted-defect case and a real-tree case
+
+MET — Spec 135 rule 4 "Six cell: letters D P F S H E" — 135 diff "D pass, P owed, F n/a, S pass, H n/a, E n/a" — all six principle letters are present on both flipped rows
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  68755ms (68.8s)
+📊 Tokens — total: 36656, input: 21360, output: 15296, reasoning: 13922

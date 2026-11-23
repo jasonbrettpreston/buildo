@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:01:52.280Z file_sha256=c31f10a0c7458c8efd07a304fb77261402254e5b751ddfffb68ba4e1ca1e686f prompt_sha256=5168497ae7e1d394079ea7c9796aa1bec0f2b49499fd959e2c80034bd5caec65
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — `.cursor/MCFRONTEND-QUEUE.md` (MF-98 row) "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D (lane BL-HB367, task-367) · ruling: \"yes to both\"" and panel "blockers": "Q-D open: may fe.51 read RULED...? Until the operator answers, the row stays OWED on FLIP_PENDING." — the pasted ruling confirms three rows flip to RULED, but the row and panel keep FE-51 OWED, so only two of three flip and the ruling is not satisfied, with the panel's own blocker conceding the gap — either flip FE-51 to RULED with its nav-tab-switch lock and two named exceptions per RR-0413, or restate RR-0413 as confirming two rows and drop the "three rows" claim.
+
+DEFER severity=MED — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — panel "plan": "the red commit attempt is recorded in docs/reports/reviews/task-367/red.out" — the red/green artifact is cited but is not in this chunk, so AC2 cannot see here and stands unverified for chunk 1 — cite the red.out contents (the "Test Files 3 failed (3)" and green-run lines) in the review packet so the AC is evidenced.
+
+DEFER severity=LOW — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — `docs/reports/generated/rule-lists-by-kind.md` "surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1" — the visible regenerated artifact shows the surface-136 Rules list grow 60 chars (29,076 to 29,136), which is the Rules section not the no-check list, and the shrink evidence ("Status: OWED count 20") sits in the card not the pasted diff — paste the before/after OWED count to evidence the shrink AC3 promises.
+
+MET — RR-0386 "a" — `.cursor/MCFRONTEND-QUEUE.md` (MF-98 row) "the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates branch is explicitly excluded and untouched.
+MET — RR-0385 "My only direction is the task 367 the handbook rules are key." — `docs/reports/panels/MF-98.json` "plan": "PLAN-367-v1 on the task-367 card... reviewed by the repo review tool" — plan approved and built.
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — panel card "RR-0413... B: the three rows are the list" plus card "1 y 2. whate very you recommend" — the gate list is confirmed before build.
+MET — RR-0412 "Merge or remove 386... both 442 and 367 should be running once this push lands." — `.cursor/MCFRONTEND-QUEUE.md` (MF-98 row) "Status: RUNNING · since 2026-11-23" — task-367 runs after the push.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  161946ms (161.9s)
+📊 Tokens — total: 49922, input: 27855, output: 22067, reasoning: 21291

@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:08:41.888Z file_sha256=476acdc31acb156aa35f17db2a7d17db6d331755aec2c7c3eb6cf3089ca459ad prompt_sha256=ec71e739973eaece5659a31b1aae546862e294e54f1ca6d2232ce8a944b65686
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — RR-0413 flips FE-49, FE-51 and FE-54 to RULED, but the change keeps FE-51 OWED (comment "while the row stays OWED") and parks it in FLIP_PENDING, so the third confirmed row is not flipped — Flip FE-51 to RULED with its nav-tab-switch lock and drop it from FLIP_PENDING, or get the operator's explicit word that RR-0413 excludes FE-51.
+DEFER severity=MED — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pending-flip list grows from one entry (FE-39) to two (FE-39, FE-51), so it is no longer "one OWED row" and is not shrink-only — Flip FE-39 first, or record the operator's approval to grow the shrink-only list before adding FE-51.
+MET — FE-01 — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 — locks built inside the open Phase 1/Phase 2 window, consistent with the 2026-11-06 and 2026-11-09 notes that lift the freeze by name.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 2
+Rules met: FE-01
+
+---
+⏱  101021ms (101.0s)
+📊 Tokens — total: 48549, input: 25997, output: 22552, reasoning: 22140

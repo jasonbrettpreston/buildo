@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T19:15:53.922Z file_sha256=80e3689cc6256fe3ffa80923ff4203618fd2570f1ca3ec81afe2b8eece230189 prompt_sha256=698883f3fcb7a4b5c4019115a898afe0f65fb062159a0e57571592efaa92a1b4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/failure-state-declared.logic.test.ts:60 "const d = structuredClone(readJson<Descriptor>(SAMPLE));" — the RED fixtures are built inline in the test file, not imported from src/tests/factories.ts, so the letter of §5.1 is unmet — the shape is typed and cloned from a tracked golden so the untyped-mock hazard is absent, add a descriptor factory or a one-line note recording why.
+DEFER severity=LOW — 5. Testing Standards §5.5 "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — src/tests/surfaces/handbook-rule-map.logic.test.ts:292 "expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`)" — the pasted assertions compare only the count line and the thirteen fresh row lines against Spec 136; a byte-level regenerate-and-diff for the other register rows is not in this chunk (cannot see) — confirm the buffer-regen diff of the committed handbook runs in `npm run test`, else row text outside the thirteen can drift silently.
+REJECT — 10. Frontend/Backend Boundary §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — accused of touching scripts/surfaces/_schema/surface-rule-map.json and adding scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json — task-367 is a compliance-tooling WF whose deliverable is the register, its locks and generator output, and both files are generated/record artifacts rather than a change to how data enters the database, so §10.2's frontend-feature scope does not reach it.
+MET — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) ... you must document why in an inline comment" — src/tests/surfaces/nav-tab-switch.logic.test.ts:73 "// the ! is safe: the length check before it proves the first argument exists" — every `!` in the new and modified tests carries its inline justification.
+MET — 5.3 Red-Green Test Cycle — Implementation Notes "red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" — the failing run is recorded before the work commit made them pass.
+MET — 5.2 Test File Pattern ".logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/surfaces/failure-state-declared.logic.test.ts:37 "export function failureStateProblems(list: Scanned[], scopes: readonly string[]): string[]" — the derivation is exported and asserted in the layer §5.2 mandates.
+MET — 11 Plan Compliance Checklist, Pre-Review Self-Checklist "generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "self-skeptical checklist (9 items, all PASS) walked against the diff first (lane CHECKLIST.md)".
+MET — 14 Prevention Loop, SPEC LINK row "points at the spec AND the section (§N)" — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)" — all three lock files cite spec plus section.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  62687ms (62.7s)
+📊 Tokens — total: 47655, input: 34115, output: 13540, reasoning: 12672

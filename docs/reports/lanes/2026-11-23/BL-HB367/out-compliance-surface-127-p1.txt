@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:05:30.264Z file_sha256=34717f10739441aebf8da7642dd10b363f10eb768c579640bef7e09977d8da88 prompt_sha256=61e371309cb01dce96b604e263a7524f5e43725cb3f1f4c746ee8138dd4852e3
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — `.cursor/MCFRONTEND-QUEUE.md` new row "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D (lane BL-HB367, task-367)" and `docs/reports/panels/MF-98.json` "Q-D open: may fe.51 read RULED while its lock carries two named, owned tab-push exceptions" — all three locks land in commit 1 but only FE-49 and FE-54 flip, so ruling A is unmet for fe.51 — answer Q-D before the closing commit and flip FE-51 there, or amend RR-0413 by dated note quoting the operator and record the amendment in the same panel.
+
+BUG severity=MED — AC "#2 Each gate is shown red on a planted defect and green on the clean tree" — `.cursor/MCFRONTEND-QUEUE.md` "the three tests staged with T1's and T2's plant lines and T3's empty allow-list" — T3's red is produced by emptying its own allow-list, which only proves the two known exceptions are scanned, not that a planted defect is caught — stage a plant line for T3 (an inline `router.push` in a fixture) and re-record `docs/reports/reviews/task-367/red.out`, or state in the panel why the empty-allow-list red is the designed assertion for fe.51.
+
+BUG severity=MED — AC "#2 Each gate is shown red on a planted defect and green on the clean tree" — `.cursor/MCFRONTEND-QUEUE.md` "Not in this row: any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19), any other OWED row" against the acceptance record "'mobile_parcel_search: reads a contract but declares no error state' 3" — the failure-state lock is red naming a real surface gap this row explicitly does not fix, yet is green on the clean tree, and nothing in chunk 1 states the exclusion that turns it green — record the exclusion (allow-list entry plus owning row) in the panel, or keep the lock red for `mobile_parcel_search` and tie it to a declared FLIP_PENDING entry.
+
+BUG severity=MED — AC "#3 The handbook no-check lists shrink by the rules gated, by their generators" — `docs/reports/generated/rule-lists-by-kind.md` "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" (total "226,914") — the only regenerated artifact in this chunk grows by 60 characters and no before/after OWED count is pasted, so the required shrink is asserted only in prose (card: "Spec 136 OWED count 20 (NOT-YES branch: 20)", prior value not shown) — put the before and after OWED counts in `MF-98.json` or cite the register lines that changed within this chunk.
+
+DEFER severity=MED — RR-0413 "'yes to both A. Status flip.' (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108)" — `docs/reports/panels/MF-98.json` "Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)" — the same line :2108 is rendered two ways in this change and the added A/B gloss sits unflagged inside an "Operator, verbatim" card — reproduce the verbatim once, identically, and mark the A/B gloss as an orchestrator reading (the form used at `MORNING-DECISIONS.md:1188` in this same file: "orchestrator reading, flagged and not the operator's words").
+
+DEFER severity=LOW — Spec 127 §7 "Check each seat's declared `tools:` against its lens before composing the panel." — `docs/reports/panels/MF-98.json` `"seats": ["DeepSeek plan lens set, round 1 (grounded)", "integration, reality-check and regression seats (plan)", ...]` — no seat declares `tools:`, so the substrate rule's check is unevidenced in this chunk — record each seat's tools, or one line naming where the harness declares them.
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — `.cursor/MCFRONTEND-QUEUE.md` "the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates stay out of this row and untouched.
+
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — `.cursor/MCFRONTEND-QUEUE.md` "MF-97 is held by lane BL-FEDB442 (task-442, not yet landed…)" plus "**MF-98 … — RUNNING**" — both rows are in the running state the ruling names.
+
+MET — queue rule "holds exactly one bullet `  - FE rows owned: FE-nn, FE-mm.`" — `.cursor/MCFRONTEND-QUEUE.md` "  - FE rows owned: FE-49, FE-54." — form matches and the still-OWED FE-51 is correctly excluded from the owned set.
+
+MET — queue rule "Bullets never start with `- MF-` (that is the DONE-list form)." — `.cursor/MCFRONTEND-QUEUE.md` "  - Lane E. Done-condition: …" — new bullets use the running-row form.
+
+MET — Spec 127 §8.3 "Nothing in it is hand-written … The `--check` arm makes a stale artifact a failure" — `docs/reports/generated/rule-lists-by-kind.md` both "surface-136" cells move "29,076" to "29,136" with both totals moved by the same 60 — the page reads as a regeneration, not a hand edit.
+
+REJECT — Spec 127 §7 OUTPUT roster (Integration, Schema-Fidelity, Regression Guardian, User-Advocate) — the panel records only the lens set and an owed output review — this row converts no surface, descriptor or golden, so the conversion roster does not bind it.
+
+REJECT — Spec 127 §5 "generated by `node scripts/surfaces/surface-validate.mjs --surface=<id> --write`" — no generated scorecard appears in the diff — no surface is converted in this chunk, so no scorecard is owed here.
+
+REJECT — RR-0406 "McFixReborn label on the tasks that process covers" — the MF-98 queue row carries no label — labels live on the task card (`labels: McFix, McFix Final`), and a queue heading has no label field.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: none
+
+---
+⏱  74918ms (74.9s)
+📊 Tokens — total: 45204, input: 28773, output: 16431, reasoning: 14824

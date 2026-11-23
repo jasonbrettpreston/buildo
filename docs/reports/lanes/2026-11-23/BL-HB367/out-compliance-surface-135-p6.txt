@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:12:18.265Z file_sha256=2e2d52754c472d39d87ba4febea100614027dd6dee69aba0fd070e27a206e93b prompt_sha256=505c90ca22f330720ce5606c8594a3ecea40c5e035720e6f876e9b96e97d5d3e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/handbook-rule-map.logic.test.ts (diff hunk, new lines) "// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (FE-51 while the operator's Q-D is open)" — only two of the three operator-confirmed rows flip in this material (FE-49, FE-54); FE-51 keeps its OWED status in Spec 136 (its fe.51 line is untouched) and is parked on the pending-flip list instead, and no pasted operator ruling withholds that third flip, Q-D is named only in lane text — flip FE-51 to RULED with its landed nav-tab-switch lock and regenerate Spec 136, the rule map and the rule-lists page, or paste the operator's Q-D answer that keeps it OWED.
+
+DEFER severity=MED — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" — src/tests/surfaces/handbook-rule-map.logic.test.ts (diff hunk, new line) "const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);" — the change puts FE-51 on a list the pasted ruling calls shrink-only, which is growth, and the register-locks-resolve diff itself is not in this chunk so the addition cannot be seen, so the growth rests on an unpasted Q-D — land the third flip so the list stays empty, or record the operator's answer to Q-D as the ruling that authorises the one-entry list.
+
+MET — FE-10 — src/tests/surfaces/handbook-rule-map.logic.test.ts (diff hunk, C-T3) "if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));" — every row of the thirteen is still pinned to exactly one handbook line, OWED or RULED, and the header count string stays an exact toContain.
+
+MET — FE-16 — docs/specs/02-web-admin/136_mcfrontend_handbook.md (diff hunk) "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land), 0 history." — 135 stays the register and 136 the generated handbook at the ruled paths, regenerated rather than rewritten.
+
+MET — FE-02 — src/tests/surfaces/failure-state-declared.logic.test.ts:40 "if (d.kind !== 'SURFACE' || !scopes.includes(d.programme?.scope ?? '')) continue;" — the lock reads declarations only, no screen code and no matcher, so no new coded screen is introduced.
+
+MET — FE-03 — src/tests/surfaces/failure-state-declared.logic.test.ts:70 (case B) "it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem'" — planted defects give one problem each and the clean tree gives zero, both directions shown inside the executed test.
+
+REJECT — FE-09 — the FE-49 and FE-54 cells now carry both "RULED 2026-11-23 (RR-0413)" and a literal "OWED `src/tests/surfaces/...`; no machine check yet" — the row's own dated note says "prior text kept" and explains that "the lock is task-434's" is prior text, the register's standing M-246 convention, so the kept text is not an unresolved Lock column.
+
+REJECT — FE-10 — scripts/surfaces/_schema/surface-rule-map.json changed by hand ("status": "owed" to "active") although Spec 136 says the map "is generated from the same rows, not hand-written" — the pasted lane record shows "Spec 136, the rule map and the rule-lists page regenerated (generate-surface-handbook.mjs --write/--check, rule-lists.mjs page --write/--check, both exit 0)", so the hunk is generator output, not an edit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: FE-02, FE-03, FE-10, FE-16
+
+---
+⏱  114157ms (114.2s)
+📊 Tokens — total: 58455, input: 33505, output: 24950, reasoning: 23882

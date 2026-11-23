@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:15:05.953Z file_sha256=b4757f7f64d482636b38b0f98eb4e3300f104a52bc92a1725c0f44454f41e7a5 prompt_sha256=4fa45733fcc44d1dc99bcf68a0862c8da736736e4c80ea0422fb8da460d87550
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 / AC #3 "RR-0413 task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows (names task-367, RR-0413)" — .cursor/MCFRONTEND-QUEUE.md:661 "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D (lane BL-HB367, task-367)" — the pasted ruling confirms all three rows flip, but FE-51 and fe.51 stay OWED, the rule map keeps FE-51 owed, and the no-check list shrinks by 2 where three gates land — flip FE-51 in 135 and fe.51 in 136 to RULED 2026-11-23 with a dated note naming the two owned tab-push exceptions, set surface-rule-map FE-51 active, remove the Q-D blocker, regenerate 136 and the rule-lists page (19 OWED).
+
+DEFER severity=MED — RR-0413 "yes to both A. Status flip." — docs/reports/panels/MF-98.json:24 "Q-D open: may fe.51 read RULED while its lock carries two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)?" — the panel records as open a question the pasted operator ruling already answered, so the pane misstates the ruling of record — replace the blocker with the RR-0413 answer and the branch actually taken.
+
+DEFER severity=MED — fe.54 "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:8 "LIMITS (stated, not widened): declarations only, and the error state only. Code is not read" — the row now reads RULED and "Enforced by" this lock, so fe.54's blank-screen sentence and the 8 out-of-scope contract readers go unchecked while the same row's note names a live break at mobile/src/lib/maxbldHelp.ts:19 — record on the fe.54 line that the code clause is not checked, or split it to its own OWED row as FE-33 was split from FE-31.
+
+DEFER severity=LOW — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:71 "OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet" — a row that now reads RULED still carries an OWED lock sentence in the same Lock cell, so the column states two statuses — keep the prior text but label it as prior so the cell resolves to one status.
+
+MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md:662 — the row states the parked branch wf1/inc1b-gates and the live-break fixes are not in this change, and the diff touches no gate script, mobile file or app code.
+MET — fe.54 — src/tests/surfaces/failure-state-declared.logic.test.ts:5 — every in-scope SURFACE that reads a contract must declare an error state and a non-none, non-UNRESEARCHED errors.answer, with a planted-defect red case and clean controls.
+MET — fe.49 — docs/specs/02-web-admin/136_mcfrontend_handbook.md:179 — fe.49 reads "RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note" and the rule map FE-49 went owed to active.
+MET — AC #2 — pasted acceptance record "AC2: red.out 'Test Files  3 failed (3)' lines: 1; 'mobile_parcel_search: reads a contract but declares no error state' 3" — red on the planted defects and green per the same record, "Test Files 5 passed (5)".
+MET — fe.10 — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 — the rendered line and the 20 OWED count came out of the generator run (--write/--check exit 0), not a hand edit.
+
+REJECT — fe.49 — flipping FE-49 to RULED while a platform_shared descriptor note names lead_parcels — the row's dated note records it as a notes string, not a table read, so "lead_parcels is read by no surface" is not broken.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+Rules met: fe.08, fe.10, fe.16, fe.36
+
+---
+⏱  57962ms (58.0s)
+📊 Tokens — total: 48232, input: 35336, output: 12896, reasoning: 11818

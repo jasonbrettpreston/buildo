@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T19:16:03.695Z file_sha256=1a919ff3cf9477a7cb6caf10e3f8e3e66dc11f8c934047cbdf06c43c19a3da92 prompt_sha256=08525cfd14b13a40ac33c1cf8351aea03dff9004f7dbcf37f5217fd5de6d212b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5.2 "*.logic.test.ts | Pure functions, scoring, classification" — src/tests/surfaces/scope-fence.logic.test.ts:20 "import { execFileSync } from 'node:child_process';" — test A proves a claim about the live tree (git ls-files plus file reads, manifest parsed at module load), which §5.5 assigns to the pure layer only as "The pure function computes the right value on happy + edge inputs", so the tree scan sits in a layer whose stated role does not cover it — split the whole-tree assertion into an *.infra.test.ts, keep the parser tests (B, C) in the logic file; the parity row of §5.2 permits either suffix for drift guards, hence LOW not HIGH.
+DEFER severity=LOW — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/scope-fence.logic.test.ts:132 "const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };" — planted fixtures are inline literals, no factory import — bounded because both literals are structurally typed by the `Descriptor` parameter or assertion, so add a Descriptor factory to src/tests/factories.ts when the file is next touched.
+MET — 5.3 — "docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" — failing run recorded before the work commit, so the red light precedes the code.
+MET — 5.2 (test file pattern) — src/tests/surfaces/register-locks-resolve.infra.test.ts stays the infra-layered register/parity battery and src/tests/surfaces/scope-fence.logic.test.ts is named for its pure functions.
+MET — 14 registry row "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — spec and section both named.
+MET — 11 Pre-Review Self-Checklist — "self-skeptical checklist (9 items, all PASS) walked against the diff first (lane CHECKLIST.md)" — the item-by-item PASS/FAIL precedes the test run.
+REJECT — 2.1 "When writing integration tests (.infra.test.ts), you MUST include tests for error paths and silent failures" — the changed infra test adds no unhappy-path test — the diff edits one constant list ("const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];"), it writes no new integration test.
+REJECT — 5.2 "*.security.test.ts | Negative/abuse" — the fence test is negative/abuse shaped yet not filed as a security test — the surface it scans is neither auth-guarded nor externally reachable, so the security layer is not mandated.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  58447ms (58.4s)
+📊 Tokens — total: 32770, input: 20461, output: 12309, reasoning: 11571

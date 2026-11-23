@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:08:37.892Z file_sha256=6ef4b0306e15c0fa52cf019ff32d5d3dd5a30cf7b9300aff14df80ee6236d42a prompt_sha256=a1b7beb3e0dcd297ba14348f1b4d52af845b58a60eba1e409ece8a73cd3bd683
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — .cursor/MCFRONTEND-QUEUE.md "nav-tab-switch.logic.test.ts land at their reserved paths" and "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the FE-51 lock lands while FE-51 remains OWED, so an OWED row now points at an existing lock, clause unmet — resolve Q-D then flip FE-51 to RULED, or hold nav-tab-switch.logic.test.ts out until FE-51 is no longer OWED.
+
+DEFER severity=MED — Spec 135 rule 3 "Status words: `RULED <date>` · `OWED` · `PROPOSED` · `RETIRED`" — .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — FLIP_PENDING is introduced as a status overlay that is not one of the four permitted words and is read by register-locks-resolve.infra.test.ts and handbook-rule-map.logic.test.ts — keep FE-51 a plain OWED or RULED and keep FLIP_PENDING out of the register status vocabulary.
+
+DEFER severity=LOW — queue rule "naming the Spec 135 rows whose lock that task builds" — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." against "scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths" — MF-98 builds three locks but declares only two owned rows, omitting FE-51 — at the DONE flip the ownership bullet will not disclose FE-51's built lock, reconcile before DONE.
+
+DEFER severity=LOW — task-367 AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" (was 29,076) — the only visible surface-136 count grew by 60 bytes; the actual no-check list sits in chunk 2/3 and cannot be seen here — confirm the no-check list shrank rather than only the section byte total growing.
+
+MET — Spec 135 rule 2 "ONE lock per row" — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." — each listed row maps to exactly one named lock file in the Done-condition.
+
+MET — Spec 135 rule 5 "a RULED row's lock paths must exist" — .cursor/MCFRONTEND-QUEUE.md "the register rows whose flip the operator approved read RULED" — FE-49 and FE-54 are RULED and their lock paths are the files this row lands.
+
+MET — Spec 135 rule 3 "Never an OWED marker with no lock path" — .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING" with nav-tab-switch.logic.test.ts — FE-51 OWED carries a named lock path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+Rules met: none
+
+---
+⏱  83397ms (83.4s)
+📊 Tokens — total: 35838, input: 17504, output: 18334, reasoning: 17560

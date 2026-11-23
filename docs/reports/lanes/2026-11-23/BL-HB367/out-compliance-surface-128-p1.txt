@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:06:36.475Z file_sha256=1cd94af9e0ac323a6e8d4b3d9567b9ff76ea475d4a4505761a145bff4a0f559a prompt_sha256=1db4121627a0358fbb7c563788c2ec9d995dfbc87718ad4cb0116522689cfc8e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." — the third ruled row (fe.51), whose lock lands in this commit, remains OWED; only fe.49 and fe.54 flip, so the three-row flip RR-0413 orders is unmet, and the MF-98 "FE rows owned: FE-49, FE-54." bullet cannot list a row the task actually builds — flip FE-51 to RULED 2026-11-23 in this commit (the lock lands here per card "the three locks land"), or record a dated operator ruling that carves it out; unanswered Q-D is not a ruling.
+
+DEFER severity=MED — 128 §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions ... each `pass`, `n/a (reason)` or `FAIL`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "D pass, P owed, F n/a, S pass, H n/a, E n/a" (FE-54 repeats "P owed, F n/a") — the rows now read RULED while their Six cells carry "P owed" and bare "n/a", neither of which is pass, n/a (reason) or FAIL — set the Six cell to the allowed vocabulary before the row reads RULED.
+
+DEFER severity=LOW — 128 §2.2a Rule 12 "An unhandled state is a FAIL, not a blank screen." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "The lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged" — FE-54 reads RULED although Rule 12 stays unchecked for 8 contract-reading descriptors — name the exclusion as a stated exception on the row, or hold RULED until it is covered.
+
+MET — 128 §4.10 "One lock per register row (multi-lock rows are split)" — 135 FE-49, FE-54 — each flipped row names exactly one lock path.
+MET — 128 §4.11 item 1 "both panel records (`docs/reports/panels/MF-n.json`, D-3)" — docs/reports/panels/MF-98.json — the panel record exists for MF-98.
+MET — 128 §4.7a "no row reads `BUILT`" — 135 FE-49, FE-54 — both read RULED, neither claims BUILT, so the BUILT-evidence resolver is not triggered.
+MET — 128 §4.11 item 7 "a DONE heading ... `- FE rows owned: ...`" — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." — the MF-98 heading is RUNNING and its owned rows are now RULED, so the DONE refusal does not fire.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+Rules met: none
+
+---
+⏱  121331ms (121.3s)
+📊 Tokens — total: 63176, input: 34051, output: 29125, reasoning: 28340

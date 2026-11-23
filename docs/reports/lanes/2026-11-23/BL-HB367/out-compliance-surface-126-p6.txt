@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:04:13.171Z file_sha256=ba56ec5e59ba6db500a4296ff22b4a85d7644d879c621903d2717d64e2978eec prompt_sha256=934e86c89609924d4722a450c682e7e9bf096f18e595db3b9ec42d28ea1ce264
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "the rows flip from OWED to RULED in the commit that lands their tests" — .cursor/MCFRONTEND-QUEUE.md "+**MF-98 COMPLY.3 ... — RUNNING** (E) ... fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — fe.51's nav-tab-switch.logic.test.ts lands in commit 1 yet the row is kept OWED although RR-0413 approved the three-row flip ("yes to both A. Status flip") — either record Q-D as an explicitly unanswered operator question (not an orchestrator/plan question) before the fe.51 commit rides, or flip fe.51 to RULED per RR-0413 and note the two owned exceptions as dated-note scope.
+
+DEFER severity=LOW — acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/reports/panels/MF-98.json "verdict": "PLAN RULED; OUTPUT owed" — the red/green proof lives only in the test files (chunk 2 of 3), not in this chunk, so acceptance #2 cannot be verified here — verify red.out and the 67-pass green run in the test-file chunk before task-367 is set BUILT.
+
+MET — §14 "migrations/** — no migration is authored by this spec" — the three changed files (`.cursor/MCFRONTEND-QUEUE.md`, `docs/reports/generated/rule-lists-by-kind.md`, `docs/reports/panels/MF-98.json`) touch no migration.
+
+MET — §11b.7 page set — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" — this is a generator regen count and the MF-98 row is a handbook-test row, introducing no change to the A1-A6 / W1-W10 / D1-D4 page set.
+
+REJECT — acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — the rule-lists §2 "Rules" char count grew (29,076 to 29,136) — not a real issue: the §2 total includes the added dated notes, while the actual no-check shrink is the panel's "Spec 136 OWED count 20 (NOT-YES branch: 20)" (fe.49 and fe.54 flipped from OWED), which the generators produced; the acceptance is measured by the OWED count, not the raw char total.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  59081ms (59.1s)
+📊 Tokens — total: 39026, input: 26743, output: 12283, reasoning: 11665

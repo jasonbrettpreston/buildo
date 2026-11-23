@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T19:16:03.987Z file_sha256=9bd01515209f81497a7828ea3d6ceae3fbfbdcee14c2a33419a66d293089dbea prompt_sha256=c7a643c72990c69627b19e9f149ae79de9c5f0f7c13e8b8919cd4d687c92aef9
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/surfaces/failure-state-declared.logic.test.ts:41 "if (d.inputs?.answer !== 'contract') continue;" — any unrecognized contract answer on a descriptor (a typo, 'CONTRACT', a renamed enum member) is skipped, so a contract-reading surface escapes the check and the lock stays green, an unrecognized value fails open — fix: pin the answer to a closed set and push a problem for any value not in it, instead of skipping.
+
+BUG severity=MED — src/tests/surfaces/failure-state-declared.logic.test.ts:44 "const ea = d.errors?.answer ?? 'none';" with :21 "const BAD_ERRORS = new Set(['none', 'UNRESEARCHED']);" — the empty and unknown path passes: errors.answer "" or an unrecognized word is not in the two-item deny-list, so a descriptor that declares nothing usable is reported clean — fix: invert to a positive allow-list of good answers and flag everything else.
+
+BUG severity=MED — src/tests/surfaces/failure-state-declared.logic.test.ts:51 "return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })" (same shape in scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts, and handbook-rule-map.logic.test.ts) — no timeout: execFileSync blocks the event loop, so a hung git (index.lock, stale mount) hangs the suite instead of failing a test, the vitest timeout never fires — fix: pass { timeout: 30000, killSignal: 'SIGKILL' } and let the throw fail the test.
+
+BUG severity=MED — src/tests/surfaces/scope-fence.logic.test.ts:52 "const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);" (the same unguarded call in nav-tab-switch's parse) — TypeScript does not throw on bad syntax, it recovers, so a truncated or half-merged file is scanned as a partial tree and can pass the fence with zero hits, a parse failure degrades open — fix: after parsing, fail when sf.parseDiagnostics.length is non-zero.
+
+DEFER severity=LOW — src/tests/surfaces/handbook-rule-map.logic.test.ts "const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));" — the pattern is unanchored and .exec takes the first match, so a quoted copy of the declaration in the comment block or a second declaration would be read as truth and the two lists could then disagree silently — fix: export FLIP_PENDING from a shared module and import it.
+
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md "whichever of the two rows lands second rewrites this line by dated note to one past the larger id (task-367 plan section 7)." — the id counter is a double-submit on one line with no machine check that the first value is one past the largest claimed id, the only dedup named is the out-of-repo claim ~/Buildo-scratch/ids/MF-98 (cannot see) — fix: a lock that parses every MF-nn row and asserts the first value equals max+1.
+
+REJECT — src/tests/surfaces/failure-state-declared.logic.test.ts:77 "expect(inScope.length).toBe(scope.expected_count);" — an empty git walk makes failureStateProblems return [] and test A would pass vacuously — handled: the manifest count assertion catches the zero-row and shrunken-set case, and scope-fence adds the floors "expect(files.length).toBeGreaterThanOrEqual(41)" and "expect(descs.length).toBeGreaterThanOrEqual(45)".
+
+VERDICT: PASS on error-path safety
+Paths walked: descriptor JSON parse failure, missing manifest key, empty git ls-files output, zero-file walk, unknown inputs.answer, empty or unknown errors.answer, malformed scanned descriptor, syntax-error TS file, git absent or hung, missing TAB_SOURCE, FLIP_PENDING regex miss, double-claim of Next free id, generator --check re-run, duplicate allow-list entry, stale allow-list entry   Unguarded: 4
+
+---
+⏱  58115ms (58.1s)
+📊 Tokens — total: 47982, input: 35811, output: 12171, reasoning: 11195

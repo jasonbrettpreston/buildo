@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:10:01.367Z file_sha256=a531f25cdabf68450a8cc70f1879a4a5216997a38f95fdfcec7cd3cd5f24d791 prompt_sha256=5a95bde08ff2a6e01e6a0b6d6b79d1b84b04167499e56ce181fbc2c9da84b2f9
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts @@ -27,7 +27,10 @@ "+const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" and "+// commit while the row stays OWED: RR-0413 ("yes to both") does not cover RULED" — the pasted ruling flips all three rows gated by task-367 to RULED with their tests, and this diff instead parks FE-51 in FLIP_PENDING on an orchestrator reading of the same operator words — flip the FE-51 row to RULED 2026-11-23 naming src/tests/surfaces/nav-tab-switch.logic.test.ts and delete 'FE-51' from FLIP_PENDING, or obtain an operator word that overrides RR-0413.
+
+MED — FE-51 "The navigation rule reaches \"every MaxBLD screen, web and mobile\" (126:82)" — src/tests/surfaces/nav-tab-switch.logic.test.ts "if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);" — the gate scans mobile files only, so a web tab switch made by push is invisible even though the clause names web and mobile, and the file's own LIMITS line is not a ruling — add the in-scope web files (identity.route and x-draft.files under src/) to the scanned set, or record the web exclusion as a dated note on the FE-51 row.
+
+MED — FE-51 "A tab switch uses `navigate`, not `push`." — src/tests/surfaces/nav-tab-switch.logic.test.ts "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the lock goes green while two real tab switches still use push, and no pasted ruling authorizes that exception, so the rule as pasted is not enforced and would read RULED green — either change the two controls to navigate before the flip, or land the exception as a dated operator ruling in the FE-51 row.
+
+MET — FE-49 "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`" — scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the lock lands at exactly the ruled path with the ruled SPEC LINK.
+
+MET — FE-49 dated note "The platform_shared standing exception is outside the lock ... a widening of the test to platform_shared is a later batch row" — scope-fence.logic.test.ts ".filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''))" — the fence stays at programme_scopes, the notes string is never read as a table ref.
+
+MET — FE-49 "No linkage to LeadDetail, the flight board, or the lead feed." — scope-fence.logic.test.ts C "import { ok, err } from '@/features/leads/api/envelope';" — the shared envelope helper is not a lead screen and is correctly left unbanned.
+
+MET — Acceptance "#2 Each gate is shown red on a planted defect and green on the clean tree" — scope-fence.logic.test.ts B and nav-tab-switch.logic.test.ts B/B2 — planted defects give exactly one hit or throw fail-closed, controls give zero.
+
+MET — FE-51 "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`" — nav-tab-switch.logic.test.ts:1 — the new file is the path the row reserves.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+Rules met: FE-49
+
+---
+⏱  42670ms (42.7s)
+📊 Tokens — total: 35542, input: 26381, output: 9161, reasoning: 8243

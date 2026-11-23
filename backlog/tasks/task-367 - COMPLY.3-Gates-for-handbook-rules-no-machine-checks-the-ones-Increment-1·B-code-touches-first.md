@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:52:00Z'
+updated_date: '2026-11-23T19:18:00Z'
 labels:
   - McFix
   - McFix Final
@@ -539,4 +539,6 @@ AC6 nav-tab-switch: // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisio
 Item 7 own green: the related run of commit d5e3695b9 passed: register-locks-resolve (15), failure-state-declared (3), scope-fence (3), nav-tab-switch (5), handbook-rule-map (41): Test Files 5 passed (5), Tests 67 passed (67).
 
 2026-11-23 lane BL-HB367 output review round 1 (context docs/reports/reviews/task-367/context-r3.md, made by backlog-brief.mjs with --board ~/Buildo-wt-board): 78 lens inputs made by rule-lists.mjs lens-input (15 compliance lists, engineering eng-all, code-review, ux, error-paths, security); 43 outputs ran, 35 failed at DeepSeek with 402 Insufficient Balance (operator-only blocker: top up). Findings of the 43, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (174: 1 CRIT, 42 HIGH, 71 MED, 60 LOW). Task stays RUNNING, grounder owed.
+
+2026-11-23 lane BL-HB367 output review round 1 completed after the DeepSeek top-up (operator: "deepseek is updated", relayed by the orchestrator): the 35 missing outputs ran under their names at concurrency 3, 0 failed; 78 of 78 outputs present. Findings, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (285: 2 CRIT, 73 HIGH, 115 MED, 95 LOW). Task stays RUNNING, grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->

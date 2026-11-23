@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:07:12.439Z file_sha256=897bf8dccca09be3275955e5e723266a94b0a3b5b8b12e6bd3acac66283f1592 prompt_sha256=616dc33902aea27cd96ac7a45021571817ce1cd50d58d93c5665eb8dbf463cd2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only FE-49 and FE-54 flip (surface-rule-map.json:796, :851); FE-51 stays OWED, so the ruling's third row is unflipped, and the carve-out lives only in a test comment and is adjudicated by the building pass itself (contrary to §4.2 "A different party adjudicates — never the pass that discovered it" and §4.3 "The ruling is recorded in §5's Register of rulings") — flip FE-51 to RULED with its dated note in Spec 135 and the rule map, drop it from FLIP_PENDING, or record an operator amendment to RR-0413 as a §5 register row.
+
+DEFER severity=MED — Spec 128 Rule 12 "a surface declares what the user sees when it fails ... An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "if (d.inputs?.answer !== 'contract') continue;" — the fe.54 lock enforces Rule 12 only for contract readers, so a surface reading app_outputs (or any server read other than `contract`) with no declared `error` state passes unmet, and this narrowing is not recorded as a limit or a §4 ruling — extend the filter to every in-scope surface that reads server data, or record the narrowing as a dated note so the clause and its lock agree.
+
+REJECT — §4.10 status vocabulary ("Spec 135 words: RULED <date>, PROPOSED, RETIRED, OWED") — accused of setting rule-map status to "active" instead of "RULED" — §4.10 governs Spec 135 register rows, not the surface-rule-map artifact, so the pasted clause does not reach it.
+
+MET — FE-49 — scripts/surfaces/_schema/surface-rule-map.json:796 — row flips to active and scope-fence.logic.test.ts lands red-first in the same change (RED planted cases B, controls C).
+MET — FE-54 — scripts/surfaces/_schema/surface-rule-map.json:851 — row flips to active and failure-state-declared.logic.test.ts lands with in-memory RED cases for missing error state, `errors.answer: none` and `UNRESEARCHED`.
+MET — Spec 128 §2 "a rule without a lock is not yet a rule — the same commit that records a ruling adds a both-directions test" — src/tests/surfaces/nav-tab-switch.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" — both-directions proof present for each lock that lands.
+MET — §4.11 item 5 "prereg-<task>-<k>.json ... with non-empty `rules[]`, each RULED" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:6 "\"rules\": [" — non-empty, claimed RULED, OWED rows explicitly not cited.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+Rules met: FE-49
+
+---
+⏱  89370ms (89.4s)
+📊 Tokens — total: 46958, input: 27427, output: 19531, reasoning: 18759

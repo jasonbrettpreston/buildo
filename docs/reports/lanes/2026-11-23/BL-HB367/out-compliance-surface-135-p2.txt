@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:10:22.989Z file_sha256=8cba30234c1ad2930434c6eea4d16a289d796852052145acff71e3ba11dbe9a0 prompt_sha256=647e527d882bb705ea22de86773dcebc6b7e2f2e1cac319d551676e7c780b9e1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder; fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the third operator-approved row is left OWED while the task is planned BUILT, so the ruling is unmet — flip FE-51 to RULED in the commit that lands nav-tab-switch.logic.test.ts, or obtain a new operator ruling that supersedes RR-0413 and cite it in the panel.
+MET — FE-08 — docs/reports/generated/rule-lists-by-kind.md "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — the generated page keeps the 136 handbook at the ruled docs/specs/02-web-admin path.
+MET — FE-09 — .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING" — the pending-flip list is the FE-09 note's allowed path for an OWED row whose lock has landed, though RR-0413 separately requires the flip.
+MET — FE-13 — .cursor/MCFRONTEND-QUEUE.md "FE rows owned: FE-49, FE-54." — the row adds no new FE row; it owns existing rows.
+MET — FE-16 — docs/reports/generated/rule-lists-by-kind.md "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — the 136 spec is at the ruled path once landed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+Rules met: FE-08, FE-09, FE-13, FE-16
+
+---
+⏱  103435ms (103.4s)
+📊 Tokens — total: 54059, input: 29649, output: 24410, reasoning: 23988

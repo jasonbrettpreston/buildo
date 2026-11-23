@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:06:08.938Z file_sha256=797a30d006e904cafc97e0e334cd3e588784422916664a4f909f2cfb675f9064 prompt_sha256=7ddd2d0bb0df3a1f379e5247e89b5834d10c609e235d07708513be78a450a50b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:30 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the third ruled row does not flip, so the ruling and AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" are met for two rows of three — get the operator's Q-D word and remove FE-51 from FLIP_PENDING in the same commit, or hold the third lock until that word is pasted.
+BUG severity=HIGH — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:35 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 ...'" — the green run is over a tree that still holds two tab pushes, so fe.51's gate is green on the defect it names and the "green on the clean tree" direction is not shown — land the two route fixes and delete both entries in this commit (the file's own shrink rule), leaving the gate red until then.
+BUG severity=HIGH — Spec 127 §8.4 "The `x-draft` block each row carries (raw file list, line counts, the shard it came from) is retired with them; nothing downstream may read it." — src/tests/surfaces/nav-tab-switch.logic.test.ts:107 "for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])])" and src/tests/surfaces/scope-fence.logic.test.ts:108 same read — both new locks read the block the clause forbids downstream, and at shard retirement the file set collapses to identity.route and the floors "expect(files.length).toBeGreaterThanOrEqual(20)" / ">= 41" go red — build the file set from a surviving field (identity.route plus owns.components[]) or record the x-draft read as a deviation.
+BUG severity=MED — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:70 "if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);" — a tab push in object form (`router.push({ pathname: PARCEL_TAB_ROUTE.account })`) or as a template literal yields 0 findings, so that form of the ruled behaviour stays green — extend isTab to the object pathname and template spans, or state both forms in LIMITS.
+DEFER severity=LOW — AC#2 (planted-defect direction, coverage claim) — src/tests/surfaces/nav-tab-switch.logic.test.ts:122 "expect(a.why).toMatch(/^owed: MF-\d+/);" — the "each entry has an owner row" claim is enforced by a regex on the why string, not against `.cursor/MCFRONTEND-QUEUE.md`, and the cited "NAV-AUDIT #1 and #12 (126:82)" rows are not in the pasted context, so I cannot see that MF-49/MF-50/MF-51/MF-52 exist — resolve the owner rows from the queue file before the flip.
+REJECT — AC#3 "The handbook no-check lists shrink by the rules gated" — the diff does not carry handbook-rule-map.logic.test.ts, Spec 136 or the rule-lists page — this run holds chunk 3 of 3, and those files are reviewed in their own chunks, so their absence here is not a finding.
+MET — AC#2 "Each gate is shown red on a planted defect" — pasted "red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" — red-first at the (A) assertions is evidenced for all three locks.
+MET — Spec 127 §10 "every `it.fails(` under a surface's test dir ties to a declared `pending` slug and `pending ∩ converted = ∅`" — src/tests/surfaces/scope-fence.logic.test.ts — no `it.fails(` is introduced; the new locks use plain `it()`.
+MET — Spec 127 §1 "A surface's conversion is evidenced by artifacts, never by prose" — src/tests/surfaces/scope-fence.logic.test.ts — each ruled behaviour is carried by an executable lock, not by a note.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  63420ms (63.4s)
+📊 Tokens — total: 39993, input: 25121, output: 14872, reasoning: 13810

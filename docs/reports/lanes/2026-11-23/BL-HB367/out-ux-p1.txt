@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T19:16:59.959Z file_sha256=9bd01515209f81497a7828ea3d6ceae3fbfbdcee14c2a33419a66d293089dbea prompt_sha256=d7c36012ddf18126a48c67fc0c4ff38990ee14d6da9004482a7f297e2a789510
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 cell "no machine check yet, the lock is task-434's and the path is a reservation" vs design "RR-0413 task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — the operator reading the register is told FE-51 still has no machine check and its lock is a reservation, while this commit lands, tracks and greens src/tests/surfaces/nav-tab-switch.logic.test.ts; unlike FE-49 and FE-54 this row gets no dated note, so the person cannot see why it did not flip, and the queue row ("fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D") says something the register never does — add the dated note the two sister rows carry (lock landed under task-367, flip held on the open Q-D), same shape, same commit.
+
+DEFER severity=MED — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "58 in force (20 OWED, whose lock is still to land)" — the generated sentence tells the reader 20 rules await a lock, yet one of those 20 (fe.51) has its lock tracked and green in this same commit, so a person scanning the handbook for what is unenforced gets the wrong list — it is the plan's NOT-YES branch of the still-open Q-D, so the sentence cannot be true until the operator answers, and the count is the only place the reader learns it.
+
+DEFER severity=MED — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 note "the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers" vs docs/specs/02-web-admin/136_mcfrontend_handbook.md:194 "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts" — on mobile a person whose Help sheet fails to open still sees no failure state, the exact case the rule "An unhandled state is a FAIL, not a blank screen" names, and the handbook line the person reads says the rule is enforced — the limit is disclosed in the register cell and owned by a task row, so it is a reading risk, not a new break; whether the handbook's Current reading carries it cannot see in this diff.
+
+DEFER severity=LOW — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 cell "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`<br>OWED" — the reader meets "no machine check yet" inside a cell that opens RULED, and the correction ("the lock is task-434's" is prior text) arrives a paragraph later — prior text kept is this file's own dated-note convention, and the status token the generators read is unambiguous, so the person is slowed, not misled on status.
+
+REJECT — .cursor/MCFRONTEND-QUEUE.md "  - FE rows owned: FE-49, FE-54." — it looks like the row builds the fe.51 lock but does not own the row — correct: a DONE heading may own only RULED rows, fe.51 stays OWED pending Q-D, and the row is RUNNING with "next: Land the closing commit".
+
+VERDICT: FAIL on the person's experience
+States checked: handbook first view (58 rules, 20 OWED line), handbook single rule line (fe.49, fe.54, fe.51), register row read (FE-49, FE-54, FE-51), queue row MF-98 read, test RED output, test green output, no-contract surface control, out-of-scope descriptor control, lock file present vs absent   Dead ends found: 1
+
+---
+⏱  43168ms (43.2s)
+📊 Tokens — total: 44589, input: 35810, output: 8779, reasoning: 7873

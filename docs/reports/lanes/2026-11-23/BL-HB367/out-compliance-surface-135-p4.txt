@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:11:11.902Z file_sha256=281e7478ac805761cf58ff7c17fbae9b363127f68a4c277646c26c3d40e1a70c prompt_sha256=d1d1270ebf2f818faba202188bc1d1722c4869ba734dbc9854c32242641a09e8
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md:662 "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the operator confirmed all three rows, so leaving FE-51 OWED does not satisfy the ruling — flip FE-51 to RULED in the same commit or record a later operator ruling that Q-D overrides RR-0413.
+MET — FE-56 — .cursor/MCFRONTEND-QUEUE.md:663 — done-condition requires each lock proven red at its designed assertion through real commit hooks, then green.
+MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md:663 — row excludes the parked wf1/inc1b-gates branch.
+MET — RR-0385 — docs/reports/panels/MF-98.json:12 — building seat Opus and output review rounds recorded.
+MET — RR-0412 — .cursor/MCFRONTEND-QUEUE.md:662 — task-367 is RUNNING.
+MET — RR-0392 — docs/reports/panels/MF-98.json:3 — item records tests and documents only, no infrastructure.
+MET — AC1 — docs/reports/panels/MF-98.json:11 — RR-0413 confirms the three rows as the list.
+MET — AC2 — docs/reports/panels/MF-98.json:14 — plan records the red commit attempt in red.out.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+Rules met: FE-56
+
+---
+⏱  83700ms (83.7s)
+📊 Tokens — total: 36712, input: 18762, output: 17950, reasoning: 17578

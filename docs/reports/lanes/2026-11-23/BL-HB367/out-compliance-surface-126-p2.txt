@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:01:52.280Z file_sha256=0e274db7aa779116d116f46eeabb7eb8e845e8350abf915bceb02d1767815764 prompt_sha256=2b57c4b9d45f0b692b38ab0d948ffa7134c5cd591900ba02a9a6bdd90a90d848
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/reports/panels/MF-98.json "\"Q-D open: may fe.51 read RULED while its lock carries two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)? Until the operator answers, the row stays OWED on FLIP_PENDING.\"" — the ruling names three rows flipping, nav-tab-switch.logic.test.ts lands under this row, yet fe.51 is held back on a question the pasted ruling does not leave open, and OWED is defined by the card as "the 8 McFrontend rules whose lock is OWED (Spec 136)" so a landed lock cannot leave the row OWED — either flip FE-51 to RULED with a dated note naming the two owned tab-push exceptions per RR-0413, or paste the operator words that reopen Q-D and add Q-D to the Decisions naming this task list
+DEFER severity=MED — card acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — .cursor/MCFRONTEND-QUEUE.md "FE-51 stays OWED and joins FLIP_PENDING in register-locks-resolve.infra.test.ts; handbook-rule-map.logic.test.ts reads FLIP_PENDING" — the fe.51 rule remains on the lock-owed list although its gate lands, so the list shrinks by two of the three rules gated and no pre-change OWED count is recorded to show the delta — record the prior OWED count and state that fe.51 leaves the lock-owed list while only its register status awaits an answer
+DEFER severity=LOW — RR-0413 "yes to both A. Status flip." — docs/reports/panels/MF-98.json "Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)" — the verbatim is truncated and the dropped words "A. Status flip." are the ones bearing on Q-D, while "B: the three rows are the list" is presented as operator answer though the pasted words do not say it — quote the recorded words in full and mark the B reading as an orchestrator reading, as the queue file does elsewhere ("orchestrator reading, flagged and not the operator's words")
+DEFER severity=LOW — RR-0412 "So both 442 and 367 should be running once this push lands." — docs/reports/panels/MF-98.json "\"head\": \"prereg 1 (round 203); commits 0, 1\"" — no push or landing is recorded, so whether the ruling's precondition held when lane BL-HB367 started cannot be seen in this chunk — record the push sha in the panel head or cards
+DEFER severity=LOW — card acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — .cursor/MCFRONTEND-QUEUE.md "red proven first at the designed (A) assertions (docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11))" — the red proof is present only as a citation inside the queue note, red.out is outside this chunk and cannot see — nothing to change in these three files; confirm red.out lands in the same commit sequence as the locks
+MET — surface-126 §5.7 (arrow 7, generated docs) — docs/reports/generated/rule-lists-by-kind.md — both surface-136 rows move 29,076 to 29,136 and both totals move by the same +60 (226,914 and 307,977), so the page is regenerated, not hand-edited
+MET — surface-126 §5.0 (one-source rule) — docs/reports/generated/rule-lists-by-kind.md — only derived numbers change; no hand-authored prose or second declaration is added to the generated fan-out
+MET — RR-0386 "gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md "Not in this row: any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19), any other OWED row, the parked branch wf1/inc1b-gates (RR-0386)." — gates A, B, C are not built and the parked branch is declared untouched
+MET — RR-0385 "unbuilt gates withdrawn, tests are the focus" — .cursor/MCFRONTEND-QUEUE.md "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths" — the work is the three handbook locks, matching the card Files list, with no gate wiring added
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+Rules met: none
+```
+
+---
+⏱  68013ms (68.0s)
+📊 Tokens — total: 41341, input: 27271, output: 14070, reasoning: 12907
