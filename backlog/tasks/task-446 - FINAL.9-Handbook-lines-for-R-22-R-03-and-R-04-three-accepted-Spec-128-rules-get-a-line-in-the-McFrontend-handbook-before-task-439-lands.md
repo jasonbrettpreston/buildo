@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T13:51:00Z'
+updated_date: '2026-11-23T13:54:00Z'
 labels:
   - McFix
   - McFix Final
@@ -60,7 +60,7 @@ Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNI
   - `grep -n "128:224"` returns nothing in 135 or 136.
   - `grep -rn "128:224\|R-22\b" src/tests scripts` returns no hits.
   - The RSC mentions in scripts/surfaces are `why` strings of descriptors and census files (for example scripts/surfaces/parcel_admin/F03/surfaces/admin_export_audit.descriptor.json:146) and the platform descriptions in scripts/surfaces/_schema/surface.schema.json:461-465 (web is server-side RSC, mobile is a fetched projection, RN has no Server Components). None of them is a check.
-- Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates: they are lines already, FE-49 (135:71) and FE-52 (135:74). LAUNCH GATE (Q4 ruled): the card still reads three rules, and the operator's "Agreed" in RR-0395 rested on REPORT-429's claim that R-03 and R-04 are unstated, which is no longer true, so the decision needs his word (RR-0385 item 4(ii), :1920). Before launch the orchestrator shows him, in one message, the R-22 register cell and handbook line (section 3), the FE-49 and FE-52 Ruling cells (135:71, 135:74) with the one sentence of each rule they leave out (Q2), and the one-rule card text proposed in QUESTIONS-RULED.md of the plan review, and asks one question: R-22 only, since R-03 and R-04 are already lines, yes or no. His reply is recorded verbatim as a dated note on this task and in the R-22 row's Full text cell with its RR id. If he says three, this plan is replaced, not patched. The card is changed only by the orchestrator on his word.
+- Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates: they are lines already, FE-49 (135:71) and FE-52 (135:74). LAUNCH GATE (Q4 ruled): the card still reads three rules, and the operator's "Agreed" in RR-0395 rested on REPORT-429's claim that R-03 and R-04 are unstated, which is no longer true, so the decision needs his word (RR-0385 item 4(ii), :1920). Before launch the orchestrator shows him, in one message, the R-22 register cell and handbook line (section 3), the FE-49 and FE-52 Ruling cells (135:71, 135:74) with the one sentence of each rule they leave out (Q2), and the one-rule card text proposed in QUESTIONS-RULED.md of the plan review, and asks one question: R-22 only, since R-03 and R-04 are already lines, yes or no. His reply is recorded verbatim as a dated note on this task and in the R-22 row's Full text cell with its RR id. If he says three, this plan is replaced, not patched. The card is changed only by the orchestrator on his word. GATE MET (2026-11-23): shown the fe.58 line text, he answered "Question1 yes. push complete" (R-22 only) and "Question2 No" (no seam sentence appended to fe.49), RR-0396, decision-181, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1999 and :2002; the orchestrator edited the card to the one-rule text on his yes.
   - The new test T1 (section 4) proves that each of the three rules is stated by exactly one line.
   - This goes to the operator with the line text anyway (card; RR-0395 reading, MORNING-DECISIONS.md:1995). His question, "R-22 only, or R-22, R-03 and R-04?", rested on a fact that is no longer true (RR-0385 item 4(ii), :1920).
 - Partial wording, ruled not owed by this card (Q2; the operator is offered it at the sitting, default no):
@@ -102,7 +102,7 @@ Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNI
   - What was put to him is orchestrator text (MORNING-DECISIONS.md:1992): one handbook line per missing rule before task-439 lands, recommended for R-22, R-03 and R-04.
   - R-03 and R-04 were already lines (FE-49, FE-52, RR-0384), so this row carries R-22 only.
   - The Ruling cell quotes Spec 128 R-22; this row rules nothing new.
-  - The operator's reply at the line-text sitting is appended verbatim with its RR id, and commit 1 is not made before it exists.
+  - The operator's reply at the line-text sitting (RR-0396, decision-181, MORNING-DECISIONS.md:1999 and :2002, verbatim: "Question1 yes. push complete" and "Question2 No") is appended to this cell by the lane in commit 1, with its RR id, and commit 1 is not made before it exists.
 - **Status and Lock:** ``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added <date of the work commit> (RR-0395); no machine check yet, the lock is task-367's (task-434 merged into it, RR-0385 item 6) and the path is a reservation. Spec 128 names the lock owed as "a check that no mobile descriptor declares an RSC-only mechanism" (128:224); R-22 stays ACCEPTED in Spec 128; MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:713).``
   - The cell must not contain the text "Current reading:" (the generator parses a reading from it, generate-surface-handbook.mjs:72-105, :91). A dated note it only counts (:43, :146), so a plain one would be legal, and this row has none.
 
@@ -201,7 +201,7 @@ Always allowed, as for task-430 (task-430 plan section 16): the task file, docs/
 
 ## 7. LANDING
 
-**Launch gate, before commit 0.** The operator's word on the one-rule scope and the R-22 line text is on the task as a dated note (section 0). **Commit 0 (records), alone and first.** It copies 62b2ffed6.
+**Launch gate, before commit 0.** The operator's word on the one-rule scope and the R-22 line text is on the task (section 0, gate met: RR-0396 is in the card Description, and the lane writes it as the first dated note on the task). **Commit 0 (records), alone and first.** It copies 62b2ffed6.
 - The MF-96 row goes under "## Phase 2" (.cursor/MCFRONTEND-QUEUE.md:246), beside MF-95 (:648).
   - Heading, in the queue's bold form with no FE token: `**MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components) — RUNNING** (E)`, and directly under it `Status: RUNNING · since <commit date> · expires <commit date + 7 days> · next: Land commit 1, the R-22 register row (lane <lane>, task-446) · ruling: "Agreed. Plan approved"`. One status word follows the dash, and the first Next free id match in the file moves to MF-97 in the same commit (mcbylaws-queue-check.mjs:289-314).
   - Bullet: "- FE rows owned: none." (arm Q; the row is OWED).
@@ -263,7 +263,7 @@ Commit 1 trailers and gates:
 9. `git diff --stat <launch>..HEAD -- scripts/surfaces/generate-surface-handbook.mjs docs/specs/02-web-admin/128_surface_standard_policy.md scripts/analysis/rule-lists.json`: empty.
 10. The orchestrator, before the push: `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>`. Run it twice, because --lane takes one name and the unpushed range also carries task-430's ids (FE-46 to FE-57, MF-95 and round 200, owner BL-HB430): once with this lane and once with BL-HB430. Each id of the range must read OK in one of the two runs; the other-lane lines of each run are the expected ones, and the push summary says so (ids/check.mjs:142-153). The FE row, MF-96 and round 201 are claimed by this lane.
 11. `npm run test` at pre-push: pass.
-12. The operator's reply to the sitting is a dated note on this task and is appended verbatim with its RR id to the R-22 row's Full text cell (section 3); commit 1 is not made before it exists.
+12. The operator's reply to the sitting is a dated note on this task and is appended verbatim with its RR id (RR-0396) to the R-22 row's Full text cell (section 3); commit 1 is not made before it exists.
 
 ## 9. Questions for the grounder (ruled in round 1, docs/reports/reviews/task-446/QUESTIONS-RULED.md; the rulings are folded into sections 0, 3, 5 and 7)
 
