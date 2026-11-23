@@ -1,0 +1,1469 @@
+GATE OK
+[step-churn-complexity] clean — no drift at window_end=b87f62d
+[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest
+src-sql-ledger: fresh, 94 file(s) (62 static, 30 interpolated, 2 not_postgres), closed set holds, every column is in the catalog (uncatalogued, skipped: mv_monthly_permit_stats, parcel_lot_view)
+STANDARDIZED: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+OBSERVABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; snapshot_age_days 46)
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135 (ii 0 · iv unmapped 135); eval_mismatches_adjudicated 0; expert_rulings_against 0; agreement_rate n/a agreement≠correctness; code_linkage=declared-only)
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+SCALABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+PHASE 1: NOT_DONE
+  report-only docs/reference/bylaw-code-findings.md STALE (never a blocker; --write refreshes it)
+  report-only twins: groups 106 · differ 52 (value 1 · label 51; 191 units) — never a blocker
+render docs/reference/bylaw-provisions.json sha256 34cc3f789d202679287ae84989dedbf8801d5add1a16f32921ed5b49cf05ec57
+render docs/reference/bylaw-provisions.md sha256 0dc9cf5a2674d9db69335cf883adf4b0b6434898b4388382a22922fccaa50178
+generate-ingest-batch: 11 ingestor batch values, 0 drifted
+generate-sharing-phase: 40 phase maps, 0 drifted
+✔ src/features/admin-controls/generated/logic-variable-groups.json is up to date
+✔ docs/reference/logic-variables-registry.md is up to date
+[generate-assert-schema-probe-lists] clean — no drift (337 declared names)
+[generate-assert-parcel-sanity-descriptor] clean — no drift (46 checks, 1 invariants, 8 plausibility, 38 logic_variables)
+[generate-assert-global-coverage-descriptor] clean — no drift (305 checks, 25 logic_variables, 25 read tables)
+[generate-assert-data-bounds-descriptor] clean — no drift (52 checks, 33 logic_variables, 16 read tables)
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+[generate-conversion-roadmap] clean — no drift
+[generate-programme-backlog] clean — no drift
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+[bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 70bcf4259d2d, 1937 input files)
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+[spec-split-check] clean — 43 move(s) verified, 11553 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+SELF-TEST PASSED — 7 known-bad fixtures fired, 1 negative control clean, 4 marker assertions.
+No drift — 533 field rows across 20 categories.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lists448
+
+ ✓ src/tests/system-map.infra.test.ts (13 tests) 275ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  16:34:44
+   Duration  477ms (transform 32ms, setup 6ms, collect 7ms, tests 275ms, environment 0ms, prepare 24ms)
+
+PASS — 14 live doc(s)
+[step-validate] programme: blocks batching: 0 (scripts/steps/_schema/programme-items.json; npm run programme-backlog for the full table)
+[step-validate] #43 (commit) PASS OWNER-SPEC-DIFF: 0 file(s) appended to converted[] (index vs HEAD) — nothing to check
+[step-validate] --staged: no converted/pending step touched by this commit — nothing to validate, exiting clean.
+→ lint-staged could not find any staged files matching configured tasks.
+footgun[multi-transaction] (info): scripts/backfill-realtor-permit-trades.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-lifecycle-phase.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-permits.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-scope.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/close-stale-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-cost-estimates.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-opportunity-scores.js has 9 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-phase-calibration.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-storey-norms.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-timing-calibration-v2.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-trade-forecasts.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/dispatch-notifications.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/enrich-wsib.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/link-coa.js has 7 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/load-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/migrate-to-lead-id.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/update-tracked-projects.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+note: compute-purity: no declared set for scripts/lib/address-normalizers.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address-points-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/archetypes.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-data-bounds-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-global-coverage-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-parcel-sanity-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/build-norms.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-lot-row.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-materialize.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-resolution.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-cost-model.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-link-sql.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/aic-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/parse-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-scope-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-trade-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/assert-schema.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/catalogue.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/disclosures.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/layer2-cells.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/neighbour-facts.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/renovation.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/rows.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/split.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/two-structure.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/dead-tuple-ratio.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/lifecycle-phase.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/max-build.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+footgun[step-shape] (info): 29/37 unconverted manifest step files violate the frozen shape (Spec 122 §5.1). This is the expected pre-conversion state and does NOT gate — see scripts/steps/_schema/converted.json.
+footgun[step-shape] (info): scripts/load-coa.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/quality/assert-coa-freshness.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/link-coa-to-parcels.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/enrich-coa-zoning.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-scope.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-trades.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/compute-coa-cost-estimates.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/load-coa-notices.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+✅ Step-shape gate clean (29 converted step file(s) enforced; 42 compute module(s) enforced against scripts/ast-grep-rules/compute-shape.yml; 1 compute-purity site(s), all ledger-allowed).
+✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)
+
+> buildo@0.1.0 typecheck
+> tsc --noEmit
+
+
+> buildo@0.1.0 lint
+> next lint
+
+`next lint` is deprecated and will be removed in Next.js 16.
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+
+./src/components/FreshnessTimeline.tsx
+493:42  Warning: The ref value 'optimisticTimerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'optimisticTimerRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+./src/components/search/FilterPanel.tsx
+114:6  Warning: React Hook useEffect has a missing dependency: 'updateFilter'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/admin-controls/components/ControlPanelShell.tsx
+44:52  Warning: React Hook useMemo has unnecessary dependencies: 'draftConfig' and 'productionConfig'. Either exclude them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/leads/api/envelope.ts
+33:6  Warning: 'SuccessStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/leads/api/types.ts
+8:15  Warning: 'LeadFeedQuery' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/builders/extract-contacts.ts
+49:7  Warning: 'PHONE_REJECT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/classification/rules.ts
+53:7  Warning: 'TIER_2_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:7  Warning: 'STRUCTURE_TYPE_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+131:7  Warning: 'TIER_3_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/generated/schema.ts
+714:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1986:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2051:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2183:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2270:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2947:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/ssl-config.ts
+79:5  Warning: Unused eslint-disable directive (no problems were reported from 'no-new').
+
+./src/lib/export/csv.ts
+5:10  Warning: 'getClient' is defined but never used.  @typescript-eslint/no-unused-vars
+6:10  Warning: 'logError' is defined but never used.  @typescript-eslint/no-unused-vars
+14:7  Warning: 'UTF8_BOM' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:10  Warning: 'buildFilterClauses' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/parcels/lot-size-entry.ts
+246:7  Warning: 'PAGE_FLAGS' is assigned a value but only used as a type.  @typescript-eslint/no-unused-vars
+
+./src/tests/aeh-write-plan.logic.test.ts
+44:7  Warning: 'CLOCK_MS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/api-leads-view.infra.test.ts
+266:27  Warning: '_r' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-parcel-sanity.infra.test.ts
+25:7  Warning: 'audit' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-schema-ledger-locks.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+40:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:149  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/backlog/lane-claims.logic.test.ts
+23:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+54:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-cumulative.logic.test.ts
+37:20  Warning: '_b' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+39:21  Warning: '_p' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/coa-key.logic.test.ts
+39:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+44:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+56:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-round.logic.test.ts
+135:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+149:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+155:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+249:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-scorecard.logic.test.ts
+40:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+65:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+125:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+131:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+140:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+177:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+180:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+185:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+194:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+198:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+201:81  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/compute-opportunity-scores.infra.test.ts
+572:11  Warning: 'matches' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/config-meta.logic.test.ts
+96:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+133:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/backfill-smeared-enriched-status.db.test.ts
+34:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-centreline.db.test.ts
+72:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-heritage.db.test.ts
+67:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-ravines.db.test.ts
+26:15  Warning: '__filename' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/flight-board-roundtrip.db.test.ts
+54:7  Warning: 'COLON_FORM_ARCHIVE_ID' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+57:7  Warning: 'CANONICAL_LEAD_KEY' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/refresh-snapshot-consolidation.db.test.ts
+31:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/diff-narrator.logic.test.ts
+16:21  Warning: 'beforeEach' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/fixtures/mcbylaws-gate/red-literals.mjs
+2:7  Warning: 'SIDE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/gate-logic-version.infra.test.ts
+27:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-mode-emits-type.infra.test.ts
+24:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+34:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+253:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-registries.infra.test.ts
+37:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-terminals-records-meta.infra.test.ts
+25:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/geocode-permits.infra.test.ts
+42:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/ingest-ckan-primary.logic.test.ts
+106:82  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-derived-target.logic.test.ts
+65:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-on-error-warn-row.logic.test.ts
+67:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+68:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-counters.logic.test.ts
+172:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+208:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+252:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+264:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-idempotency.logic.test.ts
+218:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+243:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+254:75  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+308:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+424:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-runner.logic.test.ts
+206:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+239:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+267:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+287:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+288:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+366:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+482:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+483:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+553:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-fullrun.logic.test.ts
+56:7  Warning: 'noopLog' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+170:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+429:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+430:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-gate.logic.test.ts
+166:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+368:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+763:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+910:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+911:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1007:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1052:107  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1057:126  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1070:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1129:73  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-schema.logic.test.ts
+325:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+332:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+437:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+449:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+463:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+556:108  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+570:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+591:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+602:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0z1-schema.logic.test.ts
+102:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+129:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+134:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+171:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+195:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+206:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:76  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+273:97  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+289:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+318:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-seen-touch.logic.test.ts
+130:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/inspections.logic.test.ts
+574:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+596:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+703:13  Warning: 'badUrl' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+816:9  Warning: 'routeSource' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/load-address-points.infra.test.ts
+169:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-floating-promises').
+
+./src/tests/materialize-rows.logic.test.ts
+31:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-citeparse.logic.test.ts
+19:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-gate.logic.test.ts
+502:11  Warning: 'root' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-context.logic.test.ts
+123:7  Warning: 'clone' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+249:7  Warning: 'PROMOTE_110' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:7  Warning: 'PROMOTE_110_113' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+264:7  Warning: 'ROUND_IDS_A' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+269:10  Warning: 'groupOf' is defined but never used.  @typescript-eslint/no-unused-vars
+426:16  Warning: 'boundPathsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+438:10  Warning: 'boundBlobsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+458:10  Warning: 'stageRound' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-eval.logic.test.ts
+136:7  Warning: 'runCase' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score-buildings.logic.test.ts
+21:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts
+22:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+112:7  Warning: 'CASE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+77:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+677:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+678:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+679:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+702:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-regression.logic.test.ts
+63:7  Warning: 'nx' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-summarycollect.logic.test.ts
+69:19  Warning: 'a' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-approval.logic.test.ts
+22:6  Warning: 'Vocab' is defined but never used.  @typescript-eslint/no-unused-vars
+136:10  Warning: 'assertSortedUnique' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-prompts.logic.test.ts
+30:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-records.logic.test.ts
+77:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:21  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+397:23  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/parcel-checkout.infra.test.ts
+95:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/pipeline-sdk.logic.test.ts
+2526:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2526:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/producer-ratio-pin.logic.test.ts
+235:17  Warning: '_of' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-harness.logic.test.ts
+24:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+435:12  Warning: 'forbiddenPool' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-trace.logic.test.ts
+118:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+374:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+389:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/step-library.logic.test.ts
+2983:9  Warning: 'os' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+6979:61  Warning: 'ctx' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/tests/step-registry.logic.test.ts
+161:25  Warning: 'downstream' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/address_points/violations.test.ts
+39:7  Warning: 'NORMALIZER_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+40:7  Warning: 'WRITE_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/classify_coa_scope/ledger-locks.logic.test.ts
+10:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+14:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:104  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/classify_coa_trades/ledger-locks.logic.test.ts
+17:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+21:109  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:121  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/coa/dispatch.logic.test.ts
+239:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+311:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/coa/ledger-locks.logic.test.ts
+16:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:203  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_coa_cost_estimates/ledger-locks.logic.test.ts
+12:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts
+35:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/golden-25.logic.test.ts
+51:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:88  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment2-worked-examples.logic.test.ts
+34:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment3-worked-examples.logic.test.ts
+29:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/major-street.logic.test.ts
+16:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+81:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+110:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+124:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/sixplex.logic.test.ts
+12:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+53:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:83  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:80  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+255:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+259:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+323:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+369:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+370:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+371:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+375:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+380:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+386:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+388:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/violations.test.ts
+217:10  Warning: 'stepSource' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts
+13:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/link_parcel_addresses/violations.test.ts
+119:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+153:7  Warning: 'WARN_FAIL_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+158:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+203:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+204:7  Warning: 'T7_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+447:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+1379:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_wsib/violations.test.ts
+100:7  Warning: 'WSIB_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+101:7  Warning: 'ENTITIES_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+108:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+120:7  Warning: 'WARN_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+121:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+151:7  Warning: 'T2_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+152:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+168:7  Warning: 'currentWrite' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+365:10  Warning: 'checkById' is defined but never used.  @typescript-eslint/no-unused-vars
+401:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+405:10  Warning: 'strings' is defined but never used.  @typescript-eslint/no-unused-vars
+544:86  Warning: 'v' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1240:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_bylaw_map_areas/violations.test.ts
+25:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+114:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+159:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+162:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+166:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+191:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+197:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+212:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+223:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+224:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+225:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+227:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+228:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+235:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+333:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+373:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+426:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+435:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+541:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/load_centreline/violations.test.ts
+374:24  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_zoning/violations.test.ts
+1145:10  Warning: 'writeByTable' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/refresh_snapshot/violations.test.ts
+172:10  Warning: 'git' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/surfaces/report-generator-fields.logic.test.ts
+219:189  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+221:84  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/update-tracked-projects.infra.test.ts
+348:11  Warning: 'txEnd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/write-class-disposition.infra.test.ts
+88:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+331:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lists448
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts (29 tests | 11 failed) 1973ms
+   × V2.LIST round 2: the table rows > a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133 43ms
+     → expected [ 'surface-128', 'surface-126', …(6) ] to deeply equal [ 'five-words', 'plan-protocol', …(2) ]
+   × V2.LIST round 2: the table rows > a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a) 44ms
+     → expected [ 'policy-124-s2-s5', …(9) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+   × V2.LIST round 2: the table rows > the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed 43ms
+     → expected [ 'agents-s5-1to3', …(8) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+   × V2.LIST round 2: the table rows > docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed 48ms
+     → expected [ 'agents-s5-1to3', …(8) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+   × V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-136 only (task-448, RR-0421 item 1 a; the four specs came from the operator's "1-5 y", MORNING-DECISIONS.md:1520, item 2) 0ms
+     → expected [ 'surface-126', 'surface-128', …(2) ] to deeply equal [ 'surface-136' ]
+   × V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route get surface-136 and none of Specs 126, 128, 135 (task-448, RR-0421 item 1 a); an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none 86ms
+     → src/app/api/parcels/lookup/route.ts: surface-126: expected [ 'eng-back', 'eng-shared', …(9) ] to not include 'surface-126'
+   × task-412: review_followups.md has its Spec 08 home > the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a) 43ms
+     → expected [ 'agents-s7-s11', 'queue-137', …(4) ] to deeply equal [ 'five-words', 'plan-protocol', …(2) ]
+   × task-431: the engineering standards sent by side > S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not) 257ms
+     → scripts/steps/x.json: airtight-124a: expected [ 'step-132', 'airtight-124a', …(9) ] to not include 'airtight-124a'
+   × task-431: the engineering standards sent by side > N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row) 212ms
+     → mobile-100: expected [ 'mobile-90', 'mobile-98', …(10) ] to not include 'mobile-100'
+   × task-431: the engineering standards sent by side > N2 (task-448, RR-0421 item 1 a reverses RR-0383): an edit to a surface spec gets Spec 136 and none of the four specs (planted: the four back on the specs-web-admin row) 39ms
+     → docs/specs/02-web-admin/126_maxbld_surface_standard.md: expected [ 'eng-all', 'agents-s7-s11', …(10) ] to not include 'surface-126'
+   × task-431: the engineering standards sent by side > task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists 0ms
+     → step-pipeline: airtight-124a: expected [ 'step-132', 'airtight-124a', …(5) ] to not include 'airtight-124a'
+stdout | src/tests/backlog/rule-lists.logic.test.ts > resolve on a fixture tree (AC #2) > ATTACK 11: a Files line of only exempt paths for a build or fix task is refused (a record-only task may keep it)
+ATTACK 11: REFUSED: rule-lists: refused: the Files line of a build task resolves to no rule list (only exempt paths: docs/reports/lanes/x/); a build or fix task must touch at least one governed path
+ATTACK 11: REFUSED: rule-lists: refused: the Files line of a fix task resolves to no rule list (only exempt paths: docs/reports/lanes/x/); a build or fix task must touch at least one governed path
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts (99 tests | 4 failed) 10402ms
+   ✓ the real table (AC #1: data, every listed rule file exists) > validates: files exist, each section selector names exactly one heading, every glob matches a tracked path 462ms
+   × the real table (AC #1: data, every listed rule file exists) > a mobile file plus an API route names every list of both rows (AC #2, resolution half) 46ms
+     → expected [ 'mobile-90', 'mobile-98', …(12) ] to not include 'storage-doc16'
+   × the real table (AC #1: data, every listed rule file exists) > a src file that imports from scripts/lib/compute gets the step handbook list and no Airtight list (import row; task-448, RR-0421 item 3 a) 43ms
+     → expected [ 'eng-back', 'eng-shared', …(12) ] to not include 'airtight-124a'
+   × the real table (AC #1: data, every listed rule file exists) > ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer no longer gets Specs 126 and 128 (task-448, RR-0421 item 1 a) 254ms
+     → expected [ 'eng-back', 'eng-shared', …(7) ] to not include 'surface-126'
+   × the real table (AC #1: data, every listed rule file exists) > task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface's own lists 43ms
+     → expected [ 'eng-all', 'agents-s7-s11', …(16) ] to not include 'agents-s7-s11'
+   ✓ V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > milestone_docs gives every increment letter its own milestone list (objectives sections), and the table validates 433ms
+   ✓ V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review) 792ms
+   ✓ V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason > the real board: every open task that resolves carries the every_task lists (exit 0), and the count line is printed 1987ms
+   ✓ task-423 (e): counts pinned at most, on the real table > the tooling kind and the task-419 Files line: 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700); the task-412 Files line: 3 and 3 373ms
+stdout | src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused
+ATTACK 11: REFUSED: backlog-lane: refused: --rule-lists /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-VBfDKr/fake-table.json is not the repo table (/Users/brettpreston_macmini/Buildo-wt-lists448/scripts/analys
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts (67 tests | 6 failed) 58387ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses an existing worktree directory 332ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a dirty board: a modified file outside backlog/ (and an untracked one), but not a change inside backlog/ 381ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a missing backlog binary, a bad lane name, a missing task and a missing input 377ms
+   ✓ backlog-lane --dry-run (AC #3): prints every command, writes nothing > prints take, kickstart, worktree add, two ln, cp, backlog-brief, brief.mjs and a BRIEF-FILE line, and changes nothing 336ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > takes the task, waits for the job commit, cuts the worktree, links, writes G1 and task.json, runs brief.mjs and prints BRIEF-FILE with its sha256 647ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > uses --spec instead of a generated task.json when given 479ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T2 real launch: the line before the last is AGENT-MODEL: opus and BRIEF.md carries the split; the last line is still BRIEF-FILE 491ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T3 (a) --spec with no extra: the merged extra ends with the model line, once 502ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock) 498ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line) 2072ms
+   ✓ backlog-lane review line names the lens set (task-358) > a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security 965ms
+   × backlog-lane review line names the lens set (task-358) > PARITY: the layout fragments the brief states are the ones the close check refusal states (names, subfolder examples, the rN round form, fix-*.txt) 3ms
+     → scripts/analysis/backlog-lane.mjs lacks: never stands in for a round-1 name: expected '#!/usr/bin/env node\n// One-command l…' to contain 'never stands in for a round-1 name'
+   × backlog-lane review line names the lens set (task-358) > every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed) 1155ms
+     → expected 'Ticket: task-1 (<label from the G1 ti…' to contain 'under the SAME names'
+   ✓ backlog-lane review line names the lens set (task-358) > task-423 D2: the brief orders no plan lens; every output lens command carries --context, and the --context value is not a flag 824ms
+   ✓ backlog-lane review line names the lens set (task-358) > A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone 828ms
+   ✓ backlog-lane review line names the lens set (task-358) > T4: the lens line of a build brief and of a record brief holds the re-run command with --task, --lane, --stage, --root <worktree> and --board <board>, and the word highest-numbered 1058ms
+   ✓ backlog-lane review line names the lens set (task-358) > security joins when the Files line touches entitlements, auth, stripe or a metered route 3103ms
+   ✓ backlog-lane review line names the lens set (task-358) > a build that is not on a surface has no ux lens 822ms
+   ✓ backlog-lane review line names the lens set (task-358) > B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not 2342ms
+   × backlog-lane attaches the rule lists by touched path (task-366) > a mobile file plus an API route: the brief names every list of both rows, each with its file, READ whole before planning (AC #2) 230ms
+     → expected 'THE RULE LISTS THAT GOVERN THIS TASK …' not to contain 'storage-doc16'
+   × backlog-lane attaches the rule lists by touched path (task-366) > task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt 895ms
+     → expected 'Ticket: task-1 (<label from the G1 ti…' not to contain 'out-compliance-storage-doc16'
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > A3/D2: the extra block carries no plan review line (the plan is reviewed before launch, RR-0374) 824ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again 1132ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off) 442ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line 1202ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > task-419 (a): a board whose evidence folder lacks FOLD-CHECK.md (committed) is refused at the launch dry run naming the file; with the file back the dry run prints "plan gate ok" 1518ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch 1226ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > task-375 suite fix: a launch dry-run run with GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE of ANOTHER repository set (as inside a hook) still reads the board it was given 825ms
+   × backlog-lane attaches the rule lists by touched path (task-366) > a task with no Files line is refused, but a record-only task gets the every-task lists (the queue lists are off since task-448, RR-0418) 450ms
+     → expected 'THE RULE LISTS THAT GOVERN THIS TASK …' not to contain '137_mcqueue.md'
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused 521ms
+   × backlog-lane attaches the rule lists by touched path (task-366) > a real launch with --spec (what the orchestrator runs) still writes the rule-list block and the per-list lens line into the brief it tells the lane to read 1108ms
+     → expected 'FAKE BRIEF\n{"lane":"BL-T1","goal":"g…' not to contain 'storage-doc16'
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > launch refuses a build task with no milestone, and a table whose every_task is empty; the control launches (dry-run) 674ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 1: an empty Implementation Plan field is refused (exit 3, nothing written); with a plan the same board proceeds 762ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 2: a task that is not LATER or WAITS, a Files path no row matches and a record task are refused; a resolving LATER build task is not 1903ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 3: a dirty file outside backlog/ and the folder is refused; a change inside backlog/ and a node_modules link pass 767ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 4: a plan-*.txt already in the folder is refused with its bytes unchanged; an empty folder is not 762ms
+   ✓ plan-prep review: the calls and what they leave > 5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file 1138ms
+   ✓ plan-prep review: the calls and what they leave > 6: an output with no REVIEW header in its first 15 lines, or no VERDICT line, is exit 1 naming the file; a banner then the header on line 2 and a VERDICT pass 2162ms
+   ✓ plan-prep review: the calls and what they leave > 7: the inputs equal what the library writes for the same context (the plantEvidence call); another Description gives different inputs 1576ms
+   ✓ plan-prep review: the calls and what they leave > 8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched 725ms
+   ✓ plan-prep review: the calls and what they leave > 16: a fix task writes the plan lens outputs and no per-list inputs 427ms
+   ✓ plan-prep review: the calls and what they leave > B2 (task-445): a fix task on a src/lib path also writes plan-security.txt 415ms
+   ✓ plan-prep review: the calls and what they leave > git environment: a foreign GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE (as in a commit hook) still gives a successful review 734ms
+   ✓ plan-prep review: the calls and what they leave > 15: --dry-run on each phase prints the commands (the real tool line included) and leaves the tree byte-identical 1096ms
+   ✓ plan-prep post (task-418) > 9: from the plantEvidence state with the round line and references stripped, post restores the exact zero-form line and the references; run twice, one block 1121ms
+   ✓ plan-prep post (task-418) > 9b: a different "Plan review round" line is refused naming it, the task unchanged 737ms
+   ✓ plan-prep post (task-418) > 10: a CONFIRMED id with no TRIAGE-PLAN.md line is refused naming the id and the task is unchanged; with a folded quote that is in the task it posts 1112ms
+   ✓ plan-prep post (task-418) > 10b: a folded quote that is NOT in the task is exit 1 (the fold is not finished) and the task is unchanged 942ms
+   ✓ plan-prep post (task-418) > 12: a missing Seat line (integration, reality-check, regression where a Files path is tracked), an absent seat file and a seat file edited after the grounder are refused; all-new Files need no regression 5857ms
+   ✓ plan-prep commit and the end to end (task-418) > 13: a staged file outside the folder, a failing hook and an index.lock leave nothing committed; the commit holds exactly the folder 1153ms
+   ✓ plan-prep commit and the end to end (task-418) > fix round 1 (g418#1): --launch-args cannot turn the launch dry run into a real launch: the identity flags and --dry-run it carries are refused, the task stays LATER with no worktree and no branch; the control without the override is a dry run 1258ms
+   ✓ plan-prep commit and the end to end (task-418) > 11 and 14: a CONFIRMED HIGH folded: post, commit (the dry run prints the expected Plan line), the grounder copies it, commit again prints "plan gate ok"; one word edited in the task refuses with the new expected line 1883ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 21 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane review line names the lens set (task-358) > PARITY: the layout fragments the brief states are the ones the close check refusal states (names, subfolder examples, the rN round form, fix-*.txt)
+AssertionError: scripts/analysis/backlog-lane.mjs lacks: never stands in for a round-1 name: expected '#!/usr/bin/env node\n// One-command l…' to contain 'never stands in for a round-1 name'
+
+- Expected
++ Received
+
+- never stands in for a round-1 name
++ #!/usr/bin/env node
++ // One-command lane launch (task-310, R8e; RR-0242, MORNING-DECISIONS.md:953-955; the take on the board is RR-0240, :947-951).
++ // Usage: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name> [--board ~/Buildo-wt-board] [--worktree ~/Buildo-wt-<name>]
++ //        [--branch wf2/<name>] [--spec <task.json>] [--stage N] [--dry-run]
++ // Does, in this order, by shelling out to the existing tools (nothing is re-implemented):
++ //   1. take the task on the board checkout (backlog task edit -s RUNNING -a @lane-<name> --append-notes ...);
++ //   2. kickstart com.maxbld.board-commit and wait (4 minutes) until backlog/ of the board is clean and HEAD advanced;
++ //   3. git worktree add -b <branch> <worktree> <board HEAD>, link both node_modules, copy .cursor/active_task.md;
++ //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
++ //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
++ //   6. print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call) and then `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
++ // COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
++ // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
++ // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
++ // --dry-run prints every command (cd <dir> && <command>) and the task.json, writes nothing.
++ // Test flags (documented, not config): --no-launchd runs scripts/board/board-commit.zsh inline instead of launchctl; --wait-ms <n> shortens the wait;
++ // --lane-dir, --main, --panel-tools, --backlog-bin, --date override the defaults. Rules: PLAN-PROTOCOL.md:3 simple, no scope creep.
++ import { spawnSync } from 'node:child_process';
++ import fs from 'node:fs';
++ import { createRequire } from 'node:module';
++ import path from 'node:path';
++ import { fileURLToPath } from 'node:url';
++ import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
++ import { planGateErrors } from '../hooks/check-lane-close.mjs';
++ import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, seatOf, verifyResolved } from './rule-lists.mjs';
++
++ const a = args();
++ const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
++ const refuse = (m) => { process.stderr.write(`backlog-lane: refused: ${m}\n`); process.exit(3); };
++ const usage = (m) => { process.stderr.write(`backlog-lane: ${m}\n`); process.exit(2); };
++ const q = (s) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
++ const dry = a['dry-run'] === true;
++
++ const taskId = str('task', '').toLowerCase();
++ const lane = str('lane', '');
++ if (!/^task-\d+$/.test(taskId) || !lane) usage('usage: --task task-N --lane <name> [--board <dir>] [--worktree <dir>] [--branch <name>] [--spec <task.json>] [--dry-run]');
++ if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/.test(lane)) refuse(`lane name ${lane} is not a plain name (letters, digits, . _ -)`);
++ const name = lane.toLowerCase().replace(/^bl-/, '');
++ const date = str('date', today());
++ if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage('--date must be YYYY-MM-DD');
++ const stage = str('stage', '1');
++ const board = path.resolve(home(str('board', '~/Buildo-wt-board')));
++ const wt = path.resolve(home(str('worktree', `~/Buildo-wt-${name}`)));
++ const branch = str('branch', `wf2/${name}`);
++ const main = path.resolve(home(str('main', '~/Buildo')));
++ const pt = path.resolve(home(str('panel-tools', '~/Buildo-scratch/panel-tools')));
++ const laneDir = path.resolve(home(str('lane-dir', `~/Buildo-scratch/lanes-${date.replace(/-/g, '')}/${lane}`)));
++ const specGiven = a.spec && a.spec !== true ? path.resolve(home(String(a.spec))) : null;
++ const waitMs = Number(str('wait-ms', '240000'));
++ if (!Number.isFinite(waitMs) || waitMs < 0) usage('--wait-ms must be a non-negative number');
++ if (!/^\d{1,3}$/.test(stage)) usage('--stage must be a number');
++ const here = path.dirname(fileURLToPath(import.meta.url));
++ const briefScript = path.join(here, 'backlog-brief.mjs');
++ const jobScript = path.join(REPO, 'scripts/board/board-commit.zsh');
++
++ const sh = (cwd, argv) => spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26, env: gitFreeEnv() }); // the board is named by cwd, never by an ambient GIT_DIR of a hook
++ const git = (...g) => sh(board, ['git', '-c', 'core.quotepath=false', ...g]);
++
++ // ---- preflight: everything that can be checked, before the first write ----
++ const bin = path.resolve(home(str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'))));
++ if (!fs.existsSync(bin)) refuse(`backlog binary not found at ${bin} (pass --backlog-bin)`);
++ if (!fs.existsSync(board) || git('rev-parse', '--git-dir').status !== 0) refuse(`board ${board} is not a git checkout`);
++ const t = readItems(board).find((x) => x.id === taskId);
++ if (!t) refuse(`${taskId} not found under ${path.join(board, 'backlog/tasks')}`);
++ const status = String(t.fm.status).toUpperCase();
++ if (status !== 'LATER' && status !== 'WAITS') refuse(`task ${taskId} is not LATER or WAITS (status ${status}); only a waiting task is launched`);
++ for (const p of [path.join(main, 'node_modules'), path.join(main, 'mobile/node_modules')]) if (!fs.existsSync(p)) refuse(`node_modules source ${p} not found (pass --main)`);
++ for (const p of [path.join(pt, 'brief.mjs'), briefScript, ...(specGiven ? [specGiven] : []), ...(a['no-launchd'] === true ? [jobScript] : [])]) if (!fs.existsSync(p)) refuse(`${p} not found`);
++ if (!path.isAbsolute(wt) || !fs.existsSync(path.dirname(wt))) refuse(`worktree parent ${path.dirname(wt)} does not exist`);
++ if (fs.existsSync(wt)) refuse(`worktree ${wt} already exists`);
++ if (git('check-ref-format', `refs/heads/${branch}`).status !== 0) refuse(`branch name ${branch} is not a valid git branch name`);
++ if (git('show-ref', '--verify', '--quiet', `refs/heads/${branch}`).status === 0) refuse(`branch ${branch} already exists`);
++ const rlOpt = str('rule-lists', '');
++ if (rlOpt && path.resolve(home(rlOpt)) !== path.resolve(DEFAULT_TABLE) && process.env.RULE_LISTS_ALLOW_OVERRIDE !== '1') refuse(`--rule-lists ${rlOpt} is not the repo table (${DEFAULT_TABLE}): a different table would decide which rule lists apply, so it is refused (the tests set RULE_LISTS_ALLOW_OVERRIDE=1)`);
++ let resolved;
++ let ruleTable;
++ const letterOf = milestoneLetter(board, t.fm.milestone);
++ try { ruleTable = readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))); resolved = resolveTask({ table: ruleTable, root: board, body: t.body, type: String(t.fm.type ?? ''), letter: letterOf }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
++ if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
++ const missingLists = verifyResolved(ruleTable, resolved, letterOf, String(t.fm.type ?? '')); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
++ if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);
++ const st = git('status', '--porcelain');
++ if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
++ const dirty = st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !/(^|\/)node_modules\/?$/.test(p)); // the node_modules links of a worktree are untracked (the .gitignore pattern has a trailing slash and a link is not a directory)
++ if (dirty.length) refuse(`board checkout ${board} is dirty outside backlog/: ${dirty.slice(0, 5).join(', ')}${dirty.length > 5 ? ', ...' : ''}`);
++
++ // ---- task-375 D5: THE LAUNCH GATE, the LAST refusal before the take. A build or fix task is launched only when its folded plan was checked: the plan evidence in docs/reports/reviews/<id>/ at the board HEAD
++ // (context, plan compliance outputs per list, GROUNDER-PLAN.md of a separate grounder, the required seat reports, outcomes, the round block and references on the task, the Plan hash line). No flag or
++ // environment variable turns it off. If the gate has a defect and blocks every launch, the rollback is a git revert of the commit that added this block; --dry-run diagnoses without a take.
++ const gateType = String(t.fm.type ?? '').toLowerCase();
++ if (gateType === 'build' || gateType === 'fix') {
++   const ev = `docs/reports/reviews/${taskId}`;
++   const showHead = (pth) => { const r = git('show', `HEAD:${pth}`); return r.status === 0 ? r.stdout : null; };
++   const names = git('ls-tree', '-r', '--name-only', 'HEAD', '--', `${ev}/`).stdout.split('\n').filter((x) => x && path.posix.dirname(x) === ev); // flat: a file in a subfolder is never read
++   const headTasks = git('ls-tree', '--name-only', 'HEAD', 'backlog/tasks/').stdout.split('\n').filter(Boolean);
++   const gate = planGateErrors({
++     id: taskId, taskText: fs.readFileSync(t.file, 'utf8'), type: gateType, table: ruleTable, root: board, letter: letterOf, laneName: lane, assignees: asList(t.fm.assignee).map(String),
++     folder: names.map((x) => ({ name: path.posix.basename(x), text: showHead(x) ?? '' })), readRepo: showHead,
++     tracked: (e) => git('ls-files', '--', e).stdout.trim() !== '', // the Files entry names at least one tracked path (a file, directory or glob)
++     facts: {
++       taskOf: (tid) => { const n = /\d+/.exec(tid)?.[0]; const f = headTasks.find((x) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(x)); if (!f) return { exists: false, status: '', text: '' }; const x = showHead(f) ?? ''; return { exists: true, status: String(parseFM(x).fm.status ?? ''), text: x }; },
++       decisionExists: (ref) => git('ls-tree', '--name-only', 'HEAD', 'backlog/decisions/').stdout.split('\n').some((x) => path.posix.basename(x).toLowerCase().startsWith(`${ref.toLowerCase()} -`) || path.posix.basename(x).includes(ref)),
++     },
++   });
++   if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }
++   console.log(`plan gate ok: ${gate.lists} lists, ${gate.findings} findings, ${gate.line.replace(/^Plan: \S+ /, 'Plan ')}`);
++ }
++
++ // ---- the commands, printed (dry-run) or run; one code path for both ----
++ const fmt = (cwd, argv, env, out) => `cd ${q(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${q(v)}`).join(' ')} ` : ''}${argv.map(q).join(' ')}${out ? ` > ${q(out)}` : ''}`;
++ const undo = fmt(board, [bin, 'task', 'edit', taskId, '-s', 'LATER', '-a', '']);
++ let taken = false;
++ const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what}: ${(r && r.error && r.error.message) || String((r && (r.stderr || r.stdout)) || '').trim().split('\n')[0]}${taken ? `; the task is already taken on the board, undo with: ${undo}` : ''}\n`); process.exit(1); };
++ const step = (what, cwd, argv, { env, out, must = true } = {}) => {
++   console.log(`$ ${fmt(cwd, argv, env, out)}`);
++   if (dry) return { status: 0, stdout: '', stderr: '' };
++   const r = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26, env: { ...gitFreeEnv(), ...(env ?? {}) } });
++   if (out && r.status === 0) fs.writeFileSync(out, r.stdout);
++   if (must && r.status !== 0) fail(what, r);
++   return r;
++ };
++ const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
++
++ const note = `${date} taken on the board at lane launch (lane ${lane}, worktree ${wt}, branch ${branch}), RR-0240`;
++ const head0 = dry ? '' : git('rev-parse', 'HEAD').stdout.trim();
++
++ // 1-2. take, kickstart, wait
++ // task-375 B1: the compliance references of the resolved lists the task does not carry yet go in the same edit (his :1541: a compliance document is labelled)
++ const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);
++ step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note, ...addRefs]);
++ taken = !dry;
++ if (a['no-launchd'] === true) step('board commit job', board, ['zsh', '-f', jobScript], { env: { BOARD_ROOT: board } });
++ else step('kickstart', board, ['launchctl', 'kickstart', '-k', `gui/${process.getuid()}/com.maxbld.board-commit`]);
++ if (!dry) {
++   const t0 = Date.now();
++   for (;;) {
++     const clean = git('status', '--porcelain', '--', 'backlog').stdout.trim() === '';
++     if (clean && git('rev-parse', 'HEAD').stdout.trim() !== head0) break;
++     if (Date.now() - t0 >= waitMs) refuse(`board commit did not land within ${waitMs} ms (backlog/ of ${board} still dirty or HEAD unchanged); ${taskId} is taken but not committed, undo with: ${undo}`);
++     sleep(500);
++   }
++   const now = readItems(board).find((x) => x.id === taskId);
++   if (!now || String(now.fm.status).toUpperCase() !== 'RUNNING' || !asList(now.fm.assignee).includes(`@lane-${lane}`)) refuse(`after the board commit ${taskId} is not RUNNING for @lane-${lane}; undo with: ${undo}`);
++ }
++
++ // 3. worktree, links, plan copy; a throw from here on still names the undo command
++ try {
++ const head = dry ? '<board HEAD after the take commit>' : git('rev-parse', 'HEAD').stdout.trim();
++ step('worktree add', board, ['git', 'worktree', 'add', '-b', branch, wt, head]);
++ step('link node_modules', board, ['ln', '-s', path.join(main, 'node_modules'), path.join(wt, 'node_modules')]);
++ step('link mobile/node_modules', board, ['ln', '-s', path.join(main, 'mobile/node_modules'), path.join(wt, 'mobile/node_modules')]);
++ const plan = path.join(board, '.cursor/active_task.md');
++ if (dry || fs.existsSync(plan)) {
++   step('make .cursor', board, ['mkdir', '-p', path.join(wt, '.cursor')]);
++   step('copy plan', board, ['cp', plan, path.join(wt, '.cursor/active_task.md')]);
++ }
++
++ // 4. G1 ticket
++ const g1 = path.join(laneDir, `G1-${taskId}.md`);
++ step('make lane dir', board, ['mkdir', '-p', laneDir]);
++ const g1r = step('G1 ticket', wt, ['node', briefScript, '--task', taskId, '--lane', lane, '--stage', stage, '--root', wt, '--date', date], { out: g1 });
++
++ // 5. task.json and the brief
++ const acBlock = /<!-- AC:BEGIN -->([\s\S]*?)<!-- AC:END -->/.exec(t.body)?.[1] ?? '';
++ const pathy = acBlock.split(/[\s`"'(),;]+/).map((w) => w.replace(/[.:]+$/, '')).filter((w) => /\//.test(w) && /\.\w+$/.test(w) && !/^[a-z]+:\/\//i.test(w) && !/[<>*]/.test(w));
++ const abs = (p) => (p.startsWith('~/') ? home(p) : path.isAbsolute(p) ? p : path.join(wt, p));
++ const milestone = String(t.fm.milestone ?? '');
++ const msDir = path.join(board, 'backlog/milestones');
++ const msTitle = milestone && fs.existsSync(msDir) ? fs.readdirSync(msDir).filter((f) => f.endsWith('.md')).map((f) => parseFM(fs.readFileSync(path.join(msDir, f), 'utf8')).fm).find((fm) => String(fm.id) === milestone)?.title : undefined;
++ const letter = /\[([^\]]+)\]\s*$/.exec(String(msTitle ?? ''))?.[1];
++ if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] letter in the title of milestone ${milestone || '(none)'}; groups defaults to F\n`);
++ // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
++ // task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
++ const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
++ const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.'; // task-436 FINAL.1: the split in the brief (Spec 08 rule 9 dated note 2026-11-22)
++ const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
++ const lensLine = (task, ctx, lists) => {
++   const ctxArgs = `--context ${ctx} ${sectionFlags}`;
++   const { code, out } = lensSet({ type: task.fm.type, files: filesText(task.body) }); // one lens-set function, shared with the close check (rule-lists.mjs)
++   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
++   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
++   // task-438 (RR-0385 item 2): the lists of the engineering standards file go to the engineering seat (rule-lists.mjs seatOf), the others to compliance
++   const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);
++   const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);
++   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
++   const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
++   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
++   const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
++   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.';
++   return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file ${ctx}, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
++ };
++ const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // the round the brief writes at launch: the same count (review-template.js contextRound) over the same tree
++ const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
++ const ruleBlock = [
++   `THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; ${resolved.lists.length} lists; READ each whole before planning, never hand-pick a clause):`,
++   ...resolved.lists.map((l) => `- ${l.id}: ${l.file} (${l.whole ? 'whole file' : `sections: ${l.sections.join('; ')}`}) [${l.generated_by}${l.status ? `; status: ${l.status}` : ''}] why: ${l.why.join(' | ')}`),
++   ...(resolved.exempt.length ? [`- Files entries with no rule list (records the lane writes itself, the hooks always allow them): ${resolved.exempt.join(', ')}`] : []),
++ ].join('\n');
++ const spec = {
++   lane,
++   goal: `${t.fm.title}\n\n${descriptionOf(t).trim()}`.trim(),
++   inputs: [
++     ruleBlock,
++     `THE TASK: cd ${wt} && node_modules/.bin/backlog task view ${taskId} --plain; the G1 ticket ${g1} (its context file ${path.join(wt, ctxRel)} is in the worktree, uncommitted: commit it with the work)`,
++     ...asList(t.fm.references).map((r) => `Reference: ${r}`),
++     ...asList(t.fm.documentation).map((d) => `Document: ${d}`),
++   ],
++   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
++   groups: [letter ?? 'F'],
++   writeScope: [laneDir, wt],
++   extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)], // the lens line stays last: the --spec merge below reads it there
++ };
++ let specPath = specGiven ?? path.join(laneDir, 'task.json');
++ if (!specGiven) {
++   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(spec)}`);
++   else fs.writeFileSync(specPath, JSON.stringify(spec, null, 2) + '\n');
++ } else {
++   // task-366 fix: a --spec the orchestrator supplies used to REPLACE the generated spec, so its rule-list block and per-list lens line never reached the brief (six launches, 2026-11-20).
++   // The given spec is kept as it is; a merged copy (rule block first in inputs, lens line last in extra, each only when not already there) is what brief.mjs reads. The given file is not rewritten.
++   const given = JSON.parse(fs.readFileSync(specGiven, 'utf8'));
++   const inputs = Array.isArray(given.inputs) ? given.inputs : [];
++   const extra = Array.isArray(given.extra) ? given.extra : [];
++   const merged = {
++     ...given,
++     inputs: inputs.some((x) => /Rule lists that govern this task/.test(String(x))) ? inputs : [spec.inputs[0], ...inputs],
++     extra: [...(extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]]), ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])], // task-436: the model line once
++   };
++   specPath = path.join(laneDir, 'task.merged.json');
++   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(merged)}`);
++   else fs.writeFileSync(specPath, JSON.stringify(merged) + '\n');
++ }
++ const briefOut = path.join(laneDir, 'BRIEF.md');
++ step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);
++ const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)'; // task-436: on the line before BRIEF-FILE, which stays last (lane-guard reads it)
++ if (dry) { console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
++ console.log(AGENT_MODEL);
++ console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`);
++ } catch (e) { fail('write', { stderr: String(e && e.message) }); }
++
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:290:200
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane review line names the lens set (task-358) > every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)
+AssertionError: expected 'Ticket: task-1 (<label from the G1 ti…' to contain 'under the SAME names'
+
+- Expected
++ Received
+
+- under the SAME names
++ Ticket: task-1 (<label from the G1 ticket>) · lane BL-T1 · stage 1
++ Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.
++ Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type build). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file docs/reports/reviews/task-1/context-r2.md, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): lens-code-review.md, lens-error-paths.md, each `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <diff file> --template .claude/review-templates/<lens file> --context docs/reports/reviews/task-1/context-r2.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"`. Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, `node scripts/analysis/rule-lists.mjs lens-input --list L --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-compliance-L` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <each input file> --template .claude/review-templates/lens-compliance.md --context docs/reports/reviews/task-1/context-r2.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > out-compliance-L[-pN].txt`. Files to produce, one per list: out-compliance-agents-s5-1to3.txt, out-compliance-agents-s7-s11.txt, out-compliance-queue-137.txt, out-compliance-orchestrator-doc17.txt, out-compliance-five-words.txt, out-compliance-plan-protocol.txt, out-compliance-inc-F.txt, out-compliance-ms-F.txt. The joined run (`lens-input --list rules --lists <the compliance list ids>`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused. Engineering lens, once per engineering list: the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool; files out-engineering-eng-all.txt. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly task-1; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens. REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/2026-11-19/BL-T1/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with `git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3 $(git log refs/heads/wf2/board --first-parent --reverse --format=%H -S@lane-BL-T1 -- 'backlog/tasks/task-1 - Launch-me.md' | head -1) HEAD -- 'scripts/analysis/x.mjs' 'src/tests/' ':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.mobile.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.web.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.admin.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/*.mobile.json' ':(exclude,glob)src/tests/fixtures/report-page/*.web.json' ':(exclude,glob)src/tests/fixtures/report-page/*.admin.json' ':(exclude,glob)src/tests/fixtures/report-page/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/props/*.mobile.json'` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (`lens-input --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree `node scripts/analysis/backlog-brief.mjs --task task-1 --lane BL-T1 --stage 1 --root /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-RwidpH/wt-t1 --board /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-proj-MddXbD > /dev/null`, which writes the next docs/reports/reviews/task-1/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round. Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below). Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:299:17
+    297|       expect(e).toContain('in-<same name>');
+    298|       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
+    299|       expect(e).toContain('under the SAME names'); // task-448 (RR-042…
+       |                 ^
+    300|       expect(e).toContain('fix-*.txt');
+    301|       // V2.WHOLE (task-410): lens-input splits the rule list at its h…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > a mobile file plus an API route: the brief names every list of both rows, each with its file, READ whole before planning (AC #2)
+AssertionError: expected 'THE RULE LISTS THAT GOVERN THIS TASK …' not to contain 'storage-doc16'
+
+- Expected
++ Received
+
+- storage-doc16
++ THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; 14 lists; READ each whole before planning, never hand-pick a clause):
++ - mobile-90: docs/specs/03-mobile/90_mobile_engineering_protocol.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - mobile-99: docs/specs/03-mobile/99_mobile_state_architecture.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - mobile-100: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - mobile-96: docs/specs/03-mobile/96_mobile_subscription.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - surface-136: docs/specs/02-web-admin/136_mcfrontend_handbook.md (sections: 2. Rules) [scripts/surfaces/generate-surface-handbook.mjs] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - eng-front: docs/specs/00_engineering_standards.md (sections: 1. Architecture & UI Standards) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)
++ - eng-shared: docs/specs/00_engineering_standards.md (sections: 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168) | API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row
++ - eng-back: docs/specs/00_engineering_standards.md (sections: 3. Database Management & Scaling; 9. Pipeline & Script Safety) [hand-written] why: API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row
++ - storage-doc16: backlog/docs/doc-16 - McStorage-policy-v2.md (whole file) [hand-written; status: draft, operator to confirm it binds] why: a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)
++ - five-words: docs/specs/01-pipeline/132_step_standard_handbook.md (sections: Glossary) [scripts/generate-step-handbook.mjs] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)
++ - plan-protocol: docs/specs/00-architecture/plan-protocol.md (whole file) [hand-written] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)
++ - inc-F: backlog/docs/increments/doc-1 - Increment-F-requirements.md (whole file) [hand-written] why: every task also gets the requirements document of its increment (the milestone group letter)
++ - ms-F: backlog/milestones/m-0 - increment-1·a-foundations-[f].md (sections: Objectives) [hand-written] why: every task also gets the objectives sections of its milestone (the milestone group letter)
++ THE TASK: cd /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-DSkNLu/wt-t1 && node_modules/.bin/backlog task view task-1 --plain; the G1 ticket /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-DSkNLu/lane-dir/G1-task-1.md (its context file /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-DSkNLu/wt-t1/docs/reports/reviews/task-1/context-r1.md is in the worktree, uncommitted: commit it with the work)
++ Reference: docs/a.md
++ Document: docs/b.md
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:401:24
+    399|       expect(inputs).toContain(l + ':');
+    400|     }
+    401|     expect(inputs).not.toContain('storage-doc16'); // task-448 (RR-042…
+       |                        ^
+    402|     expect(inputs).toContain('backlog/docs/increments/doc-1 - Incremen…
+    403|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt
+AssertionError: expected 'Ticket: task-1 (<label from the G1 ti…' not to contain 'out-compliance-storage-doc16'
+
+- Expected
++ Received
+
+- out-compliance-storage-doc16
++ Ticket: task-1 (<label from the G1 ticket>) · lane BL-T1 · stage 1
++ Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.
++ Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type build). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file docs/reports/reviews/task-1/context-r2.md, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): lens-code-review.md, lens-ux.md, lens-error-paths.md, lens-security.md, each `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <diff file> --template .claude/review-templates/<lens file> --context docs/reports/reviews/task-1/context-r2.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"`. Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, `node scripts/analysis/rule-lists.mjs lens-input --list L --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-compliance-L` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <each input file> --template .claude/review-templates/lens-compliance.md --context docs/reports/reviews/task-1/context-r2.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > out-compliance-L[-pN].txt`. Files to produce, one per list: out-compliance-mobile-90.txt, out-compliance-mobile-98.txt, out-compliance-mobile-99.txt, out-compliance-mobile-100.txt, out-compliance-mobile-96.txt, out-compliance-surface-136.txt, out-compliance-storage-doc16.txt, out-compliance-five-words.txt, out-compliance-plan-protocol.txt, out-compliance-inc-F.txt, out-compliance-ms-F.txt. The joined run (`lens-input --list rules --lists <the compliance list ids>`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused. Engineering lens, once per engineering list: the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool; files out-engineering-eng-front.txt, out-engineering-eng-shared.txt, out-engineering-eng-back.txt. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly task-1; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens. REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/2026-11-19/BL-T1/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with `git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3 $(git log refs/heads/wf2/board --first-parent --reverse --format=%H -S@lane-BL-T1 -- 'backlog/tasks/task-1 - Launch-me.md' | head -1) HEAD -- 'mobile/src/app/x.tsx' 'src/app/api/parcels/search/route.ts' ':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.mobile.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.web.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.admin.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/*.mobile.json' ':(exclude,glob)src/tests/fixtures/report-page/*.web.json' ':(exclude,glob)src/tests/fixtures/report-page/*.admin.json' ':(exclude,glob)src/tests/fixtures/report-page/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/props/*.mobile.json'` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (`lens-input --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree `node scripts/analysis/backlog-brief.mjs --task task-1 --lane BL-T1 --stage 1 --root /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-waUgOW/wt-t1 --board /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-proj-3G4JUk > /dev/null`, which writes the next docs/reports/reviews/task-1/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round. Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below). Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:406:23
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > a task with no Files line is refused, but a record-only task gets the every-task lists (the queue lists are off since task-448, RR-0418)
+AssertionError: expected 'THE RULE LISTS THAT GOVERN THIS TASK …' not to contain '137_mcqueue.md'
+
+- Expected
++ Received
+
+- 137_mcqueue.md
++ THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; 6 lists; READ each whole before planning, never hand-pick a clause):
++ - queue-137: docs/specs/00-architecture/137_mcqueue.md (whole file) [hand-written] why: queue, board and records are governed by Spec 137 and Spec 08 sections 7 and 11 (no Files line: the record-only default)
++ - agents-s7-s11: docs/specs/00-architecture/08_agents.md (sections: 7. Rules & economics; 11. Grounded Verification Protocol) [hand-written] why: queue, board and records are governed by Spec 137 and Spec 08 sections 7 and 11 (no Files line: the record-only default)
++ - five-words: docs/specs/01-pipeline/132_step_standard_handbook.md (sections: Glossary) [scripts/generate-step-handbook.mjs] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)
++ - plan-protocol: docs/specs/00-architecture/plan-protocol.md (whole file) [hand-written] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)
++ - inc-F: backlog/docs/increments/doc-1 - Increment-F-requirements.md (whole file) [hand-written] why: every task also gets the requirements document of its increment (the milestone group letter)
++ - ms-F: backlog/milestones/m-0 - increment-1·a-foundations-[f].md (sections: Objectives) [hand-written] why: every task also gets the objectives sections of its milestone (the milestone group letter)
++ THE TASK: cd /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-hnqWLs/wt-t1 && node_modules/.bin/backlog task view task-1 --plain; the G1 ticket /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-hnqWLs/lane-dir/G1-task-1.md (its context file /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-hnqWLs/wt-t1/docs/reports/reviews/task-1/context-r1.md is in the worktree, uncommitted: commit it with the work)
++ Reference: docs/a.md
++ Document: docs/b.md
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:554:24
+    552|     const { r, inputs } = dry({ files: null, type: 'record' });
+    553|     expect(r.status, r.stderr).toBe(0);
+    554|     expect(inputs).not.toContain('137_mcqueue.md');
+       |                        ^
+    555|     expect(inputs).toContain('plan-protocol.md');
+    556|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > a real launch with --spec (what the orchestrator runs) still writes the rule-list block and the per-list lens line into the brief it tells the lane to read
+AssertionError: expected 'FAKE BRIEF\n{"lane":"BL-T1","goal":"g…' not to contain 'storage-doc16'
+
+- Expected
++ Received
+
+- storage-doc16
++ FAKE BRIEF
++ {"lane":"BL-T1","goal":"g","inputs":["THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; 14 lists; READ each whole before planning, never hand-pick a clause):\n- mobile-90: docs/specs/03-mobile/90_mobile_engineering_protocol.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- mobile-99: docs/specs/03-mobile/99_mobile_state_architecture.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- mobile-100: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- mobile-96: docs/specs/03-mobile/96_mobile_subscription.md (whole file) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- surface-136: docs/specs/02-web-admin/136_mcfrontend_handbook.md (sections: 2. Rules) [scripts/surfaces/generate-surface-handbook.mjs] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- eng-front: docs/specs/00_engineering_standards.md (sections: 1. Architecture & UI Standards) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)\n- eng-shared: docs/specs/00_engineering_standards.md (sections: 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop) [hand-written] why: the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168) | API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row\n- eng-back: docs/specs/00_engineering_standards.md (sections: 3. Database Management & Scaling; 9. Pipeline & Script Safety) [hand-written] why: API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row\n- storage-doc16: backlog/docs/doc-16 - McStorage-policy-v2.md (whole file) [hand-written; status: draft, operator to confirm it binds] why: a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)\n- five-words: docs/specs/01-pipeline/132_step_standard_handbook.md (sections: Glossary) [scripts/generate-step-handbook.mjs] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)\n- plan-protocol: docs/specs/00-architecture/plan-protocol.md (whole file) [hand-written] why: every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)\n- inc-F: backlog/docs/increments/doc-1 - Increment-F-requirements.md (whole file) [hand-written] why: every task also gets the requirements document of its increment (the milestone group letter)\n- ms-F: backlog/milestones/m-0 - increment-1·a-foundations-[f].md (sections: Objectives) [hand-written] why: every task also gets the objectives sections of its milestone (the milestone group letter)","own input"],"outputs":["o"],"writeScope":["/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-35QE55"],"groups":["F"],"extra":["own extra","Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 \"NEVER run one generic pass\"; lens table in .claude/review-templates/README.md; task type build). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file docs/reports/reviews/task-1/context-r2.md, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees \"(no pasted context provided)\"): lens-code-review.md, lens-ux.md, lens-error-paths.md, lens-security.md, each `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <diff file> --template .claude/review-templates/<lens file> --context docs/reports/reviews/task-1/context-r2.md --section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\"`. Compliance lens, ONCE PER RULE LIST (the lists of the \"Rule lists that govern this task\" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, `node scripts/analysis/rule-lists.mjs lens-input --list L --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-compliance-L` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review <each input file> --template .claude/review-templates/lens-compliance.md --context docs/reports/reviews/task-1/context-r2.md --section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\" > out-compliance-L[-pN].txt`. Files to produce, one per list: out-compliance-mobile-90.txt, out-compliance-mobile-98.txt, out-compliance-mobile-99.txt, out-compliance-mobile-100.txt, out-compliance-mobile-96.txt, out-compliance-surface-136.txt, out-compliance-storage-doc16.txt, out-compliance-five-words.txt, out-compliance-plan-protocol.txt, out-compliance-inc-F.txt, out-compliance-ms-F.txt. The joined run (`lens-input --list rules --lists <the compliance list ids>`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused. Engineering lens, once per engineering list: the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool; files out-engineering-eng-front.txt, out-engineering-eng-shared.txt, out-engineering-eng-back.txt. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly task-1; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens. REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/2026-11-19/BL-T1/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with `git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3 $(git log refs/heads/wf2/board --first-parent --reverse --format=%H -S@lane-BL-T1 -- 'backlog/tasks/task-1 - Launch-me.md' | head -1) HEAD -- 'mobile/src/app/x.tsx' 'src/app/api/parcels/search/route.ts' ':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.mobile.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.web.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.admin.json' ':(exclude,glob)src/tests/fixtures/surfaces/*/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/*.mobile.json' ':(exclude,glob)src/tests/fixtures/report-page/*.web.json' ':(exclude,glob)src/tests/fixtures/report-page/*.admin.json' ':(exclude,glob)src/tests/fixtures/report-page/*.pdf.json' ':(exclude,glob)src/tests/fixtures/report-page/props/*.mobile.json'` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (`lens-input --context docs/reports/reviews/task-1/context-r2.md --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree `node scripts/analysis/backlog-brief.mjs --task task-1 --lane BL-T1 --stage 1 --root /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-35QE55/wt-t1 --board /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-proj-lccvEY > /dev/null`, which writes the next docs/reports/reviews/task-1/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round. Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below). Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with \"grounder owed\"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> \"<quote on that line>\" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.","Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek."]}
++
+
+ ❯ src/tests/backlog/backlog-lane.logic.test.ts:578:23
+    576|     expect(brief).toContain('Rule lists that govern this task');
+    577|     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile…
+    578|     expect(brief).not.toContain('storage-doc16');
+       |                       ^
+    579|     expect(brief).toContain('out-compliance-mobile-98');
+    580|     expect(brief).toContain('own input');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133
+AssertionError: expected [ 'surface-128', 'surface-126', …(6) ] to deeply equal [ 'five-words', 'plan-protocol', …(2) ]
+
+- Expected
++ Received
+
+  Array [
++   "surface-128",
++   "surface-126",
++   "agents-s7-s11",
++   "queue-137",
+    "five-words",
+    "plan-protocol",
+    "inc-S",
+    "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:31:53
+     29|   it('a panel record and an MF pre-registration get the four every-tas…
+     30|     const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
+     31|     expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
+       |                                                     ^
+     32|     expect(lists('scripts/analysis/bylaw-validation/coa-expected/prere…
+     33|     expect(lists('scripts/analysis/bylaw-validation/coa-expected/prere…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)
+AssertionError: expected [ 'policy-124-s2-s5', …(9) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+
+- Expected
++ Received
+
+  Array [
++   "policy-124-s2-s5",
++   "agents-s5-1to3",
++   "agents-s7-s11",
++   "queue-137",
+    "eng-all",
++   "orchestrator-doc17",
+    "five-words",
+    "plan-protocol",
+    "inc-S",
+    "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:37:15
+     35|   it('a generated report and a 127-* generated file get eng-all and th…
+     36|     const g = lists('docs/reports/generated/x.md');
+     37|     expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-…
+       |               ^
+     38|     expect(lists('docs/reports/generated/127-surface-registry.md')).to…
+     39|     const t = table().lists['policy-124-s2-s5']!;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed
+AssertionError: expected [ 'agents-s5-1to3', …(8) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+
+- Expected
++ Received
+
+  Array [
++   "agents-s5-1to3",
++   "agents-s7-s11",
++   "queue-137",
+    "eng-all",
++   "orchestrator-doc17",
+    "five-words",
+    "plan-protocol",
+    "inc-S",
+    "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:44:47
+     42|   });
+     43|   it('the policy report row says plainly that it has nearest lists and…
+     44|     expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'fiv…
+       |                                               ^
+     45|     const row = table().rows.find((r) => r.globs?.includes('docs/repor…
+     46|     expect(row.why).toContain('nearest lists, no governing spec: opera…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed
+AssertionError: expected [ 'agents-s5-1to3', …(8) ] to deeply equal [ 'eng-all', 'five-words', …(3) ]
+
+- Expected
++ Received
+
+  Array [
++   "agents-s5-1to3",
++   "agents-s7-s11",
++   "queue-137",
+    "eng-all",
++   "orchestrator-doc17",
+    "five-words",
+    "plan-protocol",
+    "inc-S",
+    "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:49:65
+     47|   });
+     48|   it('docs/reference (generated reference files) resolves to the neare…
+     49|     expect(lists('docs/reference/logic-variables-registry.md')).toEqua…
+       |                                                                 ^
+     50|     const row = table().rows.find((r) => r.globs?.includes('docs/refer…
+     51|     expect(row.why).toContain('no governing spec found: operator rulin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-136 only (task-448, RR-0421 item 1 a; the four specs came from the operator's "1-5 y", MORNING-DECISIONS.md:1520, item 2)
+AssertionError: expected [ 'surface-126', 'surface-128', …(2) ] to deeply equal [ 'surface-136' ]
+
+- Expected
++ Received
+
+  Array [
++   "surface-126",
++   "surface-128",
++   "surface-135",
+    "surface-136",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:104:23
+    102|     const row = table().rows.find((r) => r.id === 'surface-contract-ro…
+    103|     expect(row, 'row surface-contract-routes').toBeDefined();
+    104|     expect(row.lists).toEqual(['surface-136']);
+       |                       ^
+    105|     expect(row.why).toContain('left out for Increment 1·B');
+    106|     expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route get surface-136 and none of Specs 126, 128, 135 (task-448, RR-0421 item 1 a); an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none
+AssertionError: src/app/api/parcels/lookup/route.ts: surface-126: expected [ 'eng-back', 'eng-shared', …(9) ] to not include 'surface-126'
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:120:76
+    118|     for (const p of ['src/app/api/parcels/lookup/route.ts', 'src/app/a…
+    119|       expect(lists(p), p).toContain('surface-136');
+    120|       for (const l of four.slice(0, 3)) expect(lists(p), `${p}: ${l}`)…
+       |                                                                            ^
+    121|     }
+    122|     for (const p of ['src/app/api/leads/detail/[id]/route.ts', 'src/ap…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-412: review_followups.md has its Spec 08 home > the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)
+AssertionError: expected [ 'agents-s7-s11', 'queue-137', …(4) ] to deeply equal [ 'five-words', 'plan-protocol', …(2) ]
+
+- Expected
++ Received
+
+  Array [
++   "agents-s7-s11",
++   "queue-137",
+    "five-words",
+    "plan-protocol",
+    "inc-S",
+    "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:243:25
+    241|   };
+    242|   it('the real table: the file resolves through exactly one row, which…
+    243|     expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S…
+       |                         ^
+    244|     const rows = table().rows.filter((r) => r.id === 'review-followups…
+    245|     expect(rows).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-431: the engineering standards sent by side > S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not)
+AssertionError: scripts/steps/x.json: airtight-124a: expected [ 'step-132', 'airtight-124a', …(9) ] to not include 'airtight-124a'
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:285:245
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-431: the engineering standards sent by side > N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row)
+AssertionError: mobile-100: expected [ 'mobile-90', 'mobile-98', …(10) ] to not include 'mobile-100'
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:350:86
+    348|     // survive-the-fix: the hand edit of the mobile row keeps its six …
+    349|     expect(lists('mobile/x.ts'), 'mobile/x.ts').toEqual(expect.arrayCo…
+    350|     for (const l of ['mobile-100', 'mobile-96']) expect(lists('mobile/…
+       |                                                                                      ^
+    351|     const addFour = (r: Row431): Row431 => ({ ...r, lists: [...r.lists…
+    352|     const surf = resolveIn(withRow('surfaces', addFour), 'scripts/surf…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-431: the engineering standards sent by side > N2 (task-448, RR-0421 item 1 a reverses RR-0383): an edit to a surface spec gets Spec 136 and none of the four specs (planted: the four back on the specs-web-admin row)
+AssertionError: docs/specs/02-web-admin/126_maxbld_surface_standard.md: expected [ 'eng-all', 'agents-s7-s11', …(10) ] to not include 'surface-126'
+ ❯ handbookOnly src/tests/backlog/rule-lists-table.logic.test.ts:343:50
+    341|   const handbookOnly = (ids: string[], what: string) => {
+    342|     expect(ids, what).toContain('surface-136');
+    343|     for (const id of FOUR) expect(ids, what).not.toContain(id);
+       |                                                  ^
+    344|   };
+    345|   it('N1: the front-end and phone rows send the handbook only (planted…
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:363:104
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-431: the engineering standards sent by side > task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists
+AssertionError: step-pipeline: airtight-124a: expected [ 'step-132', 'airtight-124a', …(5) ] to not include 'airtight-124a'
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:371:65
+    369|     const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtigh…
+    370|     for (const r of table().rows) {
+    371|       for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toCont…
+       |                                                                 ^
+    372|       if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents…
+    373|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > a mobile file plus an API route names every list of both rows (AC #2, resolution half)
+AssertionError: expected [ 'mobile-90', 'mobile-98', …(12) ] to not include 'storage-doc16'
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:38:26
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > a src file that imports from scripts/lib/compute gets the step handbook list and no Airtight list (import row; task-448, RR-0421 item 3 a)
+AssertionError: expected [ 'eng-back', 'eng-shared', …(12) ] to not include 'airtight-124a'
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:52:116
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer no longer gets Specs 126 and 128 (task-448, RR-0421 item 1 a)
+AssertionError: expected [ 'eng-back', 'eng-shared', …(7) ] to not include 'surface-126'
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:60:74
+     58|     }
+     59|     const imp = JSON.parse(script(CLI, ['resolve', '--files', 'src/lib…
+     60|     for (const l of ['surface-126', 'surface-128']) expect(ids(imp)).n…
+       |                                                                          ^
+     61|     console.log(`ATTACK 12: RESOLVES: src/components, src/app, src/mid…
+     62|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/21]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface's own lists
+AssertionError: expected [ 'eng-all', 'agents-s7-s11', …(16) ] to not include 'agents-s7-s11'
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:67:99
+     65|     const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_…
+     66|     for (const l of ['eng-all', 'mobile-90', 'mobile-98', 'mobile-99',…
+     67|     for (const l of ['agents-s7-s11', 'queue-137', 'mobile-100', 'mobi…
+       |                                                                                                   ^
+     68|     const web = lists('docs/specs/02-web-admin/128_surface_standard_po…
+     69|     for (const l of ['eng-all', 'surface-136']) expect(web).toContain(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/21]⎯
+
+ Test Files  3 failed (3)
+      Tests  21 failed | 174 passed (195)
+   Start at  16:35:01
+   Duration  60.94s (transform 3ms, setup 14ms, collect 32ms, tests 70.76s, environment 0ms, prepare 66ms)
+

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.307Z file_sha256=2d47684d19aa5b9450ba58255b5d627e22d66118f1b440ea2f0bd5acc2e92168 prompt_sha256=7be18bcf943b07badaa7f3ff161e66186dc86668558151844f2caf77b3ac12d5
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card item (4) "round 1 is named by a history line (task-446, d04026fe5)" and "closes in TWO commits (Spec 137 Rule 3 as amended for lane build or fix tasks)" — scripts/analysis/backlog-lane.mjs:188 "the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit" — the brief now mandates a third commit before the closing commit, which no pasted ruling names and which sits against the two-commit close stated later in the same string — fix: have the history line carried in the closing commit's lane records, or cite the ruling that adds the extra commit.
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md:360 "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — scripts/analysis/backlog-lane.mjs:188 "the round-1 grounder and outcome files are kept outside the folder" — after round 2 the round-1 outcome lines live outside the lane dir the unchanged close check reads, so a CONFIRMED round-1 finding can close with no outcome line the check sees — fix: keep the round-1 outcome lines in the lane's TRIAGE.md from the closing commit, or have the round-2 GROUNDER.md carry one outcome line per round-1 finding.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json rows surface-importers "lists": [], surface-contract-routes "lists": ["surface-136"], specs-web-admin "lists": ["surface-136"], generated-127 "lists": ["eng-all"] — no row attaches the four specs, and the new table test pins it row by row.
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] and specs-mobile the same three protocols.
+
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json step-pipeline "lists": ["step-132", "eng-back", "eng-shared"], compute-import "lists": ["step-132"], storage "lists": [].
+
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"] unchanged, queue-records, generated-reports, policy-reports, reference-docs, review-followups, specs-docs reduced to eng-all or none.
+
+MET — RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file)" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name" — one string line, no logic change, no other hunk in that file.
+
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — scripts/analysis/backlog-lane.mjs:12 "a record-only task gets the every-task, increment and milestone lists only, since task-448" — comment line changed, matching the no_files_default bullet in scripts/analysis/rule-lists.json.
+
+MET — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — docs/reports/generated/rule-lists-by-kind.md "| total | 7 lists | | 128,198 | 7 |" and "| total | 14 lists | | 566,443 | 17 |" to "| total | 7 lists | | 128,198 | 7 |" — each section's removed rows sum exactly to its total drop (65,816; 65,816; 91,591; 14 rows to 7; 81,272) and the tooling growth 2,067 plus 618 matches the two dated notes.
+
+REJECT — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — that turning storage-doc16 off unbinds the McStorage policy the pasted note records ("I dont want to be bound with stale McStorage") — the later operator ruling names the turn-off, the policy's home (69a, 78, doc-16) is unchanged, and the loss is recorded in the 08_agents task-448 note as a known loss.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  211652ms (211.7s)
+📊 Tokens — total: 83964, input: 35438, output: 48526, reasoning: 47296

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.240Z file_sha256=75b58208d498a9a116968f730d8db1be37eff573f362612eacc5cf79cf5bea5c prompt_sha256=b58684cdfca95ab3b98e84583b5f453f694af56bed57bbe1738e069a5b382e53
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json row mobile "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] — keeps 90/98/99, drops 100/96; specs-mobile row pins the same.
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json row specs-web-admin "lists": ["surface-136"] — surface-126/127/128/135 gone from every changed row; rule-lists-table.logic.test.ts:361 pins no row attaches them.
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json row step-pipeline "lists": ["step-132", "eng-back", "eng-shared"] — the four Airtight lists and storage-doc16 removed; compute-import and storage rows likewise.
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json row queue-records "lists": [] — queue-137/agents-s7-s11 stripped outside lane-tools; rule-lists-table.logic.test.ts:363 pins only lane-tools keeps them.
+MET — RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file)" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names" — exactly one hunk, the layout string only.
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — scripts/analysis/backlog-lane.mjs:12 "record-only task gets the every-task, increment and milestone lists only, since task-448" — comment-only fix; by-law prereg keeps bylaw-133 as A5 MB and rule-lists-table.logic.test.ts:31 pin.
+MET — card item (1) "16 rows with a lists change; a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json" — scripts/analysis/rule-lists.json row panel-records "globs": ["docs/reports/panels/**", "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json"] — 16 lists changes counted, both not clauses and the glob present.
+MET — RR-0418 "the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table; nothing new is built" — scripts/analysis/rule-lists.json row generated-reports "lists": ["eng-all"] — row edits only; no new key, tool, hook or role; policy-124-s2-s5 attached to no row.
+REJECT — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — accused of a stale/incorrect page — the section totals recompute exactly (194,014 minus 65,816 = 128,198; 308,007 minus 91,591 = 216,416), so the page matches the edited table.
+REJECT — card item (4) "with one test line" — accused of touching more than one test line in backlog-lane.logic.test.ts — the PARITY fragment at line 290 is required so the brief and the refusal message both carry "never stands in for a round-1 name" that RR-0424 also installs.
+REJECT — card item (1) "16 rows with a lists change" — accused of a missed or extra row — the surfaces, bylaw and lane-tools edits change only why/not, and exactly 16 rows show a lists-array change, matching the card.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  118476ms (118.5s)
+📊 Tokens — total: 62407, input: 33709, output: 28698, reasoning: 27742

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.240Z file_sha256=9922e1d33fc6e972b482de37b049f0fb74ff03aed09c76bedbcabd27ee5bafbd prompt_sha256=de065108400581c4c08a0293b1b6e530069d54fdd030ac32f3614fb146f74bf3
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row" — scripts/analysis/rule-lists.json surface-importers "lists": [] and surface-contract-routes "lists": ["surface-136"] and specs-web-admin "lists": ["surface-136"] — Specs 126, 127, 128 and 135 are removed from every row.
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] — mobile-100 and mobile-96 are gone from the mobile and specs-mobile rows.
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json step-pipeline "lists": ["step-132", "eng-back", "eng-shared"] and storage "lists": [] — the Airtight ids and storage-doc16 are attached to no row.
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"] — only lane-tools keeps the queue, agent and doc-17 lists.
+MET — RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names" — exactly the one hunk in that file, and the one comment at check-lane-close.logic.test.ts:346.
+MET — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — scripts/analysis/rule-lists.json lane-tools "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] — MF pre-registrations are excluded while MB pre-registrations keep bylaw-133 and the tooling-row lists.
+MET — rule 4 dated note 2026-11-23 (task-448 FINAL.11) "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names" — the refusal clause now states the fix-round form.
+MET — RR-0418 "the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table" — scripts/analysis/rule-lists.json queue-records "lists": [] and "no_files_default" text "record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418" — a record-only task now gets the every-task lists only.
+
+DEFER severity=NIT — rule 4 dated note 2026-11-23 (task-448 FINAL.11) "a fix round re-makes every review file under the same names" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names" — the refusal says "every file" and labels the fix round "(r2)", while the pasted rule 6 note of 2026-11-22 calls round 2 "the second review round" — text only, read "every file" as the listed review files and drop "(r2)".
+
+VERDICT: PASS
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  131080ms (131.1s)
+📊 Tokens — total: 67007, input: 34414, output: 32593, reasoning: 31669

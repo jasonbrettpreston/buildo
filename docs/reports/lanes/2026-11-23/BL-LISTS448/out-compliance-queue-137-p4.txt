@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.404Z file_sha256=1b889cbdde935e9c83533e2037cfa7d8dd986720671a9ea3e1bf7b04b01092b7 prompt_sha256=612de633b6ec4ec6ad913bbdbca4a2af95f08569976aee11295cb16150f240e2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-448 card item (4) "scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line" — scripts/analysis/backlog-lane.mjs:188 "kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5)" — the brief mandates a storage location outside the lane folder, a fixed line format and an extra commit that neither the card's one sentence nor the pasted note "Rule 3 is amended to the two-commit close" names, and the close check reads only docs/reports/lanes/<date>/<lane>/ so a record kept outside it is never seen — trim the clause to the named sentence plus the history line, or add a dated note that authorises the location and the extra commit and reconcile it with the two-commit close.
+
+DEFER severity=MED — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — scripts/analysis/rule-lists.json lane-tools "an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them", pinned by src/tests/backlog/rule-lists-table.logic.test.ts "expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four)" — the prereg-MF records are excluded from the tooling row and from the bylaw row and take no list at all, so they do not stay on the tooling row — either keep the tooling lists for prereg-MF or state in the lane-tools why that only prereg-MB, not prereg-MF, is a by-law pre-registration record under RR-0426.
+
+DEFER severity=LOW — docs/specs/00-architecture/08_agents.md new note "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names" — scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448) or a Files path no row matches is refused before any write, the path named." — the only launch-script comment this change touches says nothing about fix rounds, so the note points at a sentence that does not exist — drop that third item or name the layout text instead of a comment.
+
+MET — queue-137 task-448 note "the queue-records row, and with it a record-only task with no Files line, no longer attaches Spec 137 or Spec 08" — scripts/analysis/rule-lists.json queue-records row — lists is [] and the record-only default is recorded in the rule 3 text and in backlog-lane.mjs:12.
+
+MET — Spec 08 task-448 note "Off on every row: Specs 126, 127, 128 and 135 ... Specs 100 and 96, the four Airtight lists, doc-16" — scripts/analysis/rule-lists.json surface-importers, surface-contract-routes, storage, step-pipeline, compute-import, mobile, specs-mobile, specs-web-admin — every named list is removed from every row the note names and the added test pins it.
+
+MET — Spec 08 task-448 note "Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137 and doc-17 stay on the lane-tools row only" — scripts/analysis/rule-lists.json lane-tools, specs-docs, generated-reports, generated-127, review-followups rows — lane-tools keeps agents-s5-1to3, agents-s7-s11, queue-137 and orchestrator-doc17 and each other row drops them.
+
+MET — RR-0424 "the only edit to that file" — scripts/hooks/check-lane-close.mjs:502 — one hunk, the layout string text only, with the single comment change at src/tests/backlog/check-lane-close.logic.test.ts:346.
+
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — scripts/analysis/backlog-lane.mjs:12 — the parenthetical now reads "a record-only task gets the every-task, increment and milestone lists only, since task-448", comment only.
+
+MET — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — docs/reports/generated/rule-lists-by-kind.md rows and totals — the totals recomputed (128,198 / 161,128 / 216,416 / 128,198 / 214,415 / 84,183) equal the sums of the lists each section now names.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  175357ms (175.4s)
+📊 Tokens — total: 75472, input: 35078, output: 40394, reasoning: 39233

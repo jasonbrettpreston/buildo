@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.309Z file_sha256=56c45dd5e645a4a1bee99ab75ec95790762f0f66bc8d1f7c109ba1c19312b3cf prompt_sha256=75eba2fdfc7ebe95308a3bbc68ed28f4ec0002788a0fc49d2a13f220f156e458
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=NONE — n/a (no CRIT/HIGH found)
+(see DEFER lines below)
+
+DEFER severity=LOW — task-448 item (1) "a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json" — scripts/analysis/rule-lists.json "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] vs "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json" — the exclusions use `**` (matches nested paths) while the panel-records catch uses `*.json` (flat files only), so a nested prereg-MF file would be excluded from bylaw and lane-tools, match no row and be refused at launch — make both patterns the same glob (both `prereg-MF-**`, or both flat) so every excluded file still resolves.
+DEFER severity=NIT — task-448 item (4) "one sentence ... with one test line" — src/tests/backlog/backlog-lane.logic.test.ts:288 "for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt', 'never stands in for a round-1 name']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag);" with :300 "expect(e).toContain('under the SAME names');" — two edits are made to this test where item (4) names one test line and RR-0424 covers only the check-lane-close comment — cite the PARITY-fragment edit under RR-0424, or drop it, to keep the test edit at the one line the card names.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json (surface-contract-routes, specs-web-admin) — those rows now carry surface-136 only, and rule-lists-table.logic.test.ts:360 pins that no row attaches the four.
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json (mobile, specs-mobile) — both rows drop 100 and 96 and keep 90/98/99.
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json (step-pipeline, compute-import, storage) — the airtight-* entries and storage-doc16 are removed from the lists.
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json (queue-records, generated-reports, generated-127, policy-reports, reference-docs, specs-docs) — lane-tools keeps the agent/queue/doc-17 lists, every other row drops them.
+MET — RR-0424 "changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 ... with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — scripts/hooks/check-lane-close.mjs:502 and src/tests/backlog/check-lane-close.logic.test.ts:346 — exactly one message string and one comment change, nothing else in either file.
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only); by-law pre-registration records stay on the tooling row" — scripts/analysis/backlog-lane.mjs:12 — only the record-only sentence in the comment changed; prereg-MB stays on lane-tools (attested by the A5 MB resolution in the task notes).
+MET — task-448 item (4) "a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5)" — scripts/analysis/backlog-lane.mjs:188 — the layout sentence states the same-names overwrite and the "Review round 1:" history line.
+MET — task-448 item (1) "16 rows with a lists change; a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json" — scripts/analysis/rule-lists.json — exactly the 16 rows change a lists value, the two `not` keys are added, and the panel-records glob gains the prereg-MF pattern.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  107064ms (107.1s)
+📊 Tokens — total: 60915, input: 35115, output: 25800, reasoning: 24704

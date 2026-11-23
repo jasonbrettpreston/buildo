@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T21:51:39.239Z file_sha256=dc0aba2ff122ca7a98c94b7c5c2062b88afb3104518cc8303e462b447c7e1359 prompt_sha256=eedc0219b1b3dd5316a5cd1ff2682a02602f92bd7b911449598a6efa70c9899e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs "<quoted from the pasted layout: \"in a commit of its own before the closing commit (task-446, d04026fe5)\">" — the same string already tells the lane "A lane build or fix task closes in TWO commits" (work, then closing), so the round-1 summary line now instructs a third commit that neither the two-commit sentence nor the close check's per-commit path rule is stated to allow — fix: say the round-1 line goes into the work commit (or the closing commit's task file) and drop "in a commit of its own", unless the close check is proven to accept the intermediate commit
+
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts "const t = table().lists['policy-124-s2-s5']!;" — after this change no row attaches policy-124-s2-s5 (the new row test asserts OFF includes it), so the three assertions on `t.file` / `t.sections` pin an orphan list definition inside a test about generated reports and no longer test resolution — fix: delete those three lines from this test (keep the definition pinned in a lists-map test if it must stay)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "for (const row of ['mobile', 'api-lib', 'storage'])" — the storage row now has `"lists": []`, so this loop body never runs for 'storage' and the assertion silently stopped covering that row while the test still lists it — fix: drop 'storage' from the array or assert the storage path resolves to the four every-task lists
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "{ ...l, 'out-code-review-r2.txt'" — the r2 mutate spreads the base lane, so round-1 files are always present; nothing in this diff exercises the new message claim that an rN file "never stands in for a round-1 name" (the case with only an r2 file present), so the message asserts behaviour the pasted tests do not check — fix: add a scenario with the r2 files added and the matching round-1 files removed and expect a refusal naming the round-1 name
+
+DEFER severity=NIT — scripts/analysis/rule-lists.json "this row attaches no list" — the surface-importers row keeps `imports_from` with an empty `lists`, so at launch and close every src/lib and src/app/api file is still read for imports to add zero lists: inert config with a runtime cost — fix: either delete the row (after confirming those paths still match api-lib, else launches refuse "matched by no row") or state in the why that it is kept only as a resolution anchor
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| total | 7 lists | | 128,198 | 7 |" (storage) — this total looks like the pipeline table's total copied in, since storage lost eight rows — it is correct: the same seven lists remain and 5,377+37,472+47,779+5,367+8,825+20,869+2,509 = 128,198, and the other five table totals (161,128, 216,416, 214,415, 84,183) also sum from their listed rows
+
+REJECT — src/tests/backlog/rule-lists-table.logic.test.ts "for (const l of four.slice(0, 3))" — a magic slice(0, 3) looks like an off-by-one or an accidental cut — FOUR is ['surface-126','surface-128','surface-135','surface-136'], so slice(0, 3) is exactly the three removed specs and surface-136 stays in the positive assertion
+
+VERDICT: PASS on code correctness
+
+---
+⏱  111840ms (111.8s)
+📊 Tokens — total: 59014, input: 32971, output: 26043, reasoning: 25192

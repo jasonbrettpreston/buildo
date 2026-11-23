@@ -4,11 +4,11 @@ title: >-
   FINAL.11 Review cost: each task is reviewed against the right rule lists only
   (rule table rows turned off), and the launch brief states the round-2 record
   form
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T21:31:00Z'
+updated_date: '2026-11-23T22:15:00Z'
 labels:
   - McFix
   - McFix Final
@@ -34,6 +34,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-LISTS448/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-LISTS448/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-LISTS448/TRIAGE.md
 type: build
 ordinal: 148012
 ---
@@ -521,4 +524,32 @@ rg#5 MED folded the step-pipeline ro
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-LISTS448, worktree /Users/brettpreston_macmini/Buildo-wt-lists448, branch wf1/inc1b-lists448), RR-0240
+
+2026-11-23 BL-LISTS448: test edits of plan section 4 written first (rule-lists.logic, rule-lists-table.logic, backlog-lane.logic); red attempt through the real pre-commit hook, output saved as red.out in the lane dir.
+
+2026-11-23 BL-LISTS448: STOPPED before the work commit. Red attempt seen at the designed assertions (red.out: 21 failed, the three A1 strings present). The work commit was refused by the pre-commit related run: two tests the plan does not edit went red because of the plan's exact texts: (1) src/tests/backlog/backlog-lane.logic.test.ts:280 expect(e).not.toContain('TRIAGE.md') against the new brief sentence of plan 3.3 ('then a new GROUNDER.md and TRIAGE.md'); (2) src/tests/backlog/rule-lists.logic.test.ts:986 (task-423 (e) counts pinned at most): joined compliance files at material 29700 are 4, bound 3, after the Spec 08 and Spec 137 dated notes of 3.4-3.6 grow the agents-s7-s11 and queue-137 lists. Edits are staged, not committed; plan amendment owed. Task stays RUNNING.
+
+Dated note 2026-11-23 (M-246; plan amendments ruled by the plan grounder Cairn-Ground-P448 after the lane BL-LISTS448 stopped at the work commit; the Implementation Plan above is not edited, the plan hash being read only by the launch gate): two tests the plan does not edit went red on the plan's exact texts. (1) backlog-lane.logic.test.ts:280 pins that the lane brief never names the file TRIAGE.md (task-407 fold, bbb0b31f2): the 3.3 sentence reads "then a new GROUNDER.md and its outcome file" and "the round-1 grounder and outcome files are kept outside the folder"; the rest of 3.3 is as planned, and the pin is unchanged. (2) rule-lists.logic.test.ts:986 pins at most 3 joined compliance parts for the lane-tools Files lines at material 29,700: with the plan's three dated notes (5,133 characters) it is 4 parts, without them 3 (measured in memory; room without notes 3,471 characters). The notes 3.4 to 3.6 are shortened to 2,679 characters (1,564, 499 and 616), still recording RR-0418, RR-0421 to RR-0424 and RR-0426 with his verbatim words and MORNING-DECISIONS.md lines, the reversal of RR-0383, each superseded phrase and the known loss; the parts are 3 again, with 786 characters of room. The bound is not re-pinned. Three departures of the lane are confirmed: the escaped apostrophe in the title at rule-lists-table.logic.test.ts:100 (same string at run time), longer anchors for the non-unique old texts at rule-lists-table.logic.test.ts :240 and :243, :43 and rule-lists.logic.test.ts :73, and the 11.2 note placed between the two CRLF blank lines like the note above it. The output grounder rules these deviations again on the diff.
+
+Acceptance at work head b2591b815 (lane items):
+A1 red.out: 'Tests  21 failed | 174 passed (195)'; strings found: under the SAME names 4, never stands in for a round-1 name 3, mobile-100 9
+A2 validate: rule-lists: ok 58 lists, 23 rows exit=0
+A3: mobile-90, mobile-98, mobile-99, surface-136, eng-front, eng-shared, five-words, plan-protocol, inc-S, ms-S
+A4: eng-all, surface-136, five-words, plan-protocol, inc-S, ms-S
+A5 MF: five-words, plan-protocol, inc-S, ms-S
+A5 MB: bylaw-133, agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S
+A6: check-tasks: open 302: resolve 102, not yet resolvable 200; bad lines: 0
+A7: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current exit=0
+A12: step-132, eng-back, eng-shared, five-words, plan-protocol, inc-S, ms-S
+Green: work commit b2591b815 hook tail 'Tests  373 passed (373)'. A8-A11, A13, A14 are the orchestrator's (not run).
+
+2026-11-23 BL-LISTS448: output review round 1 done on b2591b815 with fresh context context-r3.md: 28 DeepSeek lens outputs (8 compliance lists in 19 parts, eng-all in 7 parts, code-review, error-paths), 61 finding lines (HIGH 3, MED 19, LOW 33, NIT 4, NONE 2), listed untriaged in docs/reports/lanes/2026-11-23/BL-LISTS448/FINDINGS.md. Grounder owed. Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed: the table now attaches only the ruled lists (RR-0418, RR-0421); the brief and the close refusal clause state the round-2 same-names form (RR-0424); the record-only comment corrected (RR-0426); three short dated notes; page regenerated; work commit b2591b815, hook tail Tests 373 passed (373); red in docs/reports/lanes/2026-11-23/BL-LISTS448/red.out
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 18 pile; grounder docs/reports/lanes/2026-11-23/BL-LISTS448/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-LISTS448/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

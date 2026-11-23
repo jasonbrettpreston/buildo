@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.310Z file_sha256=8775d59620b78e05d1e9e984d388492a559433c57e67f918d970ee0e9027f4c8 prompt_sha256=191beefe9fd77fcaee61dc174c1ff16673a1b57974f9a82185dc41184edcf774
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json surface-contract-routes/specs-web-admin/generated-127 rows — each now carries only "surface-136" or "eng-all"; no 126/127/128/135 survives on any row, and the new guard test at rule-lists-table.logic.test.ts:368 pins it.
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile and specs-mobile rows — mobile now ["mobile-90","mobile-98","mobile-99","surface-136","eng-front","eng-shared"], specs-mobile ["mobile-90","mobile-98","mobile-99","surface-136"]; A3 matches.
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json step-pipeline (["step-132","eng-back","eng-shared"]), compute-import (["step-132"]), storage ([]) — none of airtight-124a/v3-122/v2-122/122a or storage-doc16 remains.
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json lane-tools keeps agents-s5-1to3/agents-s7-s11/queue-137/orchestrator-doc17; queue-records, specs-docs, generated-reports, generated-127, policy-reports, reference-docs, panel-records, review-followups all drop them.
+MET — RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — scripts/hooks/check-lane-close.mjs:502 layout const is reworded only; the sole other change is the comment at check-lane-close.logic.test.ts:346.
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only); by-law pre-registration records stay on the tooling row" — scripts/analysis/backlog-lane.mjs:12 record-only comment corrected; the lane-tools `not` excludes only prereg-MF, so prereg-MB keeps the lane-tools lists.
+MET — plan-protocol dated note 2026-11-20 "a single lane task takes the Spec 08 section 7 lens set ... plus its separate grounder" — scripts/analysis/backlog-lane.mjs lensLine out/eng lists and the grounder paragraph are untouched by this diff; no lens removed.
+MET — Card item (5) "the plan grounder writes the fold check itself, once, after the last fold" — docs/specs/00-architecture/08_agents.md:491 dated 2026-11-23 note records exactly that and leaves the :486 scope and launch gate unchanged.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+
+---
+⏱  130720ms (130.7s)
+📊 Tokens — total: 64939, input: 33584, output: 31355, reasoning: 30600

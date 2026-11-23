@@ -287,7 +287,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
   it('PARITY: the layout fragments the brief states are the ones the close check refusal states (names, subfolder examples, the rN round form, fix-*.txt)', () => {
     const src = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
     for (const p of ['scripts/analysis/backlog-lane.mjs', 'scripts/hooks/check-lane-close.mjs']) {
-      for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag);
+      for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt', 'never stands in for a round-1 name']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag); // task-448 (RR-0424): the brief and the refusal message say the same
     }
   });
   it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
@@ -296,6 +296,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain(LAYOUT_NAMES);
       expect(e).toContain('in-<same name>');
       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
+      expect(e).toContain('under the SAME names'); // task-448 (RR-0422): a fix round re-makes the review files under the same names
       expect(e).toContain('fix-*.txt');
       // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
       expect(e).toContain('The compliance lens reviews the WHOLE change');
@@ -397,12 +398,13 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
       expect(inputs, row + ': ' + l).toContain(TABLE.lists[l]!.file);
       expect(inputs).toContain(l + ':');
     }
-    expect(inputs).toContain('draft, operator to confirm it binds');
+    expect(inputs).not.toContain('storage-doc16'); // task-448 (RR-0421 item 3 a)
     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
   });
   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
-    for (const l of ['mobile-98', 'storage-doc16', 'inc-F']) {
+    expect(extra).not.toContain('out-compliance-storage-doc16'); // task-448 (RR-0421 item 3 a)
+    for (const l of ['mobile-98', 'inc-F']) {
       expect(extra).toContain('out-compliance-' + l);
       expect(extra).not.toContain('plan-compliance-' + l);
     }
@@ -545,11 +547,12 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(fs.existsSync(f.wt)).toBe(false);
     expect(statusOf(f)).toBe('LATER');
   });
-  it('a task with no Files line is refused, but a record-only task gets the queue lists', () => {
+  it('a task with no Files line is refused, but a record-only task gets the every-task lists (the queue lists are off since task-448, RR-0418)', () => {
     refused(lane(fixture({ files: null })), /no Files/);
     const { r, inputs } = dry({ files: null, type: 'record' });
     expect(r.status, r.stderr).toBe(0);
-    expect(inputs).toContain('137_mcqueue.md');
+    expect(inputs).not.toContain('137_mcqueue.md');
+    expect(inputs).toContain('plan-protocol.md');
   });
   it('ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused', () => {
     const f = fixture();
@@ -572,7 +575,7 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const brief = fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8');
     expect(brief).toContain('Rule lists that govern this task');
     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
-    expect(brief).toContain('storage-doc16');
+    expect(brief).not.toContain('storage-doc16');
     expect(brief).toContain('out-compliance-mobile-98');
     expect(brief).toContain('own input');
     expect(brief).toContain('own extra');

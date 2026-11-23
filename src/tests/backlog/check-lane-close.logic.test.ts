@@ -343,7 +343,7 @@ describe('close check: where the lane report files go (task-407 V2.LAYOUT)', () 
   it('the same files directly in the lane dir pass (the layout the message names is the one the check reads)', () => {
     expect(scenario().status).toBe(0);
   });
-  // the form the brief gives for a later round: out-<lens>[-<list id>]-r2.txt beside the round-1 file (green-both: it holds before and after this task's edit; it pins what the brief now promises)
+  // what the close check does with a round file out-<lens>[-<list id>]-r2.txt: it reads it like any out- file and it never stands in for a round-1 name; the brief and the refusal message now say the same (task-448, RR-0424; green-both: it holds before and after this edit)
   it('SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced', () => {
     const r2 = (l: Lane): Lane => ({ ...l, 'out-code-review-r2.txt': hdr('lens-code-review.md', null) + body(true), 'in-out-code-review-r2.txt': 'input of the round-2 review\n', 'out-compliance-first-r2.txt': hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string) + body(true), 'in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt'] as string });
     expect(scenario({ mutate: r2 }).status).toBe(0);

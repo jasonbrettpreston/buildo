@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.240Z file_sha256=5c6b097a48b8089c49d843e1ea5c81ee3ca88dcd9be039ede42b60d1602e5bca prompt_sha256=c753f439f0d3f2c17f1428e5d0bd28b807353a1d86f29f682f343fcfd4bb314e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-agents-s5-1to3-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0421 note 2026-11-21 "a round file -rN of it counts as joined" — scripts/hooks/check-lane-close.mjs:502 "an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name" — the new refusal text says a round file never stands in for a round-1 name, while the pasted clause says a round file of the joined set counts as joined, and no added dated note reconciles the two — add one clause stating whether an -rN joined file alone satisfies the close, or reword the message to match.
+MET — RR-0421 item 1a "1 a old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json surface-contract-routes and specs-web-admin — all four surface specs dropped from every row, surface-136 kept.
+MET — RR-0421 item 2a "2 a phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile and specs-mobile — both phone rows keep the three protocols and drop 100 and 96.
+MET — RR-0421 item 3a "3 a the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json step-pipeline, compute-import, storage — Airtight lists removed and the storage row now attaches no list.
+MET — RR-0421 item 4a "4 a the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json lane-tools vs queue-records, specs-docs, generated-reports — only lane-tools keeps agents-s5-1to3, agents-s7-s11, queue-137, orchestrator-doc17.
+MET — RR-0424 "changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file)" — scripts/hooks/check-lane-close.mjs:502 — one line changed, text only, no other hunk in that file.
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — scripts/analysis/backlog-lane.mjs:12 — comment now names the every-task, increment and milestone lists.
+MET — RR-0418 "nothing new is built" — scripts/analysis/rule-lists.json and scripts/analysis/backlog-lane.mjs — no new tool, hook, key or role added, only row data and text.
+MET — RR-0421 note 2026-11-21 "The default stays one compliance run per rule list" — scripts/analysis/backlog-lane.mjs:187 "Compliance lens, ONCE PER RULE LIST" — per-list default kept, joined run still named as accepted but not default.
+REJECT — RR-0383 "tasks that edit the surface specs keep those specs attached" — the change is accused of dropping the four surface specs from the specs-web-admin row — not a real issue because RR-0421 item 1a (pasted card) explicitly reverses RR-0383 and the added notes record the reversal.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  163807ms (163.8s)
+📊 Tokens — total: 74035, input: 34712, output: 39323, reasoning: 38548

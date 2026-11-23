@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.406Z file_sha256=8391e0912f142846af9dc4042ba64d8805d25374b2be78e08872982d19e6e963 prompt_sha256=e8eb726e66af026709e21b41c7bf5c377abcf47c66da7f77fe9dc27e8ce0a0ec
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 137 note 2026-11-20 "a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — scripts/analysis/backlog-lane.mjs:188 "the round-1 grounder and outcome files are kept outside the folder and named by one line \"Review round 1: <counts>; grounder <path>; triage <path>\"" — round-1 CONFIRMED and CONFLICT ids are no longer closed in a TRIAGE.md the lane directory holds (only round 2's are), and no dated note in this diff amends that pasted clause, so the close's outcome guard cannot see round-1 ids — add a Spec 137 dated note amending the 2026-11-20 clause to the round-1-outside form, or keep round 1's TRIAGE.md in the lane directory beside the hash record.
+
+DEFER severity=MED — Spec 137 note 2026-11-20 "Rule 3 (the two-commit close) is otherwise unchanged" — scripts/analysis/backlog-lane.mjs:188 "added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5)" — the same layout string says the lane "closes in TWO commits", so the new sentence orders a third commit (work, history line, close) that no pasted ruling names and that the two-commit close does not have — fold the history line into the work commit or the closing commit's task file, or get the third commit named by a ruling and a spec note.
+
+DEFER severity=LOW — Spec 08 task-448 note "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448)" — the only launch-script comment this diff edits says nothing about the fix round, so the dated note records a comment that does not exist — drop "and one launch-script comment" from the note or make that comment state the round-2 form.
+
+DEFER severity=LOW — task description "including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it)" — docs/specs/00-architecture/08_agents.md "the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan; no separate fold-check agent is run. The scope of :486 ... and the launch gate (check-lane-close.mjs:692-712) are unchanged." — the grounder's 11.2 ruling and the gate's allowance cannot see in the pasted context, and the Implementation Notes say "A8-A11, A13, A14 are the orchestrator's (not run)", so the note lands before its own condition is shown — hold the note until the 11.2 ruling and the gate check that allows a grounder-written FOLD-CHECK.md are pasted.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json "lists": ["surface-136"] on specs-web-admin and surface-contract-routes, panel-records "lists": [].
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile row "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"].
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — step-pipeline "lists": ["step-132", "eng-back", "eng-shared"], storage "lists": [].
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — lane-tools keeps queue-137, agents-s5-1to3, agents-s7-s11 and orchestrator-doc17, generated-reports "lists": ["eng-all"].
+MET — Spec 137 note 2026-11-21 "no table key is added" — scripts/analysis/rule-lists.json reuses the existing key "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] on the bylaw and lane-tools rows.
+MET — RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file)" — the layout string at :502 is the only change in that file.
+MET — Spec 137 note 2026-11-21 "a list is never trimmed in either form" — scripts/analysis/backlog-lane.mjs:185 "each pasted WHOLE ahead of the material; a list is never trimmed" is unchanged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+Rules met: Rule 13, Rule 14
+
+---
+⏱  188332ms (188.3s)
+📊 Tokens — total: 77999, input: 35377, output: 42622, reasoning: 41422

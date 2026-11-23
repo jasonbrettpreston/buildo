@@ -1,0 +1,1132 @@
+GATE OK
+[step-churn-complexity] clean — no drift at window_end=b87f62d
+[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest
+src-sql-ledger: fresh, 94 file(s) (62 static, 30 interpolated, 2 not_postgres), closed set holds, every column is in the catalog (uncatalogued, skipped: mv_monthly_permit_stats, parcel_lot_view)
+STANDARDIZED: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+OBSERVABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; snapshot_age_days 46)
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135 (ii 0 · iv unmapped 135); eval_mismatches_adjudicated 0; expert_rulings_against 0; agreement_rate n/a agreement≠correctness; code_linkage=declared-only)
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+SCALABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+PHASE 1: NOT_DONE
+  report-only docs/reference/bylaw-code-findings.md STALE (never a blocker; --write refreshes it)
+  report-only twins: groups 106 · differ 52 (value 1 · label 51; 191 units) — never a blocker
+render docs/reference/bylaw-provisions.json sha256 34cc3f789d202679287ae84989dedbf8801d5add1a16f32921ed5b49cf05ec57
+render docs/reference/bylaw-provisions.md sha256 0dc9cf5a2674d9db69335cf883adf4b0b6434898b4388382a22922fccaa50178
+generate-ingest-batch: 11 ingestor batch values, 0 drifted
+generate-sharing-phase: 40 phase maps, 0 drifted
+✔ src/features/admin-controls/generated/logic-variable-groups.json is up to date
+✔ docs/reference/logic-variables-registry.md is up to date
+[generate-assert-schema-probe-lists] clean — no drift (337 declared names)
+[generate-assert-parcel-sanity-descriptor] clean — no drift (46 checks, 1 invariants, 8 plausibility, 38 logic_variables)
+[generate-assert-global-coverage-descriptor] clean — no drift (305 checks, 25 logic_variables, 25 read tables)
+[generate-assert-data-bounds-descriptor] clean — no drift (52 checks, 33 logic_variables, 16 read tables)
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+[generate-conversion-roadmap] clean — no drift
+[generate-programme-backlog] clean — no drift
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+[bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 70bcf4259d2d, 1937 input files)
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+[spec-split-check] clean — 43 move(s) verified, 11553 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+SELF-TEST PASSED — 7 known-bad fixtures fired, 1 negative control clean, 4 marker assertions.
+No drift — 533 field rows across 20 categories.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lists448
+
+ ✓ src/tests/system-map.infra.test.ts (13 tests) 261ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  16:48:58
+   Duration  446ms (transform 32ms, setup 8ms, collect 7ms, tests 261ms, environment 0ms, prepare 30ms)
+
+PASS — 14 live doc(s)
+[step-validate] programme: blocks batching: 0 (scripts/steps/_schema/programme-items.json; npm run programme-backlog for the full table)
+[step-validate] #43 (commit) PASS OWNER-SPEC-DIFF: 0 file(s) appended to converted[] (index vs HEAD) — nothing to check
+[step-validate] --staged: no converted/pending step touched by this commit — nothing to validate, exiting clean.
+→ lint-staged could not find any staged files matching configured tasks.
+footgun[multi-transaction] (info): scripts/backfill-realtor-permit-trades.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-lifecycle-phase.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-permits.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-scope.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/close-stale-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-cost-estimates.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-opportunity-scores.js has 9 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-phase-calibration.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-storey-norms.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-timing-calibration-v2.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-trade-forecasts.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/dispatch-notifications.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/enrich-wsib.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/link-coa.js has 7 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/load-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/migrate-to-lead-id.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/update-tracked-projects.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+note: compute-purity: no declared set for scripts/lib/address-normalizers.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address-points-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/archetypes.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-data-bounds-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-global-coverage-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-parcel-sanity-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/build-norms.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-lot-row.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-materialize.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-resolution.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-cost-model.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-link-sql.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/aic-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/parse-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-scope-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-trade-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/assert-schema.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/catalogue.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/disclosures.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/layer2-cells.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/neighbour-facts.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/renovation.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/rows.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/split.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/two-structure.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/dead-tuple-ratio.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/lifecycle-phase.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/max-build.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+footgun[step-shape] (info): 29/37 unconverted manifest step files violate the frozen shape (Spec 122 §5.1). This is the expected pre-conversion state and does NOT gate — see scripts/steps/_schema/converted.json.
+footgun[step-shape] (info): scripts/load-coa.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/quality/assert-coa-freshness.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/link-coa-to-parcels.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/enrich-coa-zoning.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-scope.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-trades.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/compute-coa-cost-estimates.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/load-coa-notices.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+✅ Step-shape gate clean (29 converted step file(s) enforced; 42 compute module(s) enforced against scripts/ast-grep-rules/compute-shape.yml; 1 compute-purity site(s), all ledger-allowed).
+✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)
+
+> buildo@0.1.0 typecheck
+> tsc --noEmit
+
+
+> buildo@0.1.0 lint
+> next lint
+
+`next lint` is deprecated and will be removed in Next.js 16.
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+
+./src/components/FreshnessTimeline.tsx
+493:42  Warning: The ref value 'optimisticTimerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'optimisticTimerRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+./src/components/search/FilterPanel.tsx
+114:6  Warning: React Hook useEffect has a missing dependency: 'updateFilter'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/admin-controls/components/ControlPanelShell.tsx
+44:52  Warning: React Hook useMemo has unnecessary dependencies: 'draftConfig' and 'productionConfig'. Either exclude them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/leads/api/envelope.ts
+33:6  Warning: 'SuccessStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/leads/api/types.ts
+8:15  Warning: 'LeadFeedQuery' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/builders/extract-contacts.ts
+49:7  Warning: 'PHONE_REJECT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/classification/rules.ts
+53:7  Warning: 'TIER_2_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:7  Warning: 'STRUCTURE_TYPE_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+131:7  Warning: 'TIER_3_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/generated/schema.ts
+714:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1986:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2051:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2183:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2270:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2947:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/ssl-config.ts
+79:5  Warning: Unused eslint-disable directive (no problems were reported from 'no-new').
+
+./src/lib/export/csv.ts
+5:10  Warning: 'getClient' is defined but never used.  @typescript-eslint/no-unused-vars
+6:10  Warning: 'logError' is defined but never used.  @typescript-eslint/no-unused-vars
+14:7  Warning: 'UTF8_BOM' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:10  Warning: 'buildFilterClauses' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/parcels/lot-size-entry.ts
+246:7  Warning: 'PAGE_FLAGS' is assigned a value but only used as a type.  @typescript-eslint/no-unused-vars
+
+./src/tests/aeh-write-plan.logic.test.ts
+44:7  Warning: 'CLOCK_MS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/api-leads-view.infra.test.ts
+266:27  Warning: '_r' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-parcel-sanity.infra.test.ts
+25:7  Warning: 'audit' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-schema-ledger-locks.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+40:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:149  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/backlog/lane-claims.logic.test.ts
+23:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+54:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-cumulative.logic.test.ts
+37:20  Warning: '_b' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+39:21  Warning: '_p' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/coa-key.logic.test.ts
+39:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+44:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+56:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-round.logic.test.ts
+135:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+149:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+155:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+249:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-scorecard.logic.test.ts
+40:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+65:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+125:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+131:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+140:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+177:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+180:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+185:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+194:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+198:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+201:81  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/compute-opportunity-scores.infra.test.ts
+572:11  Warning: 'matches' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/config-meta.logic.test.ts
+96:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+133:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/backfill-smeared-enriched-status.db.test.ts
+34:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-centreline.db.test.ts
+72:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-heritage.db.test.ts
+67:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-ravines.db.test.ts
+26:15  Warning: '__filename' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/flight-board-roundtrip.db.test.ts
+54:7  Warning: 'COLON_FORM_ARCHIVE_ID' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+57:7  Warning: 'CANONICAL_LEAD_KEY' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/refresh-snapshot-consolidation.db.test.ts
+31:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/diff-narrator.logic.test.ts
+16:21  Warning: 'beforeEach' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/fixtures/mcbylaws-gate/red-literals.mjs
+2:7  Warning: 'SIDE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/gate-logic-version.infra.test.ts
+27:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-mode-emits-type.infra.test.ts
+24:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+34:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+253:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-registries.infra.test.ts
+37:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-terminals-records-meta.infra.test.ts
+25:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/geocode-permits.infra.test.ts
+42:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/ingest-ckan-primary.logic.test.ts
+106:82  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-derived-target.logic.test.ts
+65:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-on-error-warn-row.logic.test.ts
+67:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+68:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-counters.logic.test.ts
+172:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+208:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+252:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+264:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-idempotency.logic.test.ts
+218:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+243:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+254:75  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+308:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+424:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-runner.logic.test.ts
+206:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+239:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+267:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+287:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+288:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+366:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+482:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+483:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+553:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-fullrun.logic.test.ts
+56:7  Warning: 'noopLog' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+170:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+429:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+430:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-gate.logic.test.ts
+166:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+368:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+763:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+910:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+911:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1007:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1052:107  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1057:126  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1070:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1129:73  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-schema.logic.test.ts
+325:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+332:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+437:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+449:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+463:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+556:108  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+570:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+591:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+602:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0z1-schema.logic.test.ts
+102:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+129:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+134:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+171:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+195:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+206:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:76  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+273:97  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+289:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+318:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-seen-touch.logic.test.ts
+130:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/inspections.logic.test.ts
+574:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+596:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+703:13  Warning: 'badUrl' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+816:9  Warning: 'routeSource' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/load-address-points.infra.test.ts
+169:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-floating-promises').
+
+./src/tests/materialize-rows.logic.test.ts
+31:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-citeparse.logic.test.ts
+19:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-gate.logic.test.ts
+502:11  Warning: 'root' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-context.logic.test.ts
+123:7  Warning: 'clone' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+249:7  Warning: 'PROMOTE_110' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:7  Warning: 'PROMOTE_110_113' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+264:7  Warning: 'ROUND_IDS_A' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+269:10  Warning: 'groupOf' is defined but never used.  @typescript-eslint/no-unused-vars
+426:16  Warning: 'boundPathsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+438:10  Warning: 'boundBlobsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+458:10  Warning: 'stageRound' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-eval.logic.test.ts
+136:7  Warning: 'runCase' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score-buildings.logic.test.ts
+21:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts
+22:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+112:7  Warning: 'CASE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+77:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+677:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+678:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+679:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+702:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-regression.logic.test.ts
+63:7  Warning: 'nx' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-summarycollect.logic.test.ts
+69:19  Warning: 'a' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-approval.logic.test.ts
+22:6  Warning: 'Vocab' is defined but never used.  @typescript-eslint/no-unused-vars
+136:10  Warning: 'assertSortedUnique' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-prompts.logic.test.ts
+30:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-records.logic.test.ts
+77:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:21  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+397:23  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/parcel-checkout.infra.test.ts
+95:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/pipeline-sdk.logic.test.ts
+2526:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2526:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/producer-ratio-pin.logic.test.ts
+235:17  Warning: '_of' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-harness.logic.test.ts
+24:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+435:12  Warning: 'forbiddenPool' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-trace.logic.test.ts
+118:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+374:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+389:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/step-library.logic.test.ts
+2983:9  Warning: 'os' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+6979:61  Warning: 'ctx' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/tests/step-registry.logic.test.ts
+161:25  Warning: 'downstream' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/address_points/violations.test.ts
+39:7  Warning: 'NORMALIZER_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+40:7  Warning: 'WRITE_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/classify_coa_scope/ledger-locks.logic.test.ts
+10:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+14:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:104  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/classify_coa_trades/ledger-locks.logic.test.ts
+17:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+21:109  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:121  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/coa/dispatch.logic.test.ts
+239:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+311:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/coa/ledger-locks.logic.test.ts
+16:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:203  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_coa_cost_estimates/ledger-locks.logic.test.ts
+12:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts
+35:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/golden-25.logic.test.ts
+51:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:88  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment2-worked-examples.logic.test.ts
+34:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment3-worked-examples.logic.test.ts
+29:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/major-street.logic.test.ts
+16:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+81:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+110:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+124:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/sixplex.logic.test.ts
+12:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+53:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:83  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:80  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+255:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+259:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+323:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+369:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+370:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+371:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+375:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+380:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+386:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+388:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/violations.test.ts
+217:10  Warning: 'stepSource' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts
+13:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/link_parcel_addresses/violations.test.ts
+119:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+153:7  Warning: 'WARN_FAIL_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+158:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+203:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+204:7  Warning: 'T7_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+447:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+1379:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_wsib/violations.test.ts
+100:7  Warning: 'WSIB_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+101:7  Warning: 'ENTITIES_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+108:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+120:7  Warning: 'WARN_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+121:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+151:7  Warning: 'T2_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+152:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+168:7  Warning: 'currentWrite' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+365:10  Warning: 'checkById' is defined but never used.  @typescript-eslint/no-unused-vars
+401:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+405:10  Warning: 'strings' is defined but never used.  @typescript-eslint/no-unused-vars
+544:86  Warning: 'v' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1240:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_bylaw_map_areas/violations.test.ts
+25:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+114:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+159:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+162:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+166:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+191:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+197:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+212:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+223:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+224:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+225:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+227:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+228:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+235:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+333:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+373:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+426:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+435:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+541:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/load_centreline/violations.test.ts
+374:24  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_zoning/violations.test.ts
+1145:10  Warning: 'writeByTable' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/refresh_snapshot/violations.test.ts
+172:10  Warning: 'git' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/surfaces/report-generator-fields.logic.test.ts
+219:189  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+221:84  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/update-tracked-projects.infra.test.ts
+348:11  Warning: 'txEnd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/write-class-disposition.infra.test.ts
+88:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+331:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-lists448
+
+ ✓ src/tests/backlog/rule-lists-table.logic.test.ts (29 tests) 3745ms
+   ✓ V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route get surface-136 and none of Specs 126, 128, 135 (task-448, RR-0421 item 1 a); an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none 705ms
+   ✓ task-431: the engineering standards sent by side > S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not) 809ms
+   ✓ task-431: the engineering standards sent by side > N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row) 448ms
+stdout | src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer no longer gets Specs 126 and 128 (task-448, RR-0421 item 1 a)
+ATTACK 12: RESOLVES: src/components, src/app, src/middleware.ts, package.json, .github ; importer lists eng-back,eng-shared,five-words,plan-protocol,inc-S,ms-S
+
+stdout | src/tests/backlog/rule-lists.logic.test.ts > resolve on a fixture tree (AC #2) > ATTACK 11: a Files line of only exempt paths for a build or fix task is refused (a record-only task may keep it)
+ATTACK 11: REFUSED: rule-lists: refused: the Files line of a build task resolves to no rule list (only exempt paths: docs/reports/lanes/x/); a build or fix task must touch at least one governed path
+ATTACK 11: REFUSED: rule-lists: refused: the Files line of a fix task resolves to no rule list (only exempt paths: docs/reports/lanes/x/); a build or fix task must touch at least one governed path
+
+ ✓ src/tests/backlog/rule-lists.logic.test.ts (99 tests) 10513ms
+   ✓ the real table (AC #1: data, every listed rule file exists) > validates: files exist, each section selector names exactly one heading, every glob matches a tracked path 455ms
+   ✓ V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > milestone_docs gives every increment letter its own milestone list (objectives sections), and the table validates 507ms
+   ✓ V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review) 774ms
+   ✓ V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason > the real board: every open task that resolves carries the every_task lists (exit 0), and the count line is printed 1902ms
+   ✓ task-423 (e): counts pinned at most, on the real table > the tooling kind and the task-419 Files line: 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700); the task-412 Files line: 3 and 3 364ms
+stdout | src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused
+ATTACK 11: REFUSED: backlog-lane: refused: --rule-lists /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/bl-lane-0jg4NE/fake-table.json is not the repo table (/Users/brettpreston_macmini/Buildo-wt-lists448/scripts/analys
+
+ ✓ src/tests/backlog/backlog-lane.logic.test.ts (67 tests) 58883ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses an existing worktree directory 322ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a dirty board: a modified file outside backlog/ (and an untracked one), but not a change inside backlog/ 391ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a missing backlog binary, a bad lane name, a missing task and a missing input 393ms
+   ✓ backlog-lane --dry-run (AC #3): prints every command, writes nothing > prints take, kickstart, worktree add, two ln, cp, backlog-brief, brief.mjs and a BRIEF-FILE line, and changes nothing 354ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > takes the task, waits for the job commit, cuts the worktree, links, writes G1 and task.json, runs brief.mjs and prints BRIEF-FILE with its sha256 625ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > uses --spec instead of a generated task.json when given 474ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T2 real launch: the line before the last is AGENT-MODEL: opus and BRIEF.md carries the split; the last line is still BRIEF-FILE 481ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T3 (a) --spec with no extra: the merged extra ends with the model line, once 467ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > T3 (b) --spec whose extra already holds the model line: it ends with it, once (survive-the-fix lock) 466ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line) 2066ms
+   ✓ backlog-lane review line names the lens set (task-358) > a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security 910ms
+   ✓ backlog-lane review line names the lens set (task-358) > every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed) 1155ms
+   ✓ backlog-lane review line names the lens set (task-358) > task-423 D2: the brief orders no plan lens; every output lens command carries --context, and the --context value is not a flag 831ms
+   ✓ backlog-lane review line names the lens set (task-358) > A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone 830ms
+   ✓ backlog-lane review line names the lens set (task-358) > T4: the lens line of a build brief and of a record brief holds the re-run command with --task, --lane, --stage, --root <worktree> and --board <board>, and the word highest-numbered 1062ms
+   ✓ backlog-lane review line names the lens set (task-358) > security joins when the Files line touches entitlements, auth, stripe or a metered route 3125ms
+   ✓ backlog-lane review line names the lens set (task-358) > a build that is not on a surface has no ux lens 841ms
+   ✓ backlog-lane review line names the lens set (task-358) > B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not 2336ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt 1105ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > A3/D2: the extra block carries no plan review line (the plan is reviewed before launch, RR-0374) 843ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again 1159ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off) 445ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line 1224ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > task-419 (a): a board whose evidence folder lacks FOLD-CHECK.md (committed) is refused at the launch dry run naming the file; with the file back the dry run prints "plan gate ok" 1542ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch 1232ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > task-375 suite fix: a launch dry-run run with GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE of ANOTHER repository set (as inside a hook) still reads the board it was given 836ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > a task with no Files line is refused, but a record-only task gets the every-task lists (the queue lists are off since task-448, RR-0418) 451ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused 533ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > a real launch with --spec (what the orchestrator runs) still writes the rule-list block and the per-list lens line into the brief it tells the lane to read 1072ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > launch refuses a build task with no milestone, and a table whose every_task is empty; the control launches (dry-run) 688ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 1: an empty Implementation Plan field is refused (exit 3, nothing written); with a plan the same board proceeds 764ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 2: a task that is not LATER or WAITS, a Files path no row matches and a record task are refused; a resolving LATER build task is not 1897ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 3: a dirty file outside backlog/ and the folder is refused; a change inside backlog/ and a node_modules link pass 775ms
+   ✓ plan-prep review (task-418): refusals, one line, nothing written; each with its control > 4: a plan-*.txt already in the folder is refused with its bytes unchanged; an empty folder is not 767ms
+   ✓ plan-prep review: the calls and what they leave > 5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file 1138ms
+   ✓ plan-prep review: the calls and what they leave > 6: an output with no REVIEW header in its first 15 lines, or no VERDICT line, is exit 1 naming the file; a banner then the header on line 2 and a VERDICT pass 2192ms
+   ✓ plan-prep review: the calls and what they leave > 7: the inputs equal what the library writes for the same context (the plantEvidence call); another Description gives different inputs 1564ms
+   ✓ plan-prep review: the calls and what they leave > 8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched 728ms
+   ✓ plan-prep review: the calls and what they leave > 16: a fix task writes the plan lens outputs and no per-list inputs 424ms
+   ✓ plan-prep review: the calls and what they leave > B2 (task-445): a fix task on a src/lib path also writes plan-security.txt 427ms
+   ✓ plan-prep review: the calls and what they leave > git environment: a foreign GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE (as in a commit hook) still gives a successful review 726ms
+   ✓ plan-prep review: the calls and what they leave > 15: --dry-run on each phase prints the commands (the real tool line included) and leaves the tree byte-identical 1124ms
+   ✓ plan-prep post (task-418) > 9: from the plantEvidence state with the round line and references stripped, post restores the exact zero-form line and the references; run twice, one block 1130ms
+   ✓ plan-prep post (task-418) > 9b: a different "Plan review round" line is refused naming it, the task unchanged 748ms
+   ✓ plan-prep post (task-418) > 10: a CONFIRMED id with no TRIAGE-PLAN.md line is refused naming the id and the task is unchanged; with a folded quote that is in the task it posts 1125ms
+   ✓ plan-prep post (task-418) > 10b: a folded quote that is NOT in the task is exit 1 (the fold is not finished) and the task is unchanged 957ms
+   ✓ plan-prep post (task-418) > 12: a missing Seat line (integration, reality-check, regression where a Files path is tracked), an absent seat file and a seat file edited after the grounder are refused; all-new Files need no regression 5905ms
+   ✓ plan-prep commit and the end to end (task-418) > 13: a staged file outside the folder, a failing hook and an index.lock leave nothing committed; the commit holds exactly the folder 1172ms
+   ✓ plan-prep commit and the end to end (task-418) > fix round 1 (g418#1): --launch-args cannot turn the launch dry run into a real launch: the identity flags and --dry-run it carries are refused, the task stays LATER with no worktree and no branch; the control without the override is a dry run 1296ms
+   ✓ plan-prep commit and the end to end (task-418) > 11 and 14: a CONFIRMED HIGH folded: post, commit (the dry run prints the expected Plan line), the grounder copies it, commit again prints "plan gate ok"; one word edited in the task refuses with the new expected line 1925ms
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the separate grounder (AC #4) > ATTACK 3: a grounder name that merely contains or is contained in the lane or an assignee (comply2-b, comply-2) is refused
+ATTACK 3: REFUSED: check-lane-close: GROUNDER.md: Grounder "comply2-b" is the lane (BL-COMPLY2) or a name that contains or is contained in it; a separate agent must ground
+ATTACK 3: REFUSED: check-lane-close: GROUNDER.md: Grounder "comply-2" is the lane (BL-COMPLY2) or a name that contains or is contained in it; a separate agent must ground
+ATTACK 3: REFUSED: check-lane-close: GROUNDER.md: Grounder "helper-nine-2" is, contains or is contained in an assignee of task-7 (@helper-nine); a separate agent must ground
+ATTACK 3: REFUSED: check-lane-close: GROUNDER.md: Grounder "Helper_Nine" is, contains or is contained in an assignee of task-7 (@helper-nine); a separate agent must ground
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the separate grounder (AC #4) > ATTACK 4: a quote under 20 characters, a reason under 30, a repeated quote, or a boilerplate line are refused
+ATTACK 4: REFUSED: check-lane-close: GROUNDER.md: finding out-compliance-first#1: the quote must be 20+ characters taken from src/a.ts:1
+ATTACK 4: REFUSED: check-lane-close: GROUNDER.md: finding out-compliance-first#1 is REJECTED with a reason under 30 characters (Spec 08 5.3: rejections carry reasons; a conflict says what the operator must rule)
+ATTACK 4: REFUSED: check-lane-close: GROUNDER.md: finding out-compliance-first#1 has the same quote as out-code-review#1; each finding needs its own quote from the line it concerns
+ATTACK 4: REFUSED: check-lane-close: GROUNDER.md: finding out-compliance-first#1: the cited line occurs more than 3 times in src/rep.ts (a boilerplate line proves nothing): cite a line specific to the finding
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the separate grounder (AC #4) > ATTACK 5: finding lines the strict matcher misses (bold, numbered, quoted, lower case, colon) are refused as altered or unparsable
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+ATTACK 5: REFUSED: check-lane-close: task-7: out-code-review.txt: finding lines altered or unparsable (the strict reading counts 0 BUG/DEFER lines, a loose reading 1): restore the review tool's own output
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the lens outputs are the review tool's, on the committed input > ATTACK 6a: a compliance output with only a VERDICT line and no REVIEW header is refused
+ATTACK 6: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first.txt: no REVIEW header in its first lines (the review tool writes it: template, m
+ATTACK 6: REFUSED: check-lane-close: task-7: out-code-review.txt: no REVIEW header in its first lines (the review tool writes it: template, model, timestamp, file_sha256, prompt_sha256); a body with only a VERDICT line is not a lens output
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the lens outputs are the review tool's, on the committed input > ATTACK 6b: the header names another lens template, or a hash that is not of the committed input, or the input does not carry the list text
+ATTACK 6: REFUSED: check-lane-close: task-7: out-code-review.txt: the REVIEW header names template lens-ux.md, expected lens-code-review.md
+ATTACK 6: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first.txt: the REVIEW header file_sha256 is not the sha256 of the committed input in-o
+ATTACK 6: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (in-out-compliance-first.txt: the stamped sha256 does not match the list text or the material in the f
+ATTACK 6: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (the committed inputs do not carry the whole list first (docs/a.md) as it is now: the list was shorten
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: where the lane report files go (task-407 V2.LAYOUT) > PLANTED DEFECT: every output in a subfolder of the lane dir is refused, and the refusal names the layout (the lane dir itself, no subfolder, plan-/out-/in- names)
+ATTACK 11: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt; put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK 
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 1: every finished status triggers the check (MERGED as well as BUILT and DONE)
+ATTACK 1: REFUSED: check-lane-close: GROUNDER.md has no "Grounder: <name>" header line
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 2a: a wrong-task trailer or no trailer does not avoid the check; every staged task file that moves to finished is checked
+ATTACK 2: REFUSED: check-lane-close: task-7: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-COMPLY2/ (a build or fix task always needs a separate grounder verdict)
+ATTACK 2: REFUSED: check-lane-close: task-7: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-COMPLY2/ (a build or fix task always needs a separate grounder verdict)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 2b: the board auto-commit (a docs commit message, only the task file staged) is checked too
+ATTACK 2: REFUSED: check-lane-close: task-7: no docs/reports/lanes/<date>/BL-COMPLY2/ holds a TASK file naming exactly task-7 (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); put every plan-<lens>[-<list id>][-pN].
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused
+ATTACK 7: REFUSED: check-lane-close: task-7: no docs/reports/lanes/<date>/BL-COMPLY2/ holds a TASK file naming exactly task-7 (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); put every plan-<lens>[-<list id>][-pN].
+ATTACK 7: REFUSED: check-lane-close: task-7: no docs/reports/lanes/<date>/BL-COMPLY2/ holds a TASK file naming exactly task-7 (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); put every plan-<lens>[-<list id>][-pN].
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused
+ATTACK 8: REFUSED: check-lane-close: task-7: 1 changed path(s) are outside the task's Files line: src/sneaky.ts (declare them on the task or move them to their own task)
+ATTACK 8: REFUSED: check-lane-close: task-7: the Files line of a build task resolves to no rule list (only exempt paths: docs/reports/lanes/x/); a build or fix task must touch at least one governed path
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too
+ATTACK 9: REFUSED: check-lane-close: task-7: a build task closes only with an @lane-<name> assignee (none): take it through the launch script; no lane report can be checked otherwise
+ATTACK 9: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type build and assignee (none): a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the
+ATTACK 9: REFUSED: check-lane-close: task-7: a check task closes only with an @lane-<name> assignee (none): take it through the launch script; no lane report can be checked otherwise
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: scope of the lane report, the diff and who may close > ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished
+ATTACK 10: REFUSED: check-lane-close: this commit changes protected path(s) (scripts/hooks/check-lane-close.mjs) and also moves task-7 - Lan to a finished status: land the check or hook change first, close the task in a later commit (self-edit rule, COMPLY.2)
+ATTACK 10: REFUSED: check-lane-close: this commit changes protected path(s) (.husky/commit-msg) and also moves task-7 - Lan to a finished status: land the check or hook change first, close the task in a later commit (self-edit rule, COMPLY.2)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the every_task lists (V2.LIST) > PLANTED DEFECT: a task whose compliance outputs lack the every_task list is refused, naming the list and the file to write
+ATTACK 11: REFUSED: check-lane-close: task-7: list ev (docs/ev.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-ev.txt; put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK direc
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the every_task lists (V2.LIST) > a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nobody switches the lists off)
+ATTACK 12: REFUSED: check-lane-close: task-7: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the milestone guard (V2.LIST round 2) > PLANTED DEFECT: the milestone list output missing is refused naming the list
+ATTACK 13: REFUSED: check-lane-close: task-7: list msf (docs/ms.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-msf.txt; put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK dir
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the milestone guard (V2.LIST round 2) > a table with no milestone_docs key, or none for the letter of the task, is refused as missing lists
+ATTACK 14: REFUSED: check-lane-close: task-7: the table has no milestone_docs (the objectives of each milestone must be attached) (a task always gets them; the table or the resolver was altered)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a chunk set missing one changed file is refused, naming the file
+ATTACK 15: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+ATTACK 15: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a whole diff passed off as material that is not a diff (no file headers) is refused
+ATTACK 16: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: chunk 1 of 1 (no file) is not what git diff prints for its paths (first differe
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a chunk whose text differs from the diff (re-stamped, so its own hash holds) is refused
+ATTACK 17: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: chunk 1 of 3 (src/f1.ts, src/f2.ts) is not what git diff prints for its paths (
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a hand-edited chunk stamp (chunk number) is refused
+ATTACK 18: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (in-out-compliance-first-p2.txt: not what lens-input writes for its own stamp (the head line, the path
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a hand-edited path list in a chunk stamp is refused
+ATTACK 19: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (in-out-compliance-first-p2.txt: the stamped path list ["src/zzz.ts","src/f3.ts","src/f4.ts"] is not t
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > a chunk set with the last chunk deleted (all its list parts) is refused: the stamps say m chunks, and a file is missing
+ATTACK 20: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 2 input file(s) but the stamps say 3 chunk(s) x 1 list part(s) = 3: a chunk or 
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > a file left out of ONE rule list review is refused too: the check runs per list
+ATTACK 21: REFUSED: check-lane-close: task-7: list ev (docs/ev.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-ev.txt (out-compliance-ev: 2 input file(s) but the stamps say 3 chunk(s) x 1 list part(s) = 3: a chunk or a part i
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > the paths staged in the closing commit itself (outside the exempt paths and the task files) are refused: they are in no chunk
+ATTACK 22: REFUSED: check-lane-close: the closing commit of task-7 stages 1 path(s) outside the reviewed task range: src/late.ts (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; commit the work firs
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens
+ATTACK 23: REFUSED: check-lane-close: task-7: out-code-review: 2 input file(s) but the stamps say 3 chunk(s) x 1 list part(s) = 3: a chunk or a part is missing or left over from an earlier run
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a TAG with the base ref name cannot shadow the branch: a chunk set missing one file is still refused
+ATTACK 24: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F8 PLANTED DEFECT: a lane folded into the base plus one fix commit is still covered whole (from its launch commit): a chunk set missing the pre-fold file is refused; the whole set closes (control)
+ATTACK 34: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F8 PLANTED DEFECT: a task with no launch commit on the board (the lane assignee never appears on the task file there) is refused
+ATTACK 35: REFUSED: check-lane-close: task-7: no launch commit found: `git log refs/heads/wf2/board --first-parent --reverse -S@lane-BL-COMPLY2 -- backlog/tasks/task-7 - Lane work.md` returns nothing, so the task's recorded launch (the take on the board for its lane) cannot be pr
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F11 PLANTED DEFECT: a lane that retypes its task (build at launch, doc at close) is refused
+ATTACK 36: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type doc and assignee @lane-BL-COMPLY2: a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read 
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F12 PLANTED DEFECT: a generated report staged in a lane build close is refused; the lane own report directory is not (control above)
+ATTACK 37: REFUSED: check-lane-close: the closing commit of task-7 stages 1 path(s) outside the reviewed task range: docs/reports/generated/x.md (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; comm
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F9 PLANTED DEFECT: a split no-list input with its head rewritten and the review re-run is refused; an arbitrary prompt_sha256 on an unsplit lens output is refused
+ATTACK 38: REFUSED: check-lane-close: task-7: in-out-code-review-p3.txt: not what lens-input writes for its own stamp (the head line, the paths or the text around the material was edited)
+ATTACK 38: REFUSED: check-lane-close: task-7: out-code-review.txt: the REVIEW header file_sha256 is not the sha256 of the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief) (the output was not produced from that fil
+ATTACK 38: REFUSED: check-lane-close: task-7: out-code-review-p3.txt: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from lens-code-review.md, the committed input and the context (an output not made by the tool on that input, or an edited inp
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lens template edited on the lane (outputs hashed from the edited text) is refused: the template is read from the range base
+ATTACK 39: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first.txt: the REVIEW header prompt_sha256 is not the hash of the prompt the review to
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lane that trims every_task in its own table (its Files line names the table) is still held to the range base every_task
+ATTACK 40: REFUSED: check-lane-close: task-7: list ev (docs/ev.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-ev.txt; put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK direc
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a build task whose range is empty (closed after the lane was folded into the base) is refused, never skipped
+ATTACK 25: REFUSED: check-lane-close: task-7: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F2 (g binary) PLANTED DEFECT: a .gitattributes -diff line cannot hide code: material made without --text (Binary files differ) is refused; the same attributes with the shared flags close
+ATTACK 26: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: chunk 1 of 1 (.gitattributes, src/hidden.ts) is not what git diff prints for it
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt with a zeroed file_sha256 is refused; one made on the whole-range diff closes (control above)
+ATTACK 27: REFUSED: check-lane-close: task-7: out-code-review.txt: the REVIEW header file_sha256 is not the sha256 of the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief) (the output was not produced from that fil
+ATTACK 27: REFUSED: check-lane-close: task-7: out-error-paths.txt: the REVIEW header file_sha256 is not the sha256 of the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief) (the output was not produced from that fil
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt does not stand in for split parts: both present is refused
+ATTACK 28: REFUSED: check-lane-close: task-7: out-code-review.txt and out-code-review-pN.txt both exist (one file, or -p1..-pK): an unsplit file does not stand in for split parts
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: a compliance output with an arbitrary prompt_sha256 is refused; the recomputed one closes (control above)
+ATTACK 29: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first.txt: the REVIEW header prompt_sha256 is not the hash of the prompt the review to
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: line 2 of an input rewritten (the head the reviewer reads as instruction) and the review re-run on it is refused
+ATTACK 30: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (in-out-compliance-first.txt: not what lens-input writes for its own stamp (the head line, the paths o
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F4 PLANTED DEFECT: a doc close or queue-row edit that moves a non-lane task is not refused for a staged non-record path; a lane build close is
+ATTACK 31: REFUSED: check-lane-close: the closing commit of task-7 stages 1 path(s) outside the reviewed task range: docs/specs/x.md (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; commit the work 
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > F7 (f) PLANTED DEFECT: an earlier lane commit that widens exempt (scripts/**) and a material that leaves the table out is refused: exempt is read from the range base
+ATTACK 32: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > ITEM 3 (operator "1-5 y", item 3): a golden the existing golden check validates (a <state>.<target>.json under the golden folder, named in the table exempt with its check in exempt_why) is left out of the material and the close passes; the same folder with a code file renamed into it is refused
+ATTACK 33: REFUSED: check-lane-close: task-7: list first (docs/a.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-first.txt (out-compliance-first: 1 changed file(s) of the task range are in no chunk, so the review never saw th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that cuts finished_statuses in its own table is refused (the board list decides what is a finished status); the control closes (default scenario)
+ATTACK 41: REFUSED: check-lane-close: the finished_statuses of this branch's table (["MERGED"]) differs from the board's (["BUILT","DONE","MERGED"]): a lane may not change what decides what is checked or what the review need not cover (the check uses the board's)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that repoints base_ref to its own branch and widens exempt in the same commit is refused
+ATTACK 42: REFUSED: check-lane-close: the base_ref of this branch's table ("master") differs from the board's ("wf2/board"): a lane may not change what decides what is checked or what the review need not cover (the check uses the board's)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H4 PLANTED DEFECT: a lane that moves its task to another milestone is refused (the launch copy decides)
+ATTACK 43: REFUSED: check-lane-close: task-7: the milestone is m-9 here but m-0 at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H3 PLANTED DEFECT: a change to the prompt builder that the launch Files line does not name is refused; named at launch it closes
+ATTACK 44: REFUSED: check-lane-close: task-7: scripts/lib/review-template.js differs from the range base but the task's launch Files line does not name it: the recomputed prompt hash would only prove consistency with the lane's own prompt builder
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)
+ATTACK 45: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type doc and assignee (none): a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the b
+ATTACK 45: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type record and assignee (none): a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from th
+ATTACK 45: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type doc and assignee @human: a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the b
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line
+ATTACK 46: REFUSED: check-lane-close: the board ref refs/heads/wf2/board or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: the lane assignee dropped in an EARLIER lane commit, then a retype to doc or record in the close, is refused: type and lane assignee come from the board copy
+ATTACK 47: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type doc and assignee (none): a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the b
+ATTACK 47: REFUSED: check-lane-close: task-7: the board copy of this task is a build task held by @lane-BL-COMPLY2; the closing copy has type record and assignee (none): a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from th
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: a task whose front matter id differs from its file number is refused (the id names the lane report scope)
+ATTACK 48: REFUSED: check-lane-close: task-9: the front matter id (TASK-9) is not the file's task number (7): the id scopes the lane report, a lane may not rename it
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: a lane that narrows its Files line at close cannot drop a rule list: the lists resolve from the union of the launch copy and the staged copy
+ATTACK 49: REFUSED: check-lane-close: task-7: list xtra (docs/ms.md) has no valid compliance lens output in docs/reports/lanes/<date>/BL-COMPLY2/: write out-compliance-xtra.txt; put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK d
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits
+ATTACK 50: REFUSED: check-lane-close: task-9999: the board (refs/heads/wf2/board) holds no copy of this task file (task number 9999): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the boa
+ATTACK 50: REFUSED: check-lane-close: task-9999: the board (refs/heads/wf2/board) holds no copy of this task file (task number 9999): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the boa
+
+stdout | src/tests/backlog/check-lane-close.logic.test.ts > close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control)
+ATTACK 51: REFUSED: check-lane-close: this branch carries the lane directory of BL-COMPLY2 but its tree has no task-7 file: the board holds that task as a lane build task (backlog/tasks/task-7 - Lane work.md); a branch that deletes or renumbers its task file cannot close anything
+
+ ✓ src/tests/backlog/check-lane-close.logic.test.ts (178 tests) 105509ms
+   ✓ close check: the lens set (AC #3) > passes a build task with the lens set, headers, committed inputs, a plan output, a TASK file and a grounder that ruled every finding 567ms
+   ✓ close check: the lens set (AC #3) > refuses a missing compliance lens output, naming the list and the file to write 551ms
+   ✓ close check: the lens set (AC #3) > refuses a lens output with no VERDICT line (a failed run is not an output) 509ms
+   ✓ close check: the lens set (AC #3) > refuses a build task missing a lens of its set (code-review, error-paths), and one with no plan-stage output 1632ms
+   ✓ close check: the lens set (AC #3) > ux and security join the required set by the Files line, as the launch brief names them 1002ms
+   ✓ close check: the lens set (AC #3) > C1(a): a src/lib path on the Files line requires out-security.txt 535ms
+   ✓ close check: the lens set (AC #3) > C1(b): an API route on the Files line requires out-security.txt (it needs out-ux.txt as well, as before) 520ms
+   ✓ close check: the lens set (AC #3) > C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes 556ms
+   ✓ close check: the lens set (AC #3) > split parts: -p1..-pK with no gap pass; a gap, or parts beside an unsuffixed file, are refused 1060ms
+   ✓ close check: the lens set (AC #3) > a record-only task needs compliance lens outputs (plan or out) per list and no lens set; a grounder only when a lens returned a finding 1145ms
+   ✓ close check: the lens set (AC #3) > a build task with no Files line is refused (no silent "no rules apply") 384ms
+   ✓ close check: the separate grounder (AC #4) > refuses a missing GROUNDER.md even when no lens returned a finding (every build task) 480ms
+   ✓ close check: the separate grounder (AC #4) > refuses Grounder equal to Lane (header), to the task lane, and to any other assignee of the task 1542ms
+   ✓ close check: the separate grounder (AC #4) > ATTACK 3: a grounder name that merely contains or is contained in the lane or an assignee (comply2-b, comply-2) is refused 1877ms
+   ✓ close check: the separate grounder (AC #4) > refuses a GROUNDER.md with no Grounder or Lane header 467ms
+   ✓ close check: the separate grounder (AC #4) > refuses a finding id with no verdict line, naming the id (plan-stage findings of any lens count) 456ms
+   ✓ close check: the separate grounder (AC #4) > a verdict is CONFIRMED, REJECTED or CONFLICT, with file:line and a quote; REJECTED and CONFLICT also a reason 2688ms
+   ✓ close check: the separate grounder (AC #4) > ATTACK 4: a quote under 20 characters, a reason under 30, a repeated quote, or a boilerplate line are refused 1865ms
+   ✓ close check: the separate grounder (AC #4) > the quote must really be on the cited line of a repo file (the grounder opened it) 1885ms
+   ✓ close check: the separate grounder (AC #4) > binds the ruled outputs: a Ruled line per lens output, with its sha256 and finding count; an output edited after grounding is refused 1424ms
+   ✓ close check: the separate grounder (AC #4) > ATTACK 5: finding lines the strict matcher misses (bold, numbered, quoted, lower case, colon) are refused as altered or unparsable 2823ms
+   ✓ close check: the lens outputs are the review tool's, on the committed input > ATTACK 6a: a compliance output with only a VERDICT line and no REVIEW header is refused 912ms
+   ✓ close check: the lens outputs are the review tool's, on the committed input > ATTACK 6b: the header names another lens template, or a hash that is not of the committed input, or the input does not carry the list text 1844ms
+   ✓ close check: where the lane report files go (task-407 V2.LAYOUT) > PLANTED DEFECT: every output in a subfolder of the lane dir is refused, and the refusal names the layout (the lane dir itself, no subfolder, plan-/out-/in- names) 387ms
+   ✓ close check: where the lane report files go (task-407 V2.LAYOUT) > each missing-file refusal carries the layout: compliance output, a lens of the set, the plan-stage output, the TASK file 1732ms
+   ✓ close check: where the lane report files go (task-407 V2.LAYOUT) > the same files directly in the lane dir pass (the layout the message names is the one the check reads) 476ms
+   ✓ close check: where the lane report files go (task-407 V2.LAYOUT) > SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced 1508ms
+   ✓ close check: where the lane report files go (task-407 V2.LAYOUT) > SURVIVE-THE-FIX: a fix-*.txt output is never read (a finding in it needs no verdict and counts as no review) 470ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 1: every finished status triggers the check (MERGED as well as BUILT and DONE) 474ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 2a: a wrong-task trailer or no trailer does not avoid the check; every staged task file that moves to finished is checked 871ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 2b: the board auto-commit (a docs commit message, only the task file staged) is checked too 366ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused 769ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused 1304ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too 889ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished 795ms
+   ✓ close check: scope of the lane report, the diff and who may close > fails closed when the rule-list table that HEAD has is gone; a repo that never had one is not held to it 463ms
+   ✓ close check: scope of the lane report, the diff and who may close > exempt: a commit that moves nothing to finished, a status that is not finished, a non-build task nobody lane-holds with no code staged 816ms
+   ✓ close check: the every_task lists (V2.LIST) > control: the lane report with an out-compliance output for the every_task list passes 499ms
+   ✓ close check: the every_task lists (V2.LIST) > PLANTED DEFECT: a task whose compliance outputs lack the every_task list is refused, naming the list and the file to write 479ms
+   ✓ close check: the every_task lists (V2.LIST) > a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nobody switches the lists off) 710ms
+   ✓ close check: the milestone guard (V2.LIST round 2) > control: a build task with its milestone list (msf) among the compliance outputs passes 460ms
+   ✓ close check: the milestone guard (V2.LIST round 2) > PLANTED DEFECT: the milestone list output missing is refused naming the list 469ms
+   ✓ close check: the milestone guard (V2.LIST round 2) > a table with no milestone_docs key, or none for the letter of the task, is refused as missing lists 823ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > control: a change too big for one input, split into chunks by lens-input, with every file in one chunk, closes 599ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > control: a small change in one unsplit input (stamped chunk 1 of 1) closes 470ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a chunk set missing one changed file is refused, naming the file 1009ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a whole diff passed off as material that is not a diff (no file headers) is refused 474ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a chunk whose text differs from the diff (re-stamped, so its own hash holds) is refused 586ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a hand-edited chunk stamp (chunk number) is refused 567ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a hand-edited path list in a chunk stamp is refused 571ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > a chunk set with the last chunk deleted (all its list parts) is refused: the stamps say m chunks, and a file is missing 568ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > a file left out of ONE rule list review is refused too: the check runs per list 570ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > the paths staged in the closing commit itself (outside the exempt paths and the task files) are refused: they are in no chunk 472ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > the non-compliance lenses split by the same tool (lens-input with a lens template and no --list): out-<lens>-pN.txt with committed inputs closes (control) 634ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > task-419 (d): a one-file diff reviewed with lens-input and no list closes with the name the tool wrote, out-code-review-p1.txt (control); the same pair renamed unsuffixed is still refused (the lock stays) 956ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens 630ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > control: the default scenario (lane work in one file, split-free, every output bound) closes 465ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a TAG with the base ref name cannot shadow the branch: a chunk set missing one file is still refused 515ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F8 PLANTED DEFECT: a lane folded into the base plus one fix commit is still covered whole (from its launch commit): a chunk set missing the pre-fold file is refused; the whole set closes (control) 940ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F11 PLANTED DEFECT: a lane that retypes its task (build at launch, doc at close) is refused 301ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F12 PLANTED DEFECT: a generated report staged in a lane build close is refused; the lane own report directory is not (control above) 466ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F9 PLANTED DEFECT: a split no-list input with its head rewritten and the review re-run is refused; an arbitrary prompt_sha256 on an unsplit lens output is refused 1746ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lens template edited on the lane (outputs hashed from the edited text) is refused: the template is read from the range base 424ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lane that trims every_task in its own table (its Files line names the table) is still held to the range base every_task 461ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a build task whose range is empty (closed after the lane was folded into the base) is refused, never skipped 401ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F2 (g binary) PLANTED DEFECT: a .gitattributes -diff line cannot hide code: material made without --text (Binary files differ) is refused; the same attributes with the shared flags close 946ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt with a zeroed file_sha256 is refused; one made on the whole-range diff closes (control above) 931ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt does not stand in for split parts: both present is refused 623ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: a compliance output with an arbitrary prompt_sha256 is refused; the recomputed one closes (control above) 451ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: line 2 of an input rewritten (the head the reviewer reads as instruction) and the review re-run on it is refused 434ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F4 PLANTED DEFECT: a doc close or queue-row edit that moves a non-lane task is not refused for a staged non-record path; a lane build close is 707ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F7 (f) PLANTED DEFECT: an earlier lane commit that widens exempt (scripts/**) and a material that leaves the table out is refused: exempt is read from the range base 428ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F7 control: a lane commit that edits the table without moving exempt or base_ref (the table is reviewed like any file) closes 426ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > ITEM 3 (operator "1-5 y", item 3): a golden the existing golden check validates (a <state>.<target>.json under the golden folder, named in the table exempt with its check in exempt_why) is left out of the material and the close passes; the same folder with a code file renamed into it is refused 883ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that cuts finished_statuses in its own table is refused (the board list decides what is a finished status); the control closes (default scenario) 438ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that repoints base_ref to its own branch and widens exempt in the same commit is refused 430ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H4 PLANTED DEFECT: a lane that moves its task to another milestone is refused (the launch copy decides) 425ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H3 PLANTED DEFECT: a change to the prompt builder that the launch Files line does not name is refused; named at launch it closes 861ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above) 828ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line 484ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: the lane assignee dropped in an EARLIER lane commit, then a retype to doc or record in the close, is refused: type and lane assignee come from the board copy 552ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 control: the three same-commit forms stay refused (see H8) and the unchanged close passes (default scenario) 432ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 round 6: the diff text is pinned against the config keys: the lane made its diff with diff.interHunkContext set high and the recompute still matches 434ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: a lane that narrows its Files line at close cannot drop a rule list: the lists resolve from the union of the launch copy and the staged copy 933ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits 545ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control) 561ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path) 439ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > control: the default close (every CONFIRMED id has a fixed line with a real lane commit and the Final Summary holds the block) passes 426ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: an id with no outcome line is refused, naming the id, its severity, the verdict and the form that passes 416ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the LAST line of an id is judged: an earlier wrong line does not matter (control), a wrong last line is refused 846ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a line that starts with a known id and fits no form (no path, unknown word) is refused; a line for a stale id is ignored (control) 1254ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: fixed with a fake sha, a sha not touching the path, a sha outside L..HEAD (the launch commit), is refused 1262ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a sha reverted by a later commit of the range is refused; the same fix without the revert closes (control above) 440ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > task: on a DEFER finding passes when the task exists, is not DROPPED and names the id; refused for DROPPED, unknown, a text without the id, and x#1 against a task naming only x#12 2928ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light) 411ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > ruling: a CONFLICT closed by ruling:RR-0001 passes (control); an unknown ruling and a CONFLICT closed by task: are refused 1243ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > wontfix and pile: refused on a HIGH finding; on a LOW grounder severity (lowering the lens HIGH) they pass; a reason under 30 characters after squashing is refused; no parsable severity reads as CRITICAL 2477ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the seat report: control passes; a missing file, a changed sha, a report with no finding line, a seat finding with no verdict and one with no outcome are refused 2654ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > visible on the task: a Final Summary with no round line, a missing finding line or wrong counts is refused, and the refusal prints the exact block; N counts the round lines of the HEAD copy 2127ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > fix round (out-compliance-queue-137#2): the block is looked for in the Final Summary section; the same block in the Notes is refused 423ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids" 635ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > control: a lane with a valid committed context and the three references closes 429ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > refuses when no context file is committed for the task (the placeholder is not accepted) 408ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > refuses a context that is the placeholder, and one without the Description heading 829ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context) 409ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > an output must match one committed context file: the earlier round file is kept and still binds 428ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none 833ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three 441ms
+   ✓ task-375 A4, A5, B2: the close binds the committed review context and the references > B2: the TRIAGE.md reference is required only when the lane directory holds one 838ms
+   ✓ task-423 (b): the close accepts a joined output set and still accepts the per-list set > control: the per-list set is accepted 426ms
+   ✓ task-423 (b): the close accepts a joined output set and still accepts the per-list set > a folder holding both forms for one phase is refused 303ms
+   ✓ task-423 (b): the close accepts a joined output set and still accepts the per-list set > task-423 D1: a joined round file (out-compliance-rules-r2.txt, out-compliance-rules-r2-p1.txt) beside the joined round 1 is the joined form, not refused as holding both; control: a real per-list file (round or not) beside the joined set is still refused 895ms
+   ✓ task-423 (b): the close accepts a joined output set and still accepts the per-list set > a joined set with a gap (-p1 and -p3) is refused 303ms
+   ✓ task-423 (b): the close accepts a joined output set and still accepts the per-list set > neither form: the refusal names the joined file first, and the per-list refusals follow 376ms
+   ✓ task-423 (c): plan findings are ruled once, at the plan > a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line 428ms
+   ✓ task-423 (c): plan findings are ruled once, at the plan > a plan-*.txt with a finding in the folder is ignored: no Ruled line and no finding id of it is demanded 429ms
+   ✓ task-423 (c): plan findings are ruled once, at the plan > GROUNDER-PLAN.md absent at the launch commit with no plan-*.txt is refused; so is an empty one, or one with no Plan line 1696ms
+   ✓ task-423 (c): plan findings are ruled once, at the plan > control: absent at the launch commit with plan-*.txt present keeps the old rule (the plan finding needs its Ruled line and verdict) 847ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (a) out-engineering-eng with lens-engineering.md is accepted 466ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (b) the same review filed as out-compliance-eng is refused, naming out-engineering-eng.txt 479ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (c) an engineering output whose REVIEW header names lens-compliance.md is refused 483ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (d) F10 control: with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted (a lane launched before the landing closes as before) 466ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (e) the joined out-compliance-rules over the compliance lists only, plus out-engineering-eng, is accepted 336ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (f) no engineering list needs no out-engineering file (control: the lens set of the scenario default has none) 425ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (g) a joined out-compliance-rules over every list, eng included, is refused with the template at the base and accepted without it 584ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (h) a joined out-engineering-rules is accepted; with a lens-compliance.md header it is refused 946ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base 477ms
+   ✓ task-438 T3: the close requires the engineering seat for a list on the engineering standards file > (j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt 467ms
+
+ Test Files  4 passed (4)
+      Tests  373 passed (373)
+   Start at  16:49:07
+   Duration  107.96s (transform 4ms, setup 25ms, collect 73ms, tests 178.65s, environment 0ms, prepare 84ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 6 file(s)
+[wf1/inc1b-lists448 b2591b815] feat(08_agents): task-448 FINAL.11 each review gets the right rule lists only; the brief states the round-2 record form
+ 11 files changed, 117 insertions(+), 109 deletions(-)

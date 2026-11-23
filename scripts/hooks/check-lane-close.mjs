@@ -499,7 +499,7 @@ export function closeErrors(i) {
   for (const f of i.laneFiles) { if (!dirs.has(f.dir)) dirs.set(f.dir, []); dirs.get(f.dir).push(f); }
   const dirNote = `docs/reports/lanes/<date>/${laneName}/`;
   // task-407 (V2.LAYOUT): the one place the check reads, named in every refusal that says a file is missing
-  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a later round (r2, r3, ...) is out-<lens>[-<list id>]-rN.txt`;
+  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name`;
   const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
   if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
   const files = mine.flatMap(([, fs_]) => fs_);

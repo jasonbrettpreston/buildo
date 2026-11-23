@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.266Z file_sha256=8dcf1af56e910d7eee32c0441be3ed92b1cd8eb31004394a473609aba967d73d prompt_sha256=cfca75226c93b6146c5ad3be656ef4ad7d8b972b08585c1f2cc379da4a72e749
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0424 "task 448 also changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — NONE (check-lane-close.mjs and its test are not in this chunk) — the :502 clause edit and :346 comment cannot be seen here — chunk 2 of 2 holds only the two rule-list test files; judge in the other chunk.
+
+DEFER severity=LOW — RR-0426 "task 448 also corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — NONE (backlog-lane.mjs and backlog-lane.logic.test.ts are not in this chunk) — the stale-comment correction and its test line cannot be seen here — same chunk split; judge in the other chunk.
+
+DEFER severity=LOW — task item (3)/(5) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" and "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings" — NONE — the regenerated page and the two dated notes are not in this chunk, cannot see — chunk split; judge in the other chunk.
+
+DEFER severity=LOW — RR-0421 item 4 a "the lane-tools row keeps its process lists" — src/tests/backlog/rule-lists-table.logic.test.ts:377 "if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, ...).not.toContain(l);" — no assertion positively requires lane-tools to retain those four lists, only that other rows lack them — a future drop from the lane-tools row would leave this test green, the keep half unpinned.
+
+MET — RR-0421 item 1 a — src/tests/backlog/rule-lists-table.logic.test.ts:101 — surface-contract-routes row becomes ['surface-136'] and N2 rejects the four when planted back.
+MET — RR-0421 item 2 a — src/tests/backlog/rule-lists-table.logic.test.ts:340 — MOBILE drops mobile-100 and mobile-96 and a not-contains check is added.
+MET — RR-0421 item 3 a — src/tests/backlog/rule-lists.logic.test.ts:38 — storage-doc16 not contained; the four Airtight lists not contained in the table and import tests.
+MET — RR-0421 item 4 a — src/tests/backlog/rule-lists-table.logic.test.ts:377 — every row except lane-tools loses queue-137, agents-s5-1to3, agents-s7-s11 and orchestrator-doc17.
+MET — RR-0426 — src/tests/backlog/rule-lists-table.logic.test.ts:30 — prereg-MB-18-1 keeps bylaw-133 while prereg-MF-96-1 gets only the four every-task lists.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  61764ms (61.8s)
+📊 Tokens — total: 31024, input: 16790, output: 14234, reasoning: 13485

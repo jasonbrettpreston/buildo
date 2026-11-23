@@ -26,26 +26,27 @@ describe('V2.LIST round 2: the table rows', () => {
     expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
     expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
   });
-  it('a panel record (docs/reports/panels/**) gets Specs 128, 126, 08 sections 7 and 11, and 137', () => {
-    expect(lists('docs/reports/panels/MF-94.json')).toEqual(expect.arrayContaining(['surface-128', 'surface-126', 'agents-s7-s11', 'queue-137']));
+  it('a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133', () => {
+    const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
+    expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
+    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four);
+    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133');
   });
-  it('a generated report gets the Spec 124 list (Rule 13, R-GW) and not surface-127; a 127-* generated file keeps surface-127 and gets it too', () => {
+  it('a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)', () => {
     const g = lists('docs/reports/generated/x.md');
-    expect(g).toContain('policy-124-s2-s5');
-    expect(g).not.toContain('surface-127');
-    const g127 = lists('docs/reports/generated/127-surface-registry.md');
-    expect(g127).toEqual(expect.arrayContaining(['surface-127', 'policy-124-s2-s5']));
+    expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
     const t = table().lists['policy-124-s2-s5']!;
     expect(t.file).toBe('docs/specs/01-pipeline/124_step_standard_policy.md');
     expect(t.sections).toEqual(['2. The rules', '5. Register of rulings']);
   });
   it('the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed', () => {
-    expect(lists('docs/reports/policy/x.md')).toContain('queue-137');
+    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
   });
   it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
-    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(expect.arrayContaining(['queue-137', 'eng-all']));
+    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
     const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
     expect(row.why).toContain('no governing spec found: operator ruling owed');
   });
@@ -97,10 +98,10 @@ const censusFile = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/sur
 const entry = (scope: string, file: string, id = file): CensusEntry => ({ identity: { id }, programme: { scope }, evidence: { files: [`${file}:1`] } });
 
 describe('V2.LIST round 4: the surface-contract-routes row equals the census (drift test)', () => {
-  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches Specs 126, 128, 135 and 136 (operator "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
+  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-136 only (task-448, RR-0421 item 1 a; the four specs came from the operator\'s "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
     const row = table().rows.find((r) => r.id === 'surface-contract-routes')!;
     expect(row, 'row surface-contract-routes').toBeDefined();
-    expect(row.lists).toEqual(['surface-126', 'surface-128', 'surface-135', 'surface-136']);
+    expect(row.lists).toEqual(['surface-136']);
     expect(row.why).toContain('left out for Increment 1·B');
     expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missing: [], stale: [] });
     expect(row.why).toContain('The client is just glass');
@@ -112,10 +113,12 @@ describe('V2.LIST round 4: the surface-contract-routes row equals the census (dr
     expect(routeDrift(['src/app/api/x/route.ts'], census).missing).toEqual(['src/app/api/admin/y/route.ts']);
     expect(routeDrift(['src/app/api/x/route.ts', 'src/app/api/admin/y/route.ts', 'src/app/api/gone/route.ts'], census).stale).toEqual(['src/app/api/gone/route.ts']);
   });
-  it('the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none', () => {
+  it('the lookup route and a parcel_admin route get surface-136 and none of Specs 126, 128, 135 (task-448, RR-0421 item 1 a); an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none', () => {
     const four = ['surface-126', 'surface-128', 'surface-135', 'surface-136'];
-    expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(four));
-    expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(four));
+    for (const p of ['src/app/api/parcels/lookup/route.ts', 'src/app/api/admin/media/route.ts']) {
+      expect(lists(p), p).toContain('surface-136');
+      for (const l of four.slice(0, 3)) expect(lists(p), `${p}: ${l}`).not.toContain(l);
+    }
     for (const p of ['src/app/api/leads/detail/[id]/route.ts', 'src/app/api/admin/stats/route.ts']) for (const l of four) expect(lists(p), `${p}: ${l}`).not.toContain(l);
   });
 });
@@ -236,11 +239,11 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
     run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
     return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
   };
-  it('the real table: the file resolves agents-s7-s11 and queue-137 through exactly one row', () => {
-    expect(lists(FILE)).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
+  it('the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)', () => {
+    expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S', 'ms-S']);
     const rows = table().rows.filter((r) => r.id === 'review-followups');
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.lists).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
+    expect(rows[0]!.lists).toEqual([]);
   });
   it('RED (planted): the table without the row refuses the file (exit 3, matched by no row); the real table is the control', () => {
     const all = table().rows;
@@ -279,6 +282,7 @@ describe('task-431: the engineering standards sent by side', () => {
   it('S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not)', () => {
     expect(eng(lists('mobile/x.ts')), 'mobile').toEqual(['eng-front', 'eng-shared']);
     for (const f of ['scripts/steps/x.json', 'src/lib/x.ts', 'src/app/api/parcels/search/route.ts']) expect(eng(lists(f)), f).toEqual(['eng-back', 'eng-shared']);
+    for (const f of ['scripts/steps/x.json', 'scripts/lib/compute/x.js']) { expect(lists(f), f).toContain('step-132'); for (const l of ['airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a']) expect(lists(f), `${f}: ${l}`).not.toContain(l); } // task-448 (RR-0421 item 3 a)
     expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);
     expect(eng(resolveIn(withRow('mobile', onAll), 'mobile/x.ts')), 'planted: the mobile row on eng-all').toEqual(['eng-all']);
     expect(eng(resolveIn(withRow('api-lib', onAll), 'src/lib/x.ts')), 'planted: the api-lib row on eng-all').toEqual(['eng-all']);
@@ -333,7 +337,7 @@ describe('task-431: the engineering standards sent by side', () => {
   // task-439 FINAL.4 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163; RR-0383, decision-168): the front-end and phone rows send the handbook (Spec 136 section 2),
   // not Specs 126, 127, 128 and 135; the specs-web-admin row keeps all five, so an edit to a surface spec is reviewed with that spec.
   const FOUR = ['surface-126', 'surface-127', 'surface-128', 'surface-135'];
-  const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'mobile-100', 'mobile-96', 'surface-136', 'eng-front', 'eng-shared'];
+  const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'surface-136', 'eng-front', 'eng-shared']; // task-448 (RR-0421 item 2 a): 100 and 96 off
   const handbookOnly = (ids: string[], what: string) => {
     expect(ids, what).toContain('surface-136');
     for (const id of FOUR) expect(ids, what).not.toContain(id);
@@ -341,8 +345,9 @@ describe('task-431: the engineering standards sent by side', () => {
   it('N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row)', () => {
     for (const f of ['src/components/report/ReportPage.tsx', 'scripts/surfaces/x.mjs', 'mobile/x.ts']) handbookOnly(lists(f), f);
     for (const id of ['surfaces', 'mobile']) handbookOnly(table().rows.find((r) => r.id === id)!.lists, `row ${id}`);
-    // survive-the-fix: the hand edit of the mobile row keeps its other eight lists
+    // survive-the-fix: the hand edit of the mobile row keeps its six lists
     expect(lists('mobile/x.ts'), 'mobile/x.ts').toEqual(expect.arrayContaining(MOBILE));
+    for (const l of ['mobile-100', 'mobile-96']) expect(lists('mobile/x.ts'), l).not.toContain(l);
     const addFour = (r: Row431): Row431 => ({ ...r, lists: [...r.lists, ...FOUR] });
     const surf = resolveIn(withRow('surfaces', addFour), 'scripts/surfaces/x.mjs');
     expect(surf, 'planted: the four on the surfaces row').toEqual(expect.arrayContaining(FOUR));
@@ -353,11 +358,18 @@ describe('task-431: the engineering standards sent by side', () => {
     const no99 = resolveIn(withRow('mobile', (r) => ({ ...r, lists: r.lists.filter((l) => l !== 'mobile-99') })), 'mobile/x.ts');
     expect(() => expect(no99).toEqual(expect.arrayContaining(MOBILE)), 'planted: mobile-99 dropped').toThrow();
   });
-  it('N2 (survive-the-fix, RR-0383): an edit to a surface spec still gets the four specs and Spec 136 through the specs-web-admin row (planted: that row on surface-136 only)', () => {
+  it('N2 (task-448, RR-0421 item 1 a reverses RR-0383): an edit to a surface spec gets Spec 136 and none of the four specs (planted: the four back on the specs-web-admin row)', () => {
     const SPECS = ['126_maxbld_surface_standard.md', '127_surface_conversion_procedure.md', '128_surface_standard_policy.md', '135_mcfrontend_decisions_register.md'].map((f) => `docs/specs/02-web-admin/${f}`);
-    for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) expect(lists(f), f).toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
-    expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
-    const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: ['surface-136'] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
-    expect(planted, 'planted: specs-web-admin on surface-136 only').not.toContain('surface-128');
+    for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) handbookOnly(lists(f), f);
+    expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(['surface-136']);
+    const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: [...r.lists, ...FOUR] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
+    expect(() => handbookOnly(planted, 'planted: the four back on specs-web-admin')).toThrow();
+  });
+  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists', () => {
+    const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a', 'storage-doc16', 'mobile-100', 'mobile-96', 'policy-124-s2-s5'];
+    for (const r of table().rows) {
+      for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+      if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+    }
   });
 });

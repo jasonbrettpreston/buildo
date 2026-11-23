@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.247Z file_sha256=557cd7b797946a37df06ac4c7023d33b4b979fd78c121a8e2570e08e40a02c1c prompt_sha256=473fa1b116ad00490dd7a0f532cecfb14f5dcacf7761eb66fe4fb186a799f5bf
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0423 / pasted card item (4) "round 1 is named by a history line (task-446, d04026fe5)" and pasted Spec 137 close text "A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks)" — scripts/analysis/backlog-lane.mjs:188 "added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5)" — the brief now instructs every build/fix lane to add a commit of its own (round-1 records moved out of the folder) between the work commit and the closing commit, a third commit the pasted two-commit close does not provide and no pasted ruling names — drop "in a commit of its own before the closing commit" and land the history line with the work commit as the card's one sentence reads.
+
+DEFER severity=MED — §11.1 "a line citation is **read**, not remembered" and the new note's own sentence "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448)" — the only launch-script comment this task edits is the record-only COMPLY.2 comment and says nothing about fix rounds, so the spec note names a third changed place that does not exist; the statement is true of the brief string only, not "a launch-script comment" — delete "and one launch-script comment" from the note, or point it at the sentence actually changed.
+
+DEFER severity=MED — §11.1 "a census grep runs at the **full scope its conclusion covers**" — docs/specs/00-architecture/08_agents.md:357 "Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16. ... the Spec 124 list is attached to no row" — the universal "off on every row" claim is evidenced only by "A2 validate: rule-lists: ok 58 lists, 23 rows exit=0" and four row samples (A3 phone, A4 front-end, A5 MF record-only, A5 MB lane-tools, A12 library); none of the specs-web-admin, importer, census-route, panel-record or generated-127 rows the 137 note says changed is exercised, and the page diff shows no removal of surface-127 or surface-135 anywhere ("cannot see": rule-lists.json is chunk 2) — run one census over all 23 rows for each named list and record it with the acceptance items before the note asserts "every row".
+
+DEFER severity=MED — pasted card item (5) "including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it)" — docs/specs/00-architecture/08_agents.md:492 "for a plan launch, the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan; no separate fold-check agent is run." — the pasted Implementation Notes record Cairn-Ground-P448's rulings only on the two red tests and the three lane departures, so the gate condition "only if the plan grounder rules Spec 08 section 11.2" is not shown met for this note ("cannot see" any 11.2 ruling) — record the grounder's 11.2 ruling in the lane record, or hold the note.
+
+DEFER severity=LOW — pasted rule 6 dated note 2026-11-20, item (3) "A fix round does not file `out-<lens>-rN.txt`" — scripts/analysis/backlog-lane.mjs:188 "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name" — the brief keeps instructing lanes to keep -rN files readable as a findings form the pasted ruling removes, which invites a lane to file one — delete the -rN sentence, round 2 re-makes the same names as the preceding clause already says.
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — docs/reports/generated/rule-lists-by-kind.md phone section — mobile-100 and mobile-96 rows removed, mobile-90/98/99 remain, total 12 lists to 10.
+
+MET — rule 4 task-448 note "the Spec 124 list is attached to no row" — docs/reports/generated/rule-lists-by-kind.md — airtight-124a removed from all three sections that held it.
+
+MET — RR-0421 item 1 a "Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383)" — docs/specs/00-architecture/08_agents.md:357 — surface-126 and surface-128 removed from storage, surface-136 kept on phone and front-end.
+
+MET — pasted task-439 note phrases to be superseded — docs/specs/00-architecture/08_agents.md:357 "This supersedes '(a record-only task gets the queue lists)' (:229) and, in the task-439 note (:356), 'the mobile row keeps its five mobile lists' and 'The specs-web-admin row keeps all five surface lists' with the clause after it." — each superseded phrase is quoted verbatim.
+
+MET — rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — docs/specs/00-architecture/137_mcqueue.md:138 "`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2161 \"1-4 recommendations approved\"`" — the new notes carry the decision line and the operator's verbatim words.
+
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists" — docs/reports/generated/rule-lists-by-kind.md tooling section — agents-s5-1to3, agents-s7-s11, queue-137 and orchestrator-doc17 stay, and leave the spec-only section.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  130102ms (130.1s)
+📊 Tokens — total: 58355, input: 28621, output: 29734, reasoning: 28245

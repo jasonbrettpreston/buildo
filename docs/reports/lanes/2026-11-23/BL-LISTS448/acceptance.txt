@@ -1,0 +1,11 @@
+Acceptance at work head b2591b815 (lane items):
+A1 red.out: 'Tests  21 failed | 174 passed (195)'; strings found: under the SAME names 4, never stands in for a round-1 name 3, mobile-100 9
+A2 validate: rule-lists: ok 58 lists, 23 rows exit=0
+A3: mobile-90, mobile-98, mobile-99, surface-136, eng-front, eng-shared, five-words, plan-protocol, inc-S, ms-S
+A4: eng-all, surface-136, five-words, plan-protocol, inc-S, ms-S
+A5 MF: five-words, plan-protocol, inc-S, ms-S
+A5 MB: bylaw-133, agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S
+A6: check-tasks: open 302: resolve 102, not yet resolvable 200; bad lines: 0
+A7: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current exit=0
+A12: step-132, eng-back, eng-shared, five-words, plan-protocol, inc-S, ms-S
+Green: work commit b2591b815 hook tail 'Tests  373 passed (373)'. A8-A11, A13, A14 are the orchestrator's (not run).

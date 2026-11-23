@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T21:51:39.394Z file_sha256=361a276da5e668c5ae9c9f3fdb88fb5526710103c78961d7cd81f8623435f0af prompt_sha256=471ff6edf902ec05b257474e27035e87ae5869462a7774145b52e179c55abd79
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5.2 "Two parallel implementations stay in sync" / "generated doc ↔ generator" — docs/reports/generated/rule-lists-by-kind.md:14 "| total | 7 lists | | 128,198 | 7 |" — the regenerated page is proven only by the AC A7 CLI run ("rule-lists: docs/reports/generated/rule-lists-by-kind.md is current exit=0"); no test line in this diff regenerates the page to a buffer and diffs it, so the §5.2 parity battery for the generated artifact cannot be seen running in `npm run test` — name the existing regeneration-diff test (file:line) in the task notes or add one so the drift guard is a suite test, not a manual command.
+
+DEFER severity=LOW — 5.2 "Two parallel implementations stay in sync" — src/tests/backlog/backlog-lane.logic.test.ts:290 "for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt', 'never stands in for a round-1 name'])" — only one of the two new sentences is parity-pinned in both files; the brief's "under the SAME names" is asserted for the brief alone (same file, `expect(e).toContain('under the SAME names')`), while the close check's "a fix round (r2) re-makes every file under the same names" (scripts/hooks/check-lane-close.mjs:502) is not pinned, so the two surfaces can drift on that clause — add 'under the same names' to the shared fragment list the PARITY loop checks in both files.
+
+REJECT — 4.1 — the change is accused of leaving `src/app/api/admin/**` contract routes unreviewed for guarding by dropping surface-126/128/135 from `surface-contract-routes` — not a real issue: those routes still resolve the whole engineering standards list (Implementation Notes, "A4: eng-all, surface-136, five-words, plan-protocol, inc-S, ms-S"), and 4.1's lock is the source scan in `src/tests/api.infra.test.ts`, which this diff does not touch.
+
+MET — 5.3 — Implementation Notes "red attempt through the real pre-commit hook, output saved as red.out in the lane dir" and "A1 red.out: 'Tests  21 failed | 174 passed (195)'" — failing tests were written and run before the fix (A1 also names the three designed red strings), so the Red Light precedes the code.
+
+MET — 5.2 (parity battery, dual-surface) — src/tests/backlog/backlog-lane.logic.test.ts:290 "'never stands in for a round-1 name'" — the brief text (scripts/analysis/backlog-lane.mjs:188) and the refusal text (scripts/hooks/check-lane-close.mjs:502) are now pinned by one parity loop that reads both sources.
+
+MET — 5.2 (regression fence preserved) — src/tests/backlog/check-lane-close.logic.test.ts:346 "SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced" — the load-bearing rN behaviour is kept and asserted green-both while only its comment changes.
+
+MET — 4.2 — NONE — no SQL, Drizzle query or dynamic `order by` string appears in the diff (rule-lists.json, two .mjs text edits, spec notes, tests), so the parameterization rule has nothing to bind.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  55299ms (55.3s)
+📊 Tokens — total: 46365, input: 35046, output: 11319, reasoning: 10449
