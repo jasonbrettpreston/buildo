@@ -3,11 +3,11 @@ id: TASK-431
 title: >-
   INPUTS.3 The review table sends product tasks their handbook plus the relevant
   engineering sections; infrastructure tasks unchanged
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-TBL431'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-23T01:27:00Z'
+updated_date: '2026-11-23T01:44:00Z'
 labels:
   - McFix
   - McFix V2
@@ -35,6 +35,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-TBL431/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-TBL431/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-TBL431/TRIAGE.md
 type: build
 ordinal: 131012
 ---
@@ -290,3 +292,10 @@ rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
 
 2026-11-23 lane BL-TBL431: output review round 1 run (13 DeepSeek outputs, fresh context context-r4.md) in docs/reports/lanes/2026-11-23/BL-TBL431/, findings listed untriaged in FINDINGS.md there (post-build#1 MED, ruled Q-H, fixed in a870bdf41). RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in a870bdf41: the engineering seat gets the sections of the engineering standards that fit the task. Three section lists (eng-front section 1; eng-back sections 3 and 9; eng-shared the rest); the phone row gets front + shared; step-pipeline, api-lib and the API routes (ui-app not src/app/api/**) get back + shared; every other eng-all row keeps it; resolveTask keeps a whole list over a sections list of the same file; Spec 08 dated note, README line and regenerated page. Hooks green at the work commit (361 related tests). post-build#1 MED was ruled Q-H by the plan grounder and fixed in a870bdf41; the full suite is unverified until the push station.
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/lanes/2026-11-23/BL-TBL431/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-TBL431/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
