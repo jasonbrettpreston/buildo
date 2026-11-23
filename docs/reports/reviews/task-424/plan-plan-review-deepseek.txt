@@ -1,0 +1,55 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T13:15:16.826Z file_sha256=114a5ef114a40eb9a1db0da59208721009721f6be6ba028dcd26df1d7bdd1487 prompt_sha256=63f731e6145cd5d08a782f2e7e20eb42b0c798b47c591a5c73e59de5a463847d
+🔍 Lens review of docs/reports/reviews/task-424/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §7 Rollback — "restore station.sh lines :41-48 from the text quoted in section 2" — section 2 quotes a *summary* (`== name`/`rc=N` per step, :42-48 rc chain), not the literal `step()` body; the station edit is out-of-tree with no VCS, so a bad restore leaves the station unrecoverable — before the edit add `cp ~/Buildo-scratch/push-station/station.sh ~/Buildo-scratch/push-station/station.sh.bak.$(date +%s)` and quote :41-48 verbatim in §2 (not paraphrased).
+
+BUG severity=HIGH — §9 A7 + §2 "Difference 1" — A7 depends on `gate.mjs --ci --base 3a36e8b26` at 0f6ba8225 yielding `FAIL:Q:id-no-row`; the original 0f6ba8225 refusal was the `--push` gate, and the plan itself labels `--ci` yield UNVERIFIED in Q2 — run `node scripts/analysis/mcbylaws/gate.mjs --ci --base 3a36e8b26` in a worktree at 0f6ba8225 today, before plan-lock, and only keep A7 if it prints `FAIL:Q:id-no-row`.
+
+BUG severity=HIGH — §9 A8 vs §2 row 2 — A8 claims 21adfde8a gives "six steps rc=0", but the 2026-11-21 station run had only four steps and never ran `--staged --fast`; the new list *adds* that step (Difference 1), so the replay is a stronger test whose pass is not demonstrated — reproduce 21adfde8a against the new list with SUITE.lock and node_modules links before lock; if `--staged --fast` (which falls back to `git diff HEAD~1 HEAD`, step-validate.mjs:396-407) fails on 21adfde8a's diff, the "21adfde8a passes" premise collapses.
+
+BUG severity=HIGH — §4 step 1 — the new `die` line inserted after :36 uses `die`, `$short` and `$br`; the plan never verifies these are defined before :36, and `bash -n` (A5) does **not** catch an undefined function or unset var — add to A5: `grep -nE '^(short=|br=|die\(\))' station.sh` and confirm the line numbers precede :36, or the whole station dies with `die: command not found` on the very run (A6) that must PASS.
+
+BUG severity=MED — §3 ".husky/pre-push" splice — replacing line 41 with a `####` comment line then `sh .husky/pre-push-checks.sh push` breaks the hook if line 40 ends with a trailing `&&`; the plan asserts the whole chain is on line 41 but doesn't verify line 40's terminator — before editing run `sed -n '38,42p' .husky/pre-push`; if line 40 ends with `&&`, remove the trailing operator or fold the comment into line 41.
+
+BUG severity=MED — §7 step 2 (die before lock) — the die line is placed before SUITE.lock deliberately, so any candidate worktree on wf1/mb-rulings *without* the new file refuses with no lock; during the step-2→4 window, another lane's suite (or a fresh `git fetch` that advances the branch tip to a commit before the build commit) refuses/blocks silently — hold a note on the board that no lane runs a suite in that window, or land a `# task-424 the file will exist` stub earlier, or accept that only the final tip runs.
+
+BUG severity=MED — §3 `.husky/pre-push-checks.sh` header comment — the script header says "one line per step to `<run-dir>/steps.log`", but the `step()` function emits **two** lines (`== $name` and `   rc=$rc`) per step; A6 likewise reads per-step `rc=0`; the comment misleads a later editor — reword to "two lines per step (`== name`, `rc=N`)" (matches station.sh:41 behaviour).
+
+BUG severity=MED — §4 step 2 / §9 A6 — the station call becomes `sh .husky/pre-push-checks.sh station "origin/$br" "$run"` with a relative path; if the station's cwd in the suite branch is not the candidate worktree root, `.husky/pre-push-checks.sh` is not found and the new line 1 `die` fires — before lock verify the suite branch's cwd with `sed -n '1,60p' station.sh` or add a guard `cd "$worktree" 2>/dev/null || die "..."` before the new `sh` call.
+
+BUG severity=MED — §3 line "every station push goes there: 19 of 19 pass files say branch: wf1/mb-rulings" — an assertion in a data-reality claim, no command; if wrong, section 7 step 1 builds from the wrong branch — verify: `ls ~/Buildo-scratch/push-station/runs/*/pass* | wc -l` = 19 and `grep -L 'branch: wf1/mb-rulings' ~/Buildo-scratch/push-station/runs/*/pass*` returns empty.
+
+BUG severity=MED — §9 A7 "base 3a36e8b26 is the `tip:` in both pass files of 2026-11-21" — assumed; if the two pass files carry different `tip:` values, the base for A7/A8 is wrong — verify: `grep -h '^tip:' ~/Buildo-scratch/push-station/runs/{0f6ba8225-*,21adfde8a-*}/* | sort -u` returns exactly `3a36e8b26`.
+
+BUG severity=MED — §3 "step-validate.mjs:1290, :1304, :1300-1306", "gate.mjs:553-566 / :573-584 / :591", "paths.mjs:90-92", "station.sh:36/:41/:42-48/:49/:55", "CLAUDE.md:33" — every edit anchors on an assumed line number; if any drifted since the plan was written the fix misfires (e.g., edits a comment, or the safety rewrite at :487-490 targets stale text) — before the build edit add one `sed -n '<L-2>,<L+2>p' <file>` spot check per anchored line (or `git blame -L <L>,<L>`) and cite the exact text in the plan.
+
+BUG severity=MED — §3 "step-validate.mjs parses it from THIS file" + §9 UNVERIFIED — the whole fork-cap single-source claim rests on `step-validate.mjs:1300-1306` doing a literal-text first-match parse of `.husky/pre-push-checks.sh`, and on `step-validate.mjs --all --fast` NOT fingerprinting its own source (plan says UNVERIFIED); if either premise is false, A4/A8 fail after the move — verify before lock: `grep -n 'PRE_PUSH_HOOK_PATH\|1300\|1306' scripts/analysis/step-validate.mjs` and a headless run of `node scripts/analysis/step-validate.mjs --all --fast` after the edit on a scratch copy.
+
+BUG severity=MED — Sibling (Axis 3): other consumers of `.husky/pre-push` — the protocol mentions step-validate.mjs and the two tests, but any other script scanning that file (e.g., a cap-reporter, install-hooks, the `pre-push-summary.mjs` HARD_FLOOR path) will silently see no fork assignment after the move; a prior bug-hunt pattern for this codebase is exactly "one writer moved, another reader not updated" — before lock: `grep -rn '\.husky/pre-push\b' --include=*.mjs --include=*.ts --include=*.js .` and list every consumer in §6.
+
+BUG severity=MED — Sibling (Axis 3): `install-hooks.mjs` — the plan relies on `core.hooksPath .husky` being relative so the installed hook is the in-repo file (no copy). If `install-hooks.mjs` *copies* `.husky/pre-push` into `.git/hooks/pre-push`, a third copy exists (the root cause of this task) at install time — verify: `sed -n '1,80p' scripts/**/install-hooks.mjs` (or wherever) that it symlinks/sets hooksPath, not copies; if it copies, the "one list cannot differ" invariant holds only for the source file, not the installed one.
+
+BUG severity=MED — Sibling (Axis 3): tests that enumerate `.husky/*` — the plan says `hooks-composition.infra.test.ts:434-455 checks only the four hook names`, but if any test does `readdirSync('.husky')` and asserts length/count, the new 5th file *fails it* even though git ignores it — before lock: `grep -rn 'readdirSync.*\.husky\|\.husky.*length\|\.husky.*toHaveLength' src/tests` and add any touched files to §6/Files.
+
+DEFER severity=LOW — §3 fork-cap comment "no comment here may carry a fork assignment" — the file header *does* mention `.husky/pre-push` (the reader path) next to the fork note; safe today because `VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` literal appears only once, but a future editor could paste the whole `full_suite` line into a header and self-break the first-match parse — T2/T5 pin the current text; no change needed beyond the existing tests.
+
+DEFER severity=LOW — §3 `step()` uses `> "$run/$name.log"` (truncate) — if a future edit adds a second step with the same `$name`, its log silently overwrites the first and A6's per-step reads would misreport — names are all distinct today; not worth guarding now.
+
+DEFER severity=LOW — Sibling: `.husky/pre-commit` — if it also lists non-interactive checks (e.g., a lint stage), it shares this task's "two copies" root cause but is out of the card's scope; note only, don't fold in.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Station.sh rollback under-specified and out-of-tree (§7 Rollback restores lines :41-48 from a summary, not a verbatim quote; no backup).
+- A7/A8 replay "proof" unverified: `gate.mjs --ci --base 3a36e8b26` yielding id-no-row at 0f6ba8225 is a guess (Q2/UNVERIFIED), and 21adfde8a's "six steps rc=0" is asserted for the *new* list that adds `--staged --fast` the 2026-11-21 station never ran.
+- Die line inserted after :36 assumes `die` / `$short` / `$br` are defined before :36; `bash -n` (A5) will not catch an undefined function, and A6 is the only run standing between a broken station and no rollback.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- "19 of 19 pass files say `branch: wf1/mb-rulings`" — `ls ~/Buildo-scratch/push-station/runs/*/pass* | wc -l` = 19 and `grep -L 'branch: wf1/mb-rulings' ~/Buildo-scratch/push-station/runs/*/pass*` returns empty.
+- "base 3a36e8b26 is the `tip:` in both pass files of 2026-11-21" — `grep -h '^tip:' ~/Buildo-scratch/push-station/runs/{0f6ba8225-*,21adfde8a-*}/* | sort -u` returns exactly `3a36e8b26`.
+- "`step-validate.mjs --all --fast` does not fingerprint step-validate.mjs itself" — `grep -nE 'fingerprint|self|\.mjs' scripts/analysis/step-validate.mjs` and one headless run of `node scripts/analysis/step-validate.mjs --all --fast` on the post-edit tree before the build commit.
+
+---
+⏱  84682ms (84.7s)
+📊 Tokens — total: 36641, input: 19331, output: 17310, reasoning: 14443

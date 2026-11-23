@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.822Z file_sha256=0a84577cd75f929b1d32135da503effeff64d637e5b2c9c6927f9777ae203068 prompt_sha256=9b3f60c47c1464e02ccd1d05cee14e883708ae159ad76ae9fbaeda75765bd6a3
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=MED — card, Proof clause "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — plan A7 "That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the card names the replay as the proof and the plan leaves the decisive fact unverified with no stated fallback if `--ci` does not emit id-no-row — run `node scripts/analysis/mcbylaws/gate.mjs --ci --base 3a36e8b26` at 0f6ba8225 before lock and write the observed result into A7, or state what A7's pass means if `--ci` shows no id-no-row.
+
+BUG severity=MED — RR-0385 "Opus plans and builds, engineering seat, two rounds, validation without the operator" — plan A9 "A9 (operator). `station.sh push` → ... asks for y ... and push.log records rc=0" — the end-to-end proof of the change is assigned to the operator run, so the plan as written needs the operator to validate — state that A5-A8 are the validation and A9 is only the release action, or move the end-to-end proof to an orchestrator-run A-item.
+
+DEFER severity=MED — RR-0370 "used by both the hook and the station, so they cannot differ" with operator rule "tools live in the repo" — plan T3 "`describe.skipIf(!fs.existsSync(STATION))`, with `STATION = path.join(os.homedir(), 'Buildo-scratch/push-station/station.sh')`" — the cannot-differ property is locked only by a test that reaches outside the repo and skips when that path is absent, so it is never enforced in CI — keep T3 but make A5's station grep the always-run check and say so in the proof clause.
+
+DEFER severity=LOW — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan §4.1 "Insert one new line after :36: `[ -f .husky/pre-push-checks.sh ] || die \"HEAD $short has no .husky/pre-push-checks.sh ...`" — a new station behaviour that neither the card nor the ruling names, and it is redundant because `sh` on a missing file already fails the run — drop the die line (A6 already fails when the file is absent) or name it in the card's plumbing sentence.
+
+DEFER severity=LOW — card "one list of the non-interactive pre-push checks lives in the repo (the smallest form: decided by the plan; reuse what exists)" — plan Q5 "Is `.husky/pre-push-checks.sh` (protected, so no weakening) acceptable as the list's home, over `scripts/hooks/`?" — the card requires the plan to decide the home and the plan asks instead — decide it from the §3 protected-path argument and delete Q5.
+
+DEFER severity=LOW — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan list header "each step's output goes to <run-dir>/<name>.log, one line per step to <run-dir>/steps.log, the test report to <run-dir>/suite.json" — the repo list now owns the station's per-step logging and reporter-file plumbing, not only the checks — keep the log redirection and suite.json flags in the station (run the list once, tee per step) or record the move as named scope.
+
+REJECT — RR-0370 "used by both the hook and the station, so they cannot differ" — accused of the gate running `--push` in the hook and `--ci --base` at the station — not a real issue, the card's own words "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" and "plus the one line today" authorise the two gate modes, so Q1 needs no grounder ruling.
+
+REJECT — card Files line and "nothing added that the card did not name" — accused of the CLAUDE.md:33 edit being out of scope — not a real issue, the pasted Files line already ends "src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md", so the edit is named.
+
+MET — card "one list of the non-interactive pre-push checks lives in the repo" — plan §3 ".husky/pre-push-checks.sh" — one repo file, both callers invoke it.
+MET — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — plan §1 "Only the hook's list path calls `--push`."
+MET — card ".husky/pre-push is a protected path" — plan §3 ".husky/* is in the `protected` list (mcbylaws/protected-paths.json:51)" — the new list inherits the same push-time owner y.
+MET — card "The plan measures the size and names the Files line" — plan §6 "Estimated size: about 35 new lines, about 2 hook lines" — size and Files line present.
+MET — RR-0385 "tests are the focus" — plan §5 "Proven red on the tree with only the test edits, run recorded in the lane report, then green" — red-first evidence is specified per case.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+Rules met: none
+
+---
+⏱  71596ms (71.6s)
+📊 Tokens — total: 24388, input: 9962, output: 14426, reasoning: 13198

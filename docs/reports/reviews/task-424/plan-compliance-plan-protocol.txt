@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.819Z file_sha256=ed8090bc5c8a94ba50a81d4525ad3e622de3dc1292c03519179d8eb34fc92b0e prompt_sha256=6eb87d0d6bc3b46a0a5c7c69a695c5392c4920585c73c00e40c77e6d054512d0
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card proof clause "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — plan A7 "Run `sh <lane-wt>/.husky/pre-push-checks.sh station 3a36e8b26 r; echo $?` → `1`" — the command pins no working directory, and the gate resolves `scripts/analysis/...` from the CWD and judges `<base>..HEAD` there, so run from the lane worktree (which holds the new list and the fix) it judges the lane tip, not 0f6ba8225, and the card's proof is never exercised — fix: state in A7 and A8 that the command runs with CWD set to the detached replay worktree where `r` is created, and record the exact `cd` plus command in the lane report.
+
+DEFER severity=MED — card "the push hook and the station both run it, so they cannot differ" — plan section 1 "The mode changes only two things: which McBylaws gate mode runs, and where the output goes." / gate.mjs:591 "held, worktree and tty: not evaluated in CI" — the gate step is the one step whose mode decides which arms run, so the two callers can still return different verdicts on the same commit and the plan leaves that in Q2 as UNVERIFIED — rationale: this residual difference is exactly what the card's replay exists to disprove, so Q2 must be answered before lock, not after.
+
+DEFER severity=LOW — card, operator rule "tools live in the repo" — plan T3 "describe.skipIf(!fs.existsSync(STATION))" with `STATION = path.join(os.homedir(), 'Buildo-scratch/push-station/station.sh')` — the only in-repo check that the station still calls the list skips wherever the out-of-repo station is absent, so "both run it" is held in practice by the manual A5 greps alone — rationale: bounded, because A5 and A6 run in the landing window and station.sh:36 blocks later branches that lack the list.
+
+MET — RR-0370 "one list of push checks kept in the repo, used by both the hook and the station" — plan section 3 and section 4 — one file `.husky/pre-push-checks.sh` called as `sh .husky/pre-push-checks.sh push` from the hook and `sh .husky/pre-push-checks.sh station "origin/$br" "$run"` from the station.
+
+MET — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — plan section 1 NOT-in-scope "No change to the gate's `--push` arms (held, worktrees, summary, the operator's y). They stay inside `gate.mjs --push`".
+
+MET — card "The plan measures the size and names the Files line" — plan section 6 "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md" with "Estimated size: about 35 new lines, about 2 hook lines, about 6 lines in step-validate, about 90 test lines added and 20 changed".
+
+REJECT — card Files scope — that the plan adds `.husky/pre-push-checks.sh` and a CLAUDE.md edit the card did not name (plan Q4, Q5) — the pasted card already reads "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md", so both questions are already answered by the card and neither edit is out of scope.
+
+REJECT — RR-0385 "Label all realted tasks McFix Final" — that task-424 is not labelled as ruled — the pasted card reads "labels: McFix, McFix V2, McFix Final".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  125309ms (125.3s)
+📊 Tokens — total: 36143, input: 10786, output: 25357, reasoning: 24388

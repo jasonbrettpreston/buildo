@@ -1,0 +1,274 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:07162bd49b6e72ad297cb30043a02d10a20252ee080c4f81b9beac2bf9a360b0 part 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's ruling (RR-0370, verbatim: "The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today."; his rule "tools live in the repo"). Why: the push of 0f6ba8225 was refused by the pre-push gate after the station suite had passed, because the list of checks exists twice and the copies differed: .husky/pre-push:41 runs the McBylaws gate first, ~/Buildo-scratch/push-station/station.sh (suite branch) did not. THIS TASK: one list of the non-interactive pre-push checks lives in the repo (the smallest form: decided by the plan; reuse what exists); the push hook and the station both run it, so they cannot differ; the station outside the repo keeps only its plumbing (lock, pass file, tip check); the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook. The plan measures the size and names the Files line; .husky/pre-push is a protected path. Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes. Files: .husky/pre-push
+
+Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-424-v1
+
+**Task:** task-424 STATION.ONELIST. **Rule:** RR-0370, operator, verbatim: "The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1787). It was kept under RR-0385 item 5, "424 kept ("keep is quick")" (:1920), and it counts as a card on the board under RR-0392 (:1976-1977). **Principles served:** standardized (one list), accurate (the hook and the station cannot differ), observable (one log per step, kept).
+
+#### 1. Scope
+Move the six non-interactive pre-push checks into one POSIX shell file inside the repo: `.husky/pre-push-checks.sh`. Both callers run that file:
+- `.husky/pre-push` calls it in `push` mode.
+- `~/Buildo-scratch/push-station/station.sh` calls it in `station` mode.
+
+The mode changes only two things: which McBylaws gate mode runs, and where the output goes. It never changes which checks run or their order. The station keeps its plumbing: the clean check, the node_modules links, the fetch, the tip check, SUITE.lock, the run directory, the HEAD/dirty check after the run, the pass/fail files, the failure summary, and `push`. Its fork-cap parse in `scripts/analysis/step-validate.mjs` moves to the new file, so the cap still has one source.
+
+**NOT in scope:**
+- No new check.
+- No change to what any check does. The gate, step-validate, spec-split, typecheck and the suite are untouched.
+- No change to the gate's `--push` arms (held, worktrees, summary, the operator's y). They stay inside `gate.mjs --push` (gate.mjs:573-584, askTty :553-566). Only the hook's list path calls `--push`.
+- No change to `mcbylaws/protected-paths.json`.
+- No CI change. test.yml does not run the hook (.github/workflows/test.yml:72 says the pre-push hook is local only).
+- No post-run worktree check added to the hook.
+
+#### 2. What runs today
+
+| # | `.husky/pre-push` (all on line 41, joined by `&&`) | station.sh suite branch |
+|---|---|---|
+| 1 | `node scripts/analysis/mcbylaws/gate.mjs --push` (reads ref pairs on stdin; asks y when a protected path changed, gate.mjs:580-583) | `:44` `gate.mjs --ci --base "origin/$br"` (no stdin, no tty; "held, worktree and tty: not evaluated in CI", gate.mjs:591) |
+| 2 | `node scripts/analysis/step-validate.mjs --staged --fast` | **absent** |
+| 3 | `step-validate.mjs --all --fast` | `:45` same |
+| 4 | `spec-split-check.mjs --check` | `:46` same |
+| 5 | `npm run typecheck` | `:47` same |
+| 6 | `VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test` | `:48` same env, plus `-- --reporter=default --reporter=json --outputFile="$run/suite.json"` |
+
+Other facts that matter:
+- **Output.** The hook writes to the terminal. The station writes one `<name>.log` per step and appends `== name` / `rc=N` to `steps.log` (station.sh:41). It stops at the first failure through its own `rc` chain (:42-48).
+- **Difference 1 (row 2).** The station does not run `--staged --fast`. At push time, and on a clean station worktree, `--staged` falls back to `git diff HEAD~1 HEAD` (step-validate.mjs:396-407). So it is not a no-op, and the station misses a check the hook runs.
+- **Difference 2 (row 1).** The gate mode differs. That is unavoidable: the station has neither ref pairs nor a tty (see Q1).
+- **History.** The two 2026-11-21 station runs of 0f6ba8225 and 21adfde8a show four steps and no gate (runs/0f6ba8225-20261121-105344/steps.log, runs/21adfde8a-20261121-114802/steps.log). The gate line :44 was added later as "the one line today".
+- **Shell.** package.json:11 `"test": "vitest run --exclude \"**/*.db.test.ts\""`. `/bin/sh` on this host is GNU bash 3.2.57 (`/bin/sh --version`). Under `set -u`, an empty `"$@"` is an error in bash 3.2, so the list must not use `set -u`.
+
+#### 3. Design
+
+**Where the list lives: `.husky/pre-push-checks.sh`**
+- `.husky/*` is in the `protected` list (mcbylaws/protected-paths.json:51) and `.husky/**` is in HARD_FLOOR (pre-push-summary.mjs:9). `globToRegExp` turns `*` into `[^/]*` (paths.mjs:90-92), so the new file is matched.
+- An edit to the list therefore keeps the protection the checks have today: shown at push, owner y.
+- Putting it under unprotected `scripts/hooks/` would weaken that, and changing the policy file is MB-67's job (policy $comment).
+- git runs only hooks with known names, and the H6 test checks only the four hook names (hooks-composition.infra.test.ts:434-455). So an extra file in `.husky/` is inert.
+
+**Why a shell script:**
+- The hook is already `#!/bin/sh`, and the station's `step()` is shell.
+- A node runner would add a process layer and would have to re-implement passing stdin to the gate.
+- The script stops at the first failure through a single `&&` chain. Its exit status is the chain's.
+
+**Exact text of `.husky/pre-push-checks.sh`:**
+```sh
+#!/bin/sh
+#### task-424 (RR-0370, option C): the ONE list of the non-interactive pre-push checks, in order; stops at the first failure.
+####   push                      .husky/pre-push. The McBylaws gate reads git's ref pairs on stdin and may ask the operator (its --push arms).
+####   station <base> <run-dir>  the push station. The gate judges <base>..HEAD (--ci, never asks); each step's output goes to
+####                             <run-dir>/<name>.log, one line per step to <run-dir>/steps.log, the test report to <run-dir>/suite.json.
+#### The mode changes the gate's mode and where output goes; never which checks run or their order. Fork cap: R-CQ (see
+#### .husky/pre-push); scripts/analysis/step-validate.mjs parses it from THIS file, so no comment here may carry a fork assignment.
+mode="$1"; base="$2"; run="$3"
+case "$mode" in
+  push) ;;
+  station) [ -n "$base" ] && [ -d "$run" ] || { echo "pre-push-checks: station needs <base> <run-dir>" >&2; exit 2; } ;;
+  *) echo "pre-push-checks: usage: push | station <base> <run-dir>" >&2; exit 2 ;;
+esac
+step() {
+  name="$1"; shift
+  if [ "$mode" = push ]; then echo "== $name"; "$@"; rc=$?; echo "   rc=$rc"; return $rc; fi
+  echo "== $name" | tee -a "$run/steps.log"
+  "$@" > "$run/$name.log" 2>&1; rc=$?
+  echo "   rc=$rc" | tee -a "$run/steps.log"
+  return $rc
+}
+mcbylaws_gate() {
+  if [ "$mode" = push ]; then node scripts/analysis/mcbylaws/gate.mjs --push; else node scripts/analysis/mcbylaws/gate.mjs --ci --base "$base"; fi
+}
+full_suite() {
+  if [ "$mode" = push ]; then set --; else set -- -- --reporter=default --reporter=json --outputFile="$run/suite.json"; fi
+  VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test "$@"
+}
+step mcbylaws-gate mcbylaws_gate &&
+step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fast &&
+step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&
+step spec-split node scripts/analysis/spec-split-check.mjs --check &&
+step typecheck npm run typecheck &&
+step suite full_suite
+```
+Notes on the script:
+- The gate inherits the hook's stdin through `sh` and the shell function, and its tty prompt opens `/dev/tty` itself (gate.mjs:554). So the y prompt is unchanged.
+- `mode` is a literal word in the hook text. There is no environment switch, so a pusher cannot turn `--push` into `--ci`. gate.mjs:11 forbids such a switch, and the pin at hooks-composition.infra.test.ts:501-505 is extended to cover this file.
+- The fork assignment appears exactly once. That keeps the `VITEST_MAX_FORKS=8 npm run test` tamper pin and the first-match parse (step-validate.mjs:1300-1306) honest.
+
+**`.husky/pre-push`.** Lines 1-40 stay as they are; the history they record still holds through the list. Line 41 is replaced by:
+```sh
+#### task-424 (RR-0370 option C): the checks above run from ONE list, .husky/pre-push-checks.sh, which the push station runs too.
+sh .husky/pre-push-checks.sh push
+```
+git runs the hook at the worktree root; today's relative `scripts/...` paths already rely on that.
+
+**`scripts/analysis/step-validate.mjs`:**
+- :1290 becomes `const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');`.
+- In the error text at :1304, `.husky/pre-push` becomes `.husky/pre-push-checks.sh`.
+- The doc comments at :1294, :1313, :1317 and :1323 are reworded to "the pre-push check list". No logic changes.
+
+**CLAUDE.md:33.** "`.husky/pre-push` is the source of truth and `step-validate.mjs` parses its value" becomes "`.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value". See Q4.
+
+#### 4. The station (outside the repo)
+The lane does not edit or commit it. The orchestrator makes the edit, at the step in section 7.
+
+1. Insert one new line after :36:
+   `  [ -f .husky/pre-push-checks.sh ] || die "HEAD $short has no .husky/pre-push-checks.sh (task-424, the one check list). Rebase onto origin/$br."`
+   This is before the lock, so a refusal leaves no lock.
+2. Replace :41-48 (the `step()` function, `rc=0`, the :43 comment and the five step lines) with:
+```bash
+  # task-424 (RR-0370 option C): the checks are the repo's one list, the same file .husky/pre-push runs; this file keeps only the plumbing.
+  rc=0
+  sh .husky/pre-push-checks.sh station "origin/$br" "$run" || rc=1
+```
+3. Leave everything else as it is: :1-40, :49-58 (post-run HEAD/dirty check, pass/fail files, the `suite.json` failure summary at :55), `status` and `push`.
+
+Verification is A5 and A6 in section 9, plus test T3.
+
+#### 5. Tests first
+Proven red on the tree with only the test edits, run recorded in the lane report, then green.
+
+**New describe block in `src/tests/hooks-composition.infra.test.ts`: "task-424 — one list of pre-push checks".**
+- Read `.husky/pre-push-checks.sh` with `existsSync ? read : ''`. A missing file then fails the named cases instead of crashing the file.
+- Pure predicate: `checksIn(text) = CHECKS.filter(re => re.test(stripComments(text)))`, where CHECKS is `/mcbylaws\/gate\.mjs/`, `/step-validate\.mjs/`, `/spec-split-check\.mjs/`, `/\bnpm run typecheck\b/`, `/\bnpm run test\b/`, `/\bvitest\b/`, `/\btsc\b/`.
+
+| Case | Assertion | Red today because |
+|---|---|---|
+| T1 | `checksIn(PRE_PUSH)` is `[]`, and the hook's non-blank executable lines equal `['sh .husky/pre-push-checks.sh push']` | line 41 runs all six checks |
+| T2 | in the list's executable text, the indexOf of `gate.mjs --push` < `--staged --fast` < `--all --fast` < `spec-split-check.mjs --check` < `npm run typecheck` < `VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test`; and `gate.mjs --ci --base "$base"` appears exactly once | the file is absent |
+| T3 | `describe.skipIf(!fs.existsSync(STATION))`, with `STATION = path.join(os.homedir(), 'Buildo-scratch/push-station/station.sh')` (precedent: coa-limits.logic.test.ts:95, bylaw-mb18l-scorer.logic.test.ts:12). The suite branch (from `/^suite\)$/m` to the next `/^  ;;$/m`) has `checksIn(...)` = `[]` and contains `sh .husky/pre-push-checks.sh station "origin/$br" "$run"` exactly once | station.sh:44-48 |
+| T4 (planted, CI-safe) | `checksIn(PRE_PUSH + '&& npm run typecheck\n')` is non-empty; `checksIn(<inline literal of today's station lines 44-48>)` is non-empty; a list with the `step mcbylaws-gate` line removed fails the T2 order predicate | n/a (proves the predicates) |
+| T5 (behaviour, hermetic) | `spawnSync('sh', [LIST, 'bogus'])` gives status 2 and stderr `usage`. A temp dir holds fake `node` and `npm` on PATH that append their argv to `calls.log`; the fake `node` exits 1 when argv names gate.mjs and the test env asks for it. Station mode with the gate failing: exit 1, `steps.log` = `== mcbylaws-gate` / `rc=1` only, `calls.log` has one line. All pass: exit 0, six `==` lines in table order, and the last npm call carries `--outputFile=<run>/suite.json`. Push mode: no `steps.log` written | file absent |
+
+**Existing pins that move, with the same strength, from `PRE_PUSH` to the list text (`PRE_PUSH_CHECKS`):**
+- hooks-composition.infra.test.ts:98 (fork regex).
+- :99-104 (loops; add `PRE_PUSH_CHECKS`, keep `PRE_PUSH`).
+- :139-143.
+- :145-148.
+- :150-157.
+- :167-169.
+- :171-174. The tamper regex becomes `/step step-validate-all node scripts\/analysis\/step-validate\.mjs --all --fast &&\n/`.
+- :481-485 (count of `${GATE} --push` is 1 in the list, before `--staged --fast`).
+- :487-490 (tamper `/node scripts\/analysis\/mcbylaws\/gate\.mjs --push; /`).
+- :501-505 (add `PRE_PUSH_CHECKS` to the loop).
+
+These are moves, not removals. T1 adds that the hook itself runs nothing else, so no pin is weakened.
+
+**Fork-cap test.** In `src/tests/step-validate-vitest-fork-cap.infra.test.ts:33`, the path becomes `.husky/pre-push-checks.sh`. The titles and comments at :11-25, :50, :51 and :56 are reworded. The assertions at :52-53, :58-60, :86 and :93 stay as they are.
+
+**Unaffected:** install-hooks.infra.test.ts:35 and :99-110 (hook names only).
+
+#### 6. Files
+Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md
+
+Estimated size: about 35 new lines, about 2 hook lines, about 6 lines in step-validate, about 90 test lines added and 20 changed. The station change (about 3 lines in place of 8) is outside the repo and outside the Files line.
+
+#### 7. Landing
+**Commits:**
+- One build commit carrying `Task: task-424` and the task file in the same diff. This is Spec 137 rule 3 as built (137_mcqueue.md:23): the commit touches `scripts/` and `src/`.
+- Then the two-commit close for lane build tasks (137_mcqueue.md:100).
+- Red evidence (T1, T2, T3, T5 red; T4 green) is recorded in the lane report before the code. The commit goes through the real hooks.
+
+**Protected path.** `.husky/pre-push` and `.husky/pre-push-checks.sh` are `protected`. No commit-time trailer is needed: trailers apply to `layer23` and `frontend` paths (cite-arms.mjs:14). At push the summary shows both files and the gate asks for the owner's y (gate.mjs:580-583).
+
+**Sequence (chicken-and-egg):**
+1. The lane builds and closes on a branch from origin/wf1/mb-rulings. Every station push goes there: 19 of 19 pass files say `branch: wf1/mb-rulings`.
+2. The orchestrator makes the section 4 edit. From then until step 4, a suite on a HEAD without the list is refused with the new die line. No other suite runs in that window.
+3. The orchestrator runs `station.sh suite` on the final tip (A6). This is the new station plus the new list. It must PASS before any push.
+4. The operator runs `station.sh push`. git runs the hook in the pushed worktree, which is the NEW `.husky/pre-push` from that tree: core.hooksPath `.husky` is relative to each worktree (install-hooks.mjs:18, :45). So the new list in push mode runs, the gate asks y, and then the five steps run.
+5. After the push, the tip check at station.sh:36 means every later candidate contains the list, so the die line never fires again.
+
+**Rollback:** restore station.sh lines :41-48 from the text quoted in section 2 and remove the one inserted line, then revert the commit.
+
+**The 2026-11-22 incident** (hook's suite saw the worktree move mid-run). The record entry is UNVERIFIED: not found by grep. The nearest are :921 and :1126, which are station-side "worktree changed during the run" cases. The one list changes nothing there:
+- The hook still runs the suite in place in the pushing worktree, with no post-run check, as today.
+- The station keeps its own check at :49.
+- The guard is the same as now: nothing commits in the worktree being pushed or tested.
+
+#### 8. Order against open tasks
+None of 445, 446, 439 or 430 shares a file with this task:
+- 445 (RUNNING): rule-lists.mjs, backlog tests, 08_agents.md, review-templates README.
+- 446 (LATER) and 430 (BUILT): surfaces, Spec 135 and 136, MCFRONTEND-QUEUE, 00_system_map.md.
+- 439 (LATER): rule-lists.json, 08_agents.md, 137_mcqueue.md.
+
+The only thing shared is the station and push window. Either run the section 7 steps 2-4 with no other suite in between, or let 424 ride one combined push with 430 and 445 (as RR-0392 did), where step 3's suite runs on the combined tip. Any branch suited after 424 lands must contain it (station.sh:36).
+
+#### 9. Acceptance
+Each item is a command and its expected output.
+- **A1 (lane).** `npx vitest run src/tests/hooks-composition.infra.test.ts src/tests/step-validate-vitest-fork-cap.infra.test.ts` → all pass; T3 runs, not skipped, on this host.
+- **A2.** `grep -v '^#' .husky/pre-push | grep -cE 'gate\.mjs|step-validate|spec-split|npm run'` → `0`.
+- **A3.** `sh .husky/pre-push-checks.sh bogus; echo $?` → the usage line, then `2`.
+- **A4 (lane).** `npm run test` → green, through the real hooks.
+- **A5 (orchestrator, after the station edit):**
+  - `bash -n ~/Buildo-scratch/push-station/station.sh; echo $?` → `0`.
+  - `sed -n '/^suite)/,/^  ;;/p' ~/Buildo-scratch/push-station/station.sh | grep -cE 'gate\.mjs|step-validate|spec-split|npm run'` → `0`.
+  - `grep -c 'pre-push-checks.sh station' ~/Buildo-scratch/push-station/station.sh` → `1`.
+- **A6 (orchestrator, never the lane).** `bash ~/Buildo-scratch/push-station/station.sh suite <lane-wt> wf1/mb-rulings` → `STATION PASS <short>`. Its `runs/<short>-*/steps.log` shows mcbylaws-gate, step-validate-staged, step-validate-all, spec-split, typecheck and suite, each `rc=0`, and `suite.json` exists.
+- **A7 (orchestrator, replay of 0f6ba8225).** Make a detached worktree at 0f6ba8225 and `mkdir r`. Run `sh <lane-wt>/.husky/pre-push-checks.sh station 3a36e8b26 r; echo $?` → `1`. `r/steps.log` holds only `== mcbylaws-gate` / `rc=1`. `r/mcbylaws-gate.log` contains `FAIL:Q:id-no-row:` and `GATE FAIL`. The base 3a36e8b26 is the `tip:` in both pass files of 2026-11-21. That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2).
+- **A8 (orchestrator, under SUITE.lock, with node_modules links).** The same against a detached worktree at 21adfde8a with base 3a36e8b26 → `0`, six steps `rc=0` (see Q2).
+- **A9 (operator).** `station.sh push` → the hook prints `== mcbylaws-gate`, the summary lists the two `.husky` files, asks for y, then shows five `== ...` / `rc=0` pairs, and push.log records `rc=0`.
+
+#### 10. Questions for the grounder
+- **Q1.** "the push hook and the station both run it, so they cannot differ". Is it acceptable that the gate step runs `--push` in the hook and `--ci --base origin/<br>` at the station? I read it as yes, because the card keeps "the interactive parts of the gate ... in the hook" and the station has no ref pairs and no tty. But it could read as "an identical command line".
+- **Q2.** "21adfde8a passes": the whole list (full suite, SUITE.lock, about 75 s or more) or only the gate step? And does `gate.mjs --ci --base 3a36e8b26` at 0f6ba8225 print `id-no-row`? (gate.mjs needs no node_modules; run it alone.)
+- **Q3.** Is a repo test that reads `~/Buildo-scratch/push-station/station.sh` and skips when it is absent (T3) acceptable under "tools live in the repo"? Or should the station side be held by A5 alone?
+- **Q4.** CLAUDE.md:33 becomes untrue after the move. Is the one-phrase edit in scope ("nothing added that the card did not name", DoD #8)? If not, strike it from the Files line.
+- **Q5.** The card says "lives in the repo" and names `.husky/pre-push` only. Is `.husky/pre-push-checks.sh` (protected, so no weakening) acceptable as the list's home, over `scripts/hooks/` (not protected)?
+
+UNVERIFIED (not checked by me): that `step-validate --all --fast` does not fingerprint step-validate.mjs itself; that the gate `--ci` run on the landing tip is free of other FAIL lines; that the replay worktrees at 0f6ba8225 and 21adfde8a reproduce their 2026-11-21 results.
+

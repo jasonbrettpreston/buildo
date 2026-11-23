@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T13:15:16.836Z file_sha256=a9ee4087e30e2e0c25b5455305ea1ce294070e6390a8a0954b79fcae90e05a36 prompt_sha256=ab948e90c9e2090b31b1d43c2ecd0245b1d6f997de0708da0368597200531ea6
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — PLAN-424-v1 §9 "Each item is a command and its expected output." — the plan has no 5-10 item PASS/FAIL self-skeptical checklist and no WF3 "3-5 sibling bugs" list anywhere, only acceptance commands and open questions — add a numbered 5-10 item checklist (failure modes of the one-list move: missing file, wrong mode, station/HEAD drift, fork-cap drift, hook line count) walked PASS/FAIL before the acceptance section.
+BUG severity=MED — 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — PLAN-424-v1 §3 "CLAUDE.md:33. ... becomes \"`.husky/pre-push-checks.sh` (the one pre-push check list ...) is the source of truth\"" — the plan sweeps only CLAUDE.md:33 and the step-validate.mjs comments; no step enumerates or updates other specs/runbooks that cite `.husky/pre-push` as the fork-cap source, so those become stale in the same commit window — add a grep over docs/specs and docs/reference for "pre-push" fork-cap cites and name each hit in the Files line.
+DEFER severity=MED — 5.5 Test-Layer Map "Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence." — PLAN-424-v1 §5 T3 "`describe.skipIf(!fs.existsSync(STATION))`" — the only repo test proving the station runs the list self-skips whenever `~/Buildo-scratch/push-station/station.sh` is absent, so CI green does not prove the hook and station agree — record in the lane report that A5/A6, not the suite, is the sole proof and state it in the task file.
+MET — 5.3 Red-Green Test Cycle — PLAN-424-v1 §5 "Proven red on the tree with only the test edits, run recorded in the lane report, then green." — failing tests (T1, T2, T3, T5) precede implementation with recorded evidence.
+MET — 2.1 Unhappy Path Test Mandate — PLAN-424-v1 §5 T5 "Station mode with the gate failing: exit 1, `steps.log` = `== mcbylaws-gate` / `rc=1` only" — deepest-layer failure forced and asserted at the top.
+MET — 2.3 Assumption Documentation — PLAN-424-v1 §5 "Read `.husky/pre-push-checks.sh` with `existsSync ? read : ''`." — existence checked before access, no non-null assertion.
+MET — 5.2 Test File Pattern (regression fence) — PLAN-424-v1 §5 "These are moves, not removals." — every existing pin (:98, :99-104, :481-490, :501-505, fork-cap :33) is relocated, not deleted.
+MET — 5.2 Test File Pattern (`.infra.test.ts`) — PLAN-424-v1 §5 "New describe block in `src/tests/hooks-composition.infra.test.ts`" — no-network file/process reads stay in the infra layer, no DB replay needed (no schema change).
+REJECT — 5.1 Typed Factories Only "Never write untyped inline mocks" — T4's "inline literal of today's station lines 44-48" and T5's fake `node`/`npm` binaries — these are planted input text and path shims, not domain object mocks of the kind `src/tests/factories.ts` types.
+REJECT — 9.4 Pipeline SDK Mandate "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the change touches `scripts/analysis/step-validate.mjs` — it is a validation CLI with no DB write, and the diff is a path constant plus comments, so the SDK's scope (DB-writing pipeline scripts) is not engaged.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 24   Unmet: 3
+
+---
+⏱  64359ms (64.4s)
+📊 Tokens — total: 28386, input: 20357, output: 8029, reasoning: 7086

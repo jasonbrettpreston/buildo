@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.821Z file_sha256=7a667c7f9056187652331abab57384d1e74f1e3acd40a1da6b8d815aadf9921c prompt_sha256=408addafb7973e3754640279d0028337f299f1dd178981007a1374398a796be2
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-366 note "holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` ... The lane that wrote the work leaves the task RUNNING with "grounder owed"." — plan §7 Landing "Then the two-commit close for lane build tasks (137_mcqueue.md:100)." — the landing section names neither the per-list compliance lens outputs, nor a GROUNDER.md with a separate grounder and one CONFIRMED|REJECTED line per BUG/DEFER finding, nor the task left RUNNING with "grounder owed", so `scripts/hooks/check-lane-close.mjs` refuses the close as written — add those three items to §7 as explicit close preconditions, one lens output per attached list plus GROUNDER.md plus RUNNING "grounder owed".
+
+BUG severity=HIGH — card "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." and rule list 5.1 "HARD DEPENDENCY: Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST" — plan A7 "That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the card's proof is asserted for the mode the station will use (`--ci --base`) but never ground-truthed, so the design's one justification for the station's gate step (and for A6/A7) stands on an unverified outcome — run `node scripts/analysis/mcbylaws/gate.mjs --ci --base 3a36e8b26` at 0f6ba8225 and at 21adfde8a before plan-lock and paste both outputs, as the plan itself notes the gate needs no node_modules.
+
+DEFER severity=MED — card "the push hook and the station both run it, so they cannot differ" — plan T3 "`describe.skipIf(!fs.existsSync(STATION))`" and §7 step 2 "The orchestrator makes the edit, at the step in section 7." — off this host the station side is untested (skipped) and the station edit is out-of-repo, outside the Files line and unversioned, so nothing in the repo holds the station to the list once the edit lands — record A5's three command outputs in the lane report as the standing check and state in §7 that no repo artifact asserts the station's call line, or have the grounder rule A5 alone holds (Q3).
+
+DEFER severity=LOW — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — list text "`mcbylaws_gate() { if [ "$mode" = push ]; then node scripts/analysis/mcbylaws/gate.mjs --push; else ...`" — the `--push` call site moves out of `.husky/pre-push` into a file the station also runs, kept hook-only by a mode literal rather than by living in the hook, which is exactly the reading Q1 "it could read as "an identical command line"" leaves open — have the grounder record the Q1 ruling in the plan before lock.
+
+DEFER severity=LOW — card "Files: .husky/pre-push" — plan §6 "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md" and Q4 "If not, strike it from the Files line." — `CLAUDE.md` is named by no pasted clause or ruling and sits in the Files line with its scope question unresolved at lock — rule Q4 yes or no and fix the Files line before lock.
+
+REJECT — RR-0392 "I don't think we need any other infastrcuture beyond this" — that `.husky/pre-push-checks.sh` is new infrastructure barred by the ruling — the same card names "one list of the non-interactive pre-push checks lives in the repo", so the file is the named list, not new infrastructure.
+REJECT — card "the station outside the repo keeps only its plumbing" — that the station's post-run HEAD/dirty check and `suite.json` failure summary must move into the shared list — those are run-environment plumbing and result reporting, not pre-push checks; §4 "Leave everything else as it is: :1-40, :49-58" is the clause's own reading.
+
+MET — RR-0370 "one list of push checks kept in the repo, used by both the hook and the station" — plan §3 and §4 — one repo file, hook calls "`sh .husky/pre-push-checks.sh push`", station calls "`sh .husky/pre-push-checks.sh station "origin/$br" "$run"`".
+MET — RR-0370 "plus the one line today" — plan §4 step 3 "Leave everything else as it is: :1-40, :49-58" — the station's gate line survives as the list's gate step in station mode.
+MET — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan §1 — "The station keeps its plumbing: the clean check, the node_modules links, the fetch, the tip check, SUITE.lock, the run directory".
+MET — card "The plan measures the size and names the Files line" — plan §6 "Estimated size: about 35 new lines, about 2 hook lines" plus the Files line.
+MET — card ".husky/pre-push is a protected path" — plan §3 — cites "in the `protected` list (mcbylaws/protected-paths.json:51)" and "At push the summary shows both files and the gate asks for the owner's y".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+Rules met: none
+
+---
+⏱  61055ms (61.1s)
+📊 Tokens — total: 24529, input: 12363, output: 12166, reasoning: 10824

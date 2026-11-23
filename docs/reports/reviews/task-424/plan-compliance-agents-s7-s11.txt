@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.827Z file_sha256=569434d5f84a9097ea9dda02dd24e71a51ed25679804aae129dd7d42fa30d1bd prompt_sha256=2dd6b4d8b2cf2769c9fb86582fe15d155096197021223d72f5f9c0269911b823
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't: a data claim carries its query run" — plan §9 "A7 (orchestrator, replay of 0f6ba8225) ... That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the card's stated proof (0f6ba8225 stops at the gate with id-no-row, 21adfde8a passes) ships unexecuted and is pushed to the orchestrator after lock — run both replays at plan altitude under SUITE.lock and paste steps.log plus the gate log into the plan before lock
+
+BUG severity=MED — spec 11.1 "a line citation is read, not remembered" — plan §2 "At push time, and on a clean station worktree, `--staged` falls back to `git diff HEAD~1 HEAD` (step-validate.mjs:396-407). So it is not a no-op, and the station misses a check the hook runs." — the row-2 justification that the missing check is real is an executable claim carried by citation only — execute `node scripts/analysis/step-validate.mjs --staged --fast` in a clean worktree and record rc and stdout in the plan
+
+BUG severity=HIGH — pasted note 2026-11-21 (task-375) "The tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate ... requires their Seat lines in GROUNDER-PLAN.md" — plan §9 "A7 (orchestrator, replay of 0f6ba8225)" and §6 "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs" — the plan provisions no Integration, Reality-Check or Regression seat although the Files line names tracked paths — add the three seats to §10 with the replays and the fork-cap parse assigned to them, and require their Seat lines in GROUNDER-PLAN.md
+
+DEFER severity=MED — pasted note 2026-11-21 (task-419) "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it" — plan §10 "## Questions for the grounder" — the launch steps name neither GROUNDER-PLAN.md nor a committed FOLD-CHECK.md beside it — add both records to §7 and §9 so the plan-prep commit is not refused
+
+DEFER severity=MED — pasted note 2026-11-19 (RR-0232, RR-0235) "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — plan §7 "Then the two-commit close for lane build tasks (137_mcqueue.md:100)." — the close sequence omits the repo copy of the lane report, triage and review outputs, which 137 is not pasted to supply — name the docs/reports/lanes/<date>/<lane>/ copy in the lane's last commit in §7
+
+DEFER severity=LOW — TKT-1 "`Done-condition:`; `max_fix_rounds:` a number" — plan header "**Task:** task-424 STATION.ONELIST. **Rule:** RR-0370, operator, verbatim: ... **Principles served:** standardized (one list)" — the header carries no lane, stage, Done-condition or max_fix_rounds line — add the five header fields, taking Done-condition from A1 to A4 since the pasted task's Acceptance criteria block is empty
+
+REJECT — RR-0370 — that the gate step is not identical in the two callers (`--push` versus `--ci --base`) — the same ruling keeps "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook", and the station has neither ref pairs nor a tty
+
+MET — RR-0370 "one list of push checks kept in the repo, used by both the hook and the station" — plan §3, §4 — `.husky/pre-push-checks.sh` is called by `.husky/pre-push` in push mode and by station.sh in station mode
+MET — RR-0370 card text "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan §4 step 2 — station lines 41-48 become one call to the list, the lock, pass file, tip check and summary stay
+MET — RR-0370 card text "The plan measures the size and names the Files line" — plan §6 — "Estimated size: about 35 new lines" and the Files line equals the task's Files line
+MET — spec 11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — plan §5 — T1 to T5 with assertions, red reasons and a planted CI-safe case
+MET — spec 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new)" — plan §5 T4 "proves the predicates" — planted negatives for the T1, T2 and station-branch predicates
+MET — spec 7 rule 10 (C2) "a rule is cited by its id and anchor first, with the line number as a hint" — plan header — "RR-0370, operator, verbatim: ... (MORNING-DECISIONS.md:1787)"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: 11.3, 11.4
+
+---
+⏱  67155ms (67.2s)
+📊 Tokens — total: 34923, input: 20044, output: 14879, reasoning: 13549

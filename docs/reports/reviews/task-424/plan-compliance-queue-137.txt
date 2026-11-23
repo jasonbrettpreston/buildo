@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.826Z file_sha256=04ff1500eb6f08e555f9e13002f73ef7c055f1305924fb9029d1b4cdba7e1f59 prompt_sha256=09b374c9278514ca04e860bfcd8efd66500f251c03efb128e2b44df704bc8654
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-424 card, proof clause "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — PLAN-424-v1 §9 A7 "That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the operator-named proof is left conditional: the station now runs the gate as `--ci --base` while the 2026-11-21 refusal came from `--push`, so the replay the card requires is not shown to stop at the gate with id-no-row — run `node scripts/analysis/mcbylaws/gate.mjs --ci --base 3a36e8b26` in a worktree at 0f6ba8225 and paste the output (or make A7 a `--push` replay) before plan-lock
+
+BUG severity=MED — Spec 137 §4 rule 7 "Each open row carries an opened date and an expiry 7 days later." — task-424 front matter "status: LATER · milestone: m-1 · assignee: none · labels: McFix, McFix V2, McFix Final" — the row is open (LATER) with no `expires`, and §3 makes `expires` the due date for a Backlog task, yet no plan step adds one — add `expires: <date 7 days out>` (or a rule 12 `when <event>`) to task-424 in the build commit
+
+BUG severity=MED — Spec 137 §4 rule 3 dated note 2026-11-20 "the close of a lane's task ... now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane" — PLAN-424-v1 §7 "Then the two-commit close for lane build tasks (137_mcqueue.md:100)." — the plan names the close but none of the artifacts the close check refuses without, not the staging scope of the task-410 note, and not the rule lists the Files line resolves to — in §7 name the lane report path, the resolved rule lists, GROUNDER.md and the TRIAGE.md condition
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`." — task Description "Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's ruling (RR-0370, verbatim: ...)" — RR-0370, RR-0385 and RR-0392 sit in the auto "Decisions naming this task" block, not as M-246 dated notes, and no plan step writes one — add the dated note for RR-0370 to task-424's description in the build commit
+
+DEFER severity=LOW — Spec 137 §4 rule 3 dated note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line (the launch refuses a task whose Files line is missing or matches no row)." — task Description "Files: .husky/pre-push" and file head "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, ..." — two Files lines exist; which one rule-lists.mjs reads is cannot see, and the stale inline one resolves this six-file change to `.husky/pre-push` alone — delete the stale inline "Files:" line in the same commit
+
+REJECT — card "the push hook and the station both run it, so they cannot differ" — that the gate runs `--push` in the hook and `--ci --base origin/<br>` at the station is a difference the card forbids — the same card keeps "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook", so no ref pairs and no tty at the station is the named, unavoidable mode split, as Q1 reads it
+
+REJECT — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — that station.sh keeps its post-run HEAD/dirty check and the suite.json failure summary — those are the station's own plumbing around the run, not pre-push checks the list is meant to hold
+
+MET — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — PLAN-424-v1 §1 "No change to the gate's `--push` arms (held, worktrees, summary, the operator's y). They stay inside `gate.mjs --push`"
+
+MET — Spec 137 §4 rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN-424-v1 §7 "One build commit carrying `Task: task-424` and the task file in the same diff."
+
+MET — card "one list of the non-interactive pre-push checks lives in the repo ... the push hook and the station both run it" — PLAN-424-v1 §1 "`.husky/pre-push` calls it in `push` mode." and "`~/Buildo-scratch/push-station/station.sh` calls it in `station` mode."
+
+MET — card "The plan measures the size and names the Files line" — PLAN-424-v1 §6 "Estimated size: about 35 new lines, about 2 hook lines, about 6 lines in step-validate" with the full six-path Files line
+
+MET — Spec 137 §4 rule 2 "Every task is registered. A card, or a claimed id, gets a status line too." — task-424 "STATION.ONELIST" exists as a Backlog task with a Files line and the card is opened under rule 2
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  97807ms (97.8s)
+📊 Tokens — total: 40287, input: 18878, output: 21409, reasoning: 19999

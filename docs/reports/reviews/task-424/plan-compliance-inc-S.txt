@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.835Z file_sha256=bb824ed196b15647e8cf62f9225b53850d6efffb89b3dd71ef6b3dbededf9395 prompt_sha256=41959dc4d2241b39405b7c013205485348cb4bbec97c2aeb097bef3908bb5660
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "the push hook and the station both run it, so they cannot differ" — plan §10 Q1 "But it could read as "an identical command line"." and plan §2 "Difference 2 (row 1). The gate mode differs." — the plan leaves the gate step running `--push` in the hook and `--ci --base` at the station and itself flags that the clause may require an identical command, so "cannot differ" is unresolved at plan-lock — fix: get the grounder ruling on Q1 and record it, or make both callers run the same non-interactive gate command (same mode, same base) and keep the interactive arms as a separate hook-only call.
+
+DEFER severity=MED — card "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — plan §9 A7 "That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the acceptance proof is not established as written because the plan marks the key expected output unverified — fix: run A7, confirm id-no-row, and cite that run in A7 before lock.
+
+DEFER severity=LOW — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan §4 "Leave everything else as it is: :1-40, :49-58 (post-run HEAD/dirty check, pass/fail files, the `suite.json` failure summary at :55)" plus "Insert one new line after :36" — the station retains the HEAD/dirty check and failure summary and gains a die guard, more than the three named plumbing items — fix: state in the plan that these are the named tip/worktree plumbing the incident requires, or drop the failure summary from the station.
+
+MET — RR-0370 "one list of push checks kept in the repo" — plan §3 ".husky/pre-push-checks.sh" — one protected-repo file holds the six checks.
+MET — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — plan §1 "Only the hook's list path calls `--push`." — interactive arms are reachable only from the hook.
+MET — card "The plan measures the size and names the Files line" — plan §6 "Estimated size: about 35 new lines" and the Files line — both present.
+MET — card ".husky/pre-push is a protected path" — plan §3 ".husky/* is in the protected list (mcbylaws/protected-paths.json:51)" — protection retained and relied on.
+MET — RR-0385 "tests are the focus" — plan §5 "Tests first" T1-T5 — red-first tests named before code.
+MET — RR-0392 "one push for all four" — plan §8 "let 424 ride one combined push with 430 and 445 (as RR-0392 did)" — combined push honored.
+MET — card "the smallest form: decided by the plan; reuse what exists" — plan §1 "No new check." — reuses the six existing checks.
+MET — card "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md" — plan §6 Files line — all six named.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: RR-0385, RR-0392
+
+---
+⏱  128819ms (128.8s)
+📊 Tokens — total: 42292, input: 14626, output: 27666, reasoning: 26856

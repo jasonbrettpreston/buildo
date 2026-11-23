@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:15:16.824Z file_sha256=ca1c352824e1426642792a7967e404ba02d0d489b27be7e01f49270423c20a7d prompt_sha256=592483f20052b9fd211005da2bb3fc32e4ecf13b0a6b3fdb7270fc48ba0c7966
+🔍 Lens review of docs/reports/reviews/task-424/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card proof clause "Proof: a replay of 0f6ba8225 stops at the gate step with id-no-row; 21adfde8a passes." — plan §9 A7 "That `--ci` (not only `--push`) yields id-no-row is UNVERIFIED (Q2)." — the card's proof is not established by the plan, its decisive outcome is declared unchecked — run `gate.mjs --ci --base 3a36e8b26` on a detached 0f6ba8225 before lock, or restate A7 to prove id-no-row through `--push`.
+DEFER severity=LOW — card "the station outside the repo keeps only its plumbing (lock, pass file, tip check)" — plan §4 item 1 "|| die \"HEAD $short has no .husky/pre-push-checks.sh (task-424, the one check list). Rebase onto origin/$br.\"" — a new station-side refusal, the list existing at HEAD, is added and is not one of the named plumbing pieces, and it refuses suite runs in the §7 step 2-4 window — have the operator name the guard, or fold it into the existing tip check text.
+DEFER severity=LOW — card "The plan measures the size and names the Files line" — plan §7 "One build commit carrying `Task: task-424` and the task file in the same diff." — the task file rides in the build commit but appears in neither the Files line nor "Estimated size: about 35 new lines" — add the task file to the Files line and to the estimate.
+DEFER severity=NIT — card "Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md" — plan §10 Q5 "The card says \"lives in the repo\" and names `.husky/pre-push` only." — Q4 and Q5 rest on a premise the pasted card contradicts, it names the checks file and CLAUDE.md — close Q4 and Q5 against the card's Files line and keep both edits.
+DEFER severity=NIT — card "the push hook and the station both run it, so they cannot differ" — plan §1 "The mode changes only two things: which McBylaws gate mode runs, and where the output goes." — the suite invocation is a third difference, station adds "`-- --reporter=default --reporter=json --outputFile=\"$run/suite.json\"`" — declare the reporter arguments as the third mode difference so the divergence is fully stated.
+REJECT — card "the push hook and the station both run it, so they cannot differ" — that gate `--push` in the hook against gate `--ci --base origin/<br>` at the station is a divergence the change fails — the same card says "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook", so the mode split is what it prescribes.
+REJECT — doc-17 readings (RR-0001..RR-0218) — treating the register readings as binding clauses against this plan — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling".
+MET — card "one list of the non-interactive pre-push checks lives in the repo" — plan §3 — `.husky/pre-push-checks.sh` holds all six checks in one repo file, inert to git because only the four hook names run.
+MET — card "the interactive parts of the gate (held patches, worktrees, the operator's y) stay in the hook" — plan §1 "Only the hook's list path calls `--push`." — the `--push` arms and askTty are untouched and only the hook reaches them.
+MET — card ".husky/pre-push is a protected path" — plan §1 "No change to `mcbylaws/protected-paths.json`." — both `.husky` files stay matched by `.husky/*` and shown at push with the owner y.
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — plan §1 "No CI change. test.yml does not run the hook" — no repo tooling or pipeline is added beyond the one list plus the station edit the card names.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  87635ms (87.6s)
+📊 Tokens — total: 37061, input: 19379, output: 17682, reasoning: 16673
