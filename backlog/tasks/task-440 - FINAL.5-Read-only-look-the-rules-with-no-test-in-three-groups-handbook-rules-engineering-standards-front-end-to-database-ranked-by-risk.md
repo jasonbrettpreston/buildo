@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOOK440'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T14:07:00Z'
+updated_date: '2026-11-23T14:12:00Z'
 labels:
   - McFix
   - McFix Final
@@ -24,6 +24,7 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/reviews/task-440/RULE-CHECKS.md
+  - docs/reports/lanes/2026-11-23/BL-LOOK440/REPORT.md
 type: record
 ordinal: 140012
 ---
@@ -270,4 +271,6 @@ rg#5 MED folded scripts/analysis/mcb
 2026-11-23 taken on the board at lane launch (lane BL-LOOK440, worktree /Users/brettpreston_macmini/Buildo-wt-look440, branch wf1/inc1b-look440), RR-0240
 
 2026-11-23 lane BL-LOOK440 (Opus): RULE-CHECKS.md written at pin S=ba4ac48fd (the launch head): group 2 (58 rows: 7 enforced, 22 partly, 29 none), group 1 (57 rows: 33 enforced, 4 partly, 20 none; fe.58 pending via task-446), group 3 (47 rows listed again: 0 enforced, 17 partly, 30 none). One open known break ranked (fe.54, K2 BL-RULESACC GROUNDER.md:136); D2, D3, D6, D7, D8, D14 read fixed; D1 and D10 open under Outside. Read-only: no code, test, tool or rule change. Task stays RUNNING: compliance lens next, then the separate grounder (GROUNDER-LOOK.md, RR-0359).
+
+2026-11-23 lane BL-LOOK440: compliance lens run once per rule list (five-words, plan-protocol, inc-S, ms-S) on fresh context context-r2.md; 20 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-LOOK440/FINDINGS.md. Lens material: the brief's diff command excludes docs/reports/reviews/** and so prints nothing for the two Files paths; the material is the same diff without those excludes (stated in REPORT.md). Task left RUNNING: grounder owed (GROUNDER.md for the lens findings, GROUNDER-LOOK.md for the look), RR-0359.
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:09:11.151Z file_sha256=3131f66b886c83fa8299f5954f53eff4b425adf4c350cbd9b980c474970a01cd prompt_sha256=be7b37c26a5a6fbc419e13f5b91f31379109771bc91d64158daac2813e6f52cd
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LOOK440/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card, "a read-only look that lists every rule with no machine check in the three groups" — docs/reports/reviews/task-440/RULE-CHECKS.md:10 "Section 11 is left out (plan Q2)." — group 2 lists 52 numbered subsections and none from section 11, so "every rule" holds only if section 11 carries no rule, which cannot be seen, and the only warrant for the exclusion is plan Q2, which is not pasted — fix: add one line to group 2 stating that section 11 contains no rule, with the heading list, or list its rules and ranks.
+
+DEFER severity=MED — card, "a risk rank with known breaks first" and "the operator sees it" — docs/reports/reviews/task-440/RULE-CHECKS.md:23 "| 1 McFrontend handbook (Spec 136 section 2) | 57 (+1 pending, fe.58 via task-446) | 33 | 4 | 20 | 1 (fe.54: a failed Help open is only logged, maxbldHelp.ts:19) |" — the operator line reports one open break while the file's own ledger has D1 F-470 CRIT (line 221) and D10 F-429 HIGH (line 230) open and unranked, so the risk the operator sees first is not the worst open break — fix: add a line under the operator table naming D1 and D10 as open breaks whose rules sit outside the three groups.
+
+DEFER severity=MED — card, "lists every rule with no machine check in the three groups" — docs/reports/reviews/task-440/RULE-CHECKS.md:258 "Group 1 scope gaps were judged from each lock's header comment and the rule line ... not from the test bodies. The 33 enforced rows rest on that comparison" — the 33 enforced labels are exactly what removes those rules from the no-machine-check list, and they rest on header text, so the no-check list cannot be shown complete — fix: mark the 33 enforced rows provisional until the grounder rules, or cite the body line that asserts each check.
+
+DEFER severity=LOW — pasted principle, "keep it simple; no scope creep" — docs/reports/reviews/task-440/RULE-CHECKS.md:157 "| (pending, unranked) | fe.58 | Spec 128 R-22 (128_surface_standard_policy.md:224)" — a rule sourced from Spec 128, not group 1's stated scope "Spec 136 section 2", sits as an uncounted row inside the group 1 table — fix: move it to a footnote under section 7 until it lands on the board.
+
+DEFER severity=NIT — pasted principle, "keep it simple; no scope creep" — docs/reports/reviews/task-440/RULE-CHECKS.md:33 "| - | task-441 |" and line 167 "| task-442 |" — the Feeds column assigns the 105 listed rules to task-441 and task-442, ids named in no pasted clause or ruling — fix: name the ruling that created task-441 and task-442 or drop the column.
+
+REJECT — Files line "docs/reports/reviews/task-440/GROUNDER-LOOK.md" — the change is accused of shipping only RULE-CHECKS.md with the grounder file absent — the material reserves the grounder as the next step at RULE-CHECKS.md:3 "then the separate grounder (GROUNDER-LOOK.md, RR-0359)", so the file is out of this run by design.
+
+REJECT — RR-0359 "Nothing is folded before the grounder has ruled" — the change is accused of folding PLAN-440-v1 "as folded after plan review round 1" (RULE-CHECKS.md:3) before any grounder ruling — RR-0385 (later ruling, two rounds) covers the plan fold, and the material keeps the task RUNNING for the grounder, so no fold of this deliverable precedes it.
+
+MET — card, "No code" — docs/reports/reviews/task-440/RULE-CHECKS.md:3 — "No code, no test written or run, no tool, gate, rule or rule-table change", and the diff adds one markdown file only.
+MET — card, "what already exists" — docs/reports/reviews/task-440/RULE-CHECKS.md:31 — every row carries a "Check that exists (file:line, or none)" cell across the 58, 57 and 47 rows.
+MET — card, "a risk rank" — docs/reports/reviews/task-440/RULE-CHECKS.md:21 — the operator table and the "Rank" column of each group table give the rank.
+MET — card, Files line — diff header "new file mode 100644 ... b/docs/reports/reviews/task-440/RULE-CHECKS.md" — the named deliverable file is the only path added.
+MET — card, "plan written and built on Opus" — docs/reports/reviews/task-440/RULE-CHECKS.md:3 — "Lane BL-LOOK440 (Opus, RR-0385 item 1)".
+MET — pasted objective, "A task that serves neither a designed element nor a supporting function is most likely not relevant" — docs/reports/reviews/task-440/RULE-CHECKS.md:3 — the look is the compliance and tests work RR-0385 names, a supporting function to the report and database objectives.
+MET — RR-0359 — docs/reports/reviews/task-440/RULE-CHECKS.md:3 — "Task stays RUNNING: compliance lens next, then the separate grounder (GROUNDER-LOOK.md, RR-0359)".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: none
+
+---
+⏱  137259ms (137.3s)
+📊 Tokens — total: 55729, input: 24399, output: 31330, reasoning: 30029

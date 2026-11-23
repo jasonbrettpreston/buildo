@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:09:11.151Z file_sha256=e0f9fe1bd12ba8a7b4aa7c841dc37c774b9d53e39c7d4bfc6e92e478dc69b845 prompt_sha256=fb4b9365efcf0a3398e7ef3bee7215ffe914b77ba8aa241c67a76eb952ebb828
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LOOK440/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-440 card "Files: docs/reports/reviews/task-440/RULE-CHECKS.md, docs/reports/reviews/task-440/GROUNDER-LOOK.md" and "a grounder checks the list" — docs/reports/reviews/task-440/RULE-CHECKS.md:3 "A separate grounder checks this file (plan section 7) and writes GROUNDER-LOOK.md." — the change contains only RULE-CHECKS.md, so the task's second named deliverable and the grounder clause are unmet, and RR-0359 ("Nothing is folded before the grounder has ruled") forbids folding — land GROUNDER-LOOK.md and hold the fold until it rules.
+
+DEFER severity=MED — task-440 card "a risk rank with known breaks first" — RULE-CHECKS.md:220 "| D1 F-470 CRIT | BL-COMPLY GROUNDER.md:48-50 | doc-16 P3 | Outside | open" — the file's own worst open break is marked Outside and unranked while the operator table's open-break column reads 1, 0, 0, so the worst known break is not first for the operator — add the out-of-group open breaks to the operator table, D1 first, then D10.
+
+DEFER severity=MED — task-440 card "lists every rule with no machine check in the three groups" — RULE-CHECKS.md:10 "Section 11 is left out (plan Q2)." — an entire section of 00_engineering_standards.md is absent from group 2, so the engineering-standards group is not every rule, and plan Q2 is not in the pasted context — paste the Q2 ruling or list section 11's uncovered rules.
+
+DEFER severity=LOW — task-440 card "lists every rule with no machine check in the three groups" — RULE-CHECKS.md:162 "Union: 26 + 21 = 47 rows; no row dropped." — the pasted seed line lists 24 items and the pasted added-by-test line lists 23, so the stated union terms cannot be reproduced even though all 47 rows are present — restate the terms as 24 and 23.
+
+DEFER severity=LOW — operator verbatim "We just want to focus on getting the right tests that mirror the engineering and compliance." — RULE-CHECKS.md:24 "all three are library rules that the dated note at 00_engineering_standards.md:308 supersedes for the front end" — the group's top three to test are three rules the same cell calls superseded, so the operator's focus is spent on rules the file says are not live — make the first live none rows the top three, or add a live-rule column.
+
+DEFER severity=LOW — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — RULE-CHECKS.md:8 "task-446 is not on the board: `grep -c 'fe\.58'` → `0`" — a grep of the handbook cannot show board membership, so the small task's existence and RR-0395's status are unverified by this file — cite a board query or move the claim to section 7 UNVERIFIED.
+
+DEFER severity=LOW — RR-0385 "Opus plans and builds, engineering seat, two rounds" — RULE-CHECKS.md:3 "as folded after plan review round 1" — the material rests on a plan folded after one review round only, and the pasted context shows no second round — cite the round 2 fold or mark it pending in section 7.
+
+MET — task-440 card "No code." — docs/reports/reviews/task-440/RULE-CHECKS.md (whole diff) — the change is one new markdown file and touches no source, test, gate or rule table.
+MET — task-440 card "what already exists" — RULE-CHECKS.md:31 "Check that exists (file:line, or none)" — every row states the existing check with a file:line or none.
+MET — task-440 card "the operator sees it" — RULE-CHECKS.md:19 "## 1. For the operator" — the file opens with an operator summary and a top-three-to-test cell per group.
+MET — RR-0392 "no other infrastructure beyond this" — RULE-CHECKS.md:3 "no tool, gate, rule or rule-table change" — the look adds no infrastructure.
+MET — RR-0386 "handbook tests start fresh" — RULE-CHECKS.md:100 "task-367" — every group 1 row is fed to task-367 and no test is written here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 3
+Rules met: none
+
+---
+⏱  180689ms (180.7s)
+📊 Tokens — total: 72303, input: 29853, output: 42450, reasoning: 41392

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:09:11.151Z file_sha256=d6189b5ded28fcddb5fe156019c3ca264fef37b7d8072401d453069e0e59c4fe prompt_sha256=115cc72f2758f35bcbf368ed091cf5e9739d97c26cc4f69edb1bf3355ab5a52e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LOOK440/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card "lists every rule with no machine check in the three groups" — docs/reports/reviews/task-440/RULE-CHECKS.md:10 "Section 11 is left out (plan Q2)." — Group 2 omits section 11 of the engineering standards, so the look does not list every rule; the plan Q2 cited for the exclusion is not in the pasted context. — Add the section 11 rows or cite a pasted ruling that authorizes the exclusion.
+
+BUG severity=HIGH — task card "a grounder checks the list" and "Files: docs/reports/reviews/task-440/RULE-CHECKS.md, docs/reports/reviews/task-440/GROUNDER-LOOK.md" — docs/reports/reviews/task-440/RULE-CHECKS.md:3 "A separate grounder checks this file (plan section 7) and writes GROUNDER-LOOK.md." — The diff adds only RULE-CHECKS.md, so the required grounder check is a promise in a comment, not a delivered check. — Add GROUNDER-LOOK.md with the grounder verdict before folding.
+
+MET — task card "No code." — docs/reports/reviews/task-440/RULE-CHECKS.md:3 — "No code, no test written or run..." and the diff adds only a markdown report.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+Rules met: none
+
+---
+⏱  93111ms (93.1s)
+📊 Tokens — total: 46805, input: 25189, output: 21616, reasoning: 21287
