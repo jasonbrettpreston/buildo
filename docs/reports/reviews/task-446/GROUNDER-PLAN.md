@@ -189,4 +189,6 @@ rg#5 REJECTED docs/reports/reviews/task-446/context-r1.md:122 "(SURVIVE-THE-FIX:
 rg#6 REJECTED docs/reports/reviews/task-446/context-r1.md:220 "58 in force (22 OWED," The seat asks for no fix; step 4 runs page --write after the register edit, which measures the surface-135 part count.
 rg#7 CONFIRMED docs/reports/reviews/task-446/context-r1.md:113 "const hit = realRows().filter(r" NIT: true, untyped parameters fail typecheck. Folded.
 
-Counts: 152 ids = 127 lens + 25 seat. 116 CONFIRMED (48 MED, 65 LOW, 3 NIT; no CRITICAL, no HIGH), 36 REJECTED, 0 CONFLICT. Triage: 116 outcome lines (105 folded, 11 pile; no ruling line is needed because every MED is folded). The 30 lens HIGHs rule MED (20 on the missing operator gate, 3 on ids and census, 1 on the MF-96 status), LOW (6) or REJECTED (cite-arms parent, register-locks, Six-cell is LOW not REJECTED, pre-review checklist). One decision needs the operator's word: Q4 in QUESTIONS-RULED.md.
+Counts: 152 ids = 127 lens + 25 seat. 116 CONFIRMED (48 MED, 65 LOW, 3 NIT; no CRITICAL, no HIGH), 36 REJECTED, 0 CONFLICT. Triage: 116 outcome lines (109 folded, 7 pile; no ruling line is needed because every MED is folded). The 30 lens HIGHs rule MED (20 on the missing operator gate, 3 on ids and census, 1 on the MF-96 status), LOW (6) or REJECTED (cite-arms parent, register-locks, Six-cell is LOW not REJECTED, pre-review checklist). One decision needs the operator's word: Q4 in QUESTIONS-RULED.md.
+
+Plan: task-446 sha256:2de92c24f71a
