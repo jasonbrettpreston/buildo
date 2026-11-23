@@ -9,14 +9,15 @@
 // parts) and the content file. It reads the SAME lookup query the search page filled (['parcel-search', q]), so the normal flow makes no
 // extra request. Nothing is selected at open; the chosen lot opens through the one report route helper (lotMap.ts). The query is never
 // logged or tracked, and picking a lot does not add a recent search (P35-D16 a: the search page recorded it when it opened this page).
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
 import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
 import { buildLotMapSituation } from '@/lib/lotMap';
 import { openHelp } from '@/lib/maxbldHelp';
-import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
+import { searchQueryArg } from '@/lib/parcelSearchMatch';
 
 export default function ParcelDisambiguationScreen() {
   const router = useRouter();
@@ -31,13 +32,8 @@ export default function ParcelDisambiguationScreen() {
   );
 
   // The redirect state (the fetched outcome is not a map kind) replaces this page once, on settled data, never on a background refetch.
-  const redirectedRef = useRef(false);
-  const target = situation.navigate;
-  useEffect(() => {
-    if (isFetching || target === null || redirectedRef.current) return;
-    redirectedRef.current = true;
-    router.replace(target);
-  }, [target, isFetching, router]);
+  useSettledRedirect(situation.navigate, isFetching);
+  const goBack = useGoBack();
 
   const push = useCallback((route: string) => router.push(route), [router]);
   const actions = useMemo(
@@ -50,9 +46,9 @@ export default function ParcelDisambiguationScreen() {
       // SRCH.C12 (task-321): the help link opens Help & Support in the in-app browser sheet (task-362) with the topic and the query (the same action as the search page).
       open_help: openHelp,
       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+      back: goBack,
     }),
-    [refetch, push, router],
+    [refetch, push, goBack],
   );
 
   return (

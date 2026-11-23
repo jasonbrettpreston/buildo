@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.109Z file_sha256=5c23def986e95a051cd415fdf151ebb5ae38f67150c4396ad2e042d692c07d94 prompt_sha256=4d5bc5a99688deb1d0be402e647846a3d211597fedad70c1fe054365aaafa740
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer." — plan "the three hooks are added there (no new file, no new kind), beside useSetParcelLookup, the nearest existing hook that wraps one mount concern." — clause unmet: the change adds hand-written page control (settled redirect, back navigation, debounce) to MaxBLD phone pages, a code kind outside the closed list and outside the descriptor-to-binding pipeline — record an operator ruling naming these three hooks as permitted per-feature code in the queue row, or drive the pages' navigation from the declared binding.
+
+BUG severity=HIGH — §11b.3 dated note 2026-11-11 (MF-53) "the first mobile LIST binding, for S-071 `mobile_parcel_disambiguation_map` (`render.projection: map`). The props half is `mobile/src/components/surfaces/LotMapBinding.tsx`" — plan "Used by disambiguate, semi-question and [parcelId]" — clause unmet: the disambiguation page is ruled to render through the LIST binding LotMapBinding, yet the plan edits the hand-built `mobile/app/(app)/parcel-tool/disambiguate.tsx` and puts its settled redirect and back logic there — land the navigation inside the binding/SurfaceRenderer path, or record a dated deviation ruling that names the hand-built page.
+
+DEFER severity=MED — §13 "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the red-first result the plan claims ("red first, through the real hooks via the pre-commit related run") is prose only and the same plan says phone jest cannot run locally, so no committed red evidence exists for the five assertions — attach the red run output (Mobile CI job reference or an artifact path) before merge.
+
+MET — §11b.2 "Goldens" — plan "No golden, no page test is edited." — the declared goldens stay valid because the refactor is render-identical by statement.
+
+MET — §11b.1 "Import boundary. Library imports are allowed only in the declared binding modules." — plan "so the three hooks live under mobile/src/hooks" — no library import and no wrapper component lands in `mobile/app`, `src/lib` or the vendor folder.
+
+MET — §12 "never" — plan "the three hooks are added there (no new file, no new kind)" — the fenced `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` screens are not touched.
+
+REJECT — §11b.2 "Gate ... gains the generic arms SV-DESC, SV-SCREEN, SV-SBIND" — the change is accused of not adding gate arms — those arms validate descriptors in `surface-validate.mjs` and this change authors no descriptor, so the clause is not engaged.
+
+REJECT — §11b.2 "Content | every user-visible string comes from a content file" — the change is accused of adding literal page strings — the hooks carry a route constant (`PARCEL_TAB_ROUTE.lookup`), not user-visible text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  77788ms (77.8s)
+📊 Tokens — total: 48493, input: 33742, output: 14751, reasoning: 14004

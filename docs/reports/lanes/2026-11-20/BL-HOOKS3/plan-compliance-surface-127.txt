@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.146Z file_sha256=1b9b52651c26330e5d02ea8fec800ff76c71f8eedd2bb48dee49f51706eac3d0 prompt_sha256=ccb7f3cb85607edb938d7b4eccc9f700585f6948d4b4213be0f4010840b8728a
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §4.1 "A different party adjudicates than the one that discovered... the same pass may never both discover a fence or ambiguity and rule on its disposition." — lane plan "The task text counts it as a fourth copy: that part is FALSE. Build nothing for it; it stays as written and is reported." — the lane both discovers the index.tsx semantic difference and rules its disposition (convert nothing, leave the copy), with no adjudicator named and dated as §4.1 requires for every deviation — route the index.tsx fourth-copy disposition and the dropped retry-to-refetch to a named, dated adjudicator and record that name in the plan before any code lands.
+
+BUG severity=HIGH — Spec 127 §6 item 3 "every declared lock is proven both directions, red on the old shape, green on the new, red landing at the designed assertion" — lane plan "Tests (red first, through the real hooks via the pre-commit related run): one new test file" — red-first against hooks that do not yet exist is a missing-module failure, not a red at the designed assertion; no red run against the current page code is named — run test (a) (background refetch cannot re-fire the redirect) against the four pages as they stand today, capture the failing assertion, then land the hooks and capture green.
+
+BUG severity=MED — Spec 127 §7 "Guardian runs in the MAIN tree... and it must state the fence for every deletion." — lane plan "useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages." — three redirect copies, four back copies and the debounce effect are deleted with no fence stated for any of them — add one fence line per deleted block (or a named Regression Guardian record stating them) before merge.
+
+BUG severity=MED — Spec 127 §2 row 1 "from the MAIN tree (a worktree-isolated reviewer cannot see untracked files)" and §7 "Every inventory claim, these are the surfaces, these are the constants, must be verified from the MAIN tree" — lane plan "Facts opened and checked (files at origin tip of this branch)" — the four-copy line inventory (index.tsx:115, disambiguate.tsx:53, semi-question.tsx:90, [parcelId].tsx:38) is measured on the branch, so it does not satisfy the MAIN-tree requirement and cannot see untracked files — re-run the same grep and git blame in the MAIN tree and paste that output into the plan.
+
+DEFER severity=MED — Spec 127 §2 row 6 "every hand-written constant, label maps, field whitelists, order arrays, debounce values" with §4.2 "Every hand-written constant frozen at PH-0 step 6 is classified with the closed set" — lane plan "debounce: index.tsx:41-44 is the only copy (one useEffect + setTimeout over useState)... useDebouncedValue replaces it." — the debounce value moves with no Intent Ledger disposition recorded for it — classify the ms value and its call site in the closed vocabulary (preserved in the hook, or encoded) in the same commit.
+
+DEFER severity=LOW — Spec 127 §6 item 4 "npm run typecheck, npm run lint, and npx vitest related <changed files> --run pass" — lane plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the plan names no CI run and no artifact path where that verdict is recorded, so "existing page tests assert unchanged" stays an intention rather than evidence — name the Mobile CI run and the lane-report field that carries its verdict.
+
+REJECT — Spec 127 §3 gates S0–S9 and §5 scorecard — the change is accused of shipping no generated gate scorecard — this is hook de-duplication on already-built phone pages, not a surface conversion, so the gate ladder and scorecard have nothing to score here.
+
+REJECT — Spec 127 §2a PH-1 migrations — the change is accused of landing no schema migration or RLS policy — it touches no table, and the plan's file list is mobile hooks and parcel-tool pages only.
+
+MET — Spec 127 §2 PH-0 "Nothing may be written to migrations/ at PH-0" — lane plan "Files: mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/index.tsx, ..." — no migration, schema or RLS file is touched.
+
+MET — Spec 127 §2 row 9 "platforms[], which of web / mobile / pdf this surface serves" — lane plan scope is the phone parcel-tool pages only; no web or pdf surface claim is added or changed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  46598ms (46.6s)
+📊 Tokens — total: 32902, input: 24217, output: 8685, reasoning: 7630

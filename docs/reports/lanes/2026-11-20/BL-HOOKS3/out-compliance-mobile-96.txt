@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.778Z file_sha256=5074e5e0a59857245c5f94522400cc597074422d971fa32a75c2bef48553bc4e prompt_sha256=36486d00a7373c17eaeaf127a59ac1e37d178195486707bd48de63f6c919cccd
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 96 (pasted scope, whole file) — "A change that adds behaviour no pasted clause or ruling names is a finding" — mobile/src/hooks/useParcelPageHooks.ts:5 "// STD.HOOKS (task-381): the three mount concerns the parcel-tool pages used to copy" — the diff adds three hooks, five page rewires and a new test suite whose governing text is cited only in comments (Spec 99 §6.5, Spec 100 §4, Spec 126 §11b), none of it pasted, so their compliance is unjudgeable here — paste those clauses into the context and re-run, or record that this is a behaviour-preserving extraction judged by another lens.
+
+REJECT — Spec 96 dated note 2026-11-11 "The app half (the App A gate in `mobile/app/(app)/_layout.tsx`) stays MF-49." — that these parcel-tool edits slip screens past the subscription gate — the gate is in mobile/app/(app)/_layout.tsx (Spec 96 §10 Step 2 "File: `mobile/app/(app)/_layout.tsx`"), which this diff does not touch, so the parcel-tool pages sit under the same gate as before.
+
+MET — Spec 96 §10 Step 2 six status values — mobile/app/(app)/parcel-tool/[parcelId].tsx:1 — no status branch is added, removed or reordered on any parcel-tool screen; the gate file is untouched.
+
+MET — Spec 96 §10 Step 2 gate execution order "Auth → Subscription → Onboarding" — diff header "diff --git a/mobile/app/(app)/parcel-tool/disambiguate.tsx" — no new route, layout or group is added under (app), so the gate sequence is unchanged.
+
+MET — Spec 96 §9 "When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, the feed and flight board enter inline blur mode" — diff touches no file under "mobile/app/(app)/(tabs)/" — the feed and flight-board blur banner behaviour is not modified.
+
+MET — Spec 96 §11 "Target files" — diff header "diff --git a/mobile/src/hooks/useParcelPageHooks.ts" — the change touches none of the six listed target files, so no target-file clause is breached.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  18705ms (18.7s)
+📊 Tokens — total: 19801, input: 16466, output: 3335, reasoning: 2790

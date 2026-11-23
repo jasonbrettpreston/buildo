@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:36:06.727Z file_sha256=4831eb3b0ec06165575740e8c87b1ecf28de0185f0efa225bb437e09abb91bf8 prompt_sha256=96ef84dce19b07035f7c11256fd5e15e93f6f2178f1ed48c03e1418d5629220e
+🔍 Lens review of docs/reports/reviews/task-381/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Lane plan item 1 "1. useSettledRedirect(target, isFetching): returns void; replaces once, on settled data, never on a background refetch; returns a `markRedirected` function" — the return contract contradicts itself (void vs a function), so an implementer taking "returns void" drops semi-question's hand-set ref (semi-question.tsx:76), leaving Continue's own router.replace and the settled-data effect both able to fire, two replaces to possibly different targets — fix: state the hook returns `{ markRedirected }`, have continueToReport call it before its own replace, and add a test that Continue followed by settle yields exactly one replace.
+
+DEFER severity=MED — Lane plan item 1 "semi-question.tsx:76 also sets the ref by hand inside continueToReport before its own router.replace" — markRedirected is idempotent but does not gate the replace that follows it, so two fast taps on Continue still call router.replace twice and can stack the report screen twice; fix: have markRedirected report first vs repeat (true/false) and skip the replace on the repeat, with a double-tap test.
+
+DEFER severity=MED — Lane plan "`if (isFetching || target null || ref) return; ref = true; router.replace(target)`" — the dedup key is the mount, not the target, so a screen instance that receives a new target (a changed parcelId param, or a second settled result after a retry) is suppressed forever and the user sits on the confusion page with no redirect; same as origin, but name the key explicitly (per-mount boolean) or reset the ref when target changes.
+
+DEFER severity=MED — Lane plan tests "(a) a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect; (b) ... (e) ..." — no test covers the empty/error path (fetch errors, isFetching false, target stays null) and none covers Continue double-tap, so the two cheapest regressions of a settled-redirect hook ship untested; fix: add a test that an errored fetch with null target performs zero replaces.
+
+DEFER severity=LOW — Lane plan item 3 "useDebouncedValue(value, ms): useState + useEffect/setTimeout/clearTimeout" — no unmount cleanup is stated, so a pending timer fires after the page leaves, calling setState on an unmounted tree and letting a debounced lookup start for an address the user abandoned; fix: return () => clearTimeout(t) from the effect.
+
+REJECT — Lane plan "the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap)" — waiting with no timeout looks like a hang path — ruled by RR-0176 and the hook fails closed: with no settled target there is no redirect and no wrong number is shown.
+
+REJECT — Lane plan "index.tsx:94-105 is NOT the same code ... Build nothing for it; it stays as written and is reported" — leaving the fourth copy unfixed looks like an unguarded double-navigate — handled: its semantics differ (navigate = addRecent + push, ref keyed on the last route and reset when the route goes away), so folding it in would change behaviour.
+
+REJECT — Lane plan "retry-to-refetch (`void refetch()`) is a one-line arrow in each page and semi-question's differs (submitError branch); it is not one of the three hooks named, so it is left alone" — an untouched retry looks like an unbounded retry loop — handled: RR-0325 keeps 3 retries, and the arrow only refetches, no write and no counted event passes through it.
+
+VERDICT: FAIL on error-path safety (judged on the pasted lane plan only, no diff pasted, page error UI cannot see)
+Paths walked: error (errored fetch, target null, hand-set ref), empty (null target, empty parcelId, empty query), retry (3 retries, refetch arrow), time-out (debounce timer, no settle cap per RR-0176), double-submit (Continue double tap, redirect re-fire, background refetch), degrade-safety (client-only navigation, no write, no charge, report meter stays in the lookup route RR-0331), idempotency (per-mount boolean ref, markRedirected)   Unguarded: 3
+
+---
+⏱  26293ms (26.3s)
+📊 Tokens — total: 34007, input: 29713, output: 4294, reasoning: 3336

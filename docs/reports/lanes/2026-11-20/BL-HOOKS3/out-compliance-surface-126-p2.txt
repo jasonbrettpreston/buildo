@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.779Z file_sha256=46f7fd0027f9cfa87970ffc6a4da7cdc1a240b815190d3675898f0c6490c5d41 prompt_sha256=47fb3adcf6b7fda6dde4824df76806da060b0362f52fd853afbc30858d338786
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — 126 §11b (claimed as governing: "a mount holds hooks and callbacks; shared behaviour lives in @/hooks") — mobile/src/hooks/useParcelPageHooks.ts:3 "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)" — the clause the whole diff rests on is not in the pasted part of 126 (part 2 of 3 ends at §11a.10), so compliance with it cannot be judged in this run — paste §11b before lock and re-run against it
+DEFER severity=LOW — 99 §6.5 (claimed: "a redirect fires once, on the first settled data, never on a background refetch") — mobile/src/hooks/useParcelPageHooks.ts:2 "docs/specs/03-mobile/99_mobile_state_architecture.md §6.5" — not pasted, and the hook latches permanently, so a later genuinely different settled target also never redirects, which the test pins as intended — paste 99 §6.5 so the latch-not-per-target reading can be checked rather than assumed
+DEFER severity=LOW — 100 §4 and its dated note 2026-11-10 (the search debounce), claimed as governing — mobile/src/hooks/useParcelPageHooks.ts:2 "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)" — not pasted; the hook now initialises at the first value where the removed inline code started at '', so any restored or deep-linked query behaves differently and the clause that would decide it is absent — paste 100 §4 plus that dated note
+DEFER severity=NIT — no pasted clause or operator ruling names a `markRedirected` return value — mobile/src/hooks/useParcelPageHooks.ts:22 "return useCallback(() => { redirectedRef.current = true; }, []);" — the added public API of the shared hook (and its single use in semi-question.tsx:71 "markRedirected();") is named only by the non-pasted specs above — record it in the clause that owns the semi-question redirect before lock
+MET — 126 §11a.7 dated note 2026-11-12 (Stage B) "the screen adds one Back control (a labelled Button in a top safe area)" — mobile/app/(app)/parcel-tool/[parcelId].tsx "const onBack = useGoBack();" and "onBack={onBack}" — the Back action is preserved through the shared hook, same canGoBack/Lookup fallback
+MET — 126 §11a.7 dated note 2026-11-20 (FIX.SPECS) "The report screen's states still come from `reportScreenState` and the declared lifecycle trees above" — mobile/app/(app)/parcel-tool/[parcelId].tsx "const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });" — the state derivation is untouched by the refactor
+MET — 126 §11a.7 dated note 2026-11-20 cause (c) "the report screen shows the loading state until it redirects to the question, not the miss text" — mobile/app/(app)/parcel-tool/[parcelId].tsx "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — the held page still feeds the loading state while the question is owed
+REJECT — 126 §11a.7 dated note 2026-11-12 (Stage B) — that replacing the inline back handler and the inline effects changes the report screen's declared controls or redirect timing — the guards are carried over unchanged with the same canGoBack fallback and the same isFetching/target test
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+```
+
+---
+⏱  37529ms (37.5s)
+📊 Tokens — total: 38918, input: 32017, output: 6901, reasoning: 5981

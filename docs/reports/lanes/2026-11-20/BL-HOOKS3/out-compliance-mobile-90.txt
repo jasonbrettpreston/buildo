@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.764Z file_sha256=893ac070fe460d78ab4f7b5836bdb814cf387e5eb39a82a7ed6e774811b2edd2 prompt_sha256=2eb292f31e1fda4a32e0987a4606bef6c3de51ada8701dfd36632b5acbc1df1e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — mobile/src/hooks/useParcelPageHooks.ts:1 "new file mode 100644" — the 80% threshold for the new production file is not evidenced anywhere in the material, the test file's existence is not a coverage number, cannot see — attach the jest coverage figure or the coverage-gate output for mobile/src/hooks/useParcelPageHooks.ts
+DEFER severity=LOW — Spec 90 §7 "All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to Spec 99 — Mobile State Architecture & Ownership Protocol" — mobile/src/hooks/useParcelPageHooks.ts:18 "if (isFetching || target === null || redirectedRef.current) return;" — the new shared hook reads TanStack Query fetch state and drives router navigation for four mounts, a cross-layer bridge, and Spec 99 §3-§5 is not pasted, so conformance cannot be seen — paste Spec 99 §3-§5 (or its §6.5 redirect rule) into the next run so the bridge can be judged
+DEFER severity=LOW — not pasted (diff header cites Spec 126 §11b, Spec 99 §6.5, Spec 100 §4; none are in the pasted context) — mobile/src/hooks/useParcelPageHooks.ts:3 "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)" — the clause that authorises moving shared behaviour into @/hooks is not pasted, so the extraction has no visible authority here, cannot see — paste Spec 126 §11b / FE-31 C-2 so the placement can be checked
+MET — Spec 90 §5 "NO `useEffect` for Fetching: Never fetch API data inside a `useEffect`. Always use TanStack Query." — mobile/src/hooks/useParcelPageHooks.ts:19 "router.replace(target);" — the effect acts on the outcome of the existing TanStack Query hooks, it issues no fetch, and the pages still fetch through useParcelLookup/useParcelSearch
+MET — Spec 90 §10 "Jest + React Native Testing Library for logic hooks" — mobile/__tests__/parcelPageHooks.test.tsx:6 "import { act, renderHook } from '@testing-library/react-native';" — the real hooks run under RNTL renderHook with only expo-router mocked
+MET — Spec 90 §5 "NO DOM APIs: Never use `window`, `document`, `localStorage`, `navigator.geolocation`." — mobile/src/hooks/useParcelPageHooks.ts:15 "import { useRouter } from 'expo-router';" — the new file imports only react and expo-router and uses no DOM global
+MET — Spec 90 §3 "This mobile application is a \"Dumb Glass\" client" — mobile/src/hooks/useParcelPageHooks.ts:25 "return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);" — the added code only navigates, debounces and redirects, no mutation, PostGIS math or sorting is added
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — mobile/app/(app)/parcel-tool/index.tsx:114 "back: goBack," — the diff swaps an action handler for an equivalent one and adds no new interactive element, so no touch target changes
+REJECT — Spec 90 §5 "NO Inline `renderItem`" — the diff could be read as touching list rendering through the parcel-tool pages — the diff adds no renderItem or list component, only three hooks and their call sites
+REJECT — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema" — the new shared hooks could be read as moving query handling — the hooks consume the already-parsed results of useParcelLookup/useParcelSearch and add no new query or parse path
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  33397ms (33.4s)
+📊 Tokens — total: 16165, input: 10220, output: 5945, reasoning: 4981

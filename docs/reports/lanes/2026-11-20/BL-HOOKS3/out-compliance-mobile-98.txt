@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.775Z file_sha256=51b3863497d8e309ce73cccfae3ad6fb7e7ff67b67d3ebc67ef08c43345a7c50 prompt_sha256=b8b26708b3fb00ca94b0eb081a86ece3a1fbac83b9dd6e3243709c0ab711cb1e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 98 §4 dated note 2026-11-10 "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0)" — mobile/__tests__/parcelPageHooks.test.tsx "import { act, renderHook } from '@testing-library/react-native';" — the version pin the note mandates is not in the material, cannot see whether mobile/package.json carries it — include mobile/package.json (or the lockfile hunk) in the review material so the pin can be checked
+DEFER severity=LOW — Spec 98 §4.1 "§8.3 — gate-stability tests (no `isFetching` in render gates per §6.5)" — mobile/src/hooks/useParcelPageHooks.ts "if (isFetching || target === null || redirectedRef.current) return;" — the settlement semantics the hook encodes live in Spec 99 §6.5, which is not pasted, so the once-only rule the tests pin is unverifiable against pasted text — paste Spec 99 §6.5 so the redirect contract can be judged, not only its gate-stability consequence
+REJECT — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — the change ships parcel-tool navigation and debounce edits with no Maestro flow — §3.2 names only auth, onboarding-leads, onboarding-tracking, scroll-feed and subscription-paywall, and the pasted note already records "No Maestro flow covers parcel-tool today."
+MET — Spec 98 §4 "Tool: Jest + jest-expo" and "Location: `mobile/__tests__/`" — mobile/__tests__/parcelPageHooks.test.tsx:1 — the new test sits in the mandated directory and is a Jest test file
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — mobile/__tests__/parcelPageHooks.test.tsx:32 — every assertion is on mockRouter calls or hook return values, no snapshot and no component tree render
+MET — Spec 98 §4 dated note 2026-11-10 "React Native Testing Library is the tool Spec 90 names for logic hooks (90:88)" — mobile/__tests__/parcelPageHooks.test.tsx "import { act, renderHook } from '@testing-library/react-native';" — the shared hooks are exercised through RNTL renderHook, matching the tool the note names
+MET — Spec 98 §4.1 "§8.3 — gate-stability tests (no `isFetching` in render gates per §6.5)" — mobile/app/(app)/parcel-tool/[parcelId].tsx "reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError })" — isFetching is routed into the hook effect only, the render gate stays keyed on data and ask
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  38309ms (38.3s)
+📊 Tokens — total: 16990, input: 9551, output: 7439, reasoning: 6750

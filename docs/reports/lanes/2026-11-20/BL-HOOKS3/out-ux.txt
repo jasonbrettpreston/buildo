@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:42:40.375Z file_sha256=7a34b2de7ac6616abcba8b9379264bacfb9d4fc375fdfb3a060ee516e426268f prompt_sha256=1b8077ae711b988fd442d6ee9c02838dd380a607745b7ba22b77f51153ccc976
+🔍 Lens review of docs/reports/reviews/task-381/change-2026-11-20.diff (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/index.tsx "back: goBack," with the page comment "The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open." — cannot see the renderer, so a back control on a cold-open search page would replace the Lookup route with the Lookup route and give the person no visible response — confirm no back control renders on this page; if one does, leave it out of the action set.
+
+DEFER severity=LOW — mobile/src/hooks/useParcelPageHooks.ts "const [debounced, setDebounced] = useState(value);" and "Starts at the first value." — if the search page ever opens with a query already in the box (restored or deep-linked), the person's first search fires at once with no debounce window — design text pasted is silent on a prefilled first value and the page starts at '', so keep and note the assumption.
+
+REJECT — mobile/app/(app)/parcel-tool/index.tsx "navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again." — looks like the fourth redirect copy was missed, so a person returning with the query still typed could be pushed forward again — the guard is intact and this path pushes with a recent-search record instead of replacing, so leaving it as written is correct.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "markRedirected();" then "router.replace(route);" — looks like two replaces racing, which would move the person twice — it sets the same ref before the replace exactly as the removed hand-set ref did, so the person sees one move.
+
+REJECT — mobile/app/(app)/parcel-tool/[parcelId].tsx "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — looks like the old "!parcelId" guard was dropped, which would send the person to a semi question at an empty id — a null target keeps that guard and the redirect simply waits for the id.
+
+REJECT — mobile/src/hooks/useParcelPageHooks.ts "export function useDebouncedValue<T>(value: T, ms: number): T {" — looks like generic machinery the search page does not need, risking a different first render for the person — the seed value equals the page's initial '' so the first view is unchanged.
+
+VERDICT: PASS on the person's experience
+States checked: search first view, typing/debounce, results and unique hit, search cold-open back, disambiguate load and redirect, semi question asked and continue, semi cold-open back, report load, semi owed, error/retry, offline cache, background refetch   Dead ends found: 0
+
+---
+⏱  56338ms (56.3s)
+📊 Tokens — total: 31309, input: 21406, output: 9903, reasoning: 9276

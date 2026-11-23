@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.110Z file_sha256=a74a80199bd0699614b87127b84494b60cd576513f814c4413e9ce285b8d8817 prompt_sha256=ce80197960180cb58c2ce5e88a40e0d41f4ec27b0dabf202ec6bda7e5003dccd
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+BUG severity=none, no CRIT or HIGH finding: no pasted Spec 96 clause is breached by this plan, see DEFER lines for card-level gaps.
+
+DEFER severity=MED — task-381 card "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — plan (material) "Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx" — the plan names the red-first test but no separate attacking agent and no refused or STILL OPEN report for this gate — add one line naming the second agent that attacks parcelPageHooks.test.tsx and the refused or STILL OPEN reporting.
+
+DEFER severity=MED — task-381 card "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33)" — plan "The task text counts it as a fourth copy: that part is FALSE. Build nothing for it; it stays as written and is reported." — the plan drops a card-named conversion on the lane's own reading while RR-0190 holds that "only operator words feed reviews as rulings", so the card item is neither met nor officially retired — record the page-runner measurement as a dated note and take a one-line operator confirmation, or convert index.tsx as the card states.
+
+DEFER severity=LOW — mobile-96 rule list header "this spec governs the lead-gen product's (Buildo) trial, paywall and subscription gate" — plan "Three shared phone hooks replace the copied redirect, back and debounce code in the parcel-tool pages" — the pasted governing spec names no parcel-tool hook, no debounce and no redirect-once rule, so the plan's compliance rests on the task-381 card, which is orchestrator text and not a pasted ruling — attach the authorising plan or ruling text to the review record, or mark this review as card-based rather than Spec 96 based.
+
+DEFER severity=NIT — task-381 card "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times" vs card "Build useSettledRedirect, useGoBack and useDebouncedValue" — plan "retry-to-refetch (`void refetch()`) is a one-line arrow in each page and semi-question's differs (submitError branch); it is not one of the three hooks named, so it is left alone." — the card's measurement sentence names retry-to-refetch where its build sentence names debounce, and the plan silently follows the build sentence — have the card wording reconciled so the scan covers the intended code.
+
+MET — mobile-96 dated note 2026-11-11 "the parcel lookup gate is per product. `GET /api/parcels/lookup` admits a `parcel_tool` entitlement in {trial, active, past_due, admin_managed}" — plan "the three hooks are added there (no new file, no new kind), beside useSetParcelLookup" — the plan adds hooks only and changes no lookup request, entitlement read or status set, so the per-product gate is untouched.
+
+MET — mobile-96 dated note 2026-11-09 "the App A gate in `mobile/app/(app)/_layout.tsx` (the lead-gen status)" and "The app half ... stays MF-49" — plan Files line "mobile/src/hooks/useParcelLookup.ts, .../[parcelId].tsx" — `(app)/_layout.tsx` is not in the change set, so the MF-49 gate work is not pre-empted.
+
+MET — mobile-96 §10 Step 2 "'expired' → `<PaywallScreen>` (if `paywallStore.dismissed`, render feed with inline blur)" — plan file list names only parcel-tool pages and useParcelLookup.ts — no paywall, `paywallStore` or inline-blur file is modified.
+
+MET — task-381 card "no behaviour change; existing page tests assert unchanged" — plan "No golden, no page test is edited." — stated and consistent with §11 out-of-scope silence on this task.
+
+MET — task-381 card "one test that a background fetch cannot re-fire the redirect" — plan "(a) a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect" — covered.
+
+MET — task-381 card "Phone-test green is proven only by Mobile CI" — plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — matches, no local-green claim is made.
+
+VERDICT: PASS on compliance with the pasted clauses (Spec 96 binds nothing in this change; the three card-level gaps above are MED and below and must be closed by the lane, not by a spec note)
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  44065ms (44.1s)
+📊 Tokens — total: 28602, input: 20618, output: 7984, reasoning: 6872

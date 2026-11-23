@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:42:40.375Z file_sha256=7a34b2de7ac6616abcba8b9379264bacfb9d4fc375fdfb3a060ee516e426268f prompt_sha256=2fb61e198635f5f880aafaa082f2c32ab1beb207edc191cd65c0cfe96a739a50
+🔍 Lens review of docs/reports/reviews/task-381/change-2026-11-20.diff (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/src/hooks/useParcelPageHooks.ts:34 "const [debounced, setDebounced] = useState(value);" — the hook starts at its first value, so a caller that seeds the input would fire the first query with no debounce at all, which the inline code it replaced (useState('') plus a 400 ms timer) never did — safe today because index.tsx:33 starts input at ''; say so in the docstring or seed the state empty if the box is ever pre-filled.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:47 "-  useEffect(() => {" — this hunk removes the component's useEffect while its react import line is left untouched (the two sibling files, disambiguate.tsx:12 and [parcelId].tsx:11, did drop useEffect/useRef), so useEffect may now be an unused import and fail tsc noUnusedLocals or lint — cannot see the rest of the file, confirm a second useEffect remains or remove it from the import.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/index.tsx:113 "[refetch, navigate, goBack]" — router fell out of the actions memo deps; if any branch inside the memo body (select, push, open_help) still reads router the dependency list is incomplete and react-hooks/exhaustive-deps goes red — cannot see the memo body, confirm it only touches refetch, navigate and goBack.
+
+REJECT — mobile/src/hooks/useParcelPageHooks.ts:19 "if (isFetching || target === null || redirectedRef.current) return;" — the ref is set once and never cleared, so a later target can never redirect, which reads like a latch that strands the page — that once-only behaviour is the spec ruling (Spec 99 section 6.5) and is asserted in parcelPageHooks.test.tsx:27-39, and the null branch deliberately does not set the ref, so a later settled target still fires.
+
+REJECT — mobile/__tests__/parcelPageHooks.test.tsx:10 "jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));" — the factory closes over the const declared on line 9 after hoisting moves the mock call above it, which looks like a TDZ throw at import — the read of mockRouter sits inside the nested arrow, so it happens when useRouter() is called during a test render, well after the const initialises.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none, the two DEFER notes above are confirmations of unseen file tails, not defects.
+
+---
+⏱  121184ms (121.2s)
+📊 Tokens — total: 44457, input: 21390, output: 23067, reasoning: 22484

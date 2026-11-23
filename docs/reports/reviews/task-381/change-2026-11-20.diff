@@ -1,0 +1,341 @@
+diff --git a/mobile/__tests__/parcelPageHooks.test.tsx b/mobile/__tests__/parcelPageHooks.test.tsx
+new file mode 100644
+index 000000000..fe022a40d
+--- /dev/null
++++ b/mobile/__tests__/parcelPageHooks.test.tsx
+@@ -0,0 +1,87 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router
++// is mocked).
++import { act, renderHook } from '@testing-library/react-native';
++
++const mockRouter = { replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) };
++jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
++
++import { useDebouncedValue, useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++beforeEach(() => {
++  jest.useFakeTimers();
++  mockRouter.replace.mockClear();
++  mockRouter.back.mockClear();
++  mockRouter.canGoBack.mockReset();
++  mockRouter.canGoBack.mockReturnValue(true);
++});
++afterEach(() => { jest.useRealTimers(); });
++
++describe('useSettledRedirect', () => {
++  it('replaces once on settled data and a background refetch cannot fire it again', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x', isFetching: false },
++    });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++    rerender({ target: '/x', isFetching: true });
++    rerender({ target: '/x', isFetching: false });
++    rerender({ target: '/y', isFetching: true });
++    rerender({ target: '/y', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('does not fire while fetching or with no target, then fires once when the data settles', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x' as string | null, isFetching: true },
++    });
++    rerender({ target: null, isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('markRedirected stops a later redirect (the semi page marks it before its own replace)', () => {
++    const { result, rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: null as string | null, isFetching: false },
++    });
++    act(() => { result.current(); });
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++});
++
++describe('useGoBack', () => {
++  it('goes back when there is history', () => {
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).toHaveBeenCalledTimes(1);
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++
++  it('replaces with the Lookup route on a cold open (nothing to go back to)', () => {
++    mockRouter.canGoBack.mockReturnValue(false);
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).not.toHaveBeenCalled();
++    expect(mockRouter.replace.mock.calls).toEqual([[PARCEL_TAB_ROUTE.lookup]]);
++  });
++});
++
++describe('useDebouncedValue', () => {
++  it('holds the old value until the delay passes, restarts on a new value, and starts from the first value', () => {
++    const { result, rerender } = renderHook((p: { v: string }) => useDebouncedValue(p.v, 400), { initialProps: { v: '' } });
++    expect(result.current).toBe('');
++    rerender({ v: 'ab' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    rerender({ v: 'abc' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    act(() => { jest.advanceTimersByTime(1); });
++    expect(result.current).toBe('abc');
++  });
++});
+diff --git a/mobile/app/(app)/parcel-tool/[parcelId].tsx b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+index b49524f34..d45ba3db4 100644
+--- a/mobile/app/(app)/parcel-tool/[parcelId].tsx
++++ b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+@@ -8,33 +8,27 @@
+ // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
+ // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
+ // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
+-import React, { useCallback, useEffect, useRef } from 'react';
+-import { useLocalSearchParams, useRouter } from 'expo-router';
++import React, { useCallback } from 'react';
++import { useLocalSearchParams } from 'expo-router';
+ import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
+ import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
+ import { useParcelLookup } from '@/hooks/useParcelLookup';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
+ 
+ export default function ParcelReportScreen() {
+-  const router = useRouter();
+   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+   const semiParam = typeof semi === 'string' ? semi : undefined;
+   const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
+   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
+   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
+   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
+-  const askedRef = useRef(false);
+   const ask = needsSemiQuestion(data, semiParam);
+-  useEffect(() => {
+-    if (isFetching || !ask || askedRef.current || !parcelId) return;
+-    askedRef.current = true;
+-    router.replace(semiQuestionRoute(parcelId));
+-  }, [ask, isFetching, parcelId, router]);
++  useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);
+   // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
+   // state, never the miss text, on the settled render before the redirect above fires.
+   const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
+   const onRetry = useCallback(() => void refetch(), [refetch]);
+-  const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++  const onBack = useGoBack();
+   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;
+ }
+diff --git a/mobile/app/(app)/parcel-tool/disambiguate.tsx b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+index eac1afef2..aa6cff49d 100644
+--- a/mobile/app/(app)/parcel-tool/disambiguate.tsx
++++ b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+@@ -9,14 +9,15 @@
+ // parts) and the content file. It reads the SAME lookup query the search page filled (['parcel-search', q]), so the normal flow makes no
+ // extra request. Nothing is selected at open; the chosen lot opens through the one report route helper (lotMap.ts). The query is never
+ // logged or tracked, and picking a lot does not add a recent search (P35-D16 a: the search page recorded it when it opened this page).
+-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
++import React, { useCallback, useMemo, useState } from 'react';
+ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
+ import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { buildLotMapSituation } from '@/lib/lotMap';
+ import { openHelp } from '@/lib/maxbldHelp';
+-import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { searchQueryArg } from '@/lib/parcelSearchMatch';
+ 
+ export default function ParcelDisambiguationScreen() {
+   const router = useRouter();
+@@ -31,13 +32,8 @@ export default function ParcelDisambiguationScreen() {
+   );
+ 
+   // The redirect state (the fetched outcome is not a map kind) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   const push = useCallback((route: string) => router.push(route), [router]);
+   const actions = useMemo(
+@@ -50,9 +46,9 @@ export default function ParcelDisambiguationScreen() {
+       // SRCH.C12 (task-321): the help link opens Help & Support in the in-app browser sheet (task-362) with the topic and the query (the same action as the search page).
+       open_help: openHelp,
+       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, push, router],
++    [refetch, push, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/index.tsx b/mobile/app/(app)/parcel-tool/index.tsx
+index 70d6120e6..64bbecbe4 100644
+--- a/mobile/app/(app)/parcel-tool/index.tsx
++++ b/mobile/app/(app)/parcel-tool/index.tsx
+@@ -24,7 +24,8 @@ import {
+   searchProps,
+ } from '@/components/surfaces/SearchBinding';
+ import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+-import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { useDebouncedValue, useGoBack } from '@/hooks/useParcelPageHooks';
++import { buildSearchSituation, searchQueryArg } from '@/lib/parcelSearchMatch';
+ import { openHelp } from '@/lib/maxbldHelp';
+ import { useRecentSearchesStore } from '@/store/recentSearchesStore';
+ import { useAuthStore } from '@/store/authStore';
+@@ -32,16 +33,12 @@ import { useAuthStore } from '@/store/authStore';
+ export default function ParcelSearchScreen() {
+   const router = useRouter();
+   const [input, setInput] = useState('');
+-  const [debounced, setDebounced] = useState('');
+   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
+   const recent = useRecentSearchesStore((s) => s.recent);
+   const addRecent = useRecentSearchesStore((s) => s.add);
+ 
+   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
+-  useEffect(() => {
+-    const t = setTimeout(() => setDebounced(input), SEARCH_DEBOUNCE_MS);
+-    return () => clearTimeout(t);
+-  }, [input]);
++  const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
+ 
+   // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
+   useEffect(() => {
+@@ -91,6 +88,7 @@ export default function ParcelSearchScreen() {
+ 
+   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
+   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
++  const goBack = useGoBack();
+   const navigatedForRef = useRef<string | null>(null);
+   const route = situation.route;
+   useEffect(() => {
+@@ -112,11 +110,11 @@ export default function ParcelSearchScreen() {
+       select: (parcelId: string) => setSelectedParcelId(parcelId),
+       push: (to: string) => navigate(to),
+       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
+       open_help: openHelp,
+     }),
+-    [refetch, navigate, router],
++    [refetch, navigate, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 7b2c14b84..12d8cca09 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -16,9 +16,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -44,13 +44,8 @@ export default function SemiQuestionScreen() {
+   );
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  const markRedirected = useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+@@ -73,9 +68,9 @@ export default function SemiQuestionScreen() {
+     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
+     if (!mountedRef.current) return;
+     storeLookup(id, result);
+-    redirectedRef.current = true;
++    markRedirected();
+     router.replace(route);
+-  }, [id, answerLookup, storeLookup, router]);
++  }, [id, answerLookup, storeLookup, router, markRedirected]);
+ 
+   const actions = useMemo(
+     () => ({
+@@ -87,9 +82,9 @@ export default function SemiQuestionScreen() {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+       },
+       push: (route: string) => void continueToReport(route),
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, router, submitError, continueToReport],
++    [refetch, goBack, submitError, continueToReport],
+   );
+ 
+   return (
+diff --git a/mobile/src/hooks/useParcelPageHooks.ts b/mobile/src/hooks/useParcelPageHooks.ts
+new file mode 100644
+index 000000000..ee1903152
+--- /dev/null
++++ b/mobile/src/hooks/useParcelPageHooks.ts
+@@ -0,0 +1,40 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three mount concerns the parcel-tool pages used to copy (redirect once on settled data, go back, debounced value). A mount may
++// import only @/hooks/ (FE-31 C-2), so they live here. This is its own file, not useParcelLookup.ts: five page tests replace that whole module with a mock.
++import { useCallback, useEffect, useRef, useState } from 'react';
++import { useRouter } from 'expo-router';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++/**
++ * Redirect once, on settled data. Replaces this page with `target` the first time the fetch is not running and a target exists; a background refetch, or a
++ * later change of target, never fires it again (Spec 99 section 6.5). Returns `markRedirected`: the semi question page calls it before its own replace.
++ */
++export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {
++  const router = useRouter();
++  const redirectedRef = useRef(false);
++  useEffect(() => {
++    if (isFetching || target === null || redirectedRef.current) return;
++    redirectedRef.current = true;
++    router.replace(target);
++  }, [target, isFetching, router]);
++  return useCallback(() => { redirectedRef.current = true; }, []);
++}
++
++/** NAV-AUDIT-20261111 #64: back when there is history; a cold open (deep link) replaces with the Lookup route so it can never strand the user. */
++export function useGoBack(): () => void {
++  const router = useRouter();
++  return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++}
++
++/** The value after `ms` of no change (the search page's config.debounce_ms, so typeahead does not burn the rate bucket). Starts at the first value. */
++export function useDebouncedValue<T>(value: T, ms: number): T {
++  const [debounced, setDebounced] = useState(value);
++  useEffect(() => {
++    const t = setTimeout(() => setDebounced(value), ms);
++    return () => clearTimeout(t);
++  }, [value, ms]);
++  return debounced;
++}

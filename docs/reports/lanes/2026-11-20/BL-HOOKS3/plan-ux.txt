@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:36:06.730Z file_sha256=4831eb3b0ec06165575740e8c87b1ecf28de0185f0efa225bb437e09abb91bf8 prompt_sha256=60f41062df7dc083466ce96254083483efc1d2405f1ef29fa22c95dcdb086258
+🔍 Lens review of docs/reports/reviews/task-381/context-2026-11-20.md (model: deepseek-reasoner)
+
+DEFER severity=MED — lane plan "useDebouncedValue(value, ms): useState + useEffect/setTimeout/clearTimeout, initial value = value (the page's input starts empty, so the first debounced value is '' as before)" — the hook only holds-and-clears on a change, so if the person's search box is ever seeded non-empty on a back or repeat visit the very first render already carries a settled value and the search can fire with no debounce, which the old '' starting value did not do, and index.tsx is not shown so I cannot confirm the input is always empty — either pass the empty string as the debounced start value or show the index.tsx lines that prove the input mounts empty.
+
+DEFER severity=MED — lane plan "returns void; replaces once, on settled data, never on a background refetch; returns a `markRedirected` function used by semi-question's Continue (same effect as its hand-set ref)" — the contract says both void and a returned function, and if the Continue path stops marking before its own replace the semi page can replace a second time after the tap, so the person sees the screen move twice or land elsewhere than the report — state one return shape and keep the hand-set mark ordered before the Continue replace, as "semi-question.tsx:76 also sets the ref by hand inside continueToReport before its own router.replace".
+
+DEFER severity=MED — task text "one test that a background fetch cannot re-fire the redirect; no behaviour change; existing page tests assert unchanged" vs lane plan "one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked" — the promise the person cares about (no second jump to the report on a background refresh) is only proven on the hook in isolation, never on the disambiguate, semi and parcel screens that wire it, so a wrong isFetching or target passed by a page would reach the person untested — add at least one assertion through one real page for the background-refetch case.
+
+DEFER severity=LOW — lane plan "index.tsx:94-105 is NOT the same code" and "The task text counts it as a fourth copy: that part is FALSE" — the person's search page keeps its retype-then-navigate-again behaviour exactly as today, so nothing they see changes, but the task title still claims three hooks replacing four copies and will mislead the next reader — note in the task that index.tsx is out of scope for the redirect hook, done, no code change.
+
+DEFER severity=LOW — "### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT" — I cannot see the 65 designed search elements, so I cannot check any wording or layout order on the four parcel-tool pages against the approved design text — read the requirements file at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md before the change merges.
+
+DEFER severity=LOW — "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3)" against RR-0176 "no 35 s cap" — the approved text pasted into every review still tells the reader a 35 s cap and LOAD.3 that the operator removed, and four lines end with "undefined" where his words belong, so copy checkers are working from stale text — already logged under Problems with a draft task, no action in this lane.
+
+REJECT — lane plan "useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages" — the back control may fall back to Lookup on a screen the person reached directly, which looks odd, but that is exactly today's expression so nothing they see changes and it matches the approved build as written.
+
+VERDICT: PASS on the person's experience
+States checked: search first view, typing and debounce, search loading, results one and many, disambiguate with background refetch, semi question answered and submit error, parcel page with no id, back navigation, repeat visit   Dead ends found: 0
+
+---
+⏱  28369ms (28.4s)
+📊 Tokens — total: 34473, input: 29712, output: 4761, reasoning: 3861

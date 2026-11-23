@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.837Z file_sha256=e867254a0a5079d5ac24072759991e19865c5accea4cbc016e73282883718b97 prompt_sha256=19831775aa698a4dcb9cf0574d5d2155fc04352feb78c77ca06ef5a161fcfaa8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — mobile/src/hooks/useParcelPageHooks.ts:6 "A mount may import only @/hooks/ (FE-31 C-2), so they live here." — the whole justification for the new shared hooks module and its returned markRedirected API rests on an FE-31 C-2 sub-clause that is truncated in the pasted text ("one props golden per reachable state per declared target,…"), so no visible clause names this module — paste FE-31 C-2 in full so the import rule and the new public API can be judged clause by clause.
+
+DEFER severity=LOW — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — mobile/src/hooks/useParcelPageHooks.ts:34 "const [debounced, setDebounced] = useState(value);" — the shared hook now emits the first value immediately where the mount it replaces started at `useState('')` (mobile/app/(app)/parcel-tool/index.tsx removed that line), a timing change no pasted clause names, invisible only because input starts empty — state in the hook doc that the initial value is not debounced, or keep the empty start.
+
+DEFER severity=MED — fe.31 "one props golden per reachable state per declared target" — NONE in the diff — the three converted MaxBLD mounts are re-pointed at shared hooks and no props golden or golden-run evidence for their reachable states (search idle/typeahead, map, semi question) is carried in this change — attach the existing props goldens for the touched mounts to the change, or state that they are unchanged and green.
+
+MET — fe.36 — mobile/src/hooks/useParcelPageHooks.ts:29 "return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);" — back keeps canGoBack() before back() and the cold-open replace with the Lookup route, and forward moves stay on router.replace inside an effect, so no view is swapped by local state.
+
+MET — fe.31 — mobile/src/hooks/useParcelPageHooks.ts:15 "export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {" — the mounts only call shared hooks and keep rendering descriptor + content through ReportPageHost/SurfaceRenderer; the once-on-settled redirect guard and the semi page's pre-replace mark are preserved, not re-implemented per page.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  50420ms (50.4s)
+📊 Tokens — total: 20145, input: 10529, output: 9616, reasoning: 9016

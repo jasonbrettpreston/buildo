@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.124Z file_sha256=fc06576bc062a681a7c9d64ed821fcdef708b2b35693aae24e5b8490343e36fd prompt_sha256=341c065f00f4704b78f0d40dc100b613545939644d5cc8c33f6fa79bb4b3c7f2
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan "Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx" and "Phone jest cannot run locally: green for phone tests comes only from Mobile CI" — the red-first step names no runnable path: the pre-commit related run cannot execute mobile jest, and FE-33's note "the mobile render smoke (MF-35) runs in mobile jest, outside the root suite" confirms it, so the required red is never produced — fix: make the red run the named Mobile CI job before the code commit and state where the red output is captured (or drop the pre-commit claim and say red evidence is CI-produced, with the run id).
+
+BUG severity=HIGH — task card "no behaviour change; existing page tests assert unchanged" — plan "useSettledRedirect(target, isFetching): returns void; ... returns a `markRedirected` function used by semi-question's Continue (same effect as its hand-set ref)" — the signature is stated two ways, and with a void return there is no markRedirected for Continue, so the hand-set ref at "semi-question.tsx:76 also sets the ref by hand inside continueToReport before its own router.replace" is lost and the hook's settled replace can fire after Continue's replace, a behaviour change — fix: state one signature (holder object or tuple), have Continue call markRedirected before its router.replace, and add a test for that ordering.
+
+BUG severity=MED — task card "a separate agent attacks it, results reported as refused or STILL OPEN" — plan NONE — no adversarial review step and no report destination appears anywhere in the BL-HOOKS3 plan, so the attack clause is unmet — fix: add the attack step to the plan with the report path and the refused or STILL OPEN form for parcelPageHooks.test.tsx.
+
+DEFER severity=MED — FE-31 dated note 2026-11-11 "every MaxBLD build reuses the existing components, bindings and patterns; a new library, component kind or binding beyond the Spec 126 §11b.5 first-use costs is an operator ruling first" — plan "the three hooks are added there (no new file, no new kind), beside useSetParcelLookup, the nearest existing hook" — "no new kind" is asserted, not shown: three new exported shared hooks are a new shared pattern and no pasted ruling names useSettledRedirect, useGoBack or useDebouncedValue — fix: record useSetParcelLookup as the existing pattern the three follow (file:line) in the plan, or take the ruling before landing.
+
+DEFER severity=MED — FE-31 dated note 2026-11-09 "a converted page's mount file imports only framework packages, binding modules and project-internal paths" — plan "mounts may import only framework packages, binding modules and @/hooks/ (useParcelLookup.ts:113-114 cites bindings.json mount_internal, FE-31 C-2)" — the permission for the four pages' new `@/hooks` import rests on the plan citing its own file, not the bindings.json entry, so C-2 compliance for the edited pages is unproven — fix: attach the bindings.json mount_internal line that lists the hooks path.
+
+DEFER severity=LOW — task card "Files: mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx" — plan "one new test file mobile/__tests__/parcelPageHooks.test.tsx" — the new test file is outside the task's Files list, so the plan writes a path the task did not scope — fix: add mobile/__tests__/parcelPageHooks.test.tsx to the task Files line before the code commit.
+
+MET — FE-36 "mobile expo-router with `canGoBack()` before `back()`" — plan "useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages" — navigation stays on the router, no local-state view swap.
+MET — task card "One test that a background fetch cannot re-fire the redirect" — plan test (a) "a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect" — the named test exists in the plan.
+MET — task card "Phone-test green is proven only by Mobile CI" — plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI" — the plan does not claim local phone green.
+MET — task card "no behaviour change; existing page tests assert unchanged" — plan "No golden, no page test is edited" and "goldens (parcelScreens, lotMapScreens, daylightSearchPages) are not touched" — the test surfaces the card names are untouched.
+MET — task card "in the form of the nearest existing hook" — plan "beside useSetParcelLookup, the nearest existing hook that wraps one mount concern" — the stated form is followed.
+MET — RR-0325 "Phone keeps its 3 retries (reading)" — plan "retry-to-refetch (`void refetch()`) is a one-line arrow in each page and semi-question's differs ... so it is left alone" — the retry paths are not edited.
+MET — task card "the four copies: index.tsx:96-105" — plan "index.tsx:94-105 is NOT the same code ... Build nothing for it; it stays as written and is reported" — the plan refuses to fold code whose semantics differ, so no unnamed behaviour change lands there.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  64327ms (64.3s)
+📊 Tokens — total: 46342, input: 34127, output: 12215, reasoning: 10882

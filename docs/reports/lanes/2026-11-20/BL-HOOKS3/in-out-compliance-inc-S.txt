@@ -1,0 +1,510 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:7a34b2de7ac6616abcba8b9379264bacfb9d4fc375fdfb3a060ee516e426268f part 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/parcelPageHooks.test.tsx b/mobile/__tests__/parcelPageHooks.test.tsx
+new file mode 100644
+index 000000000..fe022a40d
+--- /dev/null
++++ b/mobile/__tests__/parcelPageHooks.test.tsx
+@@ -0,0 +1,87 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router
++// is mocked).
++import { act, renderHook } from '@testing-library/react-native';
++
++const mockRouter = { replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) };
++jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
++
++import { useDebouncedValue, useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++beforeEach(() => {
++  jest.useFakeTimers();
++  mockRouter.replace.mockClear();
++  mockRouter.back.mockClear();
++  mockRouter.canGoBack.mockReset();
++  mockRouter.canGoBack.mockReturnValue(true);
++});
++afterEach(() => { jest.useRealTimers(); });
++
++describe('useSettledRedirect', () => {
++  it('replaces once on settled data and a background refetch cannot fire it again', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x', isFetching: false },
++    });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++    rerender({ target: '/x', isFetching: true });
++    rerender({ target: '/x', isFetching: false });
++    rerender({ target: '/y', isFetching: true });
++    rerender({ target: '/y', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('does not fire while fetching or with no target, then fires once when the data settles', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x' as string | null, isFetching: true },
++    });
++    rerender({ target: null, isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('markRedirected stops a later redirect (the semi page marks it before its own replace)', () => {
++    const { result, rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: null as string | null, isFetching: false },
++    });
++    act(() => { result.current(); });
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++});
++
++describe('useGoBack', () => {
++  it('goes back when there is history', () => {
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).toHaveBeenCalledTimes(1);
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++
++  it('replaces with the Lookup route on a cold open (nothing to go back to)', () => {
++    mockRouter.canGoBack.mockReturnValue(false);
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).not.toHaveBeenCalled();
++    expect(mockRouter.replace.mock.calls).toEqual([[PARCEL_TAB_ROUTE.lookup]]);
++  });
++});
++
++describe('useDebouncedValue', () => {
++  it('holds the old value until the delay passes, restarts on a new value, and starts from the first value', () => {
++    const { result, rerender } = renderHook((p: { v: string }) => useDebouncedValue(p.v, 400), { initialProps: { v: '' } });
++    expect(result.current).toBe('');
++    rerender({ v: 'ab' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    rerender({ v: 'abc' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    act(() => { jest.advanceTimersByTime(1); });
++    expect(result.current).toBe('abc');
++  });
++});
+diff --git a/mobile/app/(app)/parcel-tool/[parcelId].tsx b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+index b49524f34..d45ba3db4 100644
+--- a/mobile/app/(app)/parcel-tool/[parcelId].tsx
++++ b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+@@ -8,33 +8,27 @@
+ // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
+ // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
+ // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
+-import React, { useCallback, useEffect, useRef } from 'react';
+-import { useLocalSearchParams, useRouter } from 'expo-router';
++import React, { useCallback } from 'react';
++import { useLocalSearchParams } from 'expo-router';
+ import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
+ import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
+ import { useParcelLookup } from '@/hooks/useParcelLookup';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
+ 
+ export default function ParcelReportScreen() {
+-  const router = useRouter();
+   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+   const semiParam = typeof semi === 'string' ? semi : undefined;
+   const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
+   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
+   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
+   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
+-  const askedRef = useRef(false);
+   const ask = needsSemiQuestion(data, semiParam);
+-  useEffect(() => {
+-    if (isFetching || !ask || askedRef.current || !parcelId) return;
+-    askedRef.current = true;
+-    router.replace(semiQuestionRoute(parcelId));
+-  }, [ask, isFetching, parcelId, router]);
++  useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);
+   // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
+   // state, never the miss text, on the settled render before the redirect above fires.
+   const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
+   const onRetry = useCallback(() => void refetch(), [refetch]);
+-  const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++  const onBack = useGoBack();
+   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;
+ }
+diff --git a/mobile/app/(app)/parcel-tool/disambiguate.tsx b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+index eac1afef2..aa6cff49d 100644
+--- a/mobile/app/(app)/parcel-tool/disambiguate.tsx
++++ b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+@@ -9,14 +9,15 @@
+ // parts) and the content file. It reads the SAME lookup query the search page filled (['parcel-search', q]), so the normal flow makes no
+ // extra request. Nothing is selected at open; the chosen lot opens through the one report route helper (lotMap.ts). The query is never
+ // logged or tracked, and picking a lot does not add a recent search (P35-D16 a: the search page recorded it when it opened this page).
+-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
++import React, { useCallback, useMemo, useState } from 'react';
+ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
+ import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { buildLotMapSituation } from '@/lib/lotMap';
+ import { openHelp } from '@/lib/maxbldHelp';
+-import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { searchQueryArg } from '@/lib/parcelSearchMatch';
+ 
+ export default function ParcelDisambiguationScreen() {
+   const router = useRouter();
+@@ -31,13 +32,8 @@ export default function ParcelDisambiguationScreen() {
+   );
+ 
+   // The redirect state (the fetched outcome is not a map kind) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   const push = useCallback((route: string) => router.push(route), [router]);
+   const actions = useMemo(
+@@ -50,9 +46,9 @@ export default function ParcelDisambiguationScreen() {
+       // SRCH.C12 (task-321): the help link opens Help & Support in the in-app browser sheet (task-362) with the topic and the query (the same action as the search page).
+       open_help: openHelp,
+       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, push, router],
++    [refetch, push, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/index.tsx b/mobile/app/(app)/parcel-tool/index.tsx
+index 70d6120e6..64bbecbe4 100644
+--- a/mobile/app/(app)/parcel-tool/index.tsx
++++ b/mobile/app/(app)/parcel-tool/index.tsx
+@@ -24,7 +24,8 @@ import {
+   searchProps,
+ } from '@/components/surfaces/SearchBinding';
+ import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+-import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { useDebouncedValue, useGoBack } from '@/hooks/useParcelPageHooks';
++import { buildSearchSituation, searchQueryArg } from '@/lib/parcelSearchMatch';
+ import { openHelp } from '@/lib/maxbldHelp';
+ import { useRecentSearchesStore } from '@/store/recentSearchesStore';
+ import { useAuthStore } from '@/store/authStore';
+@@ -32,16 +33,12 @@ import { useAuthStore } from '@/store/authStore';
+ export default function ParcelSearchScreen() {
+   const router = useRouter();
+   const [input, setInput] = useState('');
+-  const [debounced, setDebounced] = useState('');
+   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
+   const recent = useRecentSearchesStore((s) => s.recent);
+   const addRecent = useRecentSearchesStore((s) => s.add);
+ 
+   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
+-  useEffect(() => {
+-    const t = setTimeout(() => setDebounced(input), SEARCH_DEBOUNCE_MS);
+-    return () => clearTimeout(t);
+-  }, [input]);
++  const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
+ 
+   // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
+   useEffect(() => {
+@@ -91,6 +88,7 @@ export default function ParcelSearchScreen() {
+ 
+   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
+   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
++  const goBack = useGoBack();
+   const navigatedForRef = useRef<string | null>(null);
+   const route = situation.route;
+   useEffect(() => {
+@@ -112,11 +110,11 @@ export default function ParcelSearchScreen() {
+       select: (parcelId: string) => setSelectedParcelId(parcelId),
+       push: (to: string) => navigate(to),
+       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
+       open_help: openHelp,
+     }),
+-    [refetch, navigate, router],
++    [refetch, navigate, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 7b2c14b84..12d8cca09 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -16,9 +16,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -44,13 +44,8 @@ export default function SemiQuestionScreen() {
+   );
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  const markRedirected = useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+@@ -73,9 +68,9 @@ export default function SemiQuestionScreen() {
+     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
+     if (!mountedRef.current) return;
+     storeLookup(id, result);
+-    redirectedRef.current = true;
++    markRedirected();
+     router.replace(route);
+-  }, [id, answerLookup, storeLookup, router]);
++  }, [id, answerLookup, storeLookup, router, markRedirected]);
+ 
+   const actions = useMemo(
+     () => ({
+@@ -87,9 +82,9 @@ export default function SemiQuestionScreen() {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+       },
+       push: (route: string) => void continueToReport(route),
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, router, submitError, continueToReport],
++    [refetch, goBack, submitError, continueToReport],
+   );
+ 
+   return (
+diff --git a/mobile/src/hooks/useParcelPageHooks.ts b/mobile/src/hooks/useParcelPageHooks.ts
+new file mode 100644
+index 000000000..ee1903152
+--- /dev/null
++++ b/mobile/src/hooks/useParcelPageHooks.ts
+@@ -0,0 +1,40 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three mount concerns the parcel-tool pages used to copy (redirect once on settled data, go back, debounced value). A mount may
++// import only @/hooks/ (FE-31 C-2), so they live here. This is its own file, not useParcelLookup.ts: five page tests replace that whole module with a mock.
++import { useCallback, useEffect, useRef, useState } from 'react';
++import { useRouter } from 'expo-router';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++/**
++ * Redirect once, on settled data. Replaces this page with `target` the first time the fetch is not running and a target exists; a background refetch, or a
++ * later change of target, never fires it again (Spec 99 section 6.5). Returns `markRedirected`: the semi question page calls it before its own replace.
++ */
++export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {
++  const router = useRouter();
++  const redirectedRef = useRef(false);
++  useEffect(() => {
++    if (isFetching || target === null || redirectedRef.current) return;
++    redirectedRef.current = true;
++    router.replace(target);
++  }, [target, isFetching, router]);
++  return useCallback(() => { redirectedRef.current = true; }, []);
++}
++
++/** NAV-AUDIT-20261111 #64: back when there is history; a cold open (deep link) replaces with the Lookup route so it can never strand the user. */
++export function useGoBack(): () => void {
++  const router = useRouter();
++  return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++}
++
++/** The value after `ms` of no change (the search page's config.debounce_ms, so typeahead does not burn the rate bucket). Starts at the first value. */
++export function useDebouncedValue<T>(value: T, ms: number): T {
++  const [debounced, setDebounced] = useState(value);
++  useEffect(() => {
++    const t = setTimeout(() => setDebounced(value), ms);
++    return () => clearTimeout(t);
++  }, [value, ms]);
++  return debounced;
++}
+

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.133Z file_sha256=3f107cef2936a875f679b4e639e339c274926c954676466e8a18316cf84d3f38 prompt_sha256=8bc37b768eb09bca46028cc1f87f9b9a73baa9adc5346bca62d18ca82c960c82
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-381 brief "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — mobile/__tests__/parcelPageHooks.test.tsx "Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked" — no committed planted-defect canary exists in the plan; tests (a)-(e) are written against hooks that do not exist yet, so "red first" can only mean a missing-module failure, not a planted defect proving the anti-refire check actually fires — add one committed canary that plants the re-fire (a mutated hook module or a deliberately re-firing sibling) and is RED before the hook lands and GREEN after, alongside parcelPageHooks.test.tsx.
+
+DEFER severity=MED — task-381 brief "a separate agent attacks it, results reported as refused or STILL OPEN" — NONE — the plan does not name who attacks the new gate nor where a refused or STILL OPEN outcome is recorded, so the gate can pass with no adversary — add one plan line naming the attacking agent and the record path for its verdict.
+
+DEFER severity=LOW — task-381 brief "one test that a background fetch cannot re-fire the redirect; no behaviour change" — "1. useSettledRedirect(target, isFetching): returns void; replaces once, on settled data, never on a background refetch; returns a `markRedirected` function used by semi-question's Continue (same effect as its hand-set ref)" — the hook contract is stated twice, once as void and once as returning markRedirected, and semi-question.tsx:76's hand-set ref needs the second form to keep behaviour unchanged — pin the signature to the markRedirected form in the plan before code.
+
+REJECT — task-381 brief "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33)" — change accused of leaving index.tsx:94-105 out of useSettledRedirect — not a real issue: the plan reports the measurement "index.tsx:94-105 is NOT the same code: the ref holds the last ROUTE string, the effect resets it to null when the route goes away (so retyping navigates again), and it calls navigate(route) = addRecent + router.push, not replace", and folding it would break the same brief's "no behaviour change".
+
+MET — Spec 126 §5.3 "Navigation position — `expo-router` owns which route is mounted" — "2. useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages." — the added client-side logic stays inside the one named §5.3 exception (navigation position) and adds nothing beyond the copies it replaces, so it is not new client business logic.
+
+MET — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — "one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked" — the test exercises the same hook module the pages import rather than re-implementing the redirect rules.
+
+MET — task-381 brief "one test that a background fetch cannot re-fire the redirect" — "(a) a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect" — the named anti-refire guarantee has its own declared test case.
+
+MET — task-381 brief "Phone-test green is proven only by Mobile CI." — "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the plan does not claim local phone green and defers the proof to Mobile CI as ruled.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  51371ms (51.4s)
+📊 Tokens — total: 36049, input: 26691, output: 9358, reasoning: 8432

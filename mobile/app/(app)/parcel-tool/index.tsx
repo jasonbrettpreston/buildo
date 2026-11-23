@@ -24,7 +24,8 @@ import {
   searchProps,
 } from '@/components/surfaces/SearchBinding';
 import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
-import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
+import { useDebouncedValue, useGoBack } from '@/hooks/useParcelPageHooks';
+import { buildSearchSituation, searchQueryArg } from '@/lib/parcelSearchMatch';
 import { openHelp } from '@/lib/maxbldHelp';
 import { useRecentSearchesStore } from '@/store/recentSearchesStore';
 import { useAuthStore } from '@/store/authStore';
@@ -32,16 +33,12 @@ import { useAuthStore } from '@/store/authStore';
 export default function ParcelSearchScreen() {
   const router = useRouter();
   const [input, setInput] = useState('');
-  const [debounced, setDebounced] = useState('');
   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
   const recent = useRecentSearchesStore((s) => s.recent);
   const addRecent = useRecentSearchesStore((s) => s.add);
 
   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(input), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(t);
-  }, [input]);
+  const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
 
   // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
   useEffect(() => {
@@ -91,6 +88,7 @@ export default function ParcelSearchScreen() {
 
   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
+  const goBack = useGoBack();
   const navigatedForRef = useRef<string | null>(null);
   const route = situation.route;
   useEffect(() => {
@@ -112,11 +110,11 @@ export default function ParcelSearchScreen() {
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push: (to: string) => navigate(to),
       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+      back: goBack,
       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
       open_help: openHelp,
     }),
-    [refetch, navigate, router],
+    [refetch, navigate, goBack],
   );
 
   return (
