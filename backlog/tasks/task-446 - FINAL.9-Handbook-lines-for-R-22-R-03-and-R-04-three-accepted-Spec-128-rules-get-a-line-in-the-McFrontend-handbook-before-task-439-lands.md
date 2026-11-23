@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T12:43:00Z'
+updated_date: '2026-11-23T13:46:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-446/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-446/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-446/seat-integration-1.md
+  - docs/reports/reviews/task-446/seat-reality-check-1.md
+  - docs/reports/reviews/task-446/seat-regression-1.md
 type: build
 ordinal: 146012
 ---
@@ -43,7 +49,7 @@ Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, docs/specs/02-web-adm
 <!-- SECTION:PLAN:BEGIN -->
 # PLAN-446-v1
 
-Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1916). Board ~/Buildo-wt-board, read at 4382d48d3. Paths are relative to the board unless they start with ~. Nothing was run except git, grep, sed and the backlog viewer. Every claim has a file:line or is marked UNVERIFIED. Principles served: accurate (no rule is stated twice and none is missing), understandable (one plain line), standardized (task-430's row form, with no new form), observable (a test shows each of the three rules stated exactly once). It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976).
+Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1917). Domain: McFrontend handbook, register and tests. Two Files entries sit under scripts/ (surface-rule-map.json, written by the existing generator, and prereg-MF-96-1.json, the CoA record); the card names both, neither is script code, and task-430 landed the same two kinds of file (d429b287d, 62b2ffed6). Board ~/Buildo-wt-board, read at 4382d48d3 (the grounder re-read it at 77d54ecc7: no spec, test, script or queue file moved). Paths are relative to the board unless they start with ~. Nothing was run except git, grep, sed and the backlog viewer. Every claim has a file:line or is marked UNVERIFIED. Principles served: accurate (no rule is stated twice and none is missing), understandable (one plain line), standardized (task-430's row form, with no new form), observable (a test shows each of the three rules stated exactly once). It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976).
 
 ## 0. Finding that changes the card: R-03 and R-04 are already handbook lines
 
@@ -53,13 +59,13 @@ Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNI
 - R-22 (128:224) is stated nowhere and enforced nowhere:
   - `grep -n "128:224"` returns nothing in 135 or 136.
   - `grep -rn "128:224\|R-22\b" src/tests scripts` returns no hits.
-  - The only RSC mentions in scripts/surfaces are `why` strings of web admin descriptors (for example scripts/surfaces/parcel_admin/F03/surfaces/admin_export_audit.descriptor.json:146). None of them is a check.
-- Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates.
+  - The RSC mentions in scripts/surfaces are `why` strings of descriptors and census files (for example scripts/surfaces/parcel_admin/F03/surfaces/admin_export_audit.descriptor.json:146) and the platform descriptions in scripts/surfaces/_schema/surface.schema.json:461-465 (web is server-side RSC, mobile is a fetched projection, RN has no Server Components). None of them is a check.
+- Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates: they are lines already, FE-49 (135:71) and FE-52 (135:74). LAUNCH GATE (Q4 ruled): the card still reads three rules, and the operator's "Agreed" in RR-0395 rested on REPORT-429's claim that R-03 and R-04 are unstated, which is no longer true, so the decision needs his word (RR-0385 item 4(ii), :1920). Before launch the orchestrator shows him, in one message, the R-22 register cell and handbook line (section 3), the FE-49 and FE-52 Ruling cells (135:71, 135:74) with the one sentence of each rule they leave out (Q2), and the one-rule card text proposed in QUESTIONS-RULED.md of the plan review, and asks one question: R-22 only, since R-03 and R-04 are already lines, yes or no. His reply is recorded verbatim as a dated note on this task and in the R-22 row's Full text cell with its RR id. If he says three, this plan is replaced, not patched. The card is changed only by the orchestrator on his word.
   - The new test T1 (section 4) proves that each of the three rules is stated by exactly one line.
-  - This goes to the operator with the line text anyway (card; RR-0395 reading, MORNING-DECISIONS.md:1995). His question, "R-22 only, or R-22, R-03 and R-04?", rested on a fact that is no longer true (RR-0385 item 4(ii), :1918-1919).
-- Partial wording, stated and not fixed here (Q2):
-  - fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205). fe.52 does carry the seam itself (126:1238).
-  - fe.52 does not carry R-04's "Blast radius, measured" sentence (128:206). That sentence is a measurement, not an obligation.
+  - This goes to the operator with the line text anyway (card; RR-0395 reading, MORNING-DECISIONS.md:1995). His question, "R-22 only, or R-22, R-03 and R-04?", rested on a fact that is no longer true (RR-0385 item 4(ii), :1920).
+- Partial wording, ruled not owed by this card (Q2; the operator is offered it at the sitting, default no):
+  - fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205). fe.52 does carry the seam itself (126:1238), so a reviewer still reads that a declared seam exists; the sentence limits what linkage exists and adds no obligation. FE-49 and FE-52 are rows the operator approved as lines in RR-0384, so editing them is outside "one line per missing rule".
+  - fe.52 does not carry R-04's "Blast radius, measured" sentence (128:206). That sentence is a measurement and the argument for the closed subject_kind, not an obligation; fe.52 states the subject_kind obligation itself.
 
 ## 1. Scope
 
@@ -85,32 +91,32 @@ Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNI
 
 - **Id:** FE-58 (placeholder, section 5).
 - **Ruling:** `No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).`
-  - The quote is the 128:224 Ruling cell with its bold marks removed. Nothing is added to it.
+  - The quoted sentences are the 128:224 Ruling cell with its bold marks removed, unchanged; the lead sentence "No Server Components on mobile." is the lane's own title, as in FE-45 to FE-57, and is not a quote.
 - **Amends:** `128 R-22 (128:224); Spec 125 §1`
   - This is R-22's own Amends cell, "Spec 125 §1" (128:224).
 - **Six:** `D pass, P owed, F n/a, S pass, H n/a, E pass`
-  - This follows the FE-49 pattern, with E pass because R-22 is about the render path of each platform (Spec 126 §0a item 6, 126:63).
-  - It is my judgement (Q3).
+  - This is the form of FE-44 to FE-57 (P owed and bare n/a; Spec 135 rule 4 names pass, n/a and FAIL, and a cleanup of all 14 rows is a separate card). E pass because R-22 sets one render path per platform, as FE-36 does (S pass: one mechanism per platform; E pass: web and mobile), under Spec 126 §0a item 6, Same everywhere (126:64).
+  - It is the planner's judgement, ruled E pass by the grounder (Q3: FE-36 is the precedent; E n/a as in FE-48, FE-49 and FE-52 is the other reading), and the operator sees it with the line text.
 - **Full text:**
   - Operator verbatim as recorded (2026-11-23, RR-0395, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993 and backlog/decisions/decision-180): "Agreed. Plan approved".
   - What was put to him is orchestrator text (MORNING-DECISIONS.md:1992): one handbook line per missing rule before task-439 lands, recommended for R-22, R-03 and R-04.
   - R-03 and R-04 were already lines (FE-49, FE-52, RR-0384), so this row carries R-22 only.
   - The Ruling cell quotes Spec 128 R-22; this row rules nothing new.
-  - If the operator says anything at the line-text sitting, those words are appended verbatim with their RR id.
-- **Status and Lock:** ``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added <date of the work commit> (RR-0395); no machine check yet, the lock is task-367's (task-434 merged into it, RR-0385 item 6) and the path is a reservation. Spec 128 names the lock owed as "a check that no mobile descriptor declares an RSC-only mechanism" (128:224); R-22 stays ACCEPTED in Spec 128 until MF-31 moves it.``
-  - The cell must hold no "Dated note" and no "Current reading". The generator counts dated notes (generate-surface-handbook.mjs:43) and parses readings (:77-79).
+  - The operator's reply at the line-text sitting is appended verbatim with its RR id, and commit 1 is not made before it exists.
+- **Status and Lock:** ``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added <date of the work commit> (RR-0395); no machine check yet, the lock is task-367's (task-434 merged into it, RR-0385 item 6) and the path is a reservation. Spec 128 names the lock owed as "a check that no mobile descriptor declares an RSC-only mechanism" (128:224); R-22 stays ACCEPTED in Spec 128; MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:713).``
+  - The cell must not contain the text "Current reading:" (the generator parses a reading from it, generate-surface-handbook.mjs:72-105, :91). A dated note it only counts (:43, :146), so a plain one would be legal, and this row has none.
 
 Lock path:
 - `src/tests/surfaces/mobile-no-rsc.logic.test.ts` does not exist (`ls src/tests/surfaces | grep -i rsc` is empty).
 - That satisfies Spec 135 rule 5 (135:15) and register-locks-resolve.infra.test.ts.
 
-Status: OWED, like task-430's 13 rows.
+Status: OWED, like task-430's 13 rows. The lock owner is task-367 (Q6 ruled: RR-0385 item 6, MORNING-DECISIONS.md:1922, merged task-434 into it); the 13 rows still name task-434, which is LATER.
 - 135:13: "A ruled row whose lock is not built reads OWED with the lock path."
 - The lock it owes is R-22's own Lock cell, "(none yet — the two renderers, and a check that no mobile descriptor declares an RSC-only mechanism)" (128:224).
 
 ### Next free id line (135:17)
 
-The first value becomes `FE-59`. One dated note goes in front of the existing notes, in the form of the task-430 note:
+The first value becomes `FE-59`. One dated note goes in front of the existing notes, in the form of the task-430 note (the ids FE-58 and FE-59 below are the values read at the work commit; if task-388 landed first they are FE-59 and FE-60, and the lane writes the note from what it reads):
 
 `Dated note <date> (M-246, prior text kept; MF-96 · McFrontend queue · lane <lane>, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved"; Spec 135 rule 3 form): the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446), so the first value on the line, the one the Spec 136 generator reads, is FE-59.`
 
@@ -125,39 +131,40 @@ The first value becomes `FE-59`. One dated note goes in front of the existing no
 - The header lines change by themselves:
   - 136:11 becomes "v1 covers the 58 FE rulings".
   - 136:28 becomes "**Rules rendered: 58**: 58 in force (22 OWED, ...".
-- Size: section 2 is 28,690 today (docs/reports/generated/rule-lists-by-kind.md:33) plus about 420, so about 29,100. That is still one part under the 30,000 nominal (task-430 plan section 3 cites rule-lists.mjs:529). The exact value is measured at page --write.
+- Size: section 2 is 28,690 today (docs/reports/generated/rule-lists-by-kind.md:33) plus about 385 (the line is 385 characters with its newline), so about 29,075. That is one part: a list is split only when list plus the 30,000 nominal material pass the 120,000 review bound (rule-lists.mjs:29, :534), so the margin is large, not 900. Surface-135 grows by the row and the note (about 2,000 characters); its part count (3 today at 111,851) is left to page --write. The exact value is measured at page --write.
 
 ## 4. TESTS FIRST (src/tests/surfaces/handbook-rule-map.logic.test.ts only)
 
-The lane writes these cases first and runs them against the board. It saves the first red in its red.out before adding the row (08_agents.md:462, :489). The new cases go in one new describe block, "task-446 — the R-22 line (RR-0395)", placed after the MF-95 C describe (:261-299).
+The lane writes these cases first and runs them against the board. It saves the first red in its red.out before adding the row (08_agents.md:489). The new cases go in one new describe block, "task-446 — the R-22 line (RR-0395)", placed after the MF-95 C describe (:261-299).
 
 **T1 RED — each of R-03, R-04 and R-22 is stated by exactly one line.**
-- `citing = (rs, cite) => rs.filter(r => r.headline.includes(cite)).map(r => r.id)`.
+- `citing = (rs: Row[], cite: string) => rs.filter((r: Row) => r.headline.includes(cite)).map((r: Row) => r.id)` (typed as the file types its callbacks: typecheck runs at commit with noUncheckedIndexedAccess). T1 is a handbook-consistency pin, not the withheld R-22 lock: exactly one line states each rule, keyed on the cite string in the headline.
 - For [R-03 '128:205', R-04 '128:206', R-22 '128:224']: `expect(citing(realRows(), cite), rule).toHaveLength(1)`.
 - Designed red today: at R-22 (length 0). R-03 and R-04 are green today (FE-49 and FE-52 only, 135:71 and :74).
 - Planted defect: readFeRows(reg([...GOOD, row('FE-04', 'OWED `src/tests/surfaces/z.logic.test.ts`', 'A (128:205).'), row('FE-05', 'OWED `src/tests/surfaces/w.logic.test.ts`', 'B (128:205).')])) gives length 2, so a duplicate is seen.
 
 **T2 RED — the R-22 row and its line.**
 - `R22_LOCK = 'src/tests/surfaces/mobile-no-rsc.logic.test.ts'` and R22_HEADLINE = the exact plain text of section 3.
-- `const hit = realRows().filter(r => r.locks.includes(R22_LOCK)); expect(hit).toHaveLength(1)`. This is the designed red today: 0.
+- `const hit = realRows().filter((r: Row) => r.locks.includes(R22_LOCK)); expect(hit).toHaveLength(1)`. This is the designed red today: 0.
 - Then:
   - status is 'OWED';
   - locks equal [R22_LOCK];
   - headline === R22_HEADLINE;
-  - `fs.existsSync(R22_LOCK)` is false;
+  - the register text does not contain the placeholder `<date of the work commit>`;
   - Spec 136 matches `^- \*\*fe\.<n>\*\* <escaped headline>\n {2}Status: OWED · lock owed: <escaped lock>$` (m).
 - The row is found by its lock path, not its id, so a renumber at landing needs no test edit (the same device as :255-258).
+- Planted defect (both directions): readFeRows(reg([...GOOD, two rows that both hold R22_LOCK])) gives length 2, so a duplicated lock is seen. T2 asserts neither the absence of the lock file (register-locks-resolve.infra.test.ts:77 owns "OWED but its lock already exists" and its FLIP_PENDING list is the flip route) nor anything about task-367's build. When task-367 builds the lock and flips the row, the same commit edits T2's status line and the Spec 136 pattern, as it must edit the C-T2 and C-T3 pins of the 13 rows.
 
 **Changed in the same commit (SURVIVE-THE-FIX: green before and after the row; the old form goes red once the row is added, and that red is recorded):**
-- **C-T2, :267.** `rows.slice(-13)` assumes the 13 are the last rows. It becomes `const at = rows.findIndex(r => r.id === fresh[0]!.id); expect(rows.slice(at, at + 13).map(r => r.id)).toEqual(fresh.map(r => r.id))`. The it-title at :265 "are the LAST rows of the register" becomes "are contiguous, in item order (task-446 appends after them)".
-- **C-T1, :287.** `stripRows(REGISTER, ids, rows.length - 12)` would leave FE-58 after a gap, so build throws "no gap or reorder" (generator :124). It becomes `const tail = rows.slice(rows.findIndex(r => r.id === ids[0])).map(r => r.id)` with `stripRows(REGISTER, tail, rows.length - tail.length + 1)`.
-- **C-T1, :297.** `stripRows(REGISTER, [ids[12]!], rows.length)` would leave a gap at FE-57. It becomes `[rows.at(-1)!.id]`.
+- **C-T2, :267.** `rows.slice(-13)` assumes the 13 are the last rows. It becomes `const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id); expect(at).toBeGreaterThanOrEqual(0); expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id))`; the ! is safe because the first expect of the case proves fresh holds the thirteen locks, and one inline comment says so. The it-title at :265 "are the LAST rows of the register" becomes "are contiguous, in item order (task-446 appends after them)".
+- **C-T1, :287.** `stripRows(REGISTER, ids, rows.length - 12)` would leave FE-58 after a gap, so build throws "no gap or reorder" (generator :130). It becomes `const idx = rows.findIndex((r: Row) => r.id === ids[0]); expect(idx).toBeGreaterThanOrEqual(0); const tail = rows.slice(idx).map((r: Row) => r.id)` with `stripRows(REGISTER, tail, rows.length - tail.length + 1)`; an inline comment says the strip also removes any row after the thirteen.
+- **C-T1, :297.** `stripRows(REGISTER, [ids[12]!], rows.length)` would leave a gap at FE-57. It becomes `[rows.at(-1)!.id]` (.at compiles: tsconfig.json lib has esnext, and src/tests/surfaces/lot-map-help-link.logic.test.ts:60 already uses it; the ! is safe because the register is not empty, with one inline comment).
 
 **Pins that count, all floors, true after the row and NOT changed:**
 - handbook-rule-map.logic.test.ts:268 `>= 57` (becomes 58);
 - :278 `>= 21` (becomes 22);
 - src/tests/backlog/rule-lists-table.logic.test.ts:218 `>= 57` (its range is computed from the register, :209-222).
-- Census: a grep of src/tests, scripts and docs/specs for "Rules rendered: 5", "21 OWED", "57 FE", "fe.57", "FE-58", "28,690" and "111,851" outside 135 and 136 hits only the generated surface-rule-map.json (:256, :881). No other literal pin exists.
+- Census: a grep of src/tests, scripts and docs/specs for "Rules rendered: 5", "21 OWED", "57 FE", "fe.57", "FE-58", "28,690" and "111,851" outside 135 and 136 hits only the generated surface-rule-map.json (:256, :881). A whole-tree git grep at the board head adds only rule-lists-by-kind.md (:33, :37, regenerated by step 4 of section 7) and prose readings in task-430, task-439 (section 7) and task-440 (:52: 57 lines, 21 OWED, a read-only look at a sha); none is a test pin.
 
 **Must NOT change:**
 - H1 contiguity and Next free id (:48-55);
@@ -174,14 +181,14 @@ The lane writes these cases first and runs them against the board. It saves the 
 
 ## 5. Ids
 
-- **FE id: the value "Next free id" reads at the board head when the work commit is made** (FE-58 today, 135:17). The generator throws on a gap (generate-surface-handbook.mjs:123-127), so no other value is possible.
+- **FE id: the value "Next free id" reads at the board head when the work commit is made** (FE-58 today, 135:17). The generator throws on a gap (generate-surface-handbook.mjs:128-131; a repeated id throws at :123), so no other value is possible.
 - **The clash with task-388:**
   - Lane BL-MFRULES (task-388, RUNNING, not in the board: `git merge-base --is-ancestor wf1/inc1b-mfrules HEAD` is false) holds FE-45 (~/Buildo-scratch/ids/FE-45/owner).
   - task-430 has landed FE-45..FE-57 on the board (d429b287d). So task-388 is already a second lander and renumbers to the next free id.
   - Whichever of task-388 and task-446 lands first takes FE-58. The other renumbers with the 135:17 dated-note form and runs `--write` then `--check` (task-430 plan 17.5).
 - **Ledger:**
-  - ~/Buildo-scratch/ids/FE-58/owner is held by BL-HB430 for "renumbered to FE-58 if task-388 lands first". That case cannot happen now that task-430 is on the board (orchestrator reading, Q1).
-  - ids/check.mjs:153 fails an introduced id whose owner text names neither the branch nor the lane. Before launch, the orchestrator therefore adds task-446's lane to FE-58/owner (it matches by substring, :153) and claims FE-59 for the renumber case.
+  - ~/Buildo-scratch/ids/FE-58/owner is held by BL-HB430 for "renumbered to FE-58 if task-388 lands first". That case cannot happen now that task-430 is on the board (Q1 ruled: the claim is dead and FE-58 goes to this row; task-388 renumbers when it lands).
+  - ids/check.mjs:153 fails an introduced id whose owner text names neither the branch nor the lane. Before launch, the orchestrator therefore hands FE-58 over: the ledger README forbids writing into another lane's claim, and released numbers are not reused, so the orchestrator appends one dated line to FE-58/owner that names the hand-over from BL-HB430 to this lane (it matches by substring, :153). It does not claim FE-59 until a renumber is actually needed, because a claimed id equal to the next free id is the drift of Spec 137 section 5 item 7.
   - Spec 137 §5 item 7 (137:158) wants each "next free id" to be greater than every claimed id. Today FE-58 is both claimed and "next" (a drift); after this task it reads FE-59.
 - **MF id: MF-96** (.cursor/MCFRONTEND-QUEUE.md:5 "Next free id: MF-96"; MF-95 is task-430's, ~/Buildo-scratch/ids/MF-95/owner; MF-96 is not in the ledger yet). The orchestrator claims it before launch. The queue line moves to MF-97 by a dated note.
 - **Prereg round: 201** (round-200 is the last in the ledger, owner BL-HB430). The orchestrator claims it.
@@ -194,11 +201,11 @@ Always allowed, as for task-430 (task-430 plan section 16): the task file, docs/
 
 ## 7. LANDING
 
-**Commit 0 (records), alone and first.** It copies 62b2ffed6.
+**Launch gate, before commit 0.** The operator's word on the one-rule scope and the R-22 line text is on the task as a dated note (section 0). **Commit 0 (records), alone and first.** It copies 62b2ffed6.
 - The MF-96 row goes under "## Phase 2" (.cursor/MCFRONTEND-QUEUE.md:246), beside MF-95 (:648).
-  - Title, with no FE token: "MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components)".
+  - Heading, in the queue's bold form with no FE token: `**MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components) — RUNNING** (E)`, and directly under it `Status: RUNNING · since <commit date> · expires <commit date + 7 days> · next: Land commit 1, the R-22 register row (lane <lane>, task-446) · ruling: "Agreed. Plan approved"`. One status word follows the dash, and the first Next free id match in the file moves to MF-97 in the same commit (mcbylaws-queue-check.mjs:289-314).
   - Bullet: "- FE rows owned: none." (arm Q; the row is OWED).
-  - A dated note quoting RR-0395 verbatim.
+  - A dated note quoting RR-0395 verbatim and saying that the card title names three rules while R-03 and R-04 are already lines (FE-49, FE-52) and this row adds the R-22 line only.
   - The Next free id line moved to MF-97.
 - The prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json:
   - schema coa-round-prereg-v1, round 201;
@@ -210,23 +217,23 @@ Always allowed, as for task-430 (task-430 plan section 16): the task file, docs/
 - The task file goes in the same diff.
 - Trailers: `Task: task-446`, `McFrontend-Task: MF-96`, `Operator-Ruling: RR-0395 (2026-11-23, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993, "Agreed. Plan approved")`, `Spec-diff: queue row and records only, no spec rule text moves`.
 
-**Commit 1 (work).** In order:
+**Commit 1 (work).** Subject `feat(135_mcfrontend_decisions_register): one OWED register row for Spec 128 R-22, Spec 136 regenerated` (commit 0: `docs(135_mcfrontend_decisions_register): MF-96 queue row, prereg and panel record`; validate-commit-msg.sh wants type(NN_spec): description, and neither subject holds an FE-nn token). In order:
 1. Write T1, T2 and the three edits, and record the red.
 2. Add the row and the 135:17 note.
 3. Run `node scripts/surfaces/generate-surface-handbook.mjs --write` (136 and surface-rule-map.json), then `--check`.
-4. Run `node scripts/analysis/rule-lists.mjs page --write` (rule-lists-by-kind.md pins the 135 and 136 sizes, :33, :37, :60, :64).
+4. Run `node scripts/analysis/rule-lists.mjs page --check` first (task-445 changes rule-lists.mjs and the pre-commit hook runs --check on every commit), then `page --write` (rule-lists-by-kind.md pins the 135 and 136 sizes, :33, :37, :60, :64); whichever of task-445 and this task lands second re-runs `page --write` then `page --check` immediately before its own commit.
 5. Run `npm run system-map`. The Spec 135 row of the map lists the reserved lock paths (00_system_map.md:100), as in d429b287d.
-6. Edit the MF-96 status line in the same commit (137:98; see Q5).
+6. Edit the MF-96 status line in the same commit (137:98; Q5 ruled): the word stays RUNNING and its next: becomes the closing commit, which sets the task file BUILT. The closing commit cannot stage the queue file (Spec 137 task-410 dated note, 137:100 and :136), so the orchestrator's board edit moves the row to DONE with the MF-96@sha stamp afterwards; the MF-95 precedent still reads RUNNING (.cursor/MCFRONTEND-QUEUE.md:648-649) because that edit has not been made.
 
 Commit 1 trailers and gates:
 - Trailers: `Task: task-446`, `McFrontend-Task: MF-96`, the same Operator-Ruling line, `Spec-diff: one register row added (OWED, no lock built); generated handbook and rule map follow`.
 - No FE token anywhere in the message: arm C reads every FE-nn in it and refuses an OWED id (task-430 plan section 8). Name the line "fe.58", or name none.
 - Protected or frontend paths: src/tests/surfaces/**, scripts/surfaces/** (frontend), Spec 135, the queue and panels (protected) (mcbylaws/protected-paths.json). The owner is prompted at push. No hook is bypassed.
 
-**Close.** Lane records and the task file only, in a separate closing commit (137:100, :136). check-lane-close.mjs runs before BUILT.
+**Output review.** After commit 1 and before the closing commit the compliance and engineering lenses and the seats run on the output, two rounds at most (RR-0385 item 3, MORNING-DECISIONS.md:1919); record commits of the review may sit between the two commits. **Close.** Lane records and the task file only, in a separate closing commit (137:100, :136); the records are REPORT.md, GROUNDER.md, TRIAGE.md and the per-list lens outputs that the lane makes under its brief, and check-lane-close.mjs (header, :140) proves them before BUILT. task-390 is kept as it is (it loses nothing: R-22 now has its line) and task-434 stays LATER, merged into task-367 (RR-0385 item 6, :1922); no other task is updated or deleted.
 
 **Order against the other open tasks:**
-- **task-445** (RUNNING; Files task-445:42) shares no file with this task. If 445 changes the page output of rule-lists.mjs, the second lander re-runs `page --write`. UNVERIFIED whether 445 changes the page.
+- **task-445** (RUNNING; Files task-445:42) shares no file with this task. If 445 changes the page output of rule-lists.mjs, the second lander re-runs `page --write`. task-445 expects no page change (task-445 file :149: None expected).
 - **task-388:** see section 5.
 - **task-439** (planned): this task lands first (card, RR-0395 :1994).
   - task-439 owes no test or code edit. Its N1 and N2 pin no fe id or size (task-439 plan :68). Its lists are agents-s5-1to3, agents-s7-s11, five-words, inc-S, ms-S, orchestrator-doc17, plan-protocol, policy-124-s2-s5, queue-137 and eng-all (docs/reports/reviews/task-439/in-plan-*). None of them is surface-135 or surface-136, so its launch-gate input comparison (task-439 plan :104) is not staled.
@@ -239,6 +246,7 @@ Commit 1 trailers and gates:
     - docs/reports/reviews/task-439/QUESTIONS-RULED.md:7 ("57 ... lines") and :10 (496,038).
     - docs/reports/reviews/task-439/context-r1.md:33 (57 lines), :56 (28,690), :58 (496,038).
     - docs/reports/reviews/task-439/GROUNDER-PLAN.md:88, :92.
+    - task-440 :52 and the readings in task-430's own plan, also stated readings at a sha.
   - Still true: task-439 :66 "fe.45 to fe.57 (136:166-202), fe.53 the pointer (136:190)", because the new line goes after :203.
   - Recommendation: one dated line in task-439's notes at its launch naming fe.58 and the new figures. No re-review (no CRITICAL or HIGH; RR-0385 item 4). See Q4.
 
@@ -249,14 +257,15 @@ Commit 1 trailers and gates:
 3. `grep -n 'Rules rendered' docs/specs/02-web-admin/136_mcfrontend_handbook.md`: `**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history.`
 4. `for c in 128:205 128:206 128:224; do grep -c "$c" docs/specs/02-web-admin/136_mcfrontend_handbook.md; done`: 1, 1, 1.
 5. `grep -n 'mobile-no-rsc' docs/specs/02-web-admin/136_mcfrontend_handbook.md`: one line, `  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts`.
-6. `test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?`: 1.
+6. `test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?`: 1. Point in time at this landing: task-367 builds that file later and flips the row.
 7. `npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts src/tests/surfaces/register-locks-resolve.infra.test.ts src/tests/backlog/rule-lists-table.logic.test.ts src/tests/backlog/rule-lists.logic.test.ts src/tests/surfaces/mcfrontend-queue.infra.test.ts`: all pass. The red.out holds T1 red at R-22, T2 red at `toHaveLength(1)`, and the old C-T2 and C-T1 forms red after the row.
 8. `node scripts/analysis/rule-lists.mjs page --check`: exit 0. The surface-136 "2. Rules" row shows 1 part.
 9. `git diff --stat <launch>..HEAD -- scripts/surfaces/generate-surface-handbook.mjs docs/specs/02-web-admin/128_surface_standard_policy.md scripts/analysis/rule-lists.json`: empty.
-10. The orchestrator, before the push: `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>`. The FE row, MF-96 and round 201 are claimed by this lane. The full push range also carries task-430's ids (section 9).
+10. The orchestrator, before the push: `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>`. Run it twice, because --lane takes one name and the unpushed range also carries task-430's ids (FE-46 to FE-57, MF-95 and round 200, owner BL-HB430): once with this lane and once with BL-HB430. Each id of the range must read OK in one of the two runs; the other-lane lines of each run are the expected ones, and the push summary says so (ids/check.mjs:142-153). The FE row, MF-96 and round 201 are claimed by this lane.
 11. `npm run test` at pre-push: pass.
+12. The operator's reply to the sitting is a dated note on this task and is appended verbatim with its RR id to the R-22 row's Full text cell (section 3); commit 1 is not made before it exists.
 
-## 9. Questions for the grounder
+## 9. Questions for the grounder (ruled in round 1, docs/reports/reviews/task-446/QUESTIONS-RULED.md; the rulings are folded into sections 0, 3, 5 and 7)
 
 - **Q1.** Is the FE-58 ledger claim of BL-HB430 dead, now that task-430 is on the board before task-388? I read it as dead, so the orchestrator adds this lane to FE-58/owner. Or must this row wait for task-388 and take FE-59?
 - **Q2.** Is fe.49's omission of "What exists is a declared id-translation seam only." (128:205) a missing statement that this task owes? Recommended no: fe.52 states the seam (126:1238), and an FE-49 edit is outside "one line per missing rule".
@@ -267,13 +276,63 @@ Commit 1 trailers and gates:
 
 ## 10. UNVERIFIED
 
-- The exact section 2 size after the row, and whether it stays one part (about 29,100 against 30,000).
+- The exact section 2 size and the surface-135 part count after the row (page --write measures both; section 2 stays one part by the bound above).
 - That the McBylaws gate accepts commit 0 (prereg under layer23 scripts/analysis/bylaw-validation/**) on the McFrontend trailer alone. Precedent: 62b2ffed6 landed so.
-- task-430's commits are not on origin/wf1/mb-rulings (`git merge-base --is-ancestor d429b287d origin/wf1/mb-rulings` is false). The push check of a range carrying them will also see FE-45, whose owner is BL-MFRULES. That is task-430's issue, but it shares the push.
-- Whether task-445 changes the page output.
+- task-430's commits are not on origin/wf1/mb-rulings (`git merge-base --is-ancestor d429b287d origin/wf1/mb-rulings` is false). The push range therefore carries task-430's ids FE-46 to FE-57, MF-95 and round 200 (owner BL-HB430, not this lane); FE-45 is in the base text (its Next free id line) and is not read as introduced. Section 8 item 10 is two runs for that reason.
+- Whether task-445 lands first and still changes the page (its plan expects none, task-445 file :149).
 - The size of the Spec 135 growth that task-439 :69 quotes.
 
 ## 11. GUESS estimate
 
-About 1.5 agent-hours of lane time: about 30 lines of tests, one row and one note, four regenerations, commit 0. Plus the plan review and the close.
+About 1.5 agent-hours of lane time: about 30 lines of tests, one row and one note, four regenerations, commit 0. Plus the plan review, the output review and the close.
+
+Plan review round 1: 109 folded, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-446/GROUNDER-PLAN.md; triage docs/reports/reviews/task-446/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-agents-s7-s11#1 MED folded His reply is recorde
+plan-compliance-agents-s7-s11#2 MED folded A whole-tree git gre
+plan-compliance-agents-s7-s11#3 MED folded the ledger README fo
+plan-compliance-bylaw-133-p1#1 MED folded If he says three, th
+plan-compliance-bylaw-133-p2#1 MED folded him, in one message,
+plan-compliance-five-words#1 MED folded patched. The card is
+plan-compliance-five-words#3 MED folded T2 asserts neither t
+plan-compliance-inc-S#1 MED folded His reply is recorde
+plan-compliance-inc-S#2 MED folded operator's word on t
+plan-compliance-ms-S#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-orchestrator-doc17#1 MED folded If he says three, th
+plan-compliance-plan-protocol#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-policy-124-s2-s5-p1#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-policy-124-s2-s5-p1#2 MED folded The lock owner is ta
+plan-compliance-policy-124-s2-s5-p1#3 MED folded Run it twice, becaus
+plan-compliance-policy-124-s2-s5-p1#4 MED folded MF-31, the move of t
+plan-compliance-policy-124-s2-s5-p2#1 MED folded His reply is recorde
+plan-compliance-policy-124-s2-s5-p2#3 MED folded (Q1 ruled: the claim
+plan-compliance-policy-124-s2-s5-p2#4 MED folded The push range there
+plan-compliance-queue-137#1 MED folded the word stays RUNNI
+plan-compliance-queue-137#2 MED folded His reply is recorde
+plan-compliance-queue-137#3 MED folded Status: RUNNING · si
+plan-compliance-queue-137#4 MED folded It does not claim FE
+plan-compliance-surface-126-p1#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-surface-126-p1#3 MED folded (the ids FE-58 and F
+plan-compliance-surface-126-p1#4 MED folded Planted defect (both
+plan-compliance-surface-126-p2#1 MED folded If he says three, th
+plan-compliance-surface-126-p2#2 MED folded His reply is recorde
+plan-compliance-surface-126-p3#1 MED folded him, in one message,
+plan-compliance-surface-126-p4#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-surface-126-p4#3 MED folded commit 1 is not made
+plan-compliance-surface-126-p4#4 MED folded Section 8 item 10 is
+plan-compliance-surface-126-p4#6 MED folded Point in time at thi
+plan-compliance-surface-127#1 MED folded patched. The card is
+plan-compliance-surface-127#2 MED folded commit 1 is not made
+plan-compliance-surface-128#2 MED folded His reply is recorde
+plan-compliance-surface-135-p1#1 MED folded If he says three, th
+plan-compliance-surface-135-p1#4 MED folded Run it twice, becaus
+plan-compliance-surface-135-p2#1 MED folded LAUNCH GATE (Q4 rule
+plan-compliance-surface-135-p3#1 MED folded him, in one message,
+plan-error-paths#2 MED folded T2 asserts neither t
+plan-plan-review-deepseek#8 MED folded expect(idx).toBeGrea
+plan-ux#3 MED folded LAUNCH GATE (Q4 rule
+in#1 MED folded Each id of the range
+in#4 MED folded moves the row to DON
+in#5 MED folded LAUNCH GATE (Q4 rule
+rg#1 MED folded When task-367 builds
 <!-- SECTION:PLAN:END -->

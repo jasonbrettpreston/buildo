@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T13:40:00Z'
+updated_date: '2026-11-23T13:46:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-440/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-440/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-440/seat-integration-1.md
+  - docs/reports/reviews/task-440/seat-reality-check-1.md
+  - docs/reports/reviews/task-440/seat-regression-1.md
 type: record
 ordinal: 140012
 ---
@@ -58,7 +64,7 @@ Task-440 FINAL.5, type record (task-440 card, Status LATER). Plan seat: Opus (RR
 | E7 | Design-fit and "bound + available" | scripts/analysis/proof-slices.json:12 (design-fit, "notbuilt", blocked by task-345 and task-67), :15 report-opens, :17 elements-number-or-word, :18 key-match (all notbuilt); memory rule design-fit-gate.md (outside the repo, not citable as a rule) | No design-fit test exists under src/tests (grep "design-fit" finds only the proof-slice files). These rows are recorded as checks that are not built. |
 | E8 | Binding tests (file-only, "No DB, no network") | src/tests/surfaces/report-binding.logic.test.ts:1-8, contract-binding.logic.test.ts:1-12, binding-standard.logic.test.ts, engine-inputs-bind.logic.test.ts:1-9, report-generator-fields.logic.test.ts:1-9 | The "bound" side of group 3. |
 | E9 | Engineering-standards citations in checks | `git grep -l 00_engineering_standards -- src/tests scripts .husky .github` finds 110 files; enforcement.logic.test.ts:1-9 (§6.1, §9.4, §3.2); eslint.config.mjs:53-61 and :70 | The search source for group 2, with the fixed inventory of section 3 (many checks cite no spec). |
-| E10 | Report-only gates on the board (commit 6513119b0, an ancestor of the board head) | scripts/analysis/gates/compute-reach.mjs, mobile-literals.mjs:1 (SPEC LINK fe.05, fe.44) and mobile-never-do.mjs (Spec 90 section 5), tested by src/tests/gate-mobile-compliance.infra.test.ts:3 ("Report-only: nothing wires them."); also scripts/analysis/gates/red-evidence.mjs, owner-spec-diff.mjs, closed-bounds.mjs and compute-literals.mjs, run through step-validate.mjs (.husky/pre-commit:49, .husky/pre-push:41) | Check files for fe.05, fe.44 and Spec 90 section 5. A gate that only reports, or that nothing wires, is "partly" at most (section 3). |
+| E10 | Report-only gates on the board (commit 6513119b0, an ancestor of the board head) | scripts/analysis/gates/compute-reach.mjs, mobile-literals.mjs:1 (SPEC LINK fe.05, fe.44) and mobile-never-do.mjs (Spec 90 section 5), tested by src/tests/gate-mobile-compliance.infra.test.ts:4 ("Report-only: nothing wires them."); also scripts/analysis/gates/red-evidence.mjs, owner-spec-diff.mjs, closed-bounds.mjs and compute-literals.mjs, run through step-validate.mjs (.husky/pre-commit:49, .husky/pre-push:41) | Check files for fe.05, fe.44 and Spec 90 section 5. A gate that only reports, or that nothing wires, is "partly" at most (section 3). |
 
 Not read as existing checks: the 11 unlanded commits of branch wf1/inc1b-gates, which RR-0386 (MORNING-DECISIONS.md:1932) keeps untouched; the look does not read that branch. Its stage 1 is on the board (E10) and is read like any other check file.
 
@@ -108,7 +114,7 @@ Pin first: `S=$(git rev-parse wf2/board)`. The pin also fixes the hook text (.hu
   A test of one function that obeys the rule is an instance, not a check. A descriptor JSON under scripts/surfaces/ that cites the file is not a check (about 40 of the 110 citing files). Candidates are found from the subsection's own text (e.g. §12.11 at :366-375 names its files) and from `git grep -n 00_engineering_standards $S -- src/tests scripts .husky .github eslint.config.mjs biome.json`, matched to `§N.M` on the hit line or in the file header. Many checks cite no spec, so the lane also searches this fixed inventory for every subsection: eslint.config.mjs and biome.json (biome runs through lint-staged on three directories only); .sqlfluff; scripts/hooks/validate-migrations.sh and scripts/hooks/check-migration-down-comments.sh (§3.1, §3.2; .husky/pre-commit:51-52); scripts/hooks/ast-grep-leads.sh, whose own rules are silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream and step-shape (the :255 summary line), with scripts/ast-grep-rules/*.yml; scripts/amnesty.json, which lists what those rules exempt and so narrows them; scripts/analysis/src-sql-ledger.mjs (§4.2); `npm run typecheck` (.husky/pre-commit:54; §8.2); scripts/hooks/check-spec-diff.mjs (§14 row 4); .github/workflows/test.yml, db-tests.yml, lighthouse.yml (§13.4) and mutation.yml with stryker.config.mjs (§12.13); and the src/tests files that cite a section (admin-route-guard.infra.test.ts, admin-mutation-audit.infra.test.ts, logger.logic.test.ts, api.infra.test.ts, enforcement.logic.test.ts). A check found outside this inventory is added to the row and named in the header. Match on the basename: enforcement.logic.test.ts:2 cites a wrong path, docs/specs/00-architecture/00_engineering_standards.md.
 - **Wired:** a src/tests file runs in `npm run test` (pre-push and CI), except `*.db.test.ts`, which `npm test` leaves out (.husky/pre-commit:7-11). Lint runs at .husky/pre-commit:55. A db test counts as wired only where CI runs it: .github/workflows/db-tests.yml:90 runs `npm run test:db` on push to main, and on a pull request only when the change touches migrations/**, src/features/leads/lib/**, src/lib/db/**, src/tests/db/** or scripts/** (:9-17); .github/workflows/test.yml:67-68 excludes src/tests/db/**; and register-locks-resolve.infra.test.ts:7-8 says no workflow step names a surface test file. A db check whose path is in neither the filter nor a workflow step is "partly" and the row says "main only". A check nothing wires, or that only reports (E10), is "partly" at most and the row says "report-only".
 - **Status rule:**
-  - **enforced:** a wired check covers every bullet over the scope the bullet states.
+  - **enforced:** a wired check covers every bullet of the subsection that the lane compared, over the scope the bullet states (the first uncovered bullet the lane finds makes the row partly).
   - **partly:** a wired check covers some bullets or a narrower scope (example: §12.11 "Initially scoped to `src/features/leads/`", :367); or the only check is a db test that CI does not run on a pull request for the paths it guards (Wired, above); or the only check is report-only or unwired (E10).
   - **none:** no check.
 
@@ -236,4 +242,18 @@ Files: docs/reports/reviews/task-440/RULE-CHECKS.md, docs/reports/reviews/task-4
 ## 13. GUESS estimate
 
 One Opus lane, about 4-6 hours of reading (GUESS; group 2 is a comparison against a fixed inventory). Grounder about 1-2 hours.
+
+Plan review round 1: 19 folded, 0 task, 0 ruling, 0 wontfix, 3 pile; grounder docs/reports/reviews/task-440/GROUNDER-PLAN.md; triage docs/reports/reviews/task-440/TRIAGE-PLAN.md
+rc#1 HIGH folded its Spec 135 Lock ce
+rc#2 HIGH folded nav-by-route.logic.t
+rc#3 HIGH folded BL-COMPLY3 GROUNDER-
+rc#4 MED folded The row is the subse
+rc#6 MED folded Group 3 is the union
+in#2 MED folded the order stays by h
+in#3 MED folded are not handbook rul
+rg#1 HIGH folded E10 | Report-only ga
+rg#2 HIGH folded the lane also search
+rg#3 MED folded extends to API route
+rg#4 MED folded counts as wired only
+rg#5 MED folded scripts/analysis/mcb
 <!-- SECTION:PLAN:END -->
