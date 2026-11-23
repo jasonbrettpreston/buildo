@@ -1,24 +1,31 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.604Z file_sha256=cb8a88765380061b80b2c161a0dffa5ed3aa36f3dba0cb45a3cf8cdeaf03428d prompt_sha256=e7918f4d7e06c24ff4f0172092e08f3bb0f0bd05c94a0353e62c9d7c331d4871
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:00:51.164Z file_sha256=c497407bb3dae4f27fd6b4dae72a37a7f54d4758bbed79db8fcb5cc6fa136a6f prompt_sha256=d1dd30011c16662c89f0bf6deb4eda8c9cab83929710056156e8f9e7fa5c40bd
 🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
 
-```
-DEFER severity=MED — fe.05 "every number from McBylaws; no maths in the UI." — PLAN-442-v1 §3 T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so" — T3 scans only the report-presentation.json `page` block, so a digit added to any other shown content block (a label, a help string, a states.checked template) passes the new lock while fe.05 binds every number, not page texts only — extend the scan to every block a page part can show, or add a fail-closed list for the excluded blocks asserted at a counted zero.
-DEFER severity=MED — card Description "THIS TASK: tests of the interface between the front end and the database as ranked by FINAL.5 (what exists is reused first)" — PLAN-442-v1 §2 "| 1-7 | fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44 | no | OWED, lock path reserved: task-367" — the plan lands at rank 8 and defers ranks 1-7 on a citation (task-367, RR-0385 item 6, MD:1922) that is not in the pasted rulings, so the card's ranked scope is narrowed on unseen authority — quote MD:1922 and the task-367 card inside the plan, or have the orchestrator confirm the routing before plan-lock.
-DEFER severity=LOW — fe.53 "before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032)" — PLAN-442-v1 §7b "**One hand-edited source:** scripts/surfaces/_schema/report-v2-seed/page-text.json:44 (checked: the only source line)" — the plan changes the REPORT page's shown basis text without recording a read of §11b.3 or §11b.7, which fe.53 requires before any page change — cite the report page's §11b.3 row and the §11b.7 amendments in §7b.
-DEFER severity=LOW — RR-0404 "planner redirect approved: task-447 planner returns a section for task-442" — PLAN-442-v1 §6 "the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes" — RR-0404 names this task and appears in neither the dated notes nor the Operator-Ruling trailer — add RR-0404 to the commit 0 notes and the `Operator-Ruling:` line.
-DEFER severity=LOW — fe.56 "Prove each lock RED on a fixture that declares a column or a policy that does not exist" — PLAN-442-v1 §3 T2 "the lane temporarily deletes the throwing line, read-stored.ts:29" — T2's recorded red removes the production guard, so it proves the test depends on line 29 rather than going red on a fixture that declares a column the read does not select — record a grounder line stating that deletion is the accepted red form for a module-load throw, since the guard cannot be green-on-fixture and red-on-fixture at once.
-MET — fe.18 — PLAN-442-v1 §3 T1 "For each `pageBindings()` entry with `building_type !== null` and `source.kind === 'catalogue'`" — every catalogue-bound page field with a building type is checked against the engine's written rows, and the parcels and user_input kinds are covered by T2 and by the existing closed-set lock.
-MET — fe.27 — PLAN-442-v1 §3 T2 "rejects with the message \"MB-93: page field source parcels:max_build_fsi is not in the static parcels read\"" — a parcels-bound field whose column is not in the static parcels read fails at load, with the migrations and whitelist halves already held by RS-1/RS-3.
-MET — fe.34 — PLAN-442-v1 §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls" — the changed part stays a content:page text, which the v21 page contract allows, and no field, number or pending value is introduced.
-MET — fe.07 — PLAN-442-v1 §7b "(3) `npx tsx scripts/surfaces/report-page-capture.ts` rewrites the 32 page goldens and the view of the 5 props goldens" — the same declared text is regenerated into every target's goldens, so parity is re-proven rather than asserted.
-MET — fe.09 — PLAN-442-v1 §6 ".cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98" — the record commit adds one MF-97 queue row with the id counter moved on, so the register lock has a resolvable new row to check.
-REJECT — fe.27 — the plan is accused of leaving the four S-001 whitelist paths (`parcel.parcelId`, three `parcel.lot.*`) as a live break — fe.27 fails a column not in the migrations and a path not on the whitelist, and the plan shows those four paths are on the whitelist (RS-2), so the clause is met as written and the grounder's reading stands.
+BUG severity=CRIT/HIGH none raised. Producing findings only at DEFER level, plus MET lines.
+
+DEFER severity=MED — fe.05 "P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI." — PLAN-442-v1 §3 T3 "The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so." — T3 scans only the report-presentation.json `page` block, so a number shown from any other content block passes and fe.05 for that block is not checked, and the "no digit today" claim carries no checked count — scan every content block the page can show, or record the checked key count for the non-page blocks as evidence.
+
+DEFER severity=MED — fe.05 "every number from McBylaws; no maths in the UI." — PLAN-442-v1 §3 T3 "No scan of renderer code: digits in mobile or web code belong to task-367 (its card, item b) and to fe.45." — a typed number literal in a component is caught by neither T3 (content texts only) nor report-no-maths (arithmetic only), so fe.05's "every number" is unchecked in code and only deferred to task-367 — add a code-literal scan or cite the existing check that catches a typed number in web/mobile code.
+
+DEFER severity=MED — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria." — PLAN-442-v1 §2 "| 32 | fe.15 | no | Its Available side is canary f, owned by FE-25 (OWED, 135:37): task-367. |" — the acceptance criteria A1-A10 contain no canaries a-f and section 2 defers fe.15, but the clause requires the canaries in this plan's acceptance criteria — add canaries a-f to §7 or record a task-367 pointer per canary.
+
+DEFER severity=LOW — fe.18 "every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot" — PLAN-442-v1 §3 T1 "user_input (the lot-size entry, a design exception by fe.18)" — fe.18 lists user_input as a member of the closed set, not an exception, so the header misstates the clause — reword to "user_input availability is fe.19/fe.20, deferred" with no "exception".
+
+DEFER severity=LOW — fe.18 "Labels, help text and legal copy are content fields, not an exception." — PLAN-442-v1 §3 T3 "(c) The list has exactly 3 entries (legal.line, sheet.width_placeholder, sheet.depth_placeholder), 0 of kind exception ... The list only shrinks." — applying "only shrinks" to the legal and input_hint entries treats compliant content as a deviation, so a new legal or help string with a digit would fail T3 and force a list entry, contradicting fe.18 — exempt content kinds from "only shrinks" or classify them as content, not exceptions.
+
+DEFER severity=LOW — RR-0385 "Every build task of this plan follows the six steps, plan written and built on Opus" — PLAN-442-v1 §0 "Six steps: the card names them and does not list them; section 6 holds the lane's order." — the pasted card does not enumerate the six steps and section 6 labels Commit 0, Commit 1, Output review, Close, Other tasks, so compliance with "the six steps" cannot be verified — enumerate the six steps by name in section 6.
+
+MET — fe.27 — PLAN-442-v1 §3 T2 — a parcels binding absent from the static parcels read fails read-stored at module load, proven red by removing the guard.
+MET — fe.30 — PLAN-442-v1 §3 T1 — "the test repeats no line of seed-report-v2.mjs; it asserts on what the engine wrote", so no second copy of the field-generation rule.
+MET — RR-0402 — PLAN-442-v1 §7b — "the percent" is dropped from row.unit_size_basis_value.
+MET — RR-0405 — PLAN-442-v1 §7b — "expect(t).toBe('the basement, not shared stairs and halls');" matches the operator's option a.
+MET — RR-0403 — PLAN-442-v1 §6 — "task-447 is merged into this task (RR-0403) and gets no lane".
+
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 22   Unmet: 0
-Rules met: fe.06, fe.07, fe.09, fe.11, fe.14, fe.18, fe.27, fe.29, fe.34
-```
+Clauses checked: 20   Unmet: 0
+Rules met: fe.27, fe.30
 
 ---
-⏱  189036ms (189.0s)
-📊 Tokens — total: 45273, input: 20070, output: 25203, reasoning: 23946
+⏱  171980ms (172.0s)
+📊 Tokens — total: 54958, input: 20171, output: 34787, reasoning: 33733

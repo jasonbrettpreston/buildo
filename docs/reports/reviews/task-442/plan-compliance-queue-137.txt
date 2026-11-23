@@ -1,41 +1,24 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:39:27.617Z file_sha256=96c135b0d800c372ec7944ee6c1ca5ea38926f8914a9dc6330707afa3a2fa0f1 prompt_sha256=12c5d3b9a3ac15a0248858f8bdcba67c44d990a72c3202970cb2ade1b19a2aed
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:03:43.242Z file_sha256=3ebd15091636ee4068fee866b925625728827b27729d816349d5ed3f2eebc685 prompt_sha256=c0fdac12d5f186605ee3309a8df656b316e9887edfc191be4d75d60e43ad3e08
 🔍 Lens review of docs/reports/reviews/task-442/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Spec 137 §1 McLane note, Rule 4 "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" — plan §6 "the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes" — the three rulings are hand-written into the task file and backlog-decision.mjs is named nowhere in the plan, so G2's cite-exists and duplicate checks never run — run `node scripts/analysis/backlog-decision.mjs` once for RR-0402, RR-0403 and RR-0405 and carry the appended task file in commit 0.
+BUG severity=HIGH — rule.3 "The status line changes in the same commit as the work. When work lands for a row, the commit that lands it edits that row's status line." — plan section 6 "It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98" — commit 0 creates the MF-97 row and neither commit 1 ("The work commit holds T1, T2, T3, the K2 change, the text and every regenerated copy") nor the records-only close may touch .cursor/MCFRONTEND-QUEUE.md, so the row never advances from its commit-0 word — put the MF-97 status line edit in the work commit, or name the queue row in the close's record set
+BUG severity=HIGH — task-375 note "refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (it prints the exact `backlog task edit --add-ref` command); the take adds the compliance:<list id> references" — plan section 6 "Close: the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT." — the landing has no `backlog task edit --add-ref` step for the three repo copies and no `compliance:<list id>` refs at the take, so check-lane-close refuses the close as planned — add the add-ref steps and the take's compliance refs to section 6 and to A1/A3
+BUG severity=MED — rule.1 "Every row has ONE status line, REPLACED when the status changes, never appended." — plan section 6 "with the next-free-id line moved to MF-98" — the new MF-97 row's status line (word, since, expires, next, card) and its placement (heading `**MF-97 <task> — STATUS**` under the heading, or in the status-lines section) are never stated, so the row can be written off-form and off-expiry — specify the row's heading form, its status section placement and its expires date (7 days, rule 7) in commit 0
+BUG severity=MED — task-419 note "also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script" — plan section 5 "the orchestrator runs the plan compliance lens for each added list on a committed context holding this folded plan before launch" — the pre-launch step names only the plan compliance lens and omits FOLD-CHECK.md, GROUNDER-PLAN.md and the seat reports (Integration, Reality-Check, Regression for a tracked Files path) that planGateErrors requires — add the plan evidence folder contents to the pre-launch step so the launch is not refused
+BUG severity=MED — rule.4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — plan section 6 "the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes" — the notes are not stated to take the M-246 form, and RR-0404 ("task-447 planner returns a section for task-442"), a pasted ruling naming task-442, is recorded nowhere in commit 0 — name the M-246 form and add RR-0404 to the dated notes and to the Operator-Ruling trailer
+BUG severity=MED — rule.3 note 2026-11-20 "the status moves in a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record)" — plan section 6 "records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs" — the close list omits the review context directory docs/reports/reviews/task-442/context-rN.md that the close check needs to recompute the prompt hashes — add the review context directory to the close list and to the close's staged paths
 
-BUG severity=HIGH — Spec 137 §4 dated note 2026-11-21 (task-375) "the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path), an outcome for every CONFIRMED or CONFLICT finding (mode plan: folded, task, ruling, wontfix, pile), the round block on the task and the Plan hash line" — plan §5 "the orchestrator runs the plan compliance lens for each added list on a committed context holding this folded plan before launch" — the launch prep names only the plan compliance lens; GROUNDER-PLAN.md, FOLD-CHECK.md, the seat reports and the Plan hash line are missing, the Regression report is mandatory because the Files line names src/tests paths, so planGateErrors refuses the launch — add every planGateErrors artifact to the section 5 and section 6 launch steps.
-
-BUG severity=HIGH — Spec 137 §4 dated note 2026-11-21 (task-375) "an outcome for every CONFIRMED or CONFLICT finding (mode plan: folded, task, ruling, wontfix, pile)" — plan §4 item 2 "Ruled by the grounder (Q4): fe.27 fails a column that is not in the migrations and a path that is not on the whitelist; the four paths are on the whitelist" — section 9 Q4 carries no "Ruled by the grounder" line while Q1, Q2, Q3, Q5 and Q6 all do, so the one question that could open a live break is folded as settled with no recorded ruling — obtain and record the Q4 ruling, or move item 2 to a task, before the plan is locked.
-
-DEFER severity=MED — pasted decision "RR-0404 planner redirect approved: task-447 planner returns a section for task-442 (names task-442)" — plan §6 "task-447 is merged into this task (RR-0403) and gets no lane" — RR-0404 names task-442 and is cited nowhere in the plan, and section 7b is not tied to it, so the ruling cannot be traced to a step — cite RR-0404 in section 7b and in the commit 0 Operator-Ruling trailer, or record why it adds nothing.
-
-DEFER severity=MED — Spec 137 §4 Rule 3 note "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan §6 "T1 and T2 may land in a commit before it." — any earlier commit staging src/tests/admin-report-preview-live.logic.test.ts or src/tests/customer-report-read.logic.test.ts changes src/ and needs the Task: task-442 trailer plus the task file in that diff, which the plan does not require — state that any earlier T1/T2 commit carries the trailer and the task file, or drop the split.
-
-DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 (task-399) "the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes" — plan §6 "Close: the two-commit close, records only (137:100, :136): REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs; task BUILT" — the close step names the report files but never the Final Summary round line and outcomes the close check reads — add the Final Summary contents to the close step.
-
-DEFER severity=MED — Spec 137 §4 dated note 2026-11-21 (task-375) "the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md)" — plan §6 "DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359)" — no committed context-rN.md, no compliance:<list id> task refs and no `backlog task edit --add-ref` step appear, so the close is refused — add the committed context file and the references to the output review step.
-
-DEFER severity=MED — Spec 137 §4 Rule 7 "Each open row carries an opened date and an expiry 7 days later" — card "status: LATER · milestone: m-1 · assignee: none · labels: McFix, McFix Final" — task-442 is an open row with no `expires` and the plan never sets one, so §5 step 6 will list it as "no expiry" — set `expires` on task-442 in commit 0 or record an operator-set date.
-
-MET — Spec 137 §4 Rule 3 note 2026-11-20 (task-410) "Rule 3 is amended for lane build and fix tasks" — plan §6 "Close: the two-commit close, records only" — the work lands first and the status moves in the records-only close.
-
-MET — RR-0359 "That's ridiculous to fold before the grounder review" — plan §6 "DeepSeek compliance and engineering lenses on the lists the Files line resolves to, then a separate grounder before any fold (RR-0359)".
-
-MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — plan §1 "Any CI workflow change, new tool, gate, hook or card (RR-0392, MD:1976)".
-
-MET — RR-0402 "a" and RR-0405 "option a" — plan §7b "the text of `row.unit_size_basis_value` becomes exactly: the basement, not shared stairs and halls", which drops the percent.
-
-MET — Spec 137 §4 Rule 3 note "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer" — plan §6 commit 0 "Trailers: `Task: task-442`" plus "the task file", needed because commit 0 stages scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json.
-
-MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — plan §6 "McFixReborn waits for the tests (RR-0388)".
-
-MET — RR-0403 "no separate process for task-447" — plan §6 "task-447 is merged into this task (RR-0403) and gets no lane".
+MET — rule.2 — "The orchestrator claims MF-97 and round-202 in ~/Buildo-scratch/ids before launch" — the new id is claimed in the ID ledger before use and gets a row in commit 0
+MET — rule.9 — "Anything that needs a database (a lane may not connect to one; the database side of fe.19, fe.20, fe.27 and fe.38 is the main-only db tests of section 4 item 3)" — no DB job is in scope, so no rehearsal or operator go is owed
+MET — rule.13 — "It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md" — the change edits a row, not the board, per "Nobody edits the board"
+MET — task-399 note "a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md" — "REPORT.md, TRIAGE.md, GROUNDER.md and the lens outputs" — the close carries TRIAGE.md
+MET — task-423 note "a stage that holds both forms is refused" — "DeepSeek compliance and engineering lenses on the lists the Files line resolves to" — one per-list form only, no joined set, no double form
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 24   Unmet: 3
-Rules met: none
+Clauses checked: 26   Unmet: 6
+Rules met: rule.2, rule.9, rule.11, rule.13
 
 ---
-⏱  155199ms (155.2s)
-📊 Tokens — total: 44644, input: 22572, output: 22072, reasoning: 20428
+⏱  73956ms (74.0s)
+📊 Tokens — total: 38171, input: 22798, output: 15373, reasoning: 14133

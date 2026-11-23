@@ -1,4 +1,4 @@
-LIST surface-136 sha256:5ec071573033f3d7e93f4d0eda15e74b9d7564c433b961be0d08c22de35e0d90 material sha256:05f4e21ee2abd09ec136b70cd6f9df5874267482b015c7abff0da0c06dcefbb0 part 1 of 1
+LIST surface-136 sha256:d94030ef467ac9ba05ac5bf6792869d2c3f05ed44ef26f9f53d62cec84f93256 material sha256:05f4e21ee2abd09ec136b70cd6f9df5874267482b015c7abff0da0c06dcefbb0 part 1 of 1
 RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
 
 ## 2. Rules
@@ -173,6 +173,9 @@ RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, secti
 
 - **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
   Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 ## Description

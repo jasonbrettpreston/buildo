@@ -3,8 +3,8 @@
 plan-compliance-agents-s5-1to3#1 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; the lens set is enforced by the close gate)
 plan-compliance-agents-s5-1to3#5 pile:"Baseline --check runs by the grounder exit 0 (72 goldens 0 stale); the write steps cannot be run read-only and A8 to A10 prove them in the lane."
 plan-compliance-agents-s5-1to3#6 pile:"Stated in QUESTIONS-RULED UNVERIFIED: the engine-row control (a) is proven by the lane run, not by a read-only print."
-plan-compliance-agents-s7-s11#1 pile:"The three --check forms were run read-only by the grounder and exit 0; the write forms are proven by A8 to A10 in the lane."
-plan-compliance-agents-s7-s11#6 pile:"The launch brief supplies the TKT-1 header lines; the empty acceptance block belongs to the card and is outside a plan fold."
+plan-compliance-agents-s7-s11#2 pile:"The three --check forms were run read-only by the grounder and exit 0; the write forms are proven by A8 to A10 in the lane."
+plan-compliance-agents-s7-s11#4 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; the gate resolves the lists live; the sentence is descriptive)
 plan-compliance-bylaw-133-p1#2 pile:"Stated limit of T1, written in the folded T1 checker bullet; G25 compares values for the option variants where the key states a value."
 plan-compliance-bylaw-133-p1#3 folded:"are the next round of this card for fe.05"
 plan-compliance-bylaw-133-p1#6 pile:"A number written in words passes the digit scan; a stated limit in section 8 and a scope extension beyond the card."
@@ -28,10 +28,10 @@ plan-compliance-plan-protocol#4 folded:"Ruled by the grounder: the question does
 plan-compliance-plan-protocol#5 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; the lens set is enforced by the close gate)
 plan-compliance-plan-protocol#6 folded:"are the next round of this card for fe.05"
 plan-compliance-plan-protocol#7 folded:"Before launch the orchestrator appends the M-246 dated notes"
-plan-compliance-queue-137#1 folded:"Before launch the orchestrator appends the M-246 dated notes"
-plan-compliance-queue-137#3 folded:"Ruled by the grounder: the question does not arise"
-plan-compliance-queue-137#4 folded:"Before launch the orchestrator appends the M-246 dated notes"
-plan-compliance-queue-137#5 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; enforced by the commit hooks)
+plan-compliance-queue-137#1 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; the lane advances the row Status line in the work commit as 2905df62d did)
+plan-compliance-queue-137#3 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; the lane copies the MF-96 row form including a 7-day expires)
+plan-compliance-queue-137#5 folded:"Before launch the orchestrator appends the M-246 dated notes"
+plan-compliance-queue-137#6 pile:"The close commit stages the review folder including context-rN.md; the plan names the lens outputs and the gate reads the whole folder."
 plan-compliance-surface-126-p1#2 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; baseline run by the grounder exits 0; a one-line acceptance row)
 plan-compliance-surface-126-p1#3 folded:"Ruled by the grounder: the question does not arise"
 plan-compliance-surface-126-p1#4 folded:"Before launch the orchestrator appends the M-246 dated notes"
@@ -53,9 +53,9 @@ plan-compliance-surface-135-p1#5 ruling:RR-0385 (round 2: a CONFIRMED MED is rec
 plan-compliance-surface-135-p1#7 pile:"The precedents name 135 for commit 0 although no register text moves; a harmless commit-subject form."
 plan-compliance-surface-135-p2#2 folded:"are the next round of this card for fe.05"
 plan-compliance-surface-135-p3#1 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; FE-53 is a prose-only pointer; no conflicting text found)
-plan-compliance-surface-136#1 folded:"are the next round of this card for fe.05"
-plan-compliance-surface-136#3 pile:"FE-53 is a prose-only pointer; the grounder read the 126 row and found no conflicting text (see surface-135-p3#1)."
-plan-compliance-surface-136#4 folded:"Before launch the orchestrator appends the M-246 dated notes"
+plan-compliance-surface-136#2 folded:"are the next round of this card for fe.05"
+plan-compliance-surface-136#5 pile:"A wording imprecision in the T1 header: user_input is a member of the closed set; it is skipped because it binds the entry contract."
+plan-compliance-surface-136#7 pile:"The six steps are not listed in the card or the repo for build tasks; the plan says so (same claim as five-words#1)."
 plan-engineering-eng-all#1 folded:"Standards boundary (engineering §10.2)"
 plan-engineering-eng-all#2 folded:"Standards boundary (engineering §10.2)"
 plan-error-paths#2 ruling:RR-0385 (round 2: a CONFIRMED MED is recorded by ruling, not folded; a stated limit; a word-number arm is a scope extension)
@@ -88,7 +88,7 @@ in#9 folded:"they fold onto the board first and this lane then branches"
 rg#1 folded:"FIXED IN THIS TASK (RR-0402, RR-0403, RR-0405)"
 rg#2 folded:"the count equals the o3 pair count (7) and is at least 1"
 rg#3 folded:"every key of the report-presentation.json"
-rg#4 pile:"Safe by design: static imports bind at load, the finally resets the registry, and a comment says T11 stays the last describe."
+rg#4 pile:"Safe by design: static imports bind at load, the finally and the comment that T11 stays last cover it."
 rg#5 folded:"the design option of o1 and o2 is not checked"
 rg#6 pile:"A confirmation that T1 type membership, T2 and T3 duplicate no existing check; nothing to change in the plan."
 rg#7 folded:"an example hint of the lot-size entry box"
