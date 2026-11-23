@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.258Z file_sha256=f1decafcdb77b7bfeca5dd73107fcd97aca12d115b9a6946f9c8db3cd7df0053 prompt_sha256=dea515ca1de2e58cb0b151ff4af6b1ed18d587bfefea4c35b9f0d5e915e60550
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — scripts/analysis/rule-lists.json lane-tools row "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] and its why "an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them" — clause unmet as written: the ruling keeps those records on the tooling row (whose process lists item 4 a keeps), the diff takes them off it and routes them to the listless panel-records row; the plan clause "a not on the bylaw and lane-tools rows for prereg-MF files" and the ruling cannot both hold — remove the not on the lane-tools (and bylaw) rows for prereg-MF files, or paste and cite the ruling that reverses RR-0426 (the bylaw row's bylaw-133 exclusion is named by no pasted ruling either).
+
+DEFER severity=LOW — task-448 Description item (5) "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings" — docs/specs/00-architecture/08_agents.md:357 "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." against scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448) or a Files path no row matches is refused" — the third artefact named does not say that; the corrected comment is about the record-only Files line — reword the note to name the launch brief and the refusal clause, and state the comment's own subject.
+
+DEFER severity=LOW — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json generated-reports why "until task-448 (RR-0421 item 4 a, decision-205) the review also got the list policy-124-s2-s5 (sections 2 and 5 of Spec 124) and the lane-tools lists, which are off" — item 4 a names only the lane-tools process lists, so the Spec 124 list's turn-off is attributed to a ruling that does not name it — cite RR-0418 "the queue, agent, policy and orchestrator-note lists ... are turned off" for policy-124-s2-s5 and item 4 a only for the lane-tools lists.
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json mobile row "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] and specs-mobile row "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136"] — both phone rows lose only 100 and 96, surface-136 kept.
+
+MET — RR-0421 item 4 a — scripts/analysis/rule-lists.json lane-tools row keeps ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"], and generated-reports, generated-127, policy-reports, reference-docs, specs-docs, queue-records, review-followups and panel-records all drop them.
+
+MET — RR-0421 item 1 a and 3 a — scripts/analysis/rule-lists.json surface-contract-routes "lists": ["surface-136"], specs-web-admin "lists": ["surface-136"], step-pipeline "lists": ["step-132", "eng-back", "eng-shared"], storage "lists": [], no row pasted keeps 126, 127, 128, 135, the four Airtight lists or doc-16.
+
+MET — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited, except as RR-0424 says below" and RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only ...) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — one hunk, one string line at :502, one comment hunk at :346, nothing else in either file.
+
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — the changed line is the `//` comment only, no code.
+
+MET — task-448 item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — every changed total recomputes from the row edits (eng-back 11 to 7 lists and 194,014 to 128,198; storage 14 to 7 and 566,443 to 128,198; phone 12 to 10 and 308,007 to 216,416; tooling +2,685), so the page matches the table.
+
+MET — task-448 "NOT in this task: any edit to rule-lists.mjs, any edit to check-lane-close.mjs other than the one clause at :502, any new tool, hook, key or role" — scripts/analysis/rule-lists.json uses only the existing `not` key, adds no row, no list id and no role, and rule-lists.mjs is absent from the diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  124697ms (124.7s)
+📊 Tokens — total: 61166, input: 33347, output: 27819, reasoning: 26530

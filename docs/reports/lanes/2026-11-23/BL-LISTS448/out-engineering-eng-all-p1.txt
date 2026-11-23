@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T21:51:39.419Z file_sha256=09a5b856877600eebd7114c32298bef1bae0575af89fb13acaa8db09ba5492b8 prompt_sha256=9384fbdf9e6c57b9a65771d10e7ef98d6497e2e2c157159c8d98c5eb7484e459
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists-table.logic.test.ts "expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(['surface-136']);" — the added line asserts non-null on find() with no prior toBeDefined check and no inline comment, so an absent row fails as an opaque TypeError — bind the row to a const, assert it defined, then read .lists (deferrable, no fix needed before merge)
+
+MET — 2.2 Try-Catch Boundary Rule — diff paths (scripts/analysis/backlog-lane.mjs, scripts/analysis/rule-lists.json, scripts/hooks/check-lane-close.mjs) — no file under src/app/api/ is added or edited, so the wrapping try-catch and error-shape duty does not arise
+
+MET — 3.3 Pagination Enforcement — scripts/analysis/rule-lists.json "globs": ["src/lib/**", "src/app/api/**"] — no API route handler is added and no SELECT on permits or coa_applications is written, so the LIMIT duty does not arise
+
+MET — 3.1 Zero-Downtime Migration Pattern and 3.2 Migration Rollback Safety — diff paths (no migrations/ file) — the change is table data, docs and tests, no ALTER TABLE and no UP/DOWN file is owed
+
+MET — 1.1 Mobile-First UI Mandate and 1.3 Mobile Front-End Patterns — src/tests/backlog/backlog-lane.logic.test.ts additions — no Tailwind class, JSX, Pressable or haptic call is touched, so no mobile-first, 44px or animation duty arises
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — accused of adding tests with no forced-error case — the rule binds only `.infra.test.ts` ("When writing integration tests (`.infra.test.ts`)") and every test file in this diff is `.logic.test.ts`, so the mandate is not triggered
+
+REJECT — 1.2 Component Isolation — accused of changing shared UI components — the diff contains no file under `src/components/ui/`, only scripts, JSON, markdown and tests
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  36025ms (36.0s)
+📊 Tokens — total: 41942, input: 34604, output: 7338, reasoning: 6776

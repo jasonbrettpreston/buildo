@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.338Z file_sha256=043d48ace08d7993a521089afa6788557cb441ce59e8224361ef2d49f1e7d054 prompt_sha256=48eeca4d539208755833f53154728dba1f1d7c7f324bcb1cf2d53d2d89f8855a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW … clause: task card item (5) "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings, including that the plan grounder writes the fold check itself, once, after the last fold" … code: docs/specs/00-architecture/08_agents.md:357 "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." … claim: the diff does make the brief (scripts/analysis/backlog-lane.mjs:188) and the refusal clause (scripts/hooks/check-lane-close.mjs:502) say it, but the only launch-script comment the diff touches, scripts/analysis/backlog-lane.mjs:12, states the record-only lists ("a record-only task gets the every-task, increment and milestone lists only, since task-448"), so the note names a third artifact that does not say it … rationale: readers trust dated notes, the mislabel is text-only and the rule itself is stated twice.
+
+DEFER severity=LOW … clause: task card item (4) "scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line" … code: scripts/analysis/backlog-lane.mjs:188 "the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5)" … claim: the replacement clause adds a new lane procedure, an extra commit before the closing commit plus a mandated history-line format, that the card's one sentence and no pasted ruling names, while the card scopes the task to "all of it turning things off or correcting text" … rationale: a lane may make an extra commit no gate reads; cite the ruling or drop that clause.
+
+MET … Spec 137 part 6 of 6, "The commit check above stays deferred." … scripts/hooks/check-lane-close.mjs:502 … the only edit to that file is the layout refusal-message string, no commit check for status line, expiry or DROPPED is added.
+
+MET … RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" … scripts/analysis/rule-lists.json surface-contract-routes "lists": ["surface-136"] and specs-web-admin "lists": ["surface-136"] … no row attaches the four specs, and the new rule-lists-table test pins "for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l)".
+
+MET … RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" … scripts/analysis/rule-lists.json mobile "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] … both phone rows drop 100 and 96, specs-mobile keeps the three protocols plus surface-136.
+
+MET … RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" … scripts/analysis/rule-lists.json step-pipeline "lists": ["step-132", "eng-back", "eng-shared"] and storage "lists": [] … every Airtight id and storage-doc16 is off every row, the why texts record the reversal.
+
+MET … RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" … scripts/analysis/rule-lists.json lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"] … queue-records, generated-reports, generated-127, policy-reports, reference-docs, panel-records, review-followups and specs-docs are reduced to eng-all or none, and the new test pins that only lane-tools carries those four.
+
+MET … RR-0424 "the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" … src/tests/backlog/check-lane-close.logic.test.ts:346 … only that comment changes, and the check-lane-close.mjs hunk is the single :502 string.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  173321ms (173.3s)
+📊 Tokens — total: 73483, input: 33448, output: 40035, reasoning: 38926

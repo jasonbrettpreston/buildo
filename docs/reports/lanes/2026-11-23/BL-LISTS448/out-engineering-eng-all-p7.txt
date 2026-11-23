@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T21:51:39.368Z file_sha256=7d437e184cfc9bb2cf85c6bdcd45a9a92a7bd8c0fbb6bf8b45a0a45f9c5acb01 prompt_sha256=f0874ed76e2f712de64bed3ec8bf5341565c696d0713260a2f6e91d9ce0f8d1d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-engineering-eng-all-p7.txt (model: deepseek-reasoner)
+
+MET — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/08_agents.md:357 "This supersedes \"(a record-only task gets the queue lists)\" (:229) and, in the task-439 note (:356), \"the mobile row keeps its five mobile lists\" and \"The specs-web-admin row keeps all five surface lists\" with the clause after it." — each superseded phrase of the cited spec is marked in the same work commit, and docs/reports/generated/rule-lists-by-kind.md is regenerated in that commit.
+
+MET — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/137_mcqueue.md:138 "the queue-records row, and with it a record-only task with no Files line, no longer attaches Spec 137 or Spec 08" — the 137 note supersedes its own task-439 clause and points to Spec 08's note, so the change is carried in both directions.
+
+DEFER severity=LOW — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — scripts/analysis/rule-lists.json:89 "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] vs scripts/analysis/rule-lists.json:179 "globs": ["docs/reports/panels/**", "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json"] — the exclusion glob and the resolving glob differ, so a non-.json prereg-MF file would match the exclusions but no row resolves it (launch refusal) — make the three globs identical (prereg-MF-*.json on all).
+
+REJECT — 14. The Prevention Loop "where deterministic, promoted to a machine-read GATE" — the new rule "for a plan launch, the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan; no separate fold-check agent is run." (08_agents.md:491) is deterministic, but the launch gate already requires FOLD-CHECK.md (the note states check-lane-close.mjs:692-712 is unchanged), so the machine-checked part is gated and only the writer identity changes.
+
+REJECT — 14. The Prevention Loop "promoted to a machine-read GATE ... a guideline eventually will" — the turn-off "Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16." — §14 does not require every rule to be pasted as a review list; this is the operator's ruling (RR-0421), and gate J still enforces Spec 124 Rule 13 for generated reports.
+
+REJECT — 14. The Prevention Loop "Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares**" (and the ON CONFLICT, withTransaction, webhook registry rows) — the diff adds no SQL columns, no ON CONFLICT block, no transaction and no webhook handler, so those registry rows do not bind this docs/table/test change.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  106665ms (106.7s)
+📊 Tokens — total: 58873, input: 33701, output: 25172, reasoning: 24407

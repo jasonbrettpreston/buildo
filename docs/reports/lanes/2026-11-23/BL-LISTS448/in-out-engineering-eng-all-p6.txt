@@ -1,0 +1,700 @@
+LIST eng-all sha256:08c8e4260be86c0d2327de679b8dd484f4636ef4c2c4f247a950f17d8b62ee16 material sha256:fd7a42202cc5786b22b7e0de21372c7a5bdf1b073cf190019fa4d340a2f42fe2 part 6 of 7 chunk 1 of 1
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 6 of 7. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.json","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 991fb83056a7f13bc0050b2a72fc67f5878426ed..40d3e9ef23e216efd269417259241f860dd83950 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -11,17 +11,13 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 11 lists | | 194,014 | 11 |
++| total | 7 lists | | 128,198 | 7 |
+ 
+ ## McFrontend web
+ 
+@@ -32,15 +28,11 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 11 lists | | 226,944 | 11 |
++| total | 7 lists | | 161,128 | 7 |
+ 
+ ## phone
+ 
+@@ -51,8 +43,6 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+ | mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
+ | mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
+-| mobile-100 | docs/specs/03-mobile/100_mobile_parcel_cost_tool.md | whole file | 54,254 | 1 |
+-| mobile-96 | docs/specs/03-mobile/96_mobile_subscription.md | whole file | 37,337 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+@@ -60,7 +50,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 12 lists | | 308,007 | 12 |
++| total | 10 lists | | 216,416 | 10 |
+ 
+ ## storage
+ 
+@@ -70,19 +60,12 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
+ | --- | --- | --- | ---: | ---: |
+ | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+-| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
+-| surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
+-| storage-doc16 | backlog/docs/doc-16 - McStorage-policy-v2.md | whole file | 38,848 | 1 |
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 14 lists | | 566,443 | 17 |
++| total | 7 lists | | 128,198 | 7 |
+ 
+ ## tooling
+ 
+@@ -91,15 +74,15 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 43,639 | 1 |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 37,633 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 45,706 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 38,251 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 211,730 | 9 |
++| total | 9 lists | | 214,415 | 9 |
+ 
+ ## spec-only
+ 
+@@ -107,12 +90,10 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ 
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 37,633 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 43,639 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 165,455 | 7 |
++| total | 5 lists | | 84,183 | 5 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index d01732684f39d39337ef1c5e59b6f9d15685a2c3..4928a941cc14863ed3f2f1c92a05d767217a51ab 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -354,6 +354,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+    Dated note 2026-11-22 (M-246, prior text kept; task-438 FINAL.3, McFix Final; RR-0385 item 2, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." and "We need a new name for an agent called engineering."): a review seat named `engineering`, separate from compliance, at plan and at output. A rule list whose file is the engineering standards (`docs/specs/00_engineering_standards.md`, today `eng-all`; `seatOf` in `scripts/analysis/rule-lists.mjs`) is reviewed by `.claude/review-templates/lens-engineering.md`, and every other list by `lens-compliance.md`, which is not edited. The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>` (and `plan-compliance-<id>` or `plan-engineering-<id>`), by the seat of the list; the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage. The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias. The close applies the split when the range base holds `lens-engineering.md`: a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name.
+    Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1913 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" and :1865 "drop the full engineering when arts can be sent"): the engineering seat of the note above is sent the sections of the engineering standards that fit the task. Three section lists join `eng-all` in `scripts/analysis/rule-lists.json`: `eng-front` (section 1), `eng-back` (sections 3 and 9) and `eng-shared` (sections 2, 4 to 8 and 10 to 14: 8, 10 and 12 by RR-0380 Q2, 11 and 14 placed here by the plan review). The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it. Each of them is an engineering list (`seatOf`), so "today `eng-all`" in the note above now reads "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`", and the per-list rule asks for one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`. When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped (`resolveTask`), so each rule is sent once and no rule that a matched row asked for is lost.
+    Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165, and RR-0383, decision-168; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1853 "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.", :1865 "once the handbook has been updated iwth the critical items" and :1895 "1. what is your recommendation. I approve it"): the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169), so the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach `surface-126`, `surface-127`, `surface-128` and `surface-135`; they attach `surface-136` with their engineering lists, and the mobile row keeps its five mobile lists. A front-end review therefore no longer receives the text of those four specs and receives the handbook rule lines instead; a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: "we will add to the rules overtime"). The specs-web-admin row keeps all five surface lists, so a task that edits a spec under `docs/specs/02-web-admin/` is reviewed with that spec. Every other row is unchanged. The words "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" in the task-366 note of section 5.3 above now hold for those rows only.
++   Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0418, RR-0421, RR-0422, RR-0423, RR-0424, RR-0426 (decisions 203, 205, 207, 208, 209, 211); operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, :2140 "TWe only want to run these tings off not rewrite a new feature. This is simple.", :2161 "1-4 recommendations approved", :2166 "Minimum and 1a. Let's add these small fixes to the cost review task.", :2171 "add teh first two.  Plan approved.  Move forward with the task", :2176 "add it", :2186 "1 and 2 as recommended"): rule lists are turned off in scripts/analysis/rule-lists.json. A front-end task is reviewed against Spec 136 section 2, its engineering lists, the four lenses and the four every-task lists; a back-end task the same with its own handbook. Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16. Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137 and doc-17 stay on the lane-tools row only; the Spec 124 list is attached to no row. This supersedes "(a record-only task gets the queue lists)" (:229) and, in the task-439 note (:356), "the mobile row keeps its five mobile lists" and "The specs-web-admin row keeps all five surface lists" with the clause after it. The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names. Known loss: findings only the turned-off lists raised are no longer raised (tasks 367 and 442).
+ 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+ 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+    Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+@@ -488,6 +489,8 @@ After folding any review round, and BEFORE implementation: **one grounder re-exe
+ 
+ Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it: see the Spec 137 note of the same date; a fold checked at a later round leaves no required record). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The wording "the agent stays in the roster and may be asked for" is approved by RR-0360 (:1692). CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
+ 
++Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0423, decision-208; operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2171 "add teh first two.  Plan approved.  Move forward with the task"): for a plan launch, the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan; no separate fold-check agent is run. The scope of :486 (every claim in the fold) and the launch gate (check-lane-close.mjs:692-712) are unchanged.
++
+ ### 11.3 Red-first mechanics
+ Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
+ 
+diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
+index 834e0c0a071d5f623ddab94dcb052d3ed813f7df..a68f007ca09765f6dd76956fad508c82800c2a05 100644
+--- a/docs/specs/00-architecture/137_mcqueue.md
++++ b/docs/specs/00-architecture/137_mcqueue.md
+@@ -135,6 +135,8 @@ Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY
+ 
+ Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1865 "once the handbook has been updated iwth the critical items"): the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach Specs 126, 127, 128 and 135 and send the handbook (Spec 136 section 2) instead; the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them (the Spec 08 section 7 rule 4 note of task-439 has the whole account). The words "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" in the task-366 note above (Rule 12) now hold for those rows only.
+ 
++Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0421, decision-205; operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2161 "1-4 recommendations approved"): the queue-records row, and with it a record-only task with no Files line, no longer attaches Spec 137 or Spec 08, and the rows of the task-439 note above no longer keep Specs 126, 127, 128 and 135, so its words "the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them" no longer hold. The task-448 note under Spec 08 section 7 rule 4 has the whole account.
++
+ Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the commit that sets BUILT or DONE on a lane build or fix task is also refused (scripts/hooks/check-lane-close.mjs) when a file changed from the task's launch commit that its Files line covers is not in a review chunk, when a chunk, an input or an output hash does not match, and when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records. Rule 3 is unchanged: the status line moves in the commit that closes the task, after the work commits that the review covered.
+ 
+ Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above): its closing sentence says Rule 3 is unchanged. That is corrected by the Rule 3 note under Rule 3 (same date, same task): for lane build and fix tasks Rule 3 is amended to the two-commit close, the operator having agreed ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."); every other task keeps Rule 3 as written.
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index abb25e1f88dbed95c8335e2af54a491b3138326b..f923a1aaa774fb101efe66cc8d3f4d9f49806bdd 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -9,7 +9,7 @@
+ //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
+ //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
+ //   6. print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call) and then `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
+-// COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
++// COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448) or a Files path no row matches is refused before any write, the path named.
+ // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
+ // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
+ // --dry-run prints every command (cd <dir> && <command>) and the task.json, writes nothing.
+@@ -185,7 +185,7 @@ const lensLine = (task, ctx, lists) => {
+   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
+   const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+-  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385): the fix commit changes the diff, so no round-1 input or output still matches it; round 2 re-makes ALL of them under the SAME names (overwrite out-<lens>[-<list id>][-pN].txt and in-<same name>, then a new GROUNDER.md and its outcome file); the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5); a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.';
+   return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file ${ctx}, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
+ };
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index e6c542bb057dcb896e799440c74a9f9c92fe43a1..fe50f811b4fce92eed858b5c88978838c5b89cc9 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -3,7 +3,7 @@
+     "COMPLY.2 (task-366): the path to rule-list table. DATA, not code, decides which rule lists govern a task: scripts/analysis/backlog-lane.mjs resolves a task's `Files:` line through it at launch, scripts/hooks/check-lane-close.mjs resolves it again at close. Operator, verbatim, 2026-11-20: \"Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort.\" (record ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, the 2026-11-20 entries).",
+     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
+     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+-    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
++    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+     "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
+     "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
+     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+@@ -85,14 +85,15 @@
+       "id": "step-pipeline",
+       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
+       "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
+-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-back", "eng-shared"],
+-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
++      "lists": ["step-132", "eng-back", "eng-shared"],
++      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
+     },
+     {
+       "id": "bylaw",
+       "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "layer23" },
++      "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
+       "lists": ["bylaw-133"],
+-      "why": "by-law rows and the by-law engine: the paths the McBylaws gate already classifies as by-law code (protected-paths.json layer23, Spec 133 R-LD) are governed by the by-law handbook rules"
++      "why": "by-law rows and the by-law engine: the paths the McBylaws gate already classifies as by-law code (protected-paths.json layer23, Spec 133 R-LD) are governed by the by-law handbook rules. task-448 (RR-0418, decision-203): an MF pre-registration (coa-expected/prereg-MF-**, a front-end record) is excluded by not and takes no by-law list"
+     },
+     {
+       "id": "api-lib",
+@@ -117,106 +118,107 @@
+       "id": "surface-importers",
+       "globs": ["src/lib/**", "src/app/api/**"],
+       "imports_from": ["src/lib/surfaces", "scripts/surfaces"],
+-      "lists": ["surface-126", "surface-128"],
+-      "why": "ADDED by COMPLY.2: a library or API file that imports from src/lib/surfaces or scripts/surfaces (resolved module path, anchored) serves a McFrontend surface and is governed by the surface contract (Spec 126) and the surface policy (Spec 128)"
++      "lists": [],
++      "why": "ADDED by COMPLY.2: a library or API file that imports from src/lib/surfaces or scripts/surfaces (resolved module path, anchored) serves a McFrontend surface and was governed by the surface contract (Spec 126) and the surface policy (Spec 128) until task-448 (RR-0421 item 1 a, decision-205, reverses RR-0383): Specs 126 and 128 are off; this row attaches no list"
+     },
+     {
+       "id": "surface-contract-routes",
+       "globs": ["src/app/api/admin/media/[asset_id]/route.ts", "src/app/api/admin/media/route.ts", "src/app/api/admin/parcels/lookup/route.ts", "src/app/api/admin/parcels/lot-size/revert/route.ts", "src/app/api/admin/placements/advertisers/route.ts", "src/app/api/admin/placements/offers/route.ts", "src/app/api/admin/placements/route.ts", "src/app/api/parcels/entitlement/route.ts", "src/app/api/parcels/lookup/route.ts", "src/app/api/parcels/lot-size/route.ts"],
+-      "lists": ["surface-126", "surface-128", "surface-135", "surface-136"],
+-      "why": "V2.LIST (task-406, round 4; operator, 2026-11-20, \"yes, ground it and resolve it. don't makr the task complete until it actually works.\", MORNING-DECISIONS.md:1517): the API routes the surface census (scripts/surfaces/_schema/census/contracts.json) names for scopes parcel_product and parcel_admin are contracts of the programme and get the surface standard (Spec 126) and the surface standard policy (Spec 128). Spec 126:115 lists the CONTRACT as \"one API route\"; Spec 126:135 scope A parcel_product: \"This is the programme.\"; Spec 126:136 scope B parcel_admin: \"An unobservable product is not shipped.\"; Spec 128:29: \"The client is just glass\" and \"everything else is server-projected\". estate_other is not attached (Spec 126:138 scope D). Scope platform_shared (36 census entries, 20 of them admin routes) is left out for Increment 1·B on the operator's word: item 5 was put to him as \"5. The 36 shared-platform routes. My recommendation: leave out for 1·B.\"; operator, verbatim: \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\" (MORNING-DECISIONS.md:1520, entry \"2026-11-20 · Operator RULES on five more items\"). Specs 135 and 136 are attached to these routes: item 2 was put to him as \"2. Attach Specs 135 and 136 to the contract routes. My recommendation: yes.\" (same entry, same answer). The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ"
++      "lists": ["surface-136"],
++      "why": "V2.LIST (task-406, round 4; operator, 2026-11-20, \"yes, ground it and resolve it. don't makr the task complete until it actually works.\", MORNING-DECISIONS.md:1517): the API routes the surface census (scripts/surfaces/_schema/census/contracts.json) names for scopes parcel_product and parcel_admin are contracts of the programme and got the surface standard (Spec 126) and the surface standard policy (Spec 128) until task-448 (see the end of this text). Spec 126:115 lists the CONTRACT as \"one API route\"; Spec 126:135 scope A parcel_product: \"This is the programme.\"; Spec 126:136 scope B parcel_admin: \"An unobservable product is not shipped.\"; Spec 128:29: \"The client is just glass\" and \"everything else is server-projected\". estate_other is not attached (Spec 126:138 scope D). Scope platform_shared (36 census entries, 20 of them admin routes) is left out for Increment 1·B on the operator's word: item 5 was put to him as \"5. The 36 shared-platform routes. My recommendation: leave out for 1·B.\"; operator, verbatim: \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\" (MORNING-DECISIONS.md:1520, entry \"2026-11-20 · Operator RULES on five more items\"). Specs 135 and 136 were attached to these routes (Spec 135 until task-448): item 2 was put to him as \"2. Attach Specs 135 and 136 to the contract routes. My recommendation: yes.\" (same entry, same answer). The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ. task-448 (RR-0421 item 1 a, decision-205; it takes off what the operator answer 1-5 y, MORNING-DECISIONS.md:1520 item 2, attached to these routes, and reverses RR-0383): Specs 126, 128 and 135 are off; this row attaches surface-136 only"
+     },
+     {
+       "id": "storage",
+       "globs": ["src/lib/parcels/**", "src/lib/report-projection/**", "src/app/api/parcels/**"],
+-      "lists": ["storage-doc16"],
+-      "why": "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)"
++      "lists": [],
++      "why": "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels was governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds) until task-448 (RR-0421 item 3 a, decision-205): doc-16 is off; this row attaches no list"
+     },
+     {
+       "id": "compute-import",
+       "globs": ["src/**/*.ts", "src/**/*.tsx"],
+       "imports_from": ["scripts/lib/compute"],
+-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a"],
+-      "why": "a src file that imports from scripts/lib/compute gets the step standard and Airtight lists, because the compute gates scan scripts/lib/compute by path only"
++      "lists": ["step-132"],
++      "why": "a src file that imports from scripts/lib/compute gets the step standard list (Spec 132) because the compute gates scan scripts/lib/compute by path only; until task-448 it also got the four Airtight lists (RR-0421 item 3 a, decision-205: off)"
+     },
+     {
+       "id": "surfaces",
+       "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
+       "lists": ["surface-136", "eng-all"],
+-      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule); until task-439 they were also governed by the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)"
++      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule); until task-439 they were also governed by the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edited one of those specs got them through the specs-web-admin row until task-448 (RR-0383, decision-168); RR-0421 item 1 a (decision-205) reverses RR-0383, so no row attaches them now"
+     },
+     {
+       "id": "mobile",
+       "globs": ["mobile/**"],
+-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "eng-front", "eng-shared"],
+-      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136; until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edits one of those specs gets them through the specs-web-admin row (RR-0383, decision-168)"
++      "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"],
++      "why": "the mobile app is governed by Specs 90, 98, 99 and Spec 136 (Specs 100 and 96 were attached until task-448; RR-0421 item 2 a, decision-205, keeps the three protocols); until task-439 it was also governed by the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row. task-439 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163): the handbook holds the critical items (task-430), so Specs 126, 127, 128 and 135 are no longer attached to this row; Spec 136 section 2 is. A task that edited one of those specs got them through the specs-web-admin row until task-448 (RR-0383, decision-168); RR-0421 item 1 a (decision-205) reverses RR-0383, so no row attaches them now"
+     },
+     {
+       "id": "queue-records",
+       "globs": ["backlog/**", ".cursor/*QUEUE*", "docs/specs/00-architecture/**"],
+-      "lists": ["queue-137", "agents-s7-s11"],
+-      "why": "queue, board and records are governed by Spec 137 and Spec 08 sections 7 and 11"
++      "lists": [],
++      "why": "queue, board and records were governed by Spec 137 and Spec 08 sections 7 and 11 until task-448 (RR-0418, decision-203; RR-0421 item 4 a, decision-205): Spec 137 and Spec 08 are off on this row and on the record-only default; this row attaches no list (the every-task lists still apply)"
+     },
+     {
+       "id": "lane-tools",
+       "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
++      "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
+       "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all)"
++      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them"
+     },
+     {
+       "id": "generated-reports",
+       "globs": ["docs/reports/generated/**"],
+       "not": ["docs/reports/generated/127-*"],
+-      "lists": ["policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "V2.LIST (task-406, round 2): generated reports (docs/reports/generated, except the 127-* files) are governed by Spec 124 Rule 13 (every generated doc has a generator with a drift check, gate J: scripts/analysis/gates/generated-docs.mjs) and the role banner rule R-GW (list policy-124-s2-s5: sections 2 and 5 of Spec 124), with the lane-tools lists as before"
++      "lists": ["eng-all"],
++      "why": "V2.LIST (task-406, round 2): generated reports (docs/reports/generated, except the 127-* files) are governed by Spec 124 Rule 13 (every generated doc has a generator with a drift check, gate J: scripts/analysis/gates/generated-docs.mjs) and the role banner rule R-GW; until task-448 (RR-0421 item 4 a, decision-205) the review also got the list policy-124-s2-s5 (sections 2 and 5 of Spec 124) and the lane-tools lists, which are off: this row attaches eng-all only (Rule 13 stays enforced by gate J)"
+     },
+     {
+       "id": "generated-127",
+       "globs": ["docs/reports/generated/127-*"],
+-      "lists": ["surface-127", "policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "V2.LIST (task-406, round 2): the generated 127-* reports (the surface registry and review queue) keep the surface conversion procedure (Spec 127: surface-127) and also get the Spec 124 Rule 13 list and the lane-tools lists"
++      "lists": ["eng-all"],
++      "why": "V2.LIST (task-406, round 2): the generated 127-* reports (the surface registry and review queue) kept the surface conversion procedure (Spec 127: surface-127) and also got the Spec 124 Rule 13 list and the lane-tools lists until task-448 (RR-0421 items 1 a and 4 a, decision-205): surface-127, the Spec 124 list and the lane-tools lists are off; this row attaches eng-all only"
+     },
+     {
+       "id": "policy-reports",
+       "globs": ["docs/reports/policy/**"],
+-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). The lane-tools lists are attached as the nearest and are NOT presented as governing"
++      "lists": ["eng-all"],
++      "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). Until task-448 the lane-tools lists were attached as the nearest and were NOT presented as governing (RR-0421 item 4 a, decision-205: they are off; this row attaches eng-all only)"
+     },
+     {
+       "id": "reference-docs",
+       "globs": ["docs/reference/**"],
+-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "V2.LIST (task-406, round 3): docs/reference holds generated reference files (the logic-variable registry, the report field inventory, the by-law provisions): nearest lists, no governing spec found: operator ruling owed. Found because task-406 itself regenerates two of them (a Files path that matched no row); the lane-tools lists are attached as the nearest and are NOT presented as governing"
++      "lists": ["eng-all"],
++      "why": "V2.LIST (task-406, round 3): docs/reference holds generated reference files (the logic-variable registry, the report field inventory, the by-law provisions): nearest lists, no governing spec found: operator ruling owed. Found because task-406 itself regenerates two of them (a Files path that matched no row); until task-448 the lane-tools lists were attached as the nearest and were NOT presented as governing (RR-0421 item 4 a, decision-205: they are off; this row attaches eng-all only)"
+     },
+     {
+       "id": "panel-records",
+-      "globs": ["docs/reports/panels/**"],
+-      "lists": ["surface-128", "surface-126", "agents-s7-s11", "queue-137"],
+-      "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 govern it"
++      "globs": ["docs/reports/panels/**", "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json"],
++      "lists": [],
++      "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 governed it until task-448 (RR-0421 items 1 a and 4 a, decision-205): they are off; this row attaches no list and also matches the MF pre-registration files (coa-expected/prereg-MF-*.json) so they resolve"
+     },
+     {
+       "id": "review-followups",
+       "globs": ["docs/reports/review_followups.md"],
+-      "lists": ["agents-s7-s11", "queue-137"],
+-      "why": "task-412 (RR-0336, RR-0338): Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\") names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) govern it; before this row a lane could not write the file"
++      "lists": [],
++      "why": "task-412 (RR-0336, RR-0338): Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\") names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) governed it until task-448 (RR-0421 item 4 a, decision-205): they are off and this row attaches no list; the row still lets a lane write the file (before this row a lane could not write the file)"
+     },
+     {
+       "id": "specs-docs",
+       "globs": ["docs/specs/**"],
+-      "lists": ["eng-all", "agents-s7-s11", "queue-137"],
+-      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
++      "lists": ["eng-all"],
++      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them); until task-448 (RR-0421 item 4 a, decision-205) it was also governed by Spec 08 sections 7 and 11 and Spec 137, which are off on this row, so it attaches eng-all only; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
+     },
+     {
+       "id": "specs-mobile",
+       "globs": ["docs/specs/03-mobile/**"],
+-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136"],
+-      "why": "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
++      "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136"],
++      "why": "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict). task-448 (RR-0421 item 2 a, decision-205): Specs 100 and 96 are off; this row attaches mobile-90, mobile-98, mobile-99 and surface-136"
+     },
+     {
+       "id": "specs-web-admin",
+       "globs": ["docs/specs/02-web-admin/**"],
+-      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
+-      "why": "ADDED by COMPLY.2: editing a web-admin (McFrontend surface) spec is also governed by the surface lists (at that time the same lists as the surfaces row). task-439 (RR-0383, decision-168): this row keeps all five surface lists after the surfaces and mobile rows drop the four specs, so an edit to a surface spec is reviewed with that spec"
++      "lists": ["surface-136"],
++      "why": "ADDED by COMPLY.2: editing a web-admin (McFrontend surface) spec is also governed by the surface lists (at that time the same lists as the surfaces row). task-439 (RR-0383, decision-168): this row kept all five surface lists after the surfaces and mobile rows dropped the four specs, so an edit to a surface spec was reviewed with that spec until task-448 (RR-0421 item 1 a, decision-205, reverses RR-0383): Specs 126, 127, 128 and 135 are off; this row attaches surface-136 only"
+     },
+     {
+       "id": "tests",
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 69e0cd0d0b7a54ff6a6b8cd4783b7883437e280c..76b04deb59e26d469a16dd21faafce278fce6dd1 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -499,7 +499,7 @@ export function closeErrors(i) {
+   for (const f of i.laneFiles) { if (!dirs.has(f.dir)) dirs.set(f.dir, []); dirs.get(f.dir).push(f); }
+   const dirNote = `docs/reports/lanes/<date>/${laneName}/`;
+   // task-407 (V2.LAYOUT): the one place the check reads, named in every refusal that says a file is missing
+-  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a later round (r2, r3, ...) is out-<lens>[-<list id>]-rN.txt`;
++  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name`;
+   const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
+   if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
+   const files = mine.flatMap(([, fs_]) => fs_);
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 033bc4cb475cf13ed19dab2c2974f286baf9fb85..841ac0a4b7a13b1f7bb3c52d4dbcec6610699441 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -287,7 +287,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+   it('PARITY: the layout fragments the brief states are the ones the close check refusal states (names, subfolder examples, the rN round form, fix-*.txt)', () => {
+     const src = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
+     for (const p of ['scripts/analysis/backlog-lane.mjs', 'scripts/hooks/check-lane-close.mjs']) {
+-      for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag);
++      for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt', 'never stands in for a round-1 name']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag); // task-448 (RR-0424): the brief and the refusal message say the same
+     }
+   });
+   it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
+@@ -296,6 +296,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain(LAYOUT_NAMES);
+       expect(e).toContain('in-<same name>');
+       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
++      expect(e).toContain('under the SAME names'); // task-448 (RR-0422): a fix round re-makes the review files under the same names
+       expect(e).toContain('fix-*.txt');
+       // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
+       expect(e).toContain('The compliance lens reviews the WHOLE change');
+@@ -397,12 +398,13 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+       expect(inputs, row + ': ' + l).toContain(TABLE.lists[l]!.file);
+       expect(inputs).toContain(l + ':');
+     }
+-    expect(inputs).toContain('draft, operator to confirm it binds');
++    expect(inputs).not.toContain('storage-doc16'); // task-448 (RR-0421 item 3 a)
+     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
+   });
+   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
+     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+-    for (const l of ['mobile-98', 'storage-doc16', 'inc-F']) {
++    expect(extra).not.toContain('out-compliance-storage-doc16'); // task-448 (RR-0421 item 3 a)
++    for (const l of ['mobile-98', 'inc-F']) {
+       expect(extra).toContain('out-compliance-' + l);
+       expect(extra).not.toContain('plan-compliance-' + l);
+     }
+@@ -545,11 +547,12 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(fs.existsSync(f.wt)).toBe(false);
+     expect(statusOf(f)).toBe('LATER');
+   });
+-  it('a task with no Files line is refused, but a record-only task gets the queue lists', () => {
++  it('a task with no Files line is refused, but a record-only task gets the every-task lists (the queue lists are off since task-448, RR-0418)', () => {
+     refused(lane(fixture({ files: null })), /no Files/);
+     const { r, inputs } = dry({ files: null, type: 'record' });
+     expect(r.status, r.stderr).toBe(0);
+-    expect(inputs).toContain('137_mcqueue.md');
++    expect(inputs).not.toContain('137_mcqueue.md');
++    expect(inputs).toContain('plan-protocol.md');
+   });
+   it('ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused', () => {
+     const f = fixture();
+@@ -572,7 +575,7 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     const brief = fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8');
+     expect(brief).toContain('Rule lists that govern this task');
+     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
+-    expect(brief).toContain('storage-doc16');
++    expect(brief).not.toContain('storage-doc16');
+     expect(brief).toContain('out-compliance-mobile-98');
+     expect(brief).toContain('own input');
+     expect(brief).toContain('own extra');
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 07bd0eac7eb9bfbed13f3e83f72e79e6e47a9196..684414cb0f7132728d0d468feb74f0c8b6c21a01 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -343,7 +343,7 @@ describe('close check: where the lane report files go (task-407 V2.LAYOUT)', ()
+   it('the same files directly in the lane dir pass (the layout the message names is the one the check reads)', () => {
+     expect(scenario().status).toBe(0);
+   });
+-  // the form the brief gives for a later round: out-<lens>[-<list id>]-r2.txt beside the round-1 file (green-both: it holds before and after this task's edit; it pins what the brief now promises)
++  // what the close check does with a round file out-<lens>[-<list id>]-r2.txt: it reads it like any out- file and it never stands in for a round-1 name; the brief and the refusal message now say the same (task-448, RR-0424; green-both: it holds before and after this edit)
+   it('SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced', () => {
+     const r2 = (l: Lane): Lane => ({ ...l, 'out-code-review-r2.txt': hdr('lens-code-review.md', null) + body(true), 'in-out-code-review-r2.txt': 'input of the round-2 review\n', 'out-compliance-first-r2.txt': hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string) + body(true), 'in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt'] as string });
+     expect(scenario({ mutate: r2 }).status).toBe(0);
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 68f7a874a1c131106e9201a9288ad161ed520813..e50dada36ba314f8d2938c158f03dcbbb0ef41cc 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -26,26 +26,27 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
+     expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
+   });
+-  it('a panel record (docs/reports/panels/**) gets Specs 128, 126, 08 sections 7 and 11, and 137', () => {
+-    expect(lists('docs/reports/panels/MF-94.json')).toEqual(expect.arrayContaining(['surface-128', 'surface-126', 'agents-s7-s11', 'queue-137']));
++  it('a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133', () => {
++    const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
++    expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
++    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four);
++    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133');
+   });
+-  it('a generated report gets the Spec 124 list (Rule 13, R-GW) and not surface-127; a 127-* generated file keeps surface-127 and gets it too', () => {
++  it('a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)', () => {
+     const g = lists('docs/reports/generated/x.md');
+-    expect(g).toContain('policy-124-s2-s5');
+-    expect(g).not.toContain('surface-127');
+-    const g127 = lists('docs/reports/generated/127-surface-registry.md');
+-    expect(g127).toEqual(expect.arrayContaining(['surface-127', 'policy-124-s2-s5']));
++    expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+     const t = table().lists['policy-124-s2-s5']!;
+     expect(t.file).toBe('docs/specs/01-pipeline/124_step_standard_policy.md');
+     expect(t.sections).toEqual(['2. The rules', '5. Register of rulings']);
+   });
+   it('the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed', () => {
+-    expect(lists('docs/reports/policy/x.md')).toContain('queue-137');
++    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
+     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
+   });
+   it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
+-    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(expect.arrayContaining(['queue-137', 'eng-all']));
++    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+@@ -97,10 +98,10 @@ const censusFile = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/sur
+ const entry = (scope: string, file: string, id = file): CensusEntry => ({ identity: { id }, programme: { scope }, evidence: { files: [`${file}:1`] } });
+ 
+ describe('V2.LIST round 4: the surface-contract-routes row equals the census (drift test)', () => {
+-  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches Specs 126, 128, 135 and 136 (operator "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
++  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-136 only (task-448, RR-0421 item 1 a; the four specs came from the operator\'s "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
+     const row = table().rows.find((r) => r.id === 'surface-contract-routes')!;
+     expect(row, 'row surface-contract-routes').toBeDefined();
+-    expect(row.lists).toEqual(['surface-126', 'surface-128', 'surface-135', 'surface-136']);
++    expect(row.lists).toEqual(['surface-136']);
+     expect(row.why).toContain('left out for Increment 1·B');
+     expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missing: [], stale: [] });
+     expect(row.why).toContain('The client is just glass');
+@@ -112,10 +113,12 @@ describe('V2.LIST round 4: the surface-contract-routes row equals the census (dr
+     expect(routeDrift(['src/app/api/x/route.ts'], census).missing).toEqual(['src/app/api/admin/y/route.ts']);
+     expect(routeDrift(['src/app/api/x/route.ts', 'src/app/api/admin/y/route.ts', 'src/app/api/gone/route.ts'], census).stale).toEqual(['src/app/api/gone/route.ts']);
+   });
+-  it('the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none', () => {
++  it('the lookup route and a parcel_admin route get surface-136 and none of Specs 126, 128, 135 (task-448, RR-0421 item 1 a); an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none', () => {
+     const four = ['surface-126', 'surface-128', 'surface-135', 'surface-136'];
+-    expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(four));
+-    expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(four));
++    for (const p of ['src/app/api/parcels/lookup/route.ts', 'src/app/api/admin/media/route.ts']) {
++      expect(lists(p), p).toContain('surface-136');
++      for (const l of four.slice(0, 3)) expect(lists(p), `${p}: ${l}`).not.toContain(l);
++    }
+     for (const p of ['src/app/api/leads/detail/[id]/route.ts', 'src/app/api/admin/stats/route.ts']) for (const l of four) expect(lists(p), `${p}: ${l}`).not.toContain(l);
+   });
+ });
+@@ -236,11 +239,11 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
+     run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
+     return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
+   };
+-  it('the real table: the file resolves agents-s7-s11 and queue-137 through exactly one row', () => {
+-    expect(lists(FILE)).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
++  it('the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)', () => {
++    expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+     const rows = table().rows.filter((r) => r.id === 'review-followups');
+     expect(rows).toHaveLength(1);
+-    expect(rows[0]!.lists).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
++    expect(rows[0]!.lists).toEqual([]);
+   });
+   it('RED (planted): the table without the row refuses the file (exit 3, matched by no row); the real table is the control', () => {
+     const all = table().rows;
+@@ -279,6 +282,7 @@ describe('task-431: the engineering standards sent by side', () => {
+   it('S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not)', () => {
+     expect(eng(lists('mobile/x.ts')), 'mobile').toEqual(['eng-front', 'eng-shared']);
+     for (const f of ['scripts/steps/x.json', 'src/lib/x.ts', 'src/app/api/parcels/search/route.ts']) expect(eng(lists(f)), f).toEqual(['eng-back', 'eng-shared']);
++    for (const f of ['scripts/steps/x.json', 'scripts/lib/compute/x.js']) { expect(lists(f), f).toContain('step-132'); for (const l of ['airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a']) expect(lists(f), `${f}: ${l}`).not.toContain(l); } // task-448 (RR-0421 item 3 a)
+     expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);
+     expect(eng(resolveIn(withRow('mobile', onAll), 'mobile/x.ts')), 'planted: the mobile row on eng-all').toEqual(['eng-all']);
+     expect(eng(resolveIn(withRow('api-lib', onAll), 'src/lib/x.ts')), 'planted: the api-lib row on eng-all').toEqual(['eng-all']);
+@@ -333,7 +337,7 @@ describe('task-431: the engineering standards sent by side', () => {
+   // task-439 FINAL.4 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163; RR-0383, decision-168): the front-end and phone rows send the handbook (Spec 136 section 2),
+   // not Specs 126, 127, 128 and 135; the specs-web-admin row keeps all five, so an edit to a surface spec is reviewed with that spec.
+   const FOUR = ['surface-126', 'surface-127', 'surface-128', 'surface-135'];
+-  const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'mobile-100', 'mobile-96', 'surface-136', 'eng-front', 'eng-shared'];
++  const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'surface-136', 'eng-front', 'eng-shared']; // task-448 (RR-0421 item 2 a): 100 and 96 off
+   const handbookOnly = (ids: string[], what: string) => {
+     expect(ids, what).toContain('surface-136');
+     for (const id of FOUR) expect(ids, what).not.toContain(id);
+@@ -341,8 +345,9 @@ describe('task-431: the engineering standards sent by side', () => {
+   it('N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row)', () => {
+     for (const f of ['src/components/report/ReportPage.tsx', 'scripts/surfaces/x.mjs', 'mobile/x.ts']) handbookOnly(lists(f), f);
+     for (const id of ['surfaces', 'mobile']) handbookOnly(table().rows.find((r) => r.id === id)!.lists, `row ${id}`);
+-    // survive-the-fix: the hand edit of the mobile row keeps its other eight lists
++    // survive-the-fix: the hand edit of the mobile row keeps its six lists
+     expect(lists('mobile/x.ts'), 'mobile/x.ts').toEqual(expect.arrayContaining(MOBILE));
++    for (const l of ['mobile-100', 'mobile-96']) expect(lists('mobile/x.ts'), l).not.toContain(l);
+     const addFour = (r: Row431): Row431 => ({ ...r, lists: [...r.lists, ...FOUR] });
+     const surf = resolveIn(withRow('surfaces', addFour), 'scripts/surfaces/x.mjs');
+     expect(surf, 'planted: the four on the surfaces row').toEqual(expect.arrayContaining(FOUR));
+@@ -353,11 +358,18 @@ describe('task-431: the engineering standards sent by side', () => {
+     const no99 = resolveIn(withRow('mobile', (r) => ({ ...r, lists: r.lists.filter((l) => l !== 'mobile-99') })), 'mobile/x.ts');
+     expect(() => expect(no99).toEqual(expect.arrayContaining(MOBILE)), 'planted: mobile-99 dropped').toThrow();
+   });
+-  it('N2 (survive-the-fix, RR-0383): an edit to a surface spec still gets the four specs and Spec 136 through the specs-web-admin row (planted: that row on surface-136 only)', () => {
++  it('N2 (task-448, RR-0421 item 1 a reverses RR-0383): an edit to a surface spec gets Spec 136 and none of the four specs (planted: the four back on the specs-web-admin row)', () => {
+     const SPECS = ['126_maxbld_surface_standard.md', '127_surface_conversion_procedure.md', '128_surface_standard_policy.md', '135_mcfrontend_decisions_register.md'].map((f) => `docs/specs/02-web-admin/${f}`);
+-    for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) expect(lists(f), f).toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
+-    expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
+-    const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: ['surface-136'] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
+-    expect(planted, 'planted: specs-web-admin on surface-136 only').not.toContain('surface-128');
++    for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) handbookOnly(lists(f), f);
++    expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(['surface-136']);
++    const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: [...r.lists, ...FOUR] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
++    expect(() => handbookOnly(planted, 'planted: the four back on specs-web-admin')).toThrow();
++  });
++  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists', () => {
++    const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a', 'storage-doc16', 'mobile-100', 'mobile-96', 'policy-124-s2-s5'];
++    for (const r of table().rows) {
++      for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++      if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++    }
+   });
+ });
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 0303dbe54b0c01be851a8e98494bf1ab13a3c26d..5c3463a09705183a3c5b2e9b408e1d386752bd25 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -35,8 +35,7 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
+     const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { rows: { id: string; lists: string[] }[] };
+     for (const row of ['mobile', 'api-lib', 'storage']) for (const l of t.rows.find((x) => x.id === row)!.lists) expect(ids(res), `${row}: ${l}`).toContain(l);
+     expect(ids(res)).toContain('inc-S');
+-    const doc16 = res.lists.find((l) => l.id === 'storage-doc16');
+-    expect(doc16?.status).toMatch(/draft, operator to confirm it binds/);
++    expect(ids(res)).not.toContain('storage-doc16'); // task-448 (RR-0421 item 3 a)
+   });
+   // task-431 D2 (survive-the-fix): the phone row sends eng-front + eng-shared and the tests row eng-all; the de-dup line keeps the whole list only (planted defect: the line removed gives eng-all, eng-front and eng-shared)
+   it('task-431 D2: a phone file plus a test file get exactly eng-all among the lists on the engineering standards file (whole wins)', () => {
+@@ -46,31 +45,33 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
+     const engFile = t.lists['eng-all']!.file;
+     expect((JSON.parse(r.stdout) as Res).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all']);
+   });
+-  it('a src file that imports from scripts/lib/compute gets the step and Airtight lists (import row)', () => {
++  it('a src file that imports from scripts/lib/compute gets the step handbook list and no Airtight list (import row; task-448, RR-0421 item 3 a)', () => {
+     const r = script(CLI, ['resolve', '--files', 'src/lib/parcels/report-compute.ts', '--type', 'build', '--letter', 'S']);
+     const res = JSON.parse(r.stdout) as Res;
+     expect(ids(res)).toContain('step-132');
+-    expect(ids(res)).toContain('airtight-v3-122');
++    for (const l of ['airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a']) expect(ids(res)).not.toContain(l);
+   });
+-  it('ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer gets Specs 126 and 128', () => {
++  it('ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer no longer gets Specs 126 and 128 (task-448, RR-0421 item 1 a)', () => {
+     for (const p of ['src/components/report/X.tsx', 'src/app/(maxbld)/page.tsx', 'src/middleware.ts', 'package.json', '.github/workflows/test.yml']) {
+       const r = script(CLI, ['resolve', '--files', p, '--type', 'build', '--letter', 'S']);
+       expect(r.status, `${p}: ${r.stderr}`).toBe(0);
+     }
+     const imp = JSON.parse(script(CLI, ['resolve', '--files', 'src/lib/parcels/lot-size-entry.ts', '--type', 'build', '--letter', 'S']).stdout) as Res;
+-    expect(ids(imp)).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
++    for (const l of ['surface-126', 'surface-128']) expect(ids(imp)).not.toContain(l);
+     console.log(`ATTACK 12: RESOLVES: src/components, src/app, src/middleware.ts, package.json, .github ; importer lists ${ids(imp).join(',')}`);
+   });
+   it('task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface\'s own lists', () => {
+     const lists = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', '1']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
+     const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json');
+-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
++    for (const l of ['eng-all', 'mobile-90', 'mobile-98', 'mobile-99', 'surface-136']) expect(mobile).toContain(l);
++    for (const l of ['agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-96']) expect(mobile).not.toContain(l);
+     const web = lists('docs/specs/02-web-admin/128_surface_standard_policy.md');
+-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
++    for (const l of ['eng-all', 'surface-136']) expect(web).toContain(l);
++    for (const l of ['agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).not.toContain(l);
+     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
+-    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
++    expect(pipe).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-1', 'ms-1']);
+     expect(pipe).not.toContain('mobile-100');
+-    expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).toContain('queue-137');
++    expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).not.toContain('queue-137');
+   });
+   it('an unmatched path is refused and named (exit 3)', () => {
+     const r = script(CLI, ['resolve', '--files', 'zzz-unknown/dir/file.txt', '--type', 'build', '--letter', 'S']);
+

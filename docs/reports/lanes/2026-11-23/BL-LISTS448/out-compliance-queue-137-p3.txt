@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.404Z file_sha256=ce886814d9ac6a2ef307e654f1d64e8685dc759b07453a2c9467adfa9f48c255 prompt_sha256=5b56642606f4ccb5f3e08c6694b97766576f0160f18f848c23d324c0e5edf228
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card item (5) "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings" — docs/specs/00-architecture/08_agents.md:357 "Spec 137 and doc-17 stay on the lane-tools row only; the Spec 124 list is attached to no row." — the note cites RR-0418 and RR-0426 but records neither RR-0426's by-law pre-registration ruling nor the panel-records glob / prereg-MF not change, so two approved rulings live only in a table why — add one clause naming the by-law pre-registration rule and the panel-records glob, or point at the rule-lists.json why lines
+DEFER severity=LOW — card item (5) same note — docs/specs/00-architecture/08_agents.md:357 "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — the third artefact is not in this diff: the only launch-script comment edit is backlog-lane.mjs:12, which is about the record-only lists, not the fix round — name the file:line of that comment or drop the clause
+REJECT — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — accused of moving every by-law pre-registration off the tooling row — not a real issue: the approved plan line names it ("a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json") and the lane-tools why records prereg-MF as a front-end record, so prereg-MB keeps the tooling lists and bylaw-133 (A5 MB)
+REJECT — task-366 note "the launch refuses a task whose Files line is missing or matches no row" — accused of letting a record-only task launch with no list at all — not a real issue: the launch still refuses a build task with no Files line (the test at backlog-lane.logic.test.ts:551 kept) and every task keeps the every-task, increment and milestone lists, so the close still has lists to review
+MET — Rule 3 as amended "The work lands first; the status moves in a separate closing commit" — work diff has no task file and no status line hunk — the status line is left for the closing commit
+MET — task-366 note "Which lists a task attaches is decided by scripts/analysis/rule-lists.json from the task's Files line" — scripts/analysis/rule-lists.json row hunks only, rule-lists.mjs untouched — list resolution stays data-driven, no code change
+MET — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — docs/reports/generated/rule-lists-by-kind.md "| total | 9 lists | | 214,415 | 9 |" plus the phone 216,416 and storage 128,198 totals — recomputed against the remaining rows, all three totals and per-section counts match
+MET — RR-0424 "the only edit to that file" and "one refusal-message clause at scripts/hooks/check-lane-close.mjs:502" — hunk @@ -499,7 +499,7 @@ changes one string at :502 and one comment at src/tests/backlog/check-lane-close.logic.test.ts:346 — nothing else in either file changed
+MET — RR-0426 "corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — hunk @@ -9,7 +9,7 @@ touches only the comment line — comment only, as ruled
+MET — card item (4) "one sentence: a fix round re-makes every review file under the same names ... with one test line" — scripts/analysis/backlog-lane.mjs:188 "round 2 re-makes ALL of them under the SAME names" and the test line "under the SAME names" — sentence and its single test line both present
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: Rule 3, Rule 12
+
+---
+⏱  119925ms (119.9s)
+📊 Tokens — total: 62500, input: 35410, output: 27090, reasoning: 26137

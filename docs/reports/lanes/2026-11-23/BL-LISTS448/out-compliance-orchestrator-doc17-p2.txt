@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.303Z file_sha256=15aff2e7c9986d55e5abf5ed3fe2d6bb48004f9ebc207f7957255c1fcd270887 prompt_sha256=a0346ef52f16f30ee987e1807b14455f89cf033f0ae596746207be7705a65150
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+BUG severity=NONE — none found — NONE — no pasted clause is left unmet by this chunk — n/a
+
+DEFER severity=LOW — plan item (4) "(4) scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line" — src/tests/backlog/backlog-lane.logic.test.ts:290 "'never stands in for a round-1 name'" and src/tests/backlog/backlog-lane.logic.test.ts:299 "expect(e).toContain('under the SAME names');" — two separate expectations now pin backlog-lane.mjs for the one test line the plan names, and the first pins the close check's refusal wording (RR-0424 names it for check-lane-close.mjs:502) inside the brief source — keep one test line for backlog-lane.mjs, and if the brief must carry the refusal wording, have that wording named for the brief file too.
+
+DEFER severity=LOW — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — src/tests/backlog/rule-lists-table.logic.test.ts:338 "not Specs 126, 127, 128 and 135; the specs-web-admin row keeps all five, so an edit to a surface spec is reviewed with that spec." — the change rewrites the N2 test three lines below to the opposite rule and leaves this comment stating the reversed rule — update the comment in the same hunk.
+
+DEFER severity=LOW — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — src/tests/backlog/rule-lists.logic.test.ts:63 "it('task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface's own lists'" — the test name still claims a mobile or web-admin spec gets that surface's own lists while the body now asserts mobile-100, surface-128 and surface-135 are absent — rename the test to the ruling it now pins.
+
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — accused of feeding doc-17 readings to reviews as rulings by keeping the orchestrator-doc17 list attached — not a real issue: the later pasted ruling RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" keeps that list on one row only, and doc-17's header governs how its entries are read, not whether the file is attached.
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — src/tests/backlog/rule-lists-table.logic.test.ts:340 "const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'surface-136', 'eng-front', 'eng-shared']" — the mobile row pin keeps 90, 98, 99 and a separate line asserts 100 and 96 off.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row" — src/tests/backlog/rule-lists-table.logic.test.ts:365 "for (const r of table().rows) ... for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l)" — no row may attach the four surface specs.
+
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — src/tests/backlog/backlog-lane.logic.test.ts:401 "expect(inputs).not.toContain('storage-doc16')" — doc-16 and the four Airtight lists are asserted absent.
+
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — src/tests/backlog/rule-lists-table.logic.test.ts:369 "if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17'])" — only the lane-tools row may attach the process lists.
+
+MET — RR-0424 "task 448 also changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346" — src/tests/backlog/check-lane-close.logic.test.ts:346 "// what the close check does with a round file ... (task-448, RR-0424 ...)" — one comment-only edit at the named line.
+
+MET — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — src/tests/backlog/rule-lists-table.logic.test.ts:33 "expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133')" — the by-law pre-registration keeps its list while prereg-MF files get the four every-task lists only.
+
+MET — RR-0418 "the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table" — src/tests/backlog/rule-lists-table.logic.test.ts:44 "expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S'])" — the policy list is off the policy record row.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  97386ms (97.4s)
+📊 Tokens — total: 44899, input: 23593, output: 21306, reasoning: 19923

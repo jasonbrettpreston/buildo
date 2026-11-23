@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.265Z file_sha256=64068fe24f08c2cbb36225ed66fcb84aeb78467042e562485267e22a1b3dd27a prompt_sha256=8be6f1a8a22d2d0fe5c1983f4cffe28616bf055d558fc2c2adf030ece214935a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=NIT — card item (5) "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings" — docs/specs/00-architecture/08_agents.md "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — the only launch-script comment this diff changes, scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448)", carries no fix-round statement — a spec note names a location that does not hold the claim, so a reader sent there finds nothing — reword to cite the brief template at backlog-lane.mjs:188 and the close-check clause, and drop "one launch-script comment".
+
+MET — RR-0421 item 1 a — scripts/analysis/rule-lists.json "lists": ["surface-136"] (surface-contract-routes) and "lists": ["surface-136"] (specs-web-admin) — Specs 126, 127, 128, 135 removed from those rows (and the added lock asserts no row carries them).
+MET — RR-0421 item 2 a — scripts/analysis/rule-lists.json "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"] — mobile-100 and mobile-96 removed from the mobile row, and "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136"] from specs-mobile.
+MET — RR-0421 item 3 a — scripts/analysis/rule-lists.json "lists": ["step-132", "eng-back", "eng-shared"] (step-pipeline) and "lists": ["step-132"] (compute-import) — the four Airtight lists off; "lists": [] (storage) — storage-doc16 off.
+MET — RR-0421 item 4 a — scripts/analysis/rule-lists.json "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"] kept on lane-tools, "lists": [] on queue-records — process lists survive only on the lane-tools row.
+MET — RR-0424 — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name" — the single edited line of that file, text only.
+MET — RR-0426 — scripts/analysis/rule-lists.json "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] on the lane-tools row plus backlog-lane.mjs:12 "since task-448" — MF prereg excluded, MB prereg left on the row, stale comment corrected.
+MET — card item (3) — docs/reports/generated/rule-lists-by-kind.md "| total | 7 lists | | 128,198 | 7 |", "| total | 7 lists | | 161,128 | 7 |", "| total | 10 lists | | 216,416 | 10 |", "| total | 5 lists | | 84,183 | 5 |" — each total equals the surviving rows after the removals.
+MET — card item (4) — scripts/analysis/backlog-lane.mjs "round 2 re-makes ALL of them under the SAME names" and "(task-446, d04026fe5)" with the pin at backlog-lane.logic.test.ts "under the SAME names" — the launch brief now states the round-2 record form and the round-1 history line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: none
+
+---
+⏱  166615ms (166.6s)
+📊 Tokens — total: 74106, input: 34656, output: 39450, reasoning: 38541

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T21:51:39.327Z file_sha256=d505545a47f912260c0f87f731959c8083d07cbed7a82647cacaa7a5de1affe0 prompt_sha256=c307937493834fe4366f8d1482ef940338b77cac1e8ef9b81ab59deecd05f01f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-LISTS448/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0426 "task 448 also corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only)" — docs/specs/00-architecture/08_agents.md, new note "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — the only launch-script comment this change corrects is scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448)", which says nothing about a fix round, so the third item the note names has no referent in the diff — drop the third item or restate it as the record-only correction, and if the fix-round comment was intended, add it.
+
+DEFER severity=MED — the new note's own words "Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383)" — docs/specs/00-architecture/08_agents.md, task-439 note (:356) left unedited: "The words \"the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table\" in the task-366 note of section 5.3 above now hold for those rows only" — the note lists two superseded phrases but not this sentence, so Spec 08 still states that some rows put the four specs into the path table, while its Spec 137 counterpart does record the equivalent supersession ("so its words ... no longer hold") — add that sentence to the note's supersede list or state it now holds for no row.
+
+DEFER severity=MED — RR-0424 "changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file)" — scripts/hooks/check-lane-close.mjs:502 "a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name", and the only test line, src/tests/backlog/check-lane-close.logic.test.ts:346 "green-both: it holds before and after this edit; it pins what the brief now promises" — the new sentence asserts a refusal no case in the diff exercises: the surviving case holds both the round-1 and the -r2 file, so nothing shows a lane holding only out-<lens>-r2.txt is refused — add a red-first case with only the -r2 file present and assert the refusal by id.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — scripts/analysis/rule-lists.json "surface-contract-routes ... \"lists\": [\"surface-136\"]", "specs-web-admin ... \"lists\": [\"surface-136\"]", surface-importers and panel-records "lists": [] — the four specs are attached by no row, and rule-lists-table.logic.test.ts iterates every row asserting it.
+
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — scripts/analysis/rule-lists.json "mobile ... \"lists\": [\"mobile-90\", \"mobile-98\", \"mobile-99\", \"surface-136\", \"eng-front\", \"eng-shared\"]" and specs-mobile the same four — both phone rows carry the three protocols and no 100/96.
+
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — scripts/analysis/rule-lists.json "step-pipeline ... \"lists\": [\"step-132\", \"eng-back\", \"eng-shared\"]", "compute-import ... \"lists\": [\"step-132\"]", "storage ... \"lists\": []" — no row attaches an Airtight list or doc-16, and the kind page drops all five.
+
+MET — RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — scripts/analysis/rule-lists.json "lane-tools ... \"lists\": [\"agents-s5-1to3\", \"agents-s7-s11\", \"queue-137\", \"eng-all\", \"orchestrator-doc17\"]" against "queue-records ... \"lists\": []" and generated-reports/generated-127/policy-reports/reference-docs on eng-all only — the new test pins that only lane-tools carries those four ids.
+
+MET — RR-0424 "the only edit to that file" — scripts/hooks/check-lane-close.mjs:502 layout string — the check-lane-close.mjs diff is a single hunk on the refusal text, no logic line touched.
+
+MET — RR-0426 "by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads" — scripts/analysis/rule-lists.json lane-tools "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"] — the exclusion is MF only, so a prereg-MB file keeps the tooling lists (A5 MB: bylaw-133 plus the lane-tools lists).
+
+MET — RR-0418 "a front-end task is reviewed against the front-end handbook (Spec 136), the engineering standard, the four lenses and the four every-task lists" — src/tests/backlog/rule-lists-table.logic.test.ts "expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S'])" and acceptance A4 — a front-end path resolves eng-all plus surface-136 plus the four every-task lists, and a record-only task the four only (A5 MF).
+
+MET — task card point (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — docs/reports/generated/rule-lists-by-kind.md "| total | 7 lists | | 128,198 | 7 |" — every kind table drops the turned-off lists and its totals recompute to the remaining rows, and A7 reports the page current.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+Rules met: none
+
+---
+⏱  94540ms (94.5s)
+📊 Tokens — total: 56435, input: 35068, output: 21367, reasoning: 19905
