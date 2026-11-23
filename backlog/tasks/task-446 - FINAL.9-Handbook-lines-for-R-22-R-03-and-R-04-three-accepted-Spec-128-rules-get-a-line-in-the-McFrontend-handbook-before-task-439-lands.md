@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:15:00Z'
+updated_date: '2026-11-23T14:19:00Z'
 labels:
   - McFix
   - McFix Final
@@ -374,4 +374,10 @@ rg#1 MED folded When task-367 builds
 Dated note 2026-11-23 (M-246, prior text kept; RR-0396 · task-446 · Backlog; decision-181, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1999 and :2002; operator, verbatim, on the one-rule question with the fe.58 line text shown: "Question1 yes. push complete" and "Question2 No"): the launch gate of plan section 0 is met; task-446 adds the R-22 line only, with the line text as shown; no seam sentence is appended to fe.49.
 
 2026-11-23 lane BL-HB446 commit 0 (records, alone and first, plan section 7): MF-96 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-97), prereg-MF-96-1.json (round 201, claimed in ~/Buildo-scratch/ids/round-201; rules FE-09, FE-10, FE-16 RULED; totals copied unchanged from prereg-MF-95-1.json; expected_moves empty), panel record docs/reports/panels/MF-96.json. Ledger: MF-96 and round-201 claimed by this lane; FE-58 handed over to BL-HB446 (FE-58/owner dated line); FE-59 not claimed.
+
+2026-11-23 lane BL-HB446 tests first (plan section 4): T1 and T2 written in a new describe "task-446 — the R-22 line (RR-0395)" after the MF-95 C describe; red attempt 1 (only the test and the task file staged) recorded in the lane red.out.
+
+2026-11-23 lane BL-HB446 red attempt 2 (plan section 4 survive-the-fix): the FE-58 row, the Next free id note and the regenerated files staged with the OLD C-T2 and C-T1 forms; the old forms go red once the row is added; recorded in the lane red.out.
+
+2026-11-23 lane BL-HB446 commit 1 (work, plan section 7): one OWED Spec 135 row restating Spec 128 R-22 (128:224) at the id Next free id read at the work commit (fe.58 in Spec 136), lock reserved src/tests/surfaces/mobile-no-rsc.logic.test.ts (task-367); the 135 Next free id line moved by a dated note; Spec 136 and surface-rule-map.json by generate-surface-handbook.mjs --write then --check; rule-lists-by-kind.md by rule-lists.mjs page --write then --check; 00_system_map.md by npm run system-map; T1, T2 and the three survive-the-fix edits (C-T2 :267 and its title, C-T1 :287, C-T1 :297) in handbook-rule-map.logic.test.ts; the MF-96 status line keeps RUNNING with next: the closing commit (plan Q5). Red in the lane red.out (attempt 1: T1 at R-22 and T2 at toHaveLength(1); attempt 2: the old C-T2 and C-T1 forms after the row); green is this commit through the real hooks (lane commit.out).
 <!-- SECTION:NOTES:END -->

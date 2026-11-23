@@ -255,6 +255,10 @@
     {
       "id": "fe.57",
       "section": "rules"
+    },
+    {
+      "id": "fe.58",
+      "section": "rules"
     }
   ],
   "rules": [
@@ -883,6 +887,17 @@
         "register": true,
         "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
         "anchor": "FE-57"
+      }
+    },
+    {
+      "id": "FE-58",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.58",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-58"
       }
     }
   ]
