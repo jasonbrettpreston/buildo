@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:36:00Z'
+updated_date: '2026-11-23T16:05:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-442/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-442/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-442/seat-integration-1.md
+  - docs/reports/reviews/task-442/seat-reality-check-1.md
+  - docs/reports/reviews/task-442/seat-regression-1.md
 type: build
 ordinal: 142012
 ---
@@ -153,7 +159,7 @@ Rule texts, quoted:
 ### T3. No number reaches the page through a content text, except the listed exceptions (fe.05)
 
 - **File:** src/tests/admin-report-preview-live.logic.test.ts, a new describe "B2", beside F (:101).
-- **Checker:** every key of the report-presentation.json `page` block is scanned, all 90 today, so a key no part names (the lot-size error texts with {lo} and {hi}, summary.not_evaluated) is covered too. Each text matching `/\d/` is a finding keyed by the content key. The test asserts the scanned count equals the key count of `page` and is at least 90. The blocks outside `page` hold no digit in a shown string today and are out of scope; the test header says so.
+- **Checker:** every key of the report-presentation.json `page` block is scanned, all 90 today, so a key no part names (the lot-size error texts with {lo} and {hi}, summary.not_evaluated) is covered too. Each text matching `/\d/` is a finding keyed by the content key. The test asserts the scanned count equals the key count of `page` and is at least 90. The other blocks of the registry (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05; today their digits are notes, ids and ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4; the test header says so.
 - **Fail-closed list** (the nav-by-route form), keyed by content key, each with a count, a kind and a `why`:
   - `legal.line`, count 1, kind `legal`. Why: legal copy is a content field (136:85).
   - `sheet.width_placeholder` and `sheet.depth_placeholder`, count 1 each, kind `input_hint`. Why: an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85).
@@ -181,10 +187,10 @@ The backlog task file and the lane records under docs/reports/ are always allowe
 ## 6. Landing
 
 The same order as task-424 (task-424 plan section 7).
-- **Commit 0 (records, alone and first):** subject `docs(135_mcfrontend_decisions_register): MF-97 queue row, prereg and panel record` (the precedents 62b2ffed6 and 0ae43e69c name 135, not 136). It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98, prereg-MF-97-1.json (round 202, totals copied from the newest prereg, the form of prereg-MF-96-1.json), docs/reports/panels/MF-97.json (the MF-95.json form) and the task file with the RR-0402, RR-0403 and RR-0405 replies as dated notes. Trailers: `Task: task-442`, `McFrontend-Task: MF-97`, `Operator-Ruling:` RR-0402 (MD:2034, verbatim: a), RR-0403 (MD:2040, verbatim: a) and RR-0405 (MD:2052, verbatim: option a), and `Spec-diff: queue row and records only, no spec rule text moves` (the form of 0ae43e69c). The orchestrator claims MF-97 and round-202 in ~/Buildo-scratch/ids before launch (MF-96 and round-201 are BL-HB446's). Commit 0 is the parent of the work commit, because the gate reads the prereg from the parent tree.
+- **Commit 0 (records, alone and first):** subject `docs(135_mcfrontend_decisions_register): MF-97 queue row, prereg and panel record` (the precedents 62b2ffed6 and 0ae43e69c name 135, not 136). It holds the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md with the next-free-id line moved to MF-98, prereg-MF-97-1.json (round 202, totals copied from the newest prereg, the form of prereg-MF-96-1.json, with `rules` set to FE-05, FE-18, FE-24, FE-27 and FE-29, all RULED: the frontend arm refuses a prereg with no rules, cite-arms.mjs:99), docs/reports/panels/MF-97.json (the MF-95.json form) and the task file. Before launch the orchestrator appends the M-246 dated notes for RR-0402 (decision-187), RR-0403 (decision-188), RR-0404 (decision-189, the planner redirect that supplied section 7b) and RR-0405 (decision-190) with `backlog task edit task-442 --append-notes` in the form of datedNote in scripts/analysis/backlog-decision.mjs; the decisions exist and that script refuses a duplicate, so it is not re-run, and the Plan hash covers the body, so the notes come before the Plan line. Trailers: `Task: task-442`, `McFrontend-Task: MF-97`, `Operator-Ruling:` RR-0402 (MD:2034, verbatim: a), RR-0403 (MD:2040, verbatim: a) and RR-0405 (MD:2052, verbatim: option a), and `Spec-diff: queue row and records only, no spec rule text moves` (the form of 0ae43e69c). The orchestrator claims MF-97 and round-202 in ~/Buildo-scratch/ids before launch (MF-96 and round-201 are BL-HB446's). Commit 0 is the parent of the work commit, because the gate reads the prereg from the parent tree.
 - **Commit 1 (work):**
   - Subject: `test(136_mcfrontend_handbook): front end to database tests for fe.05, fe.18 and fe.27 (task-442)`. validate-commit-msg wants type(NN_spec); precedent: ba0892689.
-  - Trailer: `Task: task-442`. No FE-nn token in the message; name the rules fe.05, fe.18, fe.27.
+  - Trailer: `Task: task-442`. The work commit also carries `Rule: FE-05, FE-18, FE-24, FE-27, FE-29` (the register cite that Spec 127 §4.3, dated note 2026-11-04, asks of a golden refresh: fe.05, fe.18 and fe.27 are tested here, fe.24 and fe.29 are the golden rules report-capture.ts cites) and `Red: docs/reports/lanes/<date>/<lane>/red-T3.out`.
   - Trailers on the work commit: `Task: task-442`, `McFrontend-Task: MF-97`, the same `Operator-Ruling:` line and `Spec-diff: one content text changed; generated copies regenerated; no spec rule text moves`. The work commit touches frontend paths (scripts/surfaces/**, src/tests/surfaces/**, src/tests/fixtures/surfaces/**: protected-paths.json:20-31), so the McFrontend arm runs (cite-arms.mjs:173-178) and the owner is prompted at push. No hook is bypassed.
   - The task file goes in the same diff, status RUNNING (137:84, :100).
   - Red evidence is recorded first: three red.out files, each from a blocked commit through the real hooks, each failing at its designed assertion. The runner is never run directly. T3's attempt also stages the K2 change (section 7b). Before the red run the lane writes a 5-item PASS or FAIL self-check in its reply: binding closure, the 17 rows present, the parcels column set, no unlisted digit, the three seed reads non-vacuous. The work commit holds T1, T2, T3, the K2 change, the text and every regenerated copy; T1 and T2 may land in a commit before it.
@@ -199,7 +205,7 @@ The same order as task-424 (task-424 plan section 7).
 | # | Who | Command | Expected |
 |---|---|---|---|
 | A1 | lane | read docs/reports/lanes/<date>/<lane>/red-T1.out, red-T2.out, red-T3.out | each holds the pre-commit related-run failure at the named assertion: T1 (a) `toEqual([])`; T2 (a) `rejects.toThrow`; T3 (a), naming `row.unit_size_basis` (the planted digit), and the K2 no-digit assertion |
-| A2 | lane | `git log -1 --format=%B <work sha>` | holds `Task: task-442`, `McFrontend-Task: MF-97` and no FE-nn token; the commit passed the hooks |
+| A2 | lane | `git log -1 --format=%B <work sha>` | holds `Task: task-442`, `McFrontend-Task: MF-97` and the `Rule:` line above; the commit passed the hooks |
 | A3 | orchestrator | read green.out in the lane folder, the hook tail of the work commit | the related run passes both test files and the K2 test |
 | A4 | orchestrator | `git diff --stat <launch>..HEAD -- src/lib src/app mobile migrations .github` and `git status --short -- src/lib` | both empty (scripts is left out: the text fix regenerates files under scripts/surfaces, section 7b) |
 | A5 | orchestrator | `grep -c "kind: 'exception'" src/tests/admin-report-preview-live.logic.test.ts` | 0 (T3 lands with no entry of that kind) |
@@ -217,6 +223,7 @@ The operator ruled the wording (RR-0405, MD:2052, verbatim: option a): the text 
 - **Copies (checked by `git grep -l -F` of the old text):** 1 source, 1 presentation, 1 landing sample, 32 page goldens and 5 props goldens; the rest are records under docs/reports and the task cards, which stay. No renderer types its own copy: a grep of circulation over src, mobile and scripts finds engine code and tests only.
 - **K2 test (src/tests/surfaces/report-honest-k2.logic.test.ts):** delete the LV const at :18 (its only use is :56, and an unused const fails lint); retitle the describe and the it at :46-47 to name the basement and the words, with no figure; replace :56-57 with `expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);` and `expect(t).toBe('the basement, not shared stairs and halls');`. Lines 48-55 stay as the control. No other test pins the old string; report-generated-only.infra.test.ts and report-golden-parity.logic.test.ts check that the copies are fresh and run in the pre-push suite.
 - **Unchanged:** the engine, scripts/seeds/logic_variables.json:2, the catalogue, report-page.json and every other content key.
+- **Standards boundary (engineering §10.2):** the rule keeps frontend work from changing how data enters the database (pipeline scripts, scripts/lib, migrations). scripts/surfaces/** is the McFrontend frontend estate (mcbylaws/protected-paths.json:20-21), not a pipeline path, and McFrontend content changes edit it (commit 46b194eb5); the text fix touches no pipeline script, no scripts/lib file and no migration. The reading is the grounder's; it is written here so the output review judges the diff against it.
 - **T3 and the text move together:** T3 lands with 3 entries and no exception (section 3, T3). The text, the regenerated copies, the K2 change and T3 land in the same work commit; the red attempt is the one of T3 (section 3).
 - UNVERIFIED: that the hooks accept commit 0 and the McFrontend arm on the trailers alone (precedents 62b2ffed6 and 0ae43e69c); the three regeneration commands were read, not run.
 
@@ -233,7 +240,72 @@ The operator ruled the wording (RR-0405, MD:2052, verbatim: option a): the text 
 - **Q1.** Group 3 repeats the engineering rows that group 2 gives to task-441 (RULE-CHECKS.md:39 onward: "task-441"; group 3 says "task-442"). I read them as task-441's. Is that right, or does task-442 own the front-end to database engineering rows (§4.3, §10.3, §14 row 1)? The cards do not settle it. If it is not plain, the orchestrator reads both cards; the operator's word is needed only if the cards conflict (RR-0385 item 4(ii), MD:1920). Ruled by the grounder: they are task-441's; the cards do not conflict (RULE-CHECKS.md:163 lists them again, not counted twice, and group 2 gives §4.3, §10.3 and §14 row 1 Feeds task-441).
 - **Q2.** Ruled by the grounder: moot. T1 asserts on the engine's rows from the file's own harness and repeats no rule; no export and no copy.
 - **Q3.** The main-only Available gap (section 4, item 3) can be closed only by a CI workflow change (db-tests.yml path filter). The card does not name one. Ruled by the grounder: not done here; RR-0392 (MD:1975-1976) opens no new infrastructure without his word, and the gap stays named in section 4 item 3.
-- **Q4.** Section 4, item 2: does fe.27's "a DB field the consumer payload reads" cover values sent through the lookup route's `page` block? If not, four whitelist paths are a break, and the reading needs the operator's word (item 4(ii)).
+- **Q4.** Section 4, item 2: does fe.27's "a DB field the consumer payload reads" cover values sent through the lookup route's `page` block? Ruled by the grounder: the question does not arise. fe.27 names two failures, a column that is not in the migrations and a path that is not on the whitelist (136:112), and the four paths are on the whitelist, so they are not a break (section 4 item 2). No operator word is needed.
 - **Q5.** T1 and T3 sit in src/tests/admin-report-preview-live.logic.test.ts, which already holds the FE-05 case (:121), and not in src/tests/surfaces/report-page.logic.test.ts. Ruled by the grounder: T1 and T3 stay in the admin test file (the card names it). The merged text fix does bring this task inside the frontend paths, so commit 0 and the MF-97 trailer of section 6 apply for that reason, not for T1 and T3. If the grounder wanted them in the surfaces file, the landing adds an MF id, a commit 0 with prereg, panel record and queue row, and a `McFrontend-Task` trailer (the task-446 form, section 7 of its plan).
 - **Q6.** T3's `exception` entry cites no owner row, because no card exists and this task may not open one (RR-0392). Ruled by the grounder: moot. The operator ruled the correction (RR-0402, MD:2034) and RR-0403 (MD:2040) puts it in this task, so there is no entry and no card is needed.
+
+Plan review round 1: 47 folded, 0 task, 18 ruling, 0 wontfix, 27 pile; grounder docs/reports/reviews/task-442/GROUNDER-PLAN.md; triage docs/reports/reviews/task-442/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED ruling RR-0385
+plan-compliance-bylaw-133-p1#3 MED folded are the next round o
+plan-compliance-bylaw-133-p2#2 MED ruling RR-0385
+plan-compliance-bylaw-133-p3#1 HIGH folded Ruled by the grounde
+plan-compliance-five-words#1 MED ruling RR-0385
+plan-compliance-five-words#2 HIGH folded Ruled by the grounde
+plan-compliance-inc-S#3 MED folded are the next round o
+plan-compliance-ms-S#1 MED folded Ruled by the grounde
+plan-compliance-orchestrator-doc17#2 MED folded Ruled by the grounde
+plan-compliance-plan-protocol#1 MED ruling RR-0385
+plan-compliance-plan-protocol#4 MED folded Ruled by the grounde
+plan-compliance-plan-protocol#5 MED ruling RR-0385
+plan-compliance-plan-protocol#6 MED folded are the next round o
+plan-compliance-queue-137#1 HIGH folded Before launch the or
+plan-compliance-queue-137#3 HIGH folded Ruled by the grounde
+plan-compliance-queue-137#4 MED folded Before launch the or
+plan-compliance-queue-137#5 MED ruling RR-0385
+plan-compliance-surface-126-p1#2 MED ruling RR-0385
+plan-compliance-surface-126-p1#3 MED folded Ruled by the grounde
+plan-compliance-surface-126-p1#4 MED folded Before launch the or
+plan-compliance-surface-127#1 HIGH folded The work commit also
+plan-compliance-surface-127#2 MED ruling RR-0385
+plan-compliance-surface-127#6 MED ruling RR-0385
+plan-compliance-surface-128-p1#1 HIGH folded are the next round o
+plan-compliance-surface-128-p1#3 MED ruling RR-0385
+plan-compliance-surface-128-p1#4 MED ruling RR-0385
+plan-compliance-surface-128-p2#2 MED ruling RR-0385
+plan-compliance-surface-135-p1#5 MED ruling RR-0385
+plan-compliance-surface-135-p3#1 MED ruling RR-0385
+plan-compliance-surface-136#1 MED folded are the next round o
+plan-engineering-eng-all#1 HIGH folded Standards boundary (
+plan-engineering-eng-all#2 MED folded Standards boundary (
+plan-error-paths#2 MED ruling RR-0385
+plan-plan-review-deepseek#4 MED ruling RR-0385
+plan-plan-review-deepseek#5 MED ruling RR-0385
+plan-plan-review-deepseek#9 MED ruling RR-0385
+plan-plan-review-deepseek#12 MED folded are the next round o
+rc#1 HIGH folded the throw is line 29
+rc#2 MED folded Traced by the ground
+rc#3 MED folded the look's Feeds col
+rc#4 MED folded every key of the rep
+in#1 HIGH folded puts the line back w
+in#2 MED folded git status --short -
+in#3 MED folded (never from SEEDS: o
+in#4 MED folded read green.out in th
+in#9 MED folded they fold onto the b
+rg#1 MED folded FIXED IN THIS TASK (
+rg#2 MED folded the count equals the
+rg#3 MED folded every key of the rep
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-23 (M-246, prior text kept; RR-0401 (decision-186, MORNING-DECISIONS.md:2028) · task-442 · Backlog; operator, verbatim: "This needs to be investigated - it looks like an error to be corrected")
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0402 (decision-187, MORNING-DECISIONS.md:2034, option A: drop the percent, words only) · task-442 · Backlog; operator, verbatim: "a")
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0403 (decision-188, MORNING-DECISIONS.md:2040, option A: the text fix is done inside task-442) · task-442 · Backlog; operator, verbatim: "a")
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0404 (decision-189, MORNING-DECISIONS.md:2046, the planner redirect) · task-442 · Backlog; operator, verbatim: "approved")
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0405 (decision-190, MORNING-DECISIONS.md:2052, option A: the basement, not shared stairs and halls) · task-442 · Backlog; operator, verbatim: "option a")
+<!-- SECTION:NOTES:END -->
