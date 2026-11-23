@@ -3,10 +3,11 @@ id: TASK-440
 title: >-
   FINAL.5 Read-only look: the rules with no test, in three groups (handbook
   rules, engineering standards, front end to database), ranked by risk
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-LOOK440'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T13:46:00Z'
+updated_date: '2026-11-23T13:49:00Z'
 labels:
   - McFix
   - McFix Final
@@ -18,6 +19,10 @@ references:
   - docs/reports/reviews/task-440/seat-integration-1.md
   - docs/reports/reviews/task-440/seat-reality-check-1.md
   - docs/reports/reviews/task-440/seat-regression-1.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: record
 ordinal: 140012
 ---
@@ -257,3 +262,9 @@ rg#3 MED folded extends to API route
 rg#4 MED folded counts as wired only
 rg#5 MED folded scripts/analysis/mcb
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 taken on the board at lane launch (lane BL-LOOK440, worktree /Users/brettpreston_macmini/Buildo-wt-look440, branch wf1/inc1b-look440), RR-0240
+<!-- SECTION:NOTES:END -->
