@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SURF439'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:58:00Z'
+updated_date: '2026-11-23T16:02:00Z'
 labels:
   - McFix
   - McFix Final
@@ -214,4 +214,8 @@ rg#1 MED folded (guards the hand edi
 2026-11-23 (orchestrator, at launch, a note not a plan edit): task-446 is folded on the board at 2fe7fa150, so the handbook now holds one more line than the plan counted (fe.58 for R-22): where the plan's figures read 57 handbook rules or 21 OWED rows, the tree reads 58 and 22. The lane measures at its own head and reports the figure it finds; if a planned test pins the old figure, stop and report.
 
 2026-11-23 taken on the board at lane launch (lane BL-SURF439, worktree /Users/brettpreston_macmini/Buildo-wt-surf439, branch wf1/inc1b-surf439), RR-0240
+
+2026-11-23 (lane BL-SURF439): tests written first (N1, N2 and the changed tests at rule-lists-table.logic.test.ts:165, :180, :183, :198); red attempt with only the test file and this task file staged (red.out).
+
+2026-11-23 (lane BL-SURF439): red.out: commit attempt refused, 2 failed | 26 passed: N1 at rule-lists-table.logic.test.ts:339 "src/components/report/ReportPage.tsx: expected [ 'eng-all', 'surface-136', …(8) ] to not include 'surface-126'" (designed assertion) and the changed golden path at :165; N2 green (survive-the-fix). Work: surfaces and mobile rows drop surface-126/127/128/135 (why texts identical to QUESTIONS-RULED Q-D), specs-web-admin why updated; Spec 08 note after the task-431 note of section 7 rule 4 and Spec 137 note after the task-366 note of Rule 12, inserted by text, identical to the plan with date 2026-11-23; page --write: web kind 11 lists 226,854, phone kind 12 lists 307,917.
 <!-- SECTION:NOTES:END -->

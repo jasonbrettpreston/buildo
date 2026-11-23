@@ -162,7 +162,7 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
     expect(r.status, r.stderr).toBe(0);
     const j = JSON.parse(r.stdout) as { exempt: string[]; lists: { id: string }[] };
     expect(j.exempt).toEqual([]);
-    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'surface-126', 'surface-127', 'surface-128', 'surface-135', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
   });
   it('every exempt glob beyond the lane and review records names its proving check in $comment (planted defect: a glob with no named check fails)', () => {
     const t = raw();
@@ -177,10 +177,10 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
 });
 
 // task-384 STD.REPORT-OWN part two (operator 2026-11-20, MORNING-DECISIONS.md:1421-1422, item 3 "bring them under the existing checks"): the web report renderer is under the
-// McFrontend frontend list (mcbylaws/protected-paths.json), so the surfaces row of the table attaches Spec 136 section 2, 126, 127, 128 and 135 to its reviewers.
+// McFrontend frontend list (mcbylaws/protected-paths.json), so the surfaces row of the table attaches Spec 136 section 2 (task-439: no longer 126, 127, 128 and 135) to its reviewers.
 describe('task-384: the McFrontend handbook reaches the reviewer of the web report renderer', () => {
   const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
-  const SURFACE = ['surface-136', 'surface-126', 'surface-127', 'surface-128', 'surface-135'];
+  const SURFACE = ['surface-136'];
   const glob = 'src/components/report/**';
   const resolveIn = (frontend: string[], file: string): string[] => {
     const d = tmp('rep');
@@ -195,7 +195,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
     expect(r.status, r.stderr).toBe(0);
     return (JSON.parse(r.stdout) as Res).lists.map((l) => l.id);
   };
-  it('the real tree: each of the three files resolves Spec 136, 126, 127, 128 and 135 (before the change: eng-all five-words plan-protocol inc-S ms-S only)', () => {
+  it('the real tree: each of the three files resolves Spec 136 section 2 (task-439: Specs 126, 127, 128 and 135 no longer, RR-0380 Q1)', () => {
     expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')).frontend).toContain(glob);
     for (const f of FILES) expect([f, lists(f)]).toEqual([f, expect.arrayContaining(SURFACE)]);
   });
@@ -329,5 +329,35 @@ describe('task-431: the engineering standards sent by side', () => {
     const fake = path.join(tmp('x1t'), 'table.json');
     fs.writeFileSync(fake, JSON.stringify({ ...t, lists: { ...t.lists, 'eng-front': { ...t.lists['eng-front'], sections: ['9. Pipeline & Script Safety'] } } }));
     expect(input('eng-front', fake), 'planted: eng-front on section 9').toContain('9.1 Transaction Boundaries');
+  });
+  // task-439 FINAL.4 (RR-0380 Q1, decision-165; RR-0378 step 3, decision-163; RR-0383, decision-168): the front-end and phone rows send the handbook (Spec 136 section 2),
+  // not Specs 126, 127, 128 and 135; the specs-web-admin row keeps all five, so an edit to a surface spec is reviewed with that spec.
+  const FOUR = ['surface-126', 'surface-127', 'surface-128', 'surface-135'];
+  const MOBILE = ['mobile-90', 'mobile-98', 'mobile-99', 'mobile-100', 'mobile-96', 'surface-136', 'eng-front', 'eng-shared'];
+  const handbookOnly = (ids: string[], what: string) => {
+    expect(ids, what).toContain('surface-136');
+    for (const id of FOUR) expect(ids, what).not.toContain(id);
+  };
+  it('N1: the front-end and phone rows send the handbook only (planted: the four back on the surfaces row, then on the mobile row; mobile-99 dropped from the mobile row)', () => {
+    for (const f of ['src/components/report/ReportPage.tsx', 'scripts/surfaces/x.mjs', 'mobile/x.ts']) handbookOnly(lists(f), f);
+    for (const id of ['surfaces', 'mobile']) handbookOnly(table().rows.find((r) => r.id === id)!.lists, `row ${id}`);
+    // survive-the-fix: the hand edit of the mobile row keeps its other eight lists
+    expect(lists('mobile/x.ts'), 'mobile/x.ts').toEqual(expect.arrayContaining(MOBILE));
+    const addFour = (r: Row431): Row431 => ({ ...r, lists: [...r.lists, ...FOUR] });
+    const surf = resolveIn(withRow('surfaces', addFour), 'scripts/surfaces/x.mjs');
+    expect(surf, 'planted: the four on the surfaces row').toEqual(expect.arrayContaining(FOUR));
+    expect(() => handbookOnly(surf, 'planted surfaces')).toThrow();
+    const mob = resolveIn(withRow('mobile', addFour), 'mobile/x.ts');
+    expect(mob, 'planted: the four on the mobile row').toEqual(expect.arrayContaining(FOUR));
+    expect(() => handbookOnly(mob, 'planted mobile')).toThrow();
+    const no99 = resolveIn(withRow('mobile', (r) => ({ ...r, lists: r.lists.filter((l) => l !== 'mobile-99') })), 'mobile/x.ts');
+    expect(() => expect(no99).toEqual(expect.arrayContaining(MOBILE)), 'planted: mobile-99 dropped').toThrow();
+  });
+  it('N2 (survive-the-fix, RR-0383): an edit to a surface spec still gets the four specs and Spec 136 through the specs-web-admin row (planted: that row on surface-136 only)', () => {
+    const SPECS = ['126_maxbld_surface_standard.md', '127_surface_conversion_procedure.md', '128_surface_standard_policy.md', '135_mcfrontend_decisions_register.md'].map((f) => `docs/specs/02-web-admin/${f}`);
+    for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) expect(lists(f), f).toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
+    expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(expect.arrayContaining([...FOUR, 'surface-136']));
+    const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: ['surface-136'] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
+    expect(planted, 'planted: specs-web-admin on surface-136 only').not.toContain('surface-128');
   });
 });
