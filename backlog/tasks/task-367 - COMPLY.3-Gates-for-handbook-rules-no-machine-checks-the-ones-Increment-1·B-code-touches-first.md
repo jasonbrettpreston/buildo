@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T17:36:00Z'
+updated_date: '2026-11-23T18:14:00Z'
 labels:
   - McFix
   - McFix Final
@@ -15,6 +15,11 @@ dependencies: []
 references:
   - docs/reports/lanes/2026-11-20/BL-GATES/REPORT.md
   - docs/reports/lanes/2026-11-20/BL-GATES/FINDINGS.md
+  - docs/reports/reviews/task-367/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-367/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-367/seat-integration-1.md
+  - docs/reports/reviews/task-367/seat-reality-check-1.md
+  - docs/reports/reviews/task-367/seat-regression-1.md
 type: build
 ordinal: 67012
 ---
@@ -63,10 +68,11 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 - RR-0388 (MD:1947): McFixReborn waits for the tests of 367, 441 and 442.
 - RR-0392 (MD:1975): no new infrastructure. This plan opens no card.
 - RR-0412 (MD:2098): 442 and 367 run once the push of b32ea9b4c lands.
+- RR-0413 (MD:2108, decision-198), his words: "yes to both". A: FE-49, FE-51 and FE-54 flip from OWED to RULED in the commit that lands their three tests. B: he confirms the three rows fe.54, fe.49 and fe.51 as the list, so card acceptance #1 is met for this clean start. His words do not mention the two named tab-switch exceptions of fe.51 (section 11, Q-D).
 
 **What already exists and is reused:**
 
-1. **The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none. Its table is at :100-161. Today Spec 136 has 58 lines (`grep -c '^- \*\*fe\.'` gives 58) and 22 OWED (`grep -c 'Status: OWED'` gives 22). fe.58 came from task-446 (136:205-206). Its register row says "the lock is task-367's" (135_mcfrontend_decisions_register.md:80).
+1. **The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none. The card's wait on task-365 is met: task-365 is BUILT (grounded close, 2026-11-23). This plan takes its rows from task-440 (DONE), the read-only look at the same rules that RR-0385 item 6 ordered (RULE-CHECKS.md:3), whose rank 1 row feeds this card (RULE-CHECKS.md:102). Its table is at :100-161. Today Spec 136 has 58 lines (`grep -c '^- \*\*fe\.'` gives 58) and 22 OWED (`grep -c 'Status: OWED'` gives 22). fe.58 came from task-446 (136:205-206). Its register row says "the lock is task-367's" (135_mcfrontend_decisions_register.md:80).
 
 2. **The sibling tasks:**
  - task-441 built three source-scan tests (commit 8cf51f3cc).
@@ -97,13 +103,13 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
  - Ownership: rows FE-45..FE-57 say "the lock is task-434's" (135:67-79), and FE-58 says task-367's (135:80).
  - It adds no rule and no file beyond this card.
 
-6. **The old plan** (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here.
+6. **The old plan** (gates A, B, C on wf1/inc1b-gates) is parked: RR-0386 keeps the branch untouched and names gates A and B for a later card; gate C (mobile-never-do) sits on the same branch, and the card's candidates (a) to (c), the 2026-11-20 report-only proof and its must-fix notes move with it, because RR-0385 item 5 withdraws unbuilt gate cards and item 6 makes the handbook rules this card's direction. Not used here.
 
 ## 1. Scope
 
 **In:**
 - Three new locks at their reserved paths, each proven red through the real hooks, then green.
-- The three register rows read RULED (only if the operator answers OQ1 y), and their generators are rerun.
+- The three register rows read RULED in the commit that lands their tests (RR-0413 A; FE-51 only with Q-D yes), and their generators are rerun.
 - Edits to handbook-rule-map.logic.test.ts to match.
 - The MF queue row, prereg and panel record.
 - Records under docs/reports/reviews/task-367/.
@@ -126,7 +132,7 @@ Increment 1·B code is the parcel search and lot pages (milestone m-1 deliverabl
 
 **The 20 rows with no test:**
 
-| Rank | Row | Static test today? | Code in 1·B? | Taken by 441, 442 or a lock? | Decision and owner |
+| Rank | Row | Can a static test read it today? | Code in 1·B? | Taken by 441, 442 or a lock? | Decision and owner |
 |---|---|---|---|---|---|
 | 1 | fe.54 | Yes: descriptors' `states` and `errors` | Yes (mobile_parcel_search and others) | No | **TAKEN (T1)** |
 | 2 | fe.45 | No: "computed client-side" is a reading of code; the arithmetic half is FE-05 (442) | Yes | 442 takes fe.05 | Later batch of 367 |
@@ -192,7 +198,7 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 - **Reads:** every tracked `scripts/surfaces/**/surfaces/*.descriptor.json` with kind SURFACE and programme.scope in scope.
 - **Finder:** a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry, or when `errors.answer` is `none` or `UNRESEARCHED`.
 - **Assertions:**
-- (A) `expect(problems).toEqual([])`, and the scanned SURFACE count equals `scope.expected_count`.
+- (A) `expect(problems).toEqual([])` first, then the scanned SURFACE count equals `scope.expected_count` (the problems assertion runs first, so the plant's red names the descriptor, not the count).
 - (B) In memory: a copy of mobile_parcel_search without its error state gives 1 problem; a copy with errors.answer `none` gives 1; `UNRESEARCHED` gives 1.
 - (C) Controls give 0: a STATIC descriptor with inputs `none`, and an estate_other descriptor with no error state.
 - **Today:** 33 in scope, 25 read a contract, 0 problems. 8 problems lie outside scope (estate_other and platform_shared) and are not judged.
@@ -205,14 +211,14 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 - The tracked .ts and .tsx files named by in-scope descriptors (`identity.route` plus `x-draft.files`): 41 today (31 parcel_product, 10 parcel_admin).
 - The `inputs`, `outputs` and `evidence` table refs of the 45 in-scope descriptors.
 - **AST finder:**
-- (1) a string, template text or identifier containing `lead_parcels`;
+- (1) a string or template text containing `lead_parcels` in any letter case (SQL folds case), or an identifier containing it;
 - (2) an import or export specifier naming a lead screen (`LeadDetail`, `lead-detail`, `FlightBoard`, `flight-board`, `LeadFeed`, `lead-feed`, `useLeadFeed`, `useFlightBoard`, `useLeadDetail`, `[lead]`, `[flight-job]`);
 - (3) a route string starting `/api/leads`, `/(app)/[lead]`, `/(app)/[flight-job]`, `/(app)/flight-board` or `/(app)/map`;
 - (4) a descriptor table ref `lead_parcels`.
 - **Not banned:** `@/features/leads/api/envelope` and `error-mapping`. These are shared API helpers used by the three parcel routes (src/app/api/parcels/lookup/route.ts:40, :48; entitlement/route.ts:19-20; lot-size/route.ts:25-26). They are not lead screens.
 - **Assertions:**
-- (A) hits are `[]`, files ≥ 30, descriptors ≥ 40.
-- (B) KNOWN_BAD gives one hit each: `import { useLeadFeed } from '@/hooks/useLeadFeed'`, `pool.query('SELECT * FROM lead_parcels')`, `router.push('/(app)/[lead]?id=1')`, `fetch('/api/leads/feed')`, and a descriptor copy with `{table:'lead_parcels'}`.
+- (A) hits are `[]`, files ≥ 41, descriptors ≥ 45, mobile files ≥ 20 (today's counts, printed; a drop is a red, a rise needs no edit).
+- (B) KNOWN_BAD gives one hit each: `import { useLeadFeed } from '@/hooks/useLeadFeed'`, `pool.query('SELECT * FROM lead_parcels')`, `pool.query('SELECT * FROM LEAD_PARCELS')`, `router.push('/(app)/[lead]?id=1')`, `fetch('/api/leads/feed')`, and a descriptor copy with `{table:'lead_parcels'}`.
 - (C) Controls give 0: `// lead_parcels`, the envelope import, `'/(app)/parcel-tool'`.
 - **Today:** 41 files with 0 hits; 45 descriptors with 0 hits. The only lead text in these files is a comment, at mobile/src/hooks/useTrackedLots.ts:22, which the AST skips.
 - **Plant:** a temporary line in (A) adds a virtual file with the useLeadFeed import. (A) fails naming it.
@@ -222,7 +228,7 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 
 - **Reads:**
 - The mobile files among T2's set: 20 today.
-- The tab routes, parsed by AST from `PARCEL_TAB_ROUTE` (mobile/src/lib/parcelSearchMatch.ts:252-256), not copied.
+- The tab routes, parsed by AST from `PARCEL_TAB_ROUTE` (mobile/src/lib/parcelSearchMatch.ts:252-256), not copied; the parse is fail-closed: it must find exactly 3 routes (lookup, tracked, account) or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
 - **Finder:** a call `<router>.push(arg)` where arg is `PARCEL_TAB_ROUTE[...]` or `PARCEL_TAB_ROUTE.x`, or a literal equal to a tab route.
 - **Fail-closed list** in the nav-by-route form (nav-by-route.logic.test.ts:13-16, :361, :386). A stale entry fails, and the list only shrinks.
 - `mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)".
@@ -241,7 +247,7 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 
 ### The red attempt (through the real hooks)
 
-1. Stage the three tests (with T1's and T2's plant lines, and T3's empty list) and the task file. Typecheck and lint were run once beforehand.
+1. Stage the three tests (with T1's and T2's plant lines, and T3's empty list) and the task file. Typecheck and lint were run once beforehand. Before the red run and before the work commit the lane writes a 5 to 10 item PASS/FAIL self-skeptical checklist from Spec 135 rules 3 and 5 and Spec 136 section 2 and walks it against the actual diff (00_engineering_standards.md:288).
 2. The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions.
 3. The output is saved to docs/reports/reviews/task-367/red.out. That folder is always allowed (check-task-files.mjs:10).
 4. A refusal at any other stage is a test defect and is fixed first.
@@ -256,7 +262,7 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 
 Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
 
-**Rule lists.** `node scripts/analysis/rule-lists.mjs resolve --files "<the line above, minus the rule-lists page>" --type build --letter S` gives 15 lists, exempt [], unmatched []: surface-136, eng-all, agents-s7-s11, queue-137, surface-126, surface-127, surface-128, surface-135, bylaw-133, agents-s5-1to3, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S. This is the same set as 442's.
+**Rule lists.** `node scripts/analysis/rule-lists.mjs resolve --files "<the line above, minus the rule-lists page>" --type build --letter S` gives 15 lists, exempt [], unmatched [] (the whole Files line with the page resolves 16, see below): surface-136, eng-all, agents-s7-s11, queue-137, surface-126, surface-127, surface-128, surface-135, bylaw-133, agents-s5-1to3, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S. The whole Files line, with the rule-lists page, resolves 16 lists: these 15 plus policy-124-s2-s5 (the page entry matches the generated-reports row of scripts/analysis/rule-lists.json). The output review and the close need one compliance output per list for 15 lists and the engineering output for eng-all. 442's set is the same 15 unless its Files line also names the page.
 
 **Measured refusals and why two files are in the line:**
 - Adding `docs/reports/red-evidence/MF-98/` is refused ("matched by no row"). So the red evidence goes to the review folder, and no OWED id is cited in a message (see section 6).
@@ -267,12 +273,12 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 - Protected (mcbylaws/protected-paths.json): Spec 135 (:68), the queue (:70), docs/reports/panels/** (:55), and coa-expected/** (:38).
 - McFrontend frontend paths: src/tests/surfaces/** (:23) and scripts/surfaces/** (:21).
 - **Yes, an MF queue row is needed:** "A task not listed here is not done" (.cursor/MCFRONTEND-QUEUE.md:5; Spec 137 table :41). The commit-msg arm C needs a `McFrontend-Task:` trailer and a prereg with rules (cite-arms.mjs:145-150).
-- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 takes **MF-98** and **round-203**, claimed by the orchestrator (MCINC-8, 08_agents.md:525).
+- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 plans **MF-98** and **round-203**. The orchestrator claims the ids at launch, one past the highest claim in ~/Buildo-scratch/ids (its README: highest existing claim + 1 is next free; MCINC-8, 08_agents.md:526): if 367 launches first it takes MF-97 and round-202, and the orchestrator renames MF-98 to MF-97 in this plan and in the prereg file name on the Files line before launch (the Plan hash is then grounded again) while 442 takes MF-98 and round-203; if 442 claims first, MF-98 and round-203 stand. Arm Q refuses a heading at or above the Next free id (mcbylaws-queue-check.mjs:308), so commit 0 sets the line one past the id it takes.
 
 ## 6. Commits (D), in order, following the six steps (08_agents.md:515-525)
 
 **Commit 0 (records, alone and first):**
-- Contents: the MF-98 row in Phase 2 ("FE rows owned: FE-49, FE-51, FE-54", in the MF-96 row form at queue :654-657); the next-free line moves to MF-99 by dated note; prereg-MF-98-1.json (round 203, totals copied from the newest prereg); docs/reports/panels/MF-98.json (the MF-96.json form); the task file.
+- Contents: the MF-98 row in Phase 2 ("FE rows owned: FE-49, FE-54." at commit 0, in the MF-96 row form at queue :654-657; the commit that flips FE-51 adds it, because arm Q refuses a DONE row that owns an OWED row, mcbylaws-queue-check.mjs:178-215); the next-free line moves to MF-99 by dated note; prereg-MF-98-1.json (round 203, totals copied from the newest prereg); docs/reports/panels/MF-98.json (the MF-96.json form); the task file.
 - Prereg `rules`: RULED ids only, FE-09, FE-10, FE-16 and FE-36 (the MF-96 form: "The new row is OWED and is never cited").
 - Subject: `docs(135_mcfrontend_decisions_register): MF-98 queue row, prereg and panel record`.
 - Trailers: `Task: task-367`, `McFrontend-Task: MF-98`, `Operator-Ruling: RR-0385 …, RR-0386 …`, `Spec-diff: queue row and records only, no spec rule text moves` (precedent 0ae43e69c).
@@ -282,24 +288,24 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 
 **Commit 1 (work):**
 - The three tests, with plant lines removed and T3's two entries in.
-- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note carrying the operator's flip words (the FE-37 form, 135:59). This needs OQ1 = y.
+- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note in the Spec 135 rule 3 form (the FE-09 and FE-37 flips, 135:31 and :59): Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both"; Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). Each note also says the lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. FE-51: the PROSE-ONLY words in the rule cell are prior text, the lock now checks the tab-push half. FE-49: the platform_shared standing exception is outside the lock (the fence is converted-surfaces.json programme_scopes; the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433), so it stays out of T2 with the FE-49 note as its record and a widening of T2 to platform_shared is a later batch row of this card. FE-54: the lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open). The notes must not hold the words Current reading: (the strict form of generate-surface-handbook.mjs:72). FE-51 flips only with Q-D yes.
 - handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = ['failure-state-declared','scope-fence','nav-tab-switch']`.
-- :273 and :274: rows on that list are RULED and their lock is tracked.
-- :281: the floor becomes `21 - BUILT_BY_367.length`.
-- :283: their lines read `Status: RULED … · Enforced by: <path>`.
+- :273 and :274: rows on that list have their lock tracked and read RULED, or read OWED and are on FLIP_PENDING (FE-51 if Q-D is not yes).
+- :281: the floor becomes 21 minus the rows of that list that read RULED (18 when all three flip).
+- :283: RULED rows read `Status: RULED … · Enforced by: <path>`; an OWED row keeps its `Status: OWED · lock owed:` line.
 - Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`.
-- The task file and the queue row status (137:84).
+- The task file (plan and notes text only; its status moves in the close commit, Spec 137 rule 3 note of 2026-11-20) and the queue row status (137:84).
 - No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match.
 - Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED`.
-- **If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING (register-locks-resolve.infra.test.ts:26) and changes only :274. Spec 135 and 136 are untouched, and acceptance #3 stays open.
+- **If Q-D is not yes:** FE-51 stays OWED: commit 1 adds 'FE-51' to FLIP_PENDING (register-locks-resolve.infra.test.ts:30, the FE-39 form), its Spec 135 cell and Spec 136 line are untouched, and the MF-98 row keeps FE-51 out of its FE rows owned (mcbylaws-queue-check.mjs:178-215). Acceptance #3 then reads 20, not 19.
 
-**Output review:** the lens set on the Files line, then a separate grounder. Two rounds at most (RR-0385 item 3).
+**Output review:** DeepSeek runs, on the output, the lens set that rule-lists.mjs lensSet gives for this Files line (code-review, ux, error-paths, security), the compliance lens once per list (the 15 compliance lists: out-compliance-<list id>.txt) and the engineering lens (eng-all: out-engineering-eng-all.txt) (RR-0385 item 2); then a separate grounder runs BEFORE any fold. Two rounds at most (RR-0385 item 3). Fixes are new commits with the same trailers; after each fix commit every lens input is re-made with rule-lists.mjs lens-input and every output re-run under the same names (08_agents.md section 7, task-399 note of 2026-11-20).
 
-**Close commit (records only):** the lane report and red.out. The task becomes BUILT, not DONE, until the push suite has run. The lane never pushes.
+**Close commit (records only):** red.out in docs/reports/reviews/task-367/, and the lane report copy docs/reports/lanes/<date>/<lane>/ with REPORT.md, GROUNDER.md, the out- lens outputs and TRIAGE.md (one outcome line per CONFIRMED id; check-task-files always allows both paths, so they are not new Files entries). The same commit sets the task file BUILT, not DONE, until the push suite has run, with the evidence (sha, test names, hook result), adds the refs (backlog task edit task-367 --add-ref for REPORT.md, GROUNDER.md and TRIAGE.md), appends the Final Summary round line and one line per CRITICAL, HIGH or MED outcome (check-lane-close.mjs outcomeErrors), and sets the expires date (close date plus 7 days). The lane never pushes.
 
 ## 7. Landing order (E)
 
-- **442:** both commit 0s edit .cursor/MCFRONTEND-QUEUE.md line 5 (the next-free id), so this is a textual conflict. 442's MF-97 folds first. Whichever lands second rewrites the line by dated note (the 135:17 precedent). No other shared file: 442's panel and prereg are different files.
+- **442:** both commit 0s edit .cursor/MCFRONTEND-QUEUE.md line 5 (the next-free id), so this is a textual conflict. 442's MF-97 folds first. Whichever lands second rewrites the line by dated note (the 135:17 precedent) to one past the larger of the two ids. No other shared file: 442's panel and prereg are different files.
 - **383 (wf1/inc1b-thinroute, 5a0d52644):** touches contract_parcels_lookup.descriptor.json, which T2 reads. Its version holds 0 `lead_parcels` (`git show … | grep -c` gives 0). No conflict.
 - **411 (wf1/inc1b-areafactor, f00af29ed):** touches an estate_other descriptor only, which is out of scope.
 - **388 (wf1/inc1b-mfrules, e467590a6, RUNNING):** edits Spec 135, Spec 136, the queue and the rule map. Textual conflicts are expected; the second lander regenerates. Its rows are renumbered after FE-58 (135:17), so FE-49, FE-51 and FE-54 do not move.
@@ -309,16 +315,16 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 
 1. Lane: `git ls-files src/tests/surfaces | grep -cE '(failure-state-declared|scope-fence|nav-tab-switch)\.logic\.test\.ts$'` prints 3.
 2. Lane: docs/reports/reviews/task-367/red.out shows the related run with "Test Files 3 failed (3)". It holds at least one line each of: "mobile_parcel_search: reads a contract but declares no error state", "useLeadFeed", "_layout.tsx" and "tracked.tsx". Counts are at least 1, because each failure prints twice. No typecheck or lint line is the cause.
-3. Lane: `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md` prints 19 (if OQ1 = y). `node scripts/surfaces/generate-surface-handbook.mjs --check` and `node scripts/analysis/rule-lists.mjs page --check` both exit 0.
+3. Lane: `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md` prints 19 (20 if Q-D is not yes). `node scripts/surfaces/generate-surface-handbook.mjs --check` and `node scripts/analysis/rule-lists.mjs page --check` both exit 0.
 4. Lane: `git log -1 --format=%B <work>` holds `Task: task-367` and `McFrontend-Task: MF-98`, and `grep -cE '\bFE-[0-9]+\b'` on it prints 0.
-5. Lane: `git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components 'scripts/surfaces/parcel_product' 'scripts/surfaces/platform_shared'` prints nothing.
+5. Lane: `git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components scripts/surfaces ':(exclude)scripts/surfaces/_schema/surface-rule-map.json'` prints nothing (Spec 126 section 14 keeps descriptors out of this work).
 6. Lane: `head -1` of each new test starts with `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`.
-7. Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite.
+7. Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite. The lane's own green is the related run of commit 1 (.husky/pre-commit:56, :85), which runs the staged tests on the clean tree and passes; REPORT.md records it.
 
 **Old acceptance criteria under the clean start (meaning only, not changed):**
-- #1 "gate list confirmed by the operator": reads as the three-row test list. Changing it needs his word (OQ2).
+- #1 "gate list confirmed by the operator": is met for this clean start by RR-0413 B: he confirms the three rows.
 - #2 "red on a planted defect and green on the clean tree": unchanged; it is acceptance item 2.
-- #3 "no-check lists shrink … by their generators": acceptance item 3; it needs OQ1.
+- #3 "no-check lists shrink … by their generators": acceptance item 3; RR-0413 A allows the flip (FE-51 with Q-D).
 
 ## 9. Risks and rollback (G)
 
@@ -330,7 +336,7 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 ## 10. Questions for the plan grounder (H)
 
 - G1. Does `gate.mjs --staged` (pre-commit:19, holdForCommit) pass staged `src/tests/surfaces/*.ts` before the commit-msg trailers are read? 442 is the precedent, but it is UNVERIFIED.
-- G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which adds the list policy-124-s2-s5 (measured).
+- G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which would add policy-124-s2-s5, a list the rule-lists page entry already attaches (16 lists, section 5).
 - G3. Does arm C pass a work commit that cites no FE id with RULED-only prereg rules, as with MF-96 (2905df62d)?
 - G4. Is `identity.route` plus `x-draft.files` the right MaxBLD file set, or should it be the Spec 126 §11b.3 page set?
 - G5. Is T1's reading of 128:39 right: a contract reader must declare an `error` state and a non-`none` errors answer?
@@ -338,8 +344,123 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 
 ## 11. Questions for the operator (H)
 
-- OQ1. When the three locks land, may FE-49, FE-51 and FE-54 read RULED in the same commit, so that the handbook's no-check list drops from 22 to 19 (the MF-37 and FE-39 flips waited for your word): y or n?
-- OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?
+- OQ1 ANSWERED (RR-0413 A, MD:2108, his words "yes to both"): FE-49, FE-51 and FE-54 flip from OWED to RULED in the commit that lands their three tests, the untested list dropping from 22 to 19.
+- OQ2 ANSWERED (RR-0413 B): he confirms the three rows fe.54, fe.49 and fe.51 as the list; card acceptance #1 is met for this clean start.
+- Q-D (open, one question): May FE-51 read RULED while its lock carries two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52), as FE-36 did with its six named exceptions (FE-36 row; nav-by-route.logic.test.ts:5-7), y or n? If n or unanswered at build time, the nav-tab-switch test still lands, FE-51 is added to FLIP_PENDING and stays OWED until he says, and FE-49 and FE-54 flip as planned.
+
+Plan review round 1: 73 folded, 0 task, 46 ruling, 0 wontfix, 22 pile; grounder docs/reports/reviews/task-367/GROUNDER-PLAN.md; triage docs/reports/reviews/task-367/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED ruling RR-0413
+plan-compliance-agents-s5-1to3#2 MED folded task-365 is BUILT (g
+plan-compliance-agents-s5-1to3#3 MED ruling RR-0413
+plan-compliance-agents-s5-1to3#4 MED folded appends the Final Su
+plan-compliance-agents-s5-1to3#6 MED folded Can a static test re
+plan-compliance-agents-s7-s11#1 MED ruling RR-0413
+plan-compliance-agents-s7-s11#3 MED folded RULED 2026-11-23 (RR
+plan-compliance-agents-s7-s11#4 MED ruling RR-0413
+plan-compliance-agents-s7-s11#5 MED folded appends the Final Su
+plan-compliance-agents-s7-s11#7 MED folded task-365 is BUILT (g
+plan-compliance-bylaw-133-p1#1 MED ruling RR-0413
+plan-compliance-bylaw-133-p1#2 MED folded task-365 is BUILT (g
+plan-compliance-bylaw-133-p1#4 MED ruling RR-0413
+plan-compliance-bylaw-133-p1#5 MED folded The lane's own green
+plan-compliance-bylaw-133-p1#6 MED folded RULED 2026-11-23 (RR
+plan-compliance-bylaw-133-p2#1 MED ruling RR-0413
+plan-compliance-bylaw-133-p2#2 MED folded task-365 is BUILT (g
+plan-compliance-bylaw-133-p2#3 MED ruling RR-0413
+plan-compliance-bylaw-133-p2#4 MED folded gate C (mobile-never
+plan-compliance-bylaw-133-p2#5 MED folded the live break mobil
+plan-compliance-bylaw-133-p3#1 MED ruling RR-0413
+plan-compliance-bylaw-133-p3#2 MED ruling RR-0413
+plan-compliance-bylaw-133-p3#4 MED folded task-365 is BUILT (g
+plan-compliance-five-words#1 MED ruling RR-0413
+plan-compliance-five-words#2 MED folded task-365 is BUILT (g
+plan-compliance-five-words#3 MED ruling RR-0413
+plan-compliance-five-words#6 MED folded The lane's own green
+plan-compliance-inc-S#1 MED ruling RR-0413
+plan-compliance-inc-S#2 MED folded task-365 is BUILT (g
+plan-compliance-inc-S#3 MED ruling RR-0413
+plan-compliance-inc-S#4 MED folded gate C (mobile-never
+plan-compliance-ms-S#2 MED ruling RR-0413
+plan-compliance-ms-S#3 MED ruling RR-0413
+plan-compliance-ms-S#5 MED folded task-365 is BUILT (g
+plan-compliance-orchestrator-doc17#1 MED ruling RR-0413
+plan-compliance-orchestrator-doc17#2 MED folded task-365 is BUILT (g
+plan-compliance-orchestrator-doc17#3 MED ruling RR-0413
+plan-compliance-orchestrator-doc17#7 MED folded the live break mobil
+plan-compliance-plan-protocol#1 MED ruling RR-0413
+plan-compliance-plan-protocol#2 MED folded task-365 is BUILT (g
+plan-compliance-plan-protocol#4 MED folded gate C (mobile-never
+plan-compliance-policy-124-s2-s5-p1#1 MED ruling RR-0413
+plan-compliance-policy-124-s2-s5-p1#2 MED ruling RR-0413
+plan-compliance-policy-124-s2-s5-p2#1 MED ruling RR-0413
+plan-compliance-policy-124-s2-s5-p2#2 MED folded task-365 is BUILT (g
+plan-compliance-policy-124-s2-s5-p2#3 MED ruling RR-0413
+plan-compliance-queue-137#1 MED ruling RR-0413
+plan-compliance-queue-137#2 MED folded appends the Final Su
+plan-compliance-queue-137#3 MED folded appends the Final Su
+plan-compliance-queue-137#4 MED folded RULED 2026-11-23 (RR
+plan-compliance-surface-126-p1#2 MED ruling RR-0413
+plan-compliance-surface-126-p1#3 MED folded the live break mobil
+plan-compliance-surface-126-p1#5 MED folded task-365 is BUILT (g
+plan-compliance-surface-126-p1#6 MED ruling RR-0413
+plan-compliance-surface-126-p2#1 MED ruling RR-0413
+plan-compliance-surface-126-p2#4 MED ruling RR-0413
+plan-compliance-surface-126-p2#5 MED folded the live break mobil
+plan-compliance-surface-126-p3#1 MED ruling RR-0413
+plan-compliance-surface-126-p3#2 MED folded task-365 is BUILT (g
+plan-compliance-surface-126-p3#4 MED folded RULED 2026-11-23 (RR
+plan-compliance-surface-126-p3#6 MED folded the live break mobil
+plan-compliance-surface-126-p4#1 MED ruling RR-0413
+plan-compliance-surface-126-p4#2 MED ruling RR-0413
+plan-compliance-surface-126-p4#3 MED folded task-365 is BUILT (g
+plan-compliance-surface-126-p4#4 MED folded the live break mobil
+plan-compliance-surface-126-p5#1 MED ruling RR-0413
+plan-compliance-surface-126-p5#2 MED folded task-365 is BUILT (g
+plan-compliance-surface-126-p5#4 MED ruling RR-0413
+plan-compliance-surface-126-p5#5 MED folded RULED 2026-11-23 (RR
+plan-compliance-surface-126-p5#6 MED folded :(exclude)scripts/su
+plan-compliance-surface-127#1 MED ruling RR-0413
+plan-compliance-surface-127#3 MED folded task-365 is BUILT (g
+plan-compliance-surface-127#4 MED ruling RR-0413
+plan-compliance-surface-127#7 MED folded the live break mobil
+plan-compliance-surface-128#1 MED ruling RR-0413
+plan-compliance-surface-128#2 MED folded task-365 is BUILT (g
+plan-compliance-surface-128#4 MED ruling RR-0413
+plan-compliance-surface-128#5 MED folded RULED 2026-11-23 (RR
+plan-compliance-surface-128#6 MED folded the live break mobil
+plan-compliance-surface-135-p1#1 MED ruling RR-0413
+plan-compliance-surface-135-p1#3 MED folded task-365 is BUILT (g
+plan-compliance-surface-135-p1#4 MED ruling RR-0413
+plan-compliance-surface-135-p2#1 MED ruling RR-0413
+plan-compliance-surface-135-p2#2 MED folded task-365 is BUILT (g
+plan-compliance-surface-135-p2#4 MED ruling RR-0413
+plan-compliance-surface-135-p2#7 MED folded the live break mobil
+plan-compliance-surface-135-p3#2 MED folded the live break mobil
+plan-compliance-surface-135-p3#4 MED folded the live break mobil
+plan-compliance-surface-135-p3#5 MED ruling RR-0413
+plan-compliance-surface-135-p3#6 MED ruling RR-0413
+plan-compliance-surface-136#1 MED ruling RR-0413
+plan-compliance-surface-136#2 MED folded task-365 is BUILT (g
+plan-compliance-surface-136#3 MED ruling RR-0413
+plan-compliance-surface-136#6 MED folded the live break mobil
+plan-engineering-eng-all#3 MED folded PASS/FAIL self-skept
+plan-error-paths#1 MED folded files ≥ 41, descript
+plan-error-paths#2 MED folded it must find exactly
+plan-error-paths#3 MED folded if 367 launches firs
+plan-error-paths#4 MED folded the live break mobil
+plan-error-paths#5 MED folded the problems asserti
+plan-plan-review-deepseek#1 MED folded files ≥ 41, descript
+plan-plan-review-deepseek#2 MED folded it must find exactly
+plan-plan-review-deepseek#3 MED folded RULED 2026-11-23 (RR
+plan-plan-review-deepseek#11 MED folded in any letter case (
+plan-ux#1 MED folded the live break mobil
+plan-ux#2 MED folded the live break mobil
+plan-ux#3 MED folded the live break mobil
+plan-ux#4 MED folded May FE-51 read RULED
+in#1 MED folded with the rule-lists 
+in#2 MED folded FE rows owned: FE-49
+rg#1 MED folded the live break mobil
+rg#2 MED folded May FE-51 read RULED
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
