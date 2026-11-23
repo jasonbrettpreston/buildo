@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.345Z file_sha256=41b55406dfadee30c2ace9c41747a94ce3e976c33eb0596e7f3c498595435319 prompt_sha256=7faeea95a77065ad4868d086edabfdbb4a91e7ca611db8aa8f0a998b40cf981f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task card, "the paths the rule table's api-lib and step-pipeline rows govern" — scripts/analysis/rule-lists.mjs:186 "/^src\/(?:app\/api|lib)(?:\/|$)/.test(e)" — the card names two table rows, but the regex and the dated note at docs/specs/00-architecture/08_agents.md:263 "(the api-lib row of `scripts/analysis/rule-lists.json`)" record only one, so nothing states that the step-pipeline row's paths are covered — scripts/analysis/rule-lists.json is not pasted (cannot see): if that row governs paths outside src/app/api and src/lib, back-end tasks there still get no security lens, which is the gap RR-0391 closes; name the step-pipeline row's paths and either show they sit under src/lib or widen the regex and the note to name both rows.
+
+MET — task card, "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the /entitlement|auth|stripe|metered|admin|pii/i term is untouched and only ORed with the new path test.
+MET — RR-0394 "Security a" (API routes and library code) — scripts/analysis/rule-lists.mjs:186 — /^src\/(?:app\/api|lib)(?:\/|$)/ fires on an API route and on library code, on both phases through the existing code && sec gate.
+MET — task card, "tests first, both directions" — src/tests/backlog/rule-lists.logic.test.ts:730 "expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);" — positive sets pin security on plan and out for build and fix, and S3 (src/tests/backlog/rule-lists.logic.test.ts:742 "for (const f of ['src/components/report/ReportView.tsx', 'mobile/src/lib/analytics.ts',") pins front-end, mobile and near-miss paths off.
+MET — task card, "NOT in this task: a new lens, a new gate, a change to the lens template" — .claude/review-templates/README.md:105 "or a Files entry is under src/app/api/ or src/lib/ (task-445)" — only the trigger cell of the table row changed, lens-security.md is not in the diff, and no new script or gate file is added.
+MET — 08_agents.md dated note, "the launch brief, plan-prep and the close read that one function" — docs/specs/00-architecture/08_agents.md:263 "also runs, at plan and at output, when an entry of the task's `Files:` line is under `src/app/api/` or `src/lib/`" — the note records lensSet as the single decider and .claude/review-templates/README.md:161 "`out-security.txt` on money/auth or an API or library path" records the close requirement against that one function.
+MET — RR-0392 "no other infrastructure beyond this" — scripts/analysis/rule-lists.mjs:186 — one extra disjunct plus tests and two doc lines, no new script, gate, template or config.
+REJECT — task card, "the security lens runs on every back-end and API task" — that the change keeps the build/fix type gate, so a record task on an API route gets no security lens — a task type with no plan or output phase has no out-*.txt set for security to sit in, and the card states the gap as "at the plan or at the output".
+REJECT — doc-2 Increment S requirements (F-SEARCH-*, A.1 to G.6) — that the change fails the pasted search-page spec — no clause in that list governs rule-lists, lens selection or the close check, so it cannot be unmet here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  123277ms (123.3s)
+📊 Tokens — total: 33881, input: 15110, output: 18771, reasoning: 17871

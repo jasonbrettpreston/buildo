@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.345Z file_sha256=95c65221ba52722a474a05de1a0deaa81003ad69dc9c9a5b92d478da46bb442d prompt_sha256=49c846b9cc0fe27c78cc7ff72e6633156f8786cbeca5676c598cbfcff6a7e45c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task Description "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — scripts/analysis/rule-lists.mjs:186 "|| (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e))" and src/tests/backlog/rule-lists.logic.test.ts:742 "'scripts/analysis/x.mjs'" — the change and its control test cover only src/app/api and src/lib, so a back-end task on scripts/ (this task's own rule-lists.mjs among them) still gets no security lens and the second row the card names, step-pipeline, gets no line in the code or the note — name the step-pipeline row's paths and add them, or record in the 08_agents.md note at :263 that RR-0394 option A ("Security a", API routes and library code) is why they stay out
+DEFER severity=LOW — task Description "NOT in this task: a new lens, a new gate, a change to the lens template, front-end rows (unless the plan review rules them in with a named reason)" — src/tests/backlog/rule-lists.logic.test.ts:728 "for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts'])" — src/lib also holds front-end-only modules, so the lens now reaches front-end work with no named reason anywhere in the note — add one sentence to 08_agents.md:263 giving the reason (src/lib is shared, option A names library code) or scope the check to back-end library paths
+MET — RR-0394 "Security a" — scripts/analysis/rule-lists.mjs:186 — the OR'd path test adds the security lens for src/app/api and src/lib entries, which is option A, API routes and library code
+MET — task Description "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the original /entitlement|auth|stripe|metered|admin|pii/i test is kept whole and only OR'd with the new branch
+MET — task Description "tests first, both directions" — src/tests/backlog/rule-lists.logic.test.ts:727 and :741, src/tests/backlog/check-lane-close.logic.test.ts:224 — exact-set and toContain additions plus planted-defect controls (S3, C1(c), survive-the-fix) in both directions
+MET — 08_agents.md note "the launch brief, plan-prep and the close read that one function" — src/tests/backlog/backlog-lane.logic.test.ts:376, :743, src/tests/backlog/check-lane-close.logic.test.ts:218 — brief (B1), plan-prep (B2) and close (C1a/C1b) are exercised through lensSet with no second decision point added
+MET — 08_agents.md note "of a build or fix task" — scripts/analysis/rule-lists.mjs:186 — the new branch sits inside sec, which is still gated by code (['build','fix']) and pinned by S4 for record and empty type
+MET — task Description "NOT in this task: a new lens, a new gate, a change to the lens template" — docs/specs/00-architecture/08_agents.md:263 and .claude/review-templates/README.md — the lens template is untouched and the close refusal is the existing one reading the widened lens set, no new gate file
+MET — Project objectives "keep it simple; no scope creep" — scripts/analysis/rule-lists.mjs:186 — one added disjunct plus tests and a dated note, nothing else in the tree
+REJECT — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — accused of being review process that serves no designed element — operator ruling RR-0391 "add it." names the task and the lens guards src/app/api/parcels/search, the route the search page runs on
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 0
+Rules met: none
+
+---
+⏱  50973ms (51.0s)
+📊 Tokens — total: 20279, input: 9656, output: 10623, reasoning: 9648

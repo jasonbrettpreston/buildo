@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.346Z file_sha256=68eeb4fca3fc659ade8820ee42e71c4f42e5ae042019267961de3314b47ba888 prompt_sha256=6de0470595f048ef8c2b75b2c5f793115f6a857b292974f826e5747fdea0bc2e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task Description "the paths the rule table's api-lib and step-pipeline rows govern" — scripts/analysis/rule-lists.mjs:186 "// task-445 (RR-0391, 08_agents.md section 5.7): an API route or library path (the api-lib row)" — the change anchors only src/app/api and src/lib (the api-lib row); the card also names the step-pipeline row and the rule table cannot be seen, so whether those back-end paths are covered is unshown — confirm the step-pipeline row's paths lie under src/lib, or extend the anchor to them.
+
+MET — dated note 2026-11-22 "when an entry of the task's Files: line is under src/app/api/ or src/lib/" — scripts/analysis/rule-lists.mjs:186 — sec now ORs the six-word regex with a rooted, boundary-checked match on src/app/api and src/lib, evidenced by S1(a)/S1(b).
+MET — "Other task types are unchanged" (dated note 2026-11-22) — scripts/analysis/rule-lists.mjs:186 "...(code && sec ? ['security'] : [])" — S4 proves record and empty types still get no security.
+MET — task Description "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the original /entitlement|auth|stripe|metered|admin|pii/i is retained ahead of the OR (D11b/P5 survive-the-fix).
+MET — task Description "NOT in this task: ... a change to the lens template" — diff — no change to .claude/review-templates/lens-security.md appears in the diff.
+MET — dated note "the launch brief, plan-prep and the close read that one function" — tests B1, B2, C1(a), C1(b) — the brief, plan-prep and close tests are red without the lensSet edit, showing those consumers read lensSet.
+MET — RR-0394 "security lens option A: API routes and library code" — scripts/analysis/rule-lists.mjs:186 — src/app/api and src/lib are exactly API routes and library code.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  71122ms (71.1s)
+📊 Tokens — total: 28083, input: 12847, output: 15236, reasoning: 14722

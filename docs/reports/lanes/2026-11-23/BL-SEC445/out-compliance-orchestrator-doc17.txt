@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.345Z file_sha256=c838600880660fac0cceffae18d67ca5c5b58e95232b0af0919a74352068efb9 prompt_sha256=3fde5e81438e0db5d450c9636a25f4e9ff9e949372715a9b33cee974f5e413d1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task card scope "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — src/tests/backlog/rule-lists.logic.test.ts:742 "for (const f of ['src/components/report/ReportView.tsx', 'mobile/src/lib/analytics.ts', 'mobile/app/(app)/x.tsx', 'src/library.ts', 'src/app/apiary/x.ts', 'scripts/analysis/x.mjs', 'docs/specs/03-mobile/x.md', 'src/tests/x.test.ts'])" — only the api-lib paths are made to fire the lens, a step-pipeline path is pinned as no-security, and the row itself is not pasted so I cannot see which paths it governs — add the step-pipeline row's code paths to the sec test, or record in the 08_agents.md dated note that RR-0394 option A (API routes and library code) deliberately leaves them out.
+DEFER severity=LOW — 08_agents note "when an entry of the task's `Files:` line is under `src/app/api/` or `src/lib/` (the api-lib row of `scripts/analysis/rule-lists.json`)" — scripts/analysis/rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — the paths are hardcoded in the lens, not read from the api-lib row the note names, so an edit to that row will not move the lens — say in the comment or the dated note that this regex mirrors the api-lib row, or derive it from the row.
+REJECT — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — judged against the RR-00xx readings in the list — that header forbids treating a reading as a clause, so no reading is unmet here.
+MET — task card "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the six-word test is unchanged and OR'd with the path test.
+MET — RR-0394 "Security a" (API routes and library code) — scripts/analysis/rule-lists.mjs:186 — an entry under src/app/api or src/lib adds security on both the plan and out sets; pinned by S1(a), S1(b), B1, B2, C1(a), C1(b).
+MET — task card "NOT in this task: a new lens, a new gate, a change to the lens template" — diff — no lens template and no check-lane-close.mjs edit; the close inherits the widened lensSet.
+MET — README item 5 "out-security.txt on money/auth or an API or library path" — .claude/review-templates/README.md:161 — the close rule text now names the API or library path.
+MET — 08_agents note "`lensSet` in `scripts/analysis/rule-lists.mjs` decides it; the launch brief, plan-prep and the close read that one function" — rule-lists.mjs:186 — one function, pinned by B1 (launch brief), B2 (plan-prep), C1 (close).
+MET — README item 5 "paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line" — diff hunks — the six changed files are exactly the card's six Files entries.
+MET — RR-0391 "add it" — src/tests/backlog/rule-lists.logic.test.ts:721 — the widening lands with tests both directions and the lane's red record in Implementation Notes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  54603ms (54.6s)
+📊 Tokens — total: 31387, input: 19863, output: 11524, reasoning: 10618
