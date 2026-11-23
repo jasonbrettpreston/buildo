@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:23:35.228Z file_sha256=5827d823587213ef64e708a12bf48740049bef4ee3a64ac601f9a07c6d0edd86 prompt_sha256=e9269b11a1742df211c3c8bbd88eea5ede4622b9de5693986368ebd2f0c60695
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-128-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §5 dated note 2026-11-04 "The move of R-01..R-34 into Spec 135 (the Spec 124 to 124a pattern) touches gate-cited rows and is not needed for the REPORT: it is DEFERRED to convert-on-touch (MF-31)." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-58 Lock cell) "MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:719)." — the new row asserts a governing-spec deferral is dropped, sourced to a queue line, with no pasted operator ruling, and the same commit still publishes docs/specs/02-web-admin/136_mcfrontend_handbook.md:11 "The policy rows R-01..R-34 are in Spec 128 §5 until MF-31." — delete the MF-31 clause from FE-58, or land the ruling that drops MF-31 and amend the pasted §5 note and the Spec 136 preamble in the same change.
+
+DEFER severity=LOW — R-22 Lock cell "the two renderers, and a check that no mobile descriptor declares an RSC-only mechanism" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-58) "Spec 128 names the lock owed as \"a check that no mobile descriptor declares an RSC-only mechanism\" (128:224)" — the row quotes half of R-22's lock obligation and drops "the two renderers", so it reads as though task-367 discharges R-22's whole lock — restate both owed artifacts, or say the renderers half is outside this row.
+
+DEFER severity=LOW — Spec 128 §5 dated note 2026-11-14 "each has its register row, its goldens and planted-fault locks, and its OUTPUT panel record `docs/reports/panels/MF-83.json`" — docs/reports/panels/MF-96.json "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — the panel record shipped in this diff still describes the output review as owed while the task notes record round 1 output complete with 134 findings in FINDINGS.md — update the output and verdict fields in the closing commit so the panel record matches the review the task actually took.
+
+MET — §5 dated note 2026-11-04 (new rulings are FE-nn rows in Spec 135, R ids stay R-01..R-34 in Spec 128 meanwhile) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-58 — the new row is a Spec 135 FE row and no hunk touches 128.
+MET — R-03 (Spec 100 stays fenced) — src/tests/surfaces/handbook-rule-map.logic.test.ts "['R-03', '128:205']" — R-03 keeps exactly one citing line and nothing added references lead_parcels.
+MET — R-04 (the two parcel ids named distinctly) — src/tests/surfaces/handbook-rule-map.logic.test.ts "['R-04', '128:206']" — R-04 keeps exactly one citing line and no parcel-id vocabulary is added.
+MET — R-24 (Spec 125 superseded) — 135 FE-58 Amends cell "128 R-22 (128:224); Spec 125 §1" — Spec 125 is cited only as R-22's own amends target, exactly as in the pasted row.
+MET — §5 "No row reads `BUILT`" — 136 fe.58 "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" — the new line is OWED with a reserved lock, not BUILT, and the counts move 57/21 to 58/22 consistently.
+MET — Spec 128 §5 dated note 2026-11-14 (register row, planted-fault locks, OUTPUT panel record) — docs/reports/panels/MF-96.json plus T1/T2 planted and control arms "expect(citing(dup, '128:205')).toHaveLength(2)" — the row, its panel record and its planted-fault arms all exist.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: R-03, R-04, R-24
+
+---
+⏱  100263ms (100.3s)
+📊 Tokens — total: 56217, input: 35225, output: 20992, reasoning: 19993

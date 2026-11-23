@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T15:29:28.587Z file_sha256=5515874288d7a48c5d029df099e54b859582b70735fb8fc36043d609c944b807 prompt_sha256=7c0bbf604bce5b2871f1a12d1a082dc5936d1067e4ea1a6b0e7f29d83d508d46
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 14. The Prevention Loop "Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*" — pasted task-446 Implementation Notes "findings listed untriaged in FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed). Grounder owed (RR-0359): the task stays RUNNING." — no §14 class-prevention answer is recorded for the CRIT 2 / HIGH 5 output findings, and the round 1 fix list names MED only ("RR-0385 round 1 resolves MED") — record, per CRIT/HIGH finding, the standing-rule question answer or an explicit "no standing rule" ruling in FINDINGS.md/GROUNDER.md before BUILT.
+
+MET — 12.8 SQL Linting & Migration Safety — diff path list (no migrations/ entry) — no NEW migration file exists in the change, so neither sqlfluff, validate-migration.js nor a DOWN block is triggered.
+MET — 12.10 Real-DB Integration Tests — "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — the only test path added is "src/tests/surfaces/mobile-no-rsc.logic.test.ts", an OWED surface reservation, and no migration is added.
+MET — 12.11 Footgun Lint Gate — "Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`." — the diff touches no file under those scopes, and the changed test adds no `new Pool(`, no `process.env.X ||`, no silent catch, no null type-guard filter.
+MET — 13.3 Backend Structured Logging — "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — the change adds no API route and no catch block, only docs, JSON and a surface logic test.
+MET — 12.13 Mutation Testing — "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface." — none of the four modules or their siblings is touched; the changed test is "src/tests/surfaces/handbook-rule-map.logic.test.ts".
+
+REJECT — 13.1 Product Telemetry — "Mandatory coverage: Every interactive handler in `src/features/leads/` ... MUST call `captureEvent()`" — a handbook line and register row restating an ACCEPTED rule add no interactive handler.
+REJECT — 13.5 Feature Flags — "Any new user-facing feature MUST be wrapped in a feature flag check at the route level" — the diff ships documentation and a test for an existing accepted rule, not a new user-facing feature.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 20   Unmet: 0
+
+---
+⏱  47443ms (47.4s)
+📊 Tokens — total: 42957, input: 32715, output: 10242, reasoning: 9559

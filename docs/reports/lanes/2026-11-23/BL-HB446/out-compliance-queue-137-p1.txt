@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:14:39.742Z file_sha256=cfdb6db15ac4de38d2ee12e4df2821407a93ae82a9f4f2b4baf34fef2893460f prompt_sha256=c0a3875236e87131e6044ec281448fc59aa65bb6ef58444741ffc35ac9b0009f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 137 §4 Rule 3 dated note 2026-11-20 "the status moves in a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record)" — .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit, which sets task-446 BUILT after the output review and its grounder (lane BL-HB446, task-446)" — the row makes its own queue-status flip part of the closing commit, but .cursor/MCFRONTEND-QUEUE.md is not one of the four path kinds the pasted note lets the closing commit stage, so the flip has no named compliant home — fix: state in the row or the plan that the queue file rides the close as a task file, or move the MF-96 flip to the orchestrator commit after the close.
+DEFER severity=LOW — card, RR-0396 scope "NOT in this task: any other lower-rank rule (RR-0379), a new check or lock for these rules, a generator change, a rule-table change (task-439's)." — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 adds a new pin over R-03 and R-04, two rules the card and RR-0396 ("Question2 No") exclude, so a later edit to FE-49 or FE-52 fails this task's test — fix: scope T1 to 128:224 or record the R-03/R-04 pin as an accepted addition in the card and panel.
+
+MET — Spec 137 §3 Rule 1 — .cursor/MCFRONTEND-QUEUE.md — "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit ... · ruling: "Agreed. Plan approved"": line under the bold heading, closed word RUNNING, every field present.
+MET — Spec 137 §4 Rule 7 — .cursor/MCFRONTEND-QUEUE.md — "expires 2026-11-30" is 7 days after "since 2026-11-23".
+MET — Spec 137 §4 Rule 4 — .cursor/MCFRONTEND-QUEUE.md — "RR-0396, operator, verbatim: "Question1 yes. push complete" and "Question2 No"": both 2026-11-23 rulings entered the same day in M-246 form.
+MET — Spec 137 §4 Rule 10 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — "the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446)": prior text kept, verbatim dated note.
+MET — RR-0395 — docs/specs/02-web-admin/136_mcfrontend_handbook.md and surface-rule-map.json — "- **fe.58** No Server Components on mobile." plus "id": "FE-58": the one missing handbook line exists with its register row; task-439 untouched.
+MET — RR-0396 — docs/specs/02-web-admin/136_mcfrontend_handbook.md — only fe.58 is added, fe.49 is absent from the diff: R-22 only, no seam sentence.
+MET — Spec 135 rule 5 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395)": the OWED lock matches src/tests/surfaces/*.test.ts and is not created.
+MET — Spec 137 §4 task-419 note — docs/reports/panels/MF-96.json — "integration, reality-check and regression seats (plan)" and "the fold checked in FOLD-CHECK.md": required seats and FOLD-CHECK named.
+REJECT — Spec 137 §4 Rule 3 note (G3) — accused of "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — the 2026-11-20 Rule 3 note amends this for lane build tasks so the task file rides the closing commit, and the work commit ran the real hooks green.
+
+VERDICT: PASS
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  127935ms (127.9s)
+📊 Tokens — total: 64487, input: 36439, output: 28048, reasoning: 26953

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:13:56.133Z file_sha256=1521edd936219c9b4775c66625f3c5d9d56fa999d2c87b6334ac53e29dbb5fe2 prompt_sha256=ee58fc94f1e759e7a9c284a6511a34a2a28105d7340a0cd09938ce4a3b8626ec
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card scope "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 pins a one-line-per-rule invariant over R-03 and R-04, two rules the card and RR-0396 place outside this task (R-03 and R-04 "are already fe.49 and fe.52, so this row adds the R-22 line only"), so a future legitimate edit to fe.49 or fe.52 turns red on this task's test — narrow T1 to the R-22 tuple and keep the R-03/R-04 pairs only as planted-duplicate controls, or cite RR-0396 in the describe name so the extension is declared.
+MET — RR-0395 "Agreed. Plan approved" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "| FE-58 | No Server Components on mobile. "React Native has no Server Components..." (Spec 128 R-22, 128:224, ACCEPTED)." — one OWED row restating the accepted rule verbatim with exactly one reserved lock path, added as task-430 added its rows.
+MET — RR-0396 "Question1 yes. push complete" (R-22 only) and "Question2 No" (no seam sentence appended to fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 "- **fe.58** No Server Components on mobile." — the only handbook line added; the fe.49 and fe.52 lines are not in the hunk, so no seam sentence is appended.
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23 ... next: Land the closing commit, which sets task-446 BUILT after the output review and its grounder" and docs/reports/panels/MF-96.json "verdict": "PLAN RULED; OUTPUT owed" — nothing is folded to BUILT in this diff; the row stays RUNNING pending the grounder.
+MET — rule 13 "the scorecard validates process, from structured artifacts" plus "every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field" — scripts/surfaces/_schema/surface-rule-map.json:891 "{\"id\": \"FE-58\", \"kind\": \"fe-row\", \"status\": \"owed\"" — the change touches no step descriptor, no scorecard block, no policy-matrix status and no `source` row, so none of the F/H/J/G gates or the closed `MATRIX_STATUSES`/`source` enums is altered.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: 13
+
+---
+⏱  43524ms (43.5s)
+📊 Tokens — total: 38321, input: 29361, output: 8960, reasoning: 8220

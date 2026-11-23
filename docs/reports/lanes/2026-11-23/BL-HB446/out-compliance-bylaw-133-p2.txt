@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:08:16.418Z file_sha256=8e3629c5c96224cf066950e9512c9c9ec7166183b51ba264e1cc37eca2253199 prompt_sha256=96383e480ae3a6645cc8cf6a0e6f8d70400dd74cd102e5ffa535579e97e76199
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves" — docs/reports/panels/MF-96.json "\"class\": \"G\"," against .cursor/MCFRONTEND-QUEUE.md "  - Lane E. Done-condition: one OWED Spec 135 row restating Spec 128 R-22" — the panel record's class field files this one-writer build under the gates class while the row it records says lane E, so a reader who routes by class gets the wrong lane — set the panel's class to the row's lane E value, or strike the field
+MET — m.1 — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 113,756 | 3 |" and "| total | 16 lists | | 805,860 | 21 |" — the regenerated figures move with the committed source and reconcile: 386 + 1,905 = 2,291 in both the page total (722,506 to 724,797) and the phone total (803,569 to 805,860)
+MET — m.246 — .cursor/MCFRONTEND-QUEUE.md "Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim:" — the new note is appended inside the id line's status text with every prior note kept, and the MF-96 row carries its own dated note
+MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — .cursor/MCFRONTEND-QUEUE.md "Done-condition: one OWED Spec 135 row restating Spec 128 R-22 (128:224) with one reserved lock path (the lock is task-367's)" and "Not in this row: the R-22 lock (task-367), any other lower-rank rule (RR-0379), the review-table change (task-439)" — one row, R-22 only, landing before task-439
+MET — RR-0385 "two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-96.json "\"output\": \"... the lens set (code-review, ux, error-paths, security, compliance once per governing rule list, engineering)" and "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT" — the named lens set and the separate grounder are recorded, tests first recorded in the Implementation Notes
+REJECT — RR-0396 "Question2 No" (no seam sentence appended to fe.49) — that the diff appends a seam sentence to fe.49 — the register and handbook text are chunk 2 of this change; nothing in this chunk touches fe.49
+REJECT — RR-0385 "unbuilt gates withdrawn" — that listing src/tests/surfaces/mobile-no-rsc.logic.test.ts in the system map presents an unbuilt gate — the same change discloses it as owed: "206:  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts", and the reservation is named in the plan text "(task-367)", so it is disclosure, not a gate claim
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: m.1, m.246
+
+---
+⏱  85319ms (85.3s)
+📊 Tokens — total: 52163, input: 35039, output: 17124, reasoning: 16322

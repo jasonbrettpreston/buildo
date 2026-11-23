@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T15:06:29.421Z file_sha256=b893d7fee8ddf388ca5a9b4f8f4bae47e4a4fd5f0709799a84060152ac2b0794 prompt_sha256=8f86e0c1adb322e282d10649e3796acc62e5eba17b11d9e7d6a7cef0e6832361
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+NIT — src/tests/surfaces/handbook-rule-map.logic.test.ts "it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {" — "in item order" is duplicated (copy-paste from the old "are the LAST rows, in item order" title) — drop the first "in item order," so the title reads "thirteen rows are contiguous (task-446 appends after them)"; text only, no behaviour.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);" — a non-null assertion on fresh[0] looks like it could hide an empty array — it is safe: the preceding "expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS)" fails/throws on a wrong length before this line runs, so fresh[0] exists.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(() => readFeRows(stripRows(REGISTER, [rows.at(-1)!.id], rows.length))).not.toThrow();" — swapping the stripped id from ids[12] to the last row looks like it weakens the no-gap control — it is correct: ids[12] (FE-57) is no longer the last row now that FE-58 is appended, so removing it would create a gap; rows.at(-1) is the true tail and removing it leaves no gap, and the ! is guarded by H1 reading >= 30 rows.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  82566ms (82.6s)
+📊 Tokens — total: 44898, input: 27571, output: 17327, reasoning: 16933

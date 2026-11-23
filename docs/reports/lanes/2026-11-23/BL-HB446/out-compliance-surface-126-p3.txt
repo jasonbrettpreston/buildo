@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:18:09.645Z file_sha256=0071126a8a00cef757efed263c587261d0186043a64a94bfe67bf3100983228e prompt_sha256=c18801860c939bb0c1aed384c9bf0d9b5ed61b677b4d92c200b7a96e3797d5e6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings
+
+DEFER severity=MED — Spec 135 rule 5 "Locks: a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist ... Lock: `register-locks-resolve.infra.test.ts` (FE-09)." — Implementation Notes "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite." — the clause's own lock, the one that proves FE-58's OWED path resolves, was never run on this diff, so compliance with rule 5 is asserted, not shown — run register-locks-resolve.infra.test.ts and rule-lists on the pushed commit and paste the output in the lane before the BUILT flip.
+
+DEFER severity=LOW — Spec 135 rule 4 "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-58 row "D pass, P owed, F n/a, S pass, H n/a, E pass" — the new row's `Six` cell uses "P owed", which is not one of the three pasted verdicts — FE-55..FE-57 already carry "P owed", so amend rule 4 to admit an owed verdict in a later pass rather than silently widening the vocabulary a fourth time.
+
+DEFER severity=LOW — operator ruling RR-0396 "Question2 No" with the card's "NOT in this task: any other lower-rank rule (added over time, RR-0379)" — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 pins single-citation for R-03 and R-04 as well as R-22, a pin on two rules the card puts out of scope — it adds no line and no lock for them, so keep it only if the plan names it; otherwise narrow T1 to `128:224` and leave the R-03/R-04 pins to task-430's describe.
+
+MET lines
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-58 "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — the path is in the surfaces test directory and the diff's path list adds no such file.
+MET — Spec 136 banner "Do not edit by hand: `--check` and `src/tests/surfaces/handbook-rule-map.logic.test.ts` fail on a stale file." — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(read(SPEC.handbookRel)).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* ..." — T2 pins the exact fe.58 headline and `Status: OWED · lock owed:` line, so the handbook cannot drift from the register row.
+MET — Spec 136 "v1 covers the 57 FE rulings of Spec 135" regenerated to "v1 covers the 58 FE rulings" with "**Rules rendered: 58**: 58 in force (22 OWED ...)" — the 57→58 and 21→22 OWED arithmetic matches one OWED row added by this diff.
+MET — operator ruling RR-0396 "Question2 No" (no seam sentence on fe.49) — diff path list — fe.49 and fe.52 are untouched; the only register row added is FE-58.
+MET — operator ruling RR-0395 "Agreed. Plan approved" / card "one handbook line (Spec 136 section 2) for R-22, added the way task-430 added its 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.58** No Server Components on mobile. ... (Spec 128 R-22, 128:224, ACCEPTED)." — one line, register row plus generated handbook and rule map, the task-430 shape.
+MET — operator ruling RR-0359 "That's ridiculous to fold before the grounder review" — docs/reports/panels/MF-96.json "\"verdict\": \"PLAN RULED; OUTPUT owed\"" and .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23" — nothing is folded; the grounder is still owed and the row stays RUNNING.
+MET — card "NOT in this task: ... a generator change, a rule-table change (task-439's)" — diff path list — no script under scripts/surfaces or scripts/violations is modified and no rule-table hunk appears; only the register, its generated outputs, records and the test.
+MET — surface-126 §4 "Omission is a build failure; `"none"` is a valid value, and it applies PER FIELD, not per category." — diff path list — no SURFACE/CONTRACT descriptor or category field is added, omitted or defaulted by this change.
+
+REJECT line
+
+REJECT — Spec 135 rule 5 "a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — the change is accused of pointing docs/specs/00-architecture/00_system_map.md at `src/tests/surfaces/mobile-no-rsc.logic.test.ts` while that file does not exist — not a real issue: FE-58 is OWED, so the pasted rule requires the path to be absent, and the system-map entry is the reservation the row records.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 3
+Rules met: none
+
+---
+⏱  59862ms (59.9s)
+📊 Tokens — total: 48983, input: 36350, output: 12633, reasoning: 11188

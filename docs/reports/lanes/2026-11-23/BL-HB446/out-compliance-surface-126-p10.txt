@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:17:02.043Z file_sha256=5a3317692657f2c1ff819ea7720548c1a913e8d097b97b858d52dfcdaa64bfaf prompt_sha256=302e8dd37d93fbb820cce5b62a521f400a29c5b8511b32ec5af9164e85251fdb
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
+
+MET — §11b.7 Ownership "Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look" — docs/specs/00-architecture/00_system_map.md "…, `src/tests/surfaces/a11y-category.logic.test.ts`, `src/tests/surfaces/mobile-no-rsc.logic.test.ts` | DRAFT |" — no page id, route, connection or look rule is added, removed or reordered; the only surface-spec edit is one lock path in the Spec 135 tests cell.
+
+MET — §11b.7 "| D4 | Parcel cost | `/admin/parcel-cost` | checks the cost numbers the report shows | none (parked, §11b.3) |" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "+| FE-58 | No Server Components on mobile. …" — the new register row restates a Spec 128 mobile-platform rule and names no MaxBLD page, admin page, route, connection or report clause.
+
+MET — RR-0396 "Question1 yes. push complete" (R-22 only, the fe.58 line text as shown) — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.58** No Server Components on mobile. \"React Native has no Server Components. …\" (Spec 128 R-22, 128:224, ACCEPTED)." — the line text is the R-22 restatement only, and the handbook hunk adds no other fe line.
+
+MET — RR-0396 "Question2 No" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.57** Accessibility. The a11y check category is …" (unchanged context) — the fe.49 row is not touched and no seam sentence is appended to it.
+
+REJECT — §11b.7 (no pasted clause governs `00_system_map.md`) — the change is accused of listing a lock file that does not yet exist in the Spec 135 system-map row — no pasted clause covers the system map, and the register rule visible in the diff requires exactly that: "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist".
+
+REJECT — task-446 "NOT in this task: … a new check or lock for these rules" — the change is accused of shipping the R-22 lock — no lock file is added; the row reads "| OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395); no machine check yet, the lock is task-367's".
+
+REJECT — §11b.7 rules 1-13 "The report detail is the expanded card; there is no separate detail page (A)" — the change is accused of adding behaviour no pasted clause or ruling names — the pasted card names it, "THIS TASK: one handbook line (Spec 136 section 2) for R-22", and the diff adds that row plus the regenerated files the Files line lists.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  29336ms (29.3s)
+📊 Tokens — total: 41553, input: 35902, output: 5651, reasoning: 4921

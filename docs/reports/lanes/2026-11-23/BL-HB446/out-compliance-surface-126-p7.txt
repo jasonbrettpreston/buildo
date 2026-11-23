@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:20:00.623Z file_sha256=284f0fbff0e41cf285aeab8bad95dfbe063bce6b659a756b03022597439d717d prompt_sha256=517050b804f7371705272db9015bc4eb65a3e86f6fb9a498b75ebcf82715f5b1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+MET — RR-0396 "Question1 yes. push complete" / "Question2 No" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 — the new fe.58 line carries exactly the R-22 text shown to the operator, and the same diff leaves the fe.49 line untouched, so no seam sentence is appended
+MET — RR-0395 "Agreed. Plan approved" — .cursor/MCFRONTEND-QUEUE.md:654 "**MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components) — RUNNING**" — one small task adds the missing R-22 handbook line before task-439 lands, with the Done-condition naming that row only
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-96.json:23 "verdict": "PLAN RULED; OUTPUT owed" — the task stays RUNNING with the grounder owed and no BUILT flip, so nothing is folded early
+MET — 11a.7 item (7) "the node contract ... lives in one file, `scripts/surfaces/_schema/report-tree.schema.json`" — scripts/surfaces/_schema/surface-rule-map.json:891 "{\"id\": \"FE-58\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.58\"}" — the change adds only a fe-row map entry, no node-contract, golden tree or states file is touched
+MET — 11a.10 "Goldens: ad_slot_present, ad_slot_absent" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "| FE-58 | No Server Components on mobile. ... | OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — no slot id, targeting key, ad contract or ad golden is changed by this row
+MET — RR-0385 "two rounds at most" — docs/reports/panels/MF-96.json:15 "output": "OUTPUT review owed at the lane output stage" and the lane note "round 1 fix commit" — one OUTPUT round is recorded and the grounder is still owed, within the two-round bound
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 52   Unmet: 0
+Rules met: none
+
+---
+⏱  49600ms (49.6s)
+📊 Tokens — total: 47618, input: 36596, output: 11022, reasoning: 10474

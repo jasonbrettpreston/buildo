@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:14:35.149Z file_sha256=c94b5f6fd5ff61300cc8f006b468ededce4019eb2e9eec836e5c910fe660b6c0 prompt_sha256=6950af30176d1d46ce9693f259a3300e2cc2221d1714b4e721fe3753be9cd50f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 4 "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "D pass, P owed, F n/a, S pass, H n/a, E pass" — the new FE-58 row uses P owed, a value not in the allowed pass/n/a/FAIL set — replace P owed with an allowed value per rule 4, or amend rule 4 in a separate task
+
+MET — task card "one handbook line (Spec 136 section 2) for R-22" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 — fe.58 line added with the R-22 text, OWED and lock owed
+MET — task card "the new register row is OWED, so this row owns none" — .cursor/MCFRONTEND-QUEUE.md:657 "FE rows owned: none."
+MET — task card "Spec 136, the rule map, the rule-lists page and the system map regenerated" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |" — counts updated and surface-rule-map.json fe.58 entry added
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  185406ms (185.4s)
+📊 Tokens — total: 80004, input: 35825, output: 44179, reasoning: 43796

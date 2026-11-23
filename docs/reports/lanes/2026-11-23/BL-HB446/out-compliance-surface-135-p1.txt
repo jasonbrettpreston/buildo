@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:24:22.610Z file_sha256=479e20176b5a8b731bc6bab45e2f29970ec0a501ff99a9cceadf7c9e27fc8ff8 prompt_sha256=6821ecefb6ae68fabd5ce2f57aa1d74161269fac5d4d685cf81ff396b333a863
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+REJECT — 135 rule 4 "the `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL`" — the FE-58 Six cell reads "D pass, P owed, F n/a, S pass, H n/a, E pass", i.e. "owed" rather than one of pass/n/a/FAIL — not a real issue: FE-55, FE-56 and FE-57 all read "P owed", so "owed" is the register's established notation and the new row follows it.
+
+MET — 135 rule 2 "ONE lock per row; the Lock is in the LAST cell with the status" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-58 row — the last cell reads "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395)", one lock together with the status.
+MET — 135 rule 3 "Never an OWED marker with no lock path" — 135 register FE-58 row — "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" pairs the OWED marker with a lock path.
+MET — 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — FE-58 row lock cell — "src/tests/surfaces/mobile-no-rsc.logic.test.ts" conforms to the path pattern and no such file is created anywhere in the diff.
+MET — Next free id "the line read \"Next free id: FE-58\" before this note ... is FE-59" — 135 register Next free id line — "**Next free id:** `FE-59`" advances by a dated note after FE-58 is taken by the OWED row.
+MET — RR-0395 "Agreed. Plan approved" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — "- **fe.58** No Server Components on mobile ...", exactly the one R-22 line the ruling names.
+MET — RR-0396 "Question2 No" (no seam sentence on fe.49) — 136 handbook diff — only the fe.58 line is inserted, the fe.49 line is untouched.
+MET — card "NOT in this task: ... a generator change, a rule-table change" — diff file list — no script, Spec 128 or rule-table file changes, only the generated handbook, rule map, rule-lists page and system map are rewritten.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  213727ms (213.7s)
+📊 Tokens — total: 61131, input: 29970, output: 31161, reasoning: 30544

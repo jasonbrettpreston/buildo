@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T15:30:16.076Z file_sha256=b893d7fee8ddf388ca5a9b4f8f4bae47e4a4fd5f0709799a84060152ac2b0794 prompt_sha256=1b8974e4371aac2a600cfbb2bd6ef9cc693ccedb5810325cb89e64ab14815851
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/specs/02-web-admin/136_mcfrontend_handbook.md:11 "The policy rows R-01..R-34 are in Spec 128 §5 until MF-31." vs the added register cell docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:719)." — the front-end reviewer reads a deferred move ("until MF-31") that this same change records as never arriving, and now one policy row (R-22) does appear in the handbook with no line telling the reader that is deliberate — fixing it needs a generator-template edit, which the Files line excludes ("No generator ... change"), so route it to the generator owner, not this commit.
+
+DEFER severity=MED — task card "the fe.58 line text as shown to him" — cannot see the text put to the operator (MORNING-DECISIONS.md:1999 is outside the pasted material), so I cannot confirm that 136:205 "**fe.58** No Server Components on mobile. ... (Spec 128 R-22, 128:224, ACCEPTED)." is the wording he answered "Question1 yes" to — diff the fe.58 headline against the recommendation shown at :1999 before merge.
+
+DEFER severity=LOW — docs/specs/00-architecture/00_system_map.md:100 "src/tests/surfaces/mobile-no-rsc.logic.test.ts" appears in spec 135's test column, while the same lock is declared absent at 136:206 "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" and the lane records "6 lock absent" — a person who opens or runs the listed test finds nothing and the system-map row carries no OWED marker — acceptable for now because it follows the FE-45..FE-57 precedent and the page is generated; add the marker when the generator next changes.
+
+DEFER severity=LOW — docs/reports/panels/MF-96.json:21 ""verdict": "PLAN RULED; OUTPUT owed"" with :22 ""blockers": []" while the task notes record "FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed)" — the operator opening the panel record reads "no blockers, output owed" when output round 1 has run with untriaged CRIT and HIGH — the closing commit must update verdict and blockers before task-446 is set BUILT.
+
+DEFER severity=NIT — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "D pass, P owed, F n/a, S pass, H n/a, E pass" sits beside "no machine check yet, the lock is task-367's" — a reader sees three "pass" marks for a rule nothing checks yet — same form as the twelve task-430 rows the operator approved, so defer rather than reword this row alone.
+
+REJECT — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "The Ruling cell quotes Spec 128 R-22; this row rules nothing new." — it looks like the register now holds a second authority for an accepted Spec 128 policy rule — harmless, the row cites rather than rules and the new test pins one handbook line per rule: "each of R-03, R-04 and R-22 is stated by exactly one line".
+
+VERDICT: PASS on the person's experience
+States checked: no interface is drawn by this change (design silent, no first view, loading, answered, error, empty, offline, back or repeat-visit state exists); walked as reader states: handbook fe.58 line, register FE-58 row, queue MF-96 row, panel record, system map row 135, generated rule-lists page, and the what-enforces-this-rule path   Dead ends found: 1
+
+---
+⏱  42724ms (42.7s)
+📊 Tokens — total: 36419, input: 27587, output: 8832, reasoning: 7939

@@ -3,11 +3,11 @@ id: TASK-446
 title: >-
   FINAL.9 Handbook line for R-22: the accepted Spec 128 rule React Native has no
   Server Components gets a line in the McFrontend handbook before task-439 lands
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:15:00Z'
+updated_date: '2026-11-23T15:46:00Z'
 labels:
   - McFix
   - McFix Final
@@ -47,6 +47,10 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-HB446/FINDINGS.md
+  - docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-HB446/TRIAGE.md
 type: build
 ordinal: 146012
 ---
@@ -374,4 +378,61 @@ rg#1 MED folded When task-367 builds
 Dated note 2026-11-23 (M-246, prior text kept; RR-0396 · task-446 · Backlog; decision-181, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1999 and :2002; operator, verbatim, on the one-rule question with the fe.58 line text shown: "Question1 yes. push complete" and "Question2 No"): the launch gate of plan section 0 is met; task-446 adds the R-22 line only, with the line text as shown; no seam sentence is appended to fe.49.
 
 2026-11-23 lane BL-HB446 commit 0 (records, alone and first, plan section 7): MF-96 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-97), prereg-MF-96-1.json (round 201, claimed in ~/Buildo-scratch/ids/round-201; rules FE-09, FE-10, FE-16 RULED; totals copied unchanged from prereg-MF-95-1.json; expected_moves empty), panel record docs/reports/panels/MF-96.json. Ledger: MF-96 and round-201 claimed by this lane; FE-58 handed over to BL-HB446 (FE-58/owner dated line); FE-59 not claimed.
+
+2026-11-23 lane BL-HB446 tests first (plan section 4): T1 and T2 written in a new describe "task-446 — the R-22 line (RR-0395)" after the MF-95 C describe; red attempt 1 (only the test and the task file staged) recorded in the lane red.out.
+
+2026-11-23 lane BL-HB446 red attempt 2 (plan section 4 survive-the-fix): the FE-58 row, the Next free id note and the regenerated files staged with the OLD C-T2 and C-T1 forms; the old forms go red once the row is added; recorded in the lane red.out.
+
+2026-11-23 lane BL-HB446 commit 1 (work, plan section 7): one OWED Spec 135 row restating Spec 128 R-22 (128:224) at the id Next free id read at the work commit (fe.58 in Spec 136), lock reserved src/tests/surfaces/mobile-no-rsc.logic.test.ts (task-367); the 135 Next free id line moved by a dated note; Spec 136 and surface-rule-map.json by generate-surface-handbook.mjs --write then --check; rule-lists-by-kind.md by rule-lists.mjs page --write then --check; 00_system_map.md by npm run system-map; T1, T2 and the three survive-the-fix edits (C-T2 :267 and its title, C-T1 :287, C-T1 :297) in handbook-rule-map.logic.test.ts; the MF-96 status line keeps RUNNING with next: the closing commit (plan Q5). Red in the lane red.out (attempt 1: T1 at R-22 and T2 at toHaveLength(1); attempt 2: the old C-T2 and C-T1 forms after the row); green is this commit through the real hooks (lane commit.out).
+
+2026-11-23 lane BL-HB446 acceptance on real inputs (plan section 8), at commit 2905df62d:
+$ 1 node scripts/surfaces/generate-surface-handbook.mjs --check
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (58 rules)
+exit 0
+$ 2 grep -c fe lines
+58
+$ 3 Rules rendered
+28:**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line 
+$ 4 cites
+1
+1
+1
+$ 5 mobile-no-rsc
+206:  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+$ 6 lock absent
+1
+$ 8 page --check
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+exit 0
+33:| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |
+60:| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |
+$ 9 diff stat generator/128/rule-lists.json since launch 240e559e3
+(end of stat)
+Item 7: the pre-commit related run of commit 2905df62d ran src/tests/surfaces/handbook-rule-map.logic.test.ts (41 passed) and src/tests/system-map.infra.test.ts (13 passed); register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite. Items 10 and 11 are the orchestrator's and the push station's. Item 12: the RR-0396 reply is the first dated note on this task and is in the FE-58 Full text cell.
+
+2026-11-23 lane BL-HB446 output review round 1 (RR-0385): fresh context docs/reports/reviews/task-446/context-r3.md (backlog-brief.mjs); the whole task diff 240e559e3..2905df62d (Files-line paths); DeepSeek lenses compliance per list (15 lists, 47 parts), engineering eng-all (2 parts), code-review, error-paths, ux, security; 52 outputs and their inputs in docs/reports/lanes/2026-11-23/BL-HB446/, findings listed untriaged in FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed). Grounder owed (RR-0359): the task stays RUNNING.
+
+2026-11-23 lane BL-HB446: out-compliance-policy-124-s2-s5-p1.txt re-run once (its first run printed no VERDICT line; the close check refused it); FINDINGS.md relisted (134 findings); lane REPORT.md copied to docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md. Grounder owed; the task stays RUNNING.
+
+2026-11-23 lane BL-HB446: real check-lane-close.mjs on a throwaway clone at 337b627ac with the task staged BUILT refuses only on GROUNDER.md and its reference (grounder owed); pasted in docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md.
+
+2026-11-23 lane BL-HB446 round 1 fix commit (the grounder Cairn-Ground-O446 fix list, RR-0385 round 1 resolves MED): out-compliance-surface-126-p4#1, the FE-58 Status and Lock cell cite .cursor/MCFRONTEND-QUEUE.md:713 becomes :719 (the MF-31 status line at the lane HEAD, re-read before the commit); out-engineering-eng-all-p1#1, one inline comment above const r = hit[0]! in handbook-rule-map.logic.test.ts. generate-surface-handbook.mjs --check: up to date (58 rules); rule-lists.mjs page --check: current; nothing regenerated. Task stays RUNNING.
+
+2026-11-23 lane BL-HB446 (orchestrator decision after the round 1 fix): the round 1 output review as ruled by the grounder Cairn-Ground-O446 is at commit 22b1e36b0 (git history keeps it): 134 ids, 26 CONFIRMED, the 2 MED fixed in 390c54261 (out-compliance-surface-126-p4#1, out-engineering-eng-all-p1#1). The base-named lens files in docs/reports/lanes/2026-11-23/BL-HB446/ are re-run on the whole diff at 390c54261 with context-r4.md, because the close check builds its whole-change proof from the base names only (scripts/hooks/check-lane-close.mjs:385-394); this re-run is review round 2 (RR-0385: CRITICAL and HIGH only).
+
+2026-11-23 lane BL-HB446 output review round 2: base-named lens files re-made by lens-input on the diff 240e559e3..390c54261 with context-r4.md; 49 outputs re-run on DeepSeek, out-compliance-bylaw-133-p1 kept (input byte-identical); surface-135 p6..p8 and the single orchestrator-doc17 file removed (the split moved; round 1 stays at 22b1e36b0). 120 findings untriaged in FINDINGS.md (HIGH 7, MED 34, LOW 65, NIT 13, 1 blank). Grounder owed; the task stays RUNNING.
+
+2026-11-23 lane BL-HB446: real check-lane-close.mjs on a throwaway clone at 3ee92e2cb with the task staged BUILT refuses only on GROUNDER.md and its reference (round 2 grounder owed); pasted in docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-446 (FINAL.9, MF-96): one OWED Spec 135 row restating Spec 128 R-22 (React Native has no Server Components), rendered as Spec 136 line fe.58, lock reserved src/tests/surfaces/mobile-no-rsc.logic.test.ts (task-367); rule map, rule-lists page and system map regenerated; tests T1, T2 and three survive-the-fix edits; commits 0ae43e69c (records), 2905df62d (work), 390c54261 (round 1 fixes); red in the lane red.out, green through the real hooks.
+
+Review round 1: 2 fixed, 0 task, 0 ruling, 0 wontfix, 24 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb446-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 22b1e36b0); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb446-lane/grounder/r1/TRIAGE.md
+out-compliance-surface-126-p4#1 MED fixed 390c54261
+out-engineering-eng-all-p1#1 MED fixed 390c54261
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-HB446/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

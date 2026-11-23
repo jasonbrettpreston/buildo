@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:11:36.543Z file_sha256=a52d68030f975eee357166e9be14233beaccfa57817a9d4f5bdf1e5bbcc05fd8 prompt_sha256=207cafddf9d606d6f031b87291cf7a8203963e15d746c15cb82e7d0cf2fe7f4c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task card "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 pins two rules the card excludes (R-03, R-04) with a machine check, so a later task that states R-03 in a second line must edit this test — restrict the pin to 128:224, or put the R-03/R-04 arms under a row that owns them.
+
+DEFER severity=LOW — ms-S "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" (accuracy) — .cursor/MCFRONTEND-QUEUE.md "Prereg: scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json (round 201, documents only, nothing moves)" — the row says documents only while the same commit changes a root test, and the prereg itself says "documents and one root test only" — change the row to "documents and one root test, nothing moves" to match prereg-MF-96-1.json.
+
+DEFER severity=NIT — RR-0396 "Question1 yes. push complete" (R-22 only, the fe.58 line text as shown) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "| FE-58 | No Server Components on mobile. \"React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned.\" (Spec 128 R-22, 128:224, ACCEPTED). |" — the text shown to the operator is not pasted, so exact match of the committed line to what he approved cannot be seen here — have the lane paste the shown text beside the row so a later review can compare without the queue.
+
+MET — task card "Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, ... docs/specs/00-architecture/00_system_map.md" — the nine diff paths — the diff touches exactly the nine paths the card lists, no tenth.
+MET — RR-0395 "Agreed. Plan approved" (one handbook line for R-22 before task-439 lands) — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.58** No Server Components on mobile." — exactly one line added, the rendered count moved "57" to "58".
+MET — RR-0396 "Question2 No" (no seam sentence appended to fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md:202-206 — no hunk touches the fe.49 line, the only section 2 hunk inserts after fe.57.
+MET — task card "NOT in this task: ... a generator change, a rule-table change (task-439's)" — scripts/surfaces/_schema/surface-rule-map.json "\"id\": \"fe.58\"" — no generator script and no rule-table file appear in the diff; the map and handbook are generator output re-run by their existing commands.
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit, which sets task-446 BUILT after the output review and its grounder" — the row stays RUNNING, nothing is folded or set BUILT.
+MET — task card "NOT in this task: ... a new check or lock for these rules" — scripts/surfaces/_schema/surface-rule-map.json "\"status\": \"owed\"" — the single lock path src/tests/surfaces/mobile-no-rsc.logic.test.ts is reserved and not created, one lock for R-22 only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 0
+Rules met: none
+
+---
+⏱  55204ms (55.2s)
+📊 Tokens — total: 39737, input: 28466, output: 11271, reasoning: 10277

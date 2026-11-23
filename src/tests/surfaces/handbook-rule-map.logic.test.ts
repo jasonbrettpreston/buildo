@@ -262,9 +262,12 @@ describe('MF-95 C — the thirteen RR-0384 rows', () => {
   const rows = realRows();
   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
 
-  it('C-T2 RED: thirteen rows, in item order, are the LAST rows of the register, each OWED with exactly its one reserved lock path, none of which exists', () => {
+  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
-    expect(rows.slice(-13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+    // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
+    const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
     expect(rows.length).toBeGreaterThanOrEqual(57);
     for (const r of fresh) {
       expect(r.status, r.id).toBe('OWED');
@@ -284,7 +287,11 @@ describe('MF-95 C — the thirteen RR-0384 rows', () => {
     const run = (root: string, argv: string[]) => { const err: string[] = []; const code = runHandbookCli({ spec: '136', argv, build: (r: string) => build(r), root, out: () => {}, err: (s: string) => err.push(s), process: {} as never }); return { code, err: err.join('\n') }; };
     const ids = fresh.map((r: Row) => r.id);
     expect(ids).toHaveLength(13);
-    const old = build(makeRoot(stripRows(REGISTER, ids, rows.length - 12)));
+    // the strip also removes any row after the thirteen (task-446 appends FE rows after them), so no gap is left
+    const idx = rows.findIndex((r: Row) => r.id === ids[0]);
+    expect(idx).toBeGreaterThanOrEqual(0);
+    const tail = rows.slice(idx).map((r: Row) => r.id);
+    const old = build(makeRoot(stripRows(REGISTER, tail, rows.length - tail.length + 1)));
     const root = makeRoot(REGISTER, rows.flatMap((r: Row) => (r.status === 'RULED' ? r.locks : [])));
     for (const [rel, body] of [[SPEC.ruleMapRel, `${JSON.stringify(old.map, null, 2)}\n`], [SPEC.handbookRel, old.text]] as const) { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), body); }
     const stale = run(root, ['--check']);
@@ -294,7 +301,43 @@ describe('MF-95 C — the thirteen RR-0384 rows', () => {
     expect(run(root, ['--write']).code).toBe(0);
     expect(run(root, ['--check']).code).toBe(0);
     expect(() => readFeRows(stripRows(REGISTER, [ids[6]!], rows.length + 1))).toThrow(/no gap or reorder/);
-    expect(() => readFeRows(stripRows(REGISTER, [ids[12]!], rows.length))).not.toThrow();
+    // the ! is safe: the register is not empty (H1 reads >= 30 rows)
+    expect(() => readFeRows(stripRows(REGISTER, [rows.at(-1)!.id], rows.length))).not.toThrow();
+  });
+});
+
+// task-446 FINAL.9 (RR-0395 "Agreed. Plan approved"; RR-0396 "Question1 yes"): one OWED row restates Spec 128 R-22 (128:224); R-03 (128:205)
+// and R-04 (128:206) are already fe.49 and fe.52. T1 is a handbook-consistency pin (exactly one line states each rule, keyed on the cite string in
+// the headline), not the R-22 lock, which is task-367's. T2 finds the row by its lock path, not its id, so a renumber at landing needs no edit;
+// when task-367 builds the lock and flips the row, the same commit edits T2's status line and the Spec 136 pattern.
+const R22_LOCK = 'src/tests/surfaces/mobile-no-rsc.logic.test.ts';
+const R22_HEADLINE = 'No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).';
+const citing = (rs: Row[], cite: string) => rs.filter((r: Row) => r.headline.includes(cite)).map((r: Row) => r.id);
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+describe('task-446 — the R-22 line (RR-0395)', () => {
+  it('T1 RED: each of R-03, R-04 and R-22 is stated by exactly one line; planted: two lines citing one rule are seen, control: one line', () => {
+    for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);
+    const dup = readFeRows(reg([...GOOD, row('FE-04', 'OWED `src/tests/surfaces/z.logic.test.ts`', 'A (128:205).'), row('FE-05', 'OWED `src/tests/surfaces/w.logic.test.ts`', 'B (128:205).')]));
+    expect(citing(dup, '128:205')).toHaveLength(2);
+    const one = readFeRows(reg([...GOOD, row('FE-04', 'OWED `src/tests/surfaces/z.logic.test.ts`', 'A (128:205).')]));
+    expect(citing(one, '128:205')).toHaveLength(1);
+  });
+
+  it('T2 RED: one row holds the R-22 lock, OWED with exactly that lock, its headline the exact text, no placeholder left, its Spec 136 line OWED; planted: a duplicated lock is seen, control: one', () => {
+    const hit = realRows().filter((r: Row) => r.locks.includes(R22_LOCK));
+    expect(hit).toHaveLength(1);
+    // the ! is safe: the toHaveLength(1) above proves hit holds one row
+    const r = hit[0]!;
+    expect(r.status).toBe('OWED');
+    expect(r.locks).toEqual([R22_LOCK]);
+    expect(r.headline).toBe(R22_HEADLINE);
+    expect(REGISTER).not.toContain('<date of the work commit>');
+    expect(read(SPEC.handbookRel)).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* ${escRe(R22_HEADLINE)}\\n {2}Status: OWED · lock owed: ${escRe(R22_LOCK)}$`, 'm'));
+    const two = readFeRows(reg([...GOOD, row('FE-04', `OWED \`${R22_LOCK}\``), row('FE-05', `OWED \`${R22_LOCK}\``)]));
+    expect(two.filter((x: Row) => x.locks.includes(R22_LOCK))).toHaveLength(2);
+    const once = readFeRows(reg([...GOOD, row('FE-04', `OWED \`${R22_LOCK}\``)]));
+    expect(once.filter((x: Row) => x.locks.includes(R22_LOCK))).toHaveLength(1);
   });
 });
 
