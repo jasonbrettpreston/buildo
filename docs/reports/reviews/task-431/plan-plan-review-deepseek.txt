@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T00:15:26.208Z file_sha256=fbb05ba80af046bde48ffac6000f7b8c3543f557b8429572200b497347772830 prompt_sha256=3f55a1ab858a759bf738b49f90e05d4aae8052850953b3ede55e590ac4b400f5
+🔍 Lens review of docs/reports/reviews/task-431/context-r2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — FACTS.4 ("mobile/src makes no database call: grep for pool.query and .from( finds only Array.from") — mobile is routed to eng-front+eng-shared with no sections 3/9, and the only guard is a one-time two-pattern grep; any future DB client in mobile/src (new Pool, pool.connect, knex/prisma/Drizzle/supabase/sql``) is invisible and those tasks silently lose DB + pipeline safety rules with nothing turning red — add a test that fails if `mobile/src` matches `pool\.query|\.from\(|new Pool|pool\.connect|knex|prisma|drizzle|supabase|sql\``.
+
+BUG severity=MED — CUT-OVER "Running lanes" (task-372 → eng-back+eng-shared, task-381 → eng-front+eng-shared) — the set change is enforced only by "the orchestrator tells them"; if a lane merges the new rule-lists.json mid-run its close suddenly owes `out-engineering-<id>` for lists nobody prepped and fails — land the table change only after 372/381 close, or have the close state the set change mechanically instead of relying on a human relay.
+
+BUG severity=MED — CODE AND TABLE / rule-lists.mjs section selectors ("On the edited copy, validateTable returns []") — a selector that later matches zero headings (heading renamed/dropped) has no runtime fail-loud path shown; validateTable is a build-time measurement only — make validateTable (or resolveTask) hard-fail when a sections selector matches ≠ 1 heading, and confirm the lane path actually runs it.
+
+BUG severity=MED — CODE AND TABLE de-dup line `l.whole || !result.lists.some((w) => w.whole && w.file === l.file)` — the filter is unscoped and will also drop a COMPLIANCE sections list if any compliance file ever gains a whole+sections pair (fact 5 guarantees this only for today's table); no test pins that behavior — add a test asserting a non-ENG_FILE whole+sections pair still returns both, or scope the filter to ENG_FILE.
+
+DEFER severity=MED — FACTS.6/7 ("21 of the 106 open tasks", "478 keep eng-all and 1,900 get eng-back+eng-shared" of 2,378 layer23 files) — these are point-in-time measurements that drift between plan and build; re-run at build head rather than trusting the plan figures.
+
+DEFER severity=LOW — FACTS.2 title block ("The 550 characters left over are the title block") — parts-only tasks (mobile) never receive the title block, and P1 compares the joined lists to "the sections' text" not the whole file, so the drop is untested — read standards file lines 1-8 to confirm the title block carries nothing load-bearing.
+
+DEFER severity=LOW — WHAT THE ENGINEERING SEAT IS SENT table / eng-shared = 37,472 chars (80% of the 46,613 file) — every side task still carries a near-full-file part, so per-call size for shared content barely shrinks vs today; only the front- or back-exclusive sections are saved, which limits the stated "one small document per call" benefit — note this and consider splitting eng-shared later rather than claiming a large size win now.
+
+DEFER severity=LOW — CODE AND TABLE "the existing calls would refuse it: verifyResolved already runs after resolveTask in validate (:165) and check-tasks (:512)" — the lane path (backlog-lane.mjs resolve) is not shown to run verifyResolved, so a future every_task/milestone sections pair filtered by the de-dup would not be refused at lane runtime — verify backlog-lane calls verifyResolved or add it.
+
+NIT — rule-lists.json new lists added "After eng-all (:31)" — if a new list id ever collides with an existing key, JSON duplicate keys silently shadow and may not be caught by `validate` — confirm validateTable rejects duplicate list ids (or that eng-front/back/shared are unique).
+
+REJECT — OPERATOR item 1 (de-dup direction, parts-win vs whole-wins, ≤5,927-char cost) — the plan treats this as a load-bearing veto risk — it is a bounded text-size tradeoff already ruled and flagged to the operator, not a failure mode, and the anti-pattern rule forbids re-surfacing the plan's own acknowledged tradeoff as a bug.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- mobile/src on eng-front+eng-shared is pinned only by a one-time two-pattern grep; add a drift test so a future DB client in mobile/ turns red (it currently would not).
+- Running-lane cut-over (372/381) relies on human relay; a mid-run merge of the new table makes those lanes fail close with unprepared outputs.
+- Section selectors have no runtime fail-loud when a heading is renamed later; validateTable is only a build-time measurement.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- "No other file has both a whole list and a sections list" (fact 5) — verify: `node -e "const t=require('./scripts/analysis/rule-lists.json');const m={};for(const[l,o]of Object.entries(t.lists||t)){(m[o.file]??=[]).push(!!o.whole?'w':(o.sections?'s':''))}console.log(Object.entries(m).filter(([f,a])=>a.includes('w')&&a.includes('s')))"`
+- "mobile/src makes no database call" + "2,378 tracked layer23 files all get engineering text" (facts 4, 7) — verify: `grep -rnE 'pool\.query|\.from\(|new Pool|pool\.connect|knex|prisma|drizzle|supabase|sql\`' mobile/src; git ls-files | grep -c layer23`
+- "task-372 → eng-back+eng-shared, task-381 → eng-front+eng-shared, task-380 → eng-back+eng-shared" (CUT-OVER) — verify by resolving each task's Files line at build head: `node scripts/analysis/rule-lists.mjs resolve --type build --letter <lane> --files "<task-N Files line>"`
+
+---
+⏱  70465ms (70.5s)
+📊 Tokens — total: 32503, input: 19776, output: 12727, reasoning: 11336

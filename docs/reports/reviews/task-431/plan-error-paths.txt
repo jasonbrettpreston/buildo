@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T00:15:26.207Z file_sha256=fbb05ba80af046bde48ffac6000f7b8c3543f557b8429572200b497347772830 prompt_sha256=cad829e28d26b9a9e2725adaca3155ca0b8caa2b84600e0120d8d5ab7f43a57b
+🔍 Lens review of docs/reports/reviews/task-431/context-r2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-431-v4 CUT-OVER "The close judges a lane by the range base's table (check-lane-close.mjs:839-841) and runs the lane's own hook copy." — the de-dup lives in rule-lists.mjs code while the three new lists live in rule-lists.json data, so a lane that merges the board mid-flight pairs the new table with its old hook copy, resolves eng-all plus the three sections lists, sends the standards text up to four times and owes outputs it never computed — fix: carry the de-dup as table data (a serve-once or supersedes key on the sections lists) or require task-372 and task-381 to refresh the hook copy in the same step that takes the new table. — fix: state the code and table land together and add a hook-copy refresh step for 372 and 381.
+
+BUG severity=HIGH — "The default is one call per list (backlog-lane.mjs:186), so a split task makes 2 or 3 engineering calls where it made 1." — the change multiplies the engineering seat's calls per task and never states what happens when one of the 2 or 3 calls fails, times out or is retried, so the seat can be sent eng-front and eng-shared but not eng-back and review with a silently partial rule set — fix: name the per-call failure behaviour and force the joined out-engineering-rules (check-lane-close.mjs:434) whenever more than one engineering list resolves, or make the set atomic.
+
+BUG severity=MED — "verifyResolved already runs after resolveTask in validate (:165) and check-tasks (:512)." — the refusal guard is named at two call sites only, while plan-prep (:654) and the lane brief (backlog-lane.mjs:183-184) consume the filtered list with no named verify, so a later table edit that makes the filter drop an every_task or milestone list starves the seat silently at the point of use — fix: run verifyResolved after resolveTask at plan-prep and in the lane brief too.
+
+BUG severity=MED — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the dedup key compares file strings, so two lists that both lack file compare equal (undefined === undefined) and a fileless whole list drops every fileless sections list, the missing optional field path — fix: compare only when both files are set (l.file && w.file and equal) and have validateTable require file on every list.
+
+DEFER severity=MED — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — a whole list is never compared against another whole list, so two whole lists on one file both resolve and the file is sent twice, the note's "each rule is sent once" is keyed on the sections side only — fix: key the dedup on file for all lists and keep the first whole one, or assert one whole list per file in validateTable.
+
+DEFER severity=LOW — "The round-1 plan-*.txt files still in docs/reports/reviews/task-431/ make plan-prep refuse (rule-lists.mjs:643)." — the one blocking error path of this task is cleared by a manual orchestrator delete outside the lane, so a missed delete leaves the re-prep refused and the lane stalled with no automatic recovery — fix: have the lane's step 1 move superseded review artifacts aside, or let plan-prep quarantine them and print the list.
+
+REJECT — "One line before `return result` (:281)" — reads as unsafe because the filter only works if the file value copied at :246 is already on every list, otherwise every sections list would be dropped whenever any whole list resolves — handled: D1's control (src/two.ts still gives ['first','inc-F']) and D2 (four lists when the line is removed) go red if the placement or the copy order breaks.
+
+REJECT — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — reads as a repeat-write or double-count risk on a re-run — handled: resolveTask is pure and a second pass over the same result drops nothing, and an empty or unmatched Files line yields an empty lists array without throwing.
+
+VERDICT: FAIL on error-path safety
+Paths walked: de-dup re-run (idempotency), empty Files line, list with no file field, whole plus whole duplicate, split task 2 or 3 calls failing or timing out, verifyResolved at prep, brief and close, mid-lane code plus table version pair, stale round-1 plan files at prep, page --write repeated   Unguarded: 4
+
+---
+⏱  56780ms (56.8s)
+📊 Tokens — total: 29187, input: 18890, output: 10297, reasoning: 9231

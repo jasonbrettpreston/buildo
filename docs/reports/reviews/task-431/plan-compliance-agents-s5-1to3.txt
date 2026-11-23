@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.206Z file_sha256=097bc9bbbfc77af5d79c7f5d5ef91e3015a9168a0dc75da356612a4d06f060cd prompt_sha256=a64bc4288cfc7bfcede62d510e4fd785728d978b69c2e83a2950c6a9a62ec9d1
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 Q1 "drop the full engineering when arts can be sent" — plan DIRECTION OF THE DE-DUP "Ruling: whole wins." — when a whole engineering list and a sections list of the same file both resolve, the plan keeps the whole list, the inverse of the pasted ruling, and disposes of the operator with "Nothing needs his word. Two optional vetoes:" — fix: either implement parts-win (drop eng-all in the overlap) or record an explicit superseding operator ruling in MORNING-DECISIONS and cite it in BASIS before plan-lock
+DEFER severity=MED — card "front-end kinds get surface-136 plus front-end and shared" — plan NOT IN SCOPE "surface-136 on ui-app." — no plan line states whether the front-end rows already carry surface-136 or adds it, so a clause the card puts in this task is unaddressed — fix: add a fact line naming the current surface-136 state of the front-end rows, then either add the row change or record the deferral with its condition
+DEFER severity=MED — card "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — plan NOT IN SCOPE "Dropping the four surface specs (task-439)." — the plan is silent on whether INPUTS.2 has landed, and the out-of-scope line names a different action (dropping the specs) than the clause (not sending them whole to front-end kinds) — fix: state INPUTS.2's status and either make the row change or defer it in writing with the condition quoted
+DEFER severity=MED — card "11 and 14 placed at plan review" — plan rule-lists.json step 1 eng-shared "11. Plan Compliance Checklist" ... "14. The Prevention Loop" — the plan-review placement the card asks for is asserted by burying 11 and 14 in eng-shared, with no BASIS line, no ruling cited and no reason given for sending them to every front and back task — fix: add a BASIS line stating where 11 and 14 land and why, or take them out of eng-shared until ruled
+DEFER severity=MED — task-366 note "a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" plus 5.3 "run **DeepSeek + Integration against the *proposed findings/changes***" — plan LANDING "Close commit: the lane records and the status change only." — the plan never names the separate grounder nor GROUNDER.md, so the close it describes would be refused by the pasted note — fix: add the grounder, its difference from the lane and GROUNDER.md to LANDING and ACCEPTANCE
+DEFER severity=LOW — 5.2 "Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction" — plan BASIS "Every file:line below was re-read at this head." — a read of the plan's own anchors is not the §5.2 pass, and no ground-truth run against the live tree is recorded before this compliance judgement — fix: name the ground-truth pass and its head in BASIS
+REJECT — RR-0380 Q4 "by-law tasks gain no engineering rules" — the plan is accused of giving by-law tasks engineering rules via eng-back and eng-shared — plan FACT 7 "The bylaw row stays `["bylaw-133"]` (:91)" keeps the row unchanged, the text arrives through rows that already matched layer23 paths, so no by-law row gains a list
+MET — card "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — plan CODE AND TABLE "Every other row is unchanged, bylaw included." — lane-tools and the infrastructure rows are untouched
+MET — Implementation Notes task-438 ruling "add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));`" — plan CODE AND TABLE "One line before `return result` (:281)" — the ruled filter expression is placed in resolveTask at the moved anchor
+MET — RR-0380 Q4 "3 4 N" — plan FACT 7 "The bylaw row stays `["bylaw-133"]` (:91)" — by-law row unchanged
+MET — card "pipeline and by-law kinds get their handbook plus back-end and shared" — plan CODE AND TABLE "step-pipeline (:85) gets eng-back and eng-shared" — the pipeline row sends back and shared sections
+MET — card "the engineering standards entry split by section into front-end, back-end and shared lists" — plan rule-lists.json step 1 "add three lists" eng-front, eng-back, eng-shared — the split is defined on the standards file
+MET — task-423 note "The default stays one compliance run per rule list" — plan "The default is one call per list (backlog-lane.mjs:186)" — the per-list default is kept and the join is not ordered
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+Rules met: none
+
+---
+⏱  85263ms (85.3s)
+📊 Tokens — total: 29150, input: 11934, output: 17216, reasoning: 16070

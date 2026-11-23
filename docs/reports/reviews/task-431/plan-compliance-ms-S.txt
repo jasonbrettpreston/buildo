@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.206Z file_sha256=a12ce4deaf8512ccd9ec7e9333c8f048a3e362e84c53e9e9fc2de151f1b72370 prompt_sha256=eb7e7e5211bddc294e7b183ca37014a37e42b68ac6755ac3199e982401a2d886
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card, "pipeline and by-law kinds get their handbook plus back-end and shared" — plan "The bylaw row stays `["bylaw-133"]` (:91)" — by-law kinds get no eng-back and no eng-shared, and fact 7 leaves 478 by-law tasks on the whole eng-all; the only support is "Q4: by-law tasks gain no engineering rules" read out of "2. y 3 4 N", whose question text is not pasted — add eng-back and eng-shared to the bylaw row, or paste the Q4 question and the operator's answer that by-law gains none.
+
+BUG severity=HIGH — RR-0380 Q1 "drop the full engineering when arts can be sent" — plan "`src/app/api/parcels/search/route.ts` | eng-all | eng-all (it also hits ui-app; the de-dup keeps eng-all)" plus D2 "the lists on ENG_FILE are exactly `['eng-all']`" — the plan keeps the whole engineering file exactly where the parts are resolvable and pins that in a test, and its "OPERATOR Nothing needs his word" means a standing ruling is overruled by the planner, not the operator — record the operator's word for whole-wins, or send the parts so Q1 is met.
+
+BUG severity=HIGH — task card, "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — plan "Dropping the four surface specs (task-439)" under NOT IN SCOPE — the clause is moved off this card and the plan never says whether INPUTS.2 has landed, so it cannot show the clause is done or not yet triggered — state INPUTS.2's status and either drop the four specs from the front-end rows in this change or record why the condition is not met.
+
+DEFER severity=MED — task card, "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — plan "surface-136 on ui-app" (NOT IN SCOPE) — the plan neither reports INPUTS.1's outcome nor attaches surface-136, and its after-table leaves the web kind on eng-all without naming the front-end surface-136 attachment — record INPUTS.1's confirmation and attach surface-136 to ui-app, or state it did not confirm.
+
+DEFER severity=MED — task card, "11 and 14 placed at plan review" — plan `"eng-shared"`: "11. Plan Compliance Checklist", "14. The Prevention Loop" — sections 11 and 14 are put in the build-time shared list; the plan shows no plan-review-only placement and its ACCEPTANCE runs only `resolve --type build` — show the plan-review resolution, or carry 11 and 14 on a plan-review-only list.
+
+DEFER severity=LOW — orchestrator note, "change the line of PLAN-431-v3 that says it relies on 438's de-dup" — NONE — the plan says "This plan supersedes PLAN-431-v3" but never names or quotes the reliance line it changes, and v3 is not pasted — name the v3 line and its replacement text in this plan.
+
+MET — task card "the engineering standards entry split by section into front-end, back-end and shared lists" — rule-lists.json:31 — three lists eng-front, eng-back, eng-shared with explicit section names are added after eng-all.
+
+MET — RR-0380 Q2 "sections 8, 10 and 12 go to both sides" — plan eng-shared — 8, 10 and 12 sit in eng-shared, which both mobile (front) and step-pipeline/api-lib (back) receive.
+
+MET — orchestrator note "in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter(...)`" — plan code line — the line is quoted verbatim and placed before "return result" (:281), with the moved anchor noted.
+
+MET — orchestrator note "with one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed)" — D1 — a temp-table test on `first`/`whole`, plus a sections-only control, with the line-removed planted defect, is specified.
+
+MET — task card "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — K1 — scripts/hooks/x.mjs and scripts/surfaces/x.mjs are pinned to `['eng-all']`.
+
+MET — RR-0385 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" — WHAT THE ENGINEERING SEAT IS SENT table — mobile gets eng-front plus eng-shared, pipeline and api-lib get eng-back plus eng-shared.
+
+MET — orchestrator note "add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line" — Files line — both files are on the card's Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 5
+Rules met: none
+
+---
+⏱  66133ms (66.1s)
+📊 Tokens — total: 22347, input: 8743, output: 13604, reasoning: 12484

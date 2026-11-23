@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.210Z file_sha256=b583ece775a029631be0b92f89027e2ae190022397fcfcfa31861939ad2c64d1 prompt_sha256=6ab1e04a2d01ba4da7f1caf4496e3e597ecef293069f3ceb7ad361ed6e914ba5
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 08 §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — plan PLAN-431-v4 "The measurements were made in memory with the table's own functions (resolveTask, validateTable, buildLensInputs). No file was written and no test was run." — the plan states executed-only values as measured (40,686; 42,849; 46,063; "21 of the 106 open tasks that resolve (309 open)"; "478 keep eng-all and 1,900 get eng-back + eng-shared") while the card demands "Proof before the switch at plan review.", so the switch rests on unexecuted claims — run `rule-lists.mjs resolve/page --check`, `check-tasks` and both test files at 3a77bf98d, paste the outputs into the plan, or mark every such value UNVERIFIED beside the number.
+
+BUG severity=HIGH — spec 08 §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — plan PLAN-431-v4 "Red now at the `not.toContain('first')` assertion." against its own "Whether each test is actually red and then green (nothing was run)." — red is claimed for D1, D2, S1, P1 and X1 with no run behind it, so no lock is shown red at its designed assertion — run the five cases once before plan-lock and record rc and the failing assertion line for each.
+
+DEFER severity=MED — card Description "the engineering standards entry split by section into front-end, back-end and shared lists (sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared; 11 and 14 placed at plan review)" — plan PLAN-431-v4 `"eng-front": { "sections": ["1. Architecture & UI Standards"] ...`, with 8, 10 and 12 placed in `eng-shared` — the card puts sections 8, 10 and 12 front end and the plan puts them on both sides; the only pasted support is the token "2. y" whose question text is not pasted — paste the Q2 question beside the split, or restore 8, 10, 12 to `eng-front` as the card names.
+
+DEFER severity=MED — card Description "11 and 14 placed at plan review" — plan PLAN-431-v4 `"eng-shared": ... "11. Plan Compliance Checklist", ... "14. The Prevention Loop"` — sections 11 and 14 ride `eng-shared` into every stage's list, not plan review only, and the plan never addresses the card's placement — put 11 and 14 in a plan-only list or state the ruling that supersedes the card line.
+
+DEFER severity=MED — card Description "pipeline and by-law kinds get their handbook plus back-end and shared" — plan PLAN-431-v4 "The bylaw row stays `["bylaw-133"]` (:91)." and "After the edit, 478 keep eng-all and 1,900 get eng-back + eng-shared. None gains a list." — by-law kinds gain no `eng-back` or `eng-shared`, so the card clause is unmet and the plan's support is only the token "4 N", whose question text is not pasted — paste the Q4 question, or attach `eng-back` and `eng-shared` to the bylaw row.
+
+DEFER severity=MED — spec 08 §7 final-2 note "It comes to the operator only when ... (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways)" — plan PLAN-431-v4 "Ruling: whole wins." and "Nothing needs his word. Two optional vetoes:" against RR-0380 "drop the full engineering when arts can be sent" — the de-dup direction overrides a pasted operator answer and is withheld from him although the pasted test names exactly this case — put the parts-win versus whole-wins direction to the operator as one question before lock.
+
+DEFER severity=MED — spec 08 §11.2 dated note 2026-11-21 "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md" — plan PLAN-431-v4 "The round-1 plan-*.txt files still in docs/reports/reviews/task-431/ make plan-prep refuse ... The orchestrator removes them before the re-prep; git keeps them." — v4 folds the round-1 records, has the round-1 files deleted, and schedules no grounder re-execution of the fold and no FOLD-CHECK.md, so the fold is unvalidated — add the grounder step re-running every claim of the v3 to v4 fold and writing FOLD-CHECK.md before plan-lock.
+
+DEFER severity=LOW — spec 08 §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan PLAN-431-v4 "Recommendation: keep whole-wins." and "Recommendation: keep eng-all." carry no rule quoted with file:line — both vetoes would leave the orchestrator uncited — attach the file:line quote for each recommendation (`rule-lists.json:4` and the RR-0380 line).
+
+MET — spec 08 §7 dated note 2026-11-22 "A rule list whose file is the engineering standards ... is reviewed by `lens-engineering.md`" — plan fact 1 — `eng-front`, `eng-back` and `eng-shared` carry the same `file`, so `seatOf` keeps the engineering seat at plan-prep, brief, close and launch gate with no routing change.
+MET — the same note "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — plan SPEC 08 note "one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`".
+MET — card Description "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — plan K1 and "web, tooling, spec kinds; src/features; scripts/hooks | eng-all | unchanged".
+MET — spec 08 §11.4 "The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan" — plan TESTS names each case, its fixture, its planted defect and its direction.
+
+REJECT — card Description "front-end kinds get surface-136 plus front-end and shared" — accused of dropping surface-136 on ui-app — the card conditions it on "if INPUTS.1 confirms the oversight" and the task note puts the surface specs on a separate card after task-430.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 8
+Rules met: none
+
+---
+⏱  103385ms (103.4s)
+📊 Tokens — total: 32033, input: 19191, output: 12842, reasoning: 11275

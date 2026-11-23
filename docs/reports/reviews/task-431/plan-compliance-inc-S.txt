@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.210Z file_sha256=ee234754c64a376d08c8cda47f65cbb49d67655d5741db48cc2ff9f3b4560763 prompt_sha256=9ad4b5c1f62a916eaa62c0143e336ac1466be44d1c994ccb7e4fee88f4a2377b
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card-431 "front-end kinds get surface-136 plus front-end and shared" — plan "surface-136 on ui-app." (NOT IN SCOPE) — no row in the table edit gains surface-136, so no front-end kind is sent it and the clause is unmet — add surface-136 to the front-end rows in this task, or paste INPUTS.1's result and the operator's word that it is not attached.
+
+BUG severity=HIGH — RR-0385 item 7 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" — plan "The web kind stays on eng-all." — the web and src/features front-end kinds still receive the whole 46,613 character document instead of front-end plus shared, so the seat is not served the right sections — split the ui-app and surfaces rows into eng-front, eng-back and eng-shared so front-end kinds stop resolving eng-all.
+
+DEFER severity=MED — card-431 "11 and 14 placed at plan review" — plan "eng-shared": "11. Plan Compliance Checklist" ... "14. The Prevention Loop" — sections 11 and 14 are sent to the front-end and back-end rows and no plan-review list carries them, so the placement the card names is unmet — add a plan-review list holding 11 and 14, or paste the operator's word moving them to shared.
+
+DEFER severity=MED — RR-0380 Q1 "the whole engineering document is dropped when its parts can be sent (option b)" — plan "Cost: on a mixed task, at most 5,927 characters more than the parts would be." — on a mixed task the whole document still goes where parts can be sent, so Q1's direction is inverted on the plan's own authority — get the operator's word for whole-wins, or make the filter prefer the sections list.
+
+DEFER severity=LOW — card-431 "Proof before the switch at plan review" — plan "UNVERIFIED - Whether each test is actually red and then green (nothing was run)." — the plan carries no red or green evidence, only a commitment to record red.out — record the actual red output before plan-lock.
+
+REJECT — card-431 "pipeline and by-law kinds get their handbook plus back-end and shared" — plan keeps the bylaw row on bylaw-133 only — RR-0380 "2. y 3 4 N" read as "Q4: by-law tasks gain no engineering rules" supersedes the card wording.
+
+REJECT — card-431 "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — plan "Dropping the four surface specs (task-439)." — the pasted 2026-11-22 note says "The four surface specs are dropped by a separate card after task-430", so the deferral matches the note.
+
+REJECT — card-431 "sections 1, 8, 10, 12 front end" — plan places 8, 10 and 12 in eng-shared — RR-0380 Q2 rules "sections 8, 10 and 12 go to both sides", and eng-shared is added to both the front-end and the back-end rows.
+
+MET — task-438 note "add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));`" — plan CODE AND TABLE — the plan's line is verbatim the mandated filter, placed before return result.
+
+MET — task-438 note "add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line" — plan Files line — both files are present.
+
+MET — task-438 note "one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed)" — plan D1 — the temp-table test with the planted defect is specified.
+
+MET — RR-0380 Q2 "2. y 3 4 N" read as "sections 8, 10 and 12 go to both sides" — plan eng-shared list — 8, 10 and 12 sit in the list both front-end and back-end rows receive.
+
+MET — RR-0380 Q4 "by-law tasks gain no engineering rules" — plan "The bylaw row stays `[\"bylaw-133\"]` (:91)" — no engineering list added to the by-law row.
+
+MET — card-431 "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — plan K1 — scripts/surfaces and scripts/hooks resolve exactly ['eng-all'] before and after.
+
+MET — card-431 "pipeline and by-law kinds get their handbook plus back-end and shared" (pipeline half) — plan "step-pipeline (:85) gets eng-back and eng-shared" — step-pipeline row receives both sections lists.
+
+MET — RR-0385 "tests are the focus" — plan TESTS — six red-first tests, D1, D2, S1, K1, P1, X1, each with a planted defect.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+Rules met: none
+
+---
+⏱  65684ms (65.7s)
+📊 Tokens — total: 27919, input: 14197, output: 13722, reasoning: 12559

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.211Z file_sha256=0de967f4e3bea28c9816ba454babed9a393ad0762a9c5f05dfacd7edfad319b7 prompt_sha256=d5a8df362d46a6c01f42dcd0f7ff465bd31deaee9281f9977861a09e47c26290
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared; 11 and 14 placed at plan review" — PLAN-431-v4 CODE AND TABLE "`eng-shared`: same file, `["2. Error Handling & Stability", ... "11. Plan Compliance Checklist", ... "14. The Prevention Loop"]`" — sections 11 and 14 land in eng-shared, so they are sent to mobile, pipeline-step and api-lib tasks instead of being placed at plan review, clause unmet — remove 11 and 14 from eng-shared, attach them to the plan-review lists, and change P1's "exactly one of the three lists" partition so they are still covered.
+
+BUG severity=HIGH — card Description "pipeline and by-law kinds get their handbook plus back-end and shared" and plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-431-v4 BASIS "Q4: by-law tasks gain no engineering rules." against FACTS "After the edit, 478 keep eng-all and 1,900 get eng-back + eng-shared" — the bylaw row stays `["bylaw-133"]` while the plan's own fact 7 has bylaw-path files receiving eng-back + eng-shared through other rows, and Q4 is paraphrased with no operator words quoted — quote RR-0380 item 4 verbatim from MORNING-DECISIONS.md:1865 or add eng-back and eng-shared to the bylaw row at rule-lists.json:91.
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent" — PLAN-431-v4 CODE AND TABLE "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" plus OPERATOR "1. The de-dup direction. Parts-win (drop eng-all) would follow Q1 literally ... Recommendation: keep whole-wins." — on a mixed task the three parts do cover the whole file, so Q1's condition "when arts can be sent" is met and the whole 46,613 characters are sent anyway; the plan rules a direction the record already holds and files it as an optional veto while saying "Nothing needs his word" — obtain the operator's word on the direction and paste it verbatim, or adopt parts-win.
+
+DEFER severity=MED — card Description "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — PLAN-431-v4 NOT IN SCOPE "Dropping the four surface specs (task-439)." — the plan neither records whether INPUTS.2 has landed nor carries the conditional removal, so the card clause has no owner or gate in this plan — record INPUTS.2's status and either carry the removal here or cite the ruling that moved it to task-439.
+
+DEFER severity=LOW — card Description "ui-app attaches surface-136 if INPUTS.1 confirms the oversight" — PLAN-431-v4 NOT IN SCOPE "surface-136 on ui-app." — the plan settles ui-app without stating whether INPUTS.1 confirmed or denied the oversight that the card conditions surface-136 on, so the conditional cannot be discharged — state INPUTS.1's outcome in the plan's basis.
+
+DEFER severity=LOW — plan-protocol section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — PLAN-431-v4 SPEC 08 NOTE "engineering standards :465 ... and Spec 137 Rule 10 (:125)" and "Also change .claude/review-templates/README.md:101" — the two doc edits rest on rule lines that are not pasted in this context, so their source cannot be checked here — paste :465 and 137_mcqueue.md:125 into the plan's basis so the 08_agents.md note and README edit carry a checkable source.
+
+REJECT — plan-protocol section 4 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — the plan shows no seat verdicts — not a real issue: the dated note "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce ... plus its separate grounder" bounds a lane task to that set, so the nine-seat roster does not bind this plan.
+
+MET — card note "in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter(...)`" — PLAN-431-v4 CODE AND TABLE "One line before `return result` (:281): `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));`" — the line is carried word for word and the moved anchor re-measured.
+MET — card Description "pipeline ... kinds get their handbook plus back-end and shared" — PLAN-431-v4 CODE AND TABLE "step-pipeline (:85) gets eng-back and eng-shared." — satisfied for the pipeline row.
+MET — card Description "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — PLAN-431-v4 TESTS "K1 ... scripts/surfaces/x.mjs, scripts/hooks/x.mjs" resolve exactly `['eng-all']` before and after — infrastructure rows unchanged.
+MET — card Description "Proof before the switch at plan review." — PLAN-431-v4 FACTS "Measured: without the line, 21 of the 106 open tasks that resolve (309 open) would get eng-all plus a sections list. With the line, none would." — the measurements and red-first tests are the proof offered before the switch.
+MET — plan-protocol section 5 item 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-431-v4 "ESTIMATE (GUESS) One code line, about 20 table lines, about 70 test lines ... about two hours." — estimate present and labelled GUESS.
+MET — plan-protocol section 0 "Every new task carries its SOURCE ... A task with no source is not added." — PLAN-431-v4 BASIS "RR-0385 item 7 (MORNING-DECISIONS.md:1923 ...)" — each list, row change and code line cites a card line or ruling file:line.
+MET — RR-0385 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" — PLAN-431-v4 WHAT THE ENGINEERING SEAT IS SENT "`mobile/src/app/x.tsx` | eng-all, 46,613 | eng-front + eng-shared, 40,686" — the seat receives side-specific sections per task.
+MET — plan-protocol section 3 "No new research topics." — PLAN-431-v4 NOT IN SCOPE "Tests that mirror the rules (tasks 367, 441, 442)." — the plan stays on the table edit and the de-dup line and opens no research topic.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 3
+Rules met: none
+
+---
+⏱  72231ms (72.2s)
+📊 Tokens — total: 25740, input: 10357, output: 15383, reasoning: 13757

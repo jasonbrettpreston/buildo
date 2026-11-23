@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.209Z file_sha256=fc034864c7e82a90d74b5ea15cccddee8ff68a22a93e5c257ef768cccd0726b7 prompt_sha256=32d535f9e5e37ce1fd870d894672dfdc3e60bb95695d633d5f0aaa5445b5f1ac
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card Description, THIS TASK steps 3 and 4 "front-end kinds get surface-136 plus front-end and shared" — NONE in PLAN-431-v4; its exclusion reads "surface-136 on ui-app" only — no row in the plan gains surface-136, and the one exclusion named is ui-app, so the front-end-kind half of the card is unmet — add surface-136 to the front-end kind rows in rule-lists.json, or record a named deferral with the operator's word quoted.
+
+BUG severity=HIGH — task card Description "pipeline and by-law kinds get their handbook plus back-end and shared" — PLAN-431-v4 "The bylaw row stays `["bylaw-133"]` (:91)." and "Every other row is unchanged, bylaw included." — by-law kinds get neither eng-back nor eng-shared, contrary to the card, and the override rests on "Q4: by-law tasks gain no engineering rules", whose question text is not pasted (only "2. y 3 4 N") — apply eng-back and eng-shared to the by-law row, or paste Q4's question and the operator's answer as the authority for leaving it unchanged.
+
+BUG severity=HIGH — task card Description "2, 4, 5, 6, 7, 13 shared; 11 and 14 placed at plan review" — PLAN-431-v4 `"eng-shared"`: `["2. Error Handling & Stability", ... "11. Plan Compliance Checklist", "12. Frontend Foundation Tooling", "13. Observability Standards", "14. The Prevention Loop"]`, note "(sections 2, 4 to 8 and 10 to 14; RR-0380 Q2)" — sections 11 and 14 are moved from plan review into a lane-time list and that placement is attributed to RR-0380 Q2, which names only sections 8, 10 and 12 — remove 11 and 14 from eng-shared and attach them at plan review as the card says, or obtain the operator's word for the move.
+
+BUG severity=MED — Spec 137 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`" — PLAN-431-v4 SPEC 08 NOTE "Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7 and RR-0380 Q1; operator, verbatim," — the queue and lane fields are missing and a label (McFix Final) sits where the queue belongs — write it as "task-431 INPUTS.3 · Backlog · lane BL-INPUTS3; operator, verbatim: ..." before the note is committed.
+
+BUG severity=MED — Spec 137 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue" — PLAN-431-v4 BASIS and SPEC 08 NOTE ":1865 "drop the full engineering when arts can be sent"" — the note quotes a fragment and drops the ruling's condition, pasted on the card as "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — quote the full RR-0380 line verbatim.
+
+BUG severity=MED — Spec 137 §5a, dated note 2026-11-19 "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` ... and `Recommendation:` ...; every other decision reaches the operator only with a verified recommendation" — PLAN-431-v4 OPERATOR "Nothing needs his word. Two optional vetoes: 1. **The de-dup direction.** ... Recommendation: keep whole-wins." — the two open decisions reach the operator from a plan document with a Recommendation line only, no `Grounded:` line, no verified or UNVERIFIED mark, and not as an OPERATOR task — put both vetoes on the row in status OPERATOR with `Grounded:` and `Recommendation:` lines, or delete them.
+
+BUG severity=MED — RR-0380, pasted on the task card "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — PLAN-431-v4 table "`mobile/src/app/x.tsx` | eng-all, 46,613 | eng-front + eng-shared, 40,686" — the whole engineering document is dropped from the phone row now, while the ruling makes that conditional on the handbook update and the card ties the switch to "once INPUTS.2 has landed", neither shown met — hold the row switch until the condition lands, or record the operator's word that it is met.
+
+MET — Spec 137 Rule 3, dated note 2026-11-20 (two-commit close) — PLAN-431-v4 LANDING — "Work commit: the code line, the table, the tests, the Spec 08 note ... `Task: task-431`." and "Close commit: the lane records and the status change only."
+
+MET — Spec 137 Rule 3, dated note 2026-11-21 (task-423, one run per list is the default, joined accepted) — PLAN-431-v4 "The default is one call per list (backlog-lane.mjs:186) ... The joined form `out-engineering-rules`, already accepted (check-lane-close.mjs:434), makes 1."
+
+MET — task card Description "the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137)" — PLAN-431-v4 table "web, tooling, spec kinds; src/features; scripts/hooks | eng-all | unchanged".
+
+MET — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — PLAN-431-v4 CODE AND TABLE — the plan edits rule-lists.json, rule-lists.mjs and the tests and regenerates the page, no Status: line is edited from a board.
+
+REJECT — Spec 137 Rule 3, dated note 2026-11-20 task-410 (the closing commit stages only the lane's records) — that the work commit carries docs/specs/00-architecture/08_agents.md and .claude/review-templates/README.md outside the lane directory — that note restricts the closing commit, and these files ride the work commit that lands the change.
+
+REJECT — Spec 137 Rule 3 "The status line changes in the same commit as the work." — that task-431's status moves in a separate commit — the same rule's 2026-11-20 amendment requires exactly the two-commit close for lane build and fix tasks, which this is.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 7
+Rules met: none
+
+---
+⏱  93002ms (93.0s)
+📊 Tokens — total: 38565, input: 18449, output: 20116, reasoning: 18576

@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T00:15:26.206Z file_sha256=f4759f09aa7528f7cf74ebacdabd55dbdd0fbe3f1e1651ba1a5546be3ada9907 prompt_sha256=009cdd5e7cfa1f8a2c290ec4f29ba56667ca80beebe0ab2c09f72b8d35c0dc99
+🔍 Lens review of docs/reports/reviews/task-431/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 Q1 "drop the full engineering when arts can be sent" — plan "The web kind stays on eng-all. Its descriptor path hits step-pipeline (eng-back, eng-shared), while ui-app and surfaces bring eng-all, and the de-dup keeps eng-all"; acceptance "`--files src/app/api/parcels/search/route.ts` gives eng-all and no sections list" — every task whose paths touch ui-app or surfaces still receives the whole 46,613-character standards file, so the pasted ruling is unmet for those front-end kinds — give ui-app and surfaces eng-front, eng-back and eng-shared (the plan itself says "They could send the three parts instead of eng-all") and re-measure, or record the operator's explicit waiver of Q1 for those rows.
+
+BUG severity=HIGH — card "Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed" — plan "NOT IN SCOPE - Dropping the four surface specs (task-439)." — the plan never states whether INPUTS.2 has landed, so this card clause is neither done here nor shown inapplicable, and task-439 is not pasted anywhere — add one line recording INPUTS.2's status, and either do the drop in this commit or name the confirmed blocker that keeps it out.
+
+BUG severity=MED — card "front-end kinds get surface-136 plus front-end and shared" — plan "NOT IN SCOPE: surface-136 on ui-app" and the only row edits are "mobile (:147) gets eng-front and eng-shared" — nothing adds surface-136 to any front-end kind and the plan does not state that mobile, web or ui-app already carry it (those rows cannot see) — one line per front-end row giving its surface-136 status, plus INPUTS.1's status for the ui-app oversight.
+
+DEFER severity=MED — card "11 and 14 placed at plan review" — plan eng-shared holds "11. Plan Compliance Checklist" and "14. The Prevention Loop" — the placement of the two deferred sections is made silently inside a list defined as "sections 2, 4 to 8 and 10 to 14", with no plan-review decision recorded and no ruling quoted for it — add the one-line plan-review placement decision for sections 11 and 14 and its basis.
+
+DEFER severity=MED — BASIS clause the plan itself cites, "A list is used WHOLE ... Never a hand-picked clause" (rule-lists.json:4) — plan "the engineering standards entry split by section into front-end, back-end and shared lists" — the plan quotes the whole-list rule as binding and then carves one file into three curated section lists without naming a clause that overrides the whole-list rule for sections within a file — reconcile the two in BASIS, citing the ruling that permits section selection (RR-0380 Q1) or marking rule-lists.json:4 as superseded for this file.
+
+DEFER severity=LOW — task-438 plan ruling "rule in its plan the direction against RR-0380 Q1" — plan "Nothing needs his word. Two optional vetoes: 1. The de-dup direction. Parts-win (drop eng-all) would follow Q1 literally" — the plan takes the direction under the 438 ruling's authority yet presents it as an open operator veto, which reads as an unresolved operator dependency at plan-lock — state in BASIS that whole-wins is exercised under the 438 ruling, and move the 5,927-character cost to a stated accepted cost rather than a veto item.
+
+REJECT — card "pipeline and by-law kinds get their handbook plus back-end and shared" — plan "The bylaw row stays ["bylaw-133"] (:91)" — this is not a miss, because RR-0380 Q4 "by-law tasks gain no engineering rules" is the later pasted operator ruling the plan follows, and the bylaw layer's files still change set through the step-pipeline row (fact 7).
+
+MET — task-438 plan ruling, the de-dup line — plan "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — filter is verbatim, placed before `return result` (moved to :281), direction ruled against Q1, with one resolveTask temp-table test D1 carrying the planted defect.
+
+MET — task-438 plan ruling, Files line — plan Files block — scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts are both added, as the ruling requires.
+
+MET — RR-0385 item 7 "this now serves teh engineering seat with the right sections for the task - front-end vs backend" — plan "eng-front", "eng-back", "eng-shared" added after eng-all (:31) and routed to the mobile, pipeline and api-lib rows.
+
+MET — RR-0380 Q2 "sections 8, 10 and 12 go to both sides" — plan eng-shared "8. Next.js & TypeScript Constraints", "10. Frontend/Backend Boundary", "12. Frontend Foundation Tooling" — all three ride the shared list that both sides resolve.
+
+MET — card "the lane-tools and other infrastructure rows unchanged" — plan K1 "scripts/surfaces/x.mjs, scripts/hooks/x.mjs ... resolve exactly ['eng-all']" — infra rows keep eng-all and are asserted unchanged.
+
+MET — card "Proof before the switch at plan review" — plan "WHAT THE ENGINEERING SEAT IS SENT (measured; material 30,000; lens-engineering.md)" — before/after character counts per resolved set are supplied as the plan-review proof.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  64198ms (64.2s)
+📊 Tokens — total: 21984, input: 9533, output: 12451, reasoning: 11170
