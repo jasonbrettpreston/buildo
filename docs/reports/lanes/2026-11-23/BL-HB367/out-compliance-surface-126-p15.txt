@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:46:53.050Z file_sha256=ea6b3a17e5b93e8771caf0ba6ebb42b07dc3ea28d5aff0545dafefdaed02e0af prompt_sha256=ecf6de8fde8ffacc666d0721c5d92885be17f94145ce027dc1a000f705c07de3
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p15.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" with the diff's own note "FE-51 stays OWED and joins FLIP_PENDING" — the ruling names three rows flipping to RULED and only FE-49/FE-54 do; FE-51's lock lands (nav-tab-switch.logic.test.ts) but its row stays OWED, so the third row of the ruling is unapplied — flip FE-51 to RULED with its dated note in this commit, or record the operator's answer to Q-D permitting the holdout, before merge.
+
+DEFER severity=MED — §6.1 step 1 "Declare the table in git, as descriptor data — `database.tables[]` inside the owning CONTRACT (or JOB) descriptor" — src/tests/surfaces/scope-fence.logic.test.ts "for (const k of ['inputs', 'outputs', 'evidence'] as const) {" — the descriptor arm never scans `database.tables[]`, the location §6.1 makes the home of table declarations, so a contract declaring lead_parcels there reads green — add 'database' to the scanned key list and to the Descriptor type, with a RED case proving it.
+
+DEFER severity=MED — acceptance criteria "#2 Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" and "router.push(PARCEL_TAB_ROUTE.account)" — the tree is not clean: two live tab pushes are allow-listed, so green is produced by named exception while the rule the file tests is still violated twice on the real tree — either land navigate in _layout.tsx/tracked.tsx in this commit or paste the operator's word approving the two exceptions (Q-D) into the record.
+
+DEFER severity=LOW — acceptance criteria "#3 The handbook no-check lists shrink by the rules gated, by their generators" — "AC3: Status: OWED count 20 (NOT-YES branch: 20)" — the recorded OWED count is stated without a pre-change baseline and the regenerated handbook/rule-map/page output is not in this chunk (cannot see), so the shrink AC3 requires is unverified here — state the before and after OWED counts in the closing commit's record.
+
+MET — acceptance criteria "#6" (SPEC LINK per file) — src/tests/surfaces/nav-tab-switch.logic.test.ts "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)" — each of the three files in this chunk is on the card's Files list and carries its FE id and spec pointer.
+
+MET — acceptance criteria "#2 Each gate is shown red on a planted defect" — src/tests/surfaces/scope-fence.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit'" and src/tests/surfaces/nav-tab-switch.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" — both new locks ship in-memory planted-defect cases plus a stale-entry case.
+
+MET — §9 Core Logic 7 "derive the verdict from the resulting rows, never a parallel boolean" — src/tests/surfaces/nav-tab-switch.logic.test.ts "export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] }" — the verdict is computed from the scanned findings and entry counts, not a stored flag.
+
+MET — RR-0386 "Task-367: gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts "TESTED, over the MaxBLD code and descriptors of the programme scope" — the chunk adds handbook locks only; no relaxed gate-A/atom-purity or literal wiring appears.
+
+REJECT — §6.3 "A copy in a table is a copy to keep in sync" — accused: src/tests/surfaces/nav-tab-switch.logic.test.ts "const TABS = ['account', 'lookup', 'tracked'];" is a hand copy of PARCEL_TAB_ROUTE's keys — not a real issue: the parse is fail-closed ("Throws unless exactly the three tabs"), so a renamed or added tab reds the test loudly rather than drifting silently.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+
+---
+⏱  58898ms (58.9s)
+📊 Tokens — total: 36822, input: 24203, output: 12619, reasoning: 11516

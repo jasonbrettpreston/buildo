@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:43:22.377Z file_sha256=7f9d061ce4b4d07f6bffbf888d47e884cd09fa3e9d3b83d41d47eeac36bfb4ef prompt_sha256=d371e404918d45373a21d3bcfddd2ff8b58e7ea11ae30fbeef220782ccbe60df
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "yes to both A. Status flip." (pasted decisions: "the three handbook rows flip to RULED with their tests; the operator confirms the three rows") — docs/reports/panels/MF-98.json "Q-D open: may fe.51 read RULED while its lock carries two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)? Until the operator answers, the row stays OWED on FLIP_PENDING." and the added queue row "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" — the fe.51 lock lands in the same work commit yet the row is left OWED, so RR-0413 A, the row's own done-condition and AC3 "The handbook no-check lists shrink by the rules gated" are unmet by one of the three gated rules — flip fe.51 to RULED with the two named owned exceptions in the landing commit, or record the operator's answer to Q-D and state the flip is withheld by that answer rather than by an orchestrator question.
+
+BUG severity=MED — FE-49 rule text "`lead_parcels` is read by no surface." (128:205, R-03) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "the platform_shared standing exception is outside the lock" — the row now reads RULED while one surface path the rule names is deliberately excluded from the lock and held only by a note, so the fence the status claims is narrower than the rule — widen the scope-fence lock to platform_shared programme_scopes in this commit, or leave FE-49 OWED until the later batch row that widens it lands.
+
+BUG severity=MED — FE-54 rule text "An unhandled state is a FAIL, not a blank screen." (128:39, rule 12) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers" — the row reads RULED while a live failure with no declared state exists and 8 descriptors are outside the lock's judgement — keep FE-54 OWED, or write the narrowed claim (declaration-only for contract readers in programme scope, error state only) into the Ruling cell so RULED does not assert the whole rule.
+
+DEFER severity=LOW — the pasted queue rule "arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`<br>OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22" — the status cell carries both words, so any status reader that does not take the first value can still read the row as OWED — label the retained text "prior status OWED", as the dated note in the same cell already does.
+
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "B: the three rows are the list" — the three gated rows are named and cited to RR-0413 before the locks land.
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — pasted acceptance block "red.out 'Test Files  3 failed (3)' lines: 1" and "Test Files 5 passed (5), Tests 67 passed (67)" — red at the designed assertions, then green recorded.
+MET — AC3 "by their generators" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" — both generated pages were re-run by their commands and moved with the register.
+MET — RR-0386 "Task-367: gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md "Not in this row: ... the parked branch wf1/inc1b-gates (RR-0386)." — the parked gates are untouched and out of scope.
+MET — RR-0412 "both 442 and 367 should be running once this push lands" — .cursor/MCFRONTEND-QUEUE.md "MF-97 is held by lane BL-FEDB442 (task-442, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-97)" — both lanes and their id claims are recorded without reuse.
+MET — pasted card Files list "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json" — all seven chunk-1 paths named on the card are touched, no path outside the card is added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+Rules met: none
+
+---
+⏱  58212ms (58.2s)
+📊 Tokens — total: 49385, input: 36370, output: 13015, reasoning: 11783

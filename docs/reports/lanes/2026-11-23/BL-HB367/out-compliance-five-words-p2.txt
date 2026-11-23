@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:42:36.668Z file_sha256=bf84c656efe638d16ab73cb3675f48304b0e7f93e1a94e7a9b74d717230a3b61 prompt_sha256=323cddc9fe8a4aaecb92118e07c88ec6248581183cd6c73aae1032823067cca6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.49 (Spec 136, quoted in the file header) "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:72 "if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);" — only ImportDeclaration and ExportDeclaration nodes are checked for screen names, so a lazy or dynamic import of a lead screen, e.g. dynamic(() => import('@/features/leads/LeadDetail')) or require('@/screens/LeadDetail'), yields zero hits while the header claims ":9 an import or export that names a lead screen ... in its module path"; a declared file can link LeadDetail and test A stays green — in the visit function, when the node is a CallExpression whose expression is the import keyword or the identifier require and whose first argument is a string literal, run namesLeadScreen on that literal's text.
+
+DEFER severity=MED — fe.49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:30 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — a plain link to the lead product, '/(app)/leads', '/leads/[id]' or '/leads/feed', matches none of the five prefixes and is not among the stated ":16 LIMITS (stated, not widened)", so a Link href="/leads/feed" in a declared file passes — add the bare lead and lead-feed prefixes to LEAD_ROUTES, or list them in LIMITS so the hole is declared.
+
+DEFER severity=MED — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:127 "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {" against the five cases on :129-133 — no case exercises the identifier branch (:74), an export-from, FlightBoard or lead-detail, or LEAD_ROUTES entries 3 to 5, so deleting any of those branches or prefixes stays green, "each linkage form" is wider than the proof — add one planted case per branch and per route prefix.
+
+DEFER severity=LOW — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:135 "for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);" — the committed plant is in memory only, so the real-tree path (inScopeDescriptors, declaredFiles, git ls-files filtering) is never shown red in this artifact; the real-tree red proof lives in docs/reports/reviews/task-367/red.out, not pasted, cannot see — keep one real-tree plant behind an env flag, or cite the red.out path and its failing assertion in the SPEC LINK block.
+
+MET — Glossary lock / lock-db / check / hook "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the file is under src/tests, names FE-49 and asserts the fence in test A.
+
+MET — RR-0413 "task-367: the three handbook rows flip to RULED with their tests" — src/tests/surfaces/scope-fence.logic.test.ts:112 "describe('fe.49: the scope fence (Spec 128 R-03)', () => {" — the FE-49 row's test is the file under review.
+
+MET — grounder verdict "(3) print the scanned-file count, fail on a zero-file walk" — src/tests/surfaces/scope-fence.logic.test.ts:119 "console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`)" with :122 "expect(files.length).toBeGreaterThanOrEqual(41);" — the count is printed and a zero-file walk fails.
+
+MET — RR-0386 "gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts:20 "import { execFileSync } from 'node:child_process';" — the file builds no gate A, B or C machinery, only the handbook rule test.
+
+MET — fe.49 "lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:88 "if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });" — descriptor table refs in inputs, outputs and evidence are checked as fence hit (4).
+
+REJECT — AC#1 "The gate list is confirmed by the operator before any gate is built" — accused of building gates before the operator confirmed the list — not a real issue: RR-0386 parked gates A, B and C, and this file is a handbook rule lock confirmed by RR-0413 "yes to both A. Status flip.", not one of the parked gates.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+Rules met: none
+
+---
+⏱  65874ms (65.9s)
+📊 Tokens — total: 24554, input: 9576, output: 14978, reasoning: 13714

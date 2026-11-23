@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T18:40:32.446Z file_sha256=9bd01515209f81497a7828ea3d6ceae3fbfbdcee14c2a33419a66d293089dbea prompt_sha256=055d5163f30d4ee244fe437c6f89baaddc2e6c7277f161abe9374c9e02b85979
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/surfaces/scope-fence.logic.test.ts:42 "const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));" — a bare prefix match counts harmless routes such as "/(app)/map-view", "/(app)/flight-board-x" or "/api/leads-count" as lead linkage and would fail the lock at test A — match on a path boundary, e.g. a regex anchored as `^<route>(?:[/?#]|$)`.
+
+DEFER severity=LOW — src/tests/surfaces/scope-fence.logic.test.ts:66 "return; // the module path is checked above; its string is not a route or a table read" — the early return skips the identifier walk, so an import binding named `lead_parcels` (rule 1, "an identifier that holds lead_parcels") is never reported — also test the collected bound names against `LEAD_TABLE_RE` before returning, or fall through to the identifier visit.
+
+NIT — src/tests/surfaces/failure-state-declared.logic.test.ts:48 "const ea = d.errors?.answer ?? 'none';" — a descriptor with no `errors` block at all is reported as "its errors answer is none", conflating a missing field with the literal value `none` — add a distinct branch (e.g. "declares no errors answer") so the failure message names the real defect.
+
+NIT — src/tests/surfaces/failure-state-declared.logic.test.ts:78 "const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });" — the `d.errors` assignment can never affect the assertion because `failureStateProblems` skips the row on `inputs.answer !== 'contract'` before it reads `errors` — drop the assignment so the control isolates a single reason.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  117193ms (117.2s)
+📊 Tokens — total: 62726, input: 35794, output: 26932, reasoning: 26491

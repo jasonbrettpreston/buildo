@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:42:00.126Z file_sha256=6211944cecd6fe02a5ab22b5f87efb126ca21c5d9b340f15a51c5ccde61473ab prompt_sha256=5205c44610af7d91c76ec50185ace761e5aee4779577816e66a586b0b37d4c0b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" with the added note ":32 "commit while the row stays OWED: RR-0413 (\"yes to both\") does not cover RULED with the lock's two named, owned tab-push exceptions"" — only two of the three named rows can flip while FE-51 is pinned OWED, so the ruling's third flip is unmet and the lane's gloss narrows an operator ruling instead of following it — flip FE-51 to RULED in this commit with the dated note recording the two owned exceptions, or paste the operator's own words that withhold it.
+
+DEFER severity=MED — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the FE-51 gate is green on a tree that still makes the two tab pushes, so "clean tree" is achieved by an allow-list whose owners (MF-49 to MF-52) appear in no pasted ruling — record the two exceptions in the register note the operator confirms, or keep the FE-51 row OWED until the controls are fixed (the same remedy as the HIGH finding).
+
+DEFER severity=LOW — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "web has no tab bar (no Tabs in src/app/(maxbld), src/components/surfaces or src/components/report)" — the scope shrink that keeps the gate green rests on a comment only, nothing asserts those three dirs, so a web tab bar added later leaves the gate green — add a mechanical scan over those dirs (or drop the exclusion) so the scope claim is enforced, not stated.
+
+DEFER severity=LOW — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — the generator outputs (135 register, 136 handbook, rule-lists-by-kind.md, surface-rule-map.json) are not in this chunk, so the shrink and the two --check exit-0 runs are asserted only in the pasted notes (cannot see) — verify in the chunk that carries those files before merge.
+
+REJECT — AC#1 "The gate list is confirmed by the operator before any gate is built" — the change is accused of building unchecked gates — RR-0386 parked the gates A/B/C plan and RR-0413 ("yes to both A. Status flip.") confirms the three handbook rows these three locks serve, so the confirmation is in the pasted record.
+
+MET — RR-0413 — src/tests/surfaces/scope-fence.logic.test.ts:1 — the FE-49 lock lands with its SPEC LINK and a real-tree fence assertion, so that row has its test.
+
+MET — AC#2 — src/tests/surfaces/nav-tab-switch.logic.test.ts:133 — planted KNOWN_BAD pushes (B, B2) plus the navigate/replace/non-tab controls (C) show both directions.
+
+MET — RR-0386 — src/tests/surfaces/scope-fence.logic.test.ts:17 — the change lands handbook locks only, with stated limits and no gate wiring or gate A/B landing.
+
+MET — m.0 — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 — the change says what it replaces ("The flip commit removes the id") and each new lock states the mistake it prevents and its limits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: m.0
+
+---
+⏱  82175ms (82.2s)
+📊 Tokens — total: 46324, input: 28581, output: 17743, reasoning: 16847

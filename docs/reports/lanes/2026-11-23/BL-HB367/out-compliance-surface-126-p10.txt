@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:41.831Z file_sha256=c567dc97dacbf354e8a76474ff6dc2e6d4f7939fa54f82549799b9794fd7e8ba prompt_sha256=0c92273995c8673495868071fbcb53ecca2757e2d61d4cfb35b3bc7e8baf21f7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts" and "...failure-state-declared..." only, while 135 FE-51 row stays "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" — the pasted RR-0413 summary says three rows flip but the diff flips two, FE-51 still OWED — reconcile the record to the operator's "yes to both" (two rows) or flip FE-51 with its dated note.
+
+DEFER severity=LOW — FE-54 "a surface declares what the user sees when it fails" / "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "if (d.inputs?.answer !== 'contract') continue;" and "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the lock narrows the rule to contract readers in programme scope, so non-contract failure surfaces and 8 descriptors go unchecked — stated limit, bounded; revisit when the fence widens.
+
+DEFER severity=LOW — 128 R-03 (FE-49) "`lead_parcels` is read by no surface" — 135 FE-49 dated note "The platform_shared standing exception is outside the lock ... so it stays out of the scope-fence test with this note as its record" — a platform_shared descriptor naming lead_parcels is not caught by the scope-fence lock — documented as a notes string not a table ref; revisit when the test reaches platform_shared.
+
+MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory)" and "A. the real tree: no problem" — red on the planted defect and green on the clean tree both present.
+
+MET — RR-0386 "handbook tests start fresh; landing gates A and B is a later decision" — src/tests/surfaces/failure-state-declared.logic.test.ts "task-367 COMPLY.3" — new declaration-only handbook test landed, parked gates A/B untouched.
+
+MET — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" — OWED count regenerated down from 22 to 20 for the two flipped rows.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  109562ms (109.6s)
+📊 Tokens — total: 58077, input: 32948, output: 25129, reasoning: 24434

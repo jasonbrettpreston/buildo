@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:46:58.106Z file_sha256=c3bd467981e961e52fabe2b94e4e940841e7d22eb20354d03c20899a530a4eba prompt_sha256=de3a14567c2181bc9e3403927c0eb4db4b247062e1731bc1c33c76494d7c65e7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p16.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows (names task-367, RR-0413)" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only two of the three ruled rows flip; FE-51 stays OWED and the exclusion rests on a comment about an unpasted Q-D — fix: flip FE-51 to RULED with its dated note and drop the id from FLIP_PENDING, or land an operator ruling amending RR-0413 and quote it verbatim in the register
+
+BUG severity=MED — Acceptance criteria #3 "The handbook no-check lists shrink by the rules gated, by their generators" — Implementation Notes "AC3: Status: OWED count 20 (NOT-YES branch: 20)" — the FE-51 rule is gated yet stays in the OWED set, so the no-check list does not shrink by all the rules this chunk gates — fix: make the flip above, then regenerate and record the reduced OWED count in the acceptance record
+
+DEFER severity=MED — Acceptance criteria #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' }" — the green run rests on two live tab pushes being allow-listed, so the tree does not yet satisfy the gate's own rule and the owner rows MF-50, MF-51, MF-52 are not pasted so their existence cannot be checked — fix: check the three owner rows against the queue and record each row id and status in the test's dated note before the row flips
+
+REJECT — 11b.1 "Library imports are allowed only in the declared binding modules. A wrapper component anywhere else (`src/app`, `mobile/app`, `src/lib`, the vendor folder) fails." — accused of being broken by the new locks — src/tests/surfaces is not one of the named places and `typescript` is an AST parser, not a configured standard component or wrapper component
+
+MET — Acceptance criteria #2 — src/tests/surfaces/scope-fence.logic.test.ts:129 "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit'" — planted RED per linkage form plus the real-tree green assertion at :122, both directions present
+MET — RR-0386 "Task-367: gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)" — this chunk lands fresh handbook locks, not the parked gates A, B or C
+MET — 11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer" — src/tests/surfaces/scope-fence.logic.test.ts whole file — both new files are test gates under src/tests and touch no page or product code
+MET — Acceptance criteria #1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "the operator confirms the three rows (names task-367, RR-0413)" — the three gated rows FE-49, FE-54, FE-51 are the list the operator confirmed, one lock each
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  76471ms (76.5s)
+📊 Tokens — total: 43975, input: 25440, output: 18535, reasoning: 17641

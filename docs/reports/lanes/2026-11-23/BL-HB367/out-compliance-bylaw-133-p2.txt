@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:32.449Z file_sha256=282e8e568cf753bdc7a19fff2c94232e98a2bd4549709e032f2b90b5a104ef1d prompt_sha256=06a86cdffb2d8835ea3df50d04ad60a446d83b13785878c12245d149d470c414
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "+  - FE rows owned: FE-49, FE-54." — the ruling names three rows flipping to RULED, the row owns two and leaves fe.51 OWED behind the lane's own Q-D — flip fe.51 with the two named owned tab-push exceptions recorded with it, or get Q-D answered and dated before the closing commit sets task-367 BUILT.
+DEFER severity=LOW — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — Implementation Notes "AC3: Status: OWED count 20 (NOT-YES branch: 20)" — the YES and NOT-YES branches differ exactly by fe.51's flip, so one identical OWED count cannot evidence the shrink AC3 names for both — record the count before and after, once per branch.
+DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — card front matter "labels: McFix, McFix Final" — no line in this chunk adds the McFixReborn label RR-0406 names for task-367 — land the label on the card in the chunk that carries it, or record that it is deferred.
+MET — m.246 — .cursor/MCFRONTEND-QUEUE.md — "Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0385, operator, verbatim: ...)" is a dated note appended with prior text kept and the old first value quoted.
+MET — m.0 — .cursor/MCFRONTEND-QUEUE.md — "the line read \"Next free id: **MF-97**\" before this note" says what the change replaces, in the row's own words.
+MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md — "the parked branch wf1/inc1b-gates (RR-0386)" listed under "Not in this row", the gates parked and the handbook tests started fresh.
+MET — RR-0385 — docs/reports/panels/MF-98.json — "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." records the two rounds and the engineering seat.
+MET — RR-0412 — .cursor/MCFRONTEND-QUEUE.md — "whichever of the two rows lands second rewrites this line by dated note to one past the larger id" sequences 367 and 442 on one id line.
+MET — RR-0392 — .cursor/MCFRONTEND-QUEUE.md — "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths" adds no infrastructure beyond the named locks.
+MET — AC1 — docs/reports/panels/MF-98.json — "Operator, verbatim (RR-0413, ...:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)." records the operator confirming the gate list before any gate is built.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.0, m.246
+
+---
+⏱  66185ms (66.2s)
+📊 Tokens — total: 45928, input: 32233, output: 13695, reasoning: 12883

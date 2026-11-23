@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:43:35.615Z file_sha256=e0a91ed0c4268107cc7d815c33d5aba798fe53855a492ffd6a37a6c4f7bee3e7 prompt_sha256=c86549689a6164584d69a4b396deda42e30ab133135288effff3136c0711d3e5
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pasted ruling flips three rows to RULED, the diff flips only FE-49 and FE-54 and leaves FE-51 OWED on FLIP_PENDING on the strength of "plan PLAN-367-v1 section 11, Q-D" (:32), which is not pasted, and the operator's words were "yes to both A. Status flip." — flip FE-51 to RULED with its dated note and remove it from FLIP_PENDING, or paste the operator's Q-D answer as a ruling before merge
+
+DEFER severity=MED — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/handbook-rule-map.logic.test.ts:299 "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);" — three rules are gated by the three landed locks but fe.51 is held off the no-check list shrink (comment :261 "FE-51 while the operator's Q-D is open"), so the shrink is 2 of 3, and the floor moves with the statuses instead of the confirmed list — either flip the row (see the RR-0413 finding) or, if the row is to stay OWED, make the AC #3 shortfall explicit in the review record with the pasted operator word that allows it
+
+DEFER severity=LOW — RR-0413 "the operator confirms the three rows" — src/tests/surfaces/nav-tab-switch.logic.test.ts:35 "why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab'" — the two allow-list entries permanently tolerate breaches of fe.51 and their owners (MF-49/MF-50, MF-51/MF-52) are named in no pasted ruling, only in queue rows, so the gate's tolerance rests on text outside the pasted clauses — bind each entry to a pasted ruling id or to the operator's Q-D word when it is logged
+
+MET — doc-17 rule 10 "never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — src/tests/surfaces/failure-state-declared.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)." — the three new locks cite ruling ids only, no RR-0001 to RR-0111 reading is used as authority
+
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:78 "B. RED planted (KNOWN_BAD, in memory)" with the clean-tree case at :68 — both directions present for each of the three locks
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the change lands handbook rule locks only, none of the parked compute gates A, B or C
+
+MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — no new runtime, service or script outside the test files in this diff
+
+MET — RR-0385 "unbuilt gates withdrawn, tests are the focus" — three new logic test files plus two edits to existing locks, no product code touched
+
+REJECT — doc-17 rule 10 — that the diff leans on register readings such as RR-0106 "MF-51 and MF-59 are on the launch list" — the diff names RR-0384, RR-0385 and RR-0413 only, all pasted rulings, so no reading feeds it
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  80056ms (80.1s)
+📊 Tokens — total: 44487, input: 26491, output: 17996, reasoning: 16963

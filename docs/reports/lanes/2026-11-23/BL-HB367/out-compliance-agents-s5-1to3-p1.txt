@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:32.446Z file_sha256=eab2b970412de2e3a69b1ae3685f69801c5b6710e0a7267ad04ae5feac599cde prompt_sha256=ff162bfb1c2129782e684a66545c490ec4c506789fd590f5af25cd424075f9a1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "operator, verbatim: \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "| OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" — the row's own Done-condition reads "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts land at their reserved paths" and "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)", yet only FE-49 and FE-54 flip, so the third approved row stays OWED and AC#3 shrinks 22 OWED to 20 instead of 19 — flip FE-51 to RULED with a dated note recording RR-0413, or get the operator's Q-D answer recorded on the card before the close.
+
+DEFER severity=MED — queue rule "naming the Spec 135 rows whose lock that task builds" — .cursor/MCFRONTEND-QUEUE.md "  - FE rows owned: FE-49, FE-54." — MF-98 builds nav-tab-switch.logic.test.ts for FE-51 (the row's own Done-condition names it) but the owned bullet omits it, so at the DONE flip arm Q either refuses a listed OWED row or the bullet understates the rows built — add FE-51 to the bullet once RR-0413 A is applied, or record the exclusion reason in the row.
+
+DEFER severity=MED — FE-54 "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." and "the known break at mobile/src/lib/maxbldHelp.ts:19 ... is not caught here" — the row reads "RULED 2026-11-23" while the lock checks descriptor declarations only and its own limit text says the second sentence of the rule is unchecked in its domain — keep FE-54 OWED until the lock reads code, or state the exclusions as named standing exceptions on the register row the way FE-49's dated note does.
+
+MET — RR-0413 (three rows are the list) — src/tests/surfaces/handbook-rule-map.logic.test.ts "const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);" — exactly the three confirmed rows, no fourth row added.
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — the nine paths of this chunk — no gate script under scripts/analysis, no app, descriptor or mobile file in the diff; only the three handbook tests plus their records.
+
+MET — task card AC#1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "Operator, verbatim (RR-0413 ...): \"yes to both\" (A ...; B: the three rows are the list)" — the three-row list is operator-confirmed and the build follows it.
+
+MET — task card AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem" with A "the real tree: no problem in the programme scope" and C "controls ... give 0".
+
+MET — task-410 note (1) "cuts a diff that leaves no room ... into chunks at FILE boundaries ... each chunk goes against every list part and is stamped chunk c of m with its path list" — prompt header "chunk 1 of 2" and its nine paths — the nine stamped paths are exactly the nine files shown, cut at file boundaries.
+
+MET — queue rule "a DONE heading's block ... FE rows owned" — .cursor/MCFRONTEND-QUEUE.md "**MF-98 COMPLY.3: three tests ... — RUNNING** (E)" — the row is RUNNING, so the DONE-form arm Q check is not triggered by this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  72008ms (72.0s)
+📊 Tokens — total: 48798, input: 33288, output: 15510, reasoning: 14423

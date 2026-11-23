@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:46:08.715Z file_sha256=a2c53f924324cc7539e1eec8feba8f0f800e14ca67c1c98b04b95503cb0abcac prompt_sha256=0b6de6637bd94f749e514ae1c35ee4e04a0d090e2a0ef138b4c3a304c44856cf
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-54 "a surface declares what the user sees when it fails" | "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:7 "the known break at mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here; it is owned by the task-343 leftovers." — the row is flipped to RULED while the lock's own text disclaims the live violation it names plus 8 out-of-scope surfaces ("6 estate_other, 2 platform_shared"), so the lock does not enforce the rule it certifies — keep FE-54 OWED until the Help failure state is caught, or record the exception in the operator's words
+
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/handbook-rule-map.logic.test.ts:278 "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" — only FE-49 and FE-54 flip (register 135 rows, handbook fe.49/fe.54, surface-rule-map owed→active); fe.51 stays OWED, gated on Q-D which is not pasted, and the test is edited to permit that — obtain the operator's ruling on Q-D and flip fe.51 or record the two-only confirmation against RR-0413
+
+DEFER severity=LOW — §13 Infra "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — src/tests/surfaces/failure-state-declared.logic.test.ts:71 "it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem'" — the canary scans the real tree via git ls-files but plants the defect on a structuredClone, not a tampered file — add a temp-root tampered-descriptor case so the red fires on a tampered file per the model
+
+MET — §13 handbook-rule-map "every register row has exactly one line and every line cites exactly one row" — src/tests/surfaces/handbook-rule-map.logic.test.ts C-T2 "expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);" — row/line parity preserved across the flip
+
+MET — handbook count consistency — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "(20 OWED, whose lock is still to land)" — 22→20 matches the two flipped rows and the register OWED count
+
+MET — §14 Out-of-Scope "`migrations/**`" and "`mobile/app/(auth)/*.tsx`" and "every `scripts/**/*.descriptor.json`" — diff — no migration, no auth route and no surface descriptor is touched
+
+REJECT — FE-49 "lead_parcels is read by no surface" — accused of being certified while a platform_shared descriptor names lead_parcels — the dated note shows it is a notes string at scripts/surfaces/platform_shared/F16/contracts/...:410, "not a table ref", so the read clause still holds
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  87170ms (87.2s)
+📊 Tokens — total: 49872, input: 30599, output: 19273, reasoning: 18474

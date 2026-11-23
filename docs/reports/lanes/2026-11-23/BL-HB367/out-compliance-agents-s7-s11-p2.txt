@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:40:32.442Z file_sha256=5e46470f198df83f0cefbdf57f9814c10a812837c11557c987054fcf8dacc2ae prompt_sha256=8dab349f57d872bc509983fd552a2d769c6e69c2d78f1fa2fb105cbf79639e9e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the pasted ruling names three row flips, the diff flips two (fe.49, fe.54 at docs/specs/02-web-admin/136_mcfrontend_handbook.md:179 and :194) and deliberately holds the third as "Status: OWED" with FLIP_PENDING, so a pasted operator ruling is unmet — flip FE-51 in the register row, the Spec 136 line and surface-rule-map and drop it from FLIP_PENDING, or record an operator note quoting that the third flip is withheld.
+
+DEFER severity=MED — fe.54 "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:8 "Code is not read: the known break at" — the row is flipped to RULED while a live unhandled failure state the test itself names passes the lock, so the lock enforces less than the clause it certifies — file the maxbldHelp.ts:19 break as an outcome line (task-343 or pile) on the FE-54 flip, or read the failing code path.
+
+DEFER severity=MED — fe.49 "lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop" — a surface that reads lead_parcels from a file its descriptor does not declare passes while the row reads RULED, so the fence is narrower than the clause — scan one import hop for the declared set or record the limit as the FE-49 dated-note outcome.
+
+DEFER severity=LOW — 11.1 "a census grep runs at the full scope its conclusion covers" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:87 "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure" — a 172-row census claim carries no recorded run and the totals are "copied from prereg-MF-96-1.json, the newest" — cite the run that produced the MF-96 totals (host, current_database(), date) or re-run the coa validation before the prereg commits.
+
+DEFER severity=LOW — 11.1 "a line citation is read, not remembered" — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "web has no tab bar (no Tabs in src/app/(maxbld), src/components/surfaces or src/components/report)" — the web half of the tab-switch rule rests on prose in a comment that no assertion checks, so a web tab push is unflagged — scan the web surface files in the same test or replace the claim with a checked census.
+
+MET — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" — the count moved by exactly the two flipped rows and the card records generate-surface-handbook --check exit 0.
+
+MET — 11.3 "Every lock is proven in BOTH directions" — src/tests/surfaces/scope-fence.logic.test.ts:97 "B. RED planted (KNOWN_BAD, in memory)" with the C controls at :110 — each of the three new locks carries a planted-defect case and a green control in the committed test, tied to the recorded red at the (A) assertions.
+
+MET — MCINC-8 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:3 "In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202)." — the prereg round is claimed before use and the neighbouring claims are named.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+Rules met: none
+
+---
+⏱  60353ms (60.4s)
+📊 Tokens — total: 43343, input: 30385, output: 12958, reasoning: 11942

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:32.874Z file_sha256=a687d439be92d3e91f8ec67714cfdf198830a1269c1479f1eac1d7182e553cf2 prompt_sha256=e7986b92518bd1e597acd3f9987bcf7c1ac3aabd6f2e0e814fa4ce120276c326
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (20 OWED, whose lock is still to land), 0 history" and scripts/surfaces/_schema/surface-rule-map.json "FE-49 ... status active" plus "FE-54 ... status active" (fe.51 unchanged, still "- **fe.51** ... Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts") — three gates land (failure-state-declared, scope-fence, nav-tab-switch) but only two rows flip, so the ruling as recorded and card AC3 ("The handbook no-check lists shrink by the rules gated") are executed for two of three; the basis for holding fe.51 back is Q-D, which is not pasted, so the deviation cannot be checked — record the Q-D question and answer in the card (and re-scope RR-0413 to two rows if that is his meaning) or flip fe.51 per the recorded ruling
+
+DEFER severity=MED — FE-54 "a surface declares what the user sees when it fails" (Spec 128 Rule 12) — src/tests/surfaces/failure-state-declared.logic.test.ts "if (d.inputs?.answer !== 'contract') continue;" — the row now reads "RULED 2026-11-23 (RR-0413) ... Enforced by" a lock that judges only contract-reading descriptors in programme scope, so in-scope surfaces that do not read a contract are not judged while the quoted rule is unqualified; the narrowing is disclosed in the dated note only — either qualify the rule cell to contract-reading surfaces in programme scope (as the note does) or extend the lock to every in-scope SURFACE descriptor that declares states
+
+DEFER severity=LOW — task-367 #3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);" — the floor is derived from the live RULED count, so a reverted flip (owed 21, floor 20) still passes and nothing locks the shrink to 20; pin the expected OWED count or the three ids so a reverted flip is red
+
+MET — task-367 #1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "yes to both A. Status flip." — the operator confirmation of the rows precedes commit 1, and the parked gate list (gates A, B, C) is withdrawn by RR-0386 "handbook tests start fresh"
+
+MET — task-367 #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory)" with "docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" — each lock has its planted red case and the clean-tree green run
+
+MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json "no floor line falls; the floors file is unchanged and the floors check stays OK" — no floors file is in the diff and no total moves
+
+MET — m.360 "a pool re-base for one cause, accept moves only named lines, merge order." — prereg ""expected_moves": []" and "committed alone and first, before the MF-98 work commit" — single cause, no accept, no moves, order stated
+
+REJECT — m.322 — accused that lowering the C-T3 OWED floor asserts a falling floor — the floors m.322 governs are the bylaw accuracy floors in the floors file, untouched here; C-T3 is a frontend register count, not an accuracy floor
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 1
+Rules met: m.322, m.360
+
+---
+⏱  126253ms (126.3s)
+📊 Tokens — total: 61356, input: 35809, output: 25547, reasoning: 24571

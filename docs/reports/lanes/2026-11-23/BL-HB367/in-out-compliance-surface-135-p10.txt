@@ -1,0 +1,364 @@
+LIST surface-135 sha256:78cfecbce00c15103d946d6baa0bcd774a06f54176fc3571dffa4f7af6a019d0 material sha256:b2691c5b7bb66c50ca771881c5a632be5cb7dd548b77b6458b2a42939b74df7e part 2 of 4 chunk 3 of 3
+RULE LIST surface-135 (docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, whole file), part 2 of 4. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+## Register
+| # | Ruling (one line) | Amends | Six | Full text | Status and Lock |
+|---|---|---|---|---|---|
+| FE-01 | McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. | 126 status | n/a | Operator verbatim: "Q-FE a - let's call this McFront-end? Let's start with started with getting the plan right ..." Card answer: "A Spec 126-128 plan is authorized as documents only, named McFrontend. ... The build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name. No code until then." | RULED 2026-11-09, lock landed with this note (MF-43; same commit, its sha on the McFrontend queue heading). Lock: `src/tests/surfaces/mcfrontend-status.infra.test.ts` (126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2). Dated note 2026-11-06 (M-246, prior text kept; operator answer Q-MFGO, verbatim "a", ~/Buildo-scratch/mcfrontend/phase1/open-questions.md): Phase 1 (the report page) is open. Both conditions above are met: McBylaws increment 2 closed (McBylaws queue increments table row 2, e67fc9e8f) and the 2026-11-02 infra freeze is lifted by name for McFrontend Phase 1. The surface paths move to layer23 and this register joins the protected list (Spec 128 §4.11 item 6). Gate items MF-15, MF-17, MF-24 and MF-25 each keep McBylaws owner review. McBylaws stays the priority. Dated note 2026-11-06 (M-246, prior text kept; operator answer to the opening decision list D-1..D-9, verbatim "yes. proceed", same file; D-7 a): the lock wording "queue Phase 1 tasks WAIT on increment 2" no longer holds and is restated: the lock asserts that the 126 status line names Phase 1 only, that the McFrontend queue carries the opening note, and that no Phase 1 surface commit lands without a McFrontend-Task trailer once MF-17 lands. The lock path is unchanged. Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2, MF-41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; D-0, D-1): McFrontend Phase 2 (expansion) is open: every MaxBLD page on one standard (Spec 126 §11b). The 2026-11-02 infra freeze is lifted by name for Phase 2 (MF-35, MF-37..MF-50, MF-30), including the library dependencies and the Spec 33 amendment. The lock wording is restated: the lock asserts that the 126 status line names Phase 1 and Phase 2 and points to Spec 126 §11b.3 for the Phase 2 surfaces, plus the assertions of the 2026-11-06 note. It is built by MF-43. The lock path is unchanged. Dated note 2026-11-09 (M-246, prior text kept; FE-01 flip, MF-43; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch", item 10; Spec 135 rule 3): FE-01 reads RULED 2026-11-09; prior status: owed; the lock lands in the same commit as this note (MF-43, the same-commit flip the operator approved) and is green. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-01 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling): Current reading: Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only. (from notes dated 2026-11-06, 2026-11-09). The cell text above is kept. |
+| FE-02 | P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. | 126 0a; 128 rule 1, 19 | D | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code." | RULED 2026-11-09, lock landed 710c67940 (MF-16). Lock: `src/tests/surfaces/report-generated-only.infra.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-02 flip, MF-16; operator, verbatim: "2. MF-16 approved provided its ocmplaint"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MF-16 and MF-35"; Spec 135 rule 3): FE-02 reads RULED 2026-11-09; prior status: owed; the lock landed in 710c67940 (MF-16) and is green. The cell text above is kept. Dated note 2026-11-11 (M-246, prior text kept; rulings landing · McFrontend queue · lane R; operator, verbatim: "just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations" and "... complaince to a standard always - wiring - testing etc. this standrd needs to be written down and we make decisions which are sotres.. rulling and we cite the rulings alwsy."; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the 2026-11-11 entries): confirmed for the web pages as well as the report; the working standard is written down in Spec 126 §0b (queue row first, the Spec 08 lane process, screens as data, existing components only, server-formatted values, rulings verbatim and cited, pre-approved decisions logged and confirmed, scratch mocks as design inputs only). Its own row is owed as FE-40, after FE-35..FE-39 land. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-02 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-11 of this row, not an operator word and not a ruling): Current reading: The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b. (from notes dated 2026-11-11). The cell text above is kept. |
+| FE-03 | P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside. | 126 0a; 127 S-gen, S-golden | P | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Proven, not reviewed (no errors): every declaration is checked against the live contracts and the McBylaws catalogue, with golden render states and both-directions locks; observability (usage and drift in-product, Spec 126 P6/P8) sits inside this." | RULED 2026-11-09, lock lands with this flip in the MF-42 code commit (McFrontend-Task: MF-42). Lock: `src/tests/surfaces/surface-validate.infra.test.ts` (planted bad descriptor: exit 1, clean: exit 0) Dated note 2026-11-09 (M-246, prior text kept; FE-03 flip, MF-42; operator, verbatim: "P42 decisions approved" and "approved smaller version"; P42-D5 a: FE-03 and FE-31 flip in the same push; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions" and "Operator ruling 2026-11-09: Wave 1 decision batch"; Spec 135 rule 3): FE-03 reads RULED 2026-11-09; prior status: owed, same lock path. The flip lands in the same commit as its lock because arm C judges every id of the prereg rules list per commit against the parent register (cite-arms.mjs runFrontend), so a later flip-only commit that regenerates the rule map cannot pass. It is the same form the operator approved for MF-43 (batch real choice 10); there is no landed precedent. The lock runs the real gate on a temp tree holding four converted copies of live descriptors (FORM, LIST, SEARCH, STATIC): each clean copy exits 0 and one planted bad descriptor per archetype exits 1. The cell text above is kept. |
+| FE-04 | P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5). | 126 11a.8; 128 rule 18 | F | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Fast: a performance budget per archetype (load, payload) for the user; for the team, a new field or scenario ships in hours." Operator verbatim, Q-MF5: "QMf5 a". Card answer: "Measure first, then set. The first McFrontend build task times the current report screen and the 25 golden lots on mobile and web, then proposes budget numbers for the operator to rule. Ruled numbers go in a protected, tighten-only file. Load time stays PROSE-ONLY until there is an in-product measure. FE-04 stays OWED until the numbers are ruled." | OWED `src/tests/surfaces/budget.infra.test.ts` |
+| FE-05 | P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI. | 126 P2; 128 rule 16 | S | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Single source: the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI." | RULED 2026-11-09, lock landed 710c67940 (MF-16). Lock: `src/tests/surfaces/report-no-maths.logic.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-05 flip, MF-16; operator, verbatim: "2. MF-16 approved provided its ocmplaint"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MF-16 and MF-35"; Spec 135 rule 3): FE-05 reads RULED 2026-11-09; prior status: owed; the lock landed in 710c67940 (MF-16) and is green. The cell text above is kept. |
+| FE-06 | P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags. | 126 11a.3-5; 128 rule 17 | H | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Honest display: disclosures, confidence, \"at least\", not_evaluated and not_modelled always shown, never hidden; status words come from a closed list." | RULED 2026-11-08, lock landed 9f8e5d534 (MF-12). Lock: `src/tests/surfaces/report-honest.logic.test.ts` Dated note 2026-11-08 (M-246, prior text kept; MF-12): the lock `src/tests/surfaces/report-honest.logic.test.ts` lands (status closed list plus `none`, see FE-28). Dated note 2026-11-09 (M-246, prior text kept; FE-06 flip, lane R; operator, verbatim: "recommendations approved our decision: shall lane R flip FE-06, FE-18 and FE-30 to RULED by dated note, as one docs commit in push 5?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: FE status flips and MF-12 tranche 2"; Spec 135 rule 3): FE-06 reads RULED 2026-11-08; prior status: owed; the lock landed in 9f8e5d534 (MF-12) and is green. The cell text above is kept. |
+| FE-07 | P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. | 128 rule 15 | E | Operator verbatim, Q-MFP: "Q-MFP a". Card text: "Same everywhere: mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15)." | RULED 2026-11-09, lock landed 710c67940 (MF-16). Lock: `src/tests/surfaces/parity.golden.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-07 flip, MF-16; operator, verbatim: "2. MF-16 approved provided its ocmplaint"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MF-16 and MF-35"; Spec 135 rule 3): FE-07 reads RULED 2026-11-09; prior status: owed; the lock landed in 710c67940 (MF-16) and is green. The cell text above is kept. Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2, MF-41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; card v2.1 §2.4): widening. The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31, MF-42). This lock, its REPORT scope and its status are unchanged. Dated note 2026-11-22 (M-246, prior text kept; FE-07 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-09 of this row, not an operator word and not a ruling): Current reading: The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged. (from notes dated 2026-11-09). The cell text above is kept. |
+| FE-08 | Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook. | doc set | n/a | Operator verbatim, doc-set answer 1: "yes"; confirmed by Q-MF1 a (FE-16). | RULED 2026-11-04. Lock: see FE-16. |
+| FE-09 | A separate decisions spec, 124a/69a form, with a Lock column that resolves. | this spec | n/a | Operator verbatim, doc-set answer 2: "seperate decision spec". | RULED 2026-11-09, lock landed with this note (MF-43; same commit, its sha on the McFrontend queue heading). Lock: `src/tests/surfaces/register-locks-resolve.infra.test.ts` (rule 5 above) Dated note 2026-11-09 (M-246, prior text kept; FE-09 flip, MF-43; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch", item 10; Spec 135 rule 3): FE-09 reads RULED 2026-11-09; prior status: owed; the lock lands in the same commit as this note (MF-43, the same-commit flip the operator approved) and is green. Rule 5 is checked for every row except its CI clause for db-type locks, which stays PROSE-ONLY until MF-25 (MF-43 D-4); one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today). The cell text above is kept. |
+| FE-10 | The generator lives in the spec: the REPORT section of Spec 126. | 126 11a | n/a | Operator verbatim, doc-set answer 3: "generator lives in the spec". | RULED 2026-11-09, lock landed 6aca7c76d (MF-18). Lock: `src/tests/surfaces/handbook-rule-map.logic.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-10 flip, MF-18; operator, verbatim: "Wf-18 proceed if compliant and meets the 5 principle standard"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-18 build; Wave plan"; Spec 135 rule 3): FE-10 reads RULED 2026-11-09; prior status: owed (the cell read: owed, with the lock at the same path); the lock landed in 6aca7c76d (MF-18; queue note 6089673f8, prereg 74e6f1d7b, OUTPUT panel record a82b0e5be) and is green. FE-10 leaves the FE-09 lock's pending-flip list in this commit. |
+| FE-11 | The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; `/admin/surfaces` is built when the admin next needs that view. | 126 12 | n/a | Operator verbatim, doc-set answer 4: "product goes first". Operator verbatim, Q-MF6: "Q-Mf6 a". Card answer: "Convert-on-touch: no fixed admin pilot. Admin screens convert when changed for a product reason. /admin/surfaces is built when the admin next needs that view." | RULED 2026-11-09, lock landed with this note (MF-43; same commit, its sha on the McFrontend queue heading). Lock: `src/tests/surfaces/mcfrontend-queue.infra.test.ts` (no admin task before Phase 1 report tasks) Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2, MF-41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; D-1): the lock wording is restated: no MF task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40). It is built by MF-43. The lock path is unchanged. Dated note 2026-11-09 (M-246, prior text kept; FE-11 flip, MF-43; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch", item 10; Spec 135 rule 3): FE-11 reads RULED 2026-11-09; prior status: owed; the lock lands in the same commit as this note (MF-43, the same-commit flip the operator approved) and is green. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-11 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-09 of this row, not an operator word and not a ruling): Current reading: Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch. (from notes dated 2026-11-09). The cell text above is kept. |
+| FE-12 | Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion. | 126 | n/a | Operator verbatim, doc-set answer 5: "check out the admin section of the specs - we have all this already." | OWED `src/tests/surfaces/dashboard-not-report.logic.test.ts` |
+| FE-13 | `surface-validate.mjs` (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws. | queue | n/a | Operator verbatim, doc-set answer 6: "I dont unjderstand. The focus is still on completing Mcbylaws." | RULED 2026-11-04. Lock: see FE-01. Dated note 2026-11-09 (M-246, prior text kept; MF-15 D-1..D-6; operator, verbatim: "I agree with Mf-13 and Mf-15"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MF-15 D-1..D-6"): the gate is built as `node scripts/surfaces/surface-validate.mjs --check`, the only flag. Lock: `src/tests/surfaces/surface-validate.logic.test.ts`. Arms, one finding per line on stderr as `SV-<ARM> <subject>: <problem>`: GEN (spawns the committed generators' `--check`, no logic copied), GOLDEN (manifest targets, every state x target file present, nothing stray, fingerprint fresh), PARITY (the four target files agree), BIND (each node binds to a declared field, source kind in `binding-sources.json`, declared label), STATUS (each tree validates against `report-tree.schema.json`, plus the honest-lock extras). Exit 0 clean, 1 any finding, 2 usage. The check logic has one home, `scripts/surfaces/report-checks.mjs`, which the gate and the landed honest and parity locks import (R-27); those locks keep their assertions. Budget is NOT checked: the gate prints `budget WAITS MF-08`, which is a stated waiting, never a pass; FE-04 stays OWED and exit 0 must not be read as "budget ruled". No pre-commit, CI or package-script wiring (MF-25). No new FE row. Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2, MF-41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; D-7): MF-42 adds the generic arms SV-DESC (incl. `UNRESEARCHED`), SV-SCREEN and SV-SBIND in `scripts/surfaces/screen-checks.mjs`; a missing validator cannot crash the REPORT arms. The REPORT arms and fingerprints are unchanged, and the success-line assertion at `src/tests/surfaces/surface-validate.logic.test.ts:61` is amended deliberately to the new full string, still an exact `toBe`, with red evidence; it is never relaxed to `toContain` or a regex. Their lock is FE-31. This row's status is unchanged. Dated note 2026-11-09 (M-246, prior text kept; MF-42; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions" and "Operator ruling 2026-11-09: Wave 1 decision batch"): the three generic arms are built in `scripts/surfaces/screen-checks.mjs` and loaded by an awaited import inside their own guard after the usage check; a missing module prints one "unavailable" line per arm and the REPORT arms still report. The success line appends `S-desc ok (examined 20 in scope: converted 0, pending 7, parked 9, report 4) · S-screen WAITS MF-37 · S-sbind WAITS MF-37` after `budget WAITS MF-08`; the lock's assertion is amended to that full string, still an exact toBe, red evidence `docs/reports/red-evidence/MF-42/no-maths-gate-red.txt`. The lock's temp trees carry a manifest that examines nothing and WAITS MF-37, so every REPORT-arm assertion is unchanged. The queue-state check is not in the gate (it reads only its own tree); it is case C-1 of the FE-31 lock. This row's status is unchanged. |
+| FE-14 | LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. | queue; 127 | n/a | Card answer, Q-MFS a: "Lean McFrontend: The report page is converted first ... It reuses the back-end machinery (gate.mjs, decision log, preregs, panels, handbook generators); no parallel infra. Other screens convert only when touched for a product reason." Operator verbatim: "Q-MFS a - how do it know it's actually working" | RULED 2026-11-09, lock landed with this note (MF-43; same commit, its sha on the McFrontend queue heading). Lock: `src/tests/surfaces/mcfrontend-queue.infra.test.ts` (no MF task outside Phase 0-1 or convert-on-touch) Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2, MF-41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; D-0, D-1): LEAN now covers McFrontend Phase 2 as ruled. The lock wording is restated: no MF task outside Phase 0-2 or convert-on-touch. It is built by MF-43. The lock path is unchanged. Dated note 2026-11-09 (M-246, prior text kept; FE-14 flip, MF-43; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch", item 10; Spec 135 rule 3): FE-14 reads RULED 2026-11-09; prior status: owed; the lock lands in the same commit as this note (MF-43, the same-commit flip the operator approved) and is green. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-14 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-09 of this row, not an operator word and not a ruling): Current reading: LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch. (from notes dated 2026-11-09). The cell text above is kept. |
+| FE-15 | "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria. | queue; 127 section 6 | P | Card answer, Q-MFS a: "planted-defect red canaries, the zero-code new-scenario test, the end-to-end answer-key check on the 25 lots, parity diff, in-product error count". | RULED 2026-11-09, lock landed c44d5219c (MF-23). Lock: `src/tests/surfaces/mcfront-proof.infra.test.ts` Dated note 2026-11-09 (M-246, prior text kept; MF-23 · McFrontend queue · lane T; operator, verbatim: "all approved as recommended", MF-23 D-4; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 4): the lock `src/tests/surfaces/mcfront-proof.infra.test.ts` covers canaries a, b, c and d. Canary e (25 lots against the answer key) is owned by FE-25 (MF-22, answer-key-e2e.db.test.ts) and canary f (in-product error count) by FE-26 (MF-21, error-count.db.test.ts); each has its own lock and is not built here. Canary a runs in its "a-now" form (Spec 128 rule 17 dated note of the same date). FE-15 flips to RULED by lane R's dated note with the landed sha once the lock lands; this note flips nothing. The leading word stays OWED. Dated note 2026-11-09 (M-246, prior text kept; FE-15 flip, MF-23; operator, verbatim: "all approved as recommended", MF-23 D-4 "FE-15 flips on a–d"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 4; Spec 135 rule 3): FE-15 reads RULED 2026-11-09; prior status: owed; the lock landed in c44d5219c (MF-23, canaries a-d; folds 078d85cd5) and is green. Canaries e and f stay with FE-25 and FE-26. The cell text above is kept. |
+| FE-16 | Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change. | doc set | n/a | Operator verbatim: "Q-MF1 a". | RULED 2026-11-09, lock landed with this note (MF-43; same commit, its sha on the McFrontend queue heading). Lock: `src/tests/surfaces/spec-paths.infra.test.ts` (135 and 136 exist at the ruled paths once landed) Dated note 2026-11-09 (M-246, prior text kept; FE-16 flip, MF-43; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch", items 10 and 11 (FE-16 stays with MF-43, D-14); Spec 135 rule 3): FE-16 reads RULED 2026-11-09; prior status: owed; the lock lands in the same commit as this note (MF-43, the same-commit flip the operator approved) and is green. Spec 136 landed with MF-18, so the lock asserts both specs at the ruled paths now. The cell text above is kept. |
+| FE-17 | Q-MF2: one card per building type, `variants[]` inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 `not_modelled`), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list. | 126 11a.2 | D, S | Operator verbatim: "Q-MF2 a". | OWED `src/tests/surfaces/report-variants.logic.test.ts` |
+| FE-18 | Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set `catalogue` / `content` / `user_input` / `ad_slot` (and `external_embed`, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. | 126 11a.1; 128 rule 20 | D, P, S | Operator verbatim: "isnt that the point of the schema - there might be exceptions ie user input fields but overall teh databse fields are the key we also have ads as well. we just need to be aware of this. The premise of that question concerns me because it shows a lack of alignment with the key goals of the McFrontEnd" | RULED 2026-11-06, lock landed adb8b332e (MF-10). Lock: `src/tests/surfaces/report-binding.logic.test.ts` (RED fixture: invented field) Dated note 2026-11-06 (M-246, prior text kept; operator answer MF-10 D-1..D-7, verbatim "MF-10 all recommended provided they are complaint", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; D-5 b): the closed set gains a sixth source, `parcels` (a column of the `parcels` table, FE-27), so the set is `catalogue` / `content` / `user_input` / `ad_slot` / `external_embed` / `parcels`. The set lives in `scripts/surfaces/_schema/binding-sources.json` (D-4 a). The lock is built by MF-10 with its RED fixture (D-2 a). Dated note 2026-11-09 (M-246, prior text kept; FE-18 flip, lane R; operator, verbatim: "recommendations approved our decision: shall lane R flip FE-06, FE-18 and FE-30 to RULED by dated note, as one docs commit in push 5?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: FE status flips and MF-12 tranche 2"; Spec 135 rule 3): FE-18 reads RULED 2026-11-06; prior status: owed; the lock landed in adb8b332e (MF-10) and is green. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-18 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-06 of this row, not an operator word and not a ruling): Current reading: The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json. (from notes dated 2026-11-06). The cell text above is kept. |
+| FE-19 | User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source `user`, `entered_at`). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. | 126 11a.9 | D, H | Operator verbatim: "I dont think these need to be private - I think it will update the database with higher confidence information that will stay - its not a secret." | RULED 2026-11-11, lock landed with this note (MF-19; same commit, its sha on the McFrontend queue MF-19 row). Lock: `src/tests/surfaces/user-input-provenance.logic.test.ts` Dated note 2026-11-11 (M-246, prior text kept; FE-19 flip, MF-19 · McFrontend queue · lane E; operator, verbatim: "all as recommmended" (MF-19 D-1..D-8, 2026-11-11); record `~/Buildo-scratch/mcfrontend/MF-19/DECISIONS.md`; Spec 135 rule 3): FE-19 reads RULED 2026-11-11; prior status: owed; the lock lands in the same commit as this note (the MF-43 same-commit precedent) with red evidence `docs/reports/red-evidence/MF-19/locks-red.txt` and is green. Confidence by source for a user lot-size entry reads **high** (ruling 2, `open-questions.md:709`, `:732`); the ruling cell above read "user medium" (Spec 126 §11a.4 dated note 2026-11-11). The re-evaluation is McBylaws MB-89 (one-lot re-evaluation, added by the queue-owed commit; D-8), not increment 6. The cell text above is kept. Dated note 2026-11-15 (M-246, prior text kept; FE-19, MF-19 · McFrontend queue · lane MF19-B; operator, verbatim: "R-1 thru R-6 recommendations approved" (MF-19 plan v3 R-1..R-6, 2026-11-15) and the amendment "b" (2026-11-14: the entry is width (frontage) + depth with one ft/m switch, plus the link "My lot isn't a rectangle — enter the area instead"); record `~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md` and `~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`): the entry is width and depth (with the area form as the link's alternative); the entered fact is still one shared record with source `user` and `entered_at`, now also carrying the width, the depth and the typed values; the lock `src/tests/surfaces/user-input-provenance.logic.test.ts` is extended with a width entry and migration 324's shape CHECK. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-19 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-11, 2026-11-15 of this row, not an operator word and not a ruling): Current reading: Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative. (from notes dated 2026-11-11, 2026-11-15). The cell text above is kept. |
+| FE-20 | Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. | 126 11a.9 | H | Operator verbatim, Q-MF4: "Q-MF4 a (this is great work)". Card answer: "User entries are shared and persistent, with provenance (source, entered_at). Verified facts (permits, CoA plan facts) outrank user entries. The newest user entry is shown, and history is kept so a bad entry can be reverted (FE-20 and FE-22 move from PROPOSED to ruled)." | RULED 2026-11-11, lock landed with this note (MF-19; same commit, its sha on the McFrontend queue MF-19 row). Lock: `src/tests/surfaces/user-entry-precedence.logic.test.ts` Dated note 2026-11-11 (M-246, prior text kept; FE-20 flip, MF-19 · McFrontend queue · lane E; operator, verbatim: "all as recommmended" (MF-19 D-1..D-8, 2026-11-11); record `~/Buildo-scratch/mcfrontend/MF-19/DECISIONS.md`; Spec 135 rule 3): FE-20 reads RULED 2026-11-11; prior status: owed (the cell read: RULED 2026-11-04 (operator "Q-MF4 a (this is great work)"), with the lock owed at the same path); the lock lands in the same commit as this note with red evidence `docs/reports/red-evidence/MF-19/locks-red.txt` and is green. One active entry per lot (entered once), so "the newest user entry is shown" reads as the active entry; history is kept; a bad entry is reverted by the audited admin FORM (D-4). The cell text above is kept. Dated note 2026-11-15 (M-246, prior text kept; FE-20, MF-19 · McFrontend queue · lane MF19-B; operator, verbatim: "R-1 thru R-6 recommendations approved" (MF-19 plan v3 R-1..R-6, 2026-11-15) and the amendment "b" (2026-11-14: the entry is width (frontage) + depth with one ft/m switch, plus the link "My lot isn't a rectangle — enter the area instead"); record `~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md` and `~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`): one active entry per lot whichever form made it (the width and depth form or the area form); a width entry then an area attempt is 409; revert then re-entry works on either form; `src/tests/surfaces/user-entry-precedence.logic.test.ts` is extended with a width entry. The cell text above is kept. Dated note 2026-11-22 (M-246, prior text kept; FE-20 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-11, 2026-11-15 of this row, not an operator word and not a ruling): Current reading: One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409. (from notes dated 2026-11-11, 2026-11-15). The cell text above is kept. |
+| FE-21 | `external_embed` (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded. | 126 11a.1 | D | Operator verbatim, Q-MF4: "Q-MF4 a (this is great work)". Card answer: "Declared exception classes: user inputs (the form archetype → input contract), ad slots (the ad contract, R-17 disclosure, R-34 never inside a card), and external embeds (map tiles, payment checkout, analytics), each declared, never coded. external_embed becomes the fifth binding source (FE-21 moves from PROPOSED to ruled)." | RULED 2026-11-04 (operator "Q-MF4 a (this is great work)"). **OWED:** `src/tests/surfaces/report-binding-embed.logic.test.ts` |
+| FE-22 | Ad targeting only on declared database keys; never on user-entered facts without consent. | 126 11a.10 | H | Operator verbatim, Q-MF4: "Q-MF4 a (this is great work)". Card answer: "Ads target only declared database keys, never user-entered facts without consent." | RULED 2026-11-09, lock landed 7b152d7e1 (MF-20). Lock: `src/tests/surfaces/ad-targeting-keys.logic.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-22 flip, MF-20; operator, verbatim: "all approved as recommended", MF-20 D-12 "FE-22/23 flip after landing"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 1; Spec 135 rule 3): FE-22 reads RULED 2026-11-09; prior status: owed (the cell read: RULED 2026-11-04 (operator "Q-MF4 a (this is great work)"), with the lock owed at the same path); the lock landed in 7b152d7e1 (MF-20; folds d486180ab, D-7 8db831d53) and is green. |
+| FE-23 | Ad slots: own source (`ad_slot`) and disclosure (R-17), never inside a card (R-34), outside `variants[]` and the card list. | 126 11a.10 | D, H | Card answer Q-MF3 exception (2): "ad slots: their own source and disclosure (Spec 128 R-17, R-34)"; Q-MF2: "The ad slots stay outside the card list." | RULED 2026-11-09, lock landed 7b152d7e1 (MF-20). Lock: `src/tests/surfaces/ad-slot.golden.test.ts` (slot present and absent goldens) Dated note 2026-11-09 (M-246, prior text kept; FE-23 flip, MF-20; operator, verbatim: "all approved as recommended", MF-20 D-12 "FE-22/23 flip after landing"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 1; Spec 135 rule 3): FE-23 reads RULED 2026-11-09; prior status: owed; the lock landed in 7b152d7e1 (MF-20; folds d486180ab, D-7 8db831d53) and is green. The cell text above is kept. |
+| FE-24 | A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status. | 126 0a | D | Operator verbatim, Q-MFP: "Q-MFP a" (card text of P1: "a new scenario reaches the report with no code"). | RULED 2026-11-09, lock landed c33f4d01a (MF-14). Lock: `src/tests/surfaces/new-row-zero-code.golden.test.ts` Dated note 2026-11-09 (M-246, prior text kept; MF-13; operator "agreed", MF-13 D-5): the generator diagnostic grammar is ratified. The codes are GEN-ROW-NO-FIELD, GEN-FIELD-NO-ROW, GEN-HAND-EDIT (MF-11), plus GEN-STALE, GEN-ROW-NO-SWITCH, GEN-UNIT-UNKNOWN, GEN-LIST-NO-ROW, GEN-LIST-NO-SCENARIO, GEN-LIST-DUP, GEN-LIST-OFF and GEN-ROW-NO-LABEL (see FE-30); one line per finding on stderr, exit 1. It is recorded here and in the MF-13 panel record `docs/reports/panels/MF-13.json`; no copy in Spec 126 (R-27). Dated note 2026-11-09 (MF-13 follow-up 1, prior text kept; operator "1. I accept your reco"): the ratified grammar is extended by GEN-ROW-BAD-STATE `<switch id> <state>`: a switchboard row whose state is not exactly `on` or `off` is a finding (stderr line, exit 1, nothing written), never read as OFF. Dated note 2026-11-09 (M-246, prior text kept; MF-14; operator, verbatim: "approved 1. MF-14 T-1 to T-4 (the trimmed renderer decisions above): approve as recommended?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-14 trimmed decisions T-1..T-4"; mechanical decisions D-09 in ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): FE-24 is the rule MF-14 builds. The renderer is `src/lib/surfaces/report/core.ts` (buildTree, assertTree, viewOf), run on the server; assertTree checks a tree with AJV against the one schema (FE-29) and throws on an unknown field, status or malformed tree. A new catalogue row reaches web, admin and PDF through one DOM component (`src/components/report/ReportView.tsx`, the layout row of its target) and mobile through the mobile layout row of viewOf, with no front-end code; the React Native component waits for MF-22 (Spec 126 §5.3: the server projects, the client is glass). The lock `src/tests/surfaces/new-row-zero-code.golden.test.ts` lands in the MF-14 code commit with red evidence under `docs/reports/red-evidence/MF-14/`. The leading word stays OWED in this note; flipping it to RULED is a separate operator decision after the lock lands. Dated note 2026-11-09 (M-246, prior text kept; FE-24 flip, MF-14; operator, verbatim: "approved 1. Flip FE-24 to RULED? Its lock now exists and passes. Without the flip, MF-14 can't be marked done."; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: FE-24 flip"; Spec 135 rule 3): FE-24 reads RULED 2026-11-09; prior status: owed; the lock landed in c33f4d01a (MF-14) and is green. The cell text above is kept. |
+| FE-25 | The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step. | 126 0a | S | Card answer Q-MFS a: "the end-to-end answer-key check on the 25 lots". | OWED `src/tests/surfaces/answer-key-e2e.db.test.ts` |
+| FE-26 | In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY). | 126 0a | P | Card answer Q-MFS a: "in-product error count". | OWED `src/tests/surfaces/error-count.db.test.ts` |
+| FE-27 | `parcels` is a source in the closed binding set: a field bound to a column of the `parcels` table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails. | 126 11a.1; 128 rule 20 | D | Operator verbatim: "isnt that the point of the schema - there might be exceptions ie user input fields but overall teh databse fields are the key we also have ads as well." Operator answer MF-10 D-5 b: "MF-10 all recommended provided they are complaint" (the amendment to 126 11a.1 and FE-18, with this row and a panel, `docs/reports/panels/MF-10.json`). | RULED 2026-11-06 (operator "MF-10 all recommended provided they are complaint", D-5 b). Lock `src/tests/surfaces/report-binding.logic.test.ts` (the parcels cases) |
+| FE-28 | `none` is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries `lifecycle`, closed `loading` \| `miss` \| `error`. Omission of `status` stays a build failure; every node carries one. | 126 11a.3, 11a.7; 126:295 (Spec 122 1.2); 128 4 | H, S | Operator verbatim: "L-1C" (the lifecycle message node keeps `status` with the closed value `none`). | RULED 2026-11-08 (operator "L-1C", MF-12 L-1), panel `docs/reports/panels/MF-12.json`. Lock `src/tests/surfaces/report-honest.logic.test.ts` (also discharges the OWED lock of FE-06) |
+| FE-29 | The report node contract has ONE home, `scripts/surfaces/_schema/report-tree.schema.json` (draft 2020-12, additionalProperties false): a tree is `lifecycle?` (loading \| miss \| error) plus `nodes[]`; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus `none`), confidence (high \| medium \| medium-low \| low \| none), provenance (estimated \| permit \| plan \| user \| none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. | 126 11a.4, 11a.7; 126:552 (R-27); 126:295 (Spec 122 1.2) | H, S | Operator verbatim: "G-1 a, G-2 a" (2026-11-08). | RULED 2026-11-08 (operator "G-1 a, G-2 a", MF-12 G-2 a), panel `docs/reports/panels/MF-12.json`. Lock `src/tests/surfaces/report-honest.logic.test.ts` (reads the schema; a schema-violating node fails, proven RED) Dated note 2026-11-11 (M-246, prior text kept; MF-38; operator, verbatim: "0-1 b"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-38 O-1"; plan `~/Buildo-scratch/mcfrontend/MF-38/plan.md` with `plan.delta-1.md`): the contract is extended by this note, its register row (this row) and its lock (`src/tests/surfaces/report-honest.logic.test.ts`, new image cases): ONE closed image node kind `{field, source, kind: "image", label, images: [{scenario, asset_id, alt, caption}]}`, carrying no value, status, confidence, provenance or disclosures (an image is not a reading); every other node is unchanged. Dated note 2026-11-22 (M-246, prior text kept; FE-29 · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated 2026-11-11 of this row, not an operator word and not a ruling): Current reading: One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged. (from notes dated 2026-11-11). The cell text above is kept. |
+| FE-30 | Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) `scripts/surfaces/_schema/report-v2-seed/row-presentation.json` holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749). | 126 11a.1, 11a.6, 11a.7; 126:295 (Spec 122 1.2); 126:743; 128 R-27 | D, S, H | Operator verbatim, on the proposal: "Agreed and capture this as rulings"; on the simplified table: "yes - looks good now"; on the clarifications and the retirement and grammar rulings (C-1, C-2, C-4, D-3 c, D-5): "agreed". The D-1 b note: the operator agreed with the lean to fail closed for a headline row with no authored label (GEN-ROW-NO-LABEL). | RULED 2026-11-09, lock landed d70cf3d81 (MF-13). Lock: `src/tests/surfaces/report-generator-fields.logic.test.ts` Dated note 2026-11-09 (M-246, prior text kept; FE-30 flip, lane R; operator, verbatim: "recommendations approved our decision: shall lane R flip FE-06, FE-18 and FE-30 to RULED by dated note, as one docs commit in push 5?"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: FE status flips and MF-12 tranche 2"; Spec 135 rule 3): FE-30 reads RULED 2026-11-09; prior status: owed; the lock landed in d70cf3d81 (MF-13) and is green. The cell text above is kept. |
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..bf4e49791f9df1456895567b0caa5e8bd450ad7e 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,7 +27,10 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
+-const FLIP_PENDING: readonly string[] = ['FE-39'];
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joins it. Its lock src/tests/surfaces/nav-tab-switch.logic.test.ts lands in the MF-98 work
++// commit while the row stays OWED: RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions, which waits
++// for the operator's own word (plan PLAN-367-v1 section 11, Q-D; the FE-36 precedent). The flip commit removes the id (the MF-37 pattern above).
++const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];
+ 
+ type Row = { status: string; locks: string[] };
+ 
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

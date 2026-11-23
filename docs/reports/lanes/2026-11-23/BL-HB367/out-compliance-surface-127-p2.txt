@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:47:33.366Z file_sha256=ab3425e95783d3c61d21ae684c385297db3ce173b4a201bd603dea78c9789913 prompt_sha256=fe2340e75edc049bf4d4a82a40d5a2a9076173439fb26094865c0108f4fe956a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" and src/tests/surfaces/handbook-rule-map.logic.test.ts "(FE-51 while the operator's Q-D is open)" — only FE-49 and FE-54 flipped, so the third row the ruling names is unmet and the change's own comment contradicts the ruling record — flip FE-51 to RULED with its landed lock, or re-record RR-0413 as covering two rows and name the operator's refusal of the third.
+
+BUG severity=MED — Spec 127 §9.4 "The reviewer's discretion begins and ends at *is this record true*." — src/tests/surfaces/handbook-rule-map.logic.test.ts "const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch']" with "expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true)" against 135 FE-51 "no machine check yet, the lock is task-434's and the path is a reservation" — the register row still says the lock does not exist while this change ships it and its own test requires it tracked, so the record is false — add a dated note to FE-51 saying the lock landed and the row sits on FLIP_PENDING pending Q-D, as FE-49 and FE-54 already do.
+
+DEFER severity=MED — Spec 127 §2a row 6 "a lock never red against the defect it names is not a lock" — src/tests/surfaces/failure-state-declared.logic.test.ts "LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at mobile/src/lib/maxbldHelp.ts:19 ... is not caught here" and "if (d.inputs?.answer !== 'contract') continue;" — FE-54 reads RULED while the lock never goes red for a non-contract surface, for the 8 contract readers outside scope, or for the live blank-screen defect the rule names — record the operator's approval of that narrowing in the RR-0413 note, or widen the arm before the RULED flip.
+
+MET — fe.49 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit" and 136_mcfrontend_handbook.md "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts" with surface-rule-map.json "status": "active" — register, generated handbook and rule map agree on the flip.
+
+MET — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" — the count drops from 22 to 20 by the gated rules, produced by the generator and not hand-edited.
+
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem" — each planted defect yields exactly one problem and the unchanged copy yields none.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: fe.49
+
+---
+⏱  130342ms (130.3s)
+📊 Tokens — total: 61086, input: 32629, output: 28457, reasoning: 27575

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:30.007Z file_sha256=24822cd98ef4975ecc6203848f7a1027d184a1a649852bbcc222df4d8a56da7c prompt_sha256=b1879863ec2b7c48102ec082ae0f9232886b266bc61b598da141fa9d755e4583
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413, pasted card "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md "+Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder; fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" and 135 FE-51 still "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`" — the third lock lands in this same work commit (MF-98 Done-condition names nav-tab-switch.logic.test.ts) but its row is not flipped, so one of the three ruled rows is withheld on a Q-D condition no pasted ruling names — fix: flip FE-51 to RULED 2026-11-23 in 135 with a dated note quoting RR-0413 and the two named owned tab-push exceptions, and regenerate 136 / rule map / rule-lists page.
+DEFER severity=MED — pasted card "#3 The handbook no-check lists shrink by the rules gated, by their generators" — 136 "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land), 0 history." against the removed "58 in force (22 OWED" — three locks are gated in this commit yet the OWED list shrinks by two, so the acceptance criterion is met for two of three rules — fix: the FE-51 flip above brings the count to 19 and satisfies #3 as written.
+DEFER severity=LOW — Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "RR-0413, operator, verbatim: \"yes to both\"" against the pasted record "RR-0413 ... — \"yes to both A. Status flip.\" (MORNING-DECISIONS.md:2108)" — the quote drops "A. Status flip.", the fragment that names the flip the ruling orders — fix: quote line :2108 in full in the dated notes and in the queue row's ruling field.
+MET — Rule 1 — .cursor/MCFRONTEND-QUEUE.md "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 ... · ruling: \"yes to both\"" — one status line, RUNNING from the closed nine-word list, fields in the stated order, expires exactly 7 days after since, nothing appended.
+MET — Rule 2 — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-99**" — task-367 now has one row in one home, its id claimed, and MF-99 is greater than the claimed MF-98 and held MF-97, so §5 step 7's next-free-id check passes.
+MET — Rule 4 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: \"yes to both\"; Spec 135 rule 3)" — the ruling sits on the row, in M-246 form, on the day it was given.
+MET — Rule 10 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384)" — prior row text is kept after the `<br>` while the status changes.
+MET — Rule 3 — .cursor/MCFRONTEND-QUEUE.md "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder" — the work commit leaves the row RUNNING, as the operator's two-commit close for lane build tasks requires.
+MET — Rule 7 — .cursor/MCFRONTEND-QUEUE.md "expires 2026-11-30" with "since 2026-11-23" — the default 7-day expiry, not closed automatically.
+MET — fe.54 — 136 "+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note" — the rendered line matches its register row's new RULED cell and lock path.
+MET — generated counts — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,136 | 1 |" and "| total | 11 lists | | 226,914 | 11 |" — the +60 is exactly the two changed status lines, so the page agrees with 136.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: Rule 1, Rule 2, Rule 3, Rule 4, Rule 7, Rule 10, fe.54
+
+---
+⏱  88021ms (88.0s)
+📊 Tokens — total: 54309, input: 34465, output: 19844, reasoning: 18636

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:55.842Z file_sha256=f8ce91ec36f4f52d3a0c1e991ca9574c39c52d2b6c84837be8517502d55dcdc0 prompt_sha256=c7d75bdd6b3200a611439723169d21c1812a58f30448e40dcdcb2577d5b36dfb
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the ruling flips all three rows to RULED, the diff keeps FE-51 OWED, and the deviation is argued only from a Q-D hold written in the file's own comment (line 32), which is not pasted — flip FE-51 to RULED with its dated note and remove the id from FLIP_PENDING, or hold this commit until the operator's own word separates FE-51 from RR-0413.
+
+DEFER severity=MED — fe.49 as the file itself quotes it "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:30 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — '/(app)/map' is banned although neither the rule text the file quotes nor any pasted ruling names the map, so the gate adds a prohibition no pasted clause names — cite the sub-clause that names the lead map beside that line, or drop '/(app)/map'.
+
+DEFER severity=MED — task card "(d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the lock goes green while two live tab pushes still pass, their owner rows existing only inside the why string, which line 126 checks with "expect(a.why).toMatch(/^owed: MF-\d+/);" and not against any open row — name MF-49/MF-50 and MF-51/MF-52, or the pasted plan section that authorizes the two exceptions, in the review packet.
+
+DEFER severity=LOW — acceptance criterion "#2 Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:132 "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" — the only red in the material is an in-memory plant plus a pointer to docs/reports/reviews/task-367/red.out, which is not pasted (cannot see), so the red run is not evidenced here — attach the red.out counts or name the plant commit.
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/nav-tab-switch.logic.test.ts:115 "describe('fe.51: a tab switch uses navigate, not push', () => {" — the change lands a test-only lock, with no blocking gate wiring and no gate landing.
+
+MET — task card "Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts" — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — both new files are on the card's Files list and each carries its SPEC LINK.
+
+REJECT — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — accused of not shrinking the generated no-check lists — this chunk 3 of 3 carries only the three test files, the generators and the regenerated handbook sit in another chunk reviewed in its own run.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  84896ms (84.9s)
+📊 Tokens — total: 47780, input: 28301, output: 19479, reasoning: 18518

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:03.868Z file_sha256=e983b69bc305feacf03fdb5825f163f6112b1d0325ad1c84bf69a7f9a51cb609 prompt_sha256=3be8560f2d7462abec765a073559d03ec9af5cd15a386b517b7f8ff2b3d6e6ac
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p6.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:36 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only fe.49 and fe.54 flip (docs/specs/02-web-admin/136_mcfrontend_handbook.md:179, :194); fe.51 stays OWED on the lane's own reading "RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions", a narrowing the pasted ruling does not contain — flip fe.51 to RULED with its dated note and drop it from FLIP_PENDING, or get the operator to amend RR-0413 in writing.
+
+BUG severity=HIGH — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "58 in force (20 OWED, whose lock is still to land), 0 history." — three rules are gated by this diff (fe.49, fe.51, fe.54) but the list fell 22 to 20 and the header still asserts of the remaining OWED rows "whose lock is still to land" while fe.51's lock, src/tests/surfaces/nav-tab-switch.logic.test.ts, is added in the same diff — same fix as the RR-0413 finding: flip fe.51, or fail the check that the OWED line matches the rows' lock state.
+
+DEFER severity=MED — fe.51 "A tab switch uses navigate, not push." (SPEC LINK, 126:82) — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' }" — the lock pins two live breaches of its own rule as allow-list entries with no dated note on the row recording them as a standing exception (the fe.49 platform_shared pattern) — record the two NAV-AUDIT sites as a dated note under fe.51 before any flip, otherwise RULED would certify a rule the tree breaks at two owned sites.
+
+DEFER severity=MED — fe.54 "An unhandled state is a FAIL, not a blank screen." (128:39) — src/tests/surfaces/failure-state-declared.logic.test.ts:8 "LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at" — the changed line reads "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts" while the enforcing lock states a known live unhandled state (mobile/src/lib/maxbldHelp.ts:19) is out of its reach — record that break as a dated note under fe.54 (it is already owned by the task-343 leftovers) so "Enforced by" is not read as full coverage.
+
+DEFER severity=LOW — fe.49 "No linkage to LeadDetail, the flight board, or the lead feed." (126:140) — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop …; a server file a descriptor does not declare is not scanned." — the lock fe.49 now names as its enforcement cannot see a lead linkage in any undeclared file, and non-programme descriptors are outside the fence — keep the limit but state it in fe.49's dated note so "Enforced by" is scoped to declared files of programme-scope descriptors.
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — src/tests/surfaces/scope-fence.logic.test.ts:1 — no gate A/B script is added; the diff is the three handbook-rule locks plus regenerated artefacts.
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem" — each new lock carries a planted-defect RED case and a clean-tree green case.
+MET — RR-0385 "unbuilt gates withdrawn" — no file under scripts/analysis/gates or the parked wf1/inc1b-gates lane appears in the diff.
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — the card's 2026-11-23 entry records lane BL-HB367 launched on wf1/inc1b-hb367.
+MET — AC #1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "yes to both A. Status flip." confirms the three rows this build locks; no fourth rule is gated.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: none
+
+---
+⏱  78738ms (78.7s)
+📊 Tokens — total: 39510, input: 22383, output: 17127, reasoning: 15909

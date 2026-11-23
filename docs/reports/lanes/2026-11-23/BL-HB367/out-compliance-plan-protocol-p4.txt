@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:44:20.669Z file_sha256=f4e4d26482fbadd45a556b537a823979ba4586b7dddb2934f82e89bcaf7be12f prompt_sha256=03efc03dbfbfbd506043e9a1d418c5f0561e30b44a7c54a2d19d139824d71959
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-plan-protocol-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md:662 "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D (lane BL-HB367, task-367)" — the ruling names three flips and the diff lands three locks but flips only FE-49 and FE-54, parking fe.51 OWED on a Q-D question no pasted ruling authorises — flip fe.51 to RULED in the commit that lands nav-tab-switch.logic.test.ts, or land an operator ruling that narrows RR-0413 before deviating from it
+DEFER severity=MED — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 "58 in force (20 OWED, whose lock is still to land)" — three rules were gated but the generator count falls 22 to 20 and the rule map records FE-51 as owed, so the generated no-check list shrinks by two — after the fe.51 flip rerun generate-surface-handbook.mjs and rule-lists.mjs so the count reads 19 and the map reads active
+DEFER severity=MED — Spec 136 "the lock that enforces it (RULED rows only; an OWED row shows the lock it owes)" — src/tests/surfaces/failure-state-declared.logic.test.ts:8 "Code is not read: the known break at / mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged ...) is not caught here" — fe.54 now reads RULED "Enforced by" a lock that states it cannot catch a live instance of the rule it names, and the register's own dated note records that break — keep fe.54 OWED until maxbldHelp.ts:19 is fixed or an operator ruling scopes the Enforced-by text to descriptor declarations
+DEFER severity=LOW — Joining step 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — .cursor/MCFRONTEND-QUEUE.md:662 "next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder" — the MF-98 row and its control block carry no estimate and no MEASURED or GUESS label — add "estimate: GUESS <n> h" or the measured source to the row
+DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — "status: RUNNING · milestone: m-1 · assignee: @lane-BL-HB367 · labels: McFix, McFix Final" — task-367 carries no McFixReborn label although the ruling names it — add McFixReborn to the card labels
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "yes to both A. Status flip." — the operator confirmed the three rows before the build
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts "B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit" — every lock carries planted-defect cases and the pasted red.out records 3 failed files before green
+MET — RR-0386 "gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md:663 "the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates and their records are untouched
+MET — RR-0392 "no other infrastructure beyond this" — the diff adds no script under scripts/ except prereg-MF-98-1.json and the generated rule map — no new infrastructure is added
+MET — RR-0385 "tests are the focus" — src/tests/surfaces/nav-tab-switch.logic.test.ts "A2. the allow-list only shrinks; each entry has an owner row and a count" — the deliverable is three lock tests with fail-closed allow-lists and owned exceptions
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+Rules met: fe.49
+
+---
+⏱  77592ms (77.6s)
+📊 Tokens — total: 53328, input: 36535, output: 16793, reasoning: 15806

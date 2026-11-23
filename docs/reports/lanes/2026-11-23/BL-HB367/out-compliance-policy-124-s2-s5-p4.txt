@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:44:48.879Z file_sha256=7fe2771b47b41067bece2fdcc54795653fd48bfe913a84d41b0f0875ce949514 prompt_sha256=acdf8cad0875a315ac344b7020d433181a8f86d664ba43a04b8986937258d965
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" / "yes to both A. Status flip." — src/tests/surfaces/register-locks-resolve.infra.test.ts "+const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only FE-49 and FE-54 flip ("status": "owed" → "active" in surface-rule-map.json, "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts" and ".../failure-state-declared.logic.test.ts" in 136), the third row FE-51 stays OWED although its lock nav-tab-switch.logic.test.ts is committed in this same change, and the diff's own comment concedes the ruling: "RR-0413 (\"yes to both\") does not cover RULED with the lock's two named, owned tab-push exceptions" — flip FE-51 to RULED 2026-11-23 in the Spec 135 row, Spec 136 line, rule map and regenerate, or land a pasted operator ruling that scopes the flip to two rows
+
+BUG severity=MED — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land), 0 history." — the generated page still asserts fe.51's lock is "still to land" and counts it in OWED while src/tests/surfaces/nav-tab-switch.logic.test.ts is tracked, so a landed lock is published as owed; the count should be 19 after the third flip — regenerate after flipping, or amend the header sentinel so a lock-present OWED row is not described as "still to land"
+
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts "which waits for the operator's own word (plan PLAN-367-v1 section 11, Q-D; the FE-36 precedent)" — the narrowing of a dated operator ruling rests on PLAN-367-v1 section 11 Q-D, which is not pasted, and the pasted context says of that plan "The plan is not reviewed or grounded yet." — paste the Q-D text (or the operator's word) into the context; an unpasted, ungrounded plan section cannot license departing from a pasted ruling
+
+DEFER severity=MED — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)" — the fe.51 gate is green only because two live tab pushes are allow-listed, so the tree is not clean for this rule and the allow-list's authority (plan section 3 T3) is not pasted — print the two owed violations in the gate's console line as KNOWN_OWED, or cite the pasted authorization for the allow-list
+
+DEFER severity=MED — fe.54 "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the row now reads RULED / Enforced by a lock that skips 8 in-repo SURFACE descriptors, a narrowing no pasted clause authorizes — record the 8 out-of-fence descriptors in the fe.54 dated note so the row's claim matches the lock's reach
+
+MET — Acceptance #2 (red on planted defect) — src/tests/surfaces/scope-fence.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit'" — all three locks ship an in-memory RED case beside a real-tree green case
+
+MET — RR-0412 "both 442 and 367 should be running once this push lands." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json "\"task\": \"MF-98\"" — task-367 ran as its own lane with its own prereg and no unrelated task folded in
+
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — src/tests/surfaces/nav-tab-switch.logic.test.ts "describe('fe.51: a tab switch uses navigate, not push'" — the change lands the three tests only, no McFixReborn work
+
+REJECT — Spec 124 §2 Rule 13 — the change is accused of not regenerating a step scorecard or coverage matrix — Rule 13 governs converted pipeline steps (descriptor, compute, checks); this material touches no descriptor, compute or check, so the clause is out of scope here
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 1
+Rules met: none
+
+---
+⏱  52874ms (52.9s)
+📊 Tokens — total: 39137, input: 28063, output: 11074, reasoning: 9861

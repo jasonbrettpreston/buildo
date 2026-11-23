@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:42:19.640Z file_sha256=2cd07241299a7eb0c3093bb00c781f6c48d288e2f3c82cfa7f934a9064f3cf6a prompt_sha256=318f7e4b347ad1a20939ab001677e91e612ae916e43b1ca75c1031dbda7783d7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p9.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — the ruling names three flips, the diff lands two and holds FE-51 OWED on the lane's own reading "RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions", so the clause is unmet for one of its three rows — flip FE-51 to RULED with its dated note and drop it from FLIP_PENDING, or record the operator refusing that row before merge.
+DEFER severity=MED — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "// commit while the row stays OWED: RR-0413" — fe.51 now has a machine check (nav-tab-switch.logic.test.ts) yet stays OWED, so the no-check list shrinks by two of the three gated rules and the third shrink has no path in this change; the regenerated pages are in another chunk, cannot see — after the flip, rerun generate-surface-handbook.mjs --write/--check and rule-lists.mjs page --write/--check and show the OWED count before and after.
+DEFER severity=LOW — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:110 "expect(a.why).toMatch(/^owed: MF-\d+/);" — the allow-list's property "each owned by an existing LATER queue row" is checked only as a string prefix, so an exception naming an MF id with no queue row still passes both directions — resolve each MF id in the why string against .cursor/MCFRONTEND-QUEUE.md inside the test.
+MET — RR-0386 — src/tests/surfaces/scope-fence.logic.test.ts:1 — gates A and B stay parked, the two new files are handbook rule locks only, no blocking wiring lands.
+MET — AC #1 — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — the locks built are the rows RR-0413 names and no gate beyond them is wired (stage 2 still waits on the gate list).
+MET — AC #2 — src/tests/surfaces/scope-fence.logic.test.ts:119 "B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit" — planted-defect red plus the clean-tree assertion in A are both present.
+MET — RR-0392 — src/tests/surfaces/register-locks-resolve.infra.test.ts:31 — the change adds no infrastructure beyond the two test files and one list edit.
+MET — RR-0388 — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — the new lock lands with no McFixReborn change, so the wait condition is honoured.
+REJECT — m.452, and every m.* / lc.* rule pasted in this part — accused of failing the OWED bylaw obligations of the bylaw-133 list — why: each pasted m.*/lc.* clause names MaxBLD bylaw work (MB-27, MB-31, MB-79, MB-80, Layer 3, enrich_parcels, checkout feeds), and none names these three McFrontend surface test files or their subject.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+
+---
+⏱  75898ms (75.9s)
+📊 Tokens — total: 40309, input: 24303, output: 16006, reasoning: 15165

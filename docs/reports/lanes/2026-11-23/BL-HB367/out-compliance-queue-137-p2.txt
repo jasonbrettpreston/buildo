@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:38.338Z file_sha256=ee0a917833e07c6059dad32e4890ee0f5de7d368fc5e0c2035d6a249e44ca1e5 prompt_sha256=9118ada3cab7c7816fdf867b8b0d3947bedee70a4dcf5d064ee72dc6cc3c4c78
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];" — only FE-49 and FE-54 flip (the two surface-rule-map.json hunks) while FE-51 stays OWED, so the approved three-row flip is not carried out — either flip FE-51 to RULED with its dated note per RR-0413, or paste the operator's Q-D answer that defers it.
+DEFER severity=LOW — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/nav-tab-switch.logic.test.ts "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the two allow-list entries and the FLIP_PENDING add are named only by plan section 3 T3, which is not pasted, not by any pasted ruling — paste plan section 3 T3 or the Q-D answer so the exceptions are shown as authorised.
+MET — Spec 137 §4 Rule 3 (amended two-commit close, task-410 note) — "MF-98 row stays RUNNING, next: the closing commit." — the work commit lands the locks without flipping MF-98 to BUILT in the same commit, matching the two-commit close.
+MET — RR-0386 "gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts and failure-state-declared.logic.test.ts and nav-tab-switch.logic.test.ts — three handbook locks built fresh, no gate wiring added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+Rules met: none
+
+---
+⏱  74633ms (74.6s)
+📊 Tokens — total: 43906, input: 27841, output: 16065, reasoning: 15620

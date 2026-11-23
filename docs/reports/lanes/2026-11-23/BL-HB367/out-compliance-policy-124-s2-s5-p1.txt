@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:44:23.712Z file_sha256=aa52ab437093e4bbcd23de6905cb9a6c7e55ec9e14f079c63ff4dd69f368f31e prompt_sha256=fdc55632a35edbaa2ab3d80d6e25d0e21438a09398abdd6c1de77a64b94111d4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "| FE-51 | Navigation extras that FE-36 does not state. ... | OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet" and .cursor/MCFRONTEND-QUEUE.md "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the ruling names three rows flipping to RULED in the commit that lands their tests; this diff flips FE-49 and FE-54 only, so the third named row is clause-unmet and the deferral rests on Q-D, a question no pasted operator word answers — flip FE-51 to RULED in this commit (its lock and its FLIP_PENDING join are already landed) or paste the operator ruling that defers it.
+
+DEFER severity=MED — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — pasted acceptance run "AC3: Status: OWED count 20 (NOT-YES branch: 20)" alongside the queue line "fe.51 stays OWED on FLIP_PENDING" — three locks land but only two register rows flip, so the no-check list shrinks by two and the shrink by three the criterion names cannot be shown, and the count carries no prior value to read a delta from — state the OWED count before and after the commit in the row, or flip the third row.
+
+DEFER severity=MED — FE-54's quoted clause "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "The lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers" — the row reads RULED over a corpus narrower than the clause it quotes, the same posture that keeps fe.51 OWED on FLIP_PENDING, so one of the two adjudications is wrong — either hold FE-54 OWED for the same reason or cite a pasted ruling that scopes the lock.
+
+DEFER severity=LOW — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`<br>OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384)" — both status tokens now sit in one cell, so any generator that counts by token reads FE-49 and FE-54 as still OWED and the AC3 shrink depends on which token the reader picks — mark the superseded OWED text as prior (or strike it) so one status governs the cell.
+
+MET — Acceptance #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "RR-0413 ... \"yes to both\"" — the three-row gate list was confirmed before the three locks were built.
+
+MET — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — pasted acceptance run "red.out: Test Files 3 failed (3)" then "Test Files 5 passed (5), Tests 67 passed (67)" — red at the designed assertions then green is recorded for all three locks.
+
+MET — Spec 124 §2 Rule 13's generated-artifact freshness half — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | ... | 29,136 | 1 |" with "| total | 11 lists | | 226,914 | 11 |" and "| total | 12 lists | | 307,977 | 12 |" — the generated page is regenerated and the two section totals both move by exactly the +60 of the two surface-136 rows.
+
+MET — queue id discipline ".cursor/MCFRONTEND-QUEUE.md" "Next free id: **MF-99** ... MF-97 is held by lane BL-FEDB442 ... MF-98 is taken by the COMPLY.3 row" — the id, the prior line value and the two claims are consistent.
+
+REJECT — Spec 124 §2 Rules 1 to 13 — accused of being unmet by this change — the diff contains no step descriptor, compute file, checks[], logic_variables row, write target or verdict site, so those thirteen clauses have no object here to violate.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 4
+Rules met: none
+
+---
+⏱  66219ms (66.2s)
+📊 Tokens — total: 45541, input: 32288, output: 13253, reasoning: 12078

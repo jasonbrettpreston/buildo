@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:43:00.233Z file_sha256=f800e7edf9e2ba39f24538cbd5944c12d2c63017ee3b863fdf8a3a59081d3211 prompt_sha256=26f5ad26e9809034cb41831c64d724d3a9023a73d6ed156756bea802839e33bf
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" (panel record: "A: the rows flip from OWED to RULED in the commit that lands their tests") — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row unchanged: "| OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule. |" — the ruling names three flips in the commit that lands the tests, the diff lands the nav-tab-switch lock but flips only two rows and parks the third on an unanswered Q-D that no pasted ruling authorises — fix: land FE-51 as RULED with the two named owned tab pushes carried in its dated note, or put the operator's Q-D answer on the record before this merge.
+
+BUG severity=MED — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — .cursor/MCFRONTEND-QUEUE.md MF-98 row: "fe.51 stays OWED on FLIP_PENDING until the operator answers Q-D" — the change adds a fourth register status (OWED on FLIP_PENDING) that no pasted ruling or card line names, and couples two locks through source text at src/tests/surfaces/handbook-rule-map.logic.test.ts "const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));" — fix: drop FLIP_PENDING, leave the FE-51 row exactly as it read, and settle its status in one operator ruling.
+
+BUG severity=MED — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);" — three rules were gated and the OWED list shrank by two (136: 22 OWED to 20 OWED), and because the floor is derived from the same rows a further silent flip still passes (floor 19 against actual 20) — fix: set the floor to 21 minus BUILT_BY_367.length so a fourth flip fails, and either land the third flip or record its hold.
+
+DEFER severity=LOW — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "RR-0413, operator, verbatim: \"yes to both\"" — the operator's recorded words are truncated in the register note, the FE-49 note, the queue row and the panel, so the attestation does not carry the ruling it rests on — fix: quote the full recorded string in all four places.
+
+DEFER severity=LOW — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — NONE (src/tests/surfaces/scope-fence.logic.test.ts and src/tests/surfaces/nav-tab-switch.logic.test.ts are in chunk 2) — red and green proof for two of the three gates cannot be seen in this chunk; only failure-state-declared case B "RED planted (KNOWN_BAD, in memory)" is pasted, and the red evidence is claimed in docs/reports/reviews/task-367/red.out which is not pasted — fix: attach red.out to the reviewed material or cite it line by line in the panel record.
+
+DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — NONE (the backlog task-367 card is not in this chunk; the pasted card reads "labels: McFix, McFix Final") — cannot see whether the label landed; the pasted card text shows it absent — fix: add McFixReborn to the task-367 labels in the same change.
+
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "RR-0413, operator, verbatim: \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)" — the three-row list was confirmed before the build.
+
+MET — RR-0386 "gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md MF-98 row "the parked branch wf1/inc1b-gates (RR-0386)" — gates A and B are not landed, the parked branch is declared untouched, and the work is the handbook rule locks.
+
+MET — RR-0412 "both 442 and 367 should be running once this push lands" — .cursor/MCFRONTEND-QUEUE.md "**MF-98 COMPLY.3 ... — RUNNING** (E)" — task-367 is RUNNING on the queue with MF-97 left to lane BL-FEDB442.
+
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (20 OWED, whose lock is still to land)" — the tests are placed and no McFixReborn work appears in the diff.
+
+REJECT — RR-0413 — that FE-49 reads RULED while its note excludes a platform_shared mention of lead_parcels from the lock — the note records a notes string at contract_admin_pipeline_step_output.descriptor.json:410, not a read of the table, so "lead_parcels is read by no surface" is not contradicted the way FE-51's two live tab pushes are.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  83406ms (83.4s)
+📊 Tokens — total: 53365, input: 35551, output: 17814, reasoning: 16388

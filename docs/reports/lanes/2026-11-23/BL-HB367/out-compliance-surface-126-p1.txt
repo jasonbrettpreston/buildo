@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:45:38.351Z file_sha256=35ba87b9eee132d84aad2bf9fa78b408459543291be81f81467a7165e3e89269 prompt_sha256=8039ae54663e7c3848b96f38d80e8badb32dc0d2a325b3a549d47913a788b05a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0413 "RR-0413 task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/reports/panels/MF-98.json "Q-D open: may fe.51 read RULED while its lock carries two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)? Until the operator answers, the row stays OWED on FLIP_PENDING." — clause unmet: the ruling names three rows flipping in the commit that lands their tests and the change flips two, holding fe.51 behind a question whose answer is not pasted, and the row also builds fe.51's lock while "FE rows owned: FE-49, FE-54." — fix: land the operator's answer to Q-D verbatim as a dated note in the same commit, or flip FE-51 to RULED with the two named owned exceptions and add FE-51 to the owned list
+
+DEFER severity=MED — Spec 126 §0b item 11 "Two sentences above are convention, not checked by the lock: a tab switch uses `navigate` (the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52)" — docs/reports/panels/MF-98.json "fe.51 tab switch with two named, owned exceptions (nav-tab-switch.logic.test.ts)" — the change promotes a sentence the governing spec calls convention into a checked rule, and no dated note amending §0b item 11 appears in the pasted material — rationale: land a one-line dated note at §0b item 11 (or a Spec 135 row) recording the promotion and the ruling that authorised it, so the spec text and the new lock do not disagree
+
+DEFER severity=MED — Spec 126 §0b item 11 "(the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52)" — docs/reports/panels/MF-98.json "MF-49/MF-50 and MF-51/MF-52: the row that fixes mobile/app/(app)/parcel-tool/_layout.tsx or tracked.tsx removes its nav-tab-switch entry in the same commit" — the third owing pair (flag #6, MF-35/MF-52) is absent from the panel's exception and followup sets; the lock file itself is in another chunk, so whether its fail-closed allow-list carries #6 cannot see — rationale: add the MF-35/MF-52 entry and its owning followup, or record that #6 is already fixed and needs no entry
+
+DEFER severity=LOW — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited" with "'Operator verbatim' = the operator's own words" — docs/reports/panels/MF-98.json "Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)." — an orchestrator reading is attached to the verbatim tag without the form this same queue uses ("orchestrator reading, flagged and not the operator's words") — rationale: mark A and B as the orchestrator's reading so the ruling relied on above is not itself a gloss
+
+MET — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — .cursor/MCFRONTEND-QUEUE.md "This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-99** (ids are never reused)." — the MF-98 row is added and the id line is advanced by dated note naming the prior value and both claims
+
+MET — queue file dated-note form (M-246, prior text kept) — .cursor/MCFRONTEND-QUEUE.md "the line read \"Next free id: **MF-97**\" before this note. MF-97 is held by lane BL-FEDB442 (task-442, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-97)" — every prior dated note is preserved and the new note names the value it replaced
+
+MET — Spec 126 §0b item 6 (ruling cited with date and record path) — .cursor/MCFRONTEND-QUEUE.md "RR-0413, operator, verbatim: \"yes to both\" (:2108)" — the landed row cites the ruling with its record path and line
+
+MET — Spec 126 §0b item 3 "Screens are declared as data and drawn by the shared bindings; no page code" — .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-98.json — the chunk touches no page, descriptor or component file
+
+MET — Acceptance #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json "B: the three rows are the list" — the three-row list is recorded as confirmed by RR-0413 and cited on the row
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+Rules met: none
+
+---
+⏱  101661ms (101.7s)
+📊 Tokens — total: 47296, input: 26417, output: 20879, reasoning: 19631
