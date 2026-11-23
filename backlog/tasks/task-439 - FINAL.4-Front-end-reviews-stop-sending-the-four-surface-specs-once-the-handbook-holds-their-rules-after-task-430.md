@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SURF439'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-23T16:08:00Z'
 labels:
   - McFix
   - McFix Final
@@ -33,6 +33,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-SURF439/REPORT.md
 type: build
 ordinal: 139012
 ---
@@ -246,4 +247,6 @@ $ page totals
 N1, N2 and the changed tests: red.out refused (2 failed, N1 at :339 and golden path at :165); commit.out green, Tests 28 passed (28). The planted defects of N1 and N2 are asserted in the same tests (each designed assertion throws on its planted table) and pass in the green run.
 
 2026-11-23 (lane BL-SURF439): output review round 1 run on DeepSeek with fresh context context-r3.md: compliance once per list (9 lists; policy-124-s2-s5 in two parts), engineering eng-all, code-review, error-paths; 13 outputs, all exit 0; 29 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-SURF439/FINDINGS.md. Grounder owed (RR-0359); task stays RUNNING.
+
+2026-11-23 (lane BL-SURF439): REPORT.md in docs/reports/lanes/2026-11-23/BL-SURF439; close dry run on a throwaway clone shows only the REPORT ref (added now) and the grounder's GROUNDER.md missing; no refusal about the review material. Grounder owed.
 <!-- SECTION:NOTES:END -->
