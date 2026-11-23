@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOOK440'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T13:49:00Z'
+updated_date: '2026-11-23T14:07:00Z'
 labels:
   - McFix
   - McFix Final
@@ -23,6 +23,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/reviews/task-440/RULE-CHECKS.md
 type: record
 ordinal: 140012
 ---
@@ -267,4 +268,6 @@ rg#5 MED folded scripts/analysis/mcb
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-LOOK440, worktree /Users/brettpreston_macmini/Buildo-wt-look440, branch wf1/inc1b-look440), RR-0240
+
+2026-11-23 lane BL-LOOK440 (Opus): RULE-CHECKS.md written at pin S=ba4ac48fd (the launch head): group 2 (58 rows: 7 enforced, 22 partly, 29 none), group 1 (57 rows: 33 enforced, 4 partly, 20 none; fe.58 pending via task-446), group 3 (47 rows listed again: 0 enforced, 17 partly, 30 none). One open known break ranked (fe.54, K2 BL-RULESACC GROUNDER.md:136); D2, D3, D6, D7, D8, D14 read fixed; D1 and D10 open under Outside. Read-only: no code, test, tool or rule change. Task stays RUNNING: compliance lens next, then the separate grounder (GROUNDER-LOOK.md, RR-0359).
 <!-- SECTION:NOTES:END -->
