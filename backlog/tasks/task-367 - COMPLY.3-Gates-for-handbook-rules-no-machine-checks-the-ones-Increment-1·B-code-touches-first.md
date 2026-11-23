@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:28:00Z'
+updated_date: '2026-11-23T18:32:00Z'
 labels:
   - McFix
   - McFix Final
@@ -514,4 +514,6 @@ Dated note 2026-11-23 (M-246, prior text kept in git history at b32ea9b4c; RR-03
 Dated note 2026-11-23 (M-246, prior text kept; RR-0386, RR-0412 · task-367 · Backlog; operator, verbatim: "So both 442 and 367 should be running once this push lands."): status RUNNING to LATER and the parked lane @lane-BL-GATES taken off the card by the orchestrator, because the plan review tool and the launch script take only a waiting task (rule-lists.mjs plan-prep refusal "only a waiting task is prepared"; scripts/analysis/backlog-lane.mjs:66) and the handbook tests start clean (RR-0386). The parked branch wf1/inc1b-gates and its records are untouched. The card returns to RUNNING when lane BL-HB367 is launched by the launch script. Orchestrator decision under the six criteria, logged for the operator.
 
 2026-11-23 taken on the board at lane launch (lane BL-HB367, worktree /Users/brettpreston_macmini/Buildo-wt-hb367, branch wf1/inc1b-hb367), RR-0240
+
+2026-11-23 lane BL-HB367 commit 0 (plan section 6, alone and first): the MF-98 row in Phase 2 of .cursor/MCFRONTEND-QUEUE.md (RUNNING; FE rows owned: FE-49, FE-54; Next free id MF-99 by dated note, MF-97 held by BL-FEDB442), prereg-MF-98-1.json (round 203, rules FE-09, FE-10, FE-16, FE-36; totals copied from prereg-MF-96-1.json, the newest) and docs/reports/panels/MF-98.json. Q-D is not answered: the build follows the plan NOT-YES branch (fe.51 lock lands, row stays OWED on FLIP_PENDING).
 <!-- SECTION:NOTES:END -->
