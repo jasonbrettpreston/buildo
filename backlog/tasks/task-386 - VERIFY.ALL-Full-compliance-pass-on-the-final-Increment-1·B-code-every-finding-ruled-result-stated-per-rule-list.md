@@ -3,15 +3,14 @@ id: TASK-386
 title: >-
   VERIFY.ALL Full compliance pass on the final Increment 1·B code, every finding
   ruled, result stated per rule list
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-22T20:55:00Z'
+updated_date: '2026-11-23T17:21:00Z'
 labels:
   - McFix
   - McFix E
   - McFix Final
-  - McFixReborn
 milestone: m-1
 dependencies: []
 type: check
@@ -50,4 +49,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0361 · task-386 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0387 · task-386 · Backlog; operator, verbatim: "Approved. You run it.  Let's call this the McFixReborn")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0388 · task-386 · Backlog; operator, verbatim: "Let's wait for the McFixReborn until the new tests are in place - does that make sense?")
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0412 · task-386 · Backlog; operator, verbatim: "Merge or remove 386 - because we have the updated McFix Reborn process. So both 442 and 367 should be running once this push lands."): this card is merged into McFixReborn (RR-0387, RR-0408) and withdrawn; it is not a separate pass, and McFixReborn no longer waits for it (amends RR-0393).
 <!-- SECTION:NOTES:END -->
