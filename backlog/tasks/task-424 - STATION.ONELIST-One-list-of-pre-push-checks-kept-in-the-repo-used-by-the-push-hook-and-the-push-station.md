@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:35:00Z'
+updated_date: '2026-11-23T14:37:00Z'
 labels:
   - McFix
   - McFix V2
@@ -31,6 +31,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-ONE424/REPORT.md
 type: build
 ordinal: 124012
 ---
