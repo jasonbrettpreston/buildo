@@ -3,10 +3,11 @@ id: TASK-439
 title: >-
   FINAL.4 Front-end reviews stop sending the four surface specs once the
   handbook holds their rules (after task-430)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SURF439'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T15:57:00Z'
+updated_date: '2026-11-23T15:58:00Z'
 labels:
   - McFix
   - McFix Final
@@ -18,6 +19,20 @@ references:
   - docs/reports/reviews/task-439/seat-integration-1.md
   - docs/reports/reviews/task-439/seat-reality-check-1.md
   - docs/reports/reviews/task-439/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 139012
 ---
@@ -197,4 +212,6 @@ rg#1 MED folded (guards the hand edi
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 (orchestrator, at launch, a note not a plan edit): task-446 is folded on the board at 2fe7fa150, so the handbook now holds one more line than the plan counted (fe.58 for R-22): where the plan's figures read 57 handbook rules or 21 OWED rows, the tree reads 58 and 22. The lane measures at its own head and reports the figure it finds; if a planned test pins the old figure, stop and report.
+
+2026-11-23 taken on the board at lane launch (lane BL-SURF439, worktree /Users/brettpreston_macmini/Buildo-wt-surf439, branch wf1/inc1b-surf439), RR-0240
 <!-- SECTION:NOTES:END -->
