@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:30:07.501Z file_sha256=6bdc2408312c1003b65136caeca1ed90bdc2cfe0787336d110b9e968cb2c8987 prompt_sha256=5b54191b53c6fc34544d1631fe06876ffa092c2761fb167ae31a8f78d3bdf311
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0396 "the fe.58 line text as shown to him" and "no seam sentence appended to fe.49" — NONE — this chunk holds only the queue row, the panel record, the rule-lists page and the system map, so the fe.58 line text and the absence of a seam sentence on fe.49 cannot be seen — verify both in docs/specs/02-web-admin/136_mcfrontend_handbook.md and 135 (chunk 2) before the closing commit.
+
+REJECT — FE-56 "A rule without a lock is not yet a rule" — the change is accused of landing FE-58 with no lock — the row is OWED with a reserved path, which is exactly the state FE-56's evidence column sanctions ("Today only the red-evidence file is checked, for an OWED flip").
+
+REJECT — FE-55 "The admin is a projection, not a product" — the change is accused of opening a parallel admin path — the diff is documents only (queue row, panel record, regenerated page, system map) and names no admin surface or data path.
+
+MET — FE-58 — .cursor/MCFRONTEND-QUEUE.md "one OWED Spec 135 row restating Spec 128 R-22 (128:224) with one reserved lock path (the lock is task-367's)" — the row restates R-22 only, the lock stays task-367's reservation, no SSR-assuming mobile mechanism is planned.
+
+MET — FE-58 — docs/specs/00-architecture/00_system_map.md "src/tests/surfaces/mobile-no-rsc.logic.test.ts" — the reserved path recorded on the spec 135 row is the same path the register row names.
+
+MET — FE-56 — .cursor/MCFRONTEND-QUEUE.md "The new register row is OWED, so this row owns none (arm Q, Spec 128 section 4.11 item 7)." — the OWED state is declared in the row, the queue block and the register, and no lock is claimed proven or red.
+
+MET — RR-0395 "one handbook line per missing rule before task-439 lands, recommended for R-22, R-03 and R-04" — the queue Done-condition and the system map change carry R-22 only; no R-03 or R-04 row or line is added by this chunk.
+
+MET — card "NOT in this task: ... a rule-table change (task-439's)" — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | ... | 113,756 | 3 |" — only the generated character and total counts move (386 + 1,905 = 2,291 in both totals), no rule-table change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: FE-56, FE-58
+
+---
+⏱  109542ms (109.5s)
+📊 Tokens — total: 33140, input: 19415, output: 13725, reasoning: 13081

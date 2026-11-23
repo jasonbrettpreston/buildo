@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:26:51.326Z file_sha256=4fef21010168bfbab22315c226bb8e91d27f1c3220465d67bee974de59e323fe prompt_sha256=61ee365e1203c9dc9e8232c7ee905d9be36a23a88d9c25f8e44814ce22450ede
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+REJECT — 11b "Rules ruled elsewhere are pointed to, not restated." — the change restates Spec 128 R-22 verbatim ("React Native has no Server Components. Web is RSC on Vercel...") in FE-58 and fe.58 — not a real issue: 11b binds how Spec 126 §11b is written (one home, point not restate), and the operator approved that exact line text ("Question1 yes. push complete").
+
+REJECT — Task "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — the diff adds the new T1 and T2 cases to src/tests/surfaces/handbook-rule-map.logic.test.ts — not a real issue: they pin the handbook line inside the Spec 136 lock file (the "tests first" the card asks for), and R-22's enforcement lock stays task-367's ("the lock is task-367's").
+
+MET — 11a.7 item (7) "The node contract (required keys and the closed sets of status, confidence, provenance and lifecycle) lives in one file, `scripts/surfaces/_schema/report-tree.schema.json`" — scripts/surfaces/_schema/surface-rule-map.json "+    { "id": "fe.58", "section": "rules" }" — the only schema file touched is the handbook rule map; report-tree, report-page, report-layout and every golden are untouched.
+
+MET — 11a.8 "Spec 135 FE-04's lock stays OWED until the numbers are ruled." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "+| FE-58 | No Server Components on mobile." — the register edit is one row appended after "| FE-57 |", FE-04 and its lock cell are not touched, so FE-04 stays OWED.
+
+MET — RR-0396 "Question2 No" (no seam sentence appended to fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md, the diff adds only the fe.58 block after "Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts" — fe.49 is not edited.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  61838ms (61.8s)
+📊 Tokens — total: 47964, input: 36213, output: 11751, reasoning: 11217

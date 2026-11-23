@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:28:54.105Z file_sha256=fd30f726065c43e3a30333350e1e7896cd2db2c4a7b4c05ca2365d2cd56af033 prompt_sha256=88fa8aeccb0dc497538b6a76795f4d915ea529e170dcf1ed88b0a9c2b9192ada
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — FE-09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — docs/specs/00-architecture/00_system_map.md "`src/tests/surfaces/a11y-category.logic.test.ts`, `src/tests/surfaces/mobile-no-rsc.logic.test.ts` | DRAFT |" — the system map now names the R-22 lock as a Spec 135 test while the row itself is OWED and the lock belongs to task-367 ("with one reserved lock path (the lock is task-367's)"), so a lock path that does not yet resolve is presented as a Spec 135 test; whether the map generator emitted it or it was hand added cannot be seen in this chunk — land the map line with task-367, or record in the MF-96 panel that the generator derives it from the reserved lock path so the map is not read as proof the lock exists.
+DEFER severity=LOW — FE-11 "no MF task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40)" — .cursor/MCFRONTEND-QUEUE.md "+Status: RUNNING · since 2026-11-23 · expires 2026-11-30" — the hunk inserts the row directly above "## Later: convert-on-touch", so the row's Phase 2 membership rests only on an unpasted panel note ("MF-96 queue row under Phase 2") and the section heading is not in the diff; whether mcfrontend-queue.infra.test.ts still reads it as a Phase 2 row cannot be seen here — confirm the heading sits inside the Phase 2 section, or add the section heading to the diff so the placement is visible.
+DEFER severity=NIT — RR-0396 "Question1 yes. push complete" — docs/reports/panels/MF-96.json "(R-22 only, the fe.58 line text as shown to him)" — the operator approved a specific fe.58 line text, but that text is pasted nowhere in the context, so no chunk can compare the landed line against what he approved — paste the approved fe.58 line text into the panel or the task card so the wording can be checked verbatim.
+REJECT — FE-08 "135 = decisions register; 136 = generated handbook." — that regenerating docs/reports/generated/rule-lists-by-kind.md with new byte counts (28,690 to 29,076 and 111,851 to 113,756, total delta 2,291 both tables) adds handbook content outside the task — not a real issue, the card's Files name that page and the deltas are exactly the sum of the two landed content changes.
+REJECT — FE-13 "No pre-commit, CI or package-script wiring (MF-25)." — that the change wires the surface locks into a gate — not a real issue, no pre-commit, CI, package-script or gate file is touched; only the system map's test column moved.
+MET — FE-16 — docs/specs/00-architecture/00_system_map.md "| 135 | `02-web-admin/135_mcfrontend_decisions_register.md` | McFrontend Decisions Register |" — both specs stay at the ruled docs/specs/02-web-admin paths, no doc set move and no tooling change.
+MET — FE-10 — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |" — the handbook and rule-map outputs move only through their existing generator commands, matching the card's "No generator, Spec 128 or rule-table change".
+MET — FE-04 — .cursor/MCFRONTEND-QUEUE.md "`generate-surface-handbook.mjs --check` and `src/tests/surfaces/handbook-rule-map.logic.test.ts` are green." — no gate exit 0 is read as a budget ruling and the row claims no budget number, so FE-04 stays OWED.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 36   Unmet: 0
+Rules met: FE-01, FE-04, FE-08, FE-10, FE-13, FE-16
+
+---
+⏱  81082ms (81.1s)
+📊 Tokens — total: 47916, input: 31484, output: 16432, reasoning: 15464

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:24:51.580Z file_sha256=d66bc1759b1dda475bc50ce579787f3ef99ada9c58c616494798d0ce5e131720 prompt_sha256=2b9ce2c47f6a757b6ba1c3152d829bae4651037d422e40ebf3d4c982010a8e30
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+MET — Rule 13 — `.cursor/MCFRONTEND-QUEUE.md` "**MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components) — RUNNING** (E)" — the new status is written on its own queue row (the record); no board file appears in the diff.
+MET — Rule 13 — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` "+| FE-58 | No Server Components on mobile." — the register row is added in place, so the row stays the record.
+MET — Rule 14 — `.cursor/MCFRONTEND-QUEUE.md` "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit" — the status line is present and machine-readable, so nothing needs fixing on the row.
+MET — §6 Deferred — `docs/reports/panels/MF-96.json` "No generator, Spec 128 or rule-table change." — the diff adds a register row, a handbook line and regenerated pages only, so the deferred commit check stays unbuilt and Backlog.md is not adopted.
+MET — RR-0396 — `docs/specs/02-web-admin/136_mcfrontend_handbook.md` "@@ -202,6 +202,9 @@ +- **fe.58** No Server Components on mobile." — only fe.58 is appended after fe.57; fe.49 is untouched, so no seam sentence was added.
+MET — RR-0395 — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` "+| FE-58 | ... React Native has no Server Components ... (Spec 128 R-22, 128:224, ACCEPTED)." — one row restating R-22 only, the missing line this task supplies before task-439.
+MET — RR-0379 — `docs/specs/02-web-admin/136_mcfrontend_handbook.md` "v1 covers the 58 FE rulings of Spec 135." — one line added, consistent with adding handbook rules over time rather than in bulk.
+
+REJECT — Rule 13 — accused of weakening the MF-95 C-T2 "last rows of the register" assertion to accommodate FE-58 — Rule 13 governs where a status lives, not test strictness, and the relaxed case still pins the thirteen rows contiguous in item order with red evidence recorded.
+REJECT — §6 Deferred — accused of building the deferred generated index in the repo via `rule-lists-by-kind.md` — that page is rule lists by kind, not a queue index; the queue board remains outside the repo in §5a.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  54253ms (54.3s)
+📊 Tokens — total: 39650, input: 28346, output: 11304, reasoning: 10676

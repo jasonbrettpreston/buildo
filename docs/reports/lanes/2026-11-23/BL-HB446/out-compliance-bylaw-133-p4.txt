@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:21:43.700Z file_sha256=78d02b45ae34a9dbd210b92adf839da5094d7c1e208c2ff2cb449284b9de16b5 prompt_sha256=c9d0a37e500aee188bcb8a60905ce56cd3d8c315ef2c137fe2dcd23f3817ba60
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-446 card "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules" — src/tests/surfaces/handbook-rule-map.logic.test.ts "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 adds a permanent CI assertion that R-03 (128:205) and R-04 (128:206) are each cited exactly once, going beyond the R-22 line and beyond task-430's pattern that tested only its own rows; read narrowly this is a new check on out-of-scope rules — restrict the loop to R-22 (128:224) and keep R-03/R-04 only as off-register planted/control fixtures.
+
+REJECT — m.360 "a test never asserts a red floor" — T2 "expect(r.status).toBe('OWED');" pins a red baseline — not a real issue: OWED is the row's current correct status (its enforcement lock is task-367's, not T2), the test goes green once FE-58 lands, and the plan records the same-commit edit when task-367 flips the row.
+
+MET — RR-0396 "Question2 No" (no seam sentence on fe.49) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — only FE-58/fe.58 are added; fe.49 is untouched.
+MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — "- **fe.58** No Server Components on mobile ..." added in section 2.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135_mcfrontend_decisions_register.md — "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" is OWED and the path is absent.
+MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json — "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK" and expected_totals equal expected_before_totals.
+MET — register Next free id rule "the first value on the line, the one the Spec 136 generator reads, is FE-59" — 135_mcfrontend_decisions_register.md — the line advanced 58 to 59 with a dated note.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: m.322, m.360
+
+---
+⏱  108688ms (108.7s)
+📊 Tokens — total: 53836, input: 30633, output: 23203, reasoning: 22531

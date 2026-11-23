@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T14:32:13.887Z file_sha256=6de1e7097c970bf83cddcf0afaba36cf6421f57812f7fbd7c2f089dff2c8b3b4 prompt_sha256=ae34f4ced9a7ba1c7f650894386040f63b5f7deee7a90efb9603e868fb053bad
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found.
+
+DEFER severity=MED — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:17 "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — the reserved renumber range for lane BL-MFRULES landing second still ends at FE-58, which this change consumes, so a second landing that follows this note instead of the ledger writes a second FE-58 row and the rule map is keyed by that id — extend the parenthetical to FE-59 onward and say BL-MFRULES renumbers to the first free id after FE-58.
+
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-97** (ids are never reused)" — the MF path has no renumber-on-second-claim sentence while the FE register carries one, so two lanes launched while the line read MF-96 both append an MF-96 row and this file gives no recovery rule, the only dedup key being the out-of-repo ledger "id claimed in ~/Buildo-scratch/ids/MF-96" — add the same renumber-at-landing sentence the FE note uses.
+
+DEFER severity=LOW — pasted Implementation Notes "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite" — the four checks that would catch a duplicated queue row, a stale rule-lists table or an OWED lock path that already exists do not run before this commit, detection is pushed to the push station, which fails closed but only after the commit exists — run those four in the pre-commit related set or record them as an explicit push-station gate on the MF-96 row.
+
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:294 "stripRows(REGISTER, tail, rows.length - tail.length + 1)" — the +1 looks off by one for a call that removes tail.length rows, leaving rows.length - tail.length — handled: the replaced call carried the same +1 (rows.length - 12 for 13 ids), so the offset is stripRows' own convention, its body is not visible and the case is green.
+
+REJECT — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json:2 "every total below is the unchanged MF-95 prereg total" — copying the previous baseline looks like it could silently approve a stale figure — handled: a figure that moved between the two preregs mismatches expected_before_totals and the run reports DIFFER, so it fails closed.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md:47 "| total | 15 lists | | 724,797 | 20 |" — a hand-checkable total that would drift on a partial write — handled: 28,690+386 and 111,851+1,905 sum to the +2,291 delta and the page is rebuilt by rule-lists.mjs page --write then --check, so a second run is a no-op.
+
+REJECT — docs/specs/00-architecture/00_system_map.md:100 "src/tests/surfaces/mobile-no-rsc.logic.test.ts" — the map now names a test file that does not exist, which an existence check would fail — handled: register rule 5 (135:15 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist") makes absence correct, and the lane reports system-map.infra.test.ts green at commit 2905df62d.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (generator --check stale, T1/T2 red), empty (fresh/hit empty, citing over zero rows), retry (second --write, BL-MFRULES second landing), time-out (RUNNING expires 2026-11-30, push-station deferral), double-submit (MF-96 and FE-58 claim collision, row appended twice), degrade-safe (OWED lock absent, system map pointing at it, prereg baseline), idempotency (id ledger key, generated totals, rule-lists page)   Unguarded: 1
+
+---
+⏱  79512ms (79.5s)
+📊 Tokens — total: 41797, input: 26982, output: 14815, reasoning: 13861

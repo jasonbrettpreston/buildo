@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:29:01.922Z file_sha256=72fc4ec92f38640037323377991837b654bad3b49e7eb54b86396e67f707d732 prompt_sha256=450fb5ce69e074cb9056b08c3a6ae8599de141bc0bae0fa48d4f3b3822f81732
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-135-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-96.json "task-367: build the R-22 lock src/tests/surfaces/mobile-no-rsc.logic.test.ts and flip the row (task-434 merged into it, RR-0385 item 6)" — the register rows this merge touches still name task-434, e.g. FE-49 "the lock is task-434's and the path is a reservation", and no pasted line moves them, so the reserved locks of FE-45 to FE-54 lose their named owner while the followup names only the R-22 lock — move those rows' lock owner to task-367 in this landing or state in the followup that task-367 inherits every task-434 lock
+
+DEFER severity=LOW — FE-31 "generated and vendored files pass `--check`/manifest" — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 113,756 | 3 |" — the same 113,756-char register is cut as "part 3 of 4" in the pasted list, so the page's parts column and its totals of 20 and 21 are not shown to be the reader's split and may be stale — rerun `rule-lists.mjs page --write` and reconcile the 135 parts count and the totals, or record why the reader splits four parts
+
+MET — RR-0395 "Agreed. Plan approved" — .cursor/MCFRONTEND-QUEUE.md "ruling: \"Agreed. Plan approved\"" — the queue row and the panel record both carry the plan approval, and the work commit follows it
+MET — RR-0396 "Question1 yes. push complete" and "Question2 No" — docs/reports/panels/MF-96.json "(no seam sentence appended to fe.49)" — chunk 1 adds the R-22 line only and appends nothing to fe.49
+MET — FE-31 — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |" — the generated pages are regenerated and the acceptance records "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current"
+MET — FE-48 — .cursor/MCFRONTEND-QUEUE.md "id claimed in ~/Buildo-scratch/ids/MF-96" — scratch paths are cited as references only, no mock or Stitch content is copied into the repo
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 0
+Rules met: FE-31, FE-48, FE-53
+
+---
+⏱  188030ms (188.0s)
+📊 Tokens — total: 69544, input: 32471, output: 37073, reasoning: 36425

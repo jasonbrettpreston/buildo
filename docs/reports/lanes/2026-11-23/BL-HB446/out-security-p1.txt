@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T14:32:27.105Z file_sha256=6de1e7097c970bf83cddcf0afaba36cf6421f57812f7fbd7c2f089dff2c8b3b4 prompt_sha256=62fe453474374ad42b1c2ab3d5fccfdde4ef3be6bfe4302f1900da54ea0e263f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-security-p1.txt (model: deepseek-reasoner)
+
+NOT APPLICABLE: docs, generated handbooks, a rule-map JSON, a prereg expectations file and a test-only edit; no runtime code, no request handler, no money, auth, entitlement, PII or admin surface is touched.
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  3009ms (3.0s)
+📊 Tokens — total: 27196, input: 26972, output: 224, reasoning: 156

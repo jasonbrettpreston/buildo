@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:24:49.022Z file_sha256=b10966ac07ac59e1c38e803060243bd9c489787feba28a9497ce3f9d4d16883b prompt_sha256=f3045a38a51481d4155a712508b59c3477cee3d53fb9b4edd4921535184bf580
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 137 §4 Rule 3 note, 2026-11-20 ("the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records") — `.cursor/MCFRONTEND-QUEUE.md` "· next: Land the closing commit, which sets task-446 BUILT after the output review and its grounder (lane BL-HB446, task-446)" — the only next step named for the row is a closing commit that may not stage `.cursor/MCFRONTEND-QUEUE.md`, so the MF-96 DONE flip has no allowed commit and Rule 3's "status line changes in the same commit as the work, or in the closing commit" is left without a home — name the commit that flips MF-96 (a docs commit per §5 step 9) in the row's `next` and in the lane plan before the close.
+
+DEFER severity=LOW — task-446 card, "Not in this task: ... any other lower-rank rule (RR-0379), a new check or lock for these rules"; RR-0396 "Question2 No (no seam sentence appended to fe.49)" — `src/tests/surfaces/handbook-rule-map.logic.test.ts` "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 adds a new uniqueness check over R-03 and R-04, which this task is fenced from touching, so a later fe.49 or fe.52 edit is refused by a lock task-446 added — limit T1 to the R-22 cite and leave R-03/R-04 to their own rows.
+
+DEFER severity=LOW — Spec 137 §5 step 7 ("each 'next free id' number is greater than every claimed id of its kind in the ID ledger") — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` "FE-45..FE-57 are taken ...; ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" kept beside "FE-58 is taken by the OWED R-22 row (task-446)" — the prior note still reserves FE-58 for lane BL-MFRULES while the new note takes it, and the handover is only in the LOCAL ledger, so a reader of the register alone sees one id claimed twice — add to the 2026-11-23 note that FE-58 is released by BL-MFRULES and that its renumbering starts at FE-59.
+
+MET — Spec 137 §4 Rule 2 ("One task, one row, in one home") — `.cursor/MCFRONTEND-QUEUE.md` "**MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components) — RUNNING** (E)" — the task is registered in its own home under Phase 2.
+
+MET — Spec 137 §3 Rule 1 (form and "the line sits ... directly under the heading") — `.cursor/MCFRONTEND-QUEUE.md` "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit ... · ruling: "Agreed. Plan approved"" — one line, the closed word list, all four fields present, directly under the heading.
+
+MET — Spec 137 §4 Rule 7 ("Open rows expire in 7 days") — `.cursor/MCFRONTEND-QUEUE.md` "since 2026-11-23 · expires 2026-11-30" — the expiry is seven days after the since date, as rule 1's `opened` derivation requires.
+
+MET — Spec 137 §4 Rule 4 and Rule 10 (M-246 note form, prior text kept) — `.cursor/MCFRONTEND-QUEUE.md` "Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved"" — the operator's words are verbatim, dated, carry row, queue and lane, and the MF-95 note is kept whole.
+
+MET — Spec 137 §2 note ("The 'next free id' line ... is the one tools read") — `.cursor/MCFRONTEND-QUEUE.md` "next free id **MF-97**, now also the first value on the line" and `135_mcfrontend_decisions_register.md` "**Next free id:** `FE-59`." — both first values moved by dated notes for the two ids this change takes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: Rule 1, Rule 2, Rule 4, Rule 7, Rule 10
+
+---
+⏱  100700ms (100.7s)
+📊 Tokens — total: 57420, input: 36386, output: 21034, reasoning: 19904

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:22:44.938Z file_sha256=8e75ca4509597f61f8dcc32e3e64c8d85ef8b605f9e19d0c8b11f5ace03e1e9f prompt_sha256=62bd9e3d8bb5b62e19d75951fe12680c0164241a5b28fecd0bc7e755ba55af23
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Task Description "NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules, a generator change, a rule-table change (task-439's)." — src/tests/surfaces/handbook-rule-map.logic.test.ts (diff) "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const) expect(citing(realRows(), cite), rule).toHaveLength(1);" — T1 asserts a new uniqueness check over R-03 and R-04 as well as R-22, and RR-0396 scoped the task to "Question1 yes" (R-22 only, the fe.58 line text as shown); the card names no check for R-03/R-04 and excludes one. — Narrow T1 to the single '128:224' tuple, or record in the task file why the R-03/R-04 tuples are inside the exclude line, before merge.
+
+DEFER severity=LOW — Task Description "NOT in this task: ... a new check or lock for these rules" — src/tests/surfaces/handbook-rule-map.logic.test.ts (diff) "// when task-367 builds the lock and flips the row, the same commit edits T2's status line and the Spec 136 pattern." and "expect(r.status).toBe('OWED');" — T2 pins FE-58's OWED status and its reserved task-367 lock path, creating a second flip site beside the row and the generated line for a lock the card assigns to task-367; the card says the lock is task-367's, so this pin is a check on that rule's state. — Keep the pin but read the status from the row's lock-owed form rather than a literal 'OWED', and name the flip in the row's dated note.
+
+MET — m.0 — diff 135_mcfrontend_decisions_register.md "+**Next free id:** `FE-59`. Dated note 2026-11-23 ... the line read \"Next free id: FE-58\" before this note" — the change says what it replaces and names the reader (the Spec 136 generator's first-value rule) it serves.
+
+MET — m.1 — diff scripts/surfaces/_schema/surface-rule-map.json "+\"id\": \"FE-58\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.58\"" — the generated map is committed and derives from the same Spec 135 row the handbook line renders, with the notes recording --write then --check.
+
+MET — m.246 — diff 135_mcfrontend_decisions_register.md "Operator, at the line-text sitting (2026-11-23, RR-0396, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1999 and :2002 ...)" — the dated note is appended inside the FE-58 row with prior text kept.
+
+MET — m.305 — diff scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "+\"schema\": \"coa-round-prereg-v1\"" — the CoA record lives under scripts/analysis/bylaw-validation/coa-* and is passed by path.
+
+MET — m.321 — diff prereg-MF-96-1.json "+\"expected_moves\": []," and "+\"expected_unchanged\": \"every row of the 172, 4d and cumulative sets: class and City figure\"" — the round pre-registers the rows it expects to move (none) and the unchanged set before the work commit.
+
+MET — m.328 — diff 136_mcfrontend_handbook.md "+- **fe.58** No Server Components on mobile. \"React Native has no Server Components. ...\" (Spec 128 R-22, 128:224, ACCEPTED)." — the new decision row shows its handbook ruling.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: m.0, m.1, m.246, m.305, m.321, m.328
+
+---
+⏱  57356ms (57.4s)
+📊 Tokens — total: 43269, input: 31577, output: 11692, reasoning: 10741

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:21:43.700Z file_sha256=12bc7acec7d68b04457381fef0c280c2bfb1220cc1331a864d49d9f9c586f294 prompt_sha256=122bd5e6280d2172997e08deb877232f1b431f381ff952f55310eb1aae270641
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — rule 10 C3 "every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none" — docs/reports/panels/MF-96.json "Operator, verbatim (RR-0395, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993): \"Agreed. Plan approved\"." — the RR-0395 and RR-0396 card blocks cannot be seen to end with the C3 four-line compliance block — confirm the block on those cards, or record it in the panel cards.
+DEFER severity=NIT — rule 10 C2 "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "128 R-22 (128:224, ACCEPTED)" — the 128:224 line hint carries no commit sha to date it — add the sha hint, or keep the register convention and record the reason.
+
+MET — rule 1 "Plan review ... Output review ... The two are COMPLEMENTARY" — docs/reports/panels/MF-96.json "PLAN RULED; OUTPUT owed" — plan ruled at plan altitude, output review reserved for the output stage.
+MET — rule 2 "validate the spec against reality before checking code against the spec" — pasted card "Read at the board head by the plan review: only R-22 ... has no handbook line; R-03 ... is fe.49 ... and R-04 ... is fe.52" — reality checked against the tree before the row was written.
+MET — rule 4 note 2026-11-22 task-438 "a review seat named `engineering`, separate from compliance, at plan and at output" — docs/reports/panels/MF-96.json "compliance once per governing rule list, engineering" — the two seats are named separately in the lens set.
+MET — rule 6 FINAL.2 "round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings ... round 2 ... resolves CRITICAL and HIGH only; two rounds at most" — docs/reports/panels/MF-96.json "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — the round structure is recorded.
+MET — rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "(128:224)" — R-22 is quoted with its file:line and the RR-0395 line reference.
+MET — rule 10 note RR-0232/RR-0235 "the task's references point at that repo copy" — docs/reports/panels/MF-96.json "docs/reports/reviews/task-446/" — plan review records referenced by repo path, not a scratch path.
+MET — RR-0396 "Question1 yes ... Question2 No" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "R-03 and R-04 were already lines (FE-49, FE-52, RR-0384), so this row carries R-22 only" — only the R-22 line is added and fe.49 is untouched.
+
+REJECT — rule 1 "The two are COMPLEMENTARY" — accused that the output review is missing from this change — output review is owed at the output stage and the RUNNING task sets it before BUILT, so its absence now is the required sequence.
+REJECT — rule 4 "run the LENS SET in parallel ... (3) idempotency/dedup" — accused that the panel omits the idempotency/dedup lens — the 2026-11-19 note fixes the repo set as compliance, code-review, ux, error-paths, security plus engineering, and idempotency/dedup is not one of those templates.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  77061ms (77.1s)
+📊 Tokens — total: 48701, input: 32104, output: 16597, reasoning: 15634

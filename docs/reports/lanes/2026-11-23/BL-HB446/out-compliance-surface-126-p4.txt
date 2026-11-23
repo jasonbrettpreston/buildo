@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:26:29.807Z file_sha256=b8fddcaf37e55d188b45ae4a59b78fd381e5178e4c836b7ff45886a2b4716589 prompt_sha256=e6e14cded9fc9218cffa83571aa11d7858152845a1243ff408c438904c03c79a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 126 §5.7 "a value in two places is a drift source, which §5.2 measured four times over." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "MF-31, the move of the R rows into Spec 135, is DROPPED (.cursor/MCFRONTEND-QUEUE.md:713)" — the same diff inserts six lines above that line in the queue file ("@@ -651,6 +651,12 @@"), so the pinned line number in the new row resolves six rows early — cite the MF-31 heading text instead of a line number, or renumber the citation in this commit.
+
+DEFER severity=LOW — 126 §5.0a "an infra test that re-runs the generator, plus a RED canary proving the check itself fires" — src/tests/surfaces/handbook-rule-map.logic.test.ts:301 "const R22_HEADLINE = 'No Server Components on mobile." — the emitted handbook line is pinned against a retyped copy of the register headline rather than against the generator's own emitted map, so any operator revision of the line text (RR-0396 revised it once already) needs a matching edit inside the lock — build the expected line through the same build()/rule-map the generator emits, or assert only the cite and lock path.
+
+DEFER severity=LOW — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds" and card "McFix Final process (RR-0385): Opus plan, three Sonnet seats, compliance and engineering lenses" — docs/reports/panels/MF-96.json "DeepSeek plan lens set, round 1 (grounded)" — the panel record names an Opus build and a DeepSeek plan lens set but lists no plan-time compliance or engineering seat, so the record does not show the seat set the card requires — add the named compliance and engineering seats to the seats array before the closing commit sets BUILT.
+
+REJECT — 126 §5.0 "nothing in it is a second declaration" — the change restates Spec 128 R-22 in the Spec 135 row and again in the handbook fe.58 line — Spec 136 is emitted from the register by generate-surface-handbook.mjs with a --check gate, so the handbook line is the projection and the row is the single declaration; RR-0395 and RR-0396 ordered exactly this line.
+
+REJECT — lock weakened — the C-T2 title change ("are contiguous, in item order (task-446 appends after them)") and the C-T1 tail edit drop the MF-95 last-of-thirteen case — once FE-58 sits after FE-57, removing FE-57 alone leaves a gap, so the old assertions would be false by construction and the trailing canary must move to the new last row.
+
+REJECT — 00_system_map.md lists a test that does not exist — src/tests/surfaces/mobile-no-rsc.logic.test.ts is appended to row 135's test list — the map is emitted by npm run system-map (no generator change in this diff) and the row it reads marks that path OWED, reserved for task-367, so the map is not asserting a green lock.
+
+MET — 126 §5.0 consequence 2 (incompleteness is counted) — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Rules rendered: 58: 58 in force (22 OWED, whose lock is still to land), 0 history." — the OWED count moves 21 to 22 with the one added row, so the owed lock is a number, not a silence.
+
+MET — 126 §5.7 (generated docs by their existing commands) — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |" — the regenerated size (28,690 + 386) and both totals (+2,291 = 386 + 1,905) reconcile with the one added line and one added row.
+
+MET — 126 §5.3 (mobile is not SSR) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "No Server Components on mobile. ... mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned. ... 128:224" — the arrow 3 mobile clause and the Arrow 3 table row are restated with the cite.
+
+MET — 126 §5.0 (fan-out not hand-written) — scripts/surfaces/_schema/surface-rule-map.json "\"id\": \"FE-58\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.58\"" — the map entry carries the same shape as fe.57 and the lane log records the generator --write then --check green.
+
+MET — RR-0396 "Question2 No" — docs/specs/02-web-admin/136_mcfrontend_handbook.md, the only added rule line is "- **fe.58** No Server Components on mobile." and no fe.49 line is touched — no seam sentence was appended to fe.49.
+
+MET — RR-0395 "Agreed. Plan approved" and card "NOT in this task: ... a generator change, a rule-table change" — the changed paths are docs, the rule map, the prereg, the queue and one test, with no generator script — the scope stayed one row and one line.
+
+MET — 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395)" — the reserved path matches the handbook "lock owed" and is task-367's, not built here.
+
+MET — 126 §5.0a (RED canary in the same file) — src/tests/surfaces/handbook-rule-map.logic.test.ts:313 "T2 RED: one row holds the R-22 lock, OWED with exactly that lock" — the new row is locked by a canary with a planted duplicate (two rows sharing a lock) and a one-row control.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  99526ms (99.5s)
+📊 Tokens — total: 50364, input: 30569, output: 19795, reasoning: 18348

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:27:53.208Z file_sha256=142798af4aced1830cbf29064ea5bf14259c74d4e10c6738ed4d950f7abd0c80 prompt_sha256=4f60c94d3602a68777a27a3e1125fec7850b346187477878cc3320fc06d1f2ce
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 §4.9 "each `pass`, `n/a (reason)` or `FAIL`; a FAIL row is not RULED" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, FE-58 Six cell "D pass, P owed, F n/a, S pass, H n/a, E pass" — "owed" is outside the closed set (pass, n/a with reason, FAIL), so the new FE row's six-principle check is recorded in a value §4.9 does not define and the row cannot be RULED on this cell — fix: record "P FAIL (R-22 lock is task-367's, not built)" and give each "n/a" a reason, at latest in the flip commit.
+
+DEFER severity=MED — Spec 128 §4.8.1 "it is resolved mechanically" — task-446 Implementation Notes, lane BL-HB446 item 7 "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite" — the new Lock path's mechanical resolution is asserted by comment only, and the material itself marks the resolver unrun — fix: run register-locks-resolve (and rule-lists / mcfrontend-queue) on the tip and attach the output before the DONE flip.
+
+DEFER severity=LOW — Spec 128 §4.11 item 5 "with non-empty `rules[]`, each RULED" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json "FE-16" — cannot see FE-16's register status in this material, so "each RULED" is unverified for one of the three cited ids — fix: name FE-16's register line in the $comment, as it already does for FE-09 and FE-10, so the RULED state is checkable.
+
+MET — Spec 128 §4.10 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, FE-58 last cell "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — a ruled row without a built lock reads OWED with exactly one lock path, matching "A row that is ruled and whose lock is not yet built reads OWED with its lock path."
+
+MET — Spec 128 §4.7a / §4.8.2 — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" — no row reads BUILT; the lock is shown as owed, not enforced.
+
+MET — Spec 128 §4.11 item 7 — .cursor/MCFRONTEND-QUEUE.md "  - FE rows owned: none." — the new MF-96 block holds exactly the one permitted bullet, and the heading is RUNNING, not DONE, so no OWED-row DONE refusal is triggered.
+
+MET — RR-0396 "the handbook task adds the R-22 line only; no seam sentence on fe.49" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.58** No Server Components on mobile." — one line added, no text added to fe.49, and the row's Full text cell records "Question2 No".
+
+MET — card "one OWED Spec 135 row restating Spec 128 R-22 (128:224)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "| FE-58 | No Server Components on mobile. "React Native has no Server Components." (Spec 128 R-22, 128:224, ACCEPTED)." — the row quotes the accepted R-22 rule and rules nothing new.
+
+MET — Spec 128 §4.11 item 9 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — the reserved lock is not a `.db.test.ts`, so no CI-step naming is required.
+
+REJECT — card "NOT in this task: ... a new check or lock for these rules" — the change is accused of adding the R-22 enforcement lock — it is not: the reserved path stays task-367's, and T1/T2 are register-consistency pins, the comment stating "T1 is a handbook-consistency pin (exactly one line states each rule, keyed on the cite string in the headline), not the R-22 lock, which is task-367's."
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  216617ms (216.6s)
+📊 Tokens — total: 60153, input: 31865, output: 28288, reasoning: 27208

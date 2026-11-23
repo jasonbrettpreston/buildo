@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T14:31:57.126Z file_sha256=2f856d71771c27c03a663a7296ee1abf3f2924f9b65bbb686df56b46686086d6 prompt_sha256=23a725c005e6f0ba01fbeb2a38059f6e2d4a1e6b6447f2b7140a5947c05c63d2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/surfaces/handbook-rule-map.logic.test.ts, new T2 block hunk @@ -294,7 +301,42 @@ "const r = hit[0]!;" — this non-null assertion carries no inline comment, while the two other `!` uses in the same diff do ("// the ! is safe: the first expect of this case proves fresh holds the thirteen locks"), so the rule's documentation duty is unmet for T2 — add "// the ! is safe: the expect above proves hit holds exactly one row" above it.
+
+DEFER severity=MED — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/_schema/surface-rule-map.json and scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json (both new/modified in the diff) — this McFrontend lane edits two paths under `scripts/` and neither the MF-96 queue row nor the panel records a §10.2 exemption — record one line in .cursor/MCFRONTEND-QUEUE.md MF-96: surface-rule-map.json is the handbook generator's output and the prereg is the round ledger, not a pipeline or DB-writing script.
+
+DEFER severity=LOW — 8.2 TypeScript Target Gotchas "The project `tsconfig.json` targets **ES2017**." — src/tests/surfaces/handbook-rule-map.logic.test.ts, C-T1 hunk @@ -294,7 +301,42 @@ "expect(() => readFeRows(stripRows(REGISTER, [rows.at(-1)!.id], rows.length))).not.toThrow();" — `Array.prototype.at` is an ES2022 lib API and the lane notes record a vitest run, not a `npm run typecheck`, so this new line may not survive the ES2017 target — use "rows[rows.length - 1]!.id" instead.
+
+MET — 5.3 Red-Green Test Cycle "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — Implementation Notes "2026-11-23 lane BL-HB446 tests first (plan section 4): T1 and T2 written in a new describe ... red attempt 1 ... recorded in the lane red.out" plus the recorded red attempt 2 against the old C-T1/C-T2 forms.
+
+MET — 5.5 Test-Layer Map "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — Implementation Notes "node scripts/surfaces/generate-surface-handbook.mjs --check ... is up to date (58 rules) exit 0" and "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current exit 0", reinforced by the new T1/T2 and the existing handbook-rule-map lock.
+
+MET — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification" — src/tests/surfaces/handbook-rule-map.logic.test.ts — the added T1 (one line per cite) and T2 (row holds the reserved lock) are register-text derivations, placed in the correct layer.
+
+REJECT — 5.1 Typed Factories Only — accused of untyped inline mocks via "row('FE-04', 'OWED `src/tests/surfaces/z.logic.test.ts`', 'A (128:205).')" — these are register-text fixture builders returning text consumed by readFeRows, not object mocks cast into domain types, which is what the rule forbids.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  58628ms (58.6s)
+📊 Tokens — total: 44798, input: 33988, output: 10810, reasoning: 9927

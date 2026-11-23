@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:21:43.700Z file_sha256=5c2f18a194991c6d6ef943aee5501a4d00e7e9773b133957e731eff26cfebaae prompt_sha256=7422c054a6c76e88e24ecb844549ae65e72e2b45e45f9990bab1115f2317aa20
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — lc.53 "Verified by named lock; no partial green." — Implementation Notes, task-446 "register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite." — three of the four changed artefacts (rule-lists-by-kind.md, 00_system_map.md, MCFRONTEND-QUEUE.md) land with their own locks unrun, so the commit is partially green — run register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue at the push station before the closing commit, and record that run in the MF-96 verdict
+DEFER severity=LOW — MCFRONTEND-QUEUE dated note 2026-11-19 "the reference practice gains `task-N` beside the row: `task-N · MF-nn (item) · McFrontend queue · lane X · stage N`" — .cursor/MCFRONTEND-QUEUE.md:659 "MF-96 · McFrontend queue · lane BL-HB446, task-446" — the dated note puts task-N last and drops the `stage N` token, so the row does not carry the form the board parser was taught to tolerate — restate it as `task-446 · MF-96 (FINAL.9) · McFrontend queue · lane E · stage 8`
+DEFER severity=LOW — RR-0396 "the fe.58 line text as shown" — docs/reports/panels/MF-96.json:29 "Lane BL-MFRULES (task-388) renumbers when it lands second." — the record plans to renumber the very id the operator approved (fe.58), so the approved line can be cited under a different id after task-388 lands — record the handover in the register row and state that the approved fe.58 id is what moves, text unchanged
+MET — m.507 "BOARD-1 one open-work list." — .cursor/MCFRONTEND-QUEUE.md:655 "MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22" — the work is added to the single board and the Next-free-id line moved 96 to 97
+MET — m.508 "EXP-1 7-day expiry." — .cursor/MCFRONTEND-QUEUE.md:656 "Status: RUNNING · since 2026-11-23 · expires 2026-11-30" — exactly seven days
+MET — m.511 "CITE-2 cite by id and anchor." — docs/reports/panels/MF-96.json:3 "Spec 128 R-22 (React Native has no Server Components, 128:224)" — rule cited by id and file:line, and the rulings by file:line (:1993, :1999, :2002)
+MET — RR-0396 "Question1 yes. push complete" (R-22 only, the fe.58 line text as shown) — docs/reports/panels/MF-96.json:3 "R-03 and R-04 are already fe.49 and fe.52. No generator, Spec 128 or rule-table change." — one rule only is carried
+MET — task-446 "Not in this task: ... a generator change, a rule-table change (task-439's)" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | ... | 29,076 | 1 |" — only regenerated counts move (28,690 to 29,076, 111,851 to 113,756, totals +2,291 in both tables), no generator or rule-table edit
+MET — RR-0385 "two rounds at most" — docs/reports/panels/MF-96.json:11 "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — the review is capped at two rounds
+REJECT — task-446 "Not in this row: the R-22 lock (task-367)" — the change is accused of landing the task-367 lock by listing src/tests/surfaces/mobile-no-rsc.logic.test.ts in the Spec 135 system-map row — the row's own done-condition says "one reserved lock path (the lock is task-367's)", so the map entry is a reserved path, not the lock
+
+VERDICT: FAIL
+Clauses checked: 12   Unmet: 3
+Rules met: m.507, m.508, m.511
+
+---
+⏱  102464ms (102.5s)
+📊 Tokens — total: 50896, input: 29127, output: 21769, reasoning: 20762

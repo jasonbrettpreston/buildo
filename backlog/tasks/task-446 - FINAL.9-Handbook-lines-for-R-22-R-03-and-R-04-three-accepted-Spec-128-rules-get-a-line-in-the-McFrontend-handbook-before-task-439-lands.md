@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:19:00Z'
+updated_date: '2026-11-23T14:35:00Z'
 labels:
   - McFix
   - McFix Final
@@ -47,6 +47,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-HB446/FINDINGS.md
 type: build
 ordinal: 146012
 ---
@@ -380,4 +381,31 @@ Dated note 2026-11-23 (M-246, prior text kept; RR-0396 · task-446 · Backlog; d
 2026-11-23 lane BL-HB446 red attempt 2 (plan section 4 survive-the-fix): the FE-58 row, the Next free id note and the regenerated files staged with the OLD C-T2 and C-T1 forms; the old forms go red once the row is added; recorded in the lane red.out.
 
 2026-11-23 lane BL-HB446 commit 1 (work, plan section 7): one OWED Spec 135 row restating Spec 128 R-22 (128:224) at the id Next free id read at the work commit (fe.58 in Spec 136), lock reserved src/tests/surfaces/mobile-no-rsc.logic.test.ts (task-367); the 135 Next free id line moved by a dated note; Spec 136 and surface-rule-map.json by generate-surface-handbook.mjs --write then --check; rule-lists-by-kind.md by rule-lists.mjs page --write then --check; 00_system_map.md by npm run system-map; T1, T2 and the three survive-the-fix edits (C-T2 :267 and its title, C-T1 :287, C-T1 :297) in handbook-rule-map.logic.test.ts; the MF-96 status line keeps RUNNING with next: the closing commit (plan Q5). Red in the lane red.out (attempt 1: T1 at R-22 and T2 at toHaveLength(1); attempt 2: the old C-T2 and C-T1 forms after the row); green is this commit through the real hooks (lane commit.out).
+
+2026-11-23 lane BL-HB446 acceptance on real inputs (plan section 8), at commit 2905df62d:
+$ 1 node scripts/surfaces/generate-surface-handbook.mjs --check
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (58 rules)
+exit 0
+$ 2 grep -c fe lines
+58
+$ 3 Rules rendered
+28:**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line 
+$ 4 cites
+1
+1
+1
+$ 5 mobile-no-rsc
+206:  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+$ 6 lock absent
+1
+$ 8 page --check
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+exit 0
+33:| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |
+60:| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,076 | 1 |
+$ 9 diff stat generator/128/rule-lists.json since launch 240e559e3
+(end of stat)
+Item 7: the pre-commit related run of commit 2905df62d ran src/tests/surfaces/handbook-rule-map.logic.test.ts (41 passed) and src/tests/system-map.infra.test.ts (13 passed); register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite. Items 10 and 11 are the orchestrator's and the push station's. Item 12: the RR-0396 reply is the first dated note on this task and is in the FE-58 Full text cell.
+
+2026-11-23 lane BL-HB446 output review round 1 (RR-0385): fresh context docs/reports/reviews/task-446/context-r3.md (backlog-brief.mjs); the whole task diff 240e559e3..2905df62d (Files-line paths); DeepSeek lenses compliance per list (15 lists, 47 parts), engineering eng-all (2 parts), code-review, error-paths, ux, security; 52 outputs and their inputs in docs/reports/lanes/2026-11-23/BL-HB446/, findings listed untriaged in FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed). Grounder owed (RR-0359): the task stays RUNNING.
 <!-- SECTION:NOTES:END -->

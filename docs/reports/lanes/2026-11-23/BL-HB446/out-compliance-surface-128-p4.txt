@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:28:32.592Z file_sha256=df4502389b9508468c564efd554f19cf05cd4201934d3999598438381366eb02 prompt_sha256=ca888acb98d1abb159519e0834c15f472b340ae7439d14afa8370f15ead940ba
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-surface-128-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" and the card "Opus plan, three Sonnet seats, compliance and engineering lenses, separate grounder" — docs/reports/panels/MF-96.json "\"seats\": [\"DeepSeek plan lens set, round 1 (grounded)\", \"integration, reality-check and regression seats (plan)\", \"separate plan grounder Cairn-Ground-P446\"" — the plan-stage record names a DeepSeek lens set and three unnamed seats, never the three Sonnet seats or the compliance and engineering lenses the ruling mandates, so the mandated seats are unevidenced — name the three Sonnet seats and the compliance and engineering lenses in the panel's seats array, or correct the record if a different set ran
+
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md "lanes R rulings · G gates · E one-writer build · T tests · P product" — .cursor/MCFRONTEND-QUEUE.md "+  - Lane E. Done-condition: one OWED Spec 135 row restating Spec 128 R-22 (128:224)" against docs/reports/panels/MF-96.json "\"class\": \"G\"" — the queue labels this row lane E and its own panel calls it class G, so one of the two records is wrong — set the queue lane letter and the panel class to the same value
+
+MET — RR-0396 "Question2 No" (no seam sentence appended to fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md:205 — exactly one added line, "- **fe.58** No Server Components on mobile. ...", and fe.49 carries no change
+
+MET — card "NOT in this task: ... a generator change, a rule-table change (task-439's)" — Implementation Notes "diff stat generator/128/rule-lists.json since launch 240e559e3" then "(end of stat)" — no generator and no Spec 128 hunk appears in the diff
+
+MET — §8 "Out-of-Scope Files ... `migrations/**` — this spec records rulings about schema, never schema" — the reviewed path list ends at "src/tests/surfaces/handbook-rule-map.logic.test.ts" — no migration, no 124 register and no step.schema.json file is touched
+
+MET — ASK-06 "Stay in `02-web-admin/`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "| FE-58 | No Server Components on mobile." — the row and its sources land inside the existing folder, no 04-platform/ directory is created
+
+MET — ASK-02 "Resolved by generation" — scripts/surfaces/_schema/surface-rule-map.json "\"handbook_line\": \"fe.58\"" — the map and the handbook are generator output, "--check ... is up to date (58 rules)"
+
+MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — docs/reports/panels/MF-96.json "task-439: lands after this task" — the R-22 line lands ahead of the rule-table change, and only R-22
+
+MET — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "5. Locks: a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135 "OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added 2026-11-23 (RR-0395)" — the reserved path has the required shape and the acceptance run records it absent
+
+REJECT — card "NOT in this task: ... a new check or lock for these rules" — the new "task-446 — the R-22 line" describe (T1, T2) read as a scope breach — T1 and T2 pin the register row and its handbook line, not the R-22 enforcement lock, which the row leaves to task-367, and the test file is in the card's Files list
+
+REJECT — RR-0384 "add these 13 lines" — C-T2's "rows.slice(-13)" assertion relaxed to a contiguous slice, accused of weakening the MF-95 lock — the thirteen rows are still asserted in item order and each still OWED, and task-446 legitimately appends after them, which the title change states
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 0
+Rules met: none
+
+---
+⏱  117046ms (117.0s)
+📊 Tokens — total: 53699, input: 30677, output: 23022, reasoning: 21968

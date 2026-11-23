@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:21:43.700Z file_sha256=42f44be9646fd1cc714ecaa28dc2ed9a48b34a5eeffb7bb5ec82194f4966ccb7 prompt_sha256=19731bfcd04d931776349b65ce8bfcc5638f95ec9cf7f8968eab75e85449d18a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-bylaw-133-p1.txt (model: deepseek-reasoner)
+
+```
+MET — RR-0395 — .cursor/MCFRONTEND-QUEUE.md "MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22" — the queue row and panel record track the approved one-line R-22 change with no extra scope.
+MET — RR-0396 — .cursor/MCFRONTEND-QUEUE.md "this row adds the R-22 line only" — chunk 1 stays on R-22; no other rule and no fe.49 seam sentence appears here.
+MET — RR-0379 — docs/reports/panels/MF-96.json "R-03 and R-04 are already fe.49 and fe.52 (FE-49, 135:71)" — only R-22 is added now, other rules deferred per add-over-time.
+DEFER severity=NIT — RR-0385 "three Sonnet seats, compliance and engineering lenses" — docs/reports/panels/MF-96.json "DeepSeek plan lens set, round 1 (grounded)" — the record names DeepSeek plan seats while the card names three Sonnet seats, a record-only naming mismatch — reconcile the seat names or note the model change in the panel.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: none
+
+---
+⏱  77281ms (77.3s)
+📊 Tokens — total: 49321, input: 33788, output: 15533, reasoning: 15239

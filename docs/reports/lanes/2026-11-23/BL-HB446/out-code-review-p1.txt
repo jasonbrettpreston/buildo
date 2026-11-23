@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T14:21:43.701Z file_sha256=6de1e7097c970bf83cddcf0afaba36cf6421f57812f7fbd7c2f089dff2c8b3b4 prompt_sha256=9d7a2aa236328a55ae418a7e874e698d0cf90622e30496d65d9e25f24c569b64
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/surfaces/handbook-rule-map.logic.test.ts:315 "const citing = (rs: Row[], cite: string) => rs.filter((r: Row) => r.headline.includes(cite)).map((r: Row) => r.id);" — T1's title claims each rule is "stated by exactly one line", but the check only counts rows whose headline contains the literal token ("128:205"), so a second line restating the same rule with a different cite passes — broaden the match to the rule's own words (for R-22, "React Native has no Server Components") or to the source cell, in the same helper.
+
+DEFER severity=LOW — src/tests/surfaces/handbook-rule-map.logic.test.ts:334 "expect(REGISTER).not.toContain('<date of the work commit>');" — the anti-placeholder guard rests on one hardcoded spelling; if the plan template's token differs the assertion is vacuous and can never catch a left placeholder (the template cannot be seen) — assert against the template constant, or a pattern such as /<[^>]*date[^>]*>/, and have the grounder confirm the exact token.
+
+DEFER severity=LOW — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-58 Locks cell) "the lock is task-367's (task-434 merged into it, RR-0385 item 6)" — the neighbouring OWED rows FE-55, FE-56 and FE-57 still read "the lock is task-434's", so the same reader is given two owners for the same reservation pattern — settle the owner once and make the FE-58 cell read like FE-55..FE-57, or update the three neighbours in this commit.
+
+NIT — src/tests/surfaces/handbook-rule-map.logic.test.ts:270 "expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));" — 13 is a magic number that must stay in step with NEW_LOCKS; use at + fresh.length so the two sides cannot drift.
+
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:294 "const old = build(makeRoot(stripRows(REGISTER, tail, rows.length - tail.length + 1)));" — looks like an off-by-one against the removed "rows.length - 12" — it yields the same third argument (45) because tail grows by one when rows grows by one, so the stripRows convention is preserved exactly.
+
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:305 "expect(() => readFeRows(stripRows(REGISTER, [rows.at(-1)!.id], rows.length))).not.toThrow();" — looks like the thirteen-row boundary is no longer exercised — removing FE-57 now leaves a gap before FE-58, so the last row is the only gap-free single removal, and the preceding ids[6] case still proves a middle removal throws.
+
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:268 "const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);" — looks like a non-null assertion that can throw on an empty match — the preceding "expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS)" throws first when fresh is empty, so the ! is safe.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (PASS)
+
+---
+⏱  185239ms (185.2s)
+📊 Tokens — total: 68307, input: 26965, output: 41342, reasoning: 40538

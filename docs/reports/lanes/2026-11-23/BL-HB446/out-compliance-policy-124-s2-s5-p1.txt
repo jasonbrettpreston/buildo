@@ -1,0 +1,9 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:23:52.196Z file_sha256=cd7d6033fdac0aae0f93e265b72b939f6b72d1b80c94f42fb8b8243f4118b60a prompt_sha256=196cf33622e1d753828f85b9ea91b3f4125e633029ce84a780153e7bf4c309e9
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+
+
+---
+⏱  623692ms (623.7s)
+📊 Tokens — total: 39967, input: 35250, output: 4717, reasoning: 4717
