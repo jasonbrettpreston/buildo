@@ -108,4 +108,4 @@ rg#8 CONFIRMED .husky/pre-push:13 "scoped to each commit's own staged files — 
 
 Counts: 85 ids ruled (62 lens, 23 seat); 64 CONFIRMED (0 CRITICAL, 7 HIGH, 31 MED, 22 LOW, 4 NIT), 21 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded in FOLD-424.json (48 pairs). 60 outcomes are folded and 4 are piled (3 NIT and 1 LOW).
 
-Plan: task-424 sha256:fe06800270f3
+Plan: task-424 sha256:f5dd0e203793
