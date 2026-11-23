@@ -3,11 +3,10 @@ id: TASK-367
 title: >-
   COMPLY.3 Gates for handbook rules no machine checks, the ones Increment 1·B
   code touches first
-status: RUNNING
-assignee:
-  - '@lane-BL-GATES'
+status: LATER
+assignee: []
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T17:35:00Z'
+updated_date: '2026-11-23T17:36:00Z'
 labels:
   - McFix
   - McFix Final
@@ -361,4 +360,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, ver
 Dated note 2026-11-22 (M-246, prior text kept; RR-0386 · task-367 · Backlog; operator, verbatim: "a")
 
 Dated note 2026-11-23 (M-246, prior text kept in git history at b32ea9b4c; RR-0386, RR-0412 · task-367 · Backlog; operator, verbatim: "So both 442 and 367 should be running once this push lands."): the Implementation Plan section now holds PLAN-367-v1, the clean start for the handbook rule tests written by the Opus plan seat; the earlier gates plan (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and its text stays in history. The plan is not reviewed or grounded yet.
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0386, RR-0412 · task-367 · Backlog; operator, verbatim: "So both 442 and 367 should be running once this push lands."): status RUNNING to LATER and the parked lane @lane-BL-GATES taken off the card by the orchestrator, because the plan review tool and the launch script take only a waiting task (rule-lists.mjs plan-prep refusal "only a waiting task is prepared"; scripts/analysis/backlog-lane.mjs:66) and the handbook tests start clean (RR-0386). The parked branch wf1/inc1b-gates and its records are untouched. The card returns to RUNNING when lane BL-HB367 is launched by the launch script. Orchestrator decision under the six criteria, logged for the operator.
 <!-- SECTION:NOTES:END -->
