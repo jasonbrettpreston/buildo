@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.070Z file_sha256=0647a822c84ae252d213a04c53cc0ff6f68e3415d5b1f91daca53b224dc6e15d prompt_sha256=fb45f8dbc13014acb5ed82df634ce19a90fb5c2b160bfdcece7aa9b138a7f657
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the output stage the seat split is skipped for every lane whose range base predates the template, so such a lane closes its engineering list on lens-compliance.md and the output-stage separation the ruling names does not hold for it — make the close split unconditional (the template exists at HEAD once task-438 lands) or have the exception recorded as an operator ruling instead of a code condition.
+
+DEFER severity=MED — card Implementation Notes "per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat" — NONE — the card's Files line and this note both claim a plant-evidence change by seat, and no path under docs/reports/reviews/task-375/ appears in this material (chunk 1 of 1, all changed paths), so either the fixture still emits in-plan-compliance-<id> for an engineering list and the launch gate refuses real plan evidence, or the note overstates the build — confirm docs/reports/reviews/task-375/plant-evidence.mjs now names in-plan-<seat>-<id> and is in the lane commit, or correct the note.
+
+DEFER severity=LOW — card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:187 "The close of this task is refused without an out-compliance output per list (or the joined set)" — the brief's own close sentence names only the compliance outputs even for a task that carries an engineering list, so a lane can read the requirement as satisfied by compliance files alone — add the engineering files to that sentence or make it seat-neutral ("an out-<seat> output per list").
+
+MET — RR-0385 "For both the plan and output." — scripts/analysis/rule-lists.mjs:654 — planPrep draws and runs each rule-list lens by seat ("--out ${ev}/in-plan-${seatOf(l)}-${l.id}", "--template ...lens-${seatOf(l)}.md"), so the engineering list is planned and reviewed by the engineering seat.
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a new lens template names the engineering seat, its one question and its clause refs, with no edit to lens-compliance.md.
+
+MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one routing predicate keyed on the document, every other list and the joined list staying compliance.
+
+MET — card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:650 — the launch gate loops both seats unconditionally with no alias (a compliance file cannot stand for an engineering list), and the close applies the same loop when the base holds the template.
+
+MET — Rule 13 "A step validates itself" — scripts/analysis/rule-lists.mjs:111 — the change touches no step descriptor, step:validate, scorecard or policy-coverage matrix path, so that clause's generated-artifact mechanism is untouched.
+
+MET — Rule 12 "recovery.interrupted" — scripts/hooks/check-lane-close.mjs:517 — no step descriptor, write target or recovery field is added or altered, so no new destructive retraction target exists to declare.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  67040ms (67.0s)
+📊 Tokens — total: 44754, input: 30968, output: 13786, reasoning: 12938

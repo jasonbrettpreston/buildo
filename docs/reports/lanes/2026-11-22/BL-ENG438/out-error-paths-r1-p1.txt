@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T23:11:13.092Z file_sha256=60238a7d333240ffbe283de27a06ef73e90e3f2232deae5665c7d1a2bd783c4b prompt_sha256=216a6bbcf1763d92c96eee5fe2ba8668dd94be88d64df9e69029264762705538
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs:520 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the mode of the whole gate rides on one ancestor lookup against the range base (merge-base with base_ref): if the landing is not yet an ancestor of base_ref (branch created off an older board, shallow/stale fetch), split is false and the close accepts the engineering list under the OLD compliance name with no signal, so a lane launched after the landing can bypass the engineering seat at the output stage and the operator sees a silent pass, not a refusal — fix: decide the mode from the launch commit or GROUNDER-PLAN.md and print the resolved mode (compliance-only or split) in the close output so a silent degrade is visible.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — routing is exact-string; a table row whose file is the same document written with any variant (./ prefix, trailing space, glob-based row, globs_from) silently returns compliance, so the engineering list is reviewed and proved under the compliance seat and no error names the misroute — fix: normalize the path (resolve, trim) before the compare, and have rule-lists.mjs validate refuse a row that resolves to ENG_FILE but does not match it.
+
+REJECT — .claude/review-templates/README.md:159 "a stage holding both forms is refused" — looks like a double-submit (both the joined and the per-list set for the same seat) could slip through — handled: complianceSetErrors computes isJoined and the per-list predicate per seat and refuses a phase that holds both, and the alias (out-compliance-* for an engineering list) is not counted as the engineering seat, so the wrong-seat copy is ignored rather than double-counted.
+
+REJECT — .claude/review-templates/README.md "A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output" — looks like splitting the seat could drop engineering findings from the grounder/triage requirement — handled: engineering outputs are out-engineering-*.txt, matched by the out-*.txt glob, so their findings still demand a Ruled line and a triage outcome, and the both-forms guard keeps two copies of the same list from double-counting.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (listProof per seat, review header/template mismatch), empty (no engineering list), retry/round (r2 files), double-submit (both forms per seat, cross-seat alias), degrade (range-base cut-over), idempotency (seatOf pure, finding id by file stem)   Unguarded: 1
+
+---
+⏱  58048ms (58.0s)
+📊 Tokens — total: 38904, input: 27697, output: 11207, reasoning: 10593

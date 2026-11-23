@@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
 const HEX64 = 'a'.repeat(64);
 // the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
 const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
-const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
-const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
+// task-438: lens-engineering.md joins the templates of the fixture base (read only when present, so the red run before the template exists fails at its assertions, not at load)
+const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security', 'engineering'].filter((n) => fs.existsSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`))).map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.existsSync(path.join(ROOT, `.claude/review-templates/${template}`)) ? fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8') : '');
+// task-438 T3/T4: the fixture list on the engineering standards file (the engineering seat's list), on the src row
+const ENG_PATH = 'docs/specs/00_engineering_standards.md';
+const ENG_TEXT = '# Eng\nengineering rule text\n';
+const withEng = (table: Record<string, unknown>) => { (table.lists as Record<string, unknown>).eng = { file: ENG_PATH, whole: true, generated_by: 'hand-written' }; ((table.rows as { lists: string[] }[])[0]!).lists.push('eng'); };
 // task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
 const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
 const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
@@ -71,6 +76,9 @@ type Opts = {
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+  // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
+  // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
+  eng?: boolean; engAs?: string; engTpl?: string; noEngBase?: boolean; joinAll?: boolean; engJoined?: boolean;
   joined?: boolean | 'other'; planBoard?: string; ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
@@ -81,16 +89,18 @@ function scenario(o: Opts = {}) {
   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
   g('init', '-q', '.');
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
+  if (o.eng) withEng(table);
   o.tableEdit?.(table);
   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+  if (o.eng) w(ENG_PATH, ENG_TEXT);
   w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
   w(TASK, `${taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees })}${o.priorRound ? '\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\nReview round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder x; triage y\n<!-- SECTION:FINAL_SUMMARY:END -->\n' : ''}`);
   if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
   if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
-  for (const [p, x] of LENS_TEMPLATES) w(p, x);
+  for (const [p, x] of LENS_TEMPLATES) if (!(o.noEngBase && p.endsWith('lens-engineering.md'))) w(p, x);
   if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard); // task-423: the plan evidence on the board at the launch commit
   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
@@ -116,17 +126,23 @@ function scenario(o: Opts = {}) {
   fs.writeFileSync(path.join(d, '.git/material.txt'), material);
   fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
-  for (const id of o.joined ? ['rules'] : ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
-    const out = path.join(d, LD, `in-out-compliance-${id}`);
-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(id === 'rules' ? ['--lists', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf'] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+  const perList = ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])];
+  // task-438: the jobs of the lane's list lenses: [list id, seat, the --lists of a joined id]
+  const jobs: [string, string, string?][] = o.joinAll ? [['rules', 'compliance', 'first,inc-F,eng,ev,msf']]
+    : o.joined ? [['rules', 'compliance', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf']] : perList.map((x) => [x, 'compliance'] as [string, string]);
+  if (o.eng && !o.joinAll) jobs.push(o.engJoined ? ['rules', o.engAs ?? 'engineering', 'eng'] : ['eng', o.engAs ?? 'engineering']);
+  for (const [id, seat, joinedLists] of jobs) {
+    const tplName = seat === 'compliance' ? 'lens-compliance.md' : (o.engTpl ?? `lens-${seat}.md`);
+    const out = path.join(d, LD, `in-out-${seat}-${id}`);
+    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
     for (const p of r.stdout.split('\n').filter(Boolean)) {
       const nm = path.basename(p);
       const inText = fs.readFileSync(p, 'utf8');
       lane[nm] = inText;
-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body((id === 'first' || id === 'rules') && o.lensFinding !== false, o.finding);
+      lane[nm.replace(/^in-/, '')] = hdr(tplName, inText) + body((id === 'first' || (id === 'rules' && seat === 'compliance')) && o.lensFinding !== false, o.finding);
     }
-    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
+    if (r.status !== 0) { lane[`in-out-${seat}-${id}.txt`] = ''; lane[`out-${seat}-${id}.txt`] = hdr(tplName, '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
   }
   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
   if (o.split?.lens) {
@@ -863,13 +879,14 @@ type PO = {
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
   fold?: false | ((planLine: string) => string); assignees?: string[]; joinedPlan?: boolean | 'other' | 'both';
+  eng?: boolean; engAs?: string; // task-438 T4: the engineering list on the src row, its plan files named by engAs (default engineering)
 };
 const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
 async function planScenario(o: PO = {}) {
   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
   const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, unknown> }; resolveTask: (a: unknown) => { lists: { id: string }[] } };
   const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
-  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
+  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE, ...(o.eng ? { [ENG_PATH]: ENG_TEXT } : {}) };
   const d = tmp('pg');
   for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
   fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
@@ -877,6 +894,7 @@ async function planScenario(o: PO = {}) {
   const gi = (...x: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...x], { cwd: d });
   gi('init', '-q', '.'); gi('add', '-A'); gi('commit', '-q', '-m', 'fixture');
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
+  if (o.eng) withEng(table);
   for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
   const type = o.type ?? 'build';
   const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
@@ -897,10 +915,11 @@ async function planScenario(o: PO = {}) {
       if (!o.joinedPlan || o.joinedPlan === 'both') for (const lid of lists) forms.push({ lid, list: (table.lists as Record<string, unknown>)[lid] });
       for (const { lid, list } of forms) {
         const ins = rl.buildLensInputs({ id: lid, list, root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
+        const seat = lid === 'eng' ? (o.engAs ?? 'engineering') : 'compliance';
         for (const x of ins) {
-          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
+          const inn = `in-plan-${seat}-${lid}${x.suffix}.txt`;
           files[inn] = x.text;
-          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
+          files[inn.replace(/^in-/, '')] = hdr(`lens-${seat}.md`, x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
         }
       }
     }
@@ -1165,5 +1184,67 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
     const ok = scenario();
     expect(ok.status, ok.stderr).toBe(0);
     refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
+  });
+});
+
+// ---- task-438 T3 and T4 (FINAL.3, RR-0385 item 2, decision-170): the engineering seat at the close and at the launch gate ----
+describe('task-438 T3: the close requires the engineering seat for a list on the engineering standards file', () => {
+  it('(a) out-engineering-eng with lens-engineering.md is accepted', () => {
+    const r = scenario({ eng: true });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(b) the same review filed as out-compliance-eng is refused, naming out-engineering-eng.txt', () => {
+    refused(scenario({ eng: true, engAs: 'compliance' }), /list eng \(docs\/specs\/00_engineering_standards\.md\) has no valid engineering lens output[\s\S]*out-engineering-eng\.txt/);
+  });
+  it('(c) an engineering output whose REVIEW header names lens-compliance.md is refused', () => {
+    refused(scenario({ eng: true, engTpl: 'lens-compliance.md' }), /expected lens-engineering\.md/);
+  });
+  it('(d) F10 control: with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted (a lane launched before the landing closes as before)', () => {
+    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(e) the joined out-compliance-rules over the compliance lists only, plus out-engineering-eng, is accepted', () => {
+    const r = scenario({ eng: true, joined: true });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(f) no engineering list needs no out-engineering file (control: the lens set of the scenario default has none)', () => {
+    const r = scenario({ mutate: (l) => { expect(Object.keys(l).some((n) => /engineering/.test(n))).toBe(false); return l; } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(g) a joined out-compliance-rules over every list, eng included, is refused with the template at the base and accepted without it', () => {
+    refused(scenario({ eng: true, joinAll: true }), /out-engineering-(rules|eng)\.txt/);
+    const r = scenario({ eng: true, joinAll: true, noEngBase: true });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(h) a joined out-engineering-rules is accepted; with a lens-compliance.md header it is refused', () => {
+    const r = scenario({ eng: true, engJoined: true });
+    expect(r.status, r.stderr).toBe(0);
+    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
+  });
+  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
+  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
+  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
+  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
+  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
+    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
+    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
+  });
+});
+
+describe('task-438 T4: the launch gate requires the engineering seat for a list on the engineering standards file', () => {
+  it('plan-engineering-eng is accepted', async () => {
+    const r = await planScenario({ eng: true });
+    expect(r.errors, r.errors.join('\n')).toEqual([]);
+  });
+  it('plan-compliance-eng is refused, naming plan-engineering-eng (no alias)', async () => {
+    gate(await planScenario({ eng: true, engAs: 'compliance' }), /list eng \(docs\/specs\/00_engineering_standards\.md\) has no valid engineering lens output[\s\S]*plan-engineering-eng\.txt/);
+  });
+  it('control: no engineering list needs no plan-engineering file', async () => {
+    const r = await planScenario();
+    expect(r.errors, r.errors.join('\n')).toEqual([]);
+    expect(r.lists).toBe(4);
   });
 });

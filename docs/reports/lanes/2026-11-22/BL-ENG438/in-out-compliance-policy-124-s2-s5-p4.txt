@@ -1,0 +1,391 @@
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:a04da4ec459332b9c8f89e59e5602e246726f6aa6ddd0b43ac7d0372549b84ec part 1 of 3 chunk 2 of 2
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index e57dd20551886c845fc5a220f169f558b18e7729..cdb46274ff929b2b16f583d0d0cb8ba333f0e4f1 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+ const HEX64 = 'a'.repeat(64);
+ // the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
+ const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
+-const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+-const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
++// task-438: lens-engineering.md joins the templates of the fixture base (read only when present, so the red run before the template exists fails at its assertions, not at load)
++const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security', 'engineering'].filter((n) => fs.existsSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`))).map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
++const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.existsSync(path.join(ROOT, `.claude/review-templates/${template}`)) ? fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8') : '');
++// task-438 T3/T4: the fixture list on the engineering standards file (the engineering seat's list), on the src row
++const ENG_PATH = 'docs/specs/00_engineering_standards.md';
++const ENG_TEXT = '# Eng\nengineering rule text\n';
++const withEng = (table: Record<string, unknown>) => { (table.lists as Record<string, unknown>).eng = { file: ENG_PATH, whole: true, generated_by: 'hand-written' }; ((table.rows as { lists: string[] }[])[0]!).lists.push('eng'); };
+ // task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
+ const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
+ const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
+@@ -71,6 +76,9 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
++  // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
++  // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
++  eng?: boolean; engAs?: string; engTpl?: string; noEngBase?: boolean; joinAll?: boolean; engJoined?: boolean;
+   joined?: boolean | 'other'; planBoard?: string; ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+@@ -81,16 +89,18 @@ function scenario(o: Opts = {}) {
+   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
+   g('init', '-q', '.');
+   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  if (o.eng) withEng(table);
+   o.tableEdit?.(table);
+   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
+   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
+   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
++  if (o.eng) w(ENG_PATH, ENG_TEXT);
+   w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
+   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
+   w(TASK, `${taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees })}${o.priorRound ? '\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\nReview round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder x; triage y\n<!-- SECTION:FINAL_SUMMARY:END -->\n' : ''}`);
+   if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
+   if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
+-  for (const [p, x] of LENS_TEMPLATES) w(p, x);
++  for (const [p, x] of LENS_TEMPLATES) if (!(o.noEngBase && p.endsWith('lens-engineering.md'))) w(p, x);
+   if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard); // task-423: the plan evidence on the board at the launch commit
+   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
+   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
+@@ -116,17 +126,23 @@ function scenario(o: Opts = {}) {
+   fs.writeFileSync(path.join(d, '.git/material.txt'), material);
+   fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+-  for (const id of o.joined ? ['rules'] : ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+-    const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(id === 'rules' ? ['--lists', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf'] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++  const perList = ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])];
++  // task-438: the jobs of the lane's list lenses: [list id, seat, the --lists of a joined id]
++  const jobs: [string, string, string?][] = o.joinAll ? [['rules', 'compliance', 'first,inc-F,eng,ev,msf']]
++    : o.joined ? [['rules', 'compliance', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf']] : perList.map((x) => [x, 'compliance'] as [string, string]);
++  if (o.eng && !o.joinAll) jobs.push(o.engJoined ? ['rules', o.engAs ?? 'engineering', 'eng'] : ['eng', o.engAs ?? 'engineering']);
++  for (const [id, seat, joinedLists] of jobs) {
++    const tplName = seat === 'compliance' ? 'lens-compliance.md' : (o.engTpl ?? `lens-${seat}.md`);
++    const out = path.join(d, LD, `in-out-${seat}-${id}`);
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+       const inText = fs.readFileSync(p, 'utf8');
+       lane[nm] = inText;
+-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body((id === 'first' || id === 'rules') && o.lensFinding !== false, o.finding);
++      lane[nm.replace(/^in-/, '')] = hdr(tplName, inText) + body((id === 'first' || (id === 'rules' && seat === 'compliance')) && o.lensFinding !== false, o.finding);
+     }
+-    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
++    if (r.status !== 0) { lane[`in-out-${seat}-${id}.txt`] = ''; lane[`out-${seat}-${id}.txt`] = hdr(tplName, '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
+   }
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+@@ -863,13 +879,14 @@ type PO = {
+   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
+   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
+   fold?: false | ((planLine: string) => string); assignees?: string[]; joinedPlan?: boolean | 'other' | 'both';
++  eng?: boolean; engAs?: string; // task-438 T4: the engineering list on the src row, its plan files named by engAs (default engineering)
+ };
+ const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
+ async function planScenario(o: PO = {}) {
+   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
+   const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, unknown> }; resolveTask: (a: unknown) => { lists: { id: string }[] } };
+   const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
+-  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
++  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE, ...(o.eng ? { [ENG_PATH]: ENG_TEXT } : {}) };
+   const d = tmp('pg');
+   for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
+   fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
+@@ -877,6 +894,7 @@ async function planScenario(o: PO = {}) {
+   const gi = (...x: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...x], { cwd: d });
+   gi('init', '-q', '.'); gi('add', '-A'); gi('commit', '-q', '-m', 'fixture');
+   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  if (o.eng) withEng(table);
+   for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
+   const type = o.type ?? 'build';
+   const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
+@@ -897,10 +915,11 @@ async function planScenario(o: PO = {}) {
+       if (!o.joinedPlan || o.joinedPlan === 'both') for (const lid of lists) forms.push({ lid, list: (table.lists as Record<string, unknown>)[lid] });
+       for (const { lid, list } of forms) {
+         const ins = rl.buildLensInputs({ id: lid, list, root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++        const seat = lid === 'eng' ? (o.engAs ?? 'engineering') : 'compliance';
+         for (const x of ins) {
+-          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
++          const inn = `in-plan-${seat}-${lid}${x.suffix}.txt`;
+           files[inn] = x.text;
+-          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
++          files[inn.replace(/^in-/, '')] = hdr(`lens-${seat}.md`, x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
+         }
+       }
+     }
+@@ -1167,3 +1186,65 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+     refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
+   });
+ });
++
++// ---- task-438 T3 and T4 (FINAL.3, RR-0385 item 2, decision-170): the engineering seat at the close and at the launch gate ----
++describe('task-438 T3: the close requires the engineering seat for a list on the engineering standards file', () => {
++  it('(a) out-engineering-eng with lens-engineering.md is accepted', () => {
++    const r = scenario({ eng: true });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(b) the same review filed as out-compliance-eng is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance' }), /list eng \(docs\/specs\/00_engineering_standards\.md\) has no valid engineering lens output[\s\S]*out-engineering-eng\.txt/);
++  });
++  it('(c) an engineering output whose REVIEW header names lens-compliance.md is refused', () => {
++    refused(scenario({ eng: true, engTpl: 'lens-compliance.md' }), /expected lens-engineering\.md/);
++  });
++  it('(d) F10 control: with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted (a lane launched before the landing closes as before)', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(e) the joined out-compliance-rules over the compliance lists only, plus out-engineering-eng, is accepted', () => {
++    const r = scenario({ eng: true, joined: true });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(f) no engineering list needs no out-engineering file (control: the lens set of the scenario default has none)', () => {
++    const r = scenario({ mutate: (l) => { expect(Object.keys(l).some((n) => /engineering/.test(n))).toBe(false); return l; } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(g) a joined out-compliance-rules over every list, eng included, is refused with the template at the base and accepted without it', () => {
++    refused(scenario({ eng: true, joinAll: true }), /out-engineering-(rules|eng)\.txt/);
++    const r = scenario({ eng: true, joinAll: true, noEngBase: true });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(h) a joined out-engineering-rules is accepted; with a lens-compliance.md header it is refused', () => {
++    const r = scenario({ eng: true, engJoined: true });
++    expect(r.status, r.stderr).toBe(0);
++    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
++  });
++  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
++  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
++  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
++  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
++  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
++  });
++});
++
++describe('task-438 T4: the launch gate requires the engineering seat for a list on the engineering standards file', () => {
++  it('plan-engineering-eng is accepted', async () => {
++    const r = await planScenario({ eng: true });
++    expect(r.errors, r.errors.join('\n')).toEqual([]);
++  });
++  it('plan-compliance-eng is refused, naming plan-engineering-eng (no alias)', async () => {
++    gate(await planScenario({ eng: true, engAs: 'compliance' }), /list eng \(docs\/specs\/00_engineering_standards\.md\) has no valid engineering lens output[\s\S]*plan-engineering-eng\.txt/);
++  });
++  it('control: no engineering list needs no plan-engineering file', async () => {
++    const r = await planScenario();
++    expect(r.errors, r.errors.join('\n')).toEqual([]);
++    expect(r.lists).toBe(4);
++  });
++});
+diff --git a/src/tests/backlog/review-templates.logic.test.ts b/src/tests/backlog/review-templates.logic.test.ts
+index 0843a6e401f49079ef47aa1fdb005db3d50c11a3..6aeae065853c276692873014db856d0a748a6fd3 100644
+--- a/src/tests/backlog/review-templates.logic.test.ts
++++ b/src/tests/backlog/review-templates.logic.test.ts
+@@ -7,8 +7,9 @@ import { ROOT } from './helpers';
+ 
+ const DIR = path.join(ROOT, '.claude/review-templates');
+ describe('review lens templates: the plan placeholder appears once, so the material is sent once', () => {
+-  for (const lens of ['compliance', 'code-review', 'error-paths', 'ux', 'security']) {
++  for (const lens of ['compliance', 'code-review', 'error-paths', 'ux', 'security', 'engineering']) {
+     it(`lens-${lens}.md has exactly one plan placeholder`, () => {
++      expect(fs.existsSync(path.join(DIR, `lens-${lens}.md`)), `lens-${lens}.md exists`).toBe(true);
+       const text = fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
+       expect(text.split('{{PLAN}}').length - 1, `lens-${lens}.md`).toBe(1);
+     });
+@@ -32,3 +33,22 @@ describe('task-433: the compliance lens ends with a Rules met line', () => {
+     });
+   }
+ });
++
++// task-438 T1 (FINAL.3, RR-0385 item 2, decision-170): the engineering seat has its own template, separate from compliance. It carries the structural strings every lens template carries
++// (review-lens-template.infra.test.ts:80-92, which is left alone: its LENSES would force lens-compliance.md to name lens-engineering) and the Clauses checked line, and no Rules met line
++// (the engineering standards file has no name.N rule ids).
++describe('task-438 T1: lens-engineering.md is a lens template of its own', () => {
++  const read = (lens: string) => fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
++  it('lens-engineering.md holds the structural strings of a lens template, names the other lenses, ends with Clauses checked and has no Rules met line', () => {
++    expect(fs.existsSync(path.join(DIR, 'lens-engineering.md')), 'lens-engineering.md exists').toBe(true);
++    const t = read('engineering');
++    for (const s of ['## System persona', '## User prompt', '**The one question:**', 'You are NOT responsible for', 'a finding with no quote is rejected', 'Output format (strict', 'VERDICT:', 'Clauses checked: <n>   Unmet: <n>']) expect(t, s).toContain(s);
++    expect(t).toMatch(/At most \d+ findings/);
++    for (const other of ['compliance', 'code-review', 'ux', 'error-paths', 'security']) expect(t, `names lens-${other}`).toContain(`lens-${other}`);
++    expect(t).toContain('engineering');
++    expect(t).not.toContain('Rules met:');
++  });
++  it('control: lens-compliance.md still holds the Rules met line (it is not edited)', () => {
++    expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>');
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 427bface9fdc84a28e42d2a03acfba770d6ce10e..420502b9b42096c49884b3ad6e6a00cdb33cd23f 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -1035,3 +1035,26 @@ describe('task-433: unmentioned prints the rule ids of the sent list part that a
+     }
+   });
+ });
++
++// task-438 T2 (FINAL.3, RR-0385 item 2, decision-170): one routing predicate decides the seat of a rule list: a list whose file is the engineering standards file goes to the engineering seat,
++// every other list (and the joined list of lens-input --list rules) to the compliance seat. No table field: the ruling names the document.
++describe('task-438 T2: seatOf routes a rule list to the engineering or the compliance seat', () => {
++  type SM = { seatOf?: (l: unknown) => string; ENG_FILE?: string; readTable: () => { lists: Record<string, { file: string }> }; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, { file: string }> } };
++  const sm = async () => (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as SM;
++  it('eng-all, and a sections list on the engineering standards file, are engineering', async () => {
++    const m = await sm();
++    expect(typeof m.seatOf, 'seatOf is exported').toBe('function');
++    expect(m.ENG_FILE).toBe('docs/specs/00_engineering_standards.md');
++    const t = m.readTable();
++    expect(m.seatOf!({ id: 'eng-all', ...t.lists['eng-all'] })).toBe('engineering');
++    expect(m.seatOf!({ id: 'eng-s4', file: 'docs/specs/00_engineering_standards.md', sections: ['4. Security & API Contracts'] })).toBe('engineering');
++  });
++  it('control: bylaw-133 and the joined list (joinLists, even when it holds eng-all) are compliance', async () => {
++    const m = await sm();
++    expect(typeof m.seatOf, 'seatOf is exported').toBe('function');
++    const t = m.readTable();
++    expect(m.seatOf!({ id: 'bylaw-133', ...t.lists['bylaw-133'] })).toBe('compliance');
++    const j = m.joinLists(t, ['eng-all', 'five-words']);
++    expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');
++  });
++});
+

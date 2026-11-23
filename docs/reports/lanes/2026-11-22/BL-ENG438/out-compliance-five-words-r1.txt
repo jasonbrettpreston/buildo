@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:12.996Z file_sha256=0b93b67f28c3a47766bbf0935120ea7824c4953c75d274a0fc5b6602c2932747 prompt_sha256=f67c7a468bf1b73c3639811222d7342249672014d25bc2ee1d4f5166cd9ee78d
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-438 "the launch gate and the close check expect both seats' outputs" (and RR-0385, verbatim: "We want to seperate the compliance from the engineering standards seat. For both the plan and output.") — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — when the range base predates the landing the close routes every engineering-standards list back to the compliance name (`(split ? seatOf(l) : 'compliance')`), so such a lane is never asked for an engineering output, which contradicts "for both the plan and output" and the card's "the close check expect both seats' outputs", and the lane that lands the template (this task) is itself the first lane whose base lacks it — drop the split condition and check `seatOf(l)` unconditionally, or get the operator's grandfather ruling pasted into the card and confine it to the lanes it names
+
+DEFER severity=MED — task-438 Files line "docs/reports/reviews/task-375/plant-evidence.mjs" and Implementation Notes "plant-evidence.mjs by seat" — NONE (the material holds no hunk for that file, and it is chunk 1 of 1 of the change) — the notes record a seat split in plant-evidence.mjs that the reviewed change does not contain, so plan evidence it writes for an engineering-standards list still carries the compliance name, which the always-split launch gate refuses (the same shape as the task-431 refusal in the notes) — land the plant-evidence.mjs seat change in this diff, or strike the claim from the Implementation Notes
+
+DEFER severity=LOW — .claude/review-templates/README.md "the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it" — scripts/hooks/check-lane-close.mjs:645 "// a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line" — "always" is untrue for a fix launch, which requires no per-list plan output for either seat, so a fix task launched with an engineering-standards list gets no engineering seat review at plan — say "for a build launch", or make a fix launch require `plan-engineering-<list id>.txt` as the card's "at both stages" says
+
+REJECT — RR-0387 "no new infrastructure" — accused of adding a review seat and a new lens template — not a real issue, both are named by RR-0385 ("We need a new name for an agent called engineering.") and by this card's own scope line "a new review template named engineering"
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a lens file and a seat named engineering, with its own system persona and output format
+MET — task-438 "the engineering-standards rule lists are reviewed by that seat" — scripts/analysis/rule-lists.mjs:111 — seatOf returns engineering for file docs/specs/00_engineering_standards.md, sections lists on that file included
+MET — task-438 "the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:111 — the same predicate returns compliance for every other file, the handbook and the joined list included
+MET — task-438 "the launch gate" — scripts/hooks/check-lane-close.mjs:641 — planGateInner loops both seats, refuses a compliance-named engineering output with no alias, and names `plan-engineering-<list id>.txt` in the refusal (test T4)
+MET — task-438 "the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:520 — closeErrors proves each seat's lists under its own name and template, joined form included (tests T3 (a),(b),(c),(e),(h))
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: none
+
+---
+⏱  71349ms (71.3s)
+📊 Tokens — total: 43766, input: 29365, output: 14401, reasoning: 13484

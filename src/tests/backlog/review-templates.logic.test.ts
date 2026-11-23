@@ -7,8 +7,9 @@ import { ROOT } from './helpers';
 
 const DIR = path.join(ROOT, '.claude/review-templates');
 describe('review lens templates: the plan placeholder appears once, so the material is sent once', () => {
-  for (const lens of ['compliance', 'code-review', 'error-paths', 'ux', 'security']) {
+  for (const lens of ['compliance', 'code-review', 'error-paths', 'ux', 'security', 'engineering']) {
     it(`lens-${lens}.md has exactly one plan placeholder`, () => {
+      expect(fs.existsSync(path.join(DIR, `lens-${lens}.md`)), `lens-${lens}.md exists`).toBe(true);
       const text = fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
       expect(text.split('{{PLAN}}').length - 1, `lens-${lens}.md`).toBe(1);
     });
@@ -31,4 +32,23 @@ describe('task-433: the compliance lens ends with a Rules met line', () => {
       expect(read(lens)).not.toContain('Rules met:');
     });
   }
+});
+
+// task-438 T1 (FINAL.3, RR-0385 item 2, decision-170): the engineering seat has its own template, separate from compliance. It carries the structural strings every lens template carries
+// (review-lens-template.infra.test.ts:80-92, which is left alone: its LENSES would force lens-compliance.md to name lens-engineering) and the Clauses checked line, and no Rules met line
+// (the engineering standards file has no name.N rule ids).
+describe('task-438 T1: lens-engineering.md is a lens template of its own', () => {
+  const read = (lens: string) => fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
+  it('lens-engineering.md holds the structural strings of a lens template, names the other lenses, ends with Clauses checked and has no Rules met line', () => {
+    expect(fs.existsSync(path.join(DIR, 'lens-engineering.md')), 'lens-engineering.md exists').toBe(true);
+    const t = read('engineering');
+    for (const s of ['## System persona', '## User prompt', '**The one question:**', 'You are NOT responsible for', 'a finding with no quote is rejected', 'Output format (strict', 'VERDICT:', 'Clauses checked: <n>   Unmet: <n>']) expect(t, s).toContain(s);
+    expect(t).toMatch(/At most \d+ findings/);
+    for (const other of ['compliance', 'code-review', 'ux', 'error-paths', 'security']) expect(t, `names lens-${other}`).toContain(`lens-${other}`);
+    expect(t).toContain('engineering');
+    expect(t).not.toContain('Rules met:');
+  });
+  it('control: lens-compliance.md still holds the Rules met line (it is not edited)', () => {
+    expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>');
+  });
 });

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.730Z file_sha256=9c8afb2a185c9c0fd9e3d159c054851efaab87e21091a049551163e5de3de767 prompt_sha256=dc17bc240893ead91f2404149c43e3c6b9c2e782a36d217e0e8a52114211e86c
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" and "the launch gate and the close check expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1200 "(d) F10 control: with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted (a lane launched before the landing closes as before)" — clause unmet at the output stage: the close accepts the compliance seat's file for an engineering list, so the close does not expect the engineering seat — make the close refuse out-compliance-eng for an engineering list unconditionally, or land an operator ruling in the task text that grants the cut-over.
+DEFER severity=MED — task-438 card "the launch gate and the close check expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1212 "(g) a joined out-compliance-rules over every list, eng included, is refused with the template at the base and accepted without it" — the diff adds a behaviour no pasted clause or ruling names, a cut-over keyed on whether the range base holds lens-engineering.md, so gate acceptance turns on git history rather than the ruling — cite the ruling that names the cut-over in the card, or drop the conditional acceptance.
+DEFER severity=LOW — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — src/tests/backlog/check-lane-close.logic.test.ts:101 "w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n')" — the fixture files a readings-register id, RR-0001, as a decision titled "test ruling", modelling a reading feeding a review as a ruling — give the fixture decision a non-register id.
+MET — task-438 card "a new review template named engineering" — src/tests/backlog/review-templates.logic.test.ts:36 — the diff asserts lens-engineering.md exists and carries the structural lens strings, the Clauses checked line and no Rules met line.
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — src/tests/backlog/rule-lists.logic.test.ts:1045 — seatOf routes eng-all and a sections list on docs/specs/00_engineering_standards.md to the engineering seat.
+MET — RR-0380 "by-law tasks gain no engineering rules" — src/tests/backlog/rule-lists.logic.test.ts:1053 — the control routes bylaw-133 to the compliance seat.
+MET — task-438 card "the launch gate ... expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1217 — plan-engineering-eng is accepted and plan-compliance-eng is refused by name, no alias.
+MET — task-438 card "at both stages" (output stage) — src/tests/backlog/check-lane-close.logic.test.ts:1190 — out-engineering-eng with a lens-engineering.md REVIEW header is accepted at the close.
+MET — RR-0387 "no new infrastructure" — the diff as pasted — the chunk adds tests only, no new script, gate or queue mechanism is introduced here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  34755ms (34.8s)
+📊 Tokens — total: 28557, input: 21598, output: 6959, reasoning: 6162

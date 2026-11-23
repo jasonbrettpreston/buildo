@@ -1035,3 +1035,26 @@ describe('task-433: unmentioned prints the rule ids of the sent list part that a
     }
   });
 });
+
+// task-438 T2 (FINAL.3, RR-0385 item 2, decision-170): one routing predicate decides the seat of a rule list: a list whose file is the engineering standards file goes to the engineering seat,
+// every other list (and the joined list of lens-input --list rules) to the compliance seat. No table field: the ruling names the document.
+describe('task-438 T2: seatOf routes a rule list to the engineering or the compliance seat', () => {
+  type SM = { seatOf?: (l: unknown) => string; ENG_FILE?: string; readTable: () => { lists: Record<string, { file: string }> }; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, { file: string }> } };
+  const sm = async () => (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as SM;
+  it('eng-all, and a sections list on the engineering standards file, are engineering', async () => {
+    const m = await sm();
+    expect(typeof m.seatOf, 'seatOf is exported').toBe('function');
+    expect(m.ENG_FILE).toBe('docs/specs/00_engineering_standards.md');
+    const t = m.readTable();
+    expect(m.seatOf!({ id: 'eng-all', ...t.lists['eng-all'] })).toBe('engineering');
+    expect(m.seatOf!({ id: 'eng-s4', file: 'docs/specs/00_engineering_standards.md', sections: ['4. Security & API Contracts'] })).toBe('engineering');
+  });
+  it('control: bylaw-133 and the joined list (joinLists, even when it holds eng-all) are compliance', async () => {
+    const m = await sm();
+    expect(typeof m.seatOf, 'seatOf is exported').toBe('function');
+    const t = m.readTable();
+    expect(m.seatOf!({ id: 'bylaw-133', ...t.lists['bylaw-133'] })).toBe('compliance');
+    const j = m.joinLists(t, ['eng-all', 'five-words']);
+    expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');
+  });
+});

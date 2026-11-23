@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.789Z file_sha256=6da6cdc4a1a30aca0af51852bda31e8d9f329ed41c4b7365ecc8a8c116b90967 prompt_sha256=14a81e0ff4f3606ce76b952cd31dab3e6d064a2cc8473d84274ba71f43bc025f
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG none.
+
+DEFER severity=MED — Spec 08 dated note 2026-11-22 (task-438), per-list rule "The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>`" — scripts/analysis/backlog-lane.mjs:185 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs)." — the lane brief's own statement of the close contract still names only the compliance output, while the check refuses out-compliance-eng (test (b)) for an engineering list, so a lane with eng-all is told a close rule the hook contradicts — add "an out-engineering output per engineering list (out-engineering-<list id>.txt or the joined out-engineering-rules)" to that sentence.
+
+DEFER severity=LOW — Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue." — docs/specs/00-architecture/08_agents.md:355 "`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 \"We want to seperate the compliance from the engineering standards seat. For both the plan and output.\"" against the card "RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: \"We want to seperate the compliance from the engineering standards seat...\"" — the same words are cited at :1909 in the note and :1915 in the card, so at most one citation can be right and the note's traceability is unproven — cite the single line the quoted words sit on and make it agree with the card.
+
+DEFER severity=LOW — task-438 Implementation Notes "plant-evidence.mjs by seat" and the Files line path "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE — the change under review (chunk 1 of 1, 11 paths) contains no hunk for that file, so the record claims work the material does not hold and the planted-compliance-name seed is either unchanged or unreviewed — include that file's seat change or drop the claim from the notes.
+
+MET — operator verbatim "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — .claude/review-templates/lens-engineering.md:1 "**Spec 08 seat:** Engineering (RR-0385, decision-170)" — the new template is a distinct seat with its own one question and its own NOT-responsible list, wired at both stages.
+
+MET — dated note 2026-11-22 "every other list by `lens-compliance.md`, which is not edited" — .claude/review-templates/lens-compliance.md is absent from the diff — no hunk touches the compliance template, and review-templates.logic.test.ts asserts it still carries "Rules met: <rule ids, comma separated>".
+
+MET — dated note 2026-11-22 "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — scripts/hooks/check-lane-close.mjs "for (const seat of ['compliance', 'engineering']) { const ls = r.lists.filter((l) => seatOf(l) === seat);" in planGateInner — every resolved list is proved under its seat at plan, with no alias.
+
+MET — dated note 2026-11-22 "The close applies the split when the range base holds lens-engineering.md ... a deliberate exception for lanes already launched" — scripts/hooks/check-lane-close.mjs "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close keys on the base only, the launch gate does not.
+
+MET — dated note 2026-11-22 "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — scripts/hooks/check-lane-close.mjs "errors.push(...complianceSetErrors({ id, seat, lists: ls, phases, files, table: i.table, dirNote, ..." — one proof per seat, the joined id `rules` taken per seat and per phase.
+
+MET — dated note 2026-11-22 "A rule list whose file is the engineering standards ... (`seatOf` in `scripts/analysis/rule-lists.mjs`)" — scripts/analysis/rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one predicate over the file, no table key, so the task-423 sentence "no table key is added" holds.
+
+MET — task-410 note "a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task" — the chunk stages scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs and no task file — the work commit closes nothing, so Rule 3's two-commit close is intact.
+
+MET — task-410 note "when a file changed from the task's launch commit that its Files line covers is not in a review chunk" — "Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/..." — every changed path in the chunk is on the Files line.
+
+REJECT — task-433 dated note "the compliance lens output ends with a line `Rules met: <rule ids>`" — the engineering output carries no Rules met line — that clause binds the compliance lens output only, and the engineering standards file has no name.N bullet ids, so the only value it could carry would be `Rules met: none`.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  137464ms (137.5s)
+📊 Tokens — total: 63171, input: 34497, output: 28674, reasoning: 27279

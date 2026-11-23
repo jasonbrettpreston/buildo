@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.075Z file_sha256=1030a281918e6fbfe1f67ed0c7defe0501f873aa482dcdebc9b042d7a2893f80 prompt_sha256=722daca6ec8c7dd4849a0fd7d4148b1a1db093aec17a8ac007c893eb1ea4f299
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-438 card, "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages"; RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the close the seat split is switched off for every lane whose range base predates the template, so out-compliance-eng-all.txt is accepted and the engineering standards are judged by the compliance seat at the output stage, an exception neither the card nor RR-0385 grants (test (d) pins it, and 08_agents.md's new note calls it "a deliberate exception for lanes already launched") — fix: get the operator to rule the transitional exception explicitly (a launch-commit cut-off, or owed engineering outputs for in-flight lanes) and cite that ruling in the note, the README rule 5 sentence and the code comment, or make the close split unconditional.
+
+DEFER severity=LOW — task-438 card, "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs, lens line: "Engineering lens, once per engineering list: the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md`" — the brief the build lane actually reads names only the per-list engineering files, while the close accepts the joined out-engineering-rules set (T3 (h)) and README rule 3 states "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage", so a lane that joins its engineering lists is never told the accepted joined name — add the joined engineering form to the brief's engineering clause exactly as the compliance clause carries it.
+
+MET — task-438 card, "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1-80 — the template exists, with its own persona, one question, NOT-responsible list and VERDICT/Clauses checked tail, and lens-compliance.md is left unedited.
+
+MET — task-438 card, "the launch gate ... expect both seats' outputs" (plan stage) — scripts/hooks/check-lane-close.mjs, planGateInner: "for (const seat of ['compliance', 'engineering']) { const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate always splits and takes the engineering template text from the base.
+
+MET — task-438 card, "the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — every list on a non-engineering document, including the Spec 132 handbook lists, stays with the compliance seat.
+
+MET — task-438 Files line — the whole diff touches only paths on the card's Files line (templates, rule-lists.mjs, check-lane-close.mjs, backlog-lane.mjs, the four logic tests, 08_agents.md, rule-lists-by-kind.md).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+Rules met: none
+
+---
+⏱  66934ms (66.9s)
+📊 Tokens — total: 46881, input: 34305, output: 12576, reasoning: 11827

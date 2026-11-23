@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.795Z file_sha256=08689f4d92a763eab94b3b51316020fac42a8d52fe76941eaf7c7d0790e8941b prompt_sha256=222725b756d3bb54b26c903e98ecbca6e7879561ed950afdb7a9d76da0c6624b
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks" — pasted Implementation Notes "2026-11-22 BL-ENG438 fix round (grounder Cairn-Ground-O438, round 1): out-code-review-p1#2 MED, test only: T3 cases (i) template added in the lane range and (j) template deleted in the lane range" — the one confirmed finding of the output review was fixed inside the lane's own fix round, so no ordinary fix task carries it, which is the route the ruling names — file the confirmed MED as an ordinary fix task, or record an operator ruling line for it, before merge.
+DEFER severity=LOW — task card Files line "docs/reports/reviews/task-375/plant-evidence.mjs" with the note "plant-evidence.mjs by seat" — NONE — the material (chunk 1 of 1) holds no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, so the plant fixture is not shown to stamp the engineering name for an engineering list as the note says it does — land the plant-evidence change by seat, or correct the note.
+REJECT — 137 section 6 "a generated index across all queues is infra work: carded for the freeze lift, not built now" — that the diff's update of docs/reports/generated/rule-lists-by-kind.md builds the deferred index — that page is a pre-existing rule-list report regenerated because 08_agents.md grew ("39,171" to "40,664"), not a cross-queue index inside the repo.
+MET — RR-0385 item 2 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/analysis/rule-lists.mjs:113 — seatOf/ENG_FILE route every list whose file is the engineering standards to the engineering seat, used at plan (planPrep, planGateInner) and at output (closeErrors).
+MET — 08_agents note "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — scripts/hooks/check-lane-close.mjs:649 — planGateInner splits unconditionally and the engineering list's proof is on lens-engineering.md only, so a compliance-named file is refused.
+MET — 08_agents note "The close applies the split when the range base holds lens-engineering.md: a lane launched before the landing closes as before with out-compliance-eng-all" — scripts/hooks/check-lane-close.mjs:519 — the split reads the range base, so a pre-landing base keeps every list under the compliance name.
+MET — 08_agents note "every other list by lens-compliance.md, which is not edited" — NONE hunk on .claude/review-templates/lens-compliance.md — the compliance template is untouched, and review-templates.logic.test.ts still asserts its Rules met line.
+MET — 137 section 6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now" — scripts/hooks/check-lane-close.mjs — no such refusal is added, the change adds only the per-seat split.
+MET — task card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:184 — engIds are filtered out of the compliance list and the brief names out-engineering-<id>.txt with its own template.
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:4 — "**Spec 08 seat:** Engineering (RR-0385, decision-170)" names the seat in a template of its own.
+MET — RR-0380 "by-law tasks gain no engineering rules" — scripts/analysis/rule-lists.mjs:113 — seatOf keys on the list's file only, no row or every_task list gains the engineering file, and bylaw-133 stays compliance.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  161181ms (161.2s)
+📊 Tokens — total: 62352, input: 28843, output: 33509, reasoning: 32582

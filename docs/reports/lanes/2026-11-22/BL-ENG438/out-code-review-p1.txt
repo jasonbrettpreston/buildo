@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T23:43:54.654Z file_sha256=2c1664e919cf64ae99b6a31efa585f6cf371c9710f133242a0b86e66f3f4ec4a prompt_sha256=d54f5d6ec90e61776dbb82c471c0cbd6a7e91bf95403fcfe94965037e3b4512c
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');" — this collection-time read is unguarded while the template map five lines above is deliberately filtered ("read only when present, so the red run before the template exists fails at its assertions, not at load"), so with the template absent from the working tree the whole file throws ENOENT at load and none of its tests run — reuse the guarded map or wrap it in fs.existsSync.
+
+DEFER severity=MED — task-438 Implementation Notes "plant-evidence.mjs by seat" — the material is chunk 1 of 1 and holds no hunk for docs/reports/reviews/task-375/plant-evidence.mjs (it is on the Files line), so if that helper still emits in-plan-compliance-eng-all / plan-compliance-eng-all the launch gate now refuses its evidence for any list on the engineering standards file (check-lane-close.mjs planGateInner always splits) — read the file (cannot see the tree) and name its outputs by seat, or drop the claim.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:113 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — l is dereferenced with no guard and the helper it replaces took an id string (the old inputArgv(l.id)), so any call still passing a string throws "Cannot read properties of undefined (reading 'file')" instead of routing to compliance — use l?.file.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:183 "const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);" — when the resolved lists are engineering-only, ids is empty and the brief renders "Files to produce, one per list: ." and still says the close "is refused without an out-compliance output per list (or the joined set)", though the split close requires none — guard the compliance sentences on ids.length the way the engineering clause is guarded on engIds.length.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "lane[nm.replace(/^in-/, '')] = hdr(tplName, inText) + body((id === 'first' || (id === 'rules' && seat === 'compliance')) && o.lensFinding !== false, o.finding);" — no fixture ever puts a finding in an out-engineering-*.txt, so the finding/Ruled-line path of the close for the new output family is never exercised — add one case with a finding in out-engineering-eng and its grounder line.
+
+REJECT — scripts/analysis/rule-lists.mjs "const nEngineering = jobs.length - nCompliance;" — this looks like it counts the plan lens jobs as engineering — it cannot, because jobs.push(...lenses) runs after both counts are taken, so both numbers are list-review jobs only.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- n/a
+
+---
+⏱  204507ms (204.5s)
+📊 Tokens — total: 70585, input: 28366, output: 42219, reasoning: 41517

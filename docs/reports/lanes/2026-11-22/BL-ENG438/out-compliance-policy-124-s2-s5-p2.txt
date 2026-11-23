@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.707Z file_sha256=9ef80c25668759c2b8a3882bb4043986fe56aa5bcce5a13e196b63e3c5f1bbf2 prompt_sha256=ba71d7dc5ec790bc4dab6b3ee3831bff2630938024fded7b6aa420ad1513eb39
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Task card, "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close requires the engineering seat only when the range base holds the template, so a lane launched before the landing closes on out-compliance-eng-all.txt with no engineering review of eng-all, an exception the card and RR-0385 ("For both the plan and output.") do not grant and that the change grants itself (docs/specs/00-architecture/08_agents.md:352 "a deliberate exception for lanes already launched") — make the close split unconditional (drop the `split` guard, seat every list as at the launch gate), or land an operator ruling for the pre-landing exception before merge.
+
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--write` emits the row skeletons; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — scripts/analysis/rule-lists.mjs:112 "task-438 (FINAL.3, RR-0385 item 2, decision-170): the seat of a rule list." — this chunk lands decision-170's implementation but carries no docs/reports/decisions log for it and no register row citing it, and whether one already landed in another lane cannot see — land the decision record and the register row for decision-170, or cite the existing row that carries RR-0385, else the pre-commit coverage lock is RED.
+
+REJECT — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks; no new infrastructure" — that this change adds a new seat, template and gate plumbing, i.e. new infrastructure — the ruling governs how confirmed findings are disposed of (ordinary fix tasks, no new infra for the fix loop), while the card names the new template and the two-seat gates as this task's deliverable.
+
+MET — Task card "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the template exists with its own one-question persona, walk and output format, and lens-compliance.md is not edited.
+
+MET — Task card "the engineering-standards rule lists are reviewed by that seat" — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — the seat is decided by the list's own file, ENG_FILE being docs/specs/00_engineering_standards.md, so no list is hand-assigned.
+
+MET — Task card "the handbook lists by the compliance seat" and RR-0380 "by-law tasks gain no engineering rules" — scripts/analysis/rule-lists.mjs:110 "export const ENG_FILE = 'docs/specs/00_engineering_standards.md';" — every list not on the engineering file, five-words and the by-law lists included, resolves to compliance and is neither renamed nor re-seated.
+
+MET — Task card "at both stages" — scripts/analysis/rule-lists.mjs:654 "const inputArgv = (l) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', l.id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)];" — plan evidence is named and sized by seat and reviewed on the seat's template, and the close splits the out stage the same way.
+
+MET — Task card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:183 "const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);" — the brief names out-engineering-eng-all.txt and .claude/review-templates/lens-engineering.md only when an engineering list is attached, and the plan gate refuses the compliance name for it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  63519ms (63.5s)
+📊 Tokens — total: 47832, input: 34715, output: 13117, reasoning: 12127

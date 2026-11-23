@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.750Z file_sha256=7a835833453aa2f0c50d99d3d6ebb80abe5b9251674ed491a04963a26536416c prompt_sha256=6ba6da0a95a2fc2fe6d201ac0e5bb7dbd651ba5b2cc047be22f90a25bb0f0e47
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 operator verbatim "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close check enforces the engineering seat at the output stage only when the range base already holds the template, so every lane launched before the landing closes with its engineering-standards list judged by the compliance lens (08_agents.md:352 declares this: "a lane launched before the landing closes as before with `out-compliance-eng-all`"), and no pasted ruling authorises that cut-over, although the ruling names both stages — get an operator ruling id for the cut-over and cite it in the 08_agents note and the check, or key the split on the lane's launch commit predating the landing commit instead of on the template file's presence.
+DEFER severity=LOW — task-438 Description "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:186 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below" — the brief's own close sentence still tells a post-landing lane that the close needs an out-compliance file per list, while for an engineering list the close refuses that name (README rule 5, "a compliance file never stands for it"), so the brief contradicts the gate it summarises — make that closing sentence seat-aware or drop the per-seat enumeration from it.
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the new template exists under that name and carries the Engineering seat (RR-0385, decision-170).
+MET — task-438 Description "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — routing is keyed on the engineering standards file only, every other list and the joined list stay with compliance.
+MET — task-438 Description "at both stages" (plan half) — scripts/hooks/check-lane-close.mjs (planGateInner) "for (const seat of ['compliance', 'engineering']) {" — the launch gate always splits and accepts no compliance name for an engineering list.
+MET — task-438 Description "a new review template named engineering" — .claude/review-templates/README.md:101 "| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) |" — the seat and its file are registered in the lens table.
+REJECT — policy-124 §2 Rules 1-13 — that the change breaches the step standard policy — the diff touches only review plumbing (`.claude/review-templates`, `rule-lists.mjs`, `check-lane-close.mjs`, `backlog-lane.mjs`, one 08_agents dated note, one generated report) and no descriptor, compute, `checks[]`, `logic_variables`, `outputs.writes`, `recovery` or `step.schema.json` file, so none of those thirteen clauses reaches this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+Rules met: none
+
+---
+⏱  68001ms (68.0s)
+📊 Tokens — total: 44495, input: 30549, output: 13946, reasoning: 13144

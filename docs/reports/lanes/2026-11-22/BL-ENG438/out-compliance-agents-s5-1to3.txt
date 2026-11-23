@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.654Z file_sha256=c690e56bd8d2b5c4a0c3e5fa6b3a2c187f9665bdfb87562e8c02e3fd0a551fed prompt_sha256=0a0dd5f21efaa0eb2809b42350413c22b5e68b12ed36b693a12365735aa2217d
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings first, then MET, then the verdict block.
+
+DEFER severity=MED — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — pasted Implementation Notes "per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat, one dated note in 08_agents.md" — NONE (no hunk for docs/reports/reviews/task-375/plant-evidence.mjs in the diff, though the Files line names it) — the lane record claims a plant-evidence.mjs change by seat that the whole-change diff does not contain, so either the record is untrue (5.2 drift: the note says A, reality is B) or the plan-stage evidence tool still files the engineering list under the compliance name the launch gate now refuses, leaving "at both stages" unmet for that path — land the plant-evidence.mjs change (plan-engineering-<id> for the engineering seat) or strike the claim from the notes.
+
+DEFER severity=MED — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:518 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close exempts every lane whose range base predates the landing, so a lane already in flight closes with eng-all reviewed only under lens-compliance.md, an exception named neither in the card nor in the pasted operator words ("We want to seperate the compliance from the engineering standards seat. For both the plan and output.") — bounded in time but a literal non-satisfaction of the card clause for those lanes; get a ruling for the exception and say it in the refusal text, or require the engineering seat at every close since a launched lane can still run the engineering lens.
+
+DEFER severity=LOW — task-366 note "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — scripts/analysis/backlog-lane.mjs:187 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below" — the sentence stands even when ids is empty (every resolved list engineering), telling the lane to produce a compliance output that does not exist and that the close does not require — make it conditional on ids.length, as the engineering clause already is.
+
+DEFER severity=LOW — README item 5 "or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused" — scripts/hooks/check-lane-close.mjs:402 "bad.push(...reviewErrors(n, textOf(n) ?? '', `lens-${seat}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${seat}.md`), contexts: ctxValues }));" — the input-binding check now runs for the engineering seat too, so the unchanged "(compliance)" label understates what is enforced and invites a lane to believe an engineering output's hash is not recomputed — make the parenthetical seat-neutral.
+
+MET — task-438 operator words "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — a new template with the one question, the NOT-responsible list, the strict format and a VERDICT line; lens-compliance.md is not in the diff, as the separation requires.
+
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one predicate keyed on the document the ruling names routes every list, and every other list stays with compliance.
+
+MET — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:521 "for (const seat of ['compliance', 'engineering']) {" — each seat's lists are proved in their own set at the close and at the launch gate, with no alias (tests T3b, T3e, T4 refusal of plan-compliance-eng).
+
+MET — task-423 note "the joined run is an accepted form ... and is NOT the default ... a list is never trimmed in either form" — scripts/hooks/check-lane-close.mjs:424 "const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`)" — the joined form is per seat and per stage, the per-list form stays the brief's default, and no trimming is added.
+
+MET — task-410 corrections "The rest of the table (lists, rows, every_task) and the lens templates are read from the range base" — scripts/hooks/check-lane-close.mjs:402 "readBase(`.claude/review-templates/lens-${seat}.md`)" — the engineering template's text, and the split decision itself, come from the range base, so a lane cannot add or delete it in its own range (T3 i, j).
+
+MET — 5.2 Ground-truth "verify it against the live code" — docs/reports/generated/rule-lists-by-kind.md:99 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 40,664 | 1 |" — the list holding section 7 and both totals each move by the 1,493 characters the new dated note adds, so the generated table matches the spec file it describes.
+
+```
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  216826ms (216.8s)
+📊 Tokens — total: 59389, input: 32452, output: 26937, reasoning: 25610

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.727Z file_sha256=8ca326a1251405a0e014f77af6947315c8f81536b1c98680ced34ddc8afbb926 prompt_sha256=effb0762e6ac9f0e0157ced475d10541f3f9e10ca03c323a87733f2a126406bf
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+MET — doc-17 preamble "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — `.claude/review-templates/README.md:101` — the new seat rests only on a decision record ("Engineering (RR-0385, decision-170)"), no reading of this list is cited as authority anywhere in the diff.
+
+REJECT — doc-17 preamble "never feed a review as a ruling" — the change is accused of breaching RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — RR-0110 is a reading (and a memory record) in this list, and doc-17 says readings never feed a review as a ruling.
+
+REJECT — doc-17 preamble "never feed a review as a ruling" — the change is accused of breaching RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — reading only, it names a permit-pipeline step and nothing in this diff converts a permit step.
+
+REJECT — doc-17 preamble "never feed a review as a ruling" — the change is accused of breaching RR-0002 "lane tooling first" / RR-0135 lane-policy readings — both are logged readings of this list, so they cannot be run as a ruling against `scripts/analysis/rule-lists.mjs` or `scripts/hooks/check-lane-close.mjs`.
+
+REJECT — doc-17 preamble "The operator's rulings are the decisions" — this run's attached list carries no bold `name.N` rule id and no clause outside its preamble, so there is no rule text in this part whose requirement the diff could leave unmet.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+Rules met: none
+
+---
+⏱  25502ms (25.5s)
+📊 Tokens — total: 36976, input: 31804, output: 5172, reasoning: 4757

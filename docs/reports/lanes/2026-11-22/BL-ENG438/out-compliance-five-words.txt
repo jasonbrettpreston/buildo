@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.693Z file_sha256=aa17cf5529c7232b4ec905fe677eea84874b02fb4aa1cb50946911e44aa22b92 prompt_sha256=969de0a48817b63a565a5dc7ae7b3c3425e55f4a6766ecc5f9df20293396e33b
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings against the pasted card, rulings, and Glossary:
+
+DEFER severity=MED — task-438 card "the launch gate and the close check expect both seats' outputs" and operator verbatim "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close demands the engineering output only when the range base already holds the template, so every lane launched before the landing closes with out-compliance-eng-all and its engineering list reviewed by the compliance seat at the output stage, which the pasted ruling does not authorize — require out-engineering-<id>.txt for an engineering-file list at every close, or obtain an operator ruling for the pre-landing exemption and cite its RR in the 08_agents.md note.
+DEFER severity=LOW — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/analysis/rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — the seat is decided by an exact string compare, so a table list naming the same document with any other spelling (dot-prefixed, normalised, absolute) routes to compliance and the engineering standards list is reviewed by the wrong seat — compare a normalised, root-resolved path against ENG_FILE.
+DEFER severity=LOW — task-438 card Files line "docs/reports/reviews/task-375/plant-evidence.mjs" and Implementation Notes "plant-evidence.mjs by seat" — NONE — the diff carries no hunk for plant-evidence.mjs, so the plant that exercises the seat split is absent from the change while the note claims it was made — include the plant-evidence.mjs change or strike the note line.
+
+MET — task-438 card "a new review template named engineering" — .claude/review-templates/lens-engineering.md "**Spec 08 seat:** Engineering (RR-0385, decision-170)" — a separate template with its own persona, one question, output format and Clauses checked line, lens-compliance.md left unedited (test control in review-templates.logic.test.ts).
+MET — operator verbatim "For both the plan and output." — scripts/analysis/rule-lists.mjs "inputArgv = (l) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', l.id'" — plan-stage inputs and review calls are named and templated by the list's seat.
+MET — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs "for (const seat of ['compliance', 'engineering']) {" in planGateInner — the launch gate always splits, requires plan-engineering-eng, and refuses the compliance name with no alias (T4).
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat" — scripts/hooks/check-lane-close.mjs "const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — the close proves out-engineering-<id>.txt with the lens-engineering.md REVIEW header, and a compliance-templated file is refused (T3 b, c, h).
+MET — operator verbatim "seperate the compliance from the engineering standards seat" — scripts/analysis/backlog-lane.mjs "${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}" — the lane brief files the engineering list under its own name and template and drops it from the compliance list ids.
+MET — task-438 card "We need a new name for an agent called engineering." — .claude/review-templates/README.md "| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) |" — the seat is named engineering in the table, the template and the 08_agents.md note.
+
+REJECT — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — that the joined list `rules` routes to compliance even when it holds eng-all — because both gates recompute a joined proof against that seat's own lists, so an eng-inclusive out-compliance-rules is refused (T3 case g).
+REJECT — task-438 card "Task-431 then gives the seat the right sections (front end, back end)." — the engineering template ships without front-end and back-end sections — the same card defers those sections to task-431, so they are not owed here.
+REJECT — RR-0387 "no new infrastructure" — that the per-seat proofs in check-lane-close.mjs are new infrastructure — the card itself requires the launch gate and the close check to expect both seats' outputs, so the seat wiring is the tasked change, not McFixReborn infrastructure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  88846ms (88.8s)
+📊 Tokens — total: 47796, input: 30051, output: 17745, reasoning: 16591

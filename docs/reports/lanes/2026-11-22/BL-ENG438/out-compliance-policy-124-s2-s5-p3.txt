@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.762Z file_sha256=04439ff0e9a9c814526ecc50f779cfade7cdd39ee3715016b4f4aba206cc3e0e prompt_sha256=c6cb0b1defdbba915a6146a066dd6ace275621b92f206ac86c2e5a75254d3802
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 / task-438 card "We want to seperate the compliance from the engineering standards seat. For both the plan and output." / "the launch gate and the close check expect both seats' outputs." — scripts/hooks/check-lane-close.mjs:521 "const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — for a lane whose range base predates lens-engineering.md the split is off, so its engineering standards list closes on out-compliance-eng-all.txt under lens-compliance.md and the engineering seat reviews neither that list nor its output, while the card says the close check expects both seats' outputs — require out-engineering-eng-all.txt at close regardless of the base, or get the carve-out pasted as an operator ruling and named in the card.
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a new template, "Lens: Engineering (DeepSeek)", on the Spec 08 engineering seat.
+MET — task-438 card "a new review template named engineering" — .claude/review-templates/README.md:101 — the lens table row names lens-engineering.md with its one question and its trigger.
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:113 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — only the engineering standards file maps to the engineering seat, every other list to compliance.
+MET — task-438 card "the launch gate ... expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:650 "const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate always splits and proves plan-engineering-<id> for the engineering list.
+MET — task-438 card "at both stages" — scripts/analysis/backlog-lane.mjs:184 "const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);" — the brief names out-engineering-eng-all on lens-engineering.md for the engineering list and out-compliance for the rest.
+MET — task-438 card Files line — the diff paths — all eight changed paths (.claude/review-templates/README.md, lens-engineering.md, rule-lists.mjs, check-lane-close.mjs, backlog-lane.mjs, backlog-lane.logic.test.ts, 08_agents.md, rule-lists-by-kind.md) appear in the Files line.
+REJECT — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks; no new infrastructure" — the change adds the engineering lens template and seatOf routing, accused of new infrastructure — the card itself orders the template and the seat, and the ruling governs how confirmed findings close in McFixReborn, not the seat split it inherits from RR-0385.
+REJECT — RR-0380 "drop the full engineering when arts can be sent" — the change attaches the whole eng-all list rather than parts — task-438's card defers the seat's sections to a later task ("Task-431 then gives the seat the right sections (front end, back end)"), and eng-all is 46,613 characters, one part under the 120000 bound.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+Rules met: none
+
+---
+⏱  128325ms (128.3s)
+📊 Tokens — total: 52380, input: 24869, output: 27511, reasoning: 26713

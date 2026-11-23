@@ -3,11 +3,11 @@ id: TASK-438
 title: >-
   FINAL.3 Engineering seat: a review seat named engineering, separate from
   compliance, at plan and at output
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ENG438'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T22:56:00Z'
+updated_date: '2026-11-23T00:02:00Z'
 labels:
   - McFix
   - McFix Final
@@ -30,6 +30,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/TRIAGE.md
 type: build
 ordinal: 138012
 ---
@@ -39,7 +42,7 @@ ordinal: 138012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "We want to seperate the compliance from the engineering standards seat. For both the plan and output."; "We need a new name for an agent called engineering." THIS TASK: a new review template named engineering; the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages; the launch gate and the close check expect both seats' outputs. Task-431 then gives the seat the right sections (front end, back end). Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md
+Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -221,4 +224,29 @@ rg#4 MED folded (RR-0385 item 2 on t
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-ENG438, worktree /Users/brettpreston_macmini/Buildo-wt-eng438, branch wf1/inc1b-eng438), RR-0240
+
+2026-11-22 BL-ENG438 build: tests T1 to T5 written first (review-templates, rule-lists, check-lane-close, backlog-lane logic tests); red proven by a commit attempt with only the tests and this task file staged (red.out in the lane dir).
+
+2026-11-22 BL-ENG438 build: lens-engineering.md (the plan's TEMPLATE line changes on a copy of lens-compliance.md, which is not edited), README row and two sentences, seatOf and ENG_FILE in rule-lists.mjs with plan-prep routing by seat, per-seat proof in check-lane-close.mjs (close split when the range base holds lens-engineering.md; launch gate always split, no alias), per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat, one dated note in 08_agents.md after section 7 rule 4, rule-lists-by-kind.md regenerated (page --write) and added to the description Files line.
+
+2026-11-22 BL-ENG438 acceptance on real inputs (work commit 8745ee6dc):
+(1) plan-prep review --dry-run --task task-267 (WAITS build, resolves eng-all) --board ~/Buildo-wt-board: exit 0, board status unchanged; 18 lens-input lines, 1 engineering ('--list eng-all ... --out docs/reports/reviews/task-267/in-plan-engineering-eng-all --template .../lens-engineering.md'), 17 compliance; 1 review line on lens-engineering.md ('review docs/reports/reviews/task-267/in-plan-engineering-eng-all[-pN].txt --template .claude/review-templates/lens-engineering.md'), 17 on lens-compliance.md.
+(2) launch gate on task-431's real plan evidence (plan-compliance-eng-all.txt at the board head), template present: 'task-431: list eng-all (docs/specs/00_engineering_standards.md) has no valid engineering lens output in docs/reports/reviews/task-431/: write plan-engineering-eng-all.txt'. Close on task-437's real lane records (out-compliance-eng-all.txt) with a base holding lens-engineering.md: 'task-437: list eng-all (docs/specs/00_engineering_standards.md) has no valid engineering lens output in docs/reports/lanes/<date>/BL-ROUNDS437/: write out-engineering-eng-all.txt'; with a base without it: 0 refusals about eng-all (the cut-over).
+(3) T1 to T5: red attempt refused at 15 assertions ('Tests 15 failed | 330 passed (345)'); work commit hook 'Test Files 4 passed (4)', 'Tests 345 passed (345)'.
+(4) 'rule-lists: ok 55 lists, 23 rows'; 'rule-lists: docs/reports/generated/rule-lists-by-kind.md is current'.
+Full suite: UNVERIFIED (push station only).
+
+2026-11-22 BL-ENG438 output review round 1: 20 lens outputs in docs/reports/lanes/2026-11-22/BL-ENG438 (10 rule lists under the compliance name as the launch brief names them, eng-all and agents-s7-s11, queue-137, orchestrator-doc17 in 2 parts, policy-124-s2-s5 in 5; code-review-p1, error-paths-p1), context-r3.md; 58 ids listed in FINDINGS.md (1 CRIT placeholder 'none raised', 11 HIGH, 23 MED, 19 LOW, 4 NIT), untriaged. Grounder owed; task stays RUNNING.
+
+2026-11-22 BL-ENG438 fix round (grounder Cairn-Ground-O438, round 1): out-code-review-p1#2 MED, test only: T3 cases (i) template added in the lane range and (j) template deleted in the lane range; red against a planted readRepo on the split line (working tree only, never committed), red2.out in the lane dir.
+
+2026-11-22 BL-ENG438 output review round 2 (after fix d98ab4dd3): round-1 lens files renamed to the -r1 form (BL-GAPS419 precedent); full lens set re-run on the new whole-range diff with context-r4.md: 23 outputs, 70 ids (10 HIGH, 30 MED, 29 LOW, 1 placeholder), untriaged in FINDINGS.md. Grounder owed (round 2: CRITICAL and HIGH, RR-0385). Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 33 pile; grounder docs/reports/lanes/2026-11-22/BL-ENG438/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-ENG438/TRIAGE.md
+out-code-review-r1-p1#2 MED fixed d98ab4d
+Round 2 ran (23 outputs, 70 ids, 17 LOW piled, no CRITICAL, HIGH or MED open); the full suite is unverified until the push station.
+<!-- SECTION:FINAL_SUMMARY:END -->

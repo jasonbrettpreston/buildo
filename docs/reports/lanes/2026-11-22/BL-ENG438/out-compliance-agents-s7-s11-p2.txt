@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.668Z file_sha256=d308e3e99744d55d02b069221d4aef4fda2d8b676cf833326f9a24cf39cbef83 prompt_sha256=6ce36b941172834b6e47e3428644b19c862e0c091d2bd94578f15c738ee98686
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Task 438 Files line (pasted) "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE — the Implementation Notes say "plant-evidence.mjs by seat, one dated note in 08_agents.md after section 7 rule 4" but the material, chunk 1 of 1 cut at file boundaries, carries no hunk for that path, so the record claims built work the change does not contain — land the plant-evidence.mjs hunk or strike that clause from the notes before the lane closes.
+
+DEFER severity=LOW — README section 5, task-438 sentence "the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it." — scripts/hooks/check-lane-close.mjs:427 "const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`);" — the table the 2026-11-19 note names states the per-list plan name only, while the gate also accepts the joined plan-engineering-rules[-pN].txt that the 2026-11-22 note says is per seat — add the joined plan-engineering-rules form to that README sentence.
+
+DEFER severity=LOW — 08_agents.md dated note 2026-11-22 "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — scripts/analysis/backlog-lane.mjs:187 "The joined run (`lens-input --list rules --lists <the compliance list ids>`, one set out-compliance-rules[-pN].txt for all the compliance lists)" — the lane brief offers the joined run for the compliance lists only, so a lane cannot learn from its brief that a joined out-engineering-rules is accepted at the close — add the joined engineering command to the brief, or state that the engineering lists are per-list only in the brief.
+
+DEFER severity=LOW — 08_agents.md rule 4 note 2026-11-19 "the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`" — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the change adds a sixth lens template and no pasted note says the set is six, so rule 4's enumeration contradicts its own 2026-11-22 note — say six, or "the lens templates in .claude/review-templates/", in the 2026-11-22 note.
+
+MET — 08_agents.md note 2026-11-22 "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — scripts/hooks/check-lane-close.mjs planGateInner "for (const seat of ['compliance', 'engineering']) { const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate splits by seat on every launch with no compliance alias.
+
+MET — 08_agents.md note 2026-11-22 "The close applies the split when the range base holds `lens-engineering.md`" — scripts/hooks/check-lane-close.mjs "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close reads the template at the range base, so a lane launched before the landing keeps the compliance name.
+
+MET — 08_agents.md note 2026-11-22 "every other list by `lens-compliance.md`, which is not edited" — the diff holds no hunk for .claude/review-templates/lens-compliance.md — the compliance template is untouched.
+
+MET — 08_agents.md note 2026-11-22 "the joined form is per seat" — scripts/hooks/check-lane-close.mjs:425 "const base = `${ph}-${seat}-${l.id}`;" — both the single and the joined file names are built from the seat, and a stage holding both forms is refused per seat.
+
+MET — TKT-1 dated note 2026-11-21 "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — scripts/analysis/rule-lists.mjs planPrep "'--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)" — the engineering plan input carries the context, the material-from and its own template.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  138623ms (138.6s)
+📊 Tokens — total: 63419, input: 33972, output: 29447, reasoning: 28363

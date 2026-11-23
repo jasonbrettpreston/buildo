@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.696Z file_sha256=dcd5a367262816a62dba6dee7f3ed03b34b3d23c5e70d027bc9167990698ad58 prompt_sha256=4361579f590efe2a979717923eb8570e160956658a44c12bc764203f07b606c7
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG none raised: every clause below is either satisfied by a diff line or carried as a DEFER risk.
+
+DEFER severity=MED — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close applies the seat split only when the range base holds the template, so a lane launched before the landing still has its engineering standards list reviewed by lens-compliance.md and filed out-compliance-eng-all.txt, the merge the ruling asks to end — make the close split unconditional and require a fresh out-engineering-eng-all.txt run for a pre-landing lane instead of accepting the compliance-named file.
+
+DEFER severity=MED — card scope "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — src/tests/backlog/rule-lists.logic.test.ts "expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');" — the joined virtual list rules is routed compliance even when it carries eng-all, so lens-input --list rules --lists eng-all,... still writes a compliance-voiced input over the engineering standards text and only the close refuses the result — refuse an engineering list inside a compliance joined run at lens-input, or split the join by seat.
+
+DEFER severity=LOW — card Files line "docs/reports/reviews/task-375/plant-evidence.mjs" — Implementation Notes "plant-evidence.mjs by seat" — the material is chunk 1 of 1 and carries no diff for that path, so the claimed by-seat routing of the plan-evidence generator cannot be seen, and a compliance-named evidence file it plants would be refused by the launch gate — commit the plant-evidence.mjs change in this range or drop it from the pasted Files line so the claim is provable from the diff.
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a template named engineering, with its own persona, its own one question and its own output format.
+
+MET — card scope "a new review template named engineering; the engineering-standards rule lists are reviewed by that seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one predicate routes the engineering standards file (whole and sections lists) to engineering and every other list to compliance.
+
+MET — card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:519 "for (const seat of ['compliance', 'engineering']) {" — both gates now build one proof set per seat, and listProof takes the seat into the file name and the header template.
+
+MET — card "at both stages" — scripts/analysis/rule-lists.mjs:653 "`${ev}/in-plan-${seatOf(l)}-${l.id}`" — plan-prep names, sizes and reviews each list's plan input by its seat, so the engineering seat exists at the plan stage and not only at output.
+
+MET — card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:641 "const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate splits always and accepts no alias, so plan-compliance-eng-all is refused for an engineering list.
+
+REJECT — RR-0387 "no new infrastructure" — the change is accused of adding infrastructure (a template plus seat routing) — the task card itself names lens-engineering.md, rule-lists.mjs, check-lane-close.mjs and backlog-lane.mjs, and the routing is one predicate, not a new subsystem.
+
+REJECT — inc-S Built state "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — the change is accused of not matching the increment S built state — the diff touches no search page, map, lookup, report or landing path, so no inc-S element is in scope of this card.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  70936ms (70.9s)
+📊 Tokens — total: 48188, input: 34715, output: 13473, reasoning: 12502

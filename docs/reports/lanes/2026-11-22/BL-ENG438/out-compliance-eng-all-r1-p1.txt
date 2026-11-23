@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:12.984Z file_sha256=7c3a8e057586372de2d6b4d7cd2c91560c489fe7334df03b697e8217feefe86f prompt_sha256=7327bafdfa02904951fb41dae0ddea087a41630f2c709126d68b481f63e2d319
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Card Files line and Implementation Notes "plant-evidence.mjs by seat" — docs/reports/reviews/task-375/plant-evidence.mjs: NONE (material header lists 11 paths, plant-evidence.mjs is not among them, and no hunk in the material touches it) — the card names the planting tool and the build note claims it was routed by seat, but the material (chunk 1 of 1) contains no change to it, so it still plants plan-compliance-eng-all.txt, which the new launch gate refuses with no alias ("task-431: list eng-all ... has no valid engineering lens output ... write plan-engineering-eng-all.txt") — add the plant-evidence.mjs change to this diff (engineering file name plus the lens-engineering.md prompt hash) or remove both the claim and the Files-line entry.
+
+DEFER severity=MED — Card Description "the launch gate and the close check expect both seats' outputs." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close expects the engineering output only when the range base holds the template, so any lane whose base predates the landing closes with the engineering standards list reviewed under lens-compliance.md and no engineering output, a carve-out no pasted clause or operator word grants — make the close split unconditional like the launch gate, or get an operator word for the in-flight-lane exception.
+
+DEFER severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/check-lane-close.logic.test.ts:38 "((table.rows as { lists: string[] }[])[0]!).lists.push('eng');" — the new test helpers assert with `!` (here, and `m.seatOf!` three times in src/tests/backlog/rule-lists.logic.test.ts) with no inline comment saying why the value cannot be null, which the pasted rule requires — add a one-line inline comment at each `!` (or a guard that removes it).
+
+DEFER severity=LOW — Card Description "the launch gate and the close check expect both seats' outputs." — scripts/analysis/backlog-lane.mjs:187 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below" — the brief's closing sentence still names only compliance outputs, so the sentence a lane reads to know what to file omits the engineering file the same brief now requires — list the engineering file in that sentence too.
+
+MET — Card Description "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 — a standalone template with its own persona, one question, the BUG/DEFER/MET/REJECT form and the VERDICT plus Clauses checked tail.
+
+MET — Card Description "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one predicate, used by planPrep, planGateInner, closeErrors and the lane brief.
+
+MET — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/analysis/backlog-lane.mjs:183 "const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);" — the brief emits out-engineering-<id> on lens-engineering.md separately from the compliance files.
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/README.md:101 "| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) |" — the seat has its own name and row.
+
+MET — RR-0380 "engineering sent by parts now" — scripts/analysis/rule-lists.mjs:654 "'--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)" — the engineering list is sized against its own template, so the 120000 bound and the heading split apply to it like any list, and listProof reads -pN parts per seat.
+
+MET — RR-0380 "by-law tasks gain no engineering rules" — src/tests/backlog/rule-lists.logic.test.ts:1056 "expect(m.seatOf!({ id: 'bylaw-133', ...t.lists['bylaw-133'] })).toBe('compliance');" — a by-law list routes to compliance and scripts/analysis/rule-lists.json is not touched by the diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+Rules met: none
+
+---
+⏱  90902ms (90.9s)
+📊 Tokens — total: 52542, input: 33607, output: 18935, reasoning: 17790
