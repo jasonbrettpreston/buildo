@@ -3,10 +3,11 @@ id: TASK-446
 title: >-
   FINAL.9 Handbook line for R-22: the accepted Spec 128 rule React Native has no
   Server Components gets a line in the McFrontend handbook before task-439 lands
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T13:54:00Z'
+updated_date: '2026-11-23T14:12:00Z'
 labels:
   - McFix
   - McFix Final
@@ -18,6 +19,34 @@ references:
   - docs/reports/reviews/task-446/seat-integration-1.md
   - docs/reports/reviews/task-446/seat-reality-check-1.md
   - docs/reports/reviews/task-446/seat-regression-1.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - >-
+    compliance:surface-126
+    docs/specs/02-web-admin/126_maxbld_surface_standard.md
+  - >-
+    compliance:surface-127
+    docs/specs/02-web-admin/127_surface_conversion_procedure.md
+  - >-
+    compliance:surface-128
+    docs/specs/02-web-admin/128_surface_standard_policy.md
+  - >-
+    compliance:surface-135
+    docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:bylaw-133 docs/specs/01-pipeline/133_bylaw_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 146012
 ---
@@ -336,3 +365,9 @@ in#4 MED folded moves the row to DON
 in#5 MED folded LAUNCH GATE (Q4 rule
 rg#1 MED folded When task-367 builds
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 taken on the board at lane launch (lane BL-HB446, worktree /Users/brettpreston_macmini/Buildo-wt-hb446, branch wf1/inc1b-hb446), RR-0240
+<!-- SECTION:NOTES:END -->
