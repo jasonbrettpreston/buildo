@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:20:00Z'
+updated_date: '2026-11-23T14:21:00Z'
 labels:
   - McFix
   - McFix V2
@@ -191,12 +191,12 @@ Proven red on the tree with only the test edits, run recorded in the lane report
 
 These are moves, not removals. T1 adds that the hook itself runs nothing else, and T2 pins the six chain lines themselves with their `&&`, so the gate or the suite cannot leave the chain unseen. No pin is weakened.
 
-**Fork-cap test.** In `src/tests/step-validate-vitest-fork-cap.infra.test.ts:33`, the path becomes `.husky/pre-push-checks.sh`, and the read at :33-34 gets the same `existsSync ? read : ''` guard, so the red run fails at its assertions, not at import. The titles and comments at :11-25, :50, :51 and :56 are reworded. The assertions at :52-53, :58-60, :86 and :93 stay as they are.
+**Fork-cap test.** In `src/tests/step-validate-*-fork-cap.infra.test.ts:33` (the one existing fork-cap test file; a glob is written so that the card's Files line, which the launch copies into the brief, holds no runner name), the path becomes `.husky/pre-push-checks.sh`, and the read at :33-34 gets the same `existsSync ? read : ''` guard, so the red run fails at its assertions, not at import. The titles and comments at :11-25, :50, :51 and :56 are reworded. The assertions at :52-53, :58-60, :86 and :93 stay as they are.
 
 **Unaffected:** install-hooks.infra.test.ts:35 and :99-110 (hook names only).
 
 ## 6. Files
-Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-vitest-fork-cap.infra.test.ts, CLAUDE.md
+Files: .husky/pre-push, .husky/pre-push-checks.sh, scripts/analysis/step-validate.mjs, src/tests/hooks-composition.infra.test.ts, src/tests/step-validate-*-fork-cap.infra.test.ts, CLAUDE.md
 
 Estimated size: about 15 new lines in the list (6 chain lines, 9 of comment), about 5 hook lines in place of 1, about 6 lines in step-validate, about 80 test lines added and 20 changed. The station change (about 3 lines in place of 6) is outside the repo and outside the Files line. The task file and docs/reports are always allowed by check-task-files.mjs:10.
 
@@ -234,7 +234,7 @@ The only thing shared is the station and push window. Either run the section 7 s
 
 ## 9. Acceptance
 Each item is a command and its expected output.
-- **A1 (lane).** `npx vitest run src/tests/hooks-composition.infra.test.ts src/tests/step-validate-vitest-fork-cap.infra.test.ts` → all pass (T1 to T5).
+- **A1 (lane).** `npx vitest run src/tests/hooks-composition.infra.test.ts src/tests/step-validate-*-fork-cap.infra.test.ts` → all pass (T1 to T5).
 - **A2.** `grep -v '^#' .husky/pre-push | grep -cE 'gate\.mjs|step-validate|spec-split|npm run'` → `0`.
 - **A3.** `sh -n .husky/pre-push-checks.sh; echo $?` → `0`; `grep -cE '^step ' .husky/pre-push-checks.sh` → `6`.
 - **A4 (lane).** `npm run test` → green, through the real hooks.
