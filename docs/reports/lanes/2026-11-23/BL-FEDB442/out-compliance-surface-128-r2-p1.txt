@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:21:33.861Z file_sha256=aa6ed6dbcbfbeef5d5818b499c9234066ecdc643f4796dc91c56b9fbb52ed9f8 prompt_sha256=f4886d2d6627ef4958634a08b9029dd598e46fc1a8e14bb2e79400cdbfce4708
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-128-r2-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none (no clause in the pasted list is violated by the diff on the evidence shown)
+
+DEFER severity=MED — Spec 128 §4 step 2 "**policy rule**, not merely a procedure step (Spec 123 §7.1, restated here per R-I.3)" — src/tests/admin-report-preview-live.logic.test.ts:222 "kind: 'input_hint', why: 'an example hint of the lot-size entry box; it shows no value of the lot and is help text, a content field by fe.18 (136:85)'" — the three fe.05 digit exceptions (legal.line, sheet.width_placeholder, sheet.depth_placeholder) are adjudicated inside the test the same pass wrote, with a why string only, no adjudicator and no date, so the different-party rule is not evidenced — record the three keys as a dated note adjudicated by the grounder (or a §5 row) and cite it in DIGIT_TEXTS.
+
+DEFER severity=MED — card "task-442 FINAL.7 Front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:207 "plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — a shown status text carrying a digit is left outside the B2 scan and the exclusion lives only in a test comment, while docs/reports/panels/MF-97.json:33 followups name other later rounds but not this one — add this shown status text to the panel followups as a named later round, or extend digitAudit to the status_text block.
+
+DEFER severity=MED — Spec 128 §4.11 item 9 "`register-locks-resolve` fails an OWED/RULED lock that is a `.db.test.ts` and is not named in a CI step." — docs/reports/panels/MF-97.json:33 "the main-only db tests of fe.19, fe.20, fe.27 and fe.38; a workflow change, not opened, RR-0392" — fe.27 is one of the five rules this prereg cites ("FE-27" in prereg-MF-97-1.json rules[]) yet its db test still runs nowhere but main, and the change records the gap in a note instead of a register/CI step — land the test.yml step §4.11 item 8 names, or record fe.27's db leg as OWED with its lock path in the register row.
+
+DEFER severity=LOW — Spec 128 §4.11 MF-34 note "naming the Spec 135 rows whose lock that task builds" — .cursor/MCFRONTEND-QUEUE.md:665 "FE rows owned: none." with the row's own note "The tests add no new lock path: they extend two existing test files, so this row owns none." — the change builds three new describes asserting fe.05, fe.18 and fe.27 (B1, B2, T11), so the ownership declaration rests on path novelty rather than on which rows' locks the task builds — name FE-05, FE-18 and FE-27 in the bullet, or state in the note that those rows are RULED with locks already resolving elsewhere.
+
+DEFER severity=LOW — Spec 128 Rule B4 "This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment." — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 scripts/surfaces/_schema/report-presentation.json 34b0addce2ad502e — the fingerprint map covers the generated copy but not the file a human actually edits, scripts/surfaces/_schema/report-v2-seed/page-text.json, so a later seed-only edit would not force a recapture through this fingerprint — add page-text.json to fingerprint_files.
+
+DEFER severity=LOW — Spec 128 Rule 15 "parity between render targets is a comparison, not a discipline" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1555 "the basement, not shared stairs and halls" — the only target artefact in this change carrying the new copy is the landing sample, so equality of the changed node across the report targets is not shown here (the notes report 72 goldens 0 stale rather than a differential) — show the parity comparison for row.unit_size_basis_value, or state that the report goldens store the content key, not the text.
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 — the registry value, the seed page-text.json:44 and the landing sample :1555 all read exactly the ruled wording.
+MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — the percent is gone and the test forbids any digit in that text.
+MET — card "each test is proven red on a planted defect before it counts" — pasted A1 reds (red-T1.out :177, red-T2.out :421, red-T3.out :229, :235, :55) — each red lands at the designed assertion, at the assertion the plan names.
+MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — docs/reports/panels/MF-97.json:25 — the text fix is carried inside this task's diff, no task-447 artefact appears.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json:31 "PLAN RULED; OUTPUT owed" — nothing is set BUILT; the queue row's next field names the closing commit after the grounder.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+
+---
+⏱  135059ms (135.1s)
+📊 Tokens — total: 59648, input: 31697, output: 27951, reasoning: 26587

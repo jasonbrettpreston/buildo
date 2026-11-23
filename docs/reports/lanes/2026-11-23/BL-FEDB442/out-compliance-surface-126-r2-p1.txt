@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:18:11.402Z file_sha256=12e695da57e10398edda0e5ef0fe1b66ac1ec380665ba3bdc1346e22da6d7d55 prompt_sha256=1ec4e0b9a2dc187c0f13a2c9994efa90964848a08da7e4486772df533faa20c0
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-126-r2-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none raised: no pasted clause is broken by the diff at CRIT or HIGH.
+
+DEFER severity=MED — 126 §0b item 6 "cited by every commit, prereg and lock that relies on it (the `McFrontend-Task:` trailer and the prereg `rules[]`, each RULED, Spec 128:170-171; the `Operator-Ruling:` line, as on the landed lane commits)" — implementation note A2 "Task: task-442 / McFrontend-Task: MF-97" — the work commit that applies RR-0402 and RR-0405 records no `Operator-Ruling:` trailer (cannot see one in the pasted A2 block) — add `Operator-Ruling: RR-0402, RR-0405` to the work commit trailers, or show it in the record.
+
+DEFER severity=MED — 126 §0b item 10 "the gate `surface-validate.mjs --check` (FE-13)" — implementation note "checks: seed-report-v2 --check exit 0, report-capture --check \"checked 72 goldens; 0 stale\" exit 0, report-page-capture --check \"page goldens current (40 and the landing sample)\" exit 0" — a file under scripts/surfaces/ was edited (`web_landing.sample.json`) and the FE-13 surface gate is not among the recorded checks — run `node scripts/surfaces/surface-validate.mjs --check` on the tip and record the exit.
+
+DEFER severity=LOW — 126 §0b item 10 "Goldens per state per target and one render smoke per archetype per platform (FE-31, FE-33)" — implementation note "report-capture --check \"checked 72 goldens; 0 stale\"" — a page-visible copy change left all 72 captured goldens unchanged, so only the landing sample and the K2 test pin the new text — confirm the detached_houseplex option state is inside a captured golden, or record why it is outside the captured set.
+
+DEFER severity=LOW — 126 §0a principle 4 "every number comes from McBylaws; no maths in the UI" — src/tests/admin-report-preview-live.logic.test.ts "the other registry blocks (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05" — the no-digit check covers only the `page` block, so digits in those blocks stay unverified by anything this change lands — name them as an owed row (or FE follow-up) rather than leaving the scope limit in a test comment only.
+
+DEFER severity=NIT — 126 §0b item 2 "OUTPUT panel (08_agents.md:471, the lean pair; the frontend nuance 08_agents.md:472, §11.5-FE)" — docs/reports/panels/MF-97.json "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — the panel still records the output review as owed after round 1 was filed and its grounder confirmed one MED — refresh the verdict/output fields at the closing commit.
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json "\"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"" — the exact ruled wording lands in the registry, the seed and the landing sample.
+MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\\d/)" — the percent is removed and pinned by a no-digit and exact-text assertion.
+MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — .cursor/MCFRONTEND-QUEUE.md "MF-97 FINAL.7: front-end-to-database tests for fe.05, fe.18 and fe.27, and the houseplex circulation text in words only — RUNNING" — the text fix is the MF-97/task-442 row's own done-condition.
+MET — 126 §0b item 1 "A task not listed here is not done" — .cursor/MCFRONTEND-QUEUE.md "**MF-97 FINAL.7: ... — RUNNING** (E)" — the row exists with a Status line, Done-condition and "FE rows owned: none." before the work commit.
+MET — 126 §0b item 2 "pre-registration committed alone before the code (`prereg-MF-n-k.json`, Spec 128:171 and :183)" — prereg-MF-97-1.json "\"$comment\": \"... committed alone and first, before the MF-97 work commit. Pre-registered moves: none.\"" — prereg lands with rules[] and unchanged before/after totals.
+MET — 126 §0b item 5 "The server formats every value; the UI does no maths" — src/tests/surfaces/report-honest-k2.logic.test.ts removed line "-    const pct = Math.round(Number(LV.houseplex_circulation_share.default) * 100);" — no display value is computed on the client side any more.
+MET — 126 §0b item 6 "Operator verbatim = the operator's own words" — docs/reports/panels/MF-97.json "Operator, verbatim (RR-0405, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2052): \"option a\"" — each ruling is quoted with its record path and date on the row and the panel.
+MET — task-442 "each test is proven red on a planted defect before it counts" — implementation note "AssertionError: expected [ …(2) ] to deeply equal []" — red evidence at the designed assertion is recorded for T1, T2 and T3, with control cases proving the other direction.
+
+REJECT — 126 §0a principle 5 "disclosures, confidence, \"at least\", not_evaluated and not_modelled always shown, never hidden" — accusation that dropping "10 % circulation" hides a modelling disclosure from the customer — not a real issue here: RR-0402 "a" (drop the percent, words only) and RR-0405 "option a" rule that exact wording.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  106245ms (106.2s)
+📊 Tokens — total: 56291, input: 32596, output: 23695, reasoning: 22238

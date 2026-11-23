@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FEDB442'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T19:08:00Z'
+updated_date: '2026-11-23T19:26:00Z'
 labels:
   - McFix
   - McFix Final
@@ -39,6 +39,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-FEDB442/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-FEDB442/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-FEDB442/TRIAGE.md
 type: build
 ordinal: 142012
 ---
@@ -380,4 +382,6 @@ McFrontend-Task: MF-97
 2026-11-23 output review round 1 filed in docs/reports/lanes/2026-11-23/BL-FEDB442/ (28 lens outputs beside their inputs, TASK, FINDINGS.md untriaged: 103 findings, CRIT 2, HIGH 5, MED 38, LOW 55, NIT 2); context docs/reports/reviews/task-442/context-r4.md. Real check-lane-close.mjs on a throwaway clone with the task staged BUILT refuses only on GROUNDER.md (close-check.out). Task stays RUNNING: grounder owed (RR-0359).
 
 2026-11-23 round-1 fix (grounder Cairn-Ground-O442, CONFIRMED MED out-compliance-orchestrator-doc17#2; Spec 137 rule 3, 137_mcqueue.md:98): the MF-97 Status line next field now names the closing commit, not the landed work commit. The 15 CONFIRMED LOW and NIT are piled (RR-0385 item 3).
+
+2026-11-23 output review round 2 (RR-0385: CRITICAL and HIGH only) filed in docs/reports/lanes/2026-11-23/BL-FEDB442: 28 outputs out-<lens>[-<list>]-r2[-pN].txt beside their inputs, on the diff launch 8df691b0a to bf257b6e6, context docs/reports/reviews/task-442/context-r5.md; 92 findings untriaged in FINDINGS.md (CRIT 2, both bodies 'none'; HIGH 6; MED 32; LOW 44; NIT 6). Grounder round 2 owed, with the four round-1 quotes at .cursor/MCFRONTEND-QUEUE.md:661 to be re-cited. Task RUNNING; no close attempted.
 <!-- SECTION:NOTES:END -->
