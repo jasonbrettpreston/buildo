@@ -3,10 +3,11 @@ id: TASK-424
 title: >-
   STATION.ONELIST One list of pre-push checks kept in the repo, used by the push
   hook and the push station
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T13:45:00Z'
+updated_date: '2026-11-23T14:13:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,6 +20,17 @@ references:
   - docs/reports/reviews/task-424/seat-integration-1.md
   - docs/reports/reviews/task-424/seat-reality-check-1.md
   - docs/reports/reviews/task-424/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 124012
 ---
@@ -286,3 +298,9 @@ rg#1 HIGH folded equal exactly the si
 rg#2 MED folded pins the six chain l
 rg#3 MED folded the parse of its com
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 taken on the board at lane launch (lane BL-ONE424, worktree /Users/brettpreston_macmini/Buildo-wt-one424, branch wf1/inc1b-one424), RR-0240
+<!-- SECTION:NOTES:END -->
