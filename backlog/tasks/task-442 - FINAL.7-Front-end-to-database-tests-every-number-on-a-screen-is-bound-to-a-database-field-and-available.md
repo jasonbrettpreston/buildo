@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FEDB442'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T19:26:00Z'
+updated_date: '2026-11-23T19:53:00Z'
 labels:
   - McFix
   - McFix Final
@@ -385,3 +385,12 @@ McFrontend-Task: MF-97
 
 2026-11-23 output review round 2 (RR-0385: CRITICAL and HIGH only) filed in docs/reports/lanes/2026-11-23/BL-FEDB442: 28 outputs out-<lens>[-<list>]-r2[-pN].txt beside their inputs, on the diff launch 8df691b0a to bf257b6e6, context docs/reports/reviews/task-442/context-r5.md; 92 findings untriaged in FINDINGS.md (CRIT 2, both bodies 'none'; HIGH 6; MED 32; LOW 44; NIT 6). Grounder round 2 owed, with the four round-1 quotes at .cursor/MCFRONTEND-QUEUE.md:661 to be re-cited. Task RUNNING; no close attempted.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-442 (FINAL.7, MF-97): front end to database tests B1 (fe.05, fe.18), T11 (fe.27) and B2 (fe.05) in the two existing test files, and the houseplex text row.unit_size_basis_value now reading: the basement, not shared stairs and halls (RR-0402, RR-0403, RR-0405), K2 test changed, generated copies regenerated; commits 1d3b4e0c7 (records), 99be00926 (work), bf257b6e6 (round 1 fix); red in the lane red-T1.out, red-T2.out and red-T3.out
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 15 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fedb442-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 80a3401b8); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fedb442-lane/grounder/r1/TRIAGE.md
+out-compliance-orchestrator-doc17#2 MED fixed bf257b6
+<!-- SECTION:FINAL_SUMMARY:END -->
