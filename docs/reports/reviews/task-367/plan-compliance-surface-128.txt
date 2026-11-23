@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.073Z file_sha256=5375cafa167f665caf24e006d26f4c6af6acb54a948b4716b2b39484271dfa93 prompt_sha256=504472856a668bd4164dc313ae4eecd00b112984b635eab321d1ae03aabc1bd8
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance #1 "#1 The gate list is confirmed by the operator before any gate is built" — plan §8 "reads as the three-row test list. Changing it needs his word (OQ2)." — the build commit is planned (three locks, commit 1) before OQ2 returns, so criterion #1 is unmet as pasted — hold commit 1 until OQ2 answers (a), or record OQ2 (b) under RR-0385 item 4 in writing first.
+
+BUG severity=HIGH — task card "Waits on: task-365 grounded; the operator confirms the gate list before the build." — plan §1 "Three new locks at their reserved paths, each proven red through the real hooks, then green." — no step in the plan records task-365 grounding, while its candidates were "UNVERIFIED until task-365 is grounded", so the declared wait is unmet — add the task-365 grounding evidence to §0 or obtain an operator waiver naming task-365.
+
+BUG severity=HIGH — Spec 128 §4.11 item 3 "the OWED exception also needs the lock added or modified in the SAME commit AND a new file under docs/reports/red-evidence/ (existence only)" — plan §5 "So the red evidence goes to the review folder, and no OWED id is cited in a message" and §6 "Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match." — the plan routes red evidence and the id citation around the cite gate by construction, not by compliance — land docs/reports/red-evidence/MF-98/ (add its row to the Files line) and cite the ids in the normal form.
+
+BUG severity=HIGH — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — plan §6 "If OQ1 = n: commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — a planned landing path ships with an acceptance criterion knowingly unmet — make commit 1 conditional on OQ1 = y, or do not land that path.
+
+DEFER severity=MED — Spec 128 §4.7a "Every `ACCEPTED` row names a **deciding source outside this pass**" — plan §6 "change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit`" — the cited ruling is RR-0384 "Task-430 scope approved: stop the handbook clipping, lines reflect their dated notes, add the 13 lines", which rules on the 13 lines, not on flipping FE-49, FE-51 or FE-54 — cite the OQ1 answer, its date and the operator words.
+
+DEFER severity=MED — Spec 128 §2 rule 12 "An unhandled state is a FAIL, not a blank screen." — plan §3 T1 "Limit (stated in the header): it checks declarations only. The known break at mobile/src/lib/maxbldHelp.ts:19 ... is not caught." — the row reads RULED against a rule that a known live code path still violates — give maxbldHelp.ts:19 an owning row (as T3 does for the tab pushes) or widen the lock before the flip.
+
+REJECT — R-03 / fe.51 exception list — accused of landing green while two live `router.push` tab switches remain — not a real issue: the operator-approved pattern is "named exceptions with an owning row ... fail closed both ways (a new finding fails; a fixed one left listed fails)", and the plan names MF-49/MF-50 and MF-51/MF-52 as owners.
+
+MET — R-03 — plan §3 T2 — the fence is checked over 41 tracked files and 45 descriptors, banning `lead_parcels`, lead screens and lead routes, matching "No linkage to LeadDetail, the flight board, or the lead feed."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 5
+Rules met: R-03
+
+---
+⏱  49495ms (49.5s)
+📊 Tokens — total: 43809, input: 33442, output: 10367, reasoning: 9450

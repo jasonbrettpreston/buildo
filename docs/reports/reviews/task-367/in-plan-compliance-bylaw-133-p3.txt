@@ -1,0 +1,536 @@
+LIST bylaw-133 sha256:258f2e202051dfa47a1d04fb8b72c3c0fb8d80b528ff2183d48080f589cd1c65 material sha256:5d7e9a423b7843bab888a06cdd0c396096cc2d0529d530fe6be9cf6d3c6db9c2 part 3 of 3
+RULE LIST bylaw-133 (docs/specs/01-pipeline/133_bylaw_handbook.md, sections 2. Rules by provision family; 3. Rows with an OWED marker), part 3 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 3. Rows with an OWED marker (222 in force)
+
+The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
+
+| Rule | Line | Status |
+|---|---|---|
+| M-220 | m.220 | APPLIED 2026-10-18 · OWED |
+| M-247 | m.247 | RULED 2026-10-21 · OWED |
+| M-251 | m.251 | RULED 2026-10-21 · OWED |
+| M-256 | m.256 | RULED 2026-10-21 · OWED |
+| M-259 | m.259 | RULED 2026-10-21 · OWED |
+| M-265 | m.265 | RULED 2026-10-21 · OWED |
+| M-307 | m.307 | RULED 2026-10-21 · OWED |
+| M-312 | m.312 | OWED 2026-10-21 |
+| M-316 | m.316 | OWED |
+| M-317 | m.317 | RULED 2026-10-22 · OWED |
+| M-318 | m.318 | RULED 2026-10-22 · OWED |
+| M-319 | m.319 | RULED 2026-10-22 · OWED |
+| M-320 | m.320 | RULED 2026-10-22 · OWED |
+| M-321 | m.321 | RULED 2026-10-22 · OWED |
+| M-322 | m.322 | RULED 2026-10-22 · OWED |
+| M-323 | m.323 | RULED 2026-10-22 · OWED |
+| M-324 | m.324 | RULED 2026-10-22 · OWED |
+| M-325 | m.325 | RULED 2026-10-22 · OWED |
+| M-326 | m.326 | RULED 2026-10-22 · OWED |
+| M-327 | m.327 | RULED 2026-10-22 · OWED |
+| M-329 | m.329 | RULED 2026-10-22 · OWED |
+| M-330 | m.330 | RULED 2026-10-22 · OWED |
+| M-332 | m.332 | RULED 2026-10-22 · OWED |
+| M-333 | m.333 | RULED 2026-10-22 · OWED |
+| M-334 | m.334 | RULED 2026-10-22 · OWED |
+| M-335 | m.335 | RULED 2026-10-22 · OWED |
+| M-336 | m.336 | RULED 2026-10-22 · OWED |
+| M-337 | m.337 | RULED 2026-10-22 · OWED |
+| M-338 | m.338 | RULED 2026-10-22 · OWED |
+| M-339 | m.339 | RULED 2026-10-22 · OWED |
+| M-340 | m.340 | RULED 2026-10-22 · OWED |
+| M-341 | m.341 | RULED 2026-10-22 · OWED |
+| M-342 | m.342 | RULED 2026-10-22 · OWED |
+| M-343 | m.343 | RULED 2026-10-22 · OWED |
+| M-344 | m.344 | RULED 2026-10-22 · OWED |
+| M-345 | m.345 | RULED 2026-10-22 · OWED |
+| M-346 | m.346 | RULED 2026-10-22 · OWED |
+| M-347 | m.347 | RULED 2026-10-22 · OWED |
+| M-348 | m.348 | RULED 2026-10-22 · OWED |
+| M-349 | m.349 | RULED 2026-10-23 · OWED |
+| M-350 | m.350 | RULED 2026-10-23 · OWED |
+| M-351 | m.351 | RULED 2026-10-23 · OWED |
+| M-352 | m.352 | RULED 2026-10-23 · OWED |
+| M-353 | m.353 | RULED 2026-10-23 · OWED |
+| M-354 | m.354 | RULED 2026-10-23 · OWED |
+| M-355 | m.355 | RULED 2026-10-23 · OWED |
+| M-356 | m.356 | RULED 2026-10-23 · OWED |
+| M-357 | m.357 | RULED 2026-10-23 · OWED |
+| M-358 | m.358 | RULED 2026-10-24 · OWED |
+| M-360 | m.360 | RULED 2026-10-29 · OWED |
+| M-361 | m.361 | RULED 2026-10-29 · OWED |
+| M-362 | m.362 | RULED 2026-10-29 · OWED |
+| M-363 | m.363 | RULED 2026-10-29 · OWED |
+| M-364 | m.364 | RULED 2026-10-29 · OWED |
+| M-365 | m.365 | RULED 2026-10-29 · OWED |
+| M-366 | m.366 | RULED 2026-10-29 · OWED |
+| M-367 | m.367 | RULED 2026-10-29 · OWED |
+| M-368 | m.368 | RULED 2026-10-29 · OWED |
+| M-369 | m.369 | RULED 2026-10-29 · OWED |
+| M-371 | m.371 | RULED 2026-10-29 · OWED |
+| M-372 | m.372 | RULED 2026-10-29 · OWED |
+| M-373 | m.373 | RULED 2026-10-29 · OWED |
+| M-374 | m.374 | RULED 2026-10-29 · OWED |
+| M-376 | m.376 | RULED 2026-10-29 · OWED |
+| M-378 | m.378 | RULED 2026-10-30 · OWED |
+| M-379 | m.379 | RULED 2026-10-30 · OWED |
+| M-380 | m.380 | RULED 2026-10-30 · OWED |
+| M-381 | m.381 | RULED 2026-10-30 · OWED |
+| M-382 | m.382 | RULED 2026-10-30 · OWED |
+| M-384 | m.384 | RULED 2026-10-30 · OWED |
+| M-377 | m.377 | RULED 2026-10-30 · OWED |
+| M-385 | m.385 | RULED 2026-10-30 · OWED |
+| M-386 | m.386 | RULED 2026-10-30 · OWED |
+| M-387 | m.387 | RULED 2026-10-30 · OWED |
+| M-388 | m.388 | RULED 2026-10-30 · OWED |
+| M-389 | m.389 | RULED 2026-10-30 · OWED |
+| M-390 | m.390 | RULED 2026-10-30 · OWED |
+| M-391 | m.391 | RULED 2026-10-30 · OWED |
+| M-392 | m.392 | RULED 2026-10-30 · OWED |
+| M-393 | m.393 | RULED 2026-10-30 · OWED |
+| M-400 | m.400 | RULED 2026-10-30 · OWED |
+| M-401 | m.401 | RULED 2026-10-30 · OWED |
+| M-402 | m.402 | RULED 2026-10-30 · OWED |
+| M-403 | m.403 | RULED 2026-10-30 · OWED |
+| M-394 | m.394 | RULED 2026-10-30 · OWED |
+| M-395 | m.395 | RULED 2026-10-30 · OWED |
+| M-396 | m.396 | RULED 2026-10-30 · OWED |
+| M-397 | m.397 | RULED 2026-10-30 · OWED |
+| M-398 | m.398 | RULED 2026-10-30 · OWED |
+| M-399 | m.399 | RULED 2026-10-30 · OWED |
+| M-404 | m.404 | RULED 2026-10-30 · OWED |
+| M-405 | m.405 | RULED 2026-10-30 · OWED |
+| M-406 | m.406 | RULED 2026-10-30 · OWED |
+| M-407 | m.407 | RULED 2026-10-30 · OWED |
+| M-408 | m.408 | RULED 2026-10-30 · OWED |
+| M-409 | m.409 | RULED 2026-10-30 · OWED |
+| M-410 | m.410 | RULED 2026-10-30 · OWED |
+| M-411 | m.411 | RULED 2026-10-30 · OWED |
+| M-412 | m.412 | RULED 2026-10-30 · OWED |
+| M-413 | m.413 | RULED 2026-10-30 · OWED |
+| M-414 | m.414 | RULED 2026-10-30 · OWED |
+| M-415 | m.415 | RULED 2026-10-30 · OWED |
+| M-416 | m.416 | RULED 2026-10-30 · OWED |
+| M-417 | m.417 | RULED 2026-10-30 · OWED |
+| M-418 | m.418 | RULED 2026-10-30 · OWED |
+| M-419 | m.419 | RULED 2026-10-30 · OWED |
+| M-420 | m.420 | RULED 2026-10-30 · OWED |
+| M-421 | m.421 | RULED 2026-10-30 · OWED |
+| M-422 | m.422 | RULED 2026-10-31 · OWED |
+| M-423 | m.423 | RULED 2026-10-31 · OWED |
+| M-424 | m.424 | RULED 2026-10-31 · OWED |
+| M-425 | m.425 | RULED 2026-10-31 · OWED |
+| M-426 | m.426 | RULED 2026-10-31 · OWED |
+| M-427 | m.427 | RULED 2026-10-31 · OWED |
+| M-428 | m.428 | RULED 2026-10-31 · OWED |
+| M-429 | m.429 | RULED 2026-10-31 · OWED |
+| M-430 | m.430 | RULED 2026-10-31 · OWED |
+| M-431 | m.431 | RULED 2026-10-31 · OWED |
+| M-432 | m.432 | RULED 2026-10-31 · OWED |
+| M-433 | m.433 | RULED 2026-10-31 · OWED |
+| M-434 | m.434 | RULED 2026-10-31 · OWED |
+| M-435 | m.435 | RULED 2026-10-31 · OWED |
+| M-436 | m.436 | RULED 2026-10-31 · OWED |
+| M-437 | m.437 | RULED 2026-10-31 · OWED |
+| M-438 | m.438 | RULED 2026-10-31 · OWED |
+| M-439 | m.439 | RULED 2026-10-31 · OWED |
+| M-440 | m.440 | RULED 2026-10-31 · OWED |
+| M-441 | m.441 | RULED 2026-10-31 · OWED |
+| M-442 | m.442 | RULED 2026-10-31 · OWED |
+| M-443 | m.443 | RULED 2026-10-31 · OWED |
+| M-444 | m.444 | RULED 2026-10-31 · OWED |
+| M-445 | m.445 | RULED 2026-10-31 · OWED |
+| M-446 | m.446 | RULED 2026-10-31 · OWED |
+| M-447 | m.447 | RULED 2026-10-31 · OWED |
+| M-449 | m.449 | RULED 2026-10-31 · OWED |
+| M-450 | m.450 | RULED 2026-10-31 · OWED |
+| M-451 | m.451 | RULED 2026-10-31 · OWED |
+| M-452 | m.452 | RULED 2026-11-01 · OWED |
+| M-453 | m.453 | RULED 2026-11-01 · OWED |
+| M-454 | m.454 | RULED 2026-11-01 · OWED |
+| M-455 | m.455 | RULED 2026-11-02 · OWED |
+| M-456 | m.456 | RULED 2026-11-02 · OWED |
+| M-457 | m.457 | RULED 2026-11-03 · OWED |
+| M-458 | m.458 | RULED 2026-11-03 · OWED |
+| M-459 | m.459 | RULED 2026-11-03 · OWED |
+| M-460 | m.460 | RULED 2026-11-03 · OWED |
+| M-461 | m.461 | RULED 2026-11-03 · OWED |
+| M-462 | m.462 | RULED 2026-11-03 · OWED |
+| M-463 | m.463 | RULED 2026-11-03 · OWED |
+| M-464 | m.464 | RULED 2026-11-03 · OWED |
+| M-465 | m.465 | RULED 2026-11-03 · OWED |
+| M-466 | m.466 | RULED 2026-11-03 · OWED |
+| M-467 | m.467 | RULED 2026-11-03 · OWED |
+| M-468 | m.468 | RULED 2026-11-03 · OWED |
+| M-469 | m.469 | RULED 2026-11-03 · OWED |
+| M-470 | m.470 | RULED 2026-11-03 · OWED |
+| M-471 | m.471 | RULED 2026-11-03 · OWED |
+| M-472 | m.472 | RULED 2026-11-03 · OWED |
+| M-473 | m.473 | RULED 2026-11-03 · OWED |
+| M-474 | m.474 | RULED 2026-11-03 · OWED |
+| M-475 | m.475 | RULED 2026-11-03 · OWED |
+| M-476 | m.476 | RULED 2026-11-03 · OWED |
+| M-477 | m.477 | RULED 2026-11-03 · OWED |
+| M-478 | m.478 | RULED 2026-11-03 · OWED |
+| M-479 | m.479 | RULED 2026-11-03 · OWED |
+| M-480 | m.480 | RULED 2026-11-03 · OWED |
+| M-481 | m.481 | RULED 2026-11-03 · OWED |
+| M-482 | m.482 | RULED 2026-11-04 · OWED |
+| M-483 | m.483 | RULED 2026-11-04 · OWED |
+| M-484 | m.484 | RULED 2026-11-03 · OWED |
+| M-485 | m.485 | RULED 2026-11-03 · OWED |
+| M-486 | m.486 | RULED 2026-11-03 · OWED |
+| M-487 | m.487 | RULED 2026-11-04 · OWED |
+| M-488 | m.488 | RULED 2026-11-06 · OWED |
+| M-489 | m.489 | RULED 2026-11-06 · OWED |
+| M-490 | m.490 | RULED 2026-11-06 · OWED |
+| M-491 | m.491 | RULED 2026-11-06 · OWED |
+| M-492 | m.492 | RULED 2026-11-06 · OWED |
+| M-493 | m.493 | RULED 2026-11-06 · OWED |
+| M-494 | m.494 | RULED 2026-11-03 · OWED |
+| M-495 | m.495 | RULED 2026-11-03 · OWED |
+| M-496 | m.496 | RULED 2026-11-04 · OWED |
+| M-497 | m.497 | RULED 2026-11-04 · OWED |
+| M-498 | m.498 | RULED 2026-11-06 · OWED |
+| M-499 | m.499 | RULED 2026-11-06 · OWED |
+| M-500 | m.500 | RULED 2026-11-06 · OWED |
+| LC-15 | lc.15 | RULED · OWED |
+| LC-16 | lc.16 | RULED · OWED |
+| LC-17 | lc.17 | RULED · OWED |
+| LC-18 | lc.18 | RULED · OWED |
+| LC-19 | lc.19 | RULED · OWED |
+| LC-20 | lc.20 | RULED · OWED |
+| LC-21 | lc.21 | RULED · OWED |
+| LC-22 | lc.22 | RULED · OWED |
+| LC-24 | lc.24 | RULED · OWED |
+| LC-25 | lc.25 | RULED · OWED |
+| LC-26 | lc.26 | RULED · OWED |
+| LC-27 | lc.27 | RULED · OWED |
+| LC-38 | lc.38 | RULED · OWED |
+| LC-40 | lc.40 | RULED · OWED |
+| LC-43 | lc.43 | RULED · OWED |
+| LC-44 | lc.44 | RULED · OWED |
+| LC-47 | lc.47 | RULED 2026-10-18 · OWED |
+| LC-48 | lc.48 | RULED · OWED |
+| LC-63 | lc.63 | RULED 2026-10-22 · OWED |
+| LC-64 | lc.64 | RULED 2026-10-22 · OWED |
+| LC-65 | lc.65 | RULED 2026-10-22 · OWED |
+| LC-66 | lc.66 | RULED 2026-10-22 · OWED |
+| LC-67 | lc.67 | RULED 2026-10-22 · OWED |
+| LC-68 | lc.68 | RULED 2026-10-23 · OWED |
+| LC-69 | lc.69 | RULED 2026-10-30 · OWED |
+| LC-2 | lc.2 | RULED · OWED |
+| LC-3 | lc.3 | RULED · OWED |
+| LC-14 | lc.14 | RULED 2026-10-07 · OWED |
+| LC-28 | lc.28 | RULED · OWED |
+| LC-29 | lc.29 | RULED · OWED |
+| LC-30 | lc.30 | OWED |
+| LC-31 | lc.31 | RULED · OWED |
+| LC-33 | lc.33 | RULED · OWED |
+| LC-34 | lc.34 | RULED · OWED |
+| LC-35 | lc.35 | RULED · OWED |
+| LC-36 | lc.36 | RULED 2026-10-18 · OWED |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: compliance tooling tasks into 1·B". Scope now: from the task-365 coverage table and the grounded findings, one gate per rule that has no mechanical check and that 1·B code touches; candidates named by the orchestrator, UNVERIFIED until task-365 is grounded: (a) the Airtight purity and literal gates scan only scripts/lib/compute: route-side code that calls the engine core (src/lib/parcels/report-compute.ts) is scanned by none; (b) numbers written in mobile code (the 60 s wait) against EXTERNALIZED (Spec 132 core.8); (c) the Spec 90 section 5 never-do list has no check on mobile/; (d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches. Each gate: red first on a planted defect, both directions. Waits on: task-365 grounded; the operator confirms the gate list before the build.
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+
+## Acceptance criteria
+- #1 The gate list is confirmed by the operator before any gate is built
+- #2 Each gate is shown red on a planted defect and green on the clean tree
+- #3 The handbook no-check lists shrink by the rules gated, by their generators
+
+
+## Implementation Plan
+#### PLAN-367-v1
+
+**Task:** task-367 COMPLY.3 (type build, milestone m-1, letter S). Scope: tests for the McFrontend handbook rules (Spec 136) that no machine checks. This is a clean start (RR-0386). **Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). **Build seat:** Opus (RR-0385 items 1 and 8). **Head read:** wf2/board at b32ea9b4c (`git rev-parse HEAD` gives b32ea9b4cae9350c0b1e3fcad6b3a568f317c154, the same as origin/wf1/mb-rulings). **Commands run:** git reads, sed, grep, `node scripts/analysis/rule-lists.mjs resolve`, and small inline `node -e` scripts that only read (git ls-files, JSON.parse of descriptors, TypeScript AST walks). No test runner was run and nothing was written. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. **Estimate (a guess, not measured):** one Opus lane session, about 450 lines of test code, one records commit, one work commit and one closing commit.
+
+#### 0. Facts verified
+
+**The rulings this plan follows (verbatim):**
+- RR-0385 item 6 (MD:1922): "My only direction is the task 367 the handbook rules are key."
+- RR-0386 (MD:1929-1933): the handbook tests start clean. Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched. This plan does not read, reuse, land or edit that branch.
+- RR-0388 (MD:1947): McFixReborn waits for the tests of 367, 441 and 442.
+- RR-0392 (MD:1975): no new infrastructure. This plan opens no card.
+- RR-0412 (MD:2098): 442 and 367 run once the push of b32ea9b4c lands.
+
+**What already exists and is reused:**
+
+1. **The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none. Its table is at :100-161. Today Spec 136 has 58 lines (`grep -c '^- \*\*fe\.'` gives 58) and 22 OWED (`grep -c 'Status: OWED'` gives 22). fe.58 came from task-446 (136:205-206). Its register row says "the lock is task-367's" (135_mcfrontend_decisions_register.md:80).
+
+2. **The sibling tasks:**
+ - task-441 built three source-scan tests (commit 8cf51f3cc).
+ - Lessons from 441:
+   - A planted file under src/components/ tripped `.husky/pre-commit:38` (generate-surface-registry --check), because the generator walks the .tsx files on disk (task-441 notes :316).
+   - The runner prints each failure twice, so an acceptance grep must not expect exactly 1 (task-441 notes :322).
+   - Run typecheck and lint once before the red attempt (task-441 plan 3.4).
+ - task-442 takes fe.05, fe.18 and fe.27 (task-442 plan §2 table). It leaves every OWED row to task-367: "OWED, lock path reserved: task-367" (its §2, ranks 1-7 and fe.39), and "fe.58 … its lock is task-367's".
+
+3. **How a handbook rule names its lock:**
+ - A Spec 135 row's last cell holds its status and lock (135:12-15).
+ - Rule 3 (135:13): "A ruled row whose lock is not built reads `OWED` with the lock path."
+ - Rule 5 (135:15): an OWED lock path is a reserved `src/tests/surfaces/*.test.ts` that does not exist yet.
+ - Spec 136 and the rule map are generated: `node scripts/surfaces/generate-surface-handbook.mjs --write|--check` (136:9, :26).
+ - register-locks-resolve.infra.test.ts:43-75 fails an OWED row whose lock already exists, unless the id is on FLIP_PENDING (:26, today `['FE-39']`).
+ - Flip precedent: a landed lock waits "until the operator approves the flip" (register-locks-resolve.infra.test.ts:20-25, MF-37 and FE-39).
+
+4. **A hidden lock this plan must edit:** src/tests/surfaces/handbook-rule-map.logic.test.ts.
+ - :258 lists the 13 RR-0384 lock paths, including scope-fence, nav-tab-switch and failure-state-declared.
+ - :273 asserts each row is OWED.
+ - :274 asserts `fs.existsSync(lock)` is false.
+ - :281 asserts `owed >= 21`.
+ - :283 asserts each Spec 136 line reads `Status: OWED · lock owed:`.
+ - Landing any of these locks turns this test red unless it is edited in the same commit.
+
+5. **task-434** (merged into 367, card :43 and 367 notes :69). It adds:
+ - The batch model: "build the owed locks a few at a time … each batch its own plan" (task-434:23).
+ - Ownership: rows FE-45..FE-57 say "the lock is task-434's" (135:67-79), and FE-58 says task-367's (135:80).
+ - It adds no rule and no file beyond this card.
+
+6. **The old plan** (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here.
+
+#### 1. Scope
+
+**In:**
+- Three new locks at their reserved paths, each proven red through the real hooks, then green.
+- The three register rows read RULED (only if the operator answers OQ1 y), and their generators are rerun.
+- Edits to handbook-rule-map.logic.test.ts to match.
+- The MF queue row, prereg and panel record.
+- Records under docs/reports/reviews/task-367/.
+
+**Out:**
+- Any change to app code, descriptors, mobile code or the gate scripts.
+- Any fix of a live break.
+- Any other OWED row.
+- wf1/inc1b-gates.
+- Any new tool, hook or card.
+
+#### 2. Row choice (A)
+
+**Key, in order:**
+1. A static test over files that exist today.
+2. The card's own title and description: "the ones Increment 1·B code touches first" (task-367:4-5, :26 item d).
+3. The look's rank.
+
+Increment 1·B code is the parcel search and lot pages (milestone m-1 deliverable; descriptors with programme.scope parcel_product). Three tests, the size of 441 and 442.
+
+**The 20 rows with no test:**
+
+| Rank | Row | Static test today? | Code in 1·B? | Taken by 441, 442 or a lock? | Decision and owner |
+|---|---|---|---|---|---|
+| 1 | fe.54 | Yes: descriptors' `states` and `errors` | Yes (mobile_parcel_search and others) | No | **TAKEN (T1)** |
+| 2 | fe.45 | No: "computed client-side" is a reading of code; the arithmetic half is FE-05 (442) | Yes | 442 takes fe.05 | Later batch of 367 |
+| 3 | fe.46 | Partly: a Mantine 8.3.18 version pin (package.json) | No | No | Later batch |
+| 4 | fe.47 | Two homes read two ways: descriptor `config.debounce_ms` against "registered logic variable" (135:69 note) | Yes | No | Later batch |
+| 5 | fe.48 | Weak proxy only (file names) | No | No | Later batch |
+| 6 | fe.49 | Yes: declared MaxBLD files and descriptor tables | Yes | Mobile jest checks 3 files only | **TAKEN (T2)** |
+| 7 | fe.50 | Yes, 0 Stripe Elements hits today | No (checkout) | No | Later batch |
+| 8 | fe.51 | Yes: router.push of a shelf tab route | Yes (parcel shelf) | FE-36 lock does not check it (126:82 "convention, not checked by the lock") | **TAKEN (T3)** |
+| 9 | fe.52 | Needs the DB (usage_events CHECK) | n/a | No | Later batch (station) |
+| 10 | fe.53 | Yes, a heading check, but it touches docs only | No | No | Later batch |
+| 11 | fe.55 | Judgement | No | No | Later batch |
+| 12 | fe.56 | Meta (red evidence per lock) | No | No | Later batch |
+| 13 | fe.57 | Partly; 44 px is already under FE-31 | No | FE-31 partly | Later batch |
+| 14 | fe.04 | No ruled number ("measured first, then ruled", 136:43) | n/a | No | Waits for a ruling |
+| 15 | fe.12 | Vacuous or red: admin_market_metrics is REPORT and not converted (estate_other) | No | No | Its conversion row |
+| 16 | fe.17 | variants[] not built (report-page.json has none) | No | No | Later batch |
+| 17 | fe.21 | Vacuous: no embed declared | No | No | Later batch |
+| 18, 19 | fe.25, fe.26 | `.db.test.ts`; a lane may not connect to a DB | n/a | No | Later batch (station) |
+| 20 | fe.44 | Not built (135:66); typed factor at parcelCostFormat.ts:11 | Partly | task-411 deletes the phone factor copies | Later batch, after 411 |
+
+**The 8 partly rows:**
+
+| Row | Reason not taken | Owner |
+|---|---|---|
+| fe.39 | Lock tracked, on FLIP_PENDING, waits for its operator flip | FE-39 row |
+| fe.05 | Taken elsewhere | 442 |
+| fe.15 | Canaries e and f | FE-25 and FE-26 rows |
+| fe.19 | Confidence clause is a grounder judgement; db | Later batch |
+| fe.33 | Mobile half runs in mobile jest | MF-25 |
+| fe.36 | Five named exceptions | MF-49 and MF-50 |
+| fe.38 | Screen half runs in mobile jest | Later batch |
+| fe.40 | Runs against a local stack | Station |
+
+fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next/` import in mobile, and no mobile descriptor with state.answer `server_only`. Next batch.
+
+**Rule texts as verified today:**
+- fe.54, 136:193: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)." Lock owed at 136:194. Row 135:76.
+- fe.49, 136:178: "The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03)." Lock owed at 136:179. Row 135:71.
+- fe.51, 136:184: "Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). … PROSE-ONLY until the lock below exists." Lock owed at 136:185. Row 135:73.
+
+**Overlap check:**
+- 442's rows are fe.05, fe.18, fe.27 (and fe.24 and fe.29 in its Rule trailer). None are T1-T3.
+- 441's rows are §12.7, §1.2, §2.3. None are handbook rows.
+- Existing locks:
+- fe.51 is outside FE-36 (126:82).
+- fe.49 extends mobile/__tests__/parcelScreens.golden.test.ts:217-220 (3 files, lead hooks, mobile jest only, not the root suite). It is not parcel-tool-fence.infra.test.ts, which locks the subscription gate (its :1-3).
+- fe.54: the schema requires an `errors` answer (surface.schema.json:24, :2081-2090) but allows `none` and does not tie it to a contract read. No test checks it: a grep of the three surface scripts and src/tests found nothing.
+
+#### 3. The tests
+
+**Common to all three:**
+- Path: the reserved lock path. The register reserves the exact name (135:15; OWED_LOCK_RE at register-locks-resolve.infra.test.ts:18).
+- First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)` (CLAUDE.md directive 3; the form of register-locks-resolve.infra.test.ts:1).
+- No DB, no network.
+- Files are listed with `git ls-files`.
+- The scope list comes from scripts/surfaces/_schema/converted-surfaces.json `scope.programme_scopes`, which is `["parcel_product","parcel_admin"]` with `expected_count` 33. This reuses the manifest; it is not a new list.
+- One pure finder is exported per test.
+- Each test has KNOWN_BAD cases in memory, controls, and a printed scanned count (the 441 form).
+
+#### T1 fe.54: src/tests/surfaces/failure-state-declared.logic.test.ts
+
+- **Reads:** every tracked `scripts/surfaces/**/surfaces/*.descriptor.json` with kind SURFACE and programme.scope in scope.
+- **Finder:** a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry, or when `errors.answer` is `none` or `UNRESEARCHED`.
+- **Assertions:**
+- (A) `expect(problems).toEqual([])`, and the scanned SURFACE count equals `scope.expected_count`.
+- (B) In memory: a copy of mobile_parcel_search without its error state gives 1 problem; a copy with errors.answer `none` gives 1; `UNRESEARCHED` gives 1.
+- (C) Controls give 0: a STATIC descriptor with inputs `none`, and an estate_other descriptor with no error state.
+- **Today:** 33 in scope, 25 read a contract, 0 problems. 8 problems lie outside scope (estate_other and platform_shared) and are not judged.
+- **Plant:** a temporary line in (A) pushes the (B) copy into the scanned list. It turns (A) red with "mobile_parcel_search: reads a contract but declares no error state". The line is deleted before the green commit. No file on disk changes, so no generator hook can trip.
+- **Limit (stated in the header):** it checks declarations only. The known break at mobile/src/lib/maxbldHelp.ts:19 (RULE-CHECKS.md:102: a failed Help open is only logged) is code and is not caught.
+
+#### T2 fe.49: src/tests/surfaces/scope-fence.logic.test.ts
+
+- **Reads:**
+- The tracked .ts and .tsx files named by in-scope descriptors (`identity.route` plus `x-draft.files`): 41 today (31 parcel_product, 10 parcel_admin).
+- The `inputs`, `outputs` and `evidence` table refs of the 45 in-scope descriptors.
+- **AST finder:**
+- (1) a string, template text or identifier containing `lead_parcels`;
+- (2) an import or export specifier naming a lead screen (`LeadDetail`, `lead-detail`, `FlightBoard`, `flight-board`, `LeadFeed`, `lead-feed`, `useLeadFeed`, `useFlightBoard`, `useLeadDetail`, `[lead]`, `[flight-job]`);
+- (3) a route string starting `/api/leads`, `/(app)/[lead]`, `/(app)/[flight-job]`, `/(app)/flight-board` or `/(app)/map`;
+- (4) a descriptor table ref `lead_parcels`.
+- **Not banned:** `@/features/leads/api/envelope` and `error-mapping`. These are shared API helpers used by the three parcel routes (src/app/api/parcels/lookup/route.ts:40, :48; entitlement/route.ts:19-20; lot-size/route.ts:25-26). They are not lead screens.
+- **Assertions:**
+- (A) hits are `[]`, files ≥ 30, descriptors ≥ 40.
+- (B) KNOWN_BAD gives one hit each: `import { useLeadFeed } from '@/hooks/useLeadFeed'`, `pool.query('SELECT * FROM lead_parcels')`, `router.push('/(app)/[lead]?id=1')`, `fetch('/api/leads/feed')`, and a descriptor copy with `{table:'lead_parcels'}`.
+- (C) Controls give 0: `// lead_parcels`, the envelope import, `'/(app)/parcel-tool'`.
+- **Today:** 41 files with 0 hits; 45 descriptors with 0 hits. The only lead text in these files is a comment, at mobile/src/hooks/useTrackedLots.ts:22, which the AST skips.
+- **Plant:** a temporary line in (A) adds a virtual file with the useLeadFeed import. (A) fails naming it.
+- **Limit:** declared files only, no import hop. I measured one hop: 64 more files and false hits in shared mobile/src/lib/schemas.ts and authStore.ts.
+
+#### T3 fe.51: src/tests/surfaces/nav-tab-switch.logic.test.ts
+
+- **Reads:**
+- The mobile files among T2's set: 20 today.
+- The tab routes, parsed by AST from `PARCEL_TAB_ROUTE` (mobile/src/lib/parcelSearchMatch.ts:252-256), not copied.
+- **Finder:** a call `<router>.push(arg)` where arg is `PARCEL_TAB_ROUTE[...]` or `PARCEL_TAB_ROUTE.x`, or a literal equal to a tab route.
+- **Fail-closed list** in the nav-by-route form (nav-by-route.logic.test.ts:13-16, :361, :386). A stale entry fails, and the list only shrinks.
+- `mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)".
+- `mobile/app/(app)/parcel-tool/tracked.tsx` `router.push(PARCEL_TAB_ROUTE.account)`, count 1, why "owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82)".
+- The owners already exist and are LATER rows (.cursor/MCFRONTEND-QUEUE.md:353, :376, :382, :394), so no card is needed.
+- **Cases:**
+- (A) every hit is explained by an entry, and each entry matches exactly.
+- (B) KNOWN_BAD: `router.push(PARCEL_TAB_ROUTE.tracked)` and `router.push('/(app)/parcel-tool/account')` give 1 each.
+- (C) Controls give 0: `router.navigate(PARCEL_TAB_ROUTE.tracked)`, `router.replace(PARCEL_TAB_ROUTE.lookup)`, `router.push(trackedLotRoute(id))`.
+- **Today:** 2 hits, both owned. Audit #6 (index.tsx) is already fixed.
+- **Red on the real tree:** the red attempt stages T3 with an empty list. (A) fails naming _layout.tsx:48 and tracked.tsx:99. Then the two entries are added.
+- **Limits:**
+- A route held in a variable is missed.
+- The lead-gen five-tab bar is not MaxBLD.
+- Web has no tab bar: a grep for Tabs in src/app/(maxbld), src/components/surfaces and src/components/report finds 0.
+
+#### The red attempt (through the real hooks)
+
+1. Stage the three tests (with T1's and T2's plant lines, and T3's empty list) and the task file. Typecheck and lint were run once beforehand.
+2. The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions.
+3. The output is saved to docs/reports/reviews/task-367/red.out. That folder is always allowed (check-task-files.mjs:10).
+4. A refusal at any other stage is a test defect and is fixed first.
+
+#### 4. Live breaks (named, not fixed)
+
+- fe.51: 2 tab pushes, owned by MF-49/MF-50 and MF-51/MF-52 (126:82).
+- fe.54: maxbldHelp.ts:19 is code, out of the declaration test.
+- Out of scope and only noted: 8 contract-reading descriptors in estate_other and platform_shared have no error state.
+
+#### 5. Files (C)
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+**Rule lists.** `node scripts/analysis/rule-lists.mjs resolve --files "<the line above, minus the rule-lists page>" --type build --letter S` gives 15 lists, exempt [], unmatched []: surface-136, eng-all, agents-s7-s11, queue-137, surface-126, surface-127, surface-128, surface-135, bylaw-133, agents-s5-1to3, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S. This is the same set as 442's.
+
+**Measured refusals and why two files are in the line:**
+- Adding `docs/reports/red-evidence/MF-98/` is refused ("matched by no row"). So the red evidence goes to the review folder, and no OWED id is cited in a message (see section 6).
+- Adding the two mobile files of a fix would add 5 mobile lists. Not needed, because T3 uses owned exceptions.
+- The rule-lists page is in the line because it records the Spec 136 section 2 size (rule-lists-by-kind.md:33, 29,076 characters), and `rule-lists.mjs page --check` runs at pre-commit (:44).
+
+**Protected paths and the McFrontend queue:**
+- Protected (mcbylaws/protected-paths.json): Spec 135 (:68), the queue (:70), docs/reports/panels/** (:55), and coa-expected/** (:38).
+- McFrontend frontend paths: src/tests/surfaces/** (:23) and scripts/surfaces/** (:21).
+- **Yes, an MF queue row is needed:** "A task not listed here is not done" (.cursor/MCFRONTEND-QUEUE.md:5; Spec 137 table :41). The commit-msg arm C needs a `McFrontend-Task:` trailer and a prereg with rules (cite-arms.mjs:145-150).
+- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 takes **MF-98** and **round-203**, claimed by the orchestrator (MCINC-8, 08_agents.md:525).
+
+#### 6. Commits (D), in order, following the six steps (08_agents.md:515-525)
+
+**Commit 0 (records, alone and first):**
+- Contents: the MF-98 row in Phase 2 ("FE rows owned: FE-49, FE-51, FE-54", in the MF-96 row form at queue :654-657); the next-free line moves to MF-99 by dated note; prereg-MF-98-1.json (round 203, totals copied from the newest prereg); docs/reports/panels/MF-98.json (the MF-96.json form); the task file.
+- Prereg `rules`: RULED ids only, FE-09, FE-10, FE-16 and FE-36 (the MF-96 form: "The new row is OWED and is never cited").
+- Subject: `docs(135_mcfrontend_decisions_register): MF-98 queue row, prereg and panel record`.
+- Trailers: `Task: task-367`, `McFrontend-Task: MF-98`, `Operator-Ruling: RR-0385 …, RR-0386 …`, `Spec-diff: queue row and records only, no spec rule text moves` (precedent 0ae43e69c).
+- **Two-step fold:** commit 0 holds protected paths, so the orchestrator folds it first. The work commit is its child, because the gate reads the prereg from the parent tree.
+
+**Red attempt:** section 3 (not a commit).
+
+**Commit 1 (work):**
+- The three tests, with plant lines removed and T3's two entries in.
+- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note carrying the operator's flip words (the FE-37 form, 135:59). This needs OQ1 = y.
+- handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = ['failure-state-declared','scope-fence','nav-tab-switch']`.
+- :273 and :274: rows on that list are RULED and their lock is tracked.
+- :281: the floor becomes `21 - BUILT_BY_367.length`.
+- :283: their lines read `Status: RULED … · Enforced by: <path>`.
+- Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`.
+- The task file and the queue row status (137:84).
+- No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match.
+- Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED`.
+- **If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING (register-locks-resolve.infra.test.ts:26) and changes only :274. Spec 135 and 136 are untouched, and acceptance #3 stays open.
+
+**Output review:** the lens set on the Files line, then a separate grounder. Two rounds at most (RR-0385 item 3).
+
+**Close commit (records only):** the lane report and red.out. The task becomes BUILT, not DONE, until the push suite has run. The lane never pushes.
+
+#### 7. Landing order (E)
+
+- **442:** both commit 0s edit .cursor/MCFRONTEND-QUEUE.md line 5 (the next-free id), so this is a textual conflict. 442's MF-97 folds first. Whichever lands second rewrites the line by dated note (the 135:17 precedent). No other shared file: 442's panel and prereg are different files.
+- **383 (wf1/inc1b-thinroute, 5a0d52644):** touches contract_parcels_lookup.descriptor.json, which T2 reads. Its version holds 0 `lead_parcels` (`git show … | grep -c` gives 0). No conflict.
+- **411 (wf1/inc1b-areafactor, f00af29ed):** touches an estate_other descriptor only, which is out of scope.
+- **388 (wf1/inc1b-mfrules, e467590a6, RUNNING):** edits Spec 135, Spec 136, the queue and the rule map. Textual conflicts are expected; the second lander regenerates. Its rows are renumbered after FE-58 (135:17), so FE-49, FE-51 and FE-54 do not move.
+- **McFixReborn:** its group file list was not found (UNVERIFIED). A fix to _layout.tsx:48 or tracked.tsx:99 makes T3's entry stale. The fixer removes the entry in the same commit, because the list only shrinks.
+
+#### 8. Acceptance (F)
+
+1. Lane: `git ls-files src/tests/surfaces | grep -cE '(failure-state-declared|scope-fence|nav-tab-switch)\.logic\.test\.ts$'` prints 3.
+2. Lane: docs/reports/reviews/task-367/red.out shows the related run with "Test Files 3 failed (3)". It holds at least one line each of: "mobile_parcel_search: reads a contract but declares no error state", "useLeadFeed", "_layout.tsx" and "tracked.tsx". Counts are at least 1, because each failure prints twice. No typecheck or lint line is the cause.
+3. Lane: `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md` prints 19 (if OQ1 = y). `node scripts/surfaces/generate-surface-handbook.mjs --check` and `node scripts/analysis/rule-lists.mjs page --check` both exit 0.
+4. Lane: `git log -1 --format=%B <work>` holds `Task: task-367` and `McFrontend-Task: MF-98`, and `grep -cE '\bFE-[0-9]+\b'` on it prints 0.
+5. Lane: `git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components 'scripts/surfaces/parcel_product' 'scripts/surfaces/platform_shared'` prints nothing.
+6. Lane: `head -1` of each new test starts with `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`.
+7. Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite.
+
+**Old acceptance criteria under the clean start (meaning only, not changed):**
+- #1 "gate list confirmed by the operator": reads as the three-row test list. Changing it needs his word (OQ2).
+- #2 "red on a planted defect and green on the clean tree": unchanged; it is acceptance item 2.
+- #3 "no-check lists shrink … by their generators": acceptance item 3; it needs OQ1.
+
+#### 9. Risks and rollback (G)
+
+- Another lane adds a tab push or a lead import: red at the push suite. That is the rule working.
+- If `x-draft.files` is dropped by a later conversion, the file set shrinks. The floors catch it.
+- The 442 and 388 conflicts are textual only.
+- Rollback: `git revert` commit 1, then commit 0. No runtime code changes.
+
+#### 10. Questions for the plan grounder (H)
+
+- G1. Does `gate.mjs --staged` (pre-commit:19, holdForCommit) pass staged `src/tests/surfaces/*.ts` before the commit-msg trailers are read? 442 is the precedent, but it is UNVERIFIED.
+- G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which adds the list policy-124-s2-s5 (measured).
+- G3. Does arm C pass a work commit that cites no FE id with RULED-only prereg rules, as with MF-96 (2905df62d)?
+- G4. Is `identity.route` plus `x-draft.files` the right MaxBLD file set, or should it be the Spec 126 §11b.3 page set?
+- G5. Is T1's reading of 128:39 right: a contract reader must declare an `error` state and a non-`none` errors answer?
+- G6. Does any other text lock (for example rules-acc-notes.logic.test.ts) pin the FE-49, FE-51 or FE-54 cells?
+
+#### 11. Questions for the operator (H)
+
+- OQ1. When the three locks land, may FE-49, FE-51 and FE-54 read RULED in the same commit, so that the handbook's no-check list drops from 22 to 19 (the MF-37 and FE-39 flips waited for your word): y or n?
+- OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?
+

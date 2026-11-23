@@ -1,0 +1,441 @@
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:5d7e9a423b7843bab888a06cdd0c396096cc2d0529d530fe6be9cf6d3c6db9c2 part 1 of 2
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: compliance tooling tasks into 1·B". Scope now: from the task-365 coverage table and the grounded findings, one gate per rule that has no mechanical check and that 1·B code touches; candidates named by the orchestrator, UNVERIFIED until task-365 is grounded: (a) the Airtight purity and literal gates scan only scripts/lib/compute: route-side code that calls the engine core (src/lib/parcels/report-compute.ts) is scanned by none; (b) numbers written in mobile code (the 60 s wait) against EXTERNALIZED (Spec 132 core.8); (c) the Spec 90 section 5 never-do list has no check on mobile/; (d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches. Each gate: red first on a planted defect, both directions. Waits on: task-365 grounded; the operator confirms the gate list before the build.
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+
+## Acceptance criteria
+- #1 The gate list is confirmed by the operator before any gate is built
+- #2 Each gate is shown red on a planted defect and green on the clean tree
+- #3 The handbook no-check lists shrink by the rules gated, by their generators
+
+
+## Implementation Plan
+#### PLAN-367-v1
+
+**Task:** task-367 COMPLY.3 (type build, milestone m-1, letter S). Scope: tests for the McFrontend handbook rules (Spec 136) that no machine checks. This is a clean start (RR-0386). **Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). **Build seat:** Opus (RR-0385 items 1 and 8). **Head read:** wf2/board at b32ea9b4c (`git rev-parse HEAD` gives b32ea9b4cae9350c0b1e3fcad6b3a568f317c154, the same as origin/wf1/mb-rulings). **Commands run:** git reads, sed, grep, `node scripts/analysis/rule-lists.mjs resolve`, and small inline `node -e` scripts that only read (git ls-files, JSON.parse of descriptors, TypeScript AST walks). No test runner was run and nothing was written. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. **Estimate (a guess, not measured):** one Opus lane session, about 450 lines of test code, one records commit, one work commit and one closing commit.
+
+#### 0. Facts verified
+
+**The rulings this plan follows (verbatim):**
+- RR-0385 item 6 (MD:1922): "My only direction is the task 367 the handbook rules are key."
+- RR-0386 (MD:1929-1933): the handbook tests start clean. Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched. This plan does not read, reuse, land or edit that branch.
+- RR-0388 (MD:1947): McFixReborn waits for the tests of 367, 441 and 442.
+- RR-0392 (MD:1975): no new infrastructure. This plan opens no card.
+- RR-0412 (MD:2098): 442 and 367 run once the push of b32ea9b4c lands.
+
+**What already exists and is reused:**
+
+1. **The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none. Its table is at :100-161. Today Spec 136 has 58 lines (`grep -c '^- \*\*fe\.'` gives 58) and 22 OWED (`grep -c 'Status: OWED'` gives 22). fe.58 came from task-446 (136:205-206). Its register row says "the lock is task-367's" (135_mcfrontend_decisions_register.md:80).
+
+2. **The sibling tasks:**
+ - task-441 built three source-scan tests (commit 8cf51f3cc).
+ - Lessons from 441:
+   - A planted file under src/components/ tripped `.husky/pre-commit:38` (generate-surface-registry --check), because the generator walks the .tsx files on disk (task-441 notes :316).
+   - The runner prints each failure twice, so an acceptance grep must not expect exactly 1 (task-441 notes :322).
+   - Run typecheck and lint once before the red attempt (task-441 plan 3.4).
+ - task-442 takes fe.05, fe.18 and fe.27 (task-442 plan §2 table). It leaves every OWED row to task-367: "OWED, lock path reserved: task-367" (its §2, ranks 1-7 and fe.39), and "fe.58 … its lock is task-367's".
+
+3. **How a handbook rule names its lock:**
+ - A Spec 135 row's last cell holds its status and lock (135:12-15).
+ - Rule 3 (135:13): "A ruled row whose lock is not built reads `OWED` with the lock path."
+ - Rule 5 (135:15): an OWED lock path is a reserved `src/tests/surfaces/*.test.ts` that does not exist yet.
+ - Spec 136 and the rule map are generated: `node scripts/surfaces/generate-surface-handbook.mjs --write|--check` (136:9, :26).
+ - register-locks-resolve.infra.test.ts:43-75 fails an OWED row whose lock already exists, unless the id is on FLIP_PENDING (:26, today `['FE-39']`).
+ - Flip precedent: a landed lock waits "until the operator approves the flip" (register-locks-resolve.infra.test.ts:20-25, MF-37 and FE-39).
+
+4. **A hidden lock this plan must edit:** src/tests/surfaces/handbook-rule-map.logic.test.ts.
+ - :258 lists the 13 RR-0384 lock paths, including scope-fence, nav-tab-switch and failure-state-declared.
+ - :273 asserts each row is OWED.
+ - :274 asserts `fs.existsSync(lock)` is false.
+ - :281 asserts `owed >= 21`.
+ - :283 asserts each Spec 136 line reads `Status: OWED · lock owed:`.
+ - Landing any of these locks turns this test red unless it is edited in the same commit.
+
+5. **task-434** (merged into 367, card :43 and 367 notes :69). It adds:
+ - The batch model: "build the owed locks a few at a time … each batch its own plan" (task-434:23).
+ - Ownership: rows FE-45..FE-57 say "the lock is task-434's" (135:67-79), and FE-58 says task-367's (135:80).
+ - It adds no rule and no file beyond this card.
+
+6. **The old plan** (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here.
+
+#### 1. Scope
+
+**In:**
+- Three new locks at their reserved paths, each proven red through the real hooks, then green.
+- The three register rows read RULED (only if the operator answers OQ1 y), and their generators are rerun.
+- Edits to handbook-rule-map.logic.test.ts to match.
+- The MF queue row, prereg and panel record.
+- Records under docs/reports/reviews/task-367/.
+
+**Out:**
+- Any change to app code, descriptors, mobile code or the gate scripts.
+- Any fix of a live break.
+- Any other OWED row.
+- wf1/inc1b-gates.
+- Any new tool, hook or card.
+
+#### 2. Row choice (A)
+
+**Key, in order:**
+1. A static test over files that exist today.
+2. The card's own title and description: "the ones Increment 1·B code touches first" (task-367:4-5, :26 item d).
+3. The look's rank.
+
+Increment 1·B code is the parcel search and lot pages (milestone m-1 deliverable; descriptors with programme.scope parcel_product). Three tests, the size of 441 and 442.
+
+**The 20 rows with no test:**
+
+| Rank | Row | Static test today? | Code in 1·B? | Taken by 441, 442 or a lock? | Decision and owner |
+|---|---|---|---|---|---|
+| 1 | fe.54 | Yes: descriptors' `states` and `errors` | Yes (mobile_parcel_search and others) | No | **TAKEN (T1)** |
+| 2 | fe.45 | No: "computed client-side" is a reading of code; the arithmetic half is FE-05 (442) | Yes | 442 takes fe.05 | Later batch of 367 |
+| 3 | fe.46 | Partly: a Mantine 8.3.18 version pin (package.json) | No | No | Later batch |
+| 4 | fe.47 | Two homes read two ways: descriptor `config.debounce_ms` against "registered logic variable" (135:69 note) | Yes | No | Later batch |
+| 5 | fe.48 | Weak proxy only (file names) | No | No | Later batch |
+| 6 | fe.49 | Yes: declared MaxBLD files and descriptor tables | Yes | Mobile jest checks 3 files only | **TAKEN (T2)** |
+| 7 | fe.50 | Yes, 0 Stripe Elements hits today | No (checkout) | No | Later batch |
+| 8 | fe.51 | Yes: router.push of a shelf tab route | Yes (parcel shelf) | FE-36 lock does not check it (126:82 "convention, not checked by the lock") | **TAKEN (T3)** |
+| 9 | fe.52 | Needs the DB (usage_events CHECK) | n/a | No | Later batch (station) |
+| 10 | fe.53 | Yes, a heading check, but it touches docs only | No | No | Later batch |
+| 11 | fe.55 | Judgement | No | No | Later batch |
+| 12 | fe.56 | Meta (red evidence per lock) | No | No | Later batch |
+| 13 | fe.57 | Partly; 44 px is already under FE-31 | No | FE-31 partly | Later batch |
+| 14 | fe.04 | No ruled number ("measured first, then ruled", 136:43) | n/a | No | Waits for a ruling |
+| 15 | fe.12 | Vacuous or red: admin_market_metrics is REPORT and not converted (estate_other) | No | No | Its conversion row |
+| 16 | fe.17 | variants[] not built (report-page.json has none) | No | No | Later batch |
+| 17 | fe.21 | Vacuous: no embed declared | No | No | Later batch |
+| 18, 19 | fe.25, fe.26 | `.db.test.ts`; a lane may not connect to a DB | n/a | No | Later batch (station) |
+| 20 | fe.44 | Not built (135:66); typed factor at parcelCostFormat.ts:11 | Partly | task-411 deletes the phone factor copies | Later batch, after 411 |
+
+**The 8 partly rows:**
+
+| Row | Reason not taken | Owner |
+|---|---|---|
+| fe.39 | Lock tracked, on FLIP_PENDING, waits for its operator flip | FE-39 row |
+| fe.05 | Taken elsewhere | 442 |
+| fe.15 | Canaries e and f | FE-25 and FE-26 rows |
+| fe.19 | Confidence clause is a grounder judgement; db | Later batch |
+| fe.33 | Mobile half runs in mobile jest | MF-25 |
+| fe.36 | Five named exceptions | MF-49 and MF-50 |
+| fe.38 | Screen half runs in mobile jest | Later batch |
+| fe.40 | Runs against a local stack | Station |
+
+fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next/` import in mobile, and no mobile descriptor with state.answer `server_only`. Next batch.
+
+**Rule texts as verified today:**
+- fe.54, 136:193: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)." Lock owed at 136:194. Row 135:76.
+- fe.49, 136:178: "The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03)." Lock owed at 136:179. Row 135:71.
+- fe.51, 136:184: "Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). … PROSE-ONLY until the lock below exists." Lock owed at 136:185. Row 135:73.
+
+**Overlap check:**
+- 442's rows are fe.05, fe.18, fe.27 (and fe.24 and fe.29 in its Rule trailer). None are T1-T3.
+- 441's rows are §12.7, §1.2, §2.3. None are handbook rows.
+- Existing locks:
+- fe.51 is outside FE-36 (126:82).
+- fe.49 extends mobile/__tests__/parcelScreens.golden.test.ts:217-220 (3 files, lead hooks, mobile jest only, not the root suite). It is not parcel-tool-fence.infra.test.ts, which locks the subscription gate (its :1-3).
+- fe.54: the schema requires an `errors` answer (surface.schema.json:24, :2081-2090) but allows `none` and does not tie it to a contract read. No test checks it: a grep of the three surface scripts and src/tests found nothing.
+
+#### 3. The tests
+
+**Common to all three:**
+- Path: the reserved lock path. The register reserves the exact name (135:15; OWED_LOCK_RE at register-locks-resolve.infra.test.ts:18).
+- First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)` (CLAUDE.md directive 3; the form of register-locks-resolve.infra.test.ts:1).
+- No DB, no network.
+- Files are listed with `git ls-files`.
+- The scope list comes from scripts/surfaces/_schema/converted-surfaces.json `scope.programme_scopes`, which is `["parcel_product","parcel_admin"]` with `expected_count` 33. This reuses the manifest; it is not a new list.
+- One pure finder is exported per test.
+- Each test has KNOWN_BAD cases in memory, controls, and a printed scanned count (the 441 form).
+
+#### T1 fe.54: src/tests/surfaces/failure-state-declared.logic.test.ts
+
+- **Reads:** every tracked `scripts/surfaces/**/surfaces/*.descriptor.json` with kind SURFACE and programme.scope in scope.
+- **Finder:** a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry, or when `errors.answer` is `none` or `UNRESEARCHED`.
+- **Assertions:**
+- (A) `expect(problems).toEqual([])`, and the scanned SURFACE count equals `scope.expected_count`.
+- (B) In memory: a copy of mobile_parcel_search without its error state gives 1 problem; a copy with errors.answer `none` gives 1; `UNRESEARCHED` gives 1.
+- (C) Controls give 0: a STATIC descriptor with inputs `none`, and an estate_other descriptor with no error state.
+- **Today:** 33 in scope, 25 read a contract, 0 problems. 8 problems lie outside scope (estate_other and platform_shared) and are not judged.
+- **Plant:** a temporary line in (A) pushes the (B) copy into the scanned list. It turns (A) red with "mobile_parcel_search: reads a contract but declares no error state". The line is deleted before the green commit. No file on disk changes, so no generator hook can trip.
+- **Limit (stated in the header):** it checks declarations only. The known break at mobile/src/lib/maxbldHelp.ts:19 (RULE-CHECKS.md:102: a failed Help open is only logged) is code and is not caught.
+
+#### T2 fe.49: src/tests/surfaces/scope-fence.logic.test.ts
+
+- **Reads:**
+- The tracked .ts and .tsx files named by in-scope descriptors (`identity.route` plus `x-draft.files`): 41 today (31 parcel_product, 10 parcel_admin).
+- The `inputs`, `outputs` and `evidence` table refs of the 45 in-scope descriptors.
+- **AST finder:**
+- (1) a string, template text or identifier containing `lead_parcels`;
+- (2) an import or export specifier naming a lead screen (`LeadDetail`, `lead-detail`, `FlightBoard`, `flight-board`, `LeadFeed`, `lead-feed`, `useLeadFeed`, `useFlightBoard`, `useLeadDetail`, `[lead]`, `[flight-job]`);
+- (3) a route string starting `/api/leads`, `/(app)/[lead]`, `/(app)/[flight-job]`, `/(app)/flight-board` or `/(app)/map`;
+- (4) a descriptor table ref `lead_parcels`.
+- **Not banned:** `@/features/leads/api/envelope` and `error-mapping`. These are shared API helpers used by the three parcel routes (src/app/api/parcels/lookup/route.ts:40, :48; entitlement/route.ts:19-20; lot-size/route.ts:25-26). They are not lead screens.
+- **Assertions:**
+- (A) hits are `[]`, files ≥ 30, descriptors ≥ 40.
+- (B) KNOWN_BAD gives one hit each: `import { useLeadFeed } from '@/hooks/useLeadFeed'`, `pool.query('SELECT * FROM lead_parcels')`, `router.push('/(app)/[lead]?id=1')`, `fetch('/api/leads/feed')`, and a descriptor copy with `{table:'lead_parcels'}`.
+- (C) Controls give 0: `// lead_parcels`, the envelope import, `'/(app)/parcel-tool'`.
+- **Today:** 41 files with 0 hits; 45 descriptors with 0 hits. The only lead text in these files is a comment, at mobile/src/hooks/useTrackedLots.ts:22, which the AST skips.
+- **Plant:** a temporary line in (A) adds a virtual file with the useLeadFeed import. (A) fails naming it.
+- **Limit:** declared files only, no import hop. I measured one hop: 64 more files and false hits in shared mobile/src/lib/schemas.ts and authStore.ts.
+
+#### T3 fe.51: src/tests/surfaces/nav-tab-switch.logic.test.ts
+
+- **Reads:**
+- The mobile files among T2's set: 20 today.
+- The tab routes, parsed by AST from `PARCEL_TAB_ROUTE` (mobile/src/lib/parcelSearchMatch.ts:252-256), not copied.
+- **Finder:** a call `<router>.push(arg)` where arg is `PARCEL_TAB_ROUTE[...]` or `PARCEL_TAB_ROUTE.x`, or a literal equal to a tab route.
+- **Fail-closed list** in the nav-by-route form (nav-by-route.logic.test.ts:13-16, :361, :386). A stale entry fails, and the list only shrinks.
+- `mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)".
+- `mobile/app/(app)/parcel-tool/tracked.tsx` `router.push(PARCEL_TAB_ROUTE.account)`, count 1, why "owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82)".
+- The owners already exist and are LATER rows (.cursor/MCFRONTEND-QUEUE.md:353, :376, :382, :394), so no card is needed.
+- **Cases:**
+- (A) every hit is explained by an entry, and each entry matches exactly.
+- (B) KNOWN_BAD: `router.push(PARCEL_TAB_ROUTE.tracked)` and `router.push('/(app)/parcel-tool/account')` give 1 each.
+- (C) Controls give 0: `router.navigate(PARCEL_TAB_ROUTE.tracked)`, `router.replace(PARCEL_TAB_ROUTE.lookup)`, `router.push(trackedLotRoute(id))`.
+- **Today:** 2 hits, both owned. Audit #6 (index.tsx) is already fixed.
+- **Red on the real tree:** the red attempt stages T3 with an empty list. (A) fails naming _layout.tsx:48 and tracked.tsx:99. Then the two entries are added.
+- **Limits:**
+- A route held in a variable is missed.
+- The lead-gen five-tab bar is not MaxBLD.
+- Web has no tab bar: a grep for Tabs in src/app/(maxbld), src/components/surfaces and src/components/report finds 0.
+
+#### The red attempt (through the real hooks)
+
+1. Stage the three tests (with T1's and T2's plant lines, and T3's empty list) and the task file. Typecheck and lint were run once beforehand.
+2. The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions.
+3. The output is saved to docs/reports/reviews/task-367/red.out. That folder is always allowed (check-task-files.mjs:10).
+4. A refusal at any other stage is a test defect and is fixed first.
+
+#### 4. Live breaks (named, not fixed)
+
+- fe.51: 2 tab pushes, owned by MF-49/MF-50 and MF-51/MF-52 (126:82).
+- fe.54: maxbldHelp.ts:19 is code, out of the declaration test.
+- Out of scope and only noted: 8 contract-reading descriptors in estate_other and platform_shared have no error state.
+
+#### 5. Files (C)
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+**Rule lists.** `node scripts/analysis/rule-lists.mjs resolve --files "<the line above, minus the rule-lists page>" --type build --letter S` gives 15 lists, exempt [], unmatched []: surface-136, eng-all, agents-s7-s11, queue-137, surface-126, surface-127, surface-128, surface-135, bylaw-133, agents-s5-1to3, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S. This is the same set as 442's.
+
+**Measured refusals and why two files are in the line:**
+- Adding `docs/reports/red-evidence/MF-98/` is refused ("matched by no row"). So the red evidence goes to the review folder, and no OWED id is cited in a message (see section 6).
+- Adding the two mobile files of a fix would add 5 mobile lists. Not needed, because T3 uses owned exceptions.
+- The rule-lists page is in the line because it records the Spec 136 section 2 size (rule-lists-by-kind.md:33, 29,076 characters), and `rule-lists.mjs page --check` runs at pre-commit (:44).
+
+**Protected paths and the McFrontend queue:**
+- Protected (mcbylaws/protected-paths.json): Spec 135 (:68), the queue (:70), docs/reports/panels/** (:55), and coa-expected/** (:38).
+- McFrontend frontend paths: src/tests/surfaces/** (:23) and scripts/surfaces/** (:21).
+- **Yes, an MF queue row is needed:** "A task not listed here is not done" (.cursor/MCFRONTEND-QUEUE.md:5; Spec 137 table :41). The commit-msg arm C needs a `McFrontend-Task:` trailer and a prereg with rules (cite-arms.mjs:145-150).
+- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 takes **MF-98** and **round-203**, claimed by the orchestrator (MCINC-8, 08_agents.md:525).
+
+#### 6. Commits (D), in order, following the six steps (08_agents.md:515-525)
+
+**Commit 0 (records, alone and first):**
+- Contents: the MF-98 row in Phase 2 ("FE rows owned: FE-49, FE-51, FE-54", in the MF-96 row form at queue :654-657); the next-free line moves to MF-99 by dated note; prereg-MF-98-1.json (round 203, totals copied from the newest prereg); docs/reports/panels/MF-98.json (the MF-96.json form); the task file.
+- Prereg `rules`: RULED ids only, FE-09, FE-10, FE-16 and FE-36 (the MF-96 form: "The new row is OWED and is never cited").
+- Subject: `docs(135_mcfrontend_decisions_register): MF-98 queue row, prereg and panel record`.
+- Trailers: `Task: task-367`, `McFrontend-Task: MF-98`, `Operator-Ruling: RR-0385 …, RR-0386 …`, `Spec-diff: queue row and records only, no spec rule text moves` (precedent 0ae43e69c).
+- **Two-step fold:** commit 0 holds protected paths, so the orchestrator folds it first. The work commit is its child, because the gate reads the prereg from the parent tree.
+
+**Red attempt:** section 3 (not a commit).
+
+**Commit 1 (work):**
+- The three tests, with plant lines removed and T3's two entries in.
+- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note carrying the operator's flip words (the FE-37 form, 135:59). This needs OQ1 = y.
+- handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = ['failure-state-declared','scope-fence','nav-tab-switch']`.
+- :273 and :274: rows on that list are RULED and their lock is tracked.
+- :281: the floor becomes `21 - BUILT_BY_367.length`.
+- :283: their lines read `Status: RULED … · Enforced by: <path>`.
+- Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`.
+- The task file and the queue row status (137:84).
+- No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match.
+- Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED`.
+- **If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING (register-locks-resolve.infra.test.ts:26) and changes only :274. Spec 135 and 136 are untouched, and acceptance #3 stays open.
+
+**Output review:** the lens set on the Files line, then a separate grounder. Two rounds at most (RR-0385 item 3).
+
+**Close commit (records only):** the lane report and red.out. The task becomes BUILT, not DONE, until the push suite has run. The lane never pushes.
+
+#### 7. Landing order (E)
+
+- **442:** both commit 0s edit .cursor/MCFRONTEND-QUEUE.md line 5 (the next-free id), so this is a textual conflict. 442's MF-97 folds first. Whichever lands second rewrites the line by dated note (the 135:17 precedent). No other shared file: 442's panel and prereg are different files.
+- **383 (wf1/inc1b-thinroute, 5a0d52644):** touches contract_parcels_lookup.descriptor.json, which T2 reads. Its version holds 0 `lead_parcels` (`git show … | grep -c` gives 0). No conflict.
+- **411 (wf1/inc1b-areafactor, f00af29ed):** touches an estate_other descriptor only, which is out of scope.
+- **388 (wf1/inc1b-mfrules, e467590a6, RUNNING):** edits Spec 135, Spec 136, the queue and the rule map. Textual conflicts are expected; the second lander regenerates. Its rows are renumbered after FE-58 (135:17), so FE-49, FE-51 and FE-54 do not move.
+- **McFixReborn:** its group file list was not found (UNVERIFIED). A fix to _layout.tsx:48 or tracked.tsx:99 makes T3's entry stale. The fixer removes the entry in the same commit, because the list only shrinks.
+
+#### 8. Acceptance (F)
+
+1. Lane: `git ls-files src/tests/surfaces | grep -cE '(failure-state-declared|scope-fence|nav-tab-switch)\.logic\.test\.ts$'` prints 3.
+2. Lane: docs/reports/reviews/task-367/red.out shows the related run with "Test Files 3 failed (3)". It holds at least one line each of: "mobile_parcel_search: reads a contract but declares no error state", "useLeadFeed", "_layout.tsx" and "tracked.tsx". Counts are at least 1, because each failure prints twice. No typecheck or lint line is the cause.
+3. Lane: `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md` prints 19 (if OQ1 = y). `node scripts/surfaces/generate-surface-handbook.mjs --check` and `node scripts/analysis/rule-lists.mjs page --check` both exit 0.
+4. Lane: `git log -1 --format=%B <work>` holds `Task: task-367` and `McFrontend-Task: MF-98`, and `grep -cE '\bFE-[0-9]+\b'` on it prints 0.
+5. Lane: `git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components 'scripts/surfaces/parcel_product' 'scripts/surfaces/platform_shared'` prints nothing.
+6. Lane: `head -1` of each new test starts with `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`.
+7. Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite.
+
+**Old acceptance criteria under the clean start (meaning only, not changed):**
+- #1 "gate list confirmed by the operator": reads as the three-row test list. Changing it needs his word (OQ2).
+- #2 "red on a planted defect and green on the clean tree": unchanged; it is acceptance item 2.
+- #3 "no-check lists shrink … by their generators": acceptance item 3; it needs OQ1.
+
+#### 9. Risks and rollback (G)
+
+- Another lane adds a tab push or a lead import: red at the push suite. That is the rule working.
+- If `x-draft.files` is dropped by a later conversion, the file set shrinks. The floors catch it.
+- The 442 and 388 conflicts are textual only.
+- Rollback: `git revert` commit 1, then commit 0. No runtime code changes.
+
+#### 10. Questions for the plan grounder (H)
+
+- G1. Does `gate.mjs --staged` (pre-commit:19, holdForCommit) pass staged `src/tests/surfaces/*.ts` before the commit-msg trailers are read? 442 is the precedent, but it is UNVERIFIED.
+- G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which adds the list policy-124-s2-s5 (measured).
+- G3. Does arm C pass a work commit that cites no FE id with RULED-only prereg rules, as with MF-96 (2905df62d)?
+- G4. Is `identity.route` plus `x-draft.files` the right MaxBLD file set, or should it be the Spec 126 §11b.3 page set?
+- G5. Is T1's reading of 128:39 right: a contract reader must declare an `error` state and a non-`none` errors answer?
+- G6. Does any other text lock (for example rules-acc-notes.logic.test.ts) pin the FE-49, FE-51 or FE-54 cells?
+
+#### 11. Questions for the operator (H)
+
+- OQ1. When the three locks land, may FE-49, FE-51 and FE-54 read RULED in the same commit, so that the handbook's no-check list drops from 22 to 19 (the MF-37 and FE-39 flips waited for your word): y or n?
+- OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?
+

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.111Z file_sha256=b512e372e6838491847c34c500f808eef44c12dcf46fba5650b5fb3b1bff4746 prompt_sha256=df7a1ff737183f5ac19690e6ece949c1b35577460b3c08fc38a8e949227ddf56
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Task acceptance #1 "The gate list is confirmed by the operator before any gate is built" — Plan §11 "OQ2. ... (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — Option (b) lets the gate list be settled without the operator, so criterion #1 can be satisfied by the plan grounder and the build proceeds on an unconfirmed list — Delete option (b), and hold commit 1 until the operator's own words name the three rows (fe.54, fe.49, fe.51).
+
+BUG severity=HIGH — Task "Waits on: task-365 grounded" and "candidates named by the orchestrator, UNVERIFIED until task-365 is grounded" — Plan §2 "**Key, in order:** 1. A static test over files that exist today. 2. The card's own title and description ... 3. The look's rank." (task-365 is named nowhere in the plan) — The rows are chosen from task-440's RULE-CHECKS.md and a rank, so the stated precondition (task-365 grounded) is unmet and the row set rests on unverified candidates — Paste task-365's grounded output into §2 and show which of the three rows it names, or carry the task as still waiting on task-365.
+
+BUG severity=HIGH — Task acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — Plan §6 "**If OQ1 = n:** ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — The plan ships a path that knowingly leaves a card acceptance criterion undelivered, so the plan as written only satisfies #3 conditionally — Make OQ1's answer a precondition of the work commit, or plan the generator shrink unconditionally and defer only the RULED wording.
+
+BUG severity=HIGH — Pasted COMPLY.2 note "`docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` ... with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs" — Plan §6 "**Close commit (records only):** the lane report and red.out." — The close as planned carries neither the per-list compliance outputs nor GROUNDER.md, so `check-lane-close.mjs` refuses the close and the ruling is unmet — Add the 15 resolved lists' lens outputs (one per list, or the joined form under the task-423 note) plus GROUNDER.md with a CONFIRMED/REJECTED line per BUG/DEFER finding and a Grounder that is not the lane.
+
+BUG severity=MED — Task acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — Plan §3 "`mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)"." and "Then the two entries are added." — T3 is green only because two live violations of the rule it gates are allowlisted, so "green on the clean tree" is never shown for fe.51, and its red comes from real hits rather than a planted defect — Show T3 green with the two pushes fixed, or record the operator's word accepting the two owned exceptions as the green state and plant a defect for its red direction as T1 and T2 do.
+
+BUG severity=MED — Task "one gate per rule that has no mechanical check and that 1·B code touches" — Plan §2 "| 1 | fe.54 | Yes: descriptors' `states` and `errors` |" against Plan §2 "No test checks it: a grep of the three surface scripts and src/tests found nothing." — The plan states both that fe.54 has a static test today and that no test checks it, so on its own first reading T1 is out of the card's scope — Name the existing states/errors check and quote what clause of 128:39 it leaves uncovered, or replace fe.54 with a row the plan records as having no check at all.
+
+DEFER severity=LOW — Rule fe.49, "No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (as quoted in Plan §2) — Plan §2 "**Not banned:** `@/features/leads/api/envelope` and `error-mapping`." — The exemption is the plan's reading of "no linkage" and leaves the leads-feature API surface ungated; no pasted clause authorises it — Cite the ruling that admits the envelope helper, or ban the exact leads-feature specifiers and allow only the three parcel route imports by file:line.
+
+MET — RR-0386 — Plan §0 — "Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched. This plan does not read, reuse, land or edit that branch." honors the clean start.
+MET — RR-0392 — Plan §1 Out — "Any new tool, hook or card." matches "no other infrastructure beyond this".
+MET — RR-0385 item 6 — Plan §2/§3 — all three tests are Spec 136 handbook rules (fe.54, fe.49, fe.51), as "the handbook rules are key" directs.
+MET — Task acceptance #2, red direction — Plan §3 "The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions." with the output kept at docs/reports/reviews/task-367/red.out.
+MET — Pasted COMPLY.2 note "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — Plan §5 resolves 15 lists with "exempt [], unmatched []" and no list trimmed, which is the default per-list form.
+MET — RR-0412 — Plan header "Head read: wf2/board at b32ea9b4c ... the same as origin/wf1/mb-rulings" runs 367 after the push landed, as directed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+Rules met: none
+
+---
+⏱  64845ms (64.8s)
+📊 Tokens — total: 30021, input: 16165, output: 13856, reasoning: 12419

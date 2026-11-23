@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.117Z file_sha256=478962ccaf6074e92e26dadfde6dcabc9dbb3a6d9b5b1f90538a92cb1c0de9da prompt_sha256=d0da6a5a5f574f87cabbdeb8a575d1eb4342eaeea9b1e87dbf42c4f58fd2730c
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card scope "(d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches" — plan §2 "Yes | 442 takes fe.05 | Later batch of 367" and "Yes | No | Later batch" — two rules the plan's own table marks as 1·B code (fe.45, fe.47) are deferred while OQ2 puts only fe.54, fe.49, fe.51 to the operator, so the card's 1·B scope is unmet for two rows — add fe.45 and fe.47 to this batch, or put every 1·B row and its deferral to the operator in OQ2.
+
+BUG severity=HIGH — acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — plan §6 "If OQ1 = n: ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — the plan ships a live branch under which a card acceptance criterion is not met, so it does not satisfy #3 as written — make OQ1 blocking before commit 1, and record a "n" answer as an amendment of #3, or land the flip.
+
+BUG severity=HIGH — fe.54 rule text (136:193) "A visible state for every failure. ... An unhandled state is a FAIL, not a blank screen." — plan §3 T1 "a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry" and "(C) Controls give 0: a STATIC descriptor with inputs `none`" — the lock exempts every in-scope surface that declares no contract read, a class the rule does not exempt, so a lock named fe.54 does not enforce fe.54 — scan all in-scope SURFACE descriptors, or put the contract-reader narrowing to the operator as a ruling (G5 is only a grounder question).
+
+BUG severity=MED — fe.49 rule text (136:178) "The scope fence. Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed." — plan §3 T2 "Not banned: `@/features/leads/api/envelope` and `error-mapping`." — a lead-feature import is exempted from a no-linkage rule on the author's judgement, and T2 stops at declared files ("declared files only, no import hop"), so a linkage through a shared module is invisible — cite a ruling for the two helper imports or ban them, and log the one-hop limit as a named ruling (126 §0b item 9).
+
+DEFER severity=MED — card "Waits on: task-365 grounded; the operator confirms the gate list before the build." — plan §0 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules" — the rows are derived from task-440 and no line records task-365 grounded, one of the two named waits — record the task-365 grounding read, or record that RR-0412 lifted that wait.
+
+DEFER severity=MED — acceptance #1 "The gate list is confirmed by the operator before any gate is built" — plan §11 "(b) the plan grounder validates them under RR-0385 item 4?" and §8 "#1 'gate list confirmed by the operator': reads as the three-row test list." — OQ2(b) lets the build start with no operator confirmation of the list, and §8 re-reads #1 in the plan's own words — if the operator answers (b), record it as an amendment of criterion #1 before commit 1.
+
+DEFER severity=LOW — card "Files: ... docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json" — plan §3 "The output is saved to docs/reports/reviews/task-367/red.out" — acceptance #2's evidence is written outside the card's declared file set — add docs/reports/reviews/task-367/ to the Files line in a records commit, or place the red evidence under docs/reports/panels/.
+
+MET — card "Each gate: red first on a planted defect, both directions" — plan §3 "The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions." — red is taken through the real hooks per gate, green asserted in (A) with KNOWN_BAD and control pairs.
+
+MET — Spec 126 §0b item 11 "owed by MF-49/MF-50, ... MF-51/MF-52" — plan §3 T3 "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)" — the two tab-push exceptions carry exactly the owners the spec names, and the owning fix removes its entry.
+
+MET — RR-0386 "handbook tests start fresh" — plan §0 "The old plan (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here." — the parked branch is not read, reused or edited.
+
+MET — RR-0392 "no new infrastructure. This plan opens no card." — plan §1 "Out: ... Any new tool, hook or card." — no new tool, hook or card is opened.
+
+MET — Spec 126 §0b item 1 "No McFrontend work starts without its row" — plan §6 "the MF-98 row in Phase 2 ... prereg-MF-98-1.json ... docs/reports/panels/MF-98.json" — the queue row, prereg and panel land in commit 0 before the work commit.
+
+MET — Spec 126 §0b item 6 "recorded verbatim, dated, landed and cited" — plan §6 "Operator-Ruling: RR-0385 …, RR-0386 …" — rulings are quoted verbatim with dates and record paths and cited in the trailer.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 27   Unmet: 7
+Rules met: fe.51, RR-0386, RR-0392, RR-0412
+
+---
+⏱  108374ms (108.4s)
+📊 Tokens — total: 55496, input: 31951, output: 23545, reasoning: 22182

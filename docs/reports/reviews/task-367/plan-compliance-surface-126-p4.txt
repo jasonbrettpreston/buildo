@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.064Z file_sha256=77a8182acce30c5afadd699542547ff98e16c3c947e9d4ef5f3749db07eff273 prompt_sha256=62d8c7c9bf552ab9a89dd9d28db9df21f6d133e5e6c46714b9b77091e934a7ad
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance criterion #1 "The gate list is confirmed by the operator before any gate is built" — PLAN-367-v1 §11 "OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — the plan offers a grounder in place of the operator and still lands the three locks as blocking RULED rows ("Change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit.") with no recorded operator confirmation, which the pasted note also requires ("blocking wiring waits for the operator to confirm the gate list (stage 2)") — delete option (b) and hold commit 1 until the operator names the three rows.
+
+BUG severity=HIGH — Acceptance criterion #3 "The handbook no-check lists shrink by the rules gated, by their generators" — PLAN-367-v1 §6 "If OQ1 = n: commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — the plan ships a branch in which criterion #3 is expressly unmet, so it cannot be plan-locked as written — make the RULED flip plus the two generator runs unconditional in commit 1, or state the plan does not lock unless OQ1 is y.
+
+DEFER severity=MED — task card "Waits on: task-365 grounded; the operator confirms the gate list before the build." — PLAN-367-v1 §0.1 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none." — task-365 is not named anywhere in the plan, so the card's first wait condition is neither discharged nor shown open — cite the task-365 grounding record, or state why the task-440 table replaces it.
+
+DEFER severity=MED — fe.54 as quoted at 136:193 "A visible state for every failure." — PLAN-367-v1 §3 T1 "Today: 33 in scope, 25 read a contract, 0 problems. 8 problems lie outside scope (estate_other and platform_shared) and are not judged." — the lock goes green while eight contract-reading SURFACE descriptors the plan itself calls problems stay unchecked, and the handbook will print the row as enforced by that path — scan every SURFACE descriptor with inputs.answer contract, or record the eight as a fail-closed exception list that only shrinks.
+
+BUG severity=MED — task card "Each gate: red first on a planted defect, both directions" — PLAN-367-v1 §3 T1 "a temporary line in (A) pushes the (B) copy into the scanned list. It turns (A) red ... No file on disk changes" and T2 "a temporary line in (A) adds a virtual file with the useLeadFeed import" — red is proven only against an in-memory copy injected into the assertion, never against a defective file the finder reads from disk, so a bad glob or empty walk would still read green — plant one real temp descriptor.json and one real temp .ts under an allowed folder (or a tmp dir handed to the finder) and take the red there.
+
+DEFER severity=MED — task card "one gate per rule that has no mechanical check and that 1·B code touches" — PLAN-367-v1 §2 table row 2 "| 2 | fe.45 | No: 'computed client-side' is a reading of code; the arithmetic half is FE-05 (442) | Yes | 442 takes fe.05 | Later batch of 367 |" — a row meeting both card conditions (no static test today, 1·B code) is deferred with no card, and RR-0392 "no new infrastructure. This plan opens no card." leaves no vehicle for it — name the batch or queue row that owns fe.45 on the card, or include it here.
+
+REJECT — "Fold order: this branch folds LAST, after the pilot, with the baseline at 3 rows." — accused of stranding or reordering the parked wf1/inc1b-gates fold — not a real issue, RR-0386 keeps that branch untouched and the plan makes no claim on its fold position.
+
+MET — RR-0386 "Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched." — PLAN-367-v1 §1 "wf1/inc1b-gates." — the parked branch is excluded from reading, reuse and edit.
+MET — RR-0392 "no new infrastructure. This plan opens no card." — PLAN-367-v1 §1 "Any new tool, hook or card." — no infrastructure and no new card are added.
+MET — task card Files line — PLAN-367-v1 §3 "Path: the reserved lock path." — the three locks built equal the three src/tests/surfaces paths named in the pasted Files line.
+MET — fe.51 as quoted at 136:184 "A tab switch uses navigate, not push." — PLAN-367-v1 §3 T3 finder plus the fail-closed two-entry list — a lock exists for the quoted rule and only shrinks.
+MET — fe.49 as quoted at 136:178 "lead_parcels is read by no surface." — PLAN-367-v1 §3 T2 AST finder items (1)-(4) — the fence rule gets a lock over the declared files and the descriptor table refs.
+MET — Acceptance criterion #2 "green on the clean tree" — PLAN-367-v1 §3 T1 "(C) Controls give 0" — the clean direction is asserted per gate, not assumed.
+MET — Acceptance criterion #3 "by their generators" — PLAN-367-v1 §6 "Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`." — the list shrink is produced by the generators, not by hand.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 6
+Rules met: none
+
+---
+⏱  74564ms (74.6s)
+📊 Tokens — total: 50389, input: 34199, output: 16190, reasoning: 14802

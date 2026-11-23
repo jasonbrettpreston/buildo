@@ -1,0 +1,71 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T17:36:40.107Z file_sha256=2a3f6b9904cdb22dc238986976173edef713778c98ea88cfaaf81b8a032f604f prompt_sha256=6d6d5390176cfc20d42a8e5a077dccd1bb4481b65610af20243f120a0c8d4bf0
+🔍 Lens review of docs/reports/reviews/task-367/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 T2 / §9 Risks ("If `x-draft.files` is dropped by a later conversion… the floors catch it") — floor is `files ≥ 30` / `descriptors ≥ 40` vs today 41 / 45: an 11-file or 5-descriptor drop passes silently, so the stated mitigation is false — fix: tighten to `toBe(41)` / `toBe(45)` (or `>= 41` with a documented bump), not the current slack.
+
+BUG severity=HIGH — §3 T3 finder (PARCEL_TAB_ROUTE) — AST parse of `mobile/src/lib/parcelSearchMatch.ts:252-256` has no fail-closed count; if the export is renamed or changes shape, the routes list parses empty and (A)'s "each entry matches exactly" cannot fire, so T3 is vacuous — this is the exact grounder lesson (2026-11-20 note item 3, "fail on a zero-file walk") not applied — fix: add `expect(tabRoutes.length).toBeGreaterThan(0)` (and ideally `=== 5`).
+
+BUG severity=HIGH — §6 commit 1 ("Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384)`…") — RR-0384 is task-430's "13 lines" scope ruling; it is not a flip authority for fe.49/fe.51/fe.54 (a flip authority exists only when OQ1 returns) — fix: cite the OQ1 answer's RR id and answer date, not RR-0384; keep RR-0384 only as the row-establishing ruling in a secondary column.
+
+BUG severity=HIGH — §6 commit 1 ("No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match") + §10-G3 — the whole work commit rests on a deliberate bypass of arm C (`McFrontend-Task: MF-98` trailer passes when no uppercase FE id is present), and the plan admits this is UNVERIFIED — fix: confirm against MF-96 (2905df62d) before writing the commit, or add a fallback commit-msg form (a compliant `FE-…` reference that arm C accepts) so the commit isn't blocked at t=0.
+
+BUG severity=HIGH — §6 prereg (`rules: RULED ids only, FE-09, FE-10, FE-16 and FE-36`) — the prereg cites rules the task does not flip and whose text it does not touch, while the queue row (Phase 2) says "FE rows owned: FE-49, FE-51, FE-54"; an auditor comparing prereg to queue gets a mismatch — fix: verify against MF-96's prereg whether `rules` is "rows this lane flips" (then list the 3 after OQ1) or "rows this lane's work touches" (then justify FE-09/10/16/36 from the file diffs), and eliminate the queue/prereg divergence.
+
+BUG severity=HIGH — §6 commit 1 ("handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = [...]`) — the per-lane allowlist is not extensible; a future flip of any of the other 10 RR-0384 lines (ei. a 442 row that sits in the 13, or 388's renumbered rows at 135:17) makes :273 fail on the *other* lane's commit until that lane edits `BUILT_BY_367` (a name it does not own) — fix: rewrite :273/:283 to be driven by Spec 135's per-row status (`RULED` ⇔ lock path exists, reference parity), so the test ships once and no later flipper has to edit it.
+
+BUG severity=MED — §9 rollback ("`git revert` commit 1, then commit 0") — commit 0 lands days before commit 1 can be folded, and 442's commit 0 also edits `.cursor/MCFRONTEND-QUEUE.md` line 5; revert of commit 0 after 442 or 388 folds on top conflicts on the queue row and prereg/panel files, and the plan gives no resolution — fix: state that the commit-0 revert is manual once another lane has touched the queue, and prefer a `revert` PR that re-runs the generators.
+
+BUG severity=MED — §7 "McFixReborn: its group file list was not found (UNVERIFIED)" — if McFixReborn's commit edits `mobile/app/(app)/parcel-tool/_layout.tsx:48` or `tracked.tsx:99`, T3's two fail-closed entries go stale and block the fixer until someone (unidentified) removes them; the plan only asserts "the fixer removes the entry" without naming the discovery path — fix: resolve the RR-0408/0409/0410 merged-group map before plan-lock and either route the entry-removal obligation into that map or make the T3 entry's `why` field carry an explicit "remove me when MF-49/50/51/52 land" instruction.
+
+BUG severity=MED — §10-G2 (00_system_map.md unchanged) — if the flip does change `docs/specs/00-architecture/00_system_map.md`, the Files line is incomplete and adds the `policy-124-s2-s5` rule set (the plan's own measurement) — fix: verify by running the flip locally in a throwaway worktree and diffing the system map before committing.
+
+BUG severity=MED — §10-G6 ("Does any other text lock … pin the FE-49, FE-51 or FE-54 cells?") — the plan edits Spec 135 cells, Spec 136 (regenerated), surface-rule-map.json, rule-lists page, and both `handbook-rule-map.logic.test.ts` and `register-locks-resolve.infra.test.ts`, but does not grep for other tests (e.g. `rules-acc-notes.logic.test.ts`) that pin those 3 row cells or the 29,076-character rule-lists page size — fix: pre-lock, grep `src/tests/**` and `scripts/surfaces/**/*.test.ts` for `FE-49`, `FE-51`, `FE-54`, `29,076`, `29076`, `owed >=` and read each hit.
+
+BUG severity=MED — §3 T2 finder (literal `lead_parcels`) — the string check is case-sensitive; a `SELECT * FROM LEAD_PARCELS` or `Lead_Parcels` in a parcel route passes T2, and SQL folds case, so the fence can be silently breached — fix: match case-insensitively on the SQL string and keep case-sensitive matching only for the JS identifier form.
+
+BUG severity=MED — §3 T2 limit ("I measured one hop: 64 more files and false hits in shared mobile/src/lib/schemas.ts and authStore.ts") — the acknowledged limit is a coverage gap against the actual rule text ("lead_parcels is read by no surface", 136:178), because a shared helper imported by both the parcel route and a lead screen is inside the wall and invisible to T2 — fix: ship a non-failing advisory that reports the 1-hop set and diffs against today's 64 (so an unexpected growth is flagged) or explicitly narrow fe.49's rule text in Spec 136 to "declared files only".
+
+BUG severity=MED — §3 T1 (`scanned SURFACE count equals scope.expected_count`, 33) — `converted-surfaces.json scope.expected_count` is a hand-verified constant with no named generator; if any lane adds or removes a SURFACE descriptor between 2026-11-23 and lane execution, T1 is red on first run — fix: name the generator that maintains `expected_count` (or state the exact `node …` command the lane runs to refresh it) so the lane can bump without a second look.
+
+BUG severity=MED — §3 T2 (files named by `identity.route` plus `x-draft.files`) — the plan does not say that every in-scope descriptor's server route (`route.ts`, e.g. `src/app/api/parcels/lookup/route.ts:40,48`) is declared in `x-draft.files`; if a route is listed only via `identity.route` (a URL) and not `x-draft.files` (a file), T2 scans nothing for that surface — fix: assert every in-scope descriptor's `x-draft.files` is non-empty and every listed file is tracked by `git ls-files`, or explicitly state the fallback derivation.
+
+BUG severity=MED — §3 T1 plant naming ("The … (B) copy into the scanned list…") — the planted (B) copy is a copy of `mobile_parcel_search`, so the red.out line "mobile_parcel_search: reads a contract but declares no error state" is indistinguishable from a real defect of the same surface in the future — fix: rename the planted copy (`mobile_parcel_search__planted`) so the red evidence names the synthetic row unambiguously.
+
+DEFER severity=LOW — §6 commit 0 split ("Two-step fold: commit 0 holds protected paths, so the orchestrator folds it first") — if commit 1 never folds, the queue row, panel record and prereg remain for a lock that does not exist; the OWED row is legal but the panel/queue now claim "FE rows owned: FE-49, FE-51, FE-54" with no shipped test — defer; a review of the queue at fold time confirms the row is still OWED if commit 1 aborts.
+
+DEFER severity=LOW — §3 T3 fail-closed entries reference `_layout.tsx:48` and `tracked.tsx:99` — if the entries key on line number rather than the call expression, any unrelated edit shifts the lines and the entry goes stale; the nav-by-route form is not stated — defer; the entry form (nav-by-route.logic.test.ts:13-16) presumably keys on a call signature, but the plan should state it.
+
+DEFER severity=LOW — §3 T2 / §3 T1 scope-count discrepancy: T1 uses 33 SURFACE-only, T2 uses 45 total in-scope descriptors — the plan does not say whether the two scopes are deliberate (SURFACE-only vs all kinds) or inconsistent — defer; the generator's `scope.expected_count` should be checked to confirm which it counts.
+
+DEFER severity=LOW — §3 T1 `expect(problems).toEqual([])` runs before the count assertion — in the red state, the count mismatch is never printed; a reviewer reading red.out cannot tell whether the surface count also drifted — defer; the red.out requirement (acceptance #2) names the per-file line, which is what reviewers want.
+
+DEFER severity=LOW — §3 T3 limit ("A route held in a variable is missed") — a fixer could introduce a `const R = PARCEL_TAB_ROUTE.x; router.push(R)` and T3 would not fire, so a violation ships invisibly — defer; the plan's other fire-alarm is "on the push suite", but this specific shape evades both.
+
+DEFER severity=LOW — §3 T2 (`import('@/components/LeadDetail')`) — a dynamic import of a lead screen would be invisible if the finder only walks static import/export specifiers — defer; verify in the finder's unit tests that `ts.CallExpression` on `import(...)` is visited.
+
+DEFER severity=LOW — §3 T2 (identifier containing `lead_parcels`) — a template-literal construct like `` `${'lead_parcels'}` `` or `['lead','parcels'].join('_')` bypasses both the string-literal and identifier checks — defer; the plan's limit line makes the AST-walker's scope visible and this is a fixer-engineering shape, not today's defect.
+
+DEFER severity=LOW — §5 "Adding `docs/reports/red-evidence/MF-98/` is refused… So the red evidence goes to the review folder" — putting red evidence in the reviewer's folder couples evidence to a directory whose lifecycle is not the lane's; if a reviewer cleans `docs/reports/reviews/task-367/`, acceptance #2's proof is lost — defer; acceptance #2 names exactly what red.out must contain, and the folder is "always allowed" per check-task-files.mjs:10.
+
+DEFER severity=LOW — §6 landing-order (442's MF-97 / 367's MF-98) — if 367 lands first (contrary to the plan's assumption), 442's commit-0 line-5 edits (planned "next free MF-98") are stale and must become "next free MF-99"; nothing forces 442-first except the plan's prose — defer; the queue's next-free line is textual and idempotent, and the second lander's dated-note rewrite is already in the plan.
+
+REJECT — §3 "No DB, no network" — DB failure modes (NOT NULL, FK violation, row-count drift, watermark drift) do not apply — this task writes no rows and reads no DB.
+
+REJECT — §3 "Files are listed with `git ls-files`" — a partial-clone or sparse-checkout reading fewer files is a theoretical concern but the lane runs in a normal worktree with the full index (per §7 the worktree is a fresh lane), so `git ls-files` returns everything.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The work-commit bypass of arm C (`fe.NN` lowercase, no uppercase FE id) is UNVERIFIED (finding: §6 + §10-G3); the commit-msg hook can block the work commit at t=0 — resolve against MF-96 (2905df62d) before writing commit 1.
+- RR-0384 is being cited as the flip authority for FE-49/51/54 in Spec 135, but RR-0384 is task-430's 13-line scope ruling (§6); the flipped rows would carry a materially wrong authority and date.
+- The prereg's `rules` list (FE-09, FE-10, FE-16, FE-36) contradicts the queue's "FE rows owned: FE-49, FE-51, FE-54" (§6); if a reviewer or `cite-arms` reads them together, the mismatch produces either a blocked fold or a wrong audit record.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- McFixReborn's file-scope map — did not exist for the plan seat (§7). Verify: locate the RR-0408/RR-0409/RR-0410 merged-group map file and `grep -rn 'parcel-tool/_layout.tsx\|parcel-tool/tracked.tsx' <map>`; if either file is in scope, route the T3-entry removal obligation into that map's prereg before lock.
+- `x-draft.files` coverage of parcel *server routes* — the plan verifies only the *count* (41), not that every in-scope descriptor declares the `src/app/api/parcels/**/route.ts` file where a `lead_parcels` query would live. Verify: `for f in $(git ls-files 'scripts/surfaces/**/surfaces/*.descriptor.json'); do jq -r '.id + " " + ((.["x-draft"].files // [])|join(","))' "$f"; done` and cross-check that `src/app/api/parcels/*/route.ts` appears for the parcel-lookup surfaces.
+- `scope.expected_count` (33) and the OWED count (22, floor 21) at lane-execution time — both can drift if 442 or 388 flips rows or adds a SURFACE descriptor before this lands. Verify at lane start: `node -e "const c=require('./scripts/surfaces/_schema/converted-surfaces.json'); console.log(c.scope)"` and `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md`; if either changed, refresh the manifest and re-derive acceptance #3's expected count (19).
+
+---
+⏱  178686ms (178.7s)
+📊 Tokens — total: 62557, input: 25398, output: 37159, reasoning: 33542

@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T17:36:40.104Z file_sha256=2a3f6b9904cdb22dc238986976173edef713778c98ea88cfaaf81b8a032f604f prompt_sha256=b195a50554897df41b9610b0ea50164a5d388792e8a417d42f1f7e1910f5e483
+🔍 Lens review of docs/reports/reviews/task-367/context-r1.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: the change adds three source-scan test files plus test/docs edits (Spec 135 rows, Spec 136 and rule-map generators, queue row MF-98, prereg-MF-98-1.json); the plan states "Out: Any change to app code, descriptors, mobile code or the gate scripts", so no auth, entitlement, money, PII or admin code path changes and nothing here is reachable by a request.
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  5397ms (5.4s)
+📊 Tokens — total: 25187, input: 24502, output: 685, reasoning: 573

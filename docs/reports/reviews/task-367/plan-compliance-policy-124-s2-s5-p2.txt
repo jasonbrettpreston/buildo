@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.049Z file_sha256=e84f8ecea8d2c6f2e27eea35424a6e3711ca4887fea96d32d2f8198188678f3f prompt_sha256=58bb74013affb3a0e27b438c9eb9d6703c6e4df7db0953cabdc273f36dcda1f1
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — AC #1 "#1 The gate list is confirmed by the operator before any gate is built" — PLAN-367-v1 §11 "OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — clause unmet, option (b) and §8's reading "reads as the three-row test list" let three gates be built on a grounder's validation instead of the operator's confirmation — delete option (b) and make commit 1 conditional on an explicit operator confirmation of the three rows.
+BUG severity=HIGH — Description "Waits on: task-365 grounded; the operator confirms the gate list before the build." — PLAN-367-v1 §0 "**The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none." — clause unmet, the plan never shows task-365 grounded and sources its rows from task-440's table instead — cite the grounded task-365 coverage table for fe.54, fe.49 and fe.51, or record that prerequisite as waived by the operator.
+BUG severity=HIGH — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — PLAN-367-v1 §6 "**If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING (register-locks-resolve.infra.test.ts:26) and changes only :274. Spec 135 and 136 are untouched, and acceptance #3 stays open." — clause unmet on the shipped fallback, the plan builds a path that knowingly leaves a card AC open — make the OQ1=y shrink a precondition of the work commit, or have the operator amend AC #3 before lock.
+BUG severity=HIGH — Implementation Notes "blocking wiring waits for the operator to confirm the gate list (stage 2)." — PLAN-367-v1 §8 item 7 "Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks." — clause unmet, the three locks enter the blocking pre-commit and pre-push runs before the stage-2 gate-list confirmation — hold commit 1 until the list is confirmed, or mark the three tests report-only and state how they stay out of the blocking run.
+DEFER severity=MED — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — PLAN-367-v1 §3 T1 "**Plant:** a temporary line in (A) pushes the (B) copy into the scanned list." — T1 and T2 are driven red by a temporary line inside the test and an in-memory file, not by a defect in the tree the walk reads, so the red does not prove the walk catches it — plant the defect on disk in a scratch file the walk sees, or state in the header why the in-memory copy is the planted defect.
+DEFER severity=MED — R-HK "Each set of rulings is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`" — PLAN-367-v1 §6 commit 1 "each with a dated note carrying the operator's flip words (the FE-37 form, 135:59)" — the OQ1 ruling would be hand-carried into a spec cell with no decision log and no routed row, and the Files line has no docs/reports/decisions/ path — record the OQ1 answer through decision-log.mjs and add the log plus its row to the Files line.
+MET — RR-0386 "the handbook tests start clean. Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched." — PLAN-367-v1 §1 — "wf1/inc1b-gates." is listed under Out and no commit in §6 touches it.
+MET — RR-0392 "no new infrastructure. This plan opens no card." — PLAN-367-v1 §1 — "No new tool, hook or card." under Out, and §6 opens no card.
+MET — RR-0385 item 6 "My only direction is the task 367 the handbook rules are key." — PLAN-367-v1 §2 — "Three tests, the size of 441 and 442." scopes the lane to handbook-rule locks only.
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — PLAN-367-v1 §0 — "the same as origin/wf1/mb-rulings", the plan is written against the pushed head b32ea9b4c.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: none
+
+---
+⏱  48833ms (48.8s)
+📊 Tokens — total: 40384, input: 30024, output: 10360, reasoning: 9264

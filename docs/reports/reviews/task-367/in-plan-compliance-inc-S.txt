@@ -1,0 +1,471 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:5d7e9a423b7843bab888a06cdd0c396096cc2d0529d530fe6be9cf6d3c6db9c2 part 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: compliance tooling tasks into 1·B". Scope now: from the task-365 coverage table and the grounded findings, one gate per rule that has no mechanical check and that 1·B code touches; candidates named by the orchestrator, UNVERIFIED until task-365 is grounded: (a) the Airtight purity and literal gates scan only scripts/lib/compute: route-side code that calls the engine core (src/lib/parcels/report-compute.ts) is scanned by none; (b) numbers written in mobile code (the 60 s wait) against EXTERNALIZED (Spec 132 core.8); (c) the Spec 90 section 5 never-do list has no check on mobile/; (d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches. Each gate: red first on a planted defect, both directions. Waits on: task-365 grounded; the operator confirms the gate list before the build.
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+
+## Acceptance criteria
+- #1 The gate list is confirmed by the operator before any gate is built
+- #2 Each gate is shown red on a planted defect and green on the clean tree
+- #3 The handbook no-check lists shrink by the rules gated, by their generators
+
+
+## Implementation Plan
+#### PLAN-367-v1
+
+**Task:** task-367 COMPLY.3 (type build, milestone m-1, letter S). Scope: tests for the McFrontend handbook rules (Spec 136) that no machine checks. This is a clean start (RR-0386). **Plan seat:** Opus, read-only (RR-0385 item 1, MORNING-DECISIONS.md:1917). **Build seat:** Opus (RR-0385 items 1 and 8). **Head read:** wf2/board at b32ea9b4c (`git rev-parse HEAD` gives b32ea9b4cae9350c0b1e3fcad6b3a568f317c154, the same as origin/wf1/mb-rulings). **Commands run:** git reads, sed, grep, `node scripts/analysis/rule-lists.mjs resolve`, and small inline `node -e` scripts that only read (git ls-files, JSON.parse of descriptors, TypeScript AST walks). No test runner was run and nothing was written. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. **Estimate (a guess, not measured):** one Opus lane session, about 450 lines of test code, one records commit, one work commit and one closing commit.
+
+#### 0. Facts verified
+
+**The rulings this plan follows (verbatim):**
+- RR-0385 item 6 (MD:1922): "My only direction is the task 367 the handbook rules are key."
+- RR-0386 (MD:1929-1933): the handbook tests start clean. Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched. This plan does not read, reuse, land or edit that branch.
+- RR-0388 (MD:1947): McFixReborn waits for the tests of 367, 441 and 442.
+- RR-0392 (MD:1975): no new infrastructure. This plan opens no card.
+- RR-0412 (MD:2098): 442 and 367 run once the push of b32ea9b4c lands.
+
+**What already exists and is reused:**
+
+1. **The source list.** docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none. Its table is at :100-161. Today Spec 136 has 58 lines (`grep -c '^- \*\*fe\.'` gives 58) and 22 OWED (`grep -c 'Status: OWED'` gives 22). fe.58 came from task-446 (136:205-206). Its register row says "the lock is task-367's" (135_mcfrontend_decisions_register.md:80).
+
+2. **The sibling tasks:**
+ - task-441 built three source-scan tests (commit 8cf51f3cc).
+ - Lessons from 441:
+   - A planted file under src/components/ tripped `.husky/pre-commit:38` (generate-surface-registry --check), because the generator walks the .tsx files on disk (task-441 notes :316).
+   - The runner prints each failure twice, so an acceptance grep must not expect exactly 1 (task-441 notes :322).
+   - Run typecheck and lint once before the red attempt (task-441 plan 3.4).
+ - task-442 takes fe.05, fe.18 and fe.27 (task-442 plan §2 table). It leaves every OWED row to task-367: "OWED, lock path reserved: task-367" (its §2, ranks 1-7 and fe.39), and "fe.58 … its lock is task-367's".
+
+3. **How a handbook rule names its lock:**
+ - A Spec 135 row's last cell holds its status and lock (135:12-15).
+ - Rule 3 (135:13): "A ruled row whose lock is not built reads `OWED` with the lock path."
+ - Rule 5 (135:15): an OWED lock path is a reserved `src/tests/surfaces/*.test.ts` that does not exist yet.
+ - Spec 136 and the rule map are generated: `node scripts/surfaces/generate-surface-handbook.mjs --write|--check` (136:9, :26).
+ - register-locks-resolve.infra.test.ts:43-75 fails an OWED row whose lock already exists, unless the id is on FLIP_PENDING (:26, today `['FE-39']`).
+ - Flip precedent: a landed lock waits "until the operator approves the flip" (register-locks-resolve.infra.test.ts:20-25, MF-37 and FE-39).
+
+4. **A hidden lock this plan must edit:** src/tests/surfaces/handbook-rule-map.logic.test.ts.
+ - :258 lists the 13 RR-0384 lock paths, including scope-fence, nav-tab-switch and failure-state-declared.
+ - :273 asserts each row is OWED.
+ - :274 asserts `fs.existsSync(lock)` is false.
+ - :281 asserts `owed >= 21`.
+ - :283 asserts each Spec 136 line reads `Status: OWED · lock owed:`.
+ - Landing any of these locks turns this test red unless it is edited in the same commit.
+
+5. **task-434** (merged into 367, card :43 and 367 notes :69). It adds:
+ - The batch model: "build the owed locks a few at a time … each batch its own plan" (task-434:23).
+ - Ownership: rows FE-45..FE-57 say "the lock is task-434's" (135:67-79), and FE-58 says task-367's (135:80).
+ - It adds no rule and no file beyond this card.
+
+6. **The old plan** (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here.
+
+#### 1. Scope
+
+**In:**
+- Three new locks at their reserved paths, each proven red through the real hooks, then green.
+- The three register rows read RULED (only if the operator answers OQ1 y), and their generators are rerun.
+- Edits to handbook-rule-map.logic.test.ts to match.
+- The MF queue row, prereg and panel record.
+- Records under docs/reports/reviews/task-367/.
+
+**Out:**
+- Any change to app code, descriptors, mobile code or the gate scripts.
+- Any fix of a live break.
+- Any other OWED row.
+- wf1/inc1b-gates.
+- Any new tool, hook or card.
+
+#### 2. Row choice (A)
+
+**Key, in order:**
+1. A static test over files that exist today.
+2. The card's own title and description: "the ones Increment 1·B code touches first" (task-367:4-5, :26 item d).
+3. The look's rank.
+
+Increment 1·B code is the parcel search and lot pages (milestone m-1 deliverable; descriptors with programme.scope parcel_product). Three tests, the size of 441 and 442.
+
+**The 20 rows with no test:**
+
+| Rank | Row | Static test today? | Code in 1·B? | Taken by 441, 442 or a lock? | Decision and owner |
+|---|---|---|---|---|---|
+| 1 | fe.54 | Yes: descriptors' `states` and `errors` | Yes (mobile_parcel_search and others) | No | **TAKEN (T1)** |
+| 2 | fe.45 | No: "computed client-side" is a reading of code; the arithmetic half is FE-05 (442) | Yes | 442 takes fe.05 | Later batch of 367 |
+| 3 | fe.46 | Partly: a Mantine 8.3.18 version pin (package.json) | No | No | Later batch |
+| 4 | fe.47 | Two homes read two ways: descriptor `config.debounce_ms` against "registered logic variable" (135:69 note) | Yes | No | Later batch |
+| 5 | fe.48 | Weak proxy only (file names) | No | No | Later batch |
+| 6 | fe.49 | Yes: declared MaxBLD files and descriptor tables | Yes | Mobile jest checks 3 files only | **TAKEN (T2)** |
+| 7 | fe.50 | Yes, 0 Stripe Elements hits today | No (checkout) | No | Later batch |
+| 8 | fe.51 | Yes: router.push of a shelf tab route | Yes (parcel shelf) | FE-36 lock does not check it (126:82 "convention, not checked by the lock") | **TAKEN (T3)** |
+| 9 | fe.52 | Needs the DB (usage_events CHECK) | n/a | No | Later batch (station) |
+| 10 | fe.53 | Yes, a heading check, but it touches docs only | No | No | Later batch |
+| 11 | fe.55 | Judgement | No | No | Later batch |
+| 12 | fe.56 | Meta (red evidence per lock) | No | No | Later batch |
+| 13 | fe.57 | Partly; 44 px is already under FE-31 | No | FE-31 partly | Later batch |
+| 14 | fe.04 | No ruled number ("measured first, then ruled", 136:43) | n/a | No | Waits for a ruling |
+| 15 | fe.12 | Vacuous or red: admin_market_metrics is REPORT and not converted (estate_other) | No | No | Its conversion row |
+| 16 | fe.17 | variants[] not built (report-page.json has none) | No | No | Later batch |
+| 17 | fe.21 | Vacuous: no embed declared | No | No | Later batch |
+| 18, 19 | fe.25, fe.26 | `.db.test.ts`; a lane may not connect to a DB | n/a | No | Later batch (station) |
+| 20 | fe.44 | Not built (135:66); typed factor at parcelCostFormat.ts:11 | Partly | task-411 deletes the phone factor copies | Later batch, after 411 |
+
+**The 8 partly rows:**
+
+| Row | Reason not taken | Owner |
+|---|---|---|
+| fe.39 | Lock tracked, on FLIP_PENDING, waits for its operator flip | FE-39 row |
+| fe.05 | Taken elsewhere | 442 |
+| fe.15 | Canaries e and f | FE-25 and FE-26 rows |
+| fe.19 | Confidence clause is a grounder judgement; db | Later batch |
+| fe.33 | Mobile half runs in mobile jest | MF-25 |
+| fe.36 | Five named exceptions | MF-49 and MF-50 |
+| fe.38 | Screen half runs in mobile jest | Later batch |
+| fe.40 | Runs against a local stack | Station |
+
+fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next/` import in mobile, and no mobile descriptor with state.answer `server_only`. Next batch.
+
+**Rule texts as verified today:**
+- fe.54, 136:193: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)." Lock owed at 136:194. Row 135:76.
+- fe.49, 136:178: "The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03)." Lock owed at 136:179. Row 135:71.
+- fe.51, 136:184: "Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). … PROSE-ONLY until the lock below exists." Lock owed at 136:185. Row 135:73.
+
+**Overlap check:**
+- 442's rows are fe.05, fe.18, fe.27 (and fe.24 and fe.29 in its Rule trailer). None are T1-T3.
+- 441's rows are §12.7, §1.2, §2.3. None are handbook rows.
+- Existing locks:
+- fe.51 is outside FE-36 (126:82).
+- fe.49 extends mobile/__tests__/parcelScreens.golden.test.ts:217-220 (3 files, lead hooks, mobile jest only, not the root suite). It is not parcel-tool-fence.infra.test.ts, which locks the subscription gate (its :1-3).
+- fe.54: the schema requires an `errors` answer (surface.schema.json:24, :2081-2090) but allows `none` and does not tie it to a contract read. No test checks it: a grep of the three surface scripts and src/tests found nothing.
+
+#### 3. The tests
+
+**Common to all three:**
+- Path: the reserved lock path. The register reserves the exact name (135:15; OWED_LOCK_RE at register-locks-resolve.infra.test.ts:18).
+- First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)` (CLAUDE.md directive 3; the form of register-locks-resolve.infra.test.ts:1).
+- No DB, no network.
+- Files are listed with `git ls-files`.
+- The scope list comes from scripts/surfaces/_schema/converted-surfaces.json `scope.programme_scopes`, which is `["parcel_product","parcel_admin"]` with `expected_count` 33. This reuses the manifest; it is not a new list.
+- One pure finder is exported per test.
+- Each test has KNOWN_BAD cases in memory, controls, and a printed scanned count (the 441 form).
+
+#### T1 fe.54: src/tests/surfaces/failure-state-declared.logic.test.ts
+
+- **Reads:** every tracked `scripts/surfaces/**/surfaces/*.descriptor.json` with kind SURFACE and programme.scope in scope.
+- **Finder:** a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry, or when `errors.answer` is `none` or `UNRESEARCHED`.
+- **Assertions:**
+- (A) `expect(problems).toEqual([])`, and the scanned SURFACE count equals `scope.expected_count`.
+- (B) In memory: a copy of mobile_parcel_search without its error state gives 1 problem; a copy with errors.answer `none` gives 1; `UNRESEARCHED` gives 1.
+- (C) Controls give 0: a STATIC descriptor with inputs `none`, and an estate_other descriptor with no error state.
+- **Today:** 33 in scope, 25 read a contract, 0 problems. 8 problems lie outside scope (estate_other and platform_shared) and are not judged.
+- **Plant:** a temporary line in (A) pushes the (B) copy into the scanned list. It turns (A) red with "mobile_parcel_search: reads a contract but declares no error state". The line is deleted before the green commit. No file on disk changes, so no generator hook can trip.
+- **Limit (stated in the header):** it checks declarations only. The known break at mobile/src/lib/maxbldHelp.ts:19 (RULE-CHECKS.md:102: a failed Help open is only logged) is code and is not caught.
+
+#### T2 fe.49: src/tests/surfaces/scope-fence.logic.test.ts
+
+- **Reads:**
+- The tracked .ts and .tsx files named by in-scope descriptors (`identity.route` plus `x-draft.files`): 41 today (31 parcel_product, 10 parcel_admin).
+- The `inputs`, `outputs` and `evidence` table refs of the 45 in-scope descriptors.
+- **AST finder:**
+- (1) a string, template text or identifier containing `lead_parcels`;
+- (2) an import or export specifier naming a lead screen (`LeadDetail`, `lead-detail`, `FlightBoard`, `flight-board`, `LeadFeed`, `lead-feed`, `useLeadFeed`, `useFlightBoard`, `useLeadDetail`, `[lead]`, `[flight-job]`);
+- (3) a route string starting `/api/leads`, `/(app)/[lead]`, `/(app)/[flight-job]`, `/(app)/flight-board` or `/(app)/map`;
+- (4) a descriptor table ref `lead_parcels`.
+- **Not banned:** `@/features/leads/api/envelope` and `error-mapping`. These are shared API helpers used by the three parcel routes (src/app/api/parcels/lookup/route.ts:40, :48; entitlement/route.ts:19-20; lot-size/route.ts:25-26). They are not lead screens.
+- **Assertions:**
+- (A) hits are `[]`, files ≥ 30, descriptors ≥ 40.
+- (B) KNOWN_BAD gives one hit each: `import { useLeadFeed } from '@/hooks/useLeadFeed'`, `pool.query('SELECT * FROM lead_parcels')`, `router.push('/(app)/[lead]?id=1')`, `fetch('/api/leads/feed')`, and a descriptor copy with `{table:'lead_parcels'}`.
+- (C) Controls give 0: `// lead_parcels`, the envelope import, `'/(app)/parcel-tool'`.
+- **Today:** 41 files with 0 hits; 45 descriptors with 0 hits. The only lead text in these files is a comment, at mobile/src/hooks/useTrackedLots.ts:22, which the AST skips.
+- **Plant:** a temporary line in (A) adds a virtual file with the useLeadFeed import. (A) fails naming it.
+- **Limit:** declared files only, no import hop. I measured one hop: 64 more files and false hits in shared mobile/src/lib/schemas.ts and authStore.ts.
+
+#### T3 fe.51: src/tests/surfaces/nav-tab-switch.logic.test.ts
+
+- **Reads:**
+- The mobile files among T2's set: 20 today.
+- The tab routes, parsed by AST from `PARCEL_TAB_ROUTE` (mobile/src/lib/parcelSearchMatch.ts:252-256), not copied.
+- **Finder:** a call `<router>.push(arg)` where arg is `PARCEL_TAB_ROUTE[...]` or `PARCEL_TAB_ROUTE.x`, or a literal equal to a tab route.
+- **Fail-closed list** in the nav-by-route form (nav-by-route.logic.test.ts:13-16, :361, :386). A stale entry fails, and the list only shrinks.
+- `mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)".
+- `mobile/app/(app)/parcel-tool/tracked.tsx` `router.push(PARCEL_TAB_ROUTE.account)`, count 1, why "owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82)".
+- The owners already exist and are LATER rows (.cursor/MCFRONTEND-QUEUE.md:353, :376, :382, :394), so no card is needed.
+- **Cases:**
+- (A) every hit is explained by an entry, and each entry matches exactly.
+- (B) KNOWN_BAD: `router.push(PARCEL_TAB_ROUTE.tracked)` and `router.push('/(app)/parcel-tool/account')` give 1 each.
+- (C) Controls give 0: `router.navigate(PARCEL_TAB_ROUTE.tracked)`, `router.replace(PARCEL_TAB_ROUTE.lookup)`, `router.push(trackedLotRoute(id))`.
+- **Today:** 2 hits, both owned. Audit #6 (index.tsx) is already fixed.
+- **Red on the real tree:** the red attempt stages T3 with an empty list. (A) fails naming _layout.tsx:48 and tracked.tsx:99. Then the two entries are added.
+- **Limits:**
+- A route held in a variable is missed.
+- The lead-gen five-tab bar is not MaxBLD.
+- Web has no tab bar: a grep for Tabs in src/app/(maxbld), src/components/surfaces and src/components/report finds 0.
+
+#### The red attempt (through the real hooks)
+
+1. Stage the three tests (with T1's and T2's plant lines, and T3's empty list) and the task file. Typecheck and lint were run once beforehand.
+2. The related run (.husky/pre-commit:56, :85) refuses: 3 test files failed at the designed (A) assertions.
+3. The output is saved to docs/reports/reviews/task-367/red.out. That folder is always allowed (check-task-files.mjs:10).
+4. A refusal at any other stage is a test defect and is fixed first.
+
+#### 4. Live breaks (named, not fixed)
+
+- fe.51: 2 tab pushes, owned by MF-49/MF-50 and MF-51/MF-52 (126:82).
+- fe.54: maxbldHelp.ts:19 is code, out of the declaration test.
+- Out of scope and only noted: 8 contract-reading descriptors in estate_other and platform_shared have no error state.
+
+#### 5. Files (C)
+
+Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, docs/reports/generated/rule-lists-by-kind.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+
+**Rule lists.** `node scripts/analysis/rule-lists.mjs resolve --files "<the line above, minus the rule-lists page>" --type build --letter S` gives 15 lists, exempt [], unmatched []: surface-136, eng-all, agents-s7-s11, queue-137, surface-126, surface-127, surface-128, surface-135, bylaw-133, agents-s5-1to3, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S. This is the same set as 442's.
+
+**Measured refusals and why two files are in the line:**
+- Adding `docs/reports/red-evidence/MF-98/` is refused ("matched by no row"). So the red evidence goes to the review folder, and no OWED id is cited in a message (see section 6).
+- Adding the two mobile files of a fix would add 5 mobile lists. Not needed, because T3 uses owned exceptions.
+- The rule-lists page is in the line because it records the Spec 136 section 2 size (rule-lists-by-kind.md:33, 29,076 characters), and `rule-lists.mjs page --check` runs at pre-commit (:44).
+
+**Protected paths and the McFrontend queue:**
+- Protected (mcbylaws/protected-paths.json): Spec 135 (:68), the queue (:70), docs/reports/panels/** (:55), and coa-expected/** (:38).
+- McFrontend frontend paths: src/tests/surfaces/** (:23) and scripts/surfaces/** (:21).
+- **Yes, an MF queue row is needed:** "A task not listed here is not done" (.cursor/MCFRONTEND-QUEUE.md:5; Spec 137 table :41). The commit-msg arm C needs a `McFrontend-Task:` trailer and a prereg with rules (cite-arms.mjs:145-150).
+- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 takes **MF-98** and **round-203**, claimed by the orchestrator (MCINC-8, 08_agents.md:525).
+
+#### 6. Commits (D), in order, following the six steps (08_agents.md:515-525)
+
+**Commit 0 (records, alone and first):**
+- Contents: the MF-98 row in Phase 2 ("FE rows owned: FE-49, FE-51, FE-54", in the MF-96 row form at queue :654-657); the next-free line moves to MF-99 by dated note; prereg-MF-98-1.json (round 203, totals copied from the newest prereg); docs/reports/panels/MF-98.json (the MF-96.json form); the task file.
+- Prereg `rules`: RULED ids only, FE-09, FE-10, FE-16 and FE-36 (the MF-96 form: "The new row is OWED and is never cited").
+- Subject: `docs(135_mcfrontend_decisions_register): MF-98 queue row, prereg and panel record`.
+- Trailers: `Task: task-367`, `McFrontend-Task: MF-98`, `Operator-Ruling: RR-0385 …, RR-0386 …`, `Spec-diff: queue row and records only, no spec rule text moves` (precedent 0ae43e69c).
+- **Two-step fold:** commit 0 holds protected paths, so the orchestrator folds it first. The work commit is its child, because the gate reads the prereg from the parent tree.
+
+**Red attempt:** section 3 (not a commit).
+
+**Commit 1 (work):**
+- The three tests, with plant lines removed and T3's two entries in.
+- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note carrying the operator's flip words (the FE-37 form, 135:59). This needs OQ1 = y.
+- handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = ['failure-state-declared','scope-fence','nav-tab-switch']`.
+- :273 and :274: rows on that list are RULED and their lock is tracked.
+- :281: the floor becomes `21 - BUILT_BY_367.length`.
+- :283: their lines read `Status: RULED … · Enforced by: <path>`.
+- Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`.
+- The task file and the queue row status (137:84).
+- No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match.
+- Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED`.
+- **If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING (register-locks-resolve.infra.test.ts:26) and changes only :274. Spec 135 and 136 are untouched, and acceptance #3 stays open.
+
+**Output review:** the lens set on the Files line, then a separate grounder. Two rounds at most (RR-0385 item 3).
+
+**Close commit (records only):** the lane report and red.out. The task becomes BUILT, not DONE, until the push suite has run. The lane never pushes.
+
+#### 7. Landing order (E)
+
+- **442:** both commit 0s edit .cursor/MCFRONTEND-QUEUE.md line 5 (the next-free id), so this is a textual conflict. 442's MF-97 folds first. Whichever lands second rewrites the line by dated note (the 135:17 precedent). No other shared file: 442's panel and prereg are different files.
+- **383 (wf1/inc1b-thinroute, 5a0d52644):** touches contract_parcels_lookup.descriptor.json, which T2 reads. Its version holds 0 `lead_parcels` (`git show … | grep -c` gives 0). No conflict.
+- **411 (wf1/inc1b-areafactor, f00af29ed):** touches an estate_other descriptor only, which is out of scope.
+- **388 (wf1/inc1b-mfrules, e467590a6, RUNNING):** edits Spec 135, Spec 136, the queue and the rule map. Textual conflicts are expected; the second lander regenerates. Its rows are renumbered after FE-58 (135:17), so FE-49, FE-51 and FE-54 do not move.
+- **McFixReborn:** its group file list was not found (UNVERIFIED). A fix to _layout.tsx:48 or tracked.tsx:99 makes T3's entry stale. The fixer removes the entry in the same commit, because the list only shrinks.
+
+#### 8. Acceptance (F)
+
+1. Lane: `git ls-files src/tests/surfaces | grep -cE '(failure-state-declared|scope-fence|nav-tab-switch)\.logic\.test\.ts$'` prints 3.
+2. Lane: docs/reports/reviews/task-367/red.out shows the related run with "Test Files 3 failed (3)". It holds at least one line each of: "mobile_parcel_search: reads a contract but declares no error state", "useLeadFeed", "_layout.tsx" and "tracked.tsx". Counts are at least 1, because each failure prints twice. No typecheck or lint line is the cause.
+3. Lane: `grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md` prints 19 (if OQ1 = y). `node scripts/surfaces/generate-surface-handbook.mjs --check` and `node scripts/analysis/rule-lists.mjs page --check` both exit 0.
+4. Lane: `git log -1 --format=%B <work>` holds `Task: task-367` and `McFrontend-Task: MF-98`, and `grep -cE '\bFE-[0-9]+\b'` on it prints 0.
+5. Lane: `git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components 'scripts/surfaces/parcel_product' 'scripts/surfaces/platform_shared'` prints nothing.
+6. Lane: `head -1` of each new test starts with `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`.
+7. Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite.
+
+**Old acceptance criteria under the clean start (meaning only, not changed):**
+- #1 "gate list confirmed by the operator": reads as the three-row test list. Changing it needs his word (OQ2).
+- #2 "red on a planted defect and green on the clean tree": unchanged; it is acceptance item 2.
+- #3 "no-check lists shrink … by their generators": acceptance item 3; it needs OQ1.
+
+#### 9. Risks and rollback (G)
+
+- Another lane adds a tab push or a lead import: red at the push suite. That is the rule working.
+- If `x-draft.files` is dropped by a later conversion, the file set shrinks. The floors catch it.
+- The 442 and 388 conflicts are textual only.
+- Rollback: `git revert` commit 1, then commit 0. No runtime code changes.
+
+#### 10. Questions for the plan grounder (H)
+
+- G1. Does `gate.mjs --staged` (pre-commit:19, holdForCommit) pass staged `src/tests/surfaces/*.ts` before the commit-msg trailers are read? 442 is the precedent, but it is UNVERIFIED.
+- G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which adds the list policy-124-s2-s5 (measured).
+- G3. Does arm C pass a work commit that cites no FE id with RULED-only prereg rules, as with MF-96 (2905df62d)?
+- G4. Is `identity.route` plus `x-draft.files` the right MaxBLD file set, or should it be the Spec 126 §11b.3 page set?
+- G5. Is T1's reading of 128:39 right: a contract reader must declare an `error` state and a non-`none` errors answer?
+- G6. Does any other text lock (for example rules-acc-notes.logic.test.ts) pin the FE-49, FE-51 or FE-54 cells?
+
+#### 11. Questions for the operator (H)
+
+- OQ1. When the three locks land, may FE-49, FE-51 and FE-54 read RULED in the same commit, so that the handbook's no-check list drops from 22 to 19 (the MF-37 and FE-39 flips waited for your word): y or n?
+- OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?
+

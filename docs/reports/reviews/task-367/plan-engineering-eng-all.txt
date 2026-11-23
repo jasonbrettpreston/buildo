@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T17:36:40.052Z file_sha256=5c76c68cc08d852c249abe39d4b85b6a2dd0ad97e8ce3d3566a7dede30812daf prompt_sha256=6c3c69da36eda2851707f365fa36277c79008d69247f896dba8ae222a4c8a9bf
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — plan §3 T1 "(B) In memory: a copy of mobile_parcel_search without its error state gives 1 problem; a copy with errors.answer `none` gives 1" — every KNOWN_BAD and control fixture (descriptor copies in T1/T2, the virtual file in T2, the T3 fail-closed entries "path, count 1, why") is an inline object literal with no declared type and no factory import, and the plan never names factories.ts — build the fixtures from typed factories imported from `src/tests/factories.ts` (add a typed descriptor/file fixture there) and state that import in each test's plan
+
+BUG severity=HIGH — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`. ... Do NOT use the non-null assertion operator (`!`)" — plan §3 T1 "a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry, or when `errors.answer` is `none`" — the three finders dereference `inputs`, `states`, `errors`, `identity.route`, `x-draft.files` and `PARCEL_TAB_ROUTE[...]` on parsed JSON/AST that can omit any of them, and the plan states no optional-chaining or guard per field — add a per-field null/undefined guard clause to each finder (optional chaining, no `!`) and say so in §3
+
+DEFER severity=MED — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan §6 "Output review: the lens set on the Files line, then a separate grounder" — the work-commit sequence has no self-skeptical checklist step for the Spec 135/136 governed change — add a 5-10 item PASS/FAIL self-checklist to §6 before the green commit
+
+DEFER severity=MED — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — plan §5 "Files: ... scripts/surfaces/_schema/surface-rule-map.json, ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json" — two `scripts/` paths sit in the Files line while G2 ("Does the flip leave surface-rule-map.json ... unchanged?") leaves it open whether the rule map is written — resolve G2 before lock and, if the generator writes the rule map, name the §10.2 exception and its owner in the plan
+
+DEFER severity=LOW — §11 "If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s)" — plan §3 T2 "(A) hits are `[]`, files ≥ 30, descriptors ≥ 40" — the 30/40 floors are new hardcoded literals although converted-surfaces.json already carries `expected_count` 33 — derive the floors from the manifest (or add the contracts row) instead of new literals
+
+MET — §5.3 — plan §3 "The red attempt (through the real hooks)" — a failing run through `.husky/pre-commit` is produced and saved to red.out before the green work commit, so no code precedes the Red Light
+MET — §5.2 — plan §3 "One pure finder is exported per test. No DB, no network." — the three files are pure-finder scans named `*.logic.test.ts`, matching the §5.2 logic row
+MET — §5.5 — plan §6 "Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`" — the generated artifacts are regenerated and drift-checked in the same commit
+MET — §14 — plan §3 "First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)`" — spec link carries the spec and section reference
+MET — §8.1 — plan §3 "Path: the reserved lock path" — only test files are added, no `route.ts` exports are touched
+
+REJECT — §12.11 — new type-predicate filters in the scan tests could trip the silent-row-drop heuristic — the ban is scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`, not `src/tests/`
+REJECT — §5.2 security layer — no externally reachable or auth-guarded surface is created or modified, so `*.security.test.ts` is not mandated
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  38578ms (38.6s)
+📊 Tokens — total: 31722, input: 24159, output: 7563, reasoning: 6439

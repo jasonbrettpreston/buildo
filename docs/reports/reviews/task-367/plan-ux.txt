@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T17:36:40.113Z file_sha256=2a3f6b9904cdb22dc238986976173edef713778c98ea88cfaaf81b8a032f604f prompt_sha256=6f4c7dee4df7f37bac55882e6eb015c25162eb1425988b130174503488d5c153
+🔍 Lens review of docs/reports/reviews/task-367/context-r1.md (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — PLAN-367-v1 §4 "fe.54: maxbldHelp.ts:19 is code, out of the declaration test" vs design "An unhandled state is a FAIL, not a blank screen" (136:193) — the person taps Help on the phone, the open fails, nothing appears and there is no way forward, while §1 flips the row to RULED ("The three register rows read RULED") so no later lane will look again — hold fe.54 out of the OQ1 RULED flip, or put a dated note on the Spec 136 fe.54 line that the failed-Open code path is still unchecked, then land the Help failure message under an owner.
+DEFER severity=MED — §4 "Out of scope and only noted: 8 contract-reading descriptors in estate_other and platform_shared have no error state" — on those 8 surfaces a failed read shows the person nothing and this change deliberately leaves them unjudged — bounded, the same finder can be widened to those scopes in the next batch.
+DEFER severity=MED — §3 T1 "The finder: a descriptor with `inputs.answer === 'contract'` fails when `states[]` has no `error` entry" vs design "A visible state for every failure" (136:193) — a surface that reads no contract but still fails in flight shows the person a blank and the gate reads green — state the contract-only limit in the test header and the Spec 136 line so the enforcement claim matches what is checked.
+DEFER severity=MED — §3 T3 "`mobile/app/(app)/parcel-tool/_layout.tsx` `router.push(PARCEL_TAB_ROUTE[tab])`, count 1, why "owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82)"" vs design "A tab switch uses navigate, not push" (136:184) — the person switching tabs on the phone still gets Back walking back through every tab visited — both hits have queued fix rows, so keep fe.51 out of the RULED flip until MF-49/50 and MF-51/52 land.
+DEFER severity=LOW — §3 T3 "A route held in a variable is missed" — a tab push written through a variable breaks the person's Back behaviour and the gate stays green — documented limit in the fail-closed header, accept and revisit if a miss is found.
+
+VERDICT: FAIL on the person's experience
+States checked: the change draws no product state, so I checked the states the three locked rules govern: error (failed Help open, failed contract read), loading to answered, back from a tab switch, and the 8 out-of-scope surfaces on failure; first view, empty, offline and repeat visit are not drawn by this change.   Dead ends found: 1
+```
+
+---
+⏱  31844ms (31.8s)
+📊 Tokens — total: 30424, input: 24511, output: 5913, reasoning: 5292

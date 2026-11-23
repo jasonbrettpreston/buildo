@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.122Z file_sha256=9a3a7d6c1743395d654ed515ba345e0fd4fe1c72f02dd92eb24f3cfd687afb6c prompt_sha256=9eef9f6465accc6a7fdd6abd6832eed198becda773dbd98e992ca977cd24a594
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-367 acceptance #1 "The gate list is confirmed by the operator before any gate is built" — Implementation Plan §11 "For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — the red attempt and commit 1 build all three gates while the confirmation is still an open question, so criterion #1 is unmet — hold the red attempt and commit 1 until the confirmation (option a or b) is recorded, and paste the result into the prereg-MF-98-1 rules before any gate is built.
+
+BUG severity=HIGH — task-367 card body "Waits on: task-365 grounded; the operator confirms the gate list before the build" — Implementation Plan §0.1 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none" — the row set and the OWED count are taken from task-440's table, not from a grounded task-365 coverage table, so the first named wait has not cleared — cite the task-365 grounded result for fe.49, fe.51 and fe.54 in §0 and in the prereg, or state the wait as open and stop before the build.
+
+BUG severity=HIGH — task-367 acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — Implementation Plan §6 "This needs OQ1 = y" and "If OQ1 = n: commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING ... acceptance #3 stays open" — the only path that satisfies criterion #3 is conditional on an unanswered operator question, so the plan can complete with #3 unmet — make the flip answer a pre-build gate recorded beside OQ2 and delete the OQ1 = n branch from the plan.
+
+BUG severity=HIGH — task-367 card "(d) the 8 McFrontend rules whose lock is OWED (Spec 136), those 1·B touches" and "(c) the Spec 90 section 5 never-do list has no check on mobile/" — Implementation Plan §2 table rows fe.45, fe.46, fe.47, fe.48 and fe.50 each read "Later batch", and §1 reads "Out: Any change to app code, descriptors, mobile code or the gate scripts" — five of the eight named rules and candidate gates (a), (b) and (c) are dropped, while RR-0386 parks only "landing gates A and B", so nothing pasted authorizes dropping (c) — obtain the operator word for the three-row list and for deferring (c), or carry (c) to a named owner row on this card.
+
+DEFER severity=MED — fe.54 "An unhandled state is a FAIL, not a blank screen" (plan quote of 136:193) — Implementation Plan §3 T1 "The known break at mobile/src/lib/maxbldHelp.ts:19 (RULE-CHECKS.md:102: a failed Help open is only logged) is code and is not caught" — the lock tests declarations only, so the no-check list shrinks for a rule whose known break survives — mark the Spec 135 cell declaration-only, or add a report-only arm on the maxbldHelp catch so criterion #3's shrink is honest.
+
+DEFER severity=MED — Implementation Notes "the fe.01 / fe.13 dated note is owed in stage 2 for the operator to confirm" — Implementation Plan §6 "Generators: generate-surface-handbook.mjs --write, then --check; rule-lists.mjs page --write, then --check" — commit 1 regenerates Spec 136 without the owed fe.01 / fe.13 dated note, so the recorded timing conflict is carried into the new handbook silently — write the two dated notes in commit 1, or list them as owed with an owner row.
+
+DEFER severity=LOW — task-367 acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — Implementation Plan §3 T1 "a temporary line in (A) pushes the (B) copy into the scanned list ... No file on disk changes, so no generator hook can trip" — for T1 and T2 the red is a test injecting its own input, so red.out never shows the gate firing on a real violating file on the tree — plant one temporary descriptor or file per gate, capture the refusal, revert, and keep that output in red.out.
+
+MET — RR-0392 "no other infrastructure beyond this" — Implementation Plan §1 — "Out: Any new tool, hook or card", and commit 0 opens no card.
+MET — RR-0386 "Branch wf1/inc1b-gates (a59c93ac4) and its worktree stay untouched" — Implementation Plan §0.6, §1 — the parked branch is named and not read, reused, landed or edited.
+MET — RR-0385 (tests are the focus, two rounds) — Implementation Plan §6 — "Two rounds at most (RR-0385 item 3)" and the deliverable is three test files with no app-code change.
+MET — RR-0412 "both 442 and 367 should be running once this push lands" — Implementation Plan §0 head — "the same as origin/wf1/mb-rulings", the head equals the pushed tip.
+MET — task-367 Files line — Implementation Plan §5 Files — the listed files match the card's Files line exactly, including handbook-rule-map, register-locks-resolve and the two generators' outputs.
+MET — RR-0388 "Let's wait for the McFixReborn until the new tests are in place" — Implementation Plan §7 — McFixReborn is not started; only its interaction with T3's stale entry is described.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: m.0
+
+---
+⏱  58265ms (58.3s)
+📊 Tokens — total: 48969, input: 36592, output: 12377, reasoning: 11057

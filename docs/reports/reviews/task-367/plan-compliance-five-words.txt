@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.082Z file_sha256=a848e6a015216db345884fe702661f9202741361dc2b72491cb1c29d4293c8f4 prompt_sha256=cf6c30a834f6da0801107ed9477c191f0e3f5d370a6951a22987728b9be250a4
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card acceptance #1 "The gate list is confirmed by the operator before any gate is built" — plan §11 "you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — the three-row list is still an open question with no pasted operator words confirming it, yet commit 1 builds all three — get OQ2 answered in writing on the card before the lane opens commit 1.
+
+BUG severity=HIGH — card "Waits on: task-365 grounded" — NONE — the plan never shows task-365 grounded; it substitutes docs/reports/reviews/task-440/RULE-CHECKS.md:23 "counts 57 rules: 29 enforced, 8 partly, 20 none", so the row choice rests on a source the card did not name — record the task-365 grounding on the card or leave the lane gated on it.
+
+BUG severity=HIGH — card acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — plan §6 "Spec 135 and 136 are untouched, and acceptance #3 stays open" — the plan ships a branch that leaves a card acceptance criterion open — make OQ1 = y a precondition of the lane starting, not an if/else inside commit 1.
+
+BUG severity=HIGH — card "one gate per rule that has no mechanical check and that 1·B code touches" — plan §2 "Three tests, the size of 441 and 442." — its own table marks fe.45 and fe.47 as 1·B code with no mechanical check and defers both, on the authority of task-434:23, which is not pasted — name the ruling that permits the smaller batch or take fe.45 and fe.47 in this lane.
+
+DEFER severity=MED — card acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — plan §4 "fe.51: 2 tab pushes, owned by MF-49/MF-50 and MF-51/MF-52 (126:82)." — the fe.51 gate is green only because its own two live hits are declared exceptions in the same commit, so green on a clean tree is not demonstrated — record the two hits as open until MF-49 and MF-51 land, and show the list red when one entry is struck.
+
+DEFER severity=MED — card acceptance #2 "green on the clean tree" — plan §8 "Orchestrator: the pre-push list (.husky/pre-push-checks.sh) passes, including handbook-rule-map, register-locks-resolve and the three locks. Lanes run no full suite." — the green half of #2 is delegated to a later orchestrator run, so the work commit carries red.out only — have the lane run the three tests once after removing the plant lines and save green.out beside red.out.
+
+DEFER severity=MED — RR-0388 "McFixReborn waits until the new tests are in place" — plan §7 "McFixReborn: its group file list was not found (UNVERIFIED). A fix to _layout.tsx:48 or tracked.tsx:99 makes T3's entry stale." — the fixer may delete a T3 exception entry in its own commit with no gate on the result, silently loosening the fe.51 lock — require the entry removal to carry a push-suite run and name the fixer's file set.
+
+DEFER severity=NIT — glossary "OWED": "Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — plan §8 "grep -c 'Status: OWED' docs/specs/02-web-admin/136_mcfrontend_handbook.md prints 19" — the plan carries a second sense of OWED, the Spec 135 register status, that the pasted glossary does not define — add one line naming the two senses so a reader does not conflate the handbook row status with #44 (h).
+
+MET — RR-0386 — plan §1 "Out: - wf1/inc1b-gates." — the parked branch and its worktree are not read, reused, landed or edited.
+MET — RR-0392 — plan §1 "Any new tool, hook or card." — no new infrastructure and no card is opened.
+MET — glossary "lock / lock-db / check / hook" — plan §3 "First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)`" — each new lock names its rule id in the test.
+MET — glossary "five words" OBSERVABLE — plan §3 "a printed scanned count (the 441 form)" — the tests report what they scanned.
+MET — glossary "five words" SCALABLE — plan §3 "A stale entry fails, and the list only shrinks." — exception lists cannot grow silently.
+MET — RR-0412 — plan §0 "Head read: wf2/board at b32ea9b4c" — the lane runs against the pushed baseline.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 4
+Rules met: none
+
+---
+⏱  54177ms (54.2s)
+📊 Tokens — total: 25569, input: 13764, output: 11805, reasoning: 10637

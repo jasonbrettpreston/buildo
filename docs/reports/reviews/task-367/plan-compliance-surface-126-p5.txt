@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.047Z file_sha256=b951d3aa5970703df82dadd77de19176e3b9379b0f558c4351b8c1138c2925dd prompt_sha256=f1674bcca6a6e6af5e04c591df6f42da6277dbb2b1cd47b5c18255297ed9e327
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance #1 "#1 The gate list is confirmed by the operator before any gate is built" — PLAN-367-v1 §11 "OQ2. The card's criterion #1 says you confirm the gate list before anything is built. For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" — option (b), and §8's "reads as the three-row test list", build the gates with no operator confirmation of the list — delete (b) and require the operator's confirmation of the exact three rows recorded before commit 1
+
+BUG severity=HIGH — Task Description "Waits on: task-365 grounded; the operator confirms the gate list before the build" — PLAN-367-v1 §0 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none" — the row set is derived from task-440 and the plan nowhere records task-365 grounded, so the card's first wait is unshown — record the task-365 grounding output, or an operator ruling that the task-440 table supersedes it, before lock
+
+BUG severity=HIGH — Acceptance #2 "#2 Each gate is shown red on a planted defect and green on the clean tree" — PLAN-367-v1 §3 T1 "**Plant:** a temporary line in (A) pushes the (B) copy into the scanned list." — the red is produced by editing the test's own assertion, not by a defect reaching the gate through its descriptor/file load path, and T3 is red only on today's two live pushes — plant the defect through the scanned input path (descriptor or file the finder reads) and show assertion (A) red with the test body untouched
+
+DEFER severity=MED — Acceptance #3 "#3 The handbook no-check lists shrink by the rules gated, by their generators" — PLAN-367-v1 §6 "**If OQ1 = n:** ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — the plan ships a branch that knowingly leaves a card criterion open — make commit 1 conditional on OQ1 = y in writing, or have the operator re-rule the criterion before lock
+
+DEFER severity=MED — RR-0384 "Task-430 scope approved: stop the handbook clipping, lines reflect their dated notes, add the 13 lines (item 9 a pointer)" — PLAN-367-v1 §6 "Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-22 (RR-0384), lock lands with the MF-98 work commit." — RR-0384 approves task-430's 13 lines and flips no row, so the RULED cell cites a ruling that does not carry the flip — cite the operator ruling that answers OQ1 in the dated note
+
+DEFER severity=MED — Spec 126 §14 "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — PLAN-367-v1 §8 item 5 "git diff --stat <launch>..HEAD -- mobile src/app src/lib src/components 'scripts/surfaces/parcel_product' 'scripts/surfaces/platform_shared'" — the guard omits estate_other and any other descriptor directory, so a descriptor edit would pass the acceptance check — guard on `scripts/**/*.descriptor.json` or `scripts/surfaces` as a whole
+
+DEFER severity=LOW — Spec 126 §14 "Only a declared **id-translation seam** exists (`lead_parcels.parcel_id` = `parcels.id` = `parcel_pk`" — PLAN-367-v1 §3 T2 "(1) a string, template text or identifier containing `lead_parcels`;" — the finder reds the clause-declared seam identifier itself — exempt the declared seam or state in the test header that no surface code may carry it
+
+DEFER severity=LOW — RR-0406 "McFixReborn label on the tasks that process covers" — Task block "labels: McFix, McFix Final" — the plan never adds or hands off the McFixReborn label although RR-0406 names task-367 — add the label step to the orchestrator action or record why it is out of lane scope
+
+MET — RR-0386 — PLAN-367-v1 §0 "This is a clean start (RR-0386)" plus §1 Out "wf1/inc1b-gates"
+MET — RR-0392 — PLAN-367-v1 §1 Out "Any new tool, hook or card"
+MET — RR-0385 — PLAN-367-v1 §6 "Two rounds at most (RR-0385 item 3)"
+MET — RR-0412 — PLAN-367-v1 §0 "Head read: wf2/board at b32ea9b4c ... the same as origin/wf1/mb-rulings"
+MET — RR-0388 — PLAN-367-v1 §7 "McFixReborn: ... A fix to _layout.tsx:48 or tracked.tsx:99 makes T3's entry stale"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+Rules met: none
+
+---
+⏱  81977ms (82.0s)
+📊 Tokens — total: 31104, input: 13351, output: 17753, reasoning: 16582

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.115Z file_sha256=e7d593f6b4f6dec447a508e3bd79ca10e91b525bbd4277d91382912ed6deb9f6 prompt_sha256=3d269d052adfeeb99b3eed568dab749b9107047ec47c7d38a90ce751d7f194f6
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card Description "one gate per rule that has no mechanical check and that 1·B code touches" — PLAN-367-v1 §2 row table "| 2 | fe.45 | No: ... | Yes | 442 takes fe.05 | Later batch of 367 |" and "| 4 | fe.47 | ... | Yes | No | Later batch |" — fe.45 and fe.47 are marked as touching 1·B code and having no mechanical check yet are deferred to "Later batch" with no pasted operator ruling naming that deferral — add both gates to this plan or obtain and record an operator ruling that names the deferral of fe.45 and fe.47.
+BUG severity=HIGH — Acceptance criteria #1 "The gate list is confirmed by the operator before any gate is built" — PLAN-367-v1 §11 "For this clean start: (a) you confirm the three rows fe.54, fe.49 and fe.51 yourself, or (b) the plan grounder validates them under RR-0385 item 4?" plus §8 "reads as the three-row test list" — option (b) and the unilateral rereading let Commit 1 build the three gates without the operator's confirmation — make the operator's confirmation of the three rows a recorded precondition of Commit 1 and delete option (b).
+BUG severity=MED — Acceptance criteria #3 "The handbook no-check lists shrink by the rules gated, by their generators" — PLAN-367-v1 §6 "If OQ1 = n: commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING ... and acceptance #3 stays open." — the plan ships a live branch under which an acceptance criterion is unmet — make OQ1 blocking before Commit 1 and drop the OQ1 = n variant.
+BUG severity=MED — Acceptance criteria #2 "Each gate is shown red on a planted defect and green on the clean tree" — PLAN-367-v1 §3 T1 "Plant: a temporary line in (A) pushes the (B) copy into the scanned list. ... No file on disk changes" — the T1 and T2 red comes from a line inside the test's own assertion feeding a virtual file, not from a defect planted in the scanned material, so the saved red.out rests on a test state that never exists in the committed tree — plant the defective descriptor and file on a scratch copy of the tree, run the hooks, save that output, then revert.
+BUG severity=MED — task card Description "Scope now: from the task-365 coverage table and the grounded findings" — PLAN-367-v1 §0 item 1 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules" — the plan sources its rows from task-440 and never shows task-365 grounded, nor a pasted ruling that moved the source — record the task-365 grounding or the ruling that replaces it before Commit 1.
+DEFER severity=LOW — Implementation Notes 2026-11-20 "test the new gates as part of the Task 367 - small test and show me it works and what it catches" — PLAN-367-v1 §6 "Output review: the lens set on the Files line, then a separate grounder." — no operator-facing demonstration of what the gates catch is planned — note in the plan that RR-0385 validation without the operator supersedes the demo, or attach the red.out excerpt to the closing report.
+MET — RR-0392 "no new infrastructure" — PLAN-367-v1 §1 Out "Any new tool, hook or card" — plan opens no card and changes no gate script.
+MET — RR-0386 "gates parked, handbook tests start fresh" — PLAN-367-v1 §1 Out "wf1/inc1b-gates" — the parked branch is not read, reused, landed or edited.
+MET — task card Files line — PLAN-367-v1 §5 Files list — identical to the card's Files line, no file outside the card is touched.
+MET — RR-0412 "both 442 and 367 should be running once this push lands" — PLAN-367-v1 §7 "442's MF-97 folds first" — 367 runs and the single shared queue line is sequenced.
+MET — "One plan only" — PLAN-367-v1 §0 item 6 "The old plan (gates A, B, C on wf1/inc1b-gates) is parked" — one plan is executed.
+MET — RR-0385 item 6 "the handbook rules are key" — PLAN-367-v1 §3 T1, T2, T3 — the three gates are handbook rules fe.54, fe.49, fe.51 at their reserved lock paths.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 5
+Rules met: none
+
+---
+⏱  41633ms (41.6s)
+📊 Tokens — total: 21812, input: 12974, output: 8838, reasoning: 7780

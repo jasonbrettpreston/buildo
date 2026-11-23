@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T17:36:40.117Z file_sha256=c93b80393d363685ae60fa4329f88579bf41840f20962795ebec508c41cc4480 prompt_sha256=9b25e1ed19a35717cf8111fbed7d1ec0ccb709c7c64db24aa82a6652e65cf6a3
+🔍 Lens review of docs/reports/reviews/task-367/in-plan-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance criteria #1 "The gate list is confirmed by the operator before any gate is built" — PLAN-367-v1 §8 "**Old acceptance criteria under the clean start (meaning only, not changed):** - #1 "gate list confirmed by the operator": reads as the three-row test list." plus §6 "Commit 1 (work): - The three tests" — the plan restates criterion #1 to mean the plan's own three-row list and builds commit 1 while OQ2 is unanswered, offering the grounder (OQ2 option b) as a stand-in for the operator's word — hold commit 1 until the operator answers OQ2 in his own words and paste those words into the task notes, remove the grounder-as-confirmer option
+BUG severity=HIGH — Acceptance criteria #3 "The handbook no-check lists shrink by the rules gated, by their generators" — PLAN-367-v1 §6 "**If OQ1 = n:** commit 1 instead adds 'FE-49','FE-51','FE-54' to FLIP_PENDING ... Spec 135 and 136 are untouched, and acceptance #3 stays open." — the plan carries a landing path in which the generators never shrink the no-check list and criterion #3 is knowingly left open, with no operator waiver pasted for it — make OQ1 = y a precondition of commit 1 so no path lands with #3 open, or park the flip in a separate card
+DEFER severity=MED — Acceptance criteria #2 "Each gate is shown red on a planted defect and green on the clean tree" — PLAN-367-v1 §3 T1 "**Plant:** a temporary line in (A) pushes the (B) copy into the scanned list ... No file on disk changes, so no generator hook can trip." and T2 "**Plant:** a temporary line in (A) adds a virtual file with the useLeadFeed import." — T1 and T2 red comes from an in-test synthetic injection, so the red evidence never shows the gate rejecting a defective file that exists on the tree, only a defective object in memory — plant the defect in a real tracked copy under a fixture path, run red, delete, and save that output alongside the in-memory cases
+DEFER severity=MED — Task description "Waits on: task-365 grounded" — PLAN-367-v1 §0 "docs/reports/reviews/task-440/RULE-CHECKS.md:23 counts 57 rules: 29 enforced, 8 partly, 20 none." — the plan substitutes task-440's table and never records task-365 as grounded, so a wait condition named in the card is not shown satisfied before the build — record the task-365 grounding, or the orchestrator's word that task-440's table supersedes it, in the task notes before commit 1
+DEFER severity=LOW — RR-0386 "Task-367: gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — PLAN-367-v1 §0 "The old plan (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and not used here." — the plan attributes parking of gate C to a ruling whose pasted words name only A and B — cite RR-0385 item 6 ("the handbook rules are key") as the ground for dropping candidate (c), or put the question to the operator
+MET — RR-0386 — PLAN-367-v1 §0 "This plan does not read, reuse, land or edit that branch." — wf1/inc1b-gates and its worktree stay untouched, the branch appears only in the Out list
+MET — RR-0392 — PLAN-367-v1 §2 "no new infrastructure. This plan opens no card." — no tool, hook or new task card is added, only the task's own records
+MET — card Files line — PLAN-367-v1 §5 "Files: src/tests/surfaces/failure-state-declared.logic.test.ts, ... prereg-MF-98-1.json" — the plan's Files line reproduces the card's list exactly
+MET — RR-0385 item 6 "My only direction is the task 367 the handbook rules are key." — PLAN-367-v1 §2 row choice is restricted to Spec 136 fe rows whose code touches 1·B, fe.54, fe.49, fe.51
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — PLAN-367-v1 §7 "442's MF-97 folds first." with head read b32ea9b4c recorded in §0
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+Rules met: none
+
+---
+⏱  63666ms (63.7s)
+📊 Tokens — total: 30997, input: 17532, output: 13465, reasoning: 12420
