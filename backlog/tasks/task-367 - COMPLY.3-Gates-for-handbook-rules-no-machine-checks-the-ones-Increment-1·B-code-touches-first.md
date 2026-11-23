@@ -3,10 +3,11 @@ id: TASK-367
 title: >-
   COMPLY.3 Gates for handbook rules no machine checks, the ones Increment 1·B
   code touches first
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:26:00Z'
+updated_date: '2026-11-23T18:28:00Z'
 labels:
   - McFix
   - McFix Final
@@ -20,6 +21,34 @@ references:
   - docs/reports/reviews/task-367/seat-integration-1.md
   - docs/reports/reviews/task-367/seat-reality-check-1.md
   - docs/reports/reviews/task-367/seat-regression-1.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - >-
+    compliance:surface-126
+    docs/specs/02-web-admin/126_maxbld_surface_standard.md
+  - >-
+    compliance:surface-127
+    docs/specs/02-web-admin/127_surface_conversion_procedure.md
+  - >-
+    compliance:surface-128
+    docs/specs/02-web-admin/128_surface_standard_policy.md
+  - >-
+    compliance:surface-135
+    docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:bylaw-133 docs/specs/01-pipeline/133_bylaw_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 67012
 ---
@@ -483,4 +512,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0386 · task-367 · Backlog; o
 Dated note 2026-11-23 (M-246, prior text kept in git history at b32ea9b4c; RR-0386, RR-0412 · task-367 · Backlog; operator, verbatim: "So both 442 and 367 should be running once this push lands."): the Implementation Plan section now holds PLAN-367-v1, the clean start for the handbook rule tests written by the Opus plan seat; the earlier gates plan (gates A, B, C on wf1/inc1b-gates) is parked by RR-0386 and its text stays in history. The plan is not reviewed or grounded yet.
 
 Dated note 2026-11-23 (M-246, prior text kept; RR-0386, RR-0412 · task-367 · Backlog; operator, verbatim: "So both 442 and 367 should be running once this push lands."): status RUNNING to LATER and the parked lane @lane-BL-GATES taken off the card by the orchestrator, because the plan review tool and the launch script take only a waiting task (rule-lists.mjs plan-prep refusal "only a waiting task is prepared"; scripts/analysis/backlog-lane.mjs:66) and the handbook tests start clean (RR-0386). The parked branch wf1/inc1b-gates and its records are untouched. The card returns to RUNNING when lane BL-HB367 is launched by the launch script. Orchestrator decision under the six criteria, logged for the operator.
+
+2026-11-23 taken on the board at lane launch (lane BL-HB367, worktree /Users/brettpreston_macmini/Buildo-wt-hb367, branch wf1/inc1b-hb367), RR-0240
 <!-- SECTION:NOTES:END -->
