@@ -27,7 +27,10 @@ const SENTINEL = 'FE-01';
 // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
 // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
 // commit removes the id and the list shrinks back to empty.
-const FLIP_PENDING: readonly string[] = ['FE-39'];
+// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joins it. Its lock src/tests/surfaces/nav-tab-switch.logic.test.ts lands in the MF-98 work
+// commit while the row stays OWED: RR-0413 ("yes to both") does not cover RULED with the lock's two named, owned tab-push exceptions, which waits
+// for the operator's own word (plan PLAN-367-v1 section 11, Q-D; the FE-36 precedent). The flip commit removes the id (the MF-37 pattern above).
+const FLIP_PENDING: readonly string[] = ['FE-39', 'FE-51'];
 
 type Row = { status: string; locks: string[] };
 

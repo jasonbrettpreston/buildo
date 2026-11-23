@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:32:00Z'
+updated_date: '2026-11-23T18:38:00Z'
 labels:
   - McFix
   - McFix Final
@@ -516,4 +516,8 @@ Dated note 2026-11-23 (M-246, prior text kept; RR-0386, RR-0412 · task-367 · B
 2026-11-23 taken on the board at lane launch (lane BL-HB367, worktree /Users/brettpreston_macmini/Buildo-wt-hb367, branch wf1/inc1b-hb367), RR-0240
 
 2026-11-23 lane BL-HB367 commit 0 (plan section 6, alone and first): the MF-98 row in Phase 2 of .cursor/MCFRONTEND-QUEUE.md (RUNNING; FE rows owned: FE-49, FE-54; Next free id MF-99 by dated note, MF-97 held by BL-FEDB442), prereg-MF-98-1.json (round 203, rules FE-09, FE-10, FE-16, FE-36; totals copied from prereg-MF-96-1.json, the newest) and docs/reports/panels/MF-98.json. Q-D is not answered: the build follows the plan NOT-YES branch (fe.51 lock lands, row stays OWED on FLIP_PENDING).
+
+2026-11-23 lane BL-HB367 red attempt: the three tests staged with T1's and T2's plant lines and T3's empty allow-list, plus this task file; self-skeptical checklist (9 items, all PASS) walked against the diff first (lane CHECKLIST.md); typecheck clean, lint 0 errors beforehand. Output saved to docs/reports/reviews/task-367/red.out.
+
+2026-11-23 lane BL-HB367 commit 1 (work): the three locks land with the plant lines removed and the two owned nav-tab-switch entries in; red proven first at the designed (A) assertions (docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)). Q-D unanswered, NOT-YES branch: FE-49 and FE-54 read RULED (RR-0413, "yes to both") with dated notes; FE-51 stays OWED and joins FLIP_PENDING in register-locks-resolve.infra.test.ts; handbook-rule-map.logic.test.ts reads FLIP_PENDING from that file's text (no second list). Spec 136, the rule map and the rule-lists page regenerated (generate-surface-handbook.mjs --write/--check, rule-lists.mjs page --write/--check, both exit 0); Spec 136 OWED count 20. MF-98 row stays RUNNING, next: the closing commit.
 <!-- SECTION:NOTES:END -->
