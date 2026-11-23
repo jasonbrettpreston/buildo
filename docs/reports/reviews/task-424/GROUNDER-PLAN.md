@@ -106,4 +106,6 @@ rg#6 CONFIRMED docs/reports/reviews/task-424/context-r1.md:47 "and the station m
 rg#7 CONFIRMED docs/reports/reviews/task-424/context-r1.md:46 "The hook writes to the terminal." LOW: True for the planned form; the folded hook step() runs the command and prints nothing extra, so the hook output is unchanged.
 rg#8 CONFIRMED .husky/pre-push:13 "scoped to each commit's own staged files — the FULL Vitest suite runs HERE" NIT: True: the header says the suite runs here; the one new comment line points to the list, and no test reads those comments.
 
-Counts: 85 ids ruled (62 lens, 23 seat); 64 CONFIRMED (0 CRITICAL, 7 HIGH, 31 MED, 22 LOW, 4 NIT), 21 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded in FOLD-424.json (48 pairs); 4 NIT and 1 LOW are piled with reasons, 59 are folded.
+Counts: 85 ids ruled (62 lens, 23 seat); 64 CONFIRMED (0 CRITICAL, 7 HIGH, 31 MED, 22 LOW, 4 NIT), 21 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded in FOLD-424.json (48 pairs). 60 outcomes are folded and 4 are piled (3 NIT and 1 LOW).
+
+Plan: task-424 sha256:fe06800270f3
