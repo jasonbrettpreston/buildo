@@ -3,10 +3,11 @@ id: TASK-431
 title: >-
   INPUTS.3 The review table sends product tasks their handbook plus the relevant
   engineering sections; infrastructure tasks unchanged
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-TBL431'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-23T00:57:00Z'
+updated_date: '2026-11-23T00:59:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,6 +20,20 @@ references:
   - docs/reports/reviews/task-431/seat-integration-1.md
   - docs/reports/reviews/task-431/seat-reality-check-1.md
   - docs/reports/reviews/task-431/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 131012
 ---
@@ -247,4 +262,6 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0383 · task-431 · Backlog; o
 Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, verbatim: "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend"): re-scoped. The plan on this card (PLAN-431-v2) and its round 1 records are superseded; a new plan follows the engineering seat task. The A, B or C question of the plan grounder is closed by this ruling. The four surface specs are dropped by a separate card after task-430.
 
 2026-11-22 (orchestrator, from the task-438 plan ruling by Cairn-Ground-P438, docs/reports/reviews/task-438/QUESTIONS-RULED.md; word for word): Task-431 carries the de-dup line moved out of task-438 (438 plan ruling, RR-0380 and RR-0385 item 7): add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line; in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));` so a file's text goes once when its whole list and a sections list both resolve; rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent'), with one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed); change the line of PLAN-431-v3 that says it relies on 438's de-dup; re-prep it after 438 lands.
+
+2026-11-23 taken on the board at lane launch (lane BL-TBL431, worktree /Users/brettpreston_macmini/Buildo-wt-tbl431, branch wf1/inc1b-tbl431), RR-0240
 <!-- SECTION:NOTES:END -->
