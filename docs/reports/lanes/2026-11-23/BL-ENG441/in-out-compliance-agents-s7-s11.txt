@@ -1,0 +1,529 @@
+LIST agents-s7-s11 sha256:168d43f472ccf9bb4d29931159f8b2d51386b5155c2e040080aa6eb2e9469143 material sha256:5f2f21de3a31ff54bb26c45a6c7218f02d02faad49bc88fb69f67219efd4a086 part 1 of 1 chunk 1 of 1
+RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md","src/tests/no-blocking-dialogs.logic.test.ts","src/tests/non-null-assertion-comment.logic.test.ts","src/tests/ui-component-isolation.logic.test.ts"]
+
+## 7. Rules & economics
+
+1. **Two altitudes, same roles — both mandatory per WF (§6.4).** *Plan review* points agents at `.cursor/active_task.md` + the live tree/DB (grounders query reality; CLIs read the plan text) — hunts completeness/consistency/factual-correctness BEFORE code. *Output review* points them at the diff + re-run values. The two are COMPLEMENTARY: the reality-grounders (RC/SF/GT/Integration) earn their keep at BOTH — RC caught the $105.24M gut-line and the $159.9M T3 tail at PLAN altitude (`review_followups.md` 25/2510). WF3 runs a LEAN plan roster (premise-verifiers only); it is no longer output-only.
+2. **Ground-truth gates Compliance** (§5.1/§5.2): validate the spec against reality before checking code against the spec.
+3. **Round-2 always** for money/pipeline-critical work (§5.3): panel → DeepSeek+Integration adjudicate the findings → fold survivors, file rejections with reasons.
+4. **Cost-tiering — DeepSeek as multi-pass breadth at BOTH altitudes.** DeepSeek is ~free and a distinct lineage. NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt: (1) `spec` = the Compliance (A10) substrate, (2) security, (3) idempotency/dedup, (4) error-paths/degrade-safety. Run the set at plan AND output for WF1/WF2; at output for WF3. Every DeepSeek finding is adjudicated by a tool-having grounder before folding (§9 CLI blind spots — the 25E cursor-leak HIGH was a false premise refuted by `streamQuery` try/finally). Reserve the pricier Claude Task agents for the tool-needing roles (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't).
+   Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
+   Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL-SIMPLE423, Increment 1·B; operator, verbatim, 2026-11-21, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, RR-0363 at :1718: "We just need the rules for deepseek." and the objective at :1711: "the objective is an effective compliance review on the plan and the output.  It isn't 17"): the joined run is an accepted form of the compliance lens output set and is NOT the default: the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`), one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined), and the close check and the plan gate accept it; a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`). The default stays one compliance run per rule list, as the notes above say, because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"); a list is never trimmed in either form (the "never trimmed" sentence above stays true), and nothing orders the join. Plan findings are ruled once, at the plan: when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line, the lane close requires no `plan-*.txt` in the lane folder and reads only the `out-*.txt` findings and their `Ruled:` lines; absent that file the older rule stands. Rule 6 is not changed here.
+   Dated note 2026-11-22 (M-246, prior text kept; task-438 FINAL.3, McFix Final; RR-0385 item 2, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." and "We need a new name for an agent called engineering."): a review seat named `engineering`, separate from compliance, at plan and at output. A rule list whose file is the engineering standards (`docs/specs/00_engineering_standards.md`, today `eng-all`; `seatOf` in `scripts/analysis/rule-lists.mjs`) is reviewed by `.claude/review-templates/lens-engineering.md`, and every other list by `lens-compliance.md`, which is not edited. The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>` (and `plan-compliance-<id>` or `plan-engineering-<id>`), by the seat of the list; the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage. The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias. The close applies the split when the range base holds `lens-engineering.md`: a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name.
+   Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1913 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" and :1865 "drop the full engineering when arts can be sent"): the engineering seat of the note above is sent the sections of the engineering standards that fit the task. Three section lists join `eng-all` in `scripts/analysis/rule-lists.json`: `eng-front` (section 1), `eng-back` (sections 3 and 9) and `eng-shared` (sections 2, 4 to 8 and 10 to 14: 8, 10 and 12 by RR-0380 Q2, 11 and 14 placed here by the plan review). The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it. Each of them is an engineering list (`seatOf`), so "today `eng-all`" in the note above now reads "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`", and the per-list rule asks for one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`. When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped (`resolveTask`), so each rule is sent once and no rule that a matched row asked for is lost.
+5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+   Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+   Dated note 2026-11-20 (M-246, prior text kept; task-399 fix round 1, grounder out-code-review#1 and g399#3; decisions RR-0333 and RR-0338): the note above is corrected in three places. (1) `task:task-N` passes only when the card's text holds the finding id as a whole token; the earlier alternative (the cited file path in the card's text) is removed because any card naming the file closed the deferral, and the closing task itself is refused as the card. (2) CRITICAL, HIGH and MED close by fixed or ruling, and by task only for a DEFER finding (rule 6: DEFER goes to review_followups.md with reasons); the sentence above left the DEFER exception out. (3) A fix round does not file `out-<lens>-rN.txt`: the close requires every in- input and out- output to equal the diff of the whole range at HEAD, so after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names (re-running only the changed chunks is task-414). The Final Summary block is looked for in the Final Summary section of the task, not the whole file.
+   Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2, the second review round (not the grounder's 5.3 round-2 pass), resolves CRITICAL and HIGH only; two rounds at most. Two is the most: when a second round is run stays as RR-0363 and RR-0369 left it. This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364, whose medium part RR-0369 replaced). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. The grounder's verdict line for that id gives the reason and names the round (the round line on the card cannot), and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792). After round 2 the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED; plan-prep supports one round, and a second plan round line is entered by hand.
+7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
+8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+   Dated note 2026-11-06 (MB-85, M-246, prior text kept; E2, revised form): the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".
+   Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the building lane's model is carried by that line and the brief, the plan seat's by this note alone.
+10. **Claims and briefs are checked before they leave the orchestrator.** (a) No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67). (b) A DeepSeek brief names only checks runnable through `bash_allow` (§C.4); otherwise provider `claude` with the reason logged (§B). Recorded as Spec 124a R-KO (`2026-10-30-batch-aj#CHAT-211.G10`).
+    Dated note 2026-11-06 (MB-85, M-246, prior text kept; C2 and C3): (C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
+    Dated note 2026-11-19 (M-246, prior text kept; RR-0232 (c), RR-0235; task-308 R8c · lane BL-R8c · stage 8; operator, verbatim, RR-0232 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:925): "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)."; RR-0235 (:931): "We need them linked with all the relevant data - beyond just the data references"): the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo. The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo). The 2026-11-19 reports of BL-R6, BL-R7a and BL-R7b are copied as the first set.
+
+## 11. Grounded Verification Protocol — execute claims, validate folds (ratified by operator 2026-08-13)
+
+> **Calibration scope:** this section is EVIDENCE-BASED FOR BACKEND/PIPELINE (DB/SQL/chain) work — the Phase A C1–C7 ledger below is its provenance. The general form that transfers to every domain: **execute what's executable; ground what's groundable; judge the rest.** See §11.5 for the frontend nuance (operator-ruled: this may not be the case for front-end work — do not port the roster mechanics there uncritically).
+
+### 11.1 No unexecuted executable claim
+A plan or fold may not contain a claim that COULD be executed but wasn't: a data claim carries its query **run** (host + `current_database()` printed — lessons `:83`); a SQL shape is **parse-tested** against a real DB before any reviewer approves it; a census grep runs at the **full scope its conclusion covers**; a line citation is **read**, not remembered. "Approved on paper" is not a verification state.
+*Incidents:* C2's "397 permits" premise — one missing column (`permit_type`) survived four review rounds (2026-08-12) · C7's `$16` CASE — THREE review passes approved SQL that Postgres rejects (`inconsistent types deduced`); Case C2's red caught it by executing (2026-08-13) · C7's Q1 census — the plan's recorded query could not reproduce the plan's own fourth-writer finding (fold-validation #1).
+
+### 11.2 Fold-validation is a STEP, not a courtesy
+After folding any review round, and BEFORE implementation: **one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**. Folds are read as a SET — the worst defects are collisions between corrections adopted separately (`tasks/lessons.md:117`). Sub-rules with incident bodies: **a fold must be exercised in every execution mode the file has** (the C4 `!pool` guard redded plain-Husky mode — cross-reading could not catch it, only running could) · **an expanded edit set kills every restated scope claim** ("the three SET terms. Nothing else." survived one fold past its own falsification).
+*Yield:* C4 fold-validation — 2 blocking (four-chain watchdog scope; the dropped `PIPELINE_CHAIN` harness line). C7 fold-validation — 10 defects incl. an unwritten fourth SQL expression and a falsified census query. Orchestrator folds averaged ~5 defects each across the session; the validation pass caught every one at the cost of two agents.
+
+Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it: see the Spec 137 note of the same date; a fold checked at a later round leaves no required record). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The wording "the agent stays in the roster and may be asked for" is approved by RR-0360 (:1692). CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
+
+### 11.3 Red-first mechanics
+Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
+
+### 11.4 Tests live in the plan; the plan panel reviews them
+The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan and reviewed at PLAN altitude, collapsing the separate test-panel round. *Incident:* C7 Case B's hash-guard vacuity was caught by three blind reviewers BEFORE the test file existed; the authored test then enforced the corrected design.
+
+### 11.5 Roster consequences (Backend/Pipeline) + the frontend nuance
+* **Lean grounder-first PLAN panel (3–4 seats):** Integration (main tree, live DB — the session's highest hit-rate seat: refuted C2's premise, found the live fourth writer, ruled the `--file` harness) · **Idempotency lens** (agent charter — owns replay/transaction/collision classes: F18, the backup-atomicity race, the stuck-interim-accretion collision) · **Regression Guardian, ALWAYS provisioned with shell+git** (fence archaeology: `f238b814`, the `c6bf9f1d` founding-intent ruling, Spec 41's fiction-from-birth, the inverted runSync-history claim) · + Reality-Check when derived values change (subject-matter trigger, §10.3).
+* **Cross-read Adversary is a NAMED role** (spawn: *"Hunt collisions between the plan's separately-folded decisions — pairwise, mechanically, with zero deference; walk every checklist line for staleness against the fold; verify the tests still cohere as a suite."*).
+* **CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators.** Their yield files to `review_followups.md`, never folds into a diff review. Evidence 2026-08-13: two CLI diff reviews produced ZERO diff findings; one produced a critical-sounding verdict phrase that did not reproduce and matched no line finding; DeepSeek re-raised the C1-refuted `PG_HOST` claim verbatim. Their pre-existing-defect inventories remain genuinely valuable (the close-stale safety-guard bundle) — that is their job now. Always grounder-adjudicated (§9).
+* **Lean OUTPUT panel: Guardian + one grounded reviewer.** The C7 five-seat output round produced exactly two novel catches, both reachable by that pair.
+* **§11.5-FE (operator nuance, 2026-08-13):** for Admin/Expo/frontend work, §11.1 applies to the domain's executable surface — typecheck, UI-regression suites (`*.ui.test.tsx`), render tests, a running app — but visual/UX/interaction-quality claims are NOT executable; reviewer judgment, the non-pipeline 3-reviewer panel, and the Spec 33/99 conventions carry the weight there. Fold-validation is recommended-lean (one validator) for multi-round frontend folds and mandatory only where a fold asserts executable facts. Do not demand queries of a design decision.
+
+### 11.6 Why this is the EFFICIENT shape, not just the safe one
+Grounding first means the plan panel argues about a true map instead of discovering the territory mid-round; tests-in-plan merges two panel rounds into one; fold-validation replaces "another full round" (historically low-yield — eight reviewers missed what one cross-read caught) with two targeted agents (which caught everything). C7 ran ~11 agent passes plan-to-ship under the old shape; this protocol's shape is ~7 for the same defect coverage. Reviewer METHOD diversity beats reviewer count.
+
+### 11.7 Validation panels for calculation answer keys (McProof; operator 2026-10-31)
+McProof is the validation standard for every Phase 3 increment (MB-77; `~/Buildo-scratch/mcbylaws/MB-77/MCPROOF.md`). Its rows are in Spec 69a, M-436 to M-447 and the dated note on M-358 (batch `2026-10-31-batch-an`); the two seat rules below live here because this spec governs seats and panels (operator, `CARD-mcproof-1-7` item 7).
+1. (MCPROOF-3, M-438) Independence. The author of an example never reviews its own example. The blind check withholds the answer, the working and all evidence. The calculation recheck does its own sums before it sees the key. A different seat or model family runs stage 3 from stage 4.
+2. (MCPROOF-13, M-447) Gemini tie-break and parking. Gemini runs when the blind value differs from the key or stage 4 says change; its answer is recorded in the blind stage; agreeing with DeepSeek sends the example back to stage 4 once; a three-way split goes to the operator; after `max_fix_rounds` the example is parked with an operator card. Scope: disagreements about worked-example ANSWERS only; keying of law and formula rows stays under M-17 and M-62 (operator adjudicates every disagreement), see `conflicts.md`. Gemini runs when the blind answer (stage 3) differs from the key or the Claude check (stage 4) recommends a change (card decision 3); two fix rounds, then the example is parked and goes to the operator (card decision 5). MCPROOF-13 covers worked-example answers only. M-17 and M-62 disagreements stay with the operator. (The clause "its answer is recorded ... goes to the operator" was drafted by lane R and confirmed by the operator at O-27, CARD-o27-foot18: "0-27 confirm all if in compliance with handbook, foot 18 keet it as pending"; handbook compliance checked in ~/Buildo-scratch/mcbylaws/MB-78/verify.md.)
+Dated note 2026-11-06 (MB-85, M-246, prior text kept; operator, `CARD-ticket-status.md`): MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.
+Dated note 2026-11-13 (M-246, prior text kept; operator Q4 b, verbatim: "Q4 b"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` Q4 and the ruling section, verbatim: "all recommendations accepted. proceed with the plan"; seat-4 finding F5, `~/Buildo-scratch/review-20261113/seat4-process.md`): item 2's Gemini tie-break is not run. McProof runs Claude and DeepSeek only, no Gemini (increments 5 and 6; Gemini was unavailable in increments 3 and 5). Every disagreement about a worked-example answer goes to the operator, so the three-way split of item 2 becomes a two-way split to the operator. The text above stands. Missing mandatory stages (MCPROOF stages 3-5, or the independent seat of item 1) are listed as named, accepted gaps in each increment's decision list D-0 (MCINC-3), never silently.
+
+### 11.8 The McIncrement recipe (MCINC; operator 2026-11-06)
+Every Phase 3 increment runs the same six steps, starting with increment 3 (card MCINC, `~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md`; operator "a) now, so increment 3 uses the recipe from day one, and (b) with DR-5 when the freeze lifts."). Its rows are in Spec 69a, M-488 to M-493 (batch `2026-11-06-batch-bb`); the dated note on the McBylaws queue increments table points every later increment here. Enforcement (a), now: the existing loop gate, prereg checker and door already refuse any move that no ruling names; the recipe moves those catches to step 2. Added check: none. The second-seat check on each increment's plan verifies the impact map exists and was measured on the tip. Enforcement (b) is OWED to card DR-5: the prereg names its impact-map file, and the prereg checker fails if a moved test, golden or version is missing from that file. It extends the checker that exists, with no new gate; it is infra work, so it waits for the freeze lift by name (operator rule, 2026-11-02).
+1. (MCINC-1, M-488) Scope and answer key (McProof first). The increment's targets and the 25-case answer key are hand-derived from the by-law text under McProof (§11.7, M-436..M-447). The operator walks the disputed items one at a time. Nothing is built before this.
+2. (MCINC-2, M-489) One impact map, measured on the current origin tip. Use a throwaway sandbox worktree with the work applied and the affected tests run. It lists every file, assertion, worked example, golden and oracle file that moves; every version and pin that moves; whether a Layer 2 night is needed; every disclosure the increment produces. Anything not measured is marked UNVERIFIED.
+Dated note 2026-11-13 (M-246, prior text kept; operator, verbatim: "all recommendations accepted. proceed with the plan"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K5; seat-4 finding F7): the impact-map form gains a "Map defects" heading. Every stop the map missed (step 3) is listed under it, and the increment's close note counts them. Text only; the map's other contents are unchanged.
+3. (MCINC-3, M-490) One decision list. Every ruling the map needs goes to the operator at once. For each: the rule quoted, compliant options only, a recommendation. The answers are recorded verbatim. A stop during the build that the map missed is a map defect: it is recorded and added to the map template.
+4. (MCINC-4, M-491) Build on the tip. Red tests first, then the code, through the real hooks. The full suite runs on the current origin tip before "ready" (existing memory rule). Never port a stale draft: re-cut it on the tip.
+5. (MCINC-5, M-492) At most one Layer 2 night per increment, from the standard checklist. The night uses the night-checklist-axis.v2 form: dry run, prereg, go, C1-C6, the night record.
+6. (MCINC-6, M-493) Close. The increment is green in the loop: every case passes or is a named, accepted finding. Every owed item has a card and a lock, and the disclosure lock is green (L3-DISC). One push per landing set.
+
+Dated note 2026-11-12 (M-246, prior text kept; card MCINC, "Amendment 2026-11-12: MCINC-7 and MCINC-8"): the recipe gains steps 7 and 8. Operator, verbatim: "1 and 2" and "the rules need to be written into the recipe and followed - not just memory". Their rows are in Spec 69a, M-514 and M-515 (batch `2026-11-12-batch-bf`). They apply to every lane and every DB job, not only Phase 3 increments. Why: on 2026-11-12 one DB job (MB-35) needed five night attempts, each a stop found live (a shell path bug, row-level security text, a composite-key retract, a JSON type, 22 retired settings rows), then a witness hard stop at commit; separately three numbers collided across lanes (MF-77, FE-38, migration 313). Enforcement: two scratch tools named in each step (no repo tool or code; infra freeze, operator rule 2026-11-02).
+7. (MCINC-7, M-514) Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.
+8. (MCINC-8, M-515) One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-4 above; McBylaws queue · lane INC6-RECORDS; operator 2026-11-06, "P3" (memory note ready-means-hooks-and-suite-on-tip, "Amended 2026-11-06 (operator P3: "P3")"); panel record `~/Buildo-scratch/plan-gen/data/rule-conflicts.md`, row 1): MCINC-4 reads "the current origin tip"; under the operator's P3 the base is the current mb-rul tip once that tip is suite-green and push-ready, and need not be on origin. The suite runs locally on your commits stacked on the latest suite-green tip, in a clean worktree, and the push is made from a clean worktree at the pushed commit (the pre-push suite tests the working tree). GitHub is not a substitute. Applies the spec; no new decision.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-7 above; McBylaws queue lanes row D · lane INC6-RECORDS; operator, verbatim: "y to all" (2026-11-16, DBJ-FIX (b)); record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:456): the test-stack guard checks the target database only; dev keeps the global match. (b) is the standing rule.
+
+### 11.9 Ticket header and closed reply status (TKT; operator 2026-11-06, MB-85)
+Operator, verbatim: "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well." Items 1 and 2 apply to every seat and lane agent, Claude and DeepSeek (Sonnet seats, lane agents, panel seats, lane reports). Items 3 and 4 apply to McProof (§11.7). Added check: none; no tool or code change.
+1. (TKT-1) Ticket header. The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` (queue Process 11); `Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number; when the header omits it the default is 2 (D6 B). Wider scope than the header is a new MB item, not a longer brief.
+   Dated note 2026-11-19 (M-246, prior text kept; task-1 BL.0 · McIncrement plan · lane BL-R4 · stage R4; operator, verbatim, RR-0205 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:843-844): "yes of course"; RR-0212 (:864-867): "we needd the loader and the three gates"): for a lane working a plan task the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`; `Rule:`, `Scope:`, `Done-condition:` (the task's acceptance criteria) and `max_fix_rounds:` come from the task and are generated by `scripts/analysis/backlog-brief.mjs`. A lane cut before the import may still carry `Ticket: MB-nn · lane X · stage N`. The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`, so the rule quoted with file:line (§7 rule 10 (a)) comes from the task's decisions and acceptance criteria, not from scratch. A code commit names its task by the trailer `Task: task-N` (Spec 137 §4 rule 3, gate G3). MCINC-4 (§11.8): a lane's base is the programme tip that carries the import (`backlog/`), so its `Task:` trailer and the task file are in the same commit.
+   Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS, lane BL-GATE375, Increment 1·B; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1595 "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition", :1615 "397 reality check and regression need to be claude sonnet . they need to be included in the protocol - grounding is different than reality check - whcih independantly runs the calculations and regression looks back over previous decisions", :1620 "Let's include them in the protocol as they are defined in the spec  - regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently", :1625 "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required", :1630 "these only run on the plan", :1605 "agreed"): two points. (1) The review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten (N = the context-r*.md files already there + 1), written by `scripts/analysis/backlog-brief.mjs`; it replaces the earlier name context-<date>.md in every note above that uses it. Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS (scripts/lib/review-template.js: Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes), `rule-lists.mjs lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context. (2) The tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate (`scripts/analysis/backlog-lane.mjs`, `planGateErrors` in `scripts/hooks/check-lane-close.mjs`) requires their Seat lines in GROUNDER-PLAN.md. This differs from rule 1 (:344, both altitudes mandatory), from rule 7 (:351, Reality-Check by subject matter) and from the section 6.4 table that also lists Integration and Regression on the output roster: no seat is required on the output, which keeps the DeepSeek lens set per rule list and the separate grounder, who also verifies each fix (his :1605). Reality-Check is required at every build or fix launch for now (his :1625); emptying that name is his later decision.
+2. (TKT-2) Closed reply status. Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question. ready: the done-condition is met and the evidence is in the reply. blocked: a ruling, card or input is missing; the question names it. failed: the work did not complete, or the reply is empty or truncated (TKT-4). dropped: the ticket is withdrawn or superseded; the reason is one line. This is a reply-level word. It never writes a queue status cell: the queue's own words (DONE, RUNNING, WAITS, OPERATOR, HELD, LATER; stage 10 is set by the checker) stay as they are.
+3. (TKT-3) McProof answer-first. A McProof reply puts its answers first, in the answer table the code already requires (`scripts/analysis/mcproof/prompts.mjs:10`, one row per example id: a number with an optional unit, a closed status, or `cannot decide`); the working follows the table. Rows outside the table are not read.
+4. (TKT-4) Empty or truncated is failed. An empty or truncated reply is `failed`, never a verdict and never a pass. One concise rerun is allowed; a second empty or truncated reply parks the ticket with an operator card (MCPROOF-13). McProof stage runs keep the configured retry count (`scripts/analysis/mcproof/mcproof.config.json:69`, `max_retries_per_stage` = 2) until that value is moved by a ruling (OWED, infra, frozen): this rule changes no config and no code. Output-cap and stop-reason logging are infra and frozen.
+5. (TKT-5, E1) No agent teams; lane-to-lane facts go through the orchestrator. A fact one lane needs from another goes through the orchestrator as a note of at most 100 words that cites file:line and grants no authority. Claude Code agent teams are not enabled (a harness setting is infra, frozen until lifted by name). Source (verbatim, operator 2026-11-06): "E1 a" ("E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry").
+Operator source lines for this section (verbatim): "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?" "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?" Rulings: D1 B, D2 A, D3 A, D4 A, D5 A, D6 B, D7 A (MB-85 DECISIONS.md); TKT-1 carries D6 (default `max_fix_rounds` 2) and D7 (header in the body); TKT-3 is D2 A; TKT-4 is D3 A; TKT-2 is D5 A.
+
+Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): where every queue lives, the one-line status form and the queue rules (7-day expiry, DB lane, dated-note rulings, the weekly snapshot) are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). Nothing in §11.8 or §11.9 changes.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md b/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md
+index 661738f0d34cfbfb09e4c923f40fc70d48effadb..bb31dcfc922b8200db123e94522dbd182ae16f6a 100644
+--- a/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md	
++++ b/backlog/tasks/task-441 - FINAL.6-Engineering-standards-tests-one-test-per-engineering-rule-that-has-none-a-few-at-a-time-each-proven-to-fail-first.md	
+@@ -7,7 +7,7 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-ENG441'
+ created_date: '2026-11-22T20:24:00Z'
+-updated_date: '2026-11-23T15:31:00Z'
++updated_date: '2026-11-23T15:41:00Z'
+ labels:
+   - McFix
+   - McFix Final
+@@ -306,4 +306,14 @@ rg#2 MED folded do not raise the num
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-23 taken on the board at lane launch (lane BL-ENG441, worktree /Users/brettpreston_macmini/Buildo-wt-eng441, branch wf1/inc1b-eng441), RR-0240
++
++2026-11-23 lane BL-ENG441 build: three tests written (src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts). Ceiling measured at head efaca9109 just before commit 1: 535 files scanned, 166 undocumented ! in 60 files (148 in 49 src files, 18 in 11 mobile files), equal to the plan. npm run typecheck and npm run lint passed with the three tests and the plant present. Red run next: plant src/components/ui/Planted441.tsx staged with the tests, never committed.
++
++2026-11-23 lane BL-ENG441 STOPPED at the red run (brief: a hook refusal for a file not on the Files line stops the lane). The commit attempt with the three tests, the task file and the plan's plant src/components/ui/Planted441.tsx staged was refused by .husky/pre-commit:38 (node scripts/violations/generate-surface-registry.mjs --check), hook text: [surface-registry] DRIFT — docs/reports/generated/127-surface-registry.md is stale. The generator walks src/components on disk for .tsx files (scripts/violations/generate-surface-registry.mjs:229-240, used at :1425 as unowned components), so the plant drifts the registry before typecheck, lint and the related run (:85). The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong. The plant was unstaged and deleted at once; git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. No commit made; no output review run. Ruling owed: e.g. the plant as a .ts file (the walker reads .tsx only, :238), a plan change.
++
++2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts, exporting usePlanted441; the surface-registry generator at .husky/pre-commit:38 walks src/components .tsx files on disk (generate-surface-registry.mjs:229-240); plan 3.4 and its Planted441.tsx references read as the .ts file.
++
++2026-11-23 red (lane BL-ENG441): commit attempt with the three tests, the task file and src/components/ui/Planted441.ts staged, refused by the related run (.husky/pre-commit:85) after typecheck and lint passed: Test Files 3 failed (3), Tests 3 failed | 8 passed (11). 3.1 A: 'src/components/ui/Planted441.ts:6 alert()'; 3.2 A: 'src/components/ui/Planted441.ts:4 useContext()' and ':5 fetch()'; 3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'. Plant unstaged and deleted right after (git ls-files src/components/ui: Badge.tsx, ScoreBadge.tsx). Hook output: docs/reports/reviews/task-441/red.out.
++
++2026-11-23 green and acceptance (lane BL-ENG441): commit 1 = 8cf51f3cc through the real hooks (commit-exit 0); related run: '§1.2: scanned 2 files, 0 hits', '§12.7: scanned 400 files, 0 hits', '§2.3: scanned 535 files, 166 undocumented ! in 60 files, pin sum 166', 'Test Files 3 passed (3) / Tests 11 passed (11)'. Acceptance 1: prints 3. Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1 (the runner prints each failure twice: under the test row, red.out:752, and in the Failed Tests section, red.out:785); the alert, useContext and fetch lines appear as the failure text of 3.1 A (red.out:757-759), 3.2 A (red.out:810-813) and 3.3 A (red.out:783-785) in the related run (Test Files 3 failed (3)), after tsc --noEmit (red.out:126) and next lint (red.out:130). Acceptance 3: git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only. Acceptance 4: prints 1. Acceptance 5: all three start with '// SPEC LINK: docs/specs/00_engineering_standards.md'. Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing. Acceptance 7: pin sum 166 over 60 entries equals the measure at efaca9109 (166 in 60 files) and the green run prints the same. Acceptance 8 is the orchestrator's (pre-push suite), not run.
+ <!-- SECTION:NOTES:END -->
+diff --git a/src/tests/no-blocking-dialogs.logic.test.ts b/src/tests/no-blocking-dialogs.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..99f2e9d93535c1446167c33cd5b49e9b817b2427
+--- /dev/null
++++ b/src/tests/no-blocking-dialogs.logic.test.ts
+@@ -0,0 +1,89 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §12.7 (:342-345)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :344:
++//   "**Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser)."
++// TESTED: the `alert()`, `confirm()`, `prompt()` sentence, as a call in tracked web code.
++// NOT TESTED (a scan cannot tell a notification or a banner from other UI): "for all success/error/info notifications" (:343) and
++// "Build custom alert banners" (:344).
++// SCOPE: tracked src/**/*.ts(x), minus src/tests/**, *.test.* and *.d.ts. Mobile is out: section 12 is web front end (:304-306) and the
++// phone app has its own never-do list (Spec 90 §5, scripts/analysis/gates/mobile-never-do.mjs).
++// LIMITS (stated, not widened): the finder matches by name only. It misses `window['alert']()` and aliased calls; a local function,
++// an import or a destructured name called alert, confirm or prompt gives a false red and is renamed (none exists in src today).
++// ESLint core `no-alert` and Biome `noAlert` exist but are not turned on; turning one on is a config change the card does not name.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const NAMES = new Set(['alert', 'confirm', 'prompt']);
++const GLOBALS = new Set(['window', 'globalThis', 'self']);
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every call of alert, confirm or prompt, bare or on window, globalThis or self. Pure: path and text in, hits out. */
++export function findBlockingDialogs(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const visit = (n: ts.Node): void => {
++    if (ts.isCallExpression(n)) {
++      const c = n.expression;
++      let what: string | null = null;
++      if (ts.isIdentifier(c) && NAMES.has(c.text)) what = `${c.text}()`;
++      else if (ts.isPropertyAccessExpression(c) && ts.isIdentifier(c.expression) && GLOBALS.has(c.expression.text) && NAMES.has(c.name.text)) {
++        what = `${c.expression.text}.${c.name.text}()`;
++      }
++      if (what) hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++function scannedFiles(): string[] {
++  return execFileSync('git', ['ls-files', '--', 'src/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => /\.tsx?$/.test(f) && !f.startsWith('src/tests/') && !/\.test\./.test(f) && !f.endsWith('.d.ts'));
++}
++
++describe('§12.7: no alert(), confirm() or prompt() in web code', () => {
++  it('A. the real tree has no call of alert, confirm or prompt', () => {
++    const files = scannedFiles();
++    const hits = files.flatMap((f) => findBlockingDialogs(f, readFileSync(join(ROOT, f), 'utf8')));
++    const report = hits.map((h) => `  ${h.file}:${h.line} ${h.what}`).join('\n');
++    console.log(`§12.7: scanned ${files.length} files, ${hits.length} hits`);
++    expect(hits, `§12.7 (00_engineering_standards.md:344) blocking dialog calls in src:\n${report}`).toEqual([]);
++    // 400 files today; a listing that silently shrinks turns this red (vacuous-pass guard).
++    expect(files.length).toBeGreaterThan(300);
++  });
++
++  it('B. RED planted (KNOWN_BAD): each blocking call form gives exactly one hit with its name', () => {
++    const cases: Array<[string, string]> = [
++      ["alert('x');", 'alert()'],
++      ["window.confirm('y');", 'window.confirm()'],
++      ["globalThis.prompt('z');", 'globalThis.prompt()'],
++    ];
++    for (const [code, what] of cases) {
++      const hits = findBlockingDialogs('planted.tsx', code);
++      expect(hits, code).toHaveLength(1);
++      expect(hits[0]?.what, code).toBe(what);
++    }
++  });
++
++  it('C. controls: toasts, methods, comments, strings and JSX text give 0 hits', () => {
++    const controls = [
++      "toast.error('x');",
++      'form.confirm();',
++      "// alert('x')",
++      "const s = 'please confirm (now)';",
++      'const e = <p>alert(1)</p>;',
++    ];
++    for (const code of controls) expect(findBlockingDialogs('control.tsx', code), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/non-null-assertion-comment.logic.test.ts b/src/tests/non-null-assertion-comment.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a3fcd68d62359952d499da9aaa0350615462265d
+--- /dev/null
++++ b/src/tests/non-null-assertion-comment.logic.test.ts
+@@ -0,0 +1,200 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §2.3 (:45-47)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :47:
++//   "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation
++//    step. If using `!`, you must document why in an inline comment."
++// TESTED: "If using `!`, you must document why in an inline comment". DOCUMENTED means a comment (leading or trailing comment ranges,
++// collected over the file) touches the line of the `!` or the line directly above it (plan Q3).
++// NOT TESTED: "mathematically guaranteed" (a judgment). The first sentence of §2.3 (:46) is already compiler-enforced wherever no `!`
++// overrides it (tsconfig.json `strict` and `noUncheckedIndexedAccess`; mobile/tsconfig.json `strict`).
++// OTHER CHECKS: Biome's recommended noNonNullAssertion also covers two folders (src/features/leads and src/lib/observability, biome.json);
++// it warns on every `!`, documented or not. This test is the comment-present half of §2.3, the half no other check reads.
++// SCOPE: tracked src/**/*.ts(x) minus src/tests/**, *.test.* and *.d.ts; plus tracked mobile/**/*.ts(x) minus mobile/__tests__/**, *.test.*
++// and anything SKIP (scripts/analysis/gates/mobile-never-do.mjs) matches. 535 files at the launch head.
++// LIMITS (stated, not widened): any comment counts as "document why"; the test cannot read whether the comment gives a reason.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++import { SKIP } from '../../scripts/analysis/gates/mobile-never-do.mjs';
++
++const ROOT = process.cwd();
++
++/**
++ * UNDOCUMENTED `!` per file, a CEILING (plan review round 1 ruling), measured by the lane at its own head just before commit 1:
++ * 166 in 60 files (148 in 49 src files, 18 in 11 mobile files). Counts are AST nodes (`x!!` counts twice).
++ * A file may hold FEWER than its number: nothing is edited when a `!` is fixed or documented. A file with MORE than its number, or a
++ * file not in this list with any, turns the test red. NO NUMBER IS EVER RAISED: a new undocumented `!` is fixed by writing its why
++ * comment on its line or the line above, which is what §2.3 asks, in the lane's own file. Slack: a file that falls below its number
++ * leaves room for new undocumented `!` up to that number until the next re-measure. Only task-441 edits this list.
++ */
++export const UNDOCUMENTED_BANG_PIN: Readonly<Record<string, number>> = {
++  'mobile/app/(app)/[flight-job].tsx': 1,
++  'mobile/src/components/feed/FlightCard.tsx': 1,
++  'mobile/src/components/surfaces/LotMapBinding.tsx': 2,
++  'mobile/src/components/surfaces/ReportBinding.tsx': 5,
++  'mobile/src/hooks/useFlightJobDetail.ts': 1,
++  'mobile/src/hooks/useLeadDetail.ts': 1,
++  'mobile/src/hooks/useParcelLookup.ts': 1,
++  'mobile/src/lib/debug/stateDebug.ts': 2,
++  'mobile/src/lib/lotMap.ts': 1,
++  'mobile/src/lib/parcelSearchMatch.ts': 2,
++  'mobile/src/lib/trackedLots.ts': 1,
++  'src/app/api/admin/parcels/lookup/route.ts': 1,
++  'src/app/api/admin/pipelines/status/route.ts': 1,
++  'src/app/api/admin/stats/route.ts': 1,
++  'src/app/api/admin/users/[uid]/route.ts': 12,
++  'src/app/api/admin/users/[uid]/subscription/reconcile/route.ts': 1,
++  'src/app/api/admin/users/route.ts': 3,
++  'src/app/api/parcels/lookup/route.ts': 1,
++  'src/app/api/permits/route.ts': 1,
++  'src/app/api/subscribe/exchange/route.ts': 1,
++  'src/app/api/subscribe/portal-session/route.ts': 2,
++  'src/app/api/subscribe/session/route.ts': 2,
++  'src/app/api/user-profile/reactivate/route.ts': 1,
++  'src/app/api/user-profile/route.ts': 3,
++  'src/app/permits/[id]/page.tsx': 2,
++  'src/components/DataQualityDashboard.tsx': 2,
++  'src/components/FreshnessTimeline.tsx': 4,
++  'src/components/admin/LeadDetailInspector.tsx': 1,
++  'src/components/admin/ParcelCostTool.tsx': 2,
++  'src/components/funnel/FunnelPanels.tsx': 5,
++  'src/components/report/ReportPage.tsx': 4,
++  'src/features/admin-users/api/useAdminUsers.ts': 1,
++  'src/lib/admin/github-dispatch.ts': 1,
++  'src/lib/admin/parcel-lookup.ts': 11,
++  'src/lib/auth/get-user-context.ts': 1,
++  'src/lib/auth/verify-admin.ts': 1,
++  'src/lib/builders/enrichment.ts': 1,
++  'src/lib/builders/extract-contacts.ts': 1,
++  'src/lib/classification/classifier.ts': 1,
++  'src/lib/classification/coa-scope-classifier.ts': 1,
++  'src/lib/inspections/parser.ts': 7,
++  'src/lib/leads/build-lifecycle-timeline.ts': 1,
++  'src/lib/leads/lead-inspect-query.ts': 4,
++  'src/lib/market-metrics/queries.ts': 2,
++  'src/lib/massing/geometry.ts': 12,
++  'src/lib/media/contract.ts': 1,
++  'src/lib/parcels/address.ts': 1,
++  'src/lib/parcels/geometry.ts': 19,
++  'src/lib/parcels/lot-map.ts': 1,
++  'src/lib/parcels/lot-size-entry.ts': 2,
++  'src/lib/parcels/lot-view.ts': 1,
++  'src/lib/quality/metrics.ts': 17,
++  'src/lib/quality/types.ts': 1,
++  'src/lib/stripe/parcel-checkout.ts': 1,
++  'src/lib/stripe/parcel-plans.ts': 1,
++  'src/lib/supabase/admin.ts': 1,
++  'src/lib/supabase/browser.ts': 2,
++  'src/lib/supabase/middleware.ts': 2,
++  'src/lib/supabase/server.ts': 2,
++  'src/lib/surfaces/report/core.ts': 1,
++};
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every non-null assertion with no comment on its own line or the line above. Pure: path and text in, hits out. */
++export function findUndocumentedBangs(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const lineOf = (pos: number): number => sf.getLineAndCharacterOfPosition(pos).line;
++  const commentLines = new Set<number>();
++  const seen = new Set<number>();
++  const addRanges = (ranges: ts.CommentRange[] | undefined): void => {
++    for (const r of ranges ?? []) {
++      if (seen.has(r.pos)) continue;
++      seen.add(r.pos);
++      for (let l = lineOf(r.pos); l <= lineOf(r.end); l++) commentLines.add(l);
++    }
++  };
++  const bangLines: number[] = [];
++  const visit = (n: ts.Node): void => {
++    // JSX text is not trivia: `// x` inside it is text, not a comment.
++    if (n.kind !== ts.SyntaxKind.JsxText) {
++      addRanges(ts.getLeadingCommentRanges(text, n.pos));
++      addRanges(ts.getTrailingCommentRanges(text, n.end));
++    }
++    if (ts.isNonNullExpression(n)) bangLines.push(lineOf(n.end - 1));
++    for (const c of n.getChildren(sf)) visit(c);
++  };
++  visit(sf);
++  return bangLines
++    .filter((l) => !commentLines.has(l) && !commentLines.has(l - 1))
++    .map((l) => ({ file: rel, line: l + 1, what: 'undocumented !' }));
++}
++
++export interface PinProblem { file: string; count: number; ceiling: number | null }
++
++/** The ceiling refuses growth only: a file not in the pin with hits, or a count above its pin. A count below, a file at 0 or a gone file is no problem. */
++export function pinProblems(actual: Readonly<Record<string, number>>, pin: Readonly<Record<string, number>>): PinProblem[] {
++  const out: PinProblem[] = [];
++  for (const [file, count] of Object.entries(actual)) {
++    if (count <= 0) continue;
++    const ceiling = pin[file];
++    if (ceiling === undefined) out.push({ file, count, ceiling: null });
++    else if (count > ceiling) out.push({ file, count, ceiling });
++  }
++  return out;
++}
++
++function scannedFiles(): string[] {
++  const ls = (dir: string): string[] =>
++    execFileSync('git', ['ls-files', '--', dir], { cwd: ROOT, stdio: 'pipe' })
++      .toString()
++      .split('\n')
++      .map((s) => s.trim())
++      .filter((f) => /\.tsx?$/.test(f) && !/\.test\./.test(f));
++  const src = ls('src/').filter((f) => !f.startsWith('src/tests/') && !f.endsWith('.d.ts'));
++  const mobile = ls('mobile/').filter((f) => !f.startsWith('mobile/__tests__/') && !SKIP.test(f));
++  return [...src, ...mobile];
++}
++
++describe('§2.3: every non-null assertion carries a why comment (per-file ceiling for the known breaks)', () => {
++  it('A. the real tree holds no undocumented `!` above the ceiling', () => {
++    const files = scannedFiles();
++    const actual: Record<string, number> = {};
++    for (const f of files) {
++      const n = findUndocumentedBangs(f, readFileSync(join(ROOT, f), 'utf8')).length;
++      if (n > 0) actual[f] = n;
++    }
++    const problems = pinProblems(actual, UNDOCUMENTED_BANG_PIN);
++    const pinSum = Object.values(UNDOCUMENTED_BANG_PIN).reduce((a, b) => a + b, 0);
++    const actualSum = Object.values(actual).reduce((a, b) => a + b, 0);
++    console.log(`§2.3: scanned ${files.length} files, ${actualSum} undocumented ! in ${Object.keys(actual).length} files, pin sum ${pinSum}`);
++    const report = problems
++      .map((p) =>
++        p.ceiling === null
++          ? `  ${p.file}: not in the pin, ${p.count}`
++          : `  ${p.file}: ${p.count} undocumented, above its ceiling ${p.ceiling}`,
++      )
++      .join('\n');
++    expect(
++      problems,
++      `§2.3 (00_engineering_standards.md:47) undocumented non-null assertions above the ceiling:\n${report}\n` +
++        'Document the `!` with a why comment on the line or the line above; do not raise the number.',
++    ).toEqual([]);
++    expect(files.length).toBeGreaterThan(400);
++  });
++
++  it('B. RED planted (KNOWN_BAD): each undocumented `!` form gives exactly one hit', () => {
++    for (const code of ['x!.a;', 'const v = m.get(k)!;', 'foo!();']) {
++      expect(findUndocumentedBangs('planted.ts', code), code).toHaveLength(1);
++    }
++  });
++
++  it('C. controls: a comment on the line or the line above, optional chaining and a definite assignment give 0 hits', () => {
++    const controls = ['x!.a; // guarded by parse() above', '// why\nx!.a;', 'x?.a;', 'let y!: number;'];
++    for (const code of controls) expect(findUndocumentedBangs('control.ts', code), code).toEqual([]);
++    // The imported mobile SKIP still matches node_modules, so a rename of the export fails loudly.
++    expect(SKIP.test('mobile/node_modules/x.ts')).toBe(true);
++  });
++
++  it('D. pinProblems refuses growth only', () => {
++    expect(pinProblems({ a: 2 }, { a: 1 })).toHaveLength(1);
++    expect(pinProblems({ a: 0 }, { a: 1 })).toEqual([]);
++    expect(pinProblems({ b: 1 }, {})).toHaveLength(1);
++    expect(pinProblems({ a: 1 }, { a: 1 })).toEqual([]);
++  });
++});
+diff --git a/src/tests/ui-component-isolation.logic.test.ts b/src/tests/ui-component-isolation.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..84ffd86fbc3a290f009f7c5491176236100cde1e
+--- /dev/null
++++ b/src/tests/ui-component-isolation.logic.test.ts
+@@ -0,0 +1,97 @@
++// SPEC LINK: docs/specs/00_engineering_standards.md §1.2 (:17-18)
++//
++// task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards). The rule, :18:
++//   "Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data
++//    via API calls or rely on global context unless explicitly engineered to do so."
++// TESTED: the second sentence. "unless explicitly engineered to do so" is the ENGINEERED map below: one entry per file, with its reason
++// (the FENCED form of src/tests/script-source-scan.ts). It is empty today.
++// NOT TESTED: "stateless where possible" ("where possible" is a judgment).
++// SCOPE: tracked src/components/ui/**/*.ts(x) (2 files today: Badge.tsx, ScoreBadge.tsx).
++// FINDER: a call of fetch, useContext, use, useQuery, useMutation, useInfiniteQuery or useSuspenseQuery; React.useContext, React.use
++// or window.fetch; an import from '@tanstack/react-query'.
++// LIMITS (stated, not widened): a data read through a custom hook is not seen.
++// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const UI_DIR = 'src/components/ui/';
++
++/**
++ * Files under src/components/ui that are "explicitly engineered" to fetch or read context, each with its reason.
++ * An entry here is a promise the exception was reasoned about, not a place to park a violation.
++ */
++export const ENGINEERED: Record<string, string> = {};
++
++const CALLS = new Set(['fetch', 'useContext', 'use', 'useQuery', 'useMutation', 'useInfiniteQuery', 'useSuspenseQuery']);
++const MEMBER_CALLS = new Set(['React.useContext', 'React.use', 'window.fetch']);
++const QUERY_PACKAGE = '@tanstack/react-query';
++
++export interface Hit { file: string; line: number; what: string }
++
++/** Every data fetch or global context read in one file. Pure: path and text in, hits out. */
++export function findUiImpurity(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
++  const visit = (n: ts.Node): void => {
++    if (ts.isCallExpression(n)) {
++      const c = n.expression;
++      if (ts.isIdentifier(c) && CALLS.has(c.text)) hits.push({ file: rel, line: at(n), what: `${c.text}()` });
++      else if (ts.isPropertyAccessExpression(c) && ts.isIdentifier(c.expression)) {
++        const name = `${c.expression.text}.${c.name.text}`;
++        if (MEMBER_CALLS.has(name)) hits.push({ file: rel, line: at(n), what: `${name}()` });
++      }
++    } else if (ts.isImportDeclaration(n) && ts.isStringLiteral(n.moduleSpecifier) && n.moduleSpecifier.text === QUERY_PACKAGE) {
++      hits.push({ file: rel, line: at(n), what: `import from '${QUERY_PACKAGE}'` });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++function uiFiles(): string[] {
++  return execFileSync('git', ['ls-files', '--', UI_DIR], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => /\.tsx?$/.test(f));
++}
++
++describe('§1.2: shared UI components do not fetch data or read global context', () => {
++  it('A. the real tree, minus ENGINEERED, has no fetch or context read in src/components/ui', () => {
++    const files = uiFiles();
++    const hits = files.filter((f) => !(f in ENGINEERED)).flatMap((f) => findUiImpurity(f, readFileSync(join(ROOT, f), 'utf8')));
++    const report = hits.map((h) => `  ${h.file}:${h.line} ${h.what}`).join('\n');
++    console.log(`§1.2: scanned ${files.length} files, ${hits.length} hits`);
++    expect(hits, `§1.2 (00_engineering_standards.md:18) data fetch or context read in a shared UI component:\n${report}`).toEqual([]);
++    expect(files.length).toBeGreaterThan(0);
++  });
++
++  it('B. every ENGINEERED key is a tracked file under src/components/ui (no stale entry)', () => {
++    const files = new Set(uiFiles());
++    expect(Object.keys(ENGINEERED).filter((k) => !files.has(k))).toEqual([]);
++  });
++
++  it('C. RED planted (KNOWN_BAD): each fetch or context form gives exactly one hit', () => {
++    const cases = [
++      "fetch('/api/x');",
++      'useContext(Theme);',
++      'React.useContext(T);',
++      'use(Ctx);',
++      "useQuery({ queryKey: ['k'] });",
++      "import { useQueryClient } from '@tanstack/react-query';",
++    ];
++    for (const code of cases) expect(findUiImpurity('planted.tsx', code), code).toHaveLength(1);
++  });
++
++  it('D. controls: local state, helpers, methods, comments and strings give 0 hits', () => {
++    const controls = ['useState(0);', "cn('a');", 'api.fetch();', "// fetch('/api')", "const s = 'fetch(';"];
++    for (const code of controls) expect(findUiImpurity('control.tsx', code), code).toEqual([]);
++  });
++});
+

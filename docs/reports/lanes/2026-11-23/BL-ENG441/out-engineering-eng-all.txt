@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T15:42:39.428Z file_sha256=f1ddb8314ec8ab6aa0a532522a247941392bb4d188f63c8f71f60c7d0694b92e prompt_sha256=22f560fa2bb9841e49a7f71b8f37e72c3185e054d9671fa9eb402fd4530fea18
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5. Testing Standards §5.2 "| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |" — src/tests/no-blocking-dialogs.logic.test.ts:13 "// Files come from `git ls-files` (the src/tests/script-source-scan.ts pattern), so a staged file is seen. No DB, no network." — each of the three `.logic.test.ts` files carries a repo-wide source scan (git ls-files plus 400-535 file reads), a layer §5.2 does not list and that the standards' own source scans place elsewhere, §4.1 "Enforcement is locked by the source scan in `src/tests/api.infra.test.ts`" — keep the pure finder assertions (tests B/C/D) in `.logic.test.ts` and move the real-tree scan assertion into one `*.infra.test.ts` (or add a source-scan row to §5.2), since both layers run under `npm run test` the risk is bounded to layer-filtered runs and §5.5's wrong-layer false confidence.
+
+REJECT — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — the change is accused of inline mocks in "expect(pinProblems({ a: 2 }, { a: 1 })).toHaveLength(1);" — these are literal arguments to a pure function typed by its signature (`Readonly<Record<string, number>>`), not untyped mocks of a domain entity, so no factory applies.
+
+REJECT — 12.12 Property-Based Tests "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test" — the change is accused of shipping `findBlockingDialogs`, `findUndocumentedBangs`, `findUiImpurity` and `pinProblems` with example-based tests only — none of the four is a scoring formula, key normalizer, unit conversion or cursor comparator; they are AST set-membership scans and a growth predicate, so the enumerated classes do not bind.
+
+MET — 5.3 Red-Green Test Cycle — docs/reports/reviews/task-441/red.out (quoted in the task notes) — "Test Files 3 failed (3), Tests 3 failed | 8 passed (11)" with the plant staged precedes the green commit 8cf51f3cc, so the failing run exists before the passing one.
+
+MET — 12.7 Toast Notifications — src/tests/no-blocking-dialogs.logic.test.ts:21 — `const NAMES = new Set(['alert', 'confirm', 'prompt']);` and the green run prints "§12.7: scanned 400 files, 0 hits", so neither the new code nor src carries a bare `alert()`/`confirm()`/`prompt()`.
+
+MET — 2.3 Assumption Documentation — src/tests/non-null-assertion-comment.logic.test.ts:33 — the new files add no undocumented `!` (optional chaining and explicit `undefined` checks are used), and the scan reports the pre-existing 166 as a ceiling that refuses growth.
+
+MET — 1.2 Component Isolation — src/tests/ui-component-isolation.logic.test.ts:28 — `export const ENGINEERED: Record<string, string> = {};` plus acceptance 3 "git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only", so the plant component was deleted and no impure shared UI component landed.
+
+MET — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — task-441 notes — "git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing".
+
+MET — 14 registry row "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — src/tests/ui-component-isolation.logic.test.ts:1 — "// SPEC LINK: docs/specs/00_engineering_standards.md §1.2 (:17-18)", and the other two files likewise name §12.7 and §2.3.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  69619ms (69.6s)
+📊 Tokens — total: 38108, input: 23409, output: 14699, reasoning: 13697

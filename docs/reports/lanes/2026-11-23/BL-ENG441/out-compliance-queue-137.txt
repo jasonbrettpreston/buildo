@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.425Z file_sha256=8a692b684601337b87e712fb792e5e0c98615b4dedfa62378a2606fd1f08ba39 prompt_sha256=b1b58973d8e07aeb192cd63f66fbdc29ed499d72cdce10e0fb7bcffa2f867701
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 137 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")`" — backlog/tasks/task-441 - FINAL.6-...md "+2026-11-23 plant ruling (Cairn-Ground-P441): the plant is src/components/ui/Planted441.ts, exporting usePlanted441; plan 3.4 and its Planted441.tsx references read as the .ts file." — a line labelled "ruling" is entered on the row in no M-246 form, with no row id, no queue, no lane, no verbatim words and no cite, while Rule 4's G2 needs a quote and a cite file:line that contains it — re-enter it as "Dated note 2026-11-23 (M-246, prior text kept; task-441 · Backlog · lane BL-ENG441; <author>, verbatim: ...)" with the source cite, or relabel it a lane decision and record the plan change as such.
+
+DEFER severity=MED — Spec 137 Rule 3 note (task-366) "the close of a lane's task ... now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — the material's paths are the three src/tests files and the task file, with no docs/reports/lanes path — the notes reach "green and acceptance" so the BUILT commit is next, and no lane report, per-list compliance output or separate grounder's GROUNDER.md appears in the material, so that commit will be refused — add docs/reports/lanes/<date>/BL-ENG441/ with the compliance outputs, a non-lane grounder's GROUNDER.md, and TRIAGE.md if GROUNDER.md holds CONFIRMED or CONFLICT ids (task-399 note) in the closing commit.
+
+DEFER severity=LOW — Spec 137 Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — NONE — the same-diff half is visible and satisfied (task file beside the new src/tests files); the commit-message trailer cannot be seen in a diff — confirm the message of 8cf51f3cc carries "Task: task-441", or check-backlog-task.mjs should have refused it.
+
+DEFER severity=LOW — Spec 137 §5 step 4 "For each row it checks the `Status:` line against what landed. Evidence: the commit on the origin tip (`git show`, `git merge-base --is-ancestor`), the dated notes, the card answers." — "Hook output: docs/reports/reviews/task-441/red.out" and "Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1" — red.out is the only artefact behind the red run and acceptance 2, and it is not in the material, so the snapshot can only mark it UNVERIFIED — commit docs/reports/reviews/task-441/red.out, a path the task's own Files line already names.
+
+DEFER severity=LOW — Spec 137 Rule 3 note (task-410) "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — the diff shows new src/tests files together with notes that cite "commit 1 = 8cf51f3cc", so this is a branch diff and per-commit staging cannot be seen — verify that 8cf51f3cc stages the work and the close commit stages only lane records.
+
+REJECT — Spec 137 §5a note 2026-11-19 "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` ... and `Recommendation:`" — the plant decision was ruled by "Cairn-Ground-P441" and never put to the operator — not a real issue: the pasted ruling RR-0385 gives "validation without the operator" and the task-419 note says the launch gate "does not touch lanes already launched", and a test plant's file extension is outside the operator's named domains.
+
+MET — Spec 137 Rule 1 — backlog/tasks/task-441 - FINAL.6-...md "status: RUNNING" — one status word, unchanged in this material, nothing appended to a status line.
+
+MET — Spec 137 Rule 2 — "Files: src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts, backlog/tasks/task-441 ..." — the task has its one row in backlog/ and the three new files are named on it.
+
+MET — Spec 137 §3 "for a Backlog task the status line is its front matter: `status` is the word" — "status: RUNNING" — the front-matter word is from the closed nine-word list of §3.
+
+MET — Spec 137 Rule 3 note (2026-11-20, task-410) "The work lands first; the status moves in a separate closing commit that carries only the lane's records" — "status: RUNNING" beside the new src/tests files — the work commit does not move the status, so the two-commit close is respected so far.
+
+MET — Spec 137 Rule 13 "The board is a view; the row is the record ... a status changes only on its row" — the diff edits backlog/tasks/task-441, not a board file — no queue status is changed off its row.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: Rule 1, Rule 2, Rule 3, Rule 13
+
+---
+⏱  83486ms (83.5s)
+📊 Tokens — total: 39516, input: 21930, output: 17586, reasoning: 16184

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.426Z file_sha256=a2921f39421970426cf375d47e94c8df86f247e321ea79f0cc1232b420443672 prompt_sha256=af116d1e8212d720c26f62e02b92b4222c311a6329523892b02928a3b916312a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "We just want to focus on getting the right tests that mirror the engineering and compliance." — src/tests/non-null-assertion-comment.logic.test.ts:33 "export const UNDOCUMENTED_BANG_PIN: Readonly<Record<string, number>> = {" — the §2.3 test is green on a tree it itself reports as holding 166 undocumented `!` ("§2.3: scanned 535 files, 166 undocumented ! in 60 files, pin sum 166"), so the rule it mirrors is enforced only against growth and not against the code that breaks it; the header claim "// TESTED: \"If using `!`, you must document why in an inline comment\"" is therefore not true of the tree — paste the plan-review ruling that sanctions a ceiling, or record every pinned file as a named accepted gap with its why comment.
+
+DEFER severity=MED — 11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — task-441 card Implementation Notes "The plan fact in QUESTIONS-RULED.md:37 (the generator the hook runs at :38 reads the census JSON not the disk) is wrong." — an executable plan claim about the pre-commit generator went to build unexecuted and stopped the lane at .husky/pre-commit:38, and the plan text still holds the false fact, overridden only by a card note — run the generator claim before plan approval and correct QUESTIONS-RULED.md:37 and plan 3.4 in place.
+
+DEFER severity=MED — 7.1 "Output review points them at the diff + re-run values." — task-441 card Files line "docs/reports/reviews/task-441/" and the note "Hook output: docs/reports/reviews/task-441/red.out." — the change under review holds four files and none of that directory, so the red proof the notes cite ("red.out:752", "red.out:785") and any out-engineering-441 output are outside the reviewed material — commit docs/reports/reviews/task-441/red.out with the tests and run the engineering seat over this diff.
+
+DEFER severity=LOW — 11.3 "Red must land at the DESIGNED assertion" — src/tests/non-null-assertion-comment.logic.test.ts:137 "else if (count > ceiling) out.push({ file, count, ceiling });" — the only planted red ("3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'") lands on the ceiling === undefined branch, so the above-ceiling refusal the pin exists for never went red on disk and is covered only by unit case D — plant a file already in the pin with one extra `!` above its number, prove red, then delete it.
+
+DEFER severity=LOW — 11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — src/tests/no-blocking-dialogs.logic.test.ts:62 "// 400 files today; a listing that silently shrinks turns this red (vacuous-pass guard)." against :63 "expect(files.length).toBeGreaterThan(300);" — the stated guard is not executed and is false as stated, a shrink from 400 to 301 stays green — assert a floor at the measured census and move it per task.
+
+DEFER severity=LOW — 11.9 (TKT-1 note) "A code commit names its task by the trailer `Task: task-N` (Spec 137 §4 rule 3, gate G3)." — task-441 card note "commit 1 = 8cf51f3cc through the real hooks (commit-exit 0)" — the commit message and its Task: trailer are not in the material, so G3 cannot be checked here — paste the subject and trailers of 8cf51f3cc with the diff.
+
+REJECT — 11.1 "a census grep runs at the full scope its conclusion covers" — accused of leaving mobile out of the §12.7 scan — the test states the reason with file:line (:304-306 web front end; Spec 90 §5 and scripts/analysis/gates/mobile-never-do.mjs for the phone app), so the scope matches the clause's own limits.
+
+REJECT — 11.2 "one grounder re-executes every claim in the fold" — accused of restating the plan with no fold record — the restated plan claim was exercised by the red run at the .ts plant and the 2026-11-21 note says a fold checked at a later round leaves no required record.
+
+MET — 11.3 — card note "3.3 A: 'src/components/ui/Planted441.ts: not in the pin, 1'" and "'Test Files 3 passed (3) / Tests 11 passed (11)'" — each of the three logic tests went red at its designed A assertion with the plant staged and green once the plant was removed.
+MET — 7.2 — card note "git ls-files src/components/ui prints Badge.tsx and ScoreBadge.tsx only" — the tests' stated file census was validated against the tree after the plant was deleted.
+MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — card note "Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing" — the change adds three test files and card notes only, no hook, config, script or spec.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+Rules met: 7.2, 11.4
+
+---
+⏱  124581ms (124.6s)
+📊 Tokens — total: 50506, input: 23096, output: 27410, reasoning: 26145

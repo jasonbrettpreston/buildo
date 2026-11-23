@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T15:42:39.431Z file_sha256=801e6c7f1ea332b7da8148876b4378fe04cc8e0b157d17d19e639e35df966da8 prompt_sha256=71f051277d506d1b896fa369b23a5a1872f38e2873cbb61015c305e67250d2d3
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — card Description "each test is proven red on a planted defect before it counts" — NONE — the proven-red evidence exists only as a NOTES sentence, "Hook output: docs/reports/reviews/task-441/red.out.", and red.out is absent from this diff chunk, so the clause rests on a comment — commit docs/reports/reviews/task-441/red.out (it is on the Files line) so the 3.1 A, 3.2 A and 3.3 A failures are in the material under review.
+BUG severity=HIGH — RR-0385 "We just want to focus on getting the right tests that mirror the engineering and compliance" — src/tests/non-null-assertion-comment.logic.test.ts:31 "Slack: a file that falls below its number leaves room for new undocumented `!` up to that number until the next re-measure." — the test mirrors a frozen count of 166, not the rule, and the slack lets a listed file regain an undocumented `!` and stay green, so the mirror is not of §2.3 — document the 166 and pin at zero, or state on the card that the ratchet was ruled (the ceiling's authority, "plan review round 1 ruling" at :26, is not pasted).
+DEFER severity=MED — card Description "tests for the engineering-standards rules ranked by FINAL.5, a few per round" — src/tests/no-blocking-dialogs.logic.test.ts:3 "task-441 FINAL.6 (RR-0385 item 6, tests that mirror the engineering standards)." — no header or note cites a FINAL.5 rank for §12.7, §1.2 or §2.3, so the pasted clause's ordering is unevidenced — cite each rule's FINAL.5 rank in the NOTES or the header.
+DEFER severity=MED — card Implementation Notes "Acceptance 2: grep -c 'not in the pin, 1' red.out prints 2, not 1" — NONE — a criterion recorded as met on a measured 2 where the text expects 1, and the criterion text is not pasted so I cannot see whether it was amended — paste criterion 2 or record the amendment.
+DEFER severity=LOW — card title "one test per engineering rule that has none" — src/tests/no-blocking-dialogs.logic.test.ts:12 "ESLint core `no-alert` and Biome `noAlert` exist but are not turned on" — §12.7 and §2.3 both already have a partial check (Biome noNonNullAssertion over two folders, non-null-assertion-comment.logic.test.ts:10), so "that has none" is only partly true — note the partial-coverage reason on the card.
+REJECT — project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — accused of building engineering-standards tests while the objectives name the report, details and search page — not a real issue, RR-0385 names task-441 and RR-0388 holds McFixReborn until these tests are in place.
+MET — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — task-441.md NOTES "2026-11-23 plant ruling (Cairn-Ground-P441)" — the lane stopped at the hook refusal and took a ruling before re-running.
+MET — card Files line "Files: src/tests/no-blocking-dialogs.logic.test.ts, src/tests/ui-component-isolation.logic.test.ts, src/tests/non-null-assertion-comment.logic.test.ts" — diff header — the three new files are exactly the three on the Files line.
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this" — task-441.md NOTES "Acceptance 6: git diff --stat efaca9109..HEAD on the config, scripts, hooks, specs, src and mobile minus src/tests prints nothing" — no config, hook, script or spec file rides along.
+MET — NOTES plant ruling "the plant is src/components/ui/Planted441.ts, exporting usePlanted441" — task-441.md NOTES "3.1 A: 'src/components/ui/Planted441.ts:6 alert()'" — the red run used the ruled .ts path, not the plan's .tsx.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+Rules met: none
+```
+
+---
+⏱  57955ms (58.0s)
+📊 Tokens — total: 24661, input: 12224, output: 12437, reasoning: 11435

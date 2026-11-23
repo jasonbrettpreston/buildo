@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T15:42:39.427Z file_sha256=f728efac4567fc8e10181b18ad1f3a0ae3aef129822b1984f463dac8e646e665 prompt_sha256=d0ed26991be4867320f7719fe70c210d54d8d113a9d5ff0255b59e49c221dde4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-ENG441/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER list, then verdict.
+
+DEFER severity=MED — src/tests/no-blocking-dialogs.logic.test.ts:58 "const hits = files.flatMap((f) => findBlockingDialogs(f, readFileSync(join(ROOT, f), 'utf8')));" — paths come from the index but content is read from the working tree (same at non-null-assertion-comment.logic.test.ts:160 and ui-component-isolation.logic.test.ts:71), so a file staged with `git add -p` is scanned in its edited form and the gate is green while the committed blob still holds the alert() or the undocumented ! — read the staged blob for files under the hook (git show :path) and the worktree only for a plain run, keep one code path.
+
+DEFER severity=MED — src/tests/no-blocking-dialogs.logic.test.ts:52 ".filter((f) => /\\.tsx?$/.test(f) && !f.startsWith('src/tests/') && !/\\.test\\./.test(f) && !f.endsWith('.d.ts'));" — a fixture under src/**/__tests__/ is not excluded although the mobile branch excludes mobile/__tests__/ (non-null-assertion-comment.logic.test.ts:151), so legal test code with alert() or ! turns red and the printed remedy ("Document the !", "rename") points at the wrong file — add `!f.includes('/__tests__/')` to both src filters, mirroring mobile.
+
+DEFER severity=MED — src/tests/non-null-assertion-comment.logic.test.ts:31 "* leaves room for new undocumented `!` up to that number until the next re-measure." — pinProblems compares per file only and pinSum/actualSum at :164-165 are only console.logged, so documenting one ! and adding another in the same file keeps the suite green with no signal, a net-zero drift the test claims to refuse — assert actualSum <= pinSum and print the deficit so the slack is visible.
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:34 "export const UNDOCUMENTED_BANG_PIN: Readonly<Record<string, number>> = {" — nothing asserts every pin key is still a tracked file, while ui-component-isolation.logic.test.ts:80-82 has exactly that guard for ENGINEERED, so a deleted or renamed file leaves a ceiling that later silently covers a recreated path — add test E: every pin key is in `git ls-files`.
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:160 "const n = findUndocumentedBangs(f, readFileSync(join(ROOT, f), 'utf8')).length;" — a path listed by git ls-files that cannot be opened (deleted in the worktree but not staged, or a non-ASCII path git quotes by default) throws a raw ENOENT and the run dies with no report naming the file — pass `-z` and `-c core.quotepath=false` to ls-files, and catch the read to emit the path as a problem entry.
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:102 "const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);" — a syntax error makes the parser error-recover and drop the `!` that follows it, so a mobile file passes below its ceiling, and I cannot see whether .husky/pre-commit also typechecks mobile/ — treat `sf.parseDiagnostics.length > 0` as a problem row in findUndocumentedBangs.
+
+DEFER severity=LOW — src/tests/non-null-assertion-comment.logic.test.ts:151 "const mobile = ls('mobile/').filter((f) => !f.startsWith('mobile/__tests__/') && !SKIP.test(f));" — I cannot see the flags on SKIP; if it carries /g the .test inside a filter alternates on lastIndex, so the scanned mobile list depends on order and differs run to run — rebuild the regex without `g` (or assert `SKIP.global` is false in the controls test at :192).
+
+REJECT — src/tests/no-blocking-dialogs.logic.test.ts:63 "expect(files.length).toBeGreaterThan(300);" — a magic threshold that looks like a fragile constant — it is the vacuous-pass guard, so an empty or shrunk `git ls-files` listing (wrong cwd, no repo, changed pathspec) fails closed instead of passing green on zero files, and the same guard exists at :178 and at ui-component-isolation.logic.test.ts:75.
+
+VERDICT: PASS on error-path safety
+Paths walked: git ls-files error, empty or foreign cwd; readFileSync missing file and quoted non-ASCII path; partial-staging index vs worktree; parser error recovery; SKIP regex state; pin growth, per-file slack and stale keys; ENGINEERED stale keys; vacuous-pass guards; no network, no DB, no writes (idempotent by construction)   Unguarded: 4
+
+---
+⏱  80387ms (80.4s)
+📊 Tokens — total: 30554, input: 11346, output: 19208, reasoning: 18060
