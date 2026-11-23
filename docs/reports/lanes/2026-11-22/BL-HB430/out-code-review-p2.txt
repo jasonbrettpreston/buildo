@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T01:32:15.686Z file_sha256=4d9f715e55f73812dda83d032b09362946cfbaa1d3b0571f7e7182cc35ecf63a prompt_sha256=4f75d7313998549f3496ec36bffae6e780158e74c42d4aa88093173375d3752b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/surfaces/generate-surface-handbook.mjs "  return clipped || shared !== plain ? plain : shared;" — `clipped` cannot change the result: a clipped `shared` ends in the mark at most 300 characters long while `plain` is longer than 300, so the strings always differ and `clipped || shared !== plain` collapses to `shared !== plain`, leaving that branch dead — delete `clipped` and keep `shared !== plain` (this also removes the only use of `SHARED_HEADLINE_MAX` and `CLIP_MARK`).
+
+DEFER severity=MED — src/tests/surfaces/handbook-rule-map.logic.test.ts "const code = runHandbookCli({ spec: '136', argv, build: (r: string) => build(r), root, out: () => {}, err: (s: string) => err.push(s), process: {} as never });" — `as never` silences every check on the `process` argument, so if `runHandbookCli` reads `process.cwd` or `process.env` the fake fails at runtime with an opaque TypeError instead of at typecheck — type the stub to the shape the gate reads, e.g. `{ env: {}, cwd: () => root } as unknown as NodeJS.Process`.
+
+DEFER severity=MED — src/tests/surfaces/handbook-rule-map.logic.test.ts "const readingOf = (r: Row) => (r as unknown as { reading?: { text: string; dates: string[] } }).reading;" — `Row` was not extended with the `reading` field the generator now returns and the double cast hides it: if the generator renames the field or returns `undefined` instead of `null`, the cast reads `undefined` with no type error — add `reading: { text: string; dates: string[] } | null` to `Row` (or derive `Row` from `ReturnType<typeof readFeRows>[number]`) and drop the cast.
+
+DEFER severity=MED — src/tests/surfaces/handbook-rule-map.logic.test.ts "      expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);" — this pins a transient state: the day task-434 lands any one of the 13 locks the row turns RULED, `fresh` shrinks, and both this line and `expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS)` go red on a correct change — keep the id/order pin and drop the absence pin, or assert absence against a temp root instead of `ROOT`.
+
+DEFER severity=LOW — scripts/surfaces/generate-surface-handbook.mjs "  if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell led by a bold span returns the shared headline without any clip test, so such a cell over 300 characters comes out clipped: the defect commit A removes survives in this one branch and only A-T2 going red would reveal it — run the length test before this early return and return the plain cell when the shared result ends in the clip mark.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts "    expect([...ids].sort()).toEqual(range(n));" — `sort()` with no comparator is lexicographic while `range(n)` is numeric ascending, so the register-derived range this test was built to follow breaks silently at FE-100 (and the collecting regex `/\bfe\.\d\d\b/g` cannot match a three-digit id at all) — compare both sides in the same order (sort both, or compare as sets) and widen the id pattern once `n` can reach 100.
+
+NIT — scripts/surfaces/generate-surface-handbook.mjs "if (!m || m[2] !== id) throw new Error(`[surface-handbook] ${id}: the Current reading note does not parse in the strict form (plan 17.4)`);" — a reading note carrying the wrong FE id, exactly what the plan 17.5 placeholder renumbering produces, is reported as "does not parse", pointing the next editor at the frame rather than the id — split the two conditions and throw a message naming the id the note actually carries (update B-T8's regex with it).
+
+REJECT — scripts/surfaces/generate-surface-handbook.mjs "  const earlier = new Set(segs.slice(0, -1).map((s) => NOTE_DATE.exec(s)[1]));" — `NOTE_DATE.exec(s)[1]` looks like an unguarded indexing that would throw on a non-note segment, but every segment is cut from a `Dated note <date>` match inside `noteSegments`, so the capture is always defined.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  143502ms (143.5s)
+📊 Tokens — total: 55144, input: 26711, output: 28433, reasoning: 27376

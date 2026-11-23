@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:51:54.957Z file_sha256=0c28422e45e8003412174526b349a9b3793f42f280ffab03d7d981cb9aef1944 prompt_sha256=2f2475110d8d5d7861d376ab46572b96a72557756e8a3a8f9f4bc00fd8aa998e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — docs/reports/panels/MF-95.json:22 "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the panel's output field binds the lens set and the grounder (RR-0359) but not RR-0385's two rounds, so the owed output review is not recorded as round 1 CRITICAL/HIGH/MED then round 2 CRITICAL/HIGH — add the round rule and the Opus seat to the output field so the owed review cannot run one round.
+
+DEFER severity=LOW — queue practice "where the work is a task of the increment plan (`backlog/`, Spec 137 McLane note), the reference practice gains `task-N` beside the row: `task-N · MF-nn (item) · McFrontend queue · lane X · stage N`" — .cursor/MCFRONTEND-QUEUE.md:645 "Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows) (lane BL-HB430, task-430) · ruling: \"Approved\"" — task-430 is present but not in the pasted reference order and the row carries no stage token (MF-95.json says stage 8) — restate the row token as task-430 · MF-95 (INPUTS.2) · McFrontend queue · lane BL-HB430 · stage 8.
+
+MET — §14 Target Files "`docs/specs/02-web-admin/126_maxbld_surface_standard.md` — this spec" — no hunk in this chunk touches Spec 126, 127, 128 or `scripts/violations/generate-spec-mirror.mjs`.
+MET — §14 Out-of-Scope "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — docs/specs/00-architecture/00_system_map.md:100 adds only test paths, no descriptor and no manifest entry.
+MET — §14 Out-of-Scope "`mobile/app/(auth)/*.tsx` (1,302 lines)" and "`src/app/api/quality/**`, `src/lib/quality/**` — held by another programme." — none of the four files under review lies on those paths.
+MET — §14 Out-of-Scope "Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.**" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/scope-fence.logic.test.ts`, `src/tests/surfaces/parcel-id-names.logic.test.ts`" adds the fence tests, not a linkage.
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md:647 "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows) (lane BL-HB430, task-430)" maps one to one onto the ruling's three things.
+MET — RR-0384 "These look great - teh 13 are perfect." — docs/specs/00-architecture/00_system_map.md:100 lists exactly the 13 reserved lock paths of the pasted acceptance item (3), in item order (client-glass-boundary through a11y-category).
+MET — .cursor/MCFRONTEND-QUEUE.md:4 "This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-96** (ids are never reused)." — .cursor/MCFRONTEND-QUEUE.md:5 "MF-94 is held by lane BL-MFRULES (task-388, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-94) and MF-95 is taken by the INPUTS.2 row ... next free id **MF-96**" keeps the id ledger unbroken and reuses nothing (MF-72 stays retired).
+MET — RR-0380 "by-law tasks gain no engineering rules" — .cursor/MCFRONTEND-QUEUE.md:648 "Spec 133 and scripts/analysis/bylaw/ untouched" is stated as a done-condition and no file under `scripts/analysis/bylaw/` or Spec 133 appears in this chunk.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  86432ms (86.4s)
+📊 Tokens — total: 34091, input: 17498, output: 16593, reasoning: 15508

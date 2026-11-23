@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:37:43.248Z file_sha256=c5ba2814257a5da1a17f644a67437de498c721e8dfdc3a8c744c376276048331 prompt_sha256=9f414690585768dde0fad002c84e94096be84eee753137b89e1f1453483c7680
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-eng-all-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-39 "ENGINE-INPUTS-PLAN section 4.0 and ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:157 (scratch, read-only to this lane) are owed the same change (not done)." — the same-commit clause stays unmet for the McStorage amendment, two cited docs are owed the change — pre-existing and outside this lane's writable scope, carry it as a debt item to a lane that can edit those two docs.
+MET — §12.7 (Sonner) "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-46 "This row says nothing on the toast library: RR-0384 did not rule it." — FE-46 leaves the toast library unruled, matching §12.7 still in force.
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 rows, FE-53 "POINTER, not a copy ... The tables are not copied here." — thirteen rows added and item 9 kept as a pointer.
+MET — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "Dated note 2026-11-22 ... Current reading:" on FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39 — twelve lines now carry their latest restated reading.
+REJECT — §12.3 "All forms use React Hook Form for state management" / §12.5 "Use Shadcn UI for foundational primitives" — the change is accused of dropping RHF/Shadcn because FE-46 names "the web library is Mantine 8.3" — not a real issue, the dated note "§12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`) ... are superseded for the front end by Spec 126 §11b.4" governs.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: 12.3, 12.5, 12.7
+
+---
+⏱  138062ms (138.1s)
+📊 Tokens — total: 69012, input: 52506, output: 16506, reasoning: 15890

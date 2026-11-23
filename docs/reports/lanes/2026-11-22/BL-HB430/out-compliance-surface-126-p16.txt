@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:47:11.567Z file_sha256=1f4935b3f5de306e362041eec9fa06be812f65f263a0cca1c2c6208abbcfedbc prompt_sha256=9e5f805f5dfe9c8c9779776728f5b7d12da9eb146a278e3ba214c7cc428edc9e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p16.txt (model: deepseek-reasoner)
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer" — 135 diff, rows `| FE-45 |` through `| FE-57 |` — thirteen OWED rows added, item 9 (FE-53) a pointer that copies no tables — satisfies the operator's approved scope.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — `| FE-53 | POINTER, not a copy:` — the row points at §11b.3/§11b.7 and reproduces no table — satisfies the pointer instruction.
+MET — §11b.4 "Web and admin | Mantine 8.3 ... Mobile | React Native Reusables per Spec 90 §6" — `| FE-46 | ... "the web library is Mantine 8.3" ... mobile ... "vendored unmodified (126:1006)"` — records the current library clauses, consistent with the pasted dated note amending Mantine 9 to 8.3.
+MET — §11b.2 "Every declared state (error, unauthorized, offline, rate_limited) maps to a library state component" — `| FE-54 | A visible state for every failure ... "An unhandled state is a FAIL, not a blank screen."` — records the rule consistently, no contradiction with the goldens clause.
+MET — Task "nothing in Specs 126, 127, 128 deleted or rewritten" — diff touches only `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` — no clause of 126/127/128 is edited.
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — each new row `OWED \`src/tests/surfaces/<name>.logic.test.ts\`; ... a reservation` — all 13 are `.logic.test.ts` under `src/tests/surfaces/`, none `.db.test.ts`, so no CI-step clause applies.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  217208ms (217.2s)
+📊 Tokens — total: 84957, input: 58093, output: 26864, reasoning: 26374

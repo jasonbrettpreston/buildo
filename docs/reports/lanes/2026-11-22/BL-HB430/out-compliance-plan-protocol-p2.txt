@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:41:27.188Z file_sha256=8503a25a7745b0603627b3b559398df292f86b5417d48612f96769e14c55c791 prompt_sha256=0690c2f6375e689840b04e7b0e144d78abff097b3c305ca2873dd899e0ee0bef
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md new row FE-45 Six cell "D n/a, P owed, F pass, S pass, H n/a, E pass" (the same "P owed" appears in all 13 new rows FE-45..FE-57) — "owed" is outside the closed pass/n/a/FAIL value set the register's own rule 4 fixes, so 13 new rows fail the row-form rule — write "n/a (lock owed)" or "pass" per rule 4, or add a dated note admitting "owed" as a value.
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — FE-01 new note "The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." against the same row's lock cell "(126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2)" — the printed headline reading both contradicts the row's own Status and Lock cell and omits the §11b.3 pointer and the 2026-11-06 trailer assertion that the 2026-11-09 note it cites carries, so the line reflects only part of its notes — restate the full 2026-11-09 lock wording in the reading and mark the cell wording as superseded.
+
+DEFER severity=MED — Spec 135 next-free-id line, "the first value on the line, the one the Spec 136 generator reads, is FE-58" — same dated note "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — FE-58 is published as the next free id and pre-claimed for the BL-MFRULES landing case in the same sentence, so the first value a reader or generator takes as free is already claimed — claim only FE-46..FE-57 in the ledger, or publish FE-59 as the first value for the collision case.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md new rows "| FE-45 |" through "| FE-57 |" — exactly 13 new OWED rows, in item order, item 9 a pointer.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — FE-53 "POINTER, not a copy: ... The tables are not copied here." — item 9 is a pointer row and copies no tables.
+MET — Task card "nothing in Specs 126, 127, 128 deleted or rewritten." — diff header "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — the hunk touches 135 only.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — FE-56 "OWED `src/tests/surfaces/lock-planted-defect.logic.test.ts`" — all 13 new lock paths are surfaces logic test paths the lane records as absent.
+MET — RR-0384 "make each line reflect its notes" — "Dated note 2026-11-22 ... Current reading: ... (from notes dated 2026-11-06, 2026-11-09). The cell text above is kept." — 12 rows (FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39) carry a reading that restates the last dated note, as the implementation record states.
+MET — plan protocol 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — FE-49 "128 R-03 (128:205); 126:140, :147" — every new row cites the spec lines it comes from.
+MET — RR-0380 "surface specs dropped once the handbook has the critical items" — FE-53 "before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032)" — the dropped spec tables are replaced by a pointer, not by copies.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  230240ms (230.2s)
+📊 Tokens — total: 77832, input: 49742, output: 28090, reasoning: 27010

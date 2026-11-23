@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:46:07.598Z file_sha256=0a4c82e725c13c63fbcdb523e27055c7ff0a5845f3489f14ce6dbca4ff39ba2e prompt_sha256=ef4a79bd82c395d88c0e7cdaf31b68dae1a56e43dc5e95cbee13f057d3442798
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p13.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9)" — 135_mcfrontend_decisions_register.md "| FE-45 | The client is just glass. ... | D n/a, P owed, F pass, S pass, H n/a, E pass |" — the 13 new rows use a fourth Six value `owed`, outside the ruled pass/n/a/FAIL vocabulary — either replace `owed` with a ruled value or extend rule 4 to name `owed` (FE-44 already uses "P owed", so this is format-only, hence LOW)
+
+DEFER severity=LOW — Next free id note "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing and rewrites this line by a dated note" — 135_mcfrontend_decisions_register.md "FE-45..FE-57 are taken by the thirteen OWED rows of the RR-0384 list (task-430)" plus "| FE-45 | The client is just glass. ..." — the same branch claims FE-45 while recording FE-45 held by another lane, so a duplicate id ships unless the second lander renumbers — self-resolving per plan 17.5, but relies on that renumber being executed
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer" — 135_mcfrontend_decisions_register.md (FE-45..FE-57) — 13 OWED rows added, items 1..13 in order with item 9 as pointer
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — 135_mcfrontend_decisions_register.md "FE-53 | POINTER, not a copy ... The tables are not copied here. PROSE-ONLY" — pointer row, no table copy
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — diff paths ["docs/specs/02-web-admin/135_mcfrontend_decisions_register.md"] — only the register file changes, no 126/127/128 edits in this chunk
+MET — Spec 126 §6.2 rule 5 "The admin reads the same tables through RLS ... the *same* CONTRACT descriptor serves it" — 135_mcfrontend_decisions_register.md "FE-55 ... The admin is a projection, not a product ... never a parallel data path" — FE-55 states the same-descriptor admin projection
+MET — Spec 126 §7 "R-04: `parcel_ref` = the municipal string, `parcel_pk` = the serial" — 135_mcfrontend_decisions_register.md "FE-52 ... `parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal); `parcel_pk` = `parcels.id` `SERIAL`" — FE-52 reproduces R-04 exactly
+MET — RR-0384 "make each line reflect its notes" — 135_mcfrontend_decisions_register.md "FE-19 ... Confidence for a user lot-size entry reads high, not medium ... the re-evaluation is McBylaws MB-89 ... width and depth" — the 12 Current-reading notes restate each row's latest dated note
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135_mcfrontend_decisions_register.md "OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts` ... path is a reservation" — all 13 rows name reserved `src/tests/surfaces/*.logic.test.ts` paths
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  120820ms (120.8s)
+📊 Tokens — total: 83888, input: 58445, output: 25443, reasoning: 24523

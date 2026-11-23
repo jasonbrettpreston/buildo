@@ -1,0 +1,471 @@
+=== RED commit A (2026-11-22): commit attempt with only src/tests/surfaces/handbook-rule-map.logic.test.ts and the task-430 file staged; exit 1 at the pre-commit related run (failing assertions) ===
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts (26 tests | 5 failed) 146ms
+   × FE-10 H1 — the reader: every FE row, no row can vanish > reads the live register: >= 30 rows, FE-01..FE-nn contiguous, "Next free id" follows the last, status and locks equal the gate reader 5ms
+     → FE-18: expected true to be false // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T1 RED: a 700-character ruling with no bold prints whole; control: a 120-character ruling equals the shared headlineOf 0ms
+     → expected true to be false // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell 2ms
+     → FE-18: expected true to be false // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T5: a 299-character cell with an authored ellipsis is unchanged; 700 and 990 characters print whole 1ms
+     → 700: expected 'Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 …' to be 'Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 …' // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T6 drift lock: the copy equals the shared headlineOf wherever the shared one is not clipped, and extends it where it is (real rows and planted cells) 1ms
+     → expected 297 to be greater than 297
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > FE-10 H1 — the reader: every FE row, no row can vanish > reads the live register: >= 30 rows, FE-01..FE-nn contiguous, "Next free id" follows the last, status and locks equal the gate reader
+AssertionError: FE-18: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:61:46
+     59|       // MF-95 A-T3 (task-430, RR-0384 "stop the clipping"): the 300-c…
+     60|       // a ruling prints whole, so no headline ends in the clip ellips…
+     61|       expect(r.headline.endsWith('…'), r.id).toBe(false);
+       |                                              ^
+     62|       expect(['RULED', 'OWED', 'RETIRED']).toContain(r.status);
+     63|       expect(r.status, r.id).toBe(gate.get(r.id)!.status);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T1 RED: a 700-character ruling with no bold prints whole; control: a 120-character ruling equals the shared headlineOf
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:114:29
+    112|     expect(headlineOf(long).endsWith('…')).toBe(true);
+    113|     const h = headlineFor(long);
+    114|     expect(h.endsWith('…')).toBe(false);
+       |                             ^
+    115|     expect(h).toBe(plainCell(long));
+    116|     const short = sized(120);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell
+AssertionError: FE-18: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:123:46
+    121|     const cells = rulingCells(REGISTER);
+    122|     for (const r of realRows()) {
+    123|       expect(r.headline.endsWith('…'), r.id).toBe(false);
+       |                                              ^
+    124|       expect(r.headline, r.id).toBe(plainCell(cells.get(r.id)!));
+    125|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T5: a 299-character cell with an authored ellipsis is unchanged; 700 and 990 characters print whole
+AssertionError: 700: expected 'Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 …' to be 'Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 …' // Object.is equality
+
+Expected: "Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0."
+Received: "Ruling w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w0 w1 w2 w3 w4 w5 w6…"
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:136:44
+    134|     for (const n of [700, 990]) {
+    135|       const cell = sized(n);
+    136|       expect(headlineFor(cell), String(n)).toBe(cell);
+       |                                            ^
+    137|       expect(headlineFor(cell).length, String(n)).toBe(n);
+    138|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T6 drift lock: the copy equals the shared headlineOf wherever the shared one is not clipped, and extends it where it is (real rows and planted cells)
+AssertionError: expected 297 to be greater than 297
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:155:29
+    153|       else {
+    154|         expect(mine.startsWith(shared.slice(0, -1).trimEnd())).toBe(tr…
+    155|         expect(mine.length).toBeGreaterThan(shared.length);
+       |                             ^
+    156|         expect(mine).toBe(plainCell(cell));
+    157|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 21 passed (26)
+   Start at  15:43:23
+   Duration  2.76s (transform 2ms, setup 4ms, collect 19ms, tests 146ms, environment 0ms, prepare 17ms)
+
+=== RED commit B (2026-11-22): commit attempt with only src/tests/surfaces/handbook-rule-map.logic.test.ts and the task-430 file staged; exit 1 at the pre-commit related run (failing assertions) ===
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts (35 tests | 9 failed) 172ms
+   × MF-95 B — each line reflects its notes (Current reading) > B-T1 RED: a row whose last note is a Current reading prints it on its line; B-T2 control: the same row without it prints as before 4ms
+     → expected '- **fe.02** Ruling for FE-02, a plain…' to be '- **fe.02** Ruling for FE-02, a plain…' // Object.is equality
+   × MF-95 B — each line reflects its notes (Current reading) > B-T3 RED (i): a dated note after the Current reading throws; control: the reading last builds 1ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > B-T4 RED (ii): a cited date that is not the date of an earlier note of the row throws; control: real dates 0ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > B-T5 RED (iii): a reading of 801 characters throws; control: 800 0ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > B-T8 RED (v): a malformed reading note throws; the words Current reading in the prose of an earlier note are not a reading 0ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > B-T9 RED (vi): a reading that cites its own date throws (the own date is also not an earlier note) 0ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > (vii) RED: a reading text holding a bar throws 0ms
+     → expected [Function] to throw an error
+   × MF-95 B — each line reflects its notes (Current reading) > B-T10: an OWED row and a RULED row with a reading each render the reading on the headline line, the Status line next 1ms
+     → expected '# SPEC 136 — McFrontend Handbook\n\n*…' to match /^- \*\*fe\.03\*\* Ruling for FE…/tests\
+   × MF-95 B — each line reflects its notes (Current reading) > B-T6, B-T7, B-T11 real register: exactly the 12 ruled rows carry a reading (pinned), each parses, is at most 800 characters, is printed, and adds exactly one dated note 2ms
+     → expected [] to deeply equal [ 'FE-01', 'FE-02', 'FE-07', …(9) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T1 RED: a row whose last note is a Current reading prints it on its line; B-T2 control: the same row without it prints as before
+AssertionError: expected '- **fe.02** Ruling for FE-02, a plain…' to be '- **fe.02** Ruling for FE-02, a plain…' // Object.is equality
+
+Expected: "- **fe.02** Ruling for FE-02, a plain sentence. Current reading (lane text, notes 2026-11-09, 2026-11-10): The rule now reaches every page."
+Received: "- **fe.02** Ruling for FE-02, a plain sentence."
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:178:24
+       |                        ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T3 RED (i): a dated note after the Current reading throws; control: the reading last builds
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:189:93
+       |                                                                                             ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T4 RED (ii): a cited date that is not the date of an earlier note of the row throws; control: real dates
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:194:97
+       |                                                                                                 ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T5 RED (iii): a reading of 801 characters throws; control: 800
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:199:114
+       |                                                                                                                  ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T8 RED (v): a malformed reading note throws; the words Current reading in the prose of an earlier note are not a reading
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:205:63
+       |                                                               ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T9 RED (vi): a reading that cites its own date throws (the own date is also not an earlier note)
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:215:95
+       |                                                                                               ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > (vii) RED: a reading text holding a bar throws
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:219:103
+       |                                                                                                       ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T10: an OWED row and a RULED row with a reading each render the reading on the headline line, the Status line next
+AssertionError: expected '# SPEC 136 — McFrontend Handbook\n\n*…' to match /^- \*\*fe\.03\*\* Ruling for FE…/tests\
+
+- Expected: 
+/^- \*\*fe\.03\*\* Ruling for FE-03, a plain sentence\. Current reading \(lane text, notes 2026-11-12\): Now owed wider\.\n {2}Status: OWED · lock owed: src\/tests\/surfaces\/y\.logic\.test\.ts · \+2 dated notes$/m
+
++ Received: 
+"# SPEC 136 — McFrontend Handbook
+
+**Status:** GENERATED
+
+> **Role: generated handbook.** Authority: Spec 135 FE rows (policy register) + Spec 126 (contract) and Spec 127 (procedure); this spec is GENERATED from surface-rule-map.json — do not hand-edit. It is the reading surface of the McFrontend pair (Spec 124 R-GV). If this page and a register row disagree, the register row governs on policy and Spec 126 or Spec 127 on the contract and the procedure; fix the register or the generator, never this page. A new ruling is a new row in Spec 135, never a line here.
+>
+> **Citation form.** `Spec 136 §<line id> (FE-nn)`, e.g. `Spec 136 §fe.01 (FE-01)`. The line id is the bold id that starts each line (fe.<n> for a Spec 135 FE-row); the rule id is the register row it summarises.
+
+<!-- GENERATED by `node scripts/surfaces/generate-surface-handbook.mjs --write`. Do not edit by hand: `--check` and `src/tests/surfaces/handbook-rule-map.logic.test.ts` fail on a stale file. -->
+
+v1 covers the 3 FE rulings of Spec 135. The policy rows R-01..R-34 are in Spec 128 §5 until MF-31.
+
+**\"Comply with Spec 136\"** means: for McFrontend work, read the lines that cover what you touch, then follow the register row each cites. Every line cites its binding rule id; the row in `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` is the authority, with its reasons, evidence and dated notes.
+
+## 1. Standard and policy pairs
+
+| Role | Spec | Path |
+|---|---|---|
+| Contract (what is built) | Spec 126 | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+| Procedure (how it is converted) | Spec 127 | `docs/specs/02-web-admin/127_surface_conversion_procedure.md` |
+| Policy (what is ruled) | Spec 128 | `docs/specs/02-web-admin/128_surface_standard_policy.md` |
+| Register (the FE rulings) | Spec 135 | `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md` |
+
+On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; Spec 124 R-GV).
+
+**What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
+
+**Rules rendered: 3**: 3 in force (1 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline, the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+
+**Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
+
+## 2. Rules
+
+- **fe.01** Ruling for FE-01, a plain sentence.
+  Status: RULED 2026-11-04
+
+- **fe.02** Ruling for FE-02, a plain sentence.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/x.logic.test.ts · +2 dated notes
+
+- **fe.03** Ruling for FE-03, a plain sentence.
+  Status: OWED · lock owed: src/tests/surfaces/y.logic.test.ts · +2 dated notes
+
+## 3. History
+
+Rows retired or struck. Listed only so old citations resolve. Nothing here is a rule you must follow.
+
+None yet.
+
+## Operating Boundaries
+
+### Target Files
+- `scripts/surfaces/generate-surface-handbook.mjs` (the generator; `--write` / `--check`)
+- `scripts/analysis/gates/rule-map.mjs` (the handbook registry keyed by spec id and the shared CLI shell)
+- `scripts/analysis/mcbylaws/cite-parse.mjs` (the one reader of a row's status and lock paths)
+- `scripts/surfaces/_schema/surface-rule-map.json` (the generated rule map)
+- `src/tests/surfaces/handbook-rule-map.logic.test.ts` (the lock)
+"
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:225:15
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 B — each line reflects its notes (Current reading) > B-T6, B-T7, B-T11 real register: exactly the 12 ruled rows carry a reading (pinned), each parses, is at most 800 characters, is printed, and adds exactly one dated note
+AssertionError: expected [] to deeply equal [ 'FE-01', 'FE-02', 'FE-07', …(9) ]
+
+- Expected
++ Received
+
+- Array [
+-   "FE-01",
+-   "FE-02",
+-   "FE-07",
+-   "FE-11",
+-   "FE-14",
+-   "FE-18",
+-   "FE-19",
+-   "FE-20",
+-   "FE-29",
+-   "FE-31",
+-   "FE-38",
+-   "FE-39",
+- ]
++ Array []
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:230:73
+       |                                                                         ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 26 passed (35)
+   Start at  15:47:27
+   Duration  2.78s (transform 2ms, setup 4ms, collect 19ms, tests 172ms, environment 0ms, prepare 18ms)
+
+=== RED commit C (2026-11-22): commit attempt with only src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts and the task-430 file staged; exit 1 at the pre-commit related run (failing assertions) ===
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts (38 tests | 3 failed) 196ms
+   × MF-95 C — the thirteen RR-0384 rows > C-T2 RED: thirteen rows, in item order, are the LAST rows of the register, each OWED with exactly its one reserved lock path, none of which exists 3ms
+     → expected [] to deeply equal [ …(13) ]
+   × MF-95 C — the thirteen RR-0384 rows > C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by" 0ms
+     → expected 8 to be greater than or equal to 21
+   × MF-95 C — the thirteen RR-0384 rows > C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap 1ms
+     → expected [] to have a length of 13 but got +0
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts (21 tests | 1 failed) 1130ms
+   ✓ V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none 370ms
+   × task-384: the McFrontend handbook reaches the reviewer of the web report renderer > the surface-136 lens input generated for the change holds fe.01 to fe.N, N the FE row count of Spec 135 37ms
+     → expected 44 to be greater than or equal to 57
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > task-384: the McFrontend handbook reaches the reviewer of the web report renderer > the surface-136 lens input generated for the change holds fe.01 to fe.N, N the FE row count of Spec 135
+AssertionError: expected 44 to be greater than or equal to 57
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:215:15
+       |               ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 C — the thirteen RR-0384 rows > C-T2 RED: thirteen rows, in item order, are the LAST rows of the register, each OWED with exactly its one reserved lock path, none of which exists
+AssertionError: expected [] to deeply equal [ …(13) ]
+
+- Expected
++ Received
+
+- Array [
+-   "src/tests/surfaces/client-glass-boundary.logic.test.ts",
+-   "src/tests/surfaces/ui-library-set.logic.test.ts",
+-   "src/tests/surfaces/tunables-are-data.logic.test.ts",
+-   "src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts",
+-   "src/tests/surfaces/scope-fence.logic.test.ts",
+-   "src/tests/surfaces/auth-checkout-hosted.logic.test.ts",
+-   "src/tests/surfaces/nav-tab-switch.logic.test.ts",
+-   "src/tests/surfaces/parcel-id-names.logic.test.ts",
+-   "src/tests/surfaces/page-set-pointer.logic.test.ts",
+-   "src/tests/surfaces/failure-state-declared.logic.test.ts",
+-   "src/tests/surfaces/admin-same-descriptor.logic.test.ts",
+-   "src/tests/surfaces/lock-planted-defect.logic.test.ts",
+-   "src/tests/surfaces/a11y-category.logic.test.ts",
+- ]
++ Array []
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:257:47
+       |                                               ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 C — the thirteen RR-0384 rows > C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"
+AssertionError: expected 8 to be greater than or equal to 21
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:269:18
+       |                  ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 C — the thirteen RR-0384 rows > C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap
+AssertionError: expected [] to have a length of 13 but got +0
+
+- Expected
++ Received
+
+- 13
++ 0
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:277:17
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 55 passed (59)
+   Start at  15:51:37
+   Duration  3.86s (transform 3ms, setup 10ms, collect 39ms, tests 1.33s, environment 0ms, prepare 44ms)
+
+
+=== RED Q9 (2026-11-22): commit C attempt with the reworded A-T6 and the FE-54 pin on the generator before the Q9 change; exit 1 at the pre-commit related run (failing assertions) ===
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts (39 tests | 3 failed) 284ms
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell 5ms
+     → FE-54: expected 'A visible state for every failure. "a…' to be 'A visible state for every failure. "a…' // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T6 drift lock (ruling Q9): the copy equals the shared headlineOf wherever the shared one is neither clipped nor stripped of a trailing bracket, and is the plain cell where it is (real rows and planted cells) 2ms
+     → expected 'A visible state for every failure. "a…' to be 'A visible state for every failure. "a…' // Object.is equality
+   × MF-95 A — Spec 136 prints every ruling whole (no clip) > Q9 pin: the FE-54 line keeps its cite (the shared stripProvenance would drop it) 2ms
+     → expected false to be true // Object.is equality
+ ✓ src/tests/backlog/rule-lists-table.logic.test.ts (21 tests) 1130ms
+   ✓ V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none 372ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell
+AssertionError: FE-54: expected 'A visible state for every failure. "a…' to be 'A visible state for every failure. "a…' // Object.is equality
+
+Expected: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)."
+Received: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."."
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:125:32
+       |                                ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T6 drift lock (ruling Q9): the copy equals the shared headlineOf wherever the shared one is neither clipped nor stripped of a trailing bracket, and is the plain cell where it is (real rows and planted cells)
+AssertionError: expected 'A visible state for every failure. "a…' to be 'A visible state for every failure. "a…' // Object.is equality
+
+Expected: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)."
+Received: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."."
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:155:22
+       |                      ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > Q9 pin: the FE-54 line keeps its cite (the shared stripProvenance would drop it)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:169:165
+       |                                                                                                                                                                     ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 57 passed (60)
+   Start at  16:05:29
+   Duration  3.72s (transform 3ms, setup 9ms, collect 41ms, tests 1.41s, environment 0ms, prepare 37ms)
+
+

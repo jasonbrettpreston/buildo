@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:57:33.308Z file_sha256=d61e2238d349443c1f162d7ac226afb69b7690c749493bcc6e6bb0abc6ba9603 prompt_sha256=d54cea1f9070429c42dcbfad609548dc468dd29d98de89be48f306a3c4c64335
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-135-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-56 "A rule without a lock is not yet a rule" (128:127) — docs/specs/00-architecture/00_system_map.md "+`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`..." — the system map now cites 13 lock paths the register marks OWED and that "all 13 absent" (commit C note), so the map presents unlocked rules as the spec's tests; if any infra check resolves system-map test paths to files it fails, and a reader reads them as locked — annotate the reserved paths (or defer the map row) until task-434 lands the locks.
+DEFER severity=LOW — queue form rule (M-246 note 2026-11-09): "a DONE heading's block ... holds exactly one bullet `  - FE rows owned: none.`" — .cursor/MCFRONTEND-QUEUE.md MF-95 block carries "  - Done-condition:", "  - FE rows owned: none." and "  - Dated note 2026-11-22 ..." — three bullets, so arm Q will refuse when MF-95 flips DONE unless the block is collapsed — trim to the single "FE rows owned" bullet at the DONE flip.
+REJECT — Operating Boundaries "Out-of-Scope Files ... Spec 136 (the generated handbook): its generator is Phase 1 code (MF-18)" — the change is accused of touching an out-of-scope generator — not a real issue: the card "Files:" line (approved at plan review per RR-0378) names scripts/surfaces/generate-surface-handbook.mjs and 136_mcfrontend_handbook.md, and FE-53 states "the later operator ruling governs".
+MET — card "Files: ... .cursor/MCFRONTEND-QUEUE.md ... docs/reports/generated/rule-lists-by-kind.md ... docs/reports/panels/ ... docs/specs/00-architecture/00_system_map.md" — all four diff paths — the chunk changes only files named in the approved scope.
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — diff hunks touch none of 126/127/128 — no such file appears in the change.
+MET — Operating Boundaries "this register (documents only; no code lands with it)" — the chunk adds only .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-95.json, docs/specs/00-architecture/00_system_map.md — markdown and JSON only, no source code.
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer" — docs/reports/panels/MF-95.json "13 new OWED rows carry the RR-0384 list (commit C)" and .cursor/MCFRONTEND-QUEUE.md "13 new OWED register rows" — the records state exactly 13 OWED rows with item 9 a pointer.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: FE-45, FE-46, FE-47, FE-48, FE-49, FE-50, FE-51, FE-52, FE-53, FE-54, FE-55, FE-57
+
+---
+⏱  103828ms (103.8s)
+📊 Tokens — total: 44772, input: 24721, output: 20051, reasoning: 19292

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:45:34.719Z file_sha256=8245bca80aac6e47db30f2a492970986dd4da555d9ccf41281de150ee2e35857 prompt_sha256=13652a3e1e6e3145b1fee81fd2374054865b8092592d425c8a80c8a4d0f7770a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — Spec 126 §0b item 2 "one full suite on the current origin tip before \"ready\" (`08_agents.md:488`, MCINC-4)" — pasted Implementation Notes 2026-11-22 acceptance "\"Full suite not run (push station only).\"" — the row's done-condition stops at `--check` and one logic test, and the 13 lock paths it adds are absent, so a DONE flip would breach the pasted suite step and leaves `src/tests/surfaces/register-locks-resolve.infra.test.ts` (listed in the same map row) unrun against them — add the full-suite run and the register-locks-resolve result to the MF-95 done-condition and record the run before "ready".
+
+DEFER severity=MED — Spec 126 placement note "re-run it whenever a boundary list changes" and "`src/tests/system-map.infra.test.ts:49` asserts every such path appears in the committed system-map row for the spec" — docs/specs/00-architecture/00_system_map.md:100 "\"src/tests/surfaces/a11y-category.logic.test.ts` | DRAFT\"" — 13 paths were added to row 135, yet neither the done-condition nor the acceptance record names `node scripts/generate-system-map.mjs` or the system-map infra test, so the "derived, never hand-edited (PD #2)" evidence is missing — record the generator re-run and the coupling test in the row's evidence.
+
+DEFER severity=MED — Spec 126 §0b "FE-35 is MF-62's, not yet in the register, and the Spec 136 generator refuses a gap in the FE numbering" and "Register row for this section: owed, FE-40 (reserved)" — docs/reports/panels/MF-95.json:28 "\"FE ids of the new rows are placeholders until landing: lane BL-MFRULES (task-388) holds the first free id on an unlanded branch; the second lander renumbers (plan section 17.5).\"" — the 13 rows are numbered FE-45..FE-57, past the reserved-but-absent FE-36 and FE-40, and nothing states whether those reserved rows are present, so the no-gap condition for the regenerated 57-rule handbook is unverified — state the register's numbering state (which of FE-35, FE-36, FE-40 exist at commit C) in the row's dated note or the panel.
+
+DEFER severity=LOW — Spec 126 §0b item 6 "The operator's own words with the date and the record path ('Operator verbatim' = the operator's own words, Spec 135:3)" — docs/reports/panels/MF-95.json:10 "\"RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only.\"" — RR-0385 and RR-0390 are carried as process rulings with no operator words, date or record path, and this change touches Spec 135 without landing them as an FE row or a dated note — cite MORNING-DECISIONS.md:1915 and :1961 with the operator's words, or land the dated note in the same docs commit.
+
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md form "lanes R rulings · G gates · E one-writer build · T tests · P product" — .cursor/MCFRONTEND-QUEUE.md:647 "\"**MF-95 INPUTS.2: ... — RUNNING** (E)\"" against docs/reports/panels/MF-95.json:4 "\"class\": \"G\"" — one task carries lane E in the queue and class G in its own panel record, and "lane BL-HB430" is a branch token, not one of the five lane letters — state one lane (E) in both records and keep BL-HB430 as the task/branch token.
+
+MET — Spec 126 §0b item 1 — .cursor/MCFRONTEND-QUEUE.md:647 — the MF-95 row is added with a status line, a done-condition, "FE rows owned: none." and a dated note, before any code commit.
+
+MET — Spec 126 §0b item 6, M-246 form — .cursor/MCFRONTEND-QUEUE.md:651 — the note keeps the prior line ("the line read \"Next free id: **MF-94**\" before this note") and cites the operator's word "Approved" with its record path and line.
+
+MET — Operator ruling RR-0384 scope — .cursor/MCFRONTEND-QUEUE.md:649 — the done-condition is the three approved things (no clipping, a Current reading per line, 13 OWED rows) and fences task-431 and task-434 out of the row.
+
+MET — Task Description, "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/reports/generated/rule-lists-by-kind.md:32 — the surface-126 row still reads 256,412 characters and 4 parts, and no diff path touches Specs 126, 127 or 128.
+
+MET — Spec 126 §0b item 7 — docs/reports/panels/MF-95.json:8 — no D-nn pre-approval is claimed; both cards rest on named operator rulings.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  125220ms (125.2s)
+📊 Tokens — total: 47083, input: 22778, output: 24305, reasoning: 23079

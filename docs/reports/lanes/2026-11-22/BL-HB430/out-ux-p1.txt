@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T02:01:16.633Z file_sha256=46220c3234dced19d99714982f7ec42f97ad6aff909d4902fb43f6dd69e3e4c4 prompt_sha256=1ffee02a095403bf592562908bde8f29080e5af1362d74c160c9c8e22b7e9364
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — `.cursor/MCFRONTEND-QUEUE.md:648` "Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the person reading the queue is told three commits still have to land although this change already carries all three (design: "2026-11-22 lane BL-HB430 commit C: thirteen OWED rows added to Spec 135 as FE-45..FE-57") — restate the next step as the push and the operator read, not the three commits.
+
+DEFER severity=MED — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-02` "Its own row is owed as FE-40, after FE-35..FE-39 land." — the reader sent to FE-40 for the working-standard row lands on "| FE-40 | McTest: the real app is proven wired by layers", and the new Current reading added beside it does not resolve the pointer — replace the pointer with the row that actually carries the standard, or mark it discharged.
+
+DEFER severity=LOW — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-01` "The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." vs the same row's lock cell "(126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2)" — one line now states two opposite things about one lock and the reader has to reach three older notes to know which stands — add to the reading that the lock cell wording is restated by the notes dated 2026-11-06 and 2026-11-09.
+
+DEFER severity=LOW — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-39` "When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a")." — the row's own ruling cell still reads "Engine values show before MB-38 only in the admin preview and in a tester-only preview" and the reading does not say that sentence stands until the flip — add one clause that EI-D2 stays for the pre-flip period.
+
+REJECT — `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-49` "Known standing exception: a platform_shared contract descriptor note already names lead_parcels" — the rule cell says "`lead_parcels` is read by no surface" while its own footnote says a descriptor names it, which reads as a contradiction — it is disclosed on the line, the row rules nothing new, and task-434 is named to meet it, so the reader is not misled.
+
+REJECT — `.cursor/MCFRONTEND-QUEUE.md:647` "RR-0384, operator, verbatim: \"Approved\"" — the note quotes one word where the pasted ruling is longer — the rest is the orchestrator text he pasted back and the full reply is quoted in the register rows and the panel card, so nothing is hidden.
+
+VERDICT: PASS on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit (none drawn by this diff, it is documents, generator output and a panel record); drawn: handbook line whole for a formerly clipped ruling, handbook line for an OWED row with a reserved lock path, handbook line carrying a Current reading, queue row as read by the operator, register row as read by the reviewer   Dead ends found: 0
+
+---
+⏱  54235ms (54.2s)
+📊 Tokens — total: 69308, input: 59477, output: 9831, reasoning: 9013

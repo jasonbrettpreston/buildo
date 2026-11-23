@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:49:01.278Z file_sha256=b46a641eeb52dacabe2c3f62ce505552306f0a8164c67d8f3952b21013fd33a2 prompt_sha256=ec770c65d01dbcfe9b9cb8d184046562a9f7c90c4ca323bc3e67a16ba08bfe86
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p24.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11a.9 "confidence by source (estimated low, user medium, verified high)" and "user_entry (confidence medium, provenance user)" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.19 "Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium" — the generated handbook prints a confidence value that contradicts the pasted clause and the user_entry golden, on a note its own frame calls "not an operator word and not a ruling", and no pasted ruling raises user-entry confidence to high — remove that clause from the FE-19 reading, or land and cite an operator ruling that changes user-entry confidence to high.
+
+BUG severity=HIGH — 11a.7 dated note 2026-11-11 (MF-62 copy) "the `checked` object carries no `title`, no `log_label` and no group `heading` (the contract refuses them)" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.35 "the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits)" — RR-0384 "make each line reflect its notes" is unmet for FE-35: the row now prints whole with the superseded title and carries no Current reading to correct it, while 12 other rows got one — add FE-35 (or its successor id) to READING_IDS with a reading restating the 2026-11-11 copy note and the processing-sequence note, or amend the FE-35 cell.
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"" — the strict frame requires, and each of the 12 register notes therefore carries, an operator quotation "Approved" that RR-0384 (as pasted) does not contain, so the ruling register gains 12 operator verbatims the record does not hold — drop the `operator, verbatim` clause from READING_FRAME and READING_RE or use RR-0384's actual words, then re-emit the 12 notes.
+
+DEFER severity=MED — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "if (/^\\*\\*/.test(ruleCell.trim())) return shared;" — a rule cell led by a bold span still returns the shared 300-character clipped headline, so the clip the ruling stopped survives for any such row (none on the register today, per A-T2) — return the plain cell whenever the shared result ends in the clip ellipsis and the plain cell exceeds 300, bold-led or not.
+
+DEFER severity=MED — Implementation Notes "C-T5 in src/tests/backlog/rule-lists-table.logic.test.ts (the fe.01..fe.N range computed from the register), planted: one id more than the register holds is refused" — src/tests/backlog/rule-lists-table.logic.test.ts "expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));" — the planted assertion is vacuous, an n+1 element set can never equal an n element range, so this lock cannot go red against the defect it names — assert on a register text with one extra FE row that the computed range check fails, or drop the line and the planted claim.
+
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/generate-surface-handbook.mjs, surface-rule-map.json, the two tests, prereg-MF-95-1.json — no hunk touches Spec 126, 127 or 128; the 136 hunk only re-prints rule lines.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.53 "POINTER, not a copy" — the §11b.3 and §11b.7 tables are cited by line and not copied.
+MET — RR-0384 "add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json "fe.45" through "fe.57" — 13 new OWED rows appear in the map, the handbook and the register, header counts move 44 to 57 and 8 OWED to 21.
+MET — task card Files "scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json" — the new prereg commits "expected_moves": [] with unchanged totals, matching "no file under scripts/analysis/bylaw ... changes".
+MET — RR-0384 "stop the clipping" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(r.headline.endsWith('…'), r.id).toBe(false);" — no real register headline ends in the clip ellipsis after the change.
+MET — task card "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — the change is made in that generator and locked in that test file, not in a new path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+Rules met: none
+
+---
+⏱  95731ms (95.7s)
+📊 Tokens — total: 54823, input: 36641, output: 18182, reasoning: 16916

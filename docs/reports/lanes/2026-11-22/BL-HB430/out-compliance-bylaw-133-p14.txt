@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:34:34.410Z file_sha256=1b81823a7bbcd96ced41732b5a7ec460436a4c0dc084aa058c6ee350db71efd1 prompt_sha256=e6362581a975031c788c60a25a7016b9818d1354776f59f438e1b02957f69354
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p14.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — m.515 "McIncrement (MCINC-8): one ID ledger." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.45** The client is just glass." (lane note: "FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders"; "FE-46..FE-58 claimed by this lane") — the commit books FE-45 in Spec 135, in surface-rule-map.json and in Spec 136 while the ids ledger gives FE-45 to BL-MFRULES and this lane FE-46..FE-58, so one id stands for two rows until the landing renumber — claim FE-45 for BL-HB430 in ~/Buildo-scratch/ids or hold the FE-45 row out of the commit and re-run ids/check.mjs
+DEFER severity=MED — plan 17.4 refusal (v) as the generator restates it "(v) a last note holding 'Current reading:' that does not parse strictly" — scripts/surfaces/generate-surface-handbook.mjs "if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;" — the marker is searched in the whole Status cell, so a row whose earlier note merely mentions "Current reading:" in prose and carries no reading note throws and blocks --check/--write, a refusal outside the pinned set (i)..(vii) — search the last segment only, "if (!last.includes(READING_MARK) && !READING_FRAME.test(last)) return null;"
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — the second trigger rewrites the headline of cells that were never clipped, where the shared reader stripped a trailing provenance bracket, a text change the operator's three things do not name and only the lane ruling Q9 authorises — get an operator note for the unclipped rewrite, or limit the copy to the clipped case (shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX) and keep the Q9 pin as an open question
+DEFER severity=LOW — RR-0384 "add these 13 lines" — NONE — the register rows FE-45..FE-57 and the "Next free id FE-58" note live in docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, which is not in this chunk (chunk 3 of 3, cut at file boundaries), so the line texts and the numbering cannot be verified here — confirm in the chunk that carries Spec 135
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "function wholeHeadline(ruleCell) {" — the clipped shared result is replaced by the plain Ruling cell, and the lock pins "no headline ends in an ellipsis"
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — the reading prints on the headline line and the Status count rises by one on each of the twelve rows
+MET — RR-0384 "add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json "+      "id": "FE-57"," — thirteen rows fe.45..fe.57, each OWED with exactly one lock owed path
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3" and "The tables are not copied here."
+MET — card Description "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff hunks touch only Spec 136, the prereg, the rule map, the generator and two tests, and the new rows quote 126/128 rather than edit them
+MET — card "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json" — every path changed in this chunk is on the Files line
+MET — m.511 "CITE-2 cite by id and anchor." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09)" — each new row cites the spec id with its line anchor
+REJECT — RR-0384 "stop the clipping" — the early return "if (/^\*\*/.test(ruleCell.trim())) return shared;" is accused of leaving a clip on a bold-led long cell — A-T2 pins "no headline ends in an ellipsis" and "every headline is the plain text of its cell" over the real register, so a surviving clip fails the lock
+REJECT — RR-0384 "These look great - teh 13 are perfect." — fe.46 is accused of citing RR-0384 for the toast-library question — the row only says "This row says nothing on the toast library: RR-0384 did not rule it.", which the pasted verbatim supports
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: m.511
+```
+
+---
+⏱  121812ms (121.8s)
+📊 Tokens — total: 61178, input: 38001, output: 23177, reasoning: 21801

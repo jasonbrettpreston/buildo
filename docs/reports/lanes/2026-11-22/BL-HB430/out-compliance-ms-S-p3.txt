@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:40:01.391Z file_sha256=0451506f1d264687be1a2e5617b60a98107601939d6c612dc0fd3a67a642ca5e prompt_sha256=b95eb04113b98bf240ff6ca703e7b0c6efd10335985d86f9e890d1fe9be2c102
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — only 12 of the 57 rendered lines can carry a reading because only 12 register rows got a reading note ("const READING_IDS = ['FE-01', 'FE-02', 'FE-07', 'FE-11', 'FE-14', 'FE-18', 'FE-19', 'FE-20', 'FE-29', 'FE-31', 'FE-38', 'FE-39'];", src/tests/surfaces/handbook-rule-map.logic.test.ts), so 45 lines still print a headline with no reading and the ruling's word "each" is unmet on the material as pasted — either the card or the ruling must name that exactly these 12 rows are the ones whose notes are reflected, or the other lines need a reading.
+
+BUG severity=MED — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"; lane text restating the notes dated" — the strict frame attributes the word "Approved" to the operator as a verbatim under RR-0384, but the pasted RR-0384 verbatim contains no such word, and every one of the 12 reading lines prints that frame, so the handbook carries an operator quotation the pasted ruling does not support — use the ruling's actual words ("These look great - teh 13 are perfect") or drop the word "verbatim" from the frame.
+
+DEFER severity=LOW — "Five principles, keep it simple, no scope creep" (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — this is a fourth behaviour that changes headlines of rows that were never clipped (the shared stripProvenance drops a trailing bracket, the copy keeps it), and the only authority pasted for it is the lane's own plan-grounder note "ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md)", not the operator's three named items — fold Q9 explicitly into the operator-approved scope or drop the unclipped-cell branch, since it is currently scope creep justified by a non-operator note.
+
+DEFER severity=LOW — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a register cell that starts with a bold span and runs past 300 characters still returns the clipped shared headline ending in "…", so "stop the clipping" holds only for cells without a leading bold span and no pasted clause exempts them — make the bold-led case also fall through to the plain cell, or state in the generator why bold-led cells may still clip.
+
+REJECT — "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — the change adds handbook lines while the pasted increment objective puts the search page first — not a real issue: RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" and RR-0384 approve this task's scope, and the card Files line names every path in this chunk.
+
+MET — "add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json "{\"id\": \"FE-57\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.57\"" — the generated rule map carries thirteen new owed lines FE-45 to FE-57 alongside their handbook lines fe.45 to fe.57.
+
+MET — card Files line "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json" — all five paths in this chunk appear in the pasted Files line, so the diff stays inside the card's scope.
+
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — src/tests/surfaces/handbook-rule-map.logic.test.ts "found by its lock path, not its id (FE-54 on this branch; renumbered at landing, plan 17.5)" — no Spec 126, 127 or 128 file is touched, and the Q9 pin keeps the Spec 128 Rule 12 cite in the line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  128185ms (128.2s)
+📊 Tokens — total: 31773, input: 17493, output: 14280, reasoning: 13143

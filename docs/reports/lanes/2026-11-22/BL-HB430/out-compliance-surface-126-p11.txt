@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:45:46.926Z file_sha256=2335e638341708a9ada81ad94cbc79689776c63ecc77efe8e28fee0b39c97ebe prompt_sha256=af9c8833aecaf818faf9fe6fde38f51bfffbbf27b163470a463dc9c86bfe7705
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §2.1 dated note 2026-11-09 (ii) "the web and admin archetype set is Mantine 9 + @rjsf/mantine + mantine-datatable" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-46 "the web library is Mantine 8.3" — the added rule line records a version the pasted clause does not, and restates a set the clause already holds, which is the "second copy is a second thing to keep in sync" failure 126 §3.1 names, so the line the handbook will print disagrees with the spec on the library the whole front end builds on — fix: record Mantine 9, or cite 126:1005 as the later dated note superseding §2.1 with its date and operator words, and hold the version by reference only.
+DEFER severity=MED — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-45..FE-57 "The recorded reply in full:" — the same roughly 600 character reply is copied into all thirteen new rows, so the page grows by copying it thirteen times, the exact growth the ruling refused for item 9 and that FE-53 states as "POINTER, not a copy" — fix: keep the full reply on one row or in the 2026-11-22 dated note and have the other twelve cite that id.
+DEFER severity=MED — RR-0384 (MORNING-DECISIONS.md:1901) "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-45 "and added two phrases of his own" and "(last, line 1903)" — the pasted ruling record ends at :1901 and holds neither "Approved" nor "I have not started task 430. You said you would read the list first, and this is it.", and :1902-1903 are not in the pasted context, so the operator verbatim cited by all thirteen rows and the twelve readings cannot be traced — fix: quote only what :1901 shows, or record the :1902-1903 lines in the ruling record so the words are checkable.
+DEFER severity=LOW — 126 §3.1 dated note 2026-11-09 (MF-42) "a generated LIST MUST carry render.list as an object" (recorded under Spec 135 FE-31) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-31 "Current reading: The render-smoke clause is its own row, FE-33, and this row's lock does not check it." and "The web footer is one shared component, footerNode.ts." — the appended reading claims to restate this row's notes yet no sentence carries the 2026-11-09 items (2), (3), (5) or the 2026-11-10 note, the only home of the render.form and render.list MUSTs the pasted clause records under FE-31, and this reading is what the generator prints — fix: add the schema MUST clause to the reading, or state in it that the 2026-11-09 items (2), (3), (5) and the 2026-11-10 note still govern.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-45..FE-57 — thirteen new rows added, each naming its item 1..13 of REPORT-429 section 3A in order.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-53 — the row is a pointer and says "The tables are not copied here."
+MET — 126 §2.2.1 P1 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-55 — the row quotes "The admin is a projection, not a product." word for word.
+MET — 126 §2.2.1 P4 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-47 — the row quotes "All tunables are data; zero thresholds in src/." word for word.
+MET — 126 §2.0 scope fence and two-product change — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-49 — both pasted sentences are quoted word for word and the known exception is declared.
+MET — 126 §3.4 parcel id names — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-52 — records parcel_ref as parcels.parcel_id VARCHAR(20) and parcel_pk as parcels.id SERIAL, matching §3.4.
+MET — Spec 135 rule 5 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:FE-45..FE-57 — every new row is OWED with a reserved src/tests/surfaces/*.logic.test.ts path.
+MET — task Description "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff touches docs/specs/02-web-admin/135_mcfrontend_decisions_register.md only.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: none
+
+---
+⏱  129623ms (129.6s)
+📊 Tokens — total: 85252, input: 57488, output: 27764, reasoning: 26495

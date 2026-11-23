@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:59:18.572Z file_sha256=bff1b271253d5f66e30735975b60939c61a6117e7611648a566e457286dbb0c3 prompt_sha256=05eb47563a38a28b70cf6168167fecebad483fc9dc93b9895e251ecf2a203cb4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-135-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs:59 "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell led by a bold span still returns the shared headline unchanged, so a clipped bold-led ruling would print clipped; only the fact that no such row exists today keeps the clause met, and nothing plants one — fix: run the plain-cell rule for bold-led cells too, or pin the exemption with a planted long bold cell.
+DEFER severity=LOW — RR-0384 "stop the clipping, make each line reflect its notes, and add these 13 lines" — scripts/surfaces/generate-surface-handbook.mjs:61 "return clipped || shared !== plain ? plain : shared;" — cells that were never clipped also change text (a trailing provenance bracket the shared stripProvenance drops is now kept), which is headline change beyond the clipping item and is named only by the lane's own Q9 note, not by a pasted ruling — fix: limit the plain-cell fallback to clipped cells, or record Q9 as an operator ruling.
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:88 "the re-evaluation is McBylaws MB-89, not increment 6" — the fe.19 line now prints that reading beside the same row's text "McBylaws re-evaluates (increment 6)" with nothing marking the earlier clause superseded, so the one line carries two answers — fix: mark the superseded passage on the row text (strike or "superseded by note dated ...") wherever a reading restates it.
+DEFER severity=LOW — Spec 135 rule 4 "`Six` cell: letters D P F S H E ... Applies to FE rows only." — NONE — the thirteen new FE rows live in Spec 135, which is not in this chunk (chunk 3 paths list 136, the generator, the rule map and two tests only), so the Six cells of fe.45 to fe.57 cannot be seen and nothing in this chunk shows them — fix: confirm the 13 register rows carry their Six cells before merge.
+DEFER severity=LOW — Spec 135 rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4)." — docs/specs/02-web-admin/136_mcfrontend_handbook.md:29 "57 in force (21 OWED, whose lock is still to land)" — the count line calls 21 lockless rows "in force" although rule 2 says they are not yet rules, the caveat sitting only inside the parenthesis — fix: word the count as rendered rows with "21 not yet rules (OWED, lock owed)".
+MET — Spec 135 rule 3 — docs/specs/02-web-admin/136_mcfrontend_handbook.md:166 "Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts" — each new row reads OWED with a lock path, never an OWED marker without one.
+MET — Spec 135 rule 5 — docs/specs/02-web-admin/136_mcfrontend_handbook.md:202 "Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts" — every owed lock is a src/tests/surfaces/*.test.ts the change does not create.
+MET — Spec 135 rule 2 — docs/specs/02-web-admin/136_mcfrontend_handbook.md:166 — one lock per new row, in the Status cell arm C reads.
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:166 "**fe.45** The client is just glass." — fe.45 to fe.57 are the thirteen rows.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md:190 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3" — the pointer row cites and does not copy the tables.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  115146ms (115.1s)
+📊 Tokens — total: 51293, input: 28988, output: 22305, reasoning: 21289

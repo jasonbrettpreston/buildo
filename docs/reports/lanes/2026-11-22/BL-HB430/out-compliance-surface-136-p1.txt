@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:59:36.015Z file_sha256=0943a9a86c4e2b937bf38ae5f4f8b332819964a19bcafc92b2711c99d5069cc1 prompt_sha256=9c731d92a538875d799787aed4f9b887621ead3d0a626610139c284ff70281f0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — docs/specs/00-architecture/00_system_map.md "+...`src/tests/surfaces/client-glass-boundary.logic.test.ts`...`src/tests/surfaces/a11y-category.logic.test.ts`" and card "each Status: OWED · lock owed: <path> (client-glass-boundary, ... a11y-category)" / "(all 13 absent)" — the 13 new OWED rows cite lock files that do not exist, so their Lock column does not resolve to a file, and acceptance evidence "(5) --check green: surface-handbook (57 rules), bylaw-handbook, surface-validate, surface-registry, spec-split-check, rule-lists page" names no register-locks-resolve run — confirm register-locks-resolve tolerates owed reserved paths and record it green, else defer the 13 paths until task-434 lands red stubs.
+
+MET — fe.08 — docs/specs/00-architecture/00_system_map.md "| 135 | `02-web-admin/135_mcfrontend_decisions_register.md` | McFrontend Decisions Register" — 135 stays the register and 136 stays the handbook, doc set unchanged.
+MET — fe.10 — card "(5) --check green: surface-handbook (57 rules), bylaw-handbook, surface-validate, surface-registry, spec-split-check, rule-lists page" — the generator change and handbook regeneration are held to handbook-rule-map, the rule's enforced lock.
+MET — fe.11 — .cursor/MCFRONTEND-QUEUE.md "**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole ... — RUNNING** (E)" inserted above "## Later: convert-on-touch" — MF row recorded inside the Phase 2 block, per the later operator ruling.
+MET — fe.14 — .cursor/MCFRONTEND-QUEUE.md "2026-11-22 lane BL-HB430 commit 0 ... MF-95 queue row under Phase 2 with \"FE rows owned: none.\"" — no MF task added under the LATER head.
+MET — fe.16 — docs/specs/00-architecture/00_system_map.md "| 135 | `02-web-admin/135_mcfrontend_decisions_register.md` |" — 135 register, 136 handbook kept in 02-web-admin, no path move.
+
+REJECT — fe.16 — accused: "No tooling change." broken by editing scripts/surfaces/generate-surface-handbook.mjs — the later operator ruling RR-0384 (2026-11-22) governs over the 2026-11-09 Q-MF1 note and the card Files name the script, so this is not a real issue.
+REJECT — fe.14 — accused: a handbook task sits outside Phase 0-2 or convert-on-touch — RR-0378 and RR-0384 (2026-11-22) later operator rulings authorize the task and it is the rule source the phases read, not a new screen.
+REJECT — fe.48 — accused: copying "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md" verbatim into the repo — the dated-note form cites the source path and quotes an operator ruling, not a mock or Stitch export, so the design-input rule is not touched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: fe.08, fe.10, fe.11, fe.14, fe.16, fe.48
+
+---
+⏱  95694ms (95.7s)
+📊 Tokens — total: 43020, input: 24325, output: 18695, reasoning: 17874

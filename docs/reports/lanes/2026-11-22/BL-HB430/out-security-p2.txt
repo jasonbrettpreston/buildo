@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T02:01:13.775Z file_sha256=4d9f715e55f73812dda83d032b09362946cfbaa1d3b0571f7e7182cc35ecf63a prompt_sha256=04534b32d9f42761ee26d989271946fe716b6bc53457a1bf3848a12bc24bf55e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-security-p2.txt (model: deepseek-reasoner)
+
+NOT APPLICABLE: the change is documentation, generated handbook text, a schema-lookup JSON, remark-driven generator parsing, and tests; no money, auth, entitlement, PII or admin code path is added or altered (FE-50 merely cites, in prose, that auth and checkout are hosted).
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  3063ms (3.1s)
+📊 Tokens — total: 26989, input: 26718, output: 271, reasoning: 191

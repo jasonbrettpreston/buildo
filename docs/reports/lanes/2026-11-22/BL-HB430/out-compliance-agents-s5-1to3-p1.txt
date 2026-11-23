@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:05:48.498Z file_sha256=4b3dd7e7af262789b53a0bc528bb60f8abcd2ff397cb9cca06fe25f9425869f1 prompt_sha256=7eef56734df1d96cfe1223950066832a5645d268a9b4bcdb3dab1aa8ba986d19
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG: none.
+
+DEFER severity=MED — card lane clause "Lane E. Done-condition: the Spec 136 generator prints every Spec 135 ruling whole" — docs/reports/panels/MF-95.json:4 "  \"class\": \"G\"," — the panel record files task-430 under class G while the card and the queue row heading ".cursor/MCFRONTEND-QUEUE.md:647" "**MF-95 INPUTS.2: ... — RUNNING** (E)" put it in lane E, so the two governance records disagree on the lane whose checks the close owes — set class to E, or record in the panel why G is right.
+DEFER severity=MED — queue row Done-condition "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each (the locks are task-434's)" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the map now lists 13 tests as Spec 135's while the same change records the lock paths as "all 13 absent" and assigns them to task-434, so the map asserts unbuilt paths before the locks land — move those test entries to task-434's landing, or confirm spec-paths tolerates reserved absent paths and record that confirmation in the lane.
+DEFER severity=LOW — card acceptance evidence "section 2 28,691 characters, 57 lines" — docs/reports/generated/rule-lists-by-kind.md:32 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the committed page counts section 2 at 28,690 against the lane's own 28,691 after the Q9 rework, so the page (and the 722,506 total) is stale by one character — regenerate the page after the Q9 change and commit it.
+DEFER severity=LOW — RR-0390 "Let's try A." (one larger review message, tried once, names task-430) — docs/reports/panels/MF-95.json:13 "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the output plan still describes the standard per-list lens set and nowhere records the option A ruling that names this task — add RR-0390 to the panel's output line or cards before the output review runs.
+MET — card Files line "docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, ... docs/specs/00-architecture/00_system_map.md" — docs/specs/00-architecture/00_system_map.md:100 — every file changed in this chunk is on the card's Files line.
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — docs/reports/panels/MF-95.json:12 — the record carries "commits 0, A, B, C" matching the three things plus the records commit.
+MET — card constraint "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/reports/generated/rule-lists-by-kind.md:33 — the 126, 127 and 128 rows (lines 33-35) stand unchanged in this chunk.
+MET — queue id rule "This file is the ONE source of MF task ids. A task not listed here is not done." — .cursor/MCFRONTEND-QUEUE.md:5 — next free id advanced to MF-96 with MF-94's unlanded hold explained and MF-95's row added at :647.
+MET — 2026-11-21 note "The default stays one compliance run per rule list" — docs/reports/panels/MF-95.json:13 — the panel records "compliance once per governing rule list", the per-document default, not the joined form.
+MET — rule-list page arithmetic — docs/reports/generated/rule-lists-by-kind.md:46 "| total | 15 lists | | 722,506 | 20 |" — the new total equals the row sums (679,963+14,907+27,636) and the parts 18+2, and the phone total at :64 matches the same deltas.
+REJECT — queue DONE-heading bullet form "a DONE heading's block ... holds exactly one bullet ... naming the Spec 135 rows whose lock that task builds" — that MF-95's block carries a Status line, a Done-condition, "FE rows owned: none." and a dated note — MF-95's heading is "— RUNNING** (E)" (.cursor/MCFRONTEND-QUEUE.md:647), and the one-bullet form binds DONE headings only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  91952ms (92.0s)
+📊 Tokens — total: 38477, input: 20312, output: 18165, reasoning: 17015

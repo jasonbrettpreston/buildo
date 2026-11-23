@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:35:31.699Z file_sha256=4ce48730e89e72c18b92829e93319a865b885ba7dc64af8413d5d6d6ac0493d7 prompt_sha256=5067ca6075bc28e4af8a094c3f57fdde121219ed4a1095871bf3ab4aad122d6b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG — none at CRIT or HIGH.
+
+DEFER severity=LOW — MF-95 Done-condition "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each (the locks are task-434's)" — .cursor/MCFRONTEND-QUEUE.md "+Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the row's next-action still names A, B and C as pending while its own panel record lists them as landed, so a reader cannot tell that what remains is only the output review — restate next as the output review under RR-0390 and keep commits 0/A/B/C as history.
+DEFER severity=LOW — lane definitions "lanes R rulings · G gates · E one-writer build · T tests · P product" — docs/reports/panels/MF-95.json "\"class\": \"G\"," — the panel record classes this one-writer build as G (gates) while the queue row heading carries "(E)" and the row text says lane BL-HB430, so one of the two records misstates the class and no pasted ruling names a gates-class panel for task-430 — set class to E or state on the panel why the record is classed G.
+REJECT — MF-95 Done-condition "Spec 133 and scripts/analysis/bylaw/ untouched" — the change is accused of touching the by-law lane because the row cites a prereg under scripts/analysis/bylaw-validation/ — the cited path is bylaw-validation, not scripts/analysis/bylaw/, and the by-law handbook --check is reported at 546 rules, so the clause is not breached.
+REJECT — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — the change is accused of growing the page by copying tables because surface-136 goes from 13,783 to 28,690 characters — the growth is the unclipping the same ruling ordered ("stop the clipping"), the 13 additions land in Spec 135 as OWED rows with reserved lock paths, not as copied tables.
+
+MET — m.246 — .cursor/MCFRONTEND-QUEUE.md "+Dated note 2026-11-22 (M-246, prior text kept; MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384, operator, verbatim: "Approved"" — the note sits inside the row text, prior text is kept, it states the value the previous note left ("the line read "Next free id: **MF-94**" before this note") and sets MF-96 as the first value.
+MET — RR-0384 — docs/reports/panels/MF-95.json "\"item\": \"INPUTS.2 (task-430): the Spec 136 generator prints each Spec 135 ruling whole (commit A), 12 rows gain one Current reading dated note printed on their line with a staleness lock (commit B), and 13 new OWED rows carry the RR-0384 list (commit C)." — the three things the operator named are the recorded scope and nothing else is added to it.
+MET — task description "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/reports/generated/rule-lists-by-kind.md "+| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |" — 126, 127 and 128 keep their previous sizes and part counts in both sections.
+MET — RR-0385 — docs/reports/panels/MF-95.json "\"RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only.\"" — the seat and the two-round rule the ruling sets are recorded on the panel that carries the verdict.
+MET — MF-95 Done-condition "Spec 133 and scripts/analysis/bylaw/ untouched" — paths [".cursor/MCFRONTEND-QUEUE.md","docs/reports/generated/rule-lists-by-kind.md","docs/reports/panels/MF-95.json","docs/specs/00-architecture/00_system_map.md"] — no file under docs/specs/01-pipeline/133_bylaw_handbook.md or scripts/analysis/bylaw/ appears in this chunk.
+MET — m.0 — .cursor/MCFRONTEND-QUEUE.md "Done-condition: the Spec 136 generator prints every Spec 135 ruling whole (no line ends in a clip ellipsis; Spec 133 and scripts/analysis/bylaw/ untouched)" — each gate the row adds names the mistake it prevents and the row names what it does not do ("Not in this row: dropping Specs 126-128 ... the locks of the new rows (task-434)").
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: m.0, m.11, m.246
+
+---
+⏱  96293ms (96.3s)
+📊 Tokens — total: 48117, input: 29690, output: 18427, reasoning: 17285

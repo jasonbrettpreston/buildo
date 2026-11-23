@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:54:06.508Z file_sha256=c7c1651044ce5d16062b234db49396f705421ef9da0d4cdae751637681402f89 prompt_sha256=9a8a9717b349bff38bd7f897cd606a938604671b349d41bbaaefa78755ebc7cd
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-128-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 R-04 "*Lock pending — the closed `subject_kind` CHECK + its `_contracts.json` pin, cheap now because the table is net-new*" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (diff, FE-52) "OWED `src/tests/surfaces/parcel-id-names.logic.test.ts`; ... no machine check yet, the lock is task-434's and the path is a reservation." — the row parks R-04's lock in a DB-free surfaces tree while the ruling's lock is a `subject_kind` CHECK, and the row never states what its own lock would assert, so the lock cannot go red against the defect the row names — name the surfaces-tree assertion (the two names in descriptors and route code) and keep R-04's CHECK plus pin recorded as still owed under 128, or drop the reserved path until task-434 defines it.
+
+DEFER severity=MED — Spec 128 §5 dated note 2026-11-04 "The move of R-01..R-34 into Spec 135 (the Spec 124 to 124a pattern) touches gate-cited rows and is not needed for the REPORT: it is DEFERRED to convert-on-touch (MF-31). The ids stay R-01..R-34 here meanwhile." — 135 (diff, FE-49) "Spec 128 R-03 (128:205)" with "R-03 stays ACCEPTED in Spec 128 until MF-31 moves it", and FE-52 "R-04 stays ACCEPTED there until MF-31 moves it" — two ACCEPTED 128 rulings now read from two homes with two lock paths while the move stays deferred, which is the competing-home defect R-34(i) ruled against ("placement policy currently has three competing declared homes ... RULED: the `placements` table") — make each row name 128 as the single authoritative home and hold one lock per rule, the 135 text pointing at it, per the still-deferred MF-31 move.
+
+DEFER severity=MED — Spec 128 R-03 "`lead_parcels` is read by no surface. What exists is a **declared id-translation seam only**." — 135 (diff, FE-49) "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock." — the named case is R-32's CONTRACT declaring the mapping over `lead_parcels` ("Its `consumers[]` is **`\"none\"`, written down**"), which is the seam itself rather than a breach of the surface fence, so the row pre-registers an exception to a rule it does not violate and weakens the check it names — state in FE-49 that a CONTRACT naming `lead_parcels` satisfies R-03 by construction (R-32) and scope `scope-fence.logic.test.ts` to SURFACE descriptors, with no exception entry.
+
+DEFER severity=LOW — Spec 128 R-15 "**Guardrails exist from Phase 1**, not Phase 4. A guardrail added after the fact guards nothing that already shipped" — 135 (diff, FE-45..FE-57) each row reads "no machine check yet, the lock is task-434's and the path is a reservation." — thirteen guardrails for pages already RULED and built (FE-31, FE-07, FE-19, MF-83 groups 1 and 2) arrive only as reservations on a later task — land task-434's lock with the first page change each rule governs, or mark each row's coverage start so the post-build gap is visible rather than implied closed.
+
+REJECT — Spec 135 rule 4 "`pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — the new rows write "P owed" in the Six cell — this register's own dated note applies the closed set to RULED rows only ("a RULED row's Six cell answers pass, n/a (reason) or FAIL (Spec 128 §4.9; Spec 135 rule 4) and FAIL would block this flip") and all thirteen new rows are OWED with their locks declared.
+
+REJECT — "a change that adds behaviour no pasted clause or ruling names" — the twelve "Current reading" dated notes appended to FE-01..FE-39 — RR-0384 names exactly that work in the pasted context: "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines."
+
+MET — Spec 128 §5 dated note 2026-11-04 "new McFrontend rulings are `FE-nn` rows in Spec 135" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (diff register rows) — thirteen new rulings land as FE-45..FE-57 in 135, none renamed or moved out of 128.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 135 (diff, FE-53) "POINTER, not a copy ... The tables are not copied here." — item 9 landed as a pointer row.
+MET — Spec 128 R-01 "product key **`parcel_tool`**" — 135 (diff, FE-50) "the same `parcel_tool` entitlement" — one product key kept where the register intersects the entitlement.
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — 135 (diff) each edited row ends "The cell text above is kept." and the chunk's only path is 135_mcfrontend_decisions_register.md — no 126/127/128 text touched.
+MET — Spec 128 R-04 "`parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal); `parcel_pk` = `parcels.id` `SERIAL`" — 135 (diff, FE-52) — both names quoted as ruled, no third spelling introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: R-01, R-32
+
+---
+⏱  114443ms (114.4s)
+📊 Tokens — total: 81158, input: 58399, output: 22759, reasoning: 21352

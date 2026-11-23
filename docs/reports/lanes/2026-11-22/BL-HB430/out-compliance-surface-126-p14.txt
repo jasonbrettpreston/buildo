@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:46:33.248Z file_sha256=86062b7826a8fdd092a0fd0882a82a6dd3dc23dd533185d94f445f5c8efa5bee prompt_sha256=f0a9355344ee661c415ae2f41cfcd70e25f394a18125e73e1885881796f33a58
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 135 rule 4 (unchanged line in this diff) "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, new FE-45 row "| D n/a, P owed, F pass, S pass, H n/a, E pass |" — the token `owed` is not in the closed set pass/n/a/FAIL, and all thirteen added rows (FE-45..FE-57) use it, so the Six column sits outside its own vocabulary and any reader keyed on the three tokens breaks — write `n/a (lock owed)` with the reason, as FE-31's cell does, or amend rule 4 by a dated note before landing.
+DEFER severity=MED — task-430 "the generated Spec 136 carries them as lines, by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — this chunk shows no generator or lock diff, cannot see them — the clause cannot be judged met from this chunk — confirm the generator, surface-rule-map.json and handbook-rule-map lock changes and their `--check` in their own chunk.
+DEFER severity=LOW — added Next free id note "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing" — the block is landed as FE-45..FE-57, knowingly duplicating FE-45 with another unlanded branch — two lanes can land one id and the register's renumbering precedent (FE-35/FE-38) has already cost a rewrite — land the block as FE-46..FE-58 (the ids claimed in ~/Buildo-scratch/ids) and leave FE-45 to BL-MFRULES.
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — FE-33's cell is unchanged and still carries four dated notes with no Current reading "the web smoke renders every declared state of the three admin media surfaces (17 goldens)." — "make each line reflect its notes" is applied to 12 rows only, rows with dated notes such as FE-33 keep the note pile — either add the reading for those rows or state in the task why they are out of the 12.
+MET — 126 §11a.1 dated note 2026-11-06 "the closed set gains a sixth source, `parcels`" — 135 FE-18 new note "The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27)" and "it lives in scripts/surfaces/_schema/binding-sources.json".
+MET — 126 §11a.4 dated note 2026-11-11 "a user lot-size entry is shown as confidence **high** (the line above read "user medium")" — 135 FE-19 new note "Confidence for a user lot-size entry reads high, not medium".
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables" — thirteen rows FE-45..FE-57 added, item 9 landed as FE-53 "POINTER, not a copy".
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff modifies only docs/specs/02-web-admin/135_mcfrontend_decisions_register.md.
+MET — 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — every one of the thirteen new rows names a `src/tests/surfaces/*.logic.test.ts` path declared absent (client-glass-boundary, ui-library-set, tunables-are-data, scratch-mocks-not-in-repo, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+Rules met: none
+
+---
+⏱  73981ms (74.0s)
+📊 Tokens — total: 67050, input: 53042, output: 14008, reasoning: 12993

@@ -1,0 +1,702 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:193d6dd8f19401d511e178a01ef8813b1f67cdb7605fa4e52d414870e9b5078d part 1 of 1 chunk 3 of 3
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json","scripts/surfaces/_schema/surface-rule-map.json","scripts/surfaces/generate-surface-handbook.mjs","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts"]
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7254a625e5073df0114c29382cac9856532f49fb
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json
+@@ -0,0 +1,87 @@
++{
++ "$comment": "Pre-registration, task MF-95 (INPUTS.2, task-430: the Spec 136 generator stops clipping lines, 12 Spec 135 rows gain one Current reading dated note each, 13 new OWED Spec 135 rows; documents, the Spec 136 generator, its lock and one root test only), prereg 1, committed alone and first, before the three MF-95 work commits (A, B, C). Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-93 prereg total. rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook). The new rows are OWED and are never cited. In-file round 200 (claimed in ~/Buildo-scratch/ids/round-200; MF-94 used 199).",
++ "schema": "coa-round-prereg-v1",
++ "round": 200,
++ "task": "MF-95",
++ "rules": [
++  "FE-09",
++  "FE-10",
++  "FE-16"
++ ],
++ "plan_ref": "backlog task-430 Implementation Plan (PLAN-430-v1 with round 1 and 2 rulings, section 17); docs/reports/reviews/task-430/GROUNDER-PLAN.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/surface-rule-map.json b/scripts/surfaces/_schema/surface-rule-map.json
+index dc4a656ba5acef4db3a3592da7f64c7abcd0c4e1..9263d4c8f4bfd95c63efd2236e70a18693065f04 100644
+--- a/scripts/surfaces/_schema/surface-rule-map.json
++++ b/scripts/surfaces/_schema/surface-rule-map.json
+@@ -203,6 +203,58 @@
+     {
+       "id": "fe.44",
+       "section": "rules"
++    },
++    {
++      "id": "fe.45",
++      "section": "rules"
++    },
++    {
++      "id": "fe.46",
++      "section": "rules"
++    },
++    {
++      "id": "fe.47",
++      "section": "rules"
++    },
++    {
++      "id": "fe.48",
++      "section": "rules"
++    },
++    {
++      "id": "fe.49",
++      "section": "rules"
++    },
++    {
++      "id": "fe.50",
++      "section": "rules"
++    },
++    {
++      "id": "fe.51",
++      "section": "rules"
++    },
++    {
++      "id": "fe.52",
++      "section": "rules"
++    },
++    {
++      "id": "fe.53",
++      "section": "rules"
++    },
++    {
++      "id": "fe.54",
++      "section": "rules"
++    },
++    {
++      "id": "fe.55",
++      "section": "rules"
++    },
++    {
++      "id": "fe.56",
++      "section": "rules"
++    },
++    {
++      "id": "fe.57",
++      "section": "rules"
+     }
+   ],
+   "rules": [
+@@ -689,6 +741,149 @@
+         "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+         "anchor": "FE-44"
+       }
++    },
++    {
++      "id": "FE-45",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.45",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-45"
++      }
++    },
++    {
++      "id": "FE-46",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.46",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-46"
++      }
++    },
++    {
++      "id": "FE-47",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.47",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-47"
++      }
++    },
++    {
++      "id": "FE-48",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.48",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-48"
++      }
++    },
++    {
++      "id": "FE-49",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.49",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-49"
++      }
++    },
++    {
++      "id": "FE-50",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.50",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-50"
++      }
++    },
++    {
++      "id": "FE-51",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.51",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-51"
++      }
++    },
++    {
++      "id": "FE-52",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.52",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-52"
++      }
++    },
++    {
++      "id": "FE-53",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.53",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-53"
++      }
++    },
++    {
++      "id": "FE-54",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.54",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-54"
++      }
++    },
++    {
++      "id": "FE-55",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.55",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-55"
++      }
++    },
++    {
++      "id": "FE-56",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.56",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-56"
++      }
++    },
++    {
++      "id": "FE-57",
++      "kind": "fe-row",
++      "status": "owed",
++      "handbook_line": "fe.57",
++      "source": {
++        "register": true,
++        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
++        "anchor": "FE-57"
++      }
+     }
+   ]
+ }
+diff --git a/scripts/surfaces/generate-surface-handbook.mjs b/scripts/surfaces/generate-surface-handbook.mjs
+index 57bb005975985418a57e5846301aeb8c8889a258..992e788da6bc04b37d2a817446108f2847b49b6f 100644
+--- a/scripts/surfaces/generate-surface-handbook.mjs
++++ b/scripts/surfaces/generate-surface-handbook.mjs
+@@ -43,9 +43,69 @@ const DATE = /\d{4}-\d{2}-\d{2}/;
+ const DATED_NOTE = /Dated note \d{4}-\d{2}-\d{2}/g;
+ const CLOSED_WORD = /^(RULED|OWED|RETIRED|SUPERSEDED|WITHDRAWN|PROPOSED)/;
+ const NEXT_FREE = /\*\*Next free id:\*\*\s*`FE-(\d+)`/;
++// MF-95 commit A (task-430, RR-0384 "stop the clipping"; plan section 4, A1): the shared headlineOf clips at its HEADLINE_MAX (300,
++// scripts/analysis/bylaw/bylaw-register.mjs:38, not exported) for Spec 133, whose size cap has no room to grow. Spec 136 prints each ruling
++// whole: where the shared result was clipped (it ends in the ellipsis AND the plain cell is longer than the shared cap, so an authored
++// ellipsis is never mistaken for a clip; and the cell has no leading bold span, where the shared rule prints the bold title, not the cell),
++// the line is the plain text of the Ruling cell. Named reason for this one-line copy of the shared plain(): the shared reader is a layer23
++// McBylaws path (an edit needs a McBylaws task and panel). The copy does not call stripProvenance: a long ruling keeps a trailing
++// provenance bracket. Ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): the shared stripProvenance also drops a
++// trailing bracket that matches "spec 1nn" from a cell it does not clip; a handbook headline keeps it (its cite is the point), so a cell not led
++// by a bold span whose shared headline differs from its plain text prints the plain text. Drift lock: handbook-rule-map.logic.test.ts A-T6.
++const SHARED_HEADLINE_MAX = 300;
++const CLIP_MARK = '…';
++const plainCell = (text) => text.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
++function wholeHeadline(ruleCell) {
++  const shared = headlineOf(ruleCell);
++  const plain = plainCell(ruleCell);
++  if (/^\*\*/.test(ruleCell.trim())) return shared;
++  const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX;
++  return clipped || shared !== plain ? plain : shared;
++}
++
++// MF-95 commit B (task-430, RR-0384 "make each line reflect its notes"; plan sections 5, 17.3, 17.4). A Current reading is ONE dated note,
++// lane text that restates earlier dated notes of the same row, in this one strict form, LAST in the Status cell. The page prints it on the
++// headline's line. Refusals (each throws, so --check and the lock fail): (i) a reading note that is not the last note; (ii) a cited date that
++// is not the date of an earlier note of the row; (iii) more than 800 characters (chosen, not derived: keeps the page from growing; the longest
++// reading is under 500); (v) a last note holding "Current reading:" that does not parse strictly (also: the row id in the frame must be the
++// row); (vi) a cited date equal to the reading's own date; (vii) a bar in the reading text. (iv), the 12 pinned rows, is in the lock.
++const READING_MARK = 'Current reading:';
++const READING_MAX = 800;
++const READING_FRAME = /^Dated note \d{4}-\d{2}-\d{2} \(M-246, prior text kept; FE-\d+ · McFrontend queue · lane [A-Za-z0-9-]+; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated /;
++const READING_RE = /^Dated note (\d{4}-\d{2}-\d{2}) \(M-246, prior text kept; (FE-\d+) · McFrontend queue · lane [A-Za-z0-9-]+; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated ([0-9, -]+) of this row, not an operator word and not a ruling\): Current reading: (.+) \(from notes dated \3\)\. The cell text above is kept\.$/;
++const NOTE_DATE = /^Dated note (\d{4}-\d{2}-\d{2})/;
++
++/** The note segments of a Status cell: each runs from one "Dated note <date>" to the next (the text before the first is not a note). */
++function noteSegments(statusCell) {
++  const starts = [...statusCell.matchAll(/Dated note \d{4}-\d{2}-\d{2}/g)].map((m) => m.index);
++  return starts.map((s, i) => statusCell.slice(s, i + 1 < starts.length ? starts[i + 1] : undefined).replace(/(?:<br\s*\/?>|\s)+$/i, '').trim());
++}
++
++/** The Current reading of a row ({ text, dates }) or null; throws on any refusal above. */
++function readingOf(id, statusCell) {
++  const segs = noteSegments(statusCell);
++  const last = segs.length ? segs[segs.length - 1] : '';
++  segs.slice(0, -1).forEach((s) => {
++    if (READING_FRAME.test(s) && s.includes(READING_MARK)) throw new Error(`[surface-handbook] ${id}: a dated note follows the Current reading; restate it`);
++  });
++  if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;
++  const m = READING_RE.exec(last);
++  if (!m || m[2] !== id) throw new Error(`[surface-handbook] ${id}: the Current reading note does not parse in the strict form (plan 17.4)`);
++  const [, own, , dateList, text] = m;
++  const dates = dateList.split(', ');
++  const earlier = new Set(segs.slice(0, -1).map((s) => NOTE_DATE.exec(s)[1]));
++  for (const d of dates) {
++    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error(`[surface-handbook] ${id}: the Current reading note does not parse in the strict form (plan 17.4)`);
++    if (d === own) throw new Error(`[surface-handbook] ${id}: the Current reading cites its own date ${d}`);
++    if (!earlier.has(d)) throw new Error(`[surface-handbook] ${id}: the Current reading cites ${d}, which is not the date of an earlier dated note of the row`);
++  }
++  if (text.length > READING_MAX) throw new Error(`[surface-handbook] ${id}: the Current reading is ${text.length} characters (at most ${READING_MAX})`);
++  if (text.includes('|')) throw new Error(`[surface-handbook] ${id}: the Current reading holds a bar`);
++  return { text, dates };
++}
+ 
+ /**
+- * The FE rows of the register text, in file order: { id, headline, status, date, locks, notes }. The id set is the
++ * The FE rows of the register text, in file order: { id, headline, status, date, locks, notes, reading }. The id set is the
+  * gate's own (parseRegisterRows); a row whose id cell is struck or bold, a row with the wrong cell count, a PROPOSED row, a
+  * gap in the numbering or a "Next free id" that does not follow the last row all throw, so no row can vanish silently.
+  */
+@@ -79,11 +139,12 @@ export function readFeRows(text) {
+     const date = DATE.exec(statusCell);
+     return {
+       id,
+-      headline: headlineOf(cells[1]),
++      headline: wholeHeadline(cells[1]),
+       status: g.status,
+       date: date ? date[0] : '',
+       locks: g.locks,
+       notes: (statusCell.match(DATED_NOTE) || []).length,
++      reading: readingOf(id, statusCell),
+     };
+   });
+ }
+@@ -121,7 +182,8 @@ export function buildRuleMap(rows) {
+ const lineRow = (r) => {
+   const state = r.status === 'OWED' ? 'OWED' : `${r.status}${r.date ? ` ${r.date}` : ''}`;
+   const owed = r.status === 'OWED' && r.locks.length ? ` · lock owed: ${r.locks.join(', ')}` : '';
+-  return { id: r.id, headline: r.headline, status: `${state}${owed}`, enforcedBy: r.status === 'RULED' ? r.locks.join(', ') : '', notes: r.notes };
++  const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';
++  return { id: r.id, headline: `${r.headline}${reading}`, status: `${state}${owed}`, enforcedBy: r.status === 'RULED' ? r.locks.join(', ') : '', notes: r.notes };
+ };
+ 
+ // Paths the static header names; each must exist (the generator's one fact lock, like Spec 133's).
+@@ -177,7 +239,7 @@ export function render(map, rows, root = ROOT) {
+   out.push('');
+   out.push(`**What is generated.** Everything below, from the Spec 135 register table by \`${SPEC.generator}\` (status and lock paths read by \`scripts/analysis/mcbylaws/cite-parse.mjs\` \`parseRegisterRows\`, the reader gate arm C uses). The rule map \`${SPEC.ruleMapRel}\` is generated from the same rows, not hand-written; \`src/tests/surfaces/handbook-rule-map.logic.test.ts\` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.`);
+   out.push('');
+-  out.push(`**Rules rendered: ${rows.length}**: ${inForce.length} in force (${inForce.filter((r) => r.status === 'OWED').length} OWED, whose lock is still to land), ${rows.length - inForce.length} history. Each line: its line id, the reading headline, the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.`);
++  out.push(`**Rules rendered: ${rows.length}**: ${inForce.length} in force (${inForce.filter((r) => r.status === 'OWED').length} OWED, whose lock is still to land), ${rows.length - inForce.length} history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.`);
+   out.push('');
+   out.push('**Contents.** 1 Standard and policy pairs · 2 Rules · 3 History');
+   out.push('');
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 9afbd9ac40d08d647b4acc721b6b9f5de2f54a1d..fd502a876aab33c9b7b9fd98aa75fcccd0f50b38 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -5,6 +5,7 @@ import * as crypto from 'node:crypto';
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { ROOT, run, script, tmp } from './helpers';
++import { REGISTER_REL, readFeRows } from '../../../scripts/surfaces/generate-surface-handbook.mjs';
+ 
+ const CLI = 'scripts/analysis/rule-lists.mjs';
+ type Res = { lists: { id: string; rows: string[] }[] };
+@@ -202,12 +203,18 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     for (const id of SURFACE) expect(without).not.toContain(id);
+     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+-  it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
++  // MF-95 C-T5 (task-430): the range is computed from the real register (readFeRows throws unless "Next free id" is the row count plus one),
++  // not pinned to 44, so a new FE row moves it by itself; planted: one id more than the register holds is refused.
++  it('the surface-136 lens input generated for the change holds fe.01 to fe.N, N the FE row count of Spec 135', () => {
+     const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+-    expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
++    const n = readFeRows(fs.readFileSync(path.join(ROOT, REGISTER_REL), 'utf8')).length;
++    const range = (k: number) => Array.from({ length: k }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`);
++    expect(n).toBeGreaterThanOrEqual(57);
++    expect([...ids].sort()).toEqual(range(n));
++    expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));
+   });
+ });
+ // task-375: lens-input takes --context (A4); see the deviation note on the task
+diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+index b9ddf7769ed0c47a022ae182118dd07e1e1fc079..f8cda3ad6091326324f3a3bc79feb8211343dc37 100644
+--- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
++++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+@@ -12,7 +12,7 @@ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+ import { HANDBOOKS, runHandbookCli } from '../../../scripts/analysis/gates/rule-map.mjs';
+-import { headlineOf } from '../../../scripts/analysis/bylaw/bylaw-register.mjs';
++import { headlineOf, splitRow } from '../../../scripts/analysis/bylaw/bylaw-register.mjs';
+ import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
+ import { mapFindings } from '../../../scripts/generate-bylaw-handbook.mjs';
+ import { checkHandbookCitations, extractRoleBanners } from '../../../scripts/analysis/spec-split-check.mjs';
+@@ -56,9 +56,9 @@ describe('FE-10 H1 — the reader: every FE row, no row can vanish', () => {
+     const gate = parseRegisterRows(REGISTER);
+     for (const r of rows) {
+       expect(r.headline.length, r.id).toBeGreaterThan(0);
+-      expect(r.headline.length, r.id).toBeLessThanOrEqual(300);
+-      // A headline over 300 characters is clipped by headlineOf and ends in an ellipsis; the full ruling stays in Spec 135.
+-      if (r.headline.endsWith('…')) expect(r.headline.length, r.id).toBeGreaterThan(250);
++      // MF-95 A-T3 (task-430, RR-0384 "stop the clipping"): the 300-character clip of the shared headlineOf no longer reaches Spec 136;
++      // a ruling prints whole, so no headline ends in the clip ellipsis (the pin on the shared function below stays).
++      expect(r.headline.endsWith('…'), r.id).toBe(false);
+       expect(['RULED', 'OWED', 'RETIRED']).toContain(r.status);
+       expect(r.status, r.id).toBe(gate.get(r.id)!.status);
+       expect(r.locks, r.id).toEqual(gate.get(r.id)!.locks);
+@@ -96,6 +96,208 @@ describe('FE-10 H1 — the reader: every FE row, no row can vanish', () => {
+   });
+ });
+ 
++// MF-95 commit A (task-430, RR-0384 "stop the clipping"; plan section 4, A1). The shared headlineOf (scripts/analysis/bylaw/bylaw-register.mjs)
++// still clips at 300 characters for Spec 133 (pinned above); the Spec 136 generator prints the plain text of the Ruling cell instead wherever the
++// shared result was clipped. The test-side plain() is the same three replacements as the shared reader (bylaw-register.mjs plain()).
++const plainCell = (s: string) => s.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
++const rulingCells = (text: string) => new Map(text.split('\n').filter((l) => /^\| FE-\d+ \|/.test(l)).map((l) => { const c = splitRow(l); return [c[0]!, c[1]!] as const; }));
++const sized = (n: number, tail = '.') => { let s = 'Ruling'; for (let i = 0; s.length < n - tail.length; i += 1) s += ` w${i % 10}`; return `${s.slice(0, n - tail.length)}${tail}`; };
++const CLIPPED_TODAY = ['FE-18', 'FE-19', 'FE-29', 'FE-30', 'FE-31', 'FE-34', 'FE-35', 'FE-36', 'FE-37', 'FE-38', 'FE-39', 'FE-40', 'FE-41', 'FE-42', 'FE-43', 'FE-44'];
++// A literal bar in a real cell is written back escaped (splitRow reads a backslash-bar as a literal bar), so the planted row keeps six cells.
++const headlineFor = (cell: string) => readFeRows(reg([row('FE-01', 'RULED 2026-11-04.', cell.replace(/\|/g, '\\|'))]))[0]!.headline;
++
++describe('MF-95 A — Spec 136 prints every ruling whole (no clip)', () => {
++  it('A-T1 RED: a 700-character ruling with no bold prints whole; control: a 120-character ruling equals the shared headlineOf', () => {
++    const long = sized(700);
++    expect(long.length).toBe(700);
++    expect(headlineOf(long).endsWith('…')).toBe(true);
++    const h = headlineFor(long);
++    expect(h.endsWith('…')).toBe(false);
++    expect(h).toBe(plainCell(long));
++    const short = sized(120);
++    expect(headlineFor(short)).toBe(headlineOf(short));
++  });
++
++  it('A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell', () => {
++    const cells = rulingCells(REGISTER);
++    for (const r of realRows()) {
++      expect(r.headline.endsWith('…'), r.id).toBe(false);
++      expect(r.headline, r.id).toBe(plainCell(cells.get(r.id)!));
++    }
++    for (const id of CLIPPED_TODAY) expect(realRows().find((r: Row) => r.id === id)!.headline.length, id).toBeGreaterThan(300);
++  });
++
++  it('A-T5: a 299-character cell with an authored ellipsis is unchanged; 700 and 990 characters print whole', () => {
++    const authored = sized(299, '…');
++    expect(authored.length).toBe(299);
++    expect(headlineFor(authored)).toBe(headlineOf(authored));
++    expect(headlineFor(authored).endsWith('…')).toBe(true);
++    for (const n of [700, 990]) {
++      const cell = sized(n);
++      expect(headlineFor(cell), String(n)).toBe(cell);
++      expect(headlineFor(cell).length, String(n)).toBe(n);
++    }
++  });
++
++  it('A-T6 drift lock (ruling Q9): the copy equals the shared headlineOf wherever the shared one is neither clipped nor stripped of a trailing bracket, and is the plain cell where it is (real rows and planted cells)', () => {
++    const cells = [...rulingCells(REGISTER).values()];
++    const planted = [
++      sized(500), // a long cell
++      `${sized(400, '')} (operator, verbatim 2026-11-09).`, // a long cell ending in a provenance bracket: the copy keeps the bracket (it does not call stripProvenance)
++      `${sized(200, '')}<br>${sized(200)}`, // a cell with a br tag
++      `${sized(120, '')} (operator, verbatim 2026-11-09).`, // short with provenance: unclipped, the shared rule strips the bracket; the copy keeps it (Q9: a handbook headline keeps its cite)
++    ];
++    for (const cell of [...cells, ...planted]) {
++      const shared = headlineOf(cell);
++      const mine = headlineFor(cell);
++      if (shared === plainCell(cell)) expect(mine).toBe(shared);
++      else if (!shared.endsWith('…') || plainCell(cell).length <= 300) {
++        expect(mine).toBe(plainCell(cell));
++        expect(mine.startsWith(shared.replace(/[.;:]$/, ''))).toBe(true);
++      } else {
++        expect(mine.startsWith(shared.slice(0, -1).trimEnd())).toBe(true);
++        expect(mine.length).toBeGreaterThan(shared.length);
++        expect(mine).toBe(plainCell(cell));
++      }
++    }
++    expect(headlineFor(planted[1]!)).toMatch(/\(operator, verbatim 2026-11-09\)\.$/);
++    expect(headlineFor(planted[3]!)).toMatch(/\(operator, verbatim 2026-11-09\)\.$/);
++  });
++
++  it('Q9 pin: the FE-54 line keeps its cite (the shared stripProvenance would drop it)', () => {
++    // found by its lock path, not its id (FE-54 on this branch; renumbered at landing, plan 17.5)
++    expect(realRows().find((r: Row) => r.locks[0] === 'src/tests/surfaces/failure-state-declared.logic.test.ts')!.headline.endsWith('(Spec 128 Rule 12, 128:39).')).toBe(true);
++  });
++});
++
++// MF-95 commit B (task-430, RR-0384 "make each line reflect its notes"; plan sections 5, 17.3, 17.4). A Current reading is ONE dated note in the
++// strict form of 17.4, last in its row's Status cell; the generator prints it on the SAME line as the headline (the OWED pin of H4 matches
++// `^- **fe.N**[^\n]*\n  Status: OWED`, and Spec 133's renderLine is not touched). Refusals (i)..(vii) of 17.4 are each planted below.
++const readingOf = (r: Row) => (r as unknown as { reading?: { text: string; dates: string[] } }).reading;
++const READING_IDS = ['FE-01', 'FE-02', 'FE-07', 'FE-11', 'FE-14', 'FE-18', 'FE-19', 'FE-20', 'FE-29', 'FE-31', 'FE-38', 'FE-39'];
++const readingNote = (id: string, text: string, dates: string, own = '2026-11-22') =>
++  `Dated note ${own} (M-246, prior text kept; ${id} · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated ${dates} of this row, not an operator word and not a ruling): Current reading: ${text} (from notes dated ${dates}). The cell text above is kept.`;
++const BASE2 = `RULED 2026-11-09, lock landed abc. Lock: \`${LOCK}\`. Dated note 2026-11-09 (a). Dated note 2026-11-10 (b).`;
++const withReading = (status: string, note: string) => [GOOD[0]!, row('FE-02', `${status} ${note}`), GOOD[2]!];
++const lineOf2 = (text: string) => text.split('\n').find((l) => l.startsWith('- **fe.02** '))!;
++
++describe('MF-95 B — each line reflects its notes (Current reading)', () => {
++  it('B-T1 RED: a row whose last note is a Current reading prints it on its line; B-T2 control: the same row without it prints as before', () => {
++    const t = build(makeRoot(reg(withReading(BASE2, readingNote('FE-02', 'The rule now reaches every page.', '2026-11-09, 2026-11-10'))))).text;
++    expect(lineOf2(t)).toBe('- **fe.02** Ruling for FE-02, a plain sentence. Current reading (lane text, notes 2026-11-09, 2026-11-10): The rule now reaches every page.');
++    expect(t).toMatch(/- \*\*fe\.02\*\* [^\n]*\n {2}Status: RULED 2026-11-09 · Enforced by: [^\n]* · \+3 dated notes\n/);
++    const plainT = build(makeRoot(reg(GOOD))).text;
++    expect(lineOf2(plainT)).toBe('- **fe.02** Ruling for FE-02, a plain sentence.');
++    expect(plainT.split('## 2. Rules')[1]).not.toMatch(/Current reading/);
++    const r = readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-10'))))[1]!;
++    expect(readingOf(r)).toEqual({ text: 'X.', dates: ['2026-11-10'] });
++  });
++
++  it('B-T3 RED (i): a dated note after the Current reading throws; control: the reading last builds', () => {
++    const note = readingNote('FE-02', 'X.', '2026-11-10');
++    expect(() => readFeRows(reg(withReading(BASE2, `${note} Dated note 2026-11-23 (c).`)))).toThrow(/FE-02: a dated note follows the Current reading; restate it/);
++    expect(() => readFeRows(reg(withReading(BASE2, note)))).not.toThrow();
++  });
++
++  it('B-T4 RED (ii): a cited date that is not the date of an earlier note of the row throws; control: real dates', () => {
++    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-08'))))).toThrow(/FE-02: the Current reading cites 2026-11-08/);
++    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-09'))))).not.toThrow();
++  });
++
++  it('B-T5 RED (iii): a reading of 801 characters throws; control: 800', () => {
++    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', `${'y'.repeat(800)}.`, '2026-11-09'))))).toThrow(/FE-02: the Current reading is 801 characters/);
++    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', `${'y'.repeat(799)}.`, '2026-11-09'))))).not.toThrow();
++  });
++
++  it('B-T8 RED (v): a malformed reading note throws; the words Current reading in the prose of an earlier note are not a reading', () => {
++    const broken = readingNote('FE-02', 'X.', '2026-11-10').replace(' (from notes dated 2026-11-10)', '');
++    expect(() => readFeRows(reg(withReading(BASE2, broken)))).toThrow(/FE-02: the Current reading note does not parse/);
++    const wrongRow = readingNote('FE-07', 'X.', '2026-11-10');
++    expect(() => readFeRows(reg(withReading(BASE2, wrongRow)))).toThrow(/FE-02: the Current reading note does not parse/);
++    const prose = 'RULED 2026-11-09. Lock: `src/tests/surfaces/x.logic.test.ts`. Dated note 2026-11-09 (the old Current reading: words were dropped).';
++    const r = readFeRows(reg(withReading(prose, readingNote('FE-02', 'The new words.', '2026-11-09'))))[1]!;
++    expect(readingOf(r)).toEqual({ text: 'The new words.', dates: ['2026-11-09'] });
++  });
++
++  it('B-T9 RED (vi): a reading that cites its own date throws (the own date is also not an earlier note)', () => {
++    const own = `${BASE2} Dated note 2026-11-22 (d).`;
++    expect(() => readFeRows(reg(withReading(own, readingNote('FE-02', 'X.', '2026-11-22'))))).toThrow(/FE-02: the Current reading cites its own date 2026-11-22/);
++  });
++
++  it('(vii) RED: a reading text holding a bar throws', () => {
++    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'a \\| b.', '2026-11-09'))))).toThrow(/FE-02: the Current reading holds a bar/);
++  });
++
++  it('B-T10: an OWED row with a reading renders it on the headline line, the Status line next (the RULED case is B-T1)', () => {
++    const owed = [GOOD[0]!, GOOD[1]!, row('FE-03', `OWED \`src/tests/surfaces/y.logic.test.ts\` Dated note 2026-11-12 (q). ${readingNote('FE-03', 'Now owed wider.', '2026-11-12')}`)];
++    const t = build(makeRoot(reg(owed))).text;
++    expect(t).toMatch(/^- \*\*fe\.03\*\* Ruling for FE-03, a plain sentence\. Current reading \(lane text, notes 2026-11-12\): Now owed wider\.\n {2}Status: OWED · lock owed: src\/tests\/surfaces\/y\.logic\.test\.ts · \+2 dated notes$/m);
++  });
++
++  it('B-T6, B-T7, B-T11 real register: exactly the 12 ruled rows carry a reading (pinned), each parses, is at most 800 characters, is printed, and adds exactly one dated note', () => {
++    const rows = realRows();
++    expect(rows.filter((r: Row) => readingOf(r)).map((r: Row) => r.id)).toEqual(READING_IDS);
++    const text = read(SPEC.handbookRel);
++    const cells = new Map(REGISTER.split('\n').filter((l) => /^\| FE-\d+ \|/.test(l)).map((l) => { const c = splitRow(l); return [c[0]!, c[5]!] as const; }));
++    for (const r of rows) {
++      const line = text.split('\n').find((l) => l.startsWith(`- **fe.${r.id.slice(3)}** `))!;
++      const rd = readingOf(r);
++      if (!rd) { expect(line, r.id).not.toMatch(/Current reading/); continue; }
++      expect(rd.text.length, r.id).toBeLessThanOrEqual(800);
++      expect(line, r.id).toBe(`- **fe.${r.id.slice(3)}** ${r.headline} Current reading (lane text, notes ${rd.dates.join(', ')}): ${rd.text}`);
++      const cell = cells.get(r.id)!;
++      const before = cell.slice(0, cell.lastIndexOf('Dated note '));
++      expect(r.notes, r.id).toBe((before.match(/Dated note \d{4}-\d{2}-\d{2}/g) || []).length + 1);
++    }
++  });
++});
++
++// MF-95 commit C (task-430, RR-0384 "add these 13 lines"; plan sections 6, 17.2, 17.6). The thirteen rows are OWED, each naming one lock path
++// that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
++// set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
++const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
++
++describe('MF-95 C — the thirteen RR-0384 rows', () => {
++  const rows = realRows();
++  const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
++
++  it('C-T2 RED: thirteen rows, in item order, are the LAST rows of the register, each OWED with exactly its one reserved lock path, none of which exists', () => {
++    expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
++    expect(rows.slice(-13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
++    expect(rows.length).toBeGreaterThanOrEqual(57);
++    for (const r of fresh) {
++      expect(r.status, r.id).toBe('OWED');
++      expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
++    }
++  });
++
++  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
++    const text = read(SPEC.handbookRel);
++    const owed = rows.filter((r: Row) => r.status === 'OWED').length;
++    expect(owed).toBeGreaterThanOrEqual(21);
++    expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
++    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
++  });
++
++  it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
++    const run = (root: string, argv: string[]) => { const err: string[] = []; const code = runHandbookCli({ spec: '136', argv, build: (r: string) => build(r), root, out: () => {}, err: (s: string) => err.push(s), process: {} as never }); return { code, err: err.join('\n') }; };
++    const ids = fresh.map((r: Row) => r.id);
++    expect(ids).toHaveLength(13);
++    const old = build(makeRoot(stripRows(REGISTER, ids, rows.length - 12)));
++    const root = makeRoot(REGISTER, rows.flatMap((r: Row) => (r.status === 'RULED' ? r.locks : [])));
++    for (const [rel, body] of [[SPEC.ruleMapRel, `${JSON.stringify(old.map, null, 2)}\n`], [SPEC.handbookRel, old.text]] as const) { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), body); }
++    const stale = run(root, ['--check']);
++    expect(stale.code).toBe(1);
++    expect(stale.err).toContain(SPEC.ruleMapRel);
++    expect(stale.err).toContain(SPEC.handbookRel);
++    expect(run(root, ['--write']).code).toBe(0);
++    expect(run(root, ['--check']).code).toBe(0);
++    expect(() => readFeRows(stripRows(REGISTER, [ids[6]!], rows.length + 1))).toThrow(/no gap or reorder/);
++    expect(() => readFeRows(stripRows(REGISTER, [ids[12]!], rows.length))).not.toThrow();
++  });
++});
++
+ describe('FE-10 H2/H3 — the rule map: built from the register, one rule per line', () => {
+   const rows = realRows();
+   const committed = JSON.parse(read(SPEC.ruleMapRel));
+

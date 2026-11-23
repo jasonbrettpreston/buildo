@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T01:32:15.676Z file_sha256=46220c3234dced19d99714982f7ec42f97ad6aff909d4902fb43f6dd69e3e4c4 prompt_sha256=14291fe09f2dd7f577261967e95273ea5cdbc6825fb70c000720dbc96f00b4ac
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/specs/00-architecture/00_system_map.md "`src/tests/surfaces/report-units.logic.test.ts`, `src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`" — 13 test paths are added to the Spec 135 row as governing tests while Spec 135 itself records them as not existing ("no machine check yet, the lock is task-434's and the path is a reservation"), so a system-map existence check would go red before task-434 lands them; cannot see `src/tests/system-map.infra.test.ts`, so the grounder must confirm — either drop the 13 path additions until the locks land, or confirm the map check tolerates OWED reservations.
+
+DEFER severity=MED — .cursor/MCFRONTEND-QUEUE.md "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows) (lane BL-HB430, task-430)" — at the tip of this same change all three commits have landed (the panel record says "\"head\": \"prereg 1 (round 200); commits 0, A, B, C\""), so the row's next pointer is stale and re-runs finished work — restate next as the output review owed and set the expiry accordingly.
+
+DEFER severity=LOW — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the generated count disagrees by one with the lane's own acceptance line "section 2 28,691 characters, 57 lines", so one of the two records of the same measurement is wrong — regenerate the table after the Q9 rewording, or correct the acceptance figure.
+
+DEFER severity=LOW — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "The recorded reply in full: \"These look great - teh 13 are perfect. … Approved\"." — the identical ~1,000-character cell is copied into all 13 new rows, which grows the register from 84,215 to 111,851 characters and splits it 1 part to 3, against the operator's own instruction quoted in the same cell, "Item 9 stays a pointer, so the page does not grow by copying tables." — hold the verbatim reply once in one dated note and give each row a short pointer to it.
+
+REJECT — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — the 13 new rows name lock paths that do not exist, which looks like an unresolved lock finding — rule 5 requires exactly that for OWED rows, so the reservation paths are correct as written.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 111,851 | 3 |" — 111,851 against the lane note "Spec 135 112,035 bytes" looks like a mismatched measurement — bytes and characters differ by the file's multibyte punctuation (184 bytes over characters), so both figures are consistent.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  70640ms (70.6s)
+📊 Tokens — total: 73470, input: 59461, output: 14009, reasoning: 13244

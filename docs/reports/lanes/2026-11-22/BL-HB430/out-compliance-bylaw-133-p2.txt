@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:34:53.331Z file_sha256=f9c19a1f701b87aa0912ea51d58a6a8ddca2860f3b03f7fa2af87256e9491bd0 prompt_sha256=f892d8403ae4b37c6af585b0a98f18b400c4327bd7500699277284c97c3c8e7c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0390 "task-430 output review size: option A, one larger review message, tried once" — docs/reports/panels/MF-95.json "filed in docs/reports/lanes/2026-11-22/BL-HB430/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md" — the panel plans a split multi-artifact output review, not the single larger message the ruling named — when the output review runs, record it as one larger review message per RR-0390.
+
+DEFER severity=LOW — task-430 done-condition "one reserved lock path each (the locks are task-434's)" — docs/specs/00-architecture/00_system_map.md "src/tests/surfaces/client-glass-boundary.logic.test.ts" — the map adds the 13 task-434 lock paths to Spec 135's live lock column before those locks exist; cannot see the files, do not assert — mark the 13 as reserved/OWED in the map, or list only built locks.
+
+REJECT — m.29 "Exactly 50 stratified rows" — accused of not producing the 50-row expert audit — this chunk edits a front-end queue, a generated list-count report, a panel record and the system map, none of which are Chapter 900 audit rows; the clause governs the bylaw audit, not the handbook.
+
+REJECT — m.357 "Each new CoA notice batch is scored blind first" — accused of a blind-scoring breach — no CoA notice batch is touched by this diff; the clause binds CoA scoring, not the McFrontend handbook.
+
+MET — RR-0384 "stop the clipping, make each line reflect its notes, and add these 13 lines" — .cursor/MCFRONTEND-QUEUE.md "Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the queue row and panel item both encode the three ruled parts.
+
+MET — RR-0385 "two rounds" — docs/reports/panels/MF-95.json "DeepSeek plan lens set, rounds 1 and 2 (grounded)" — the plan record carries the two ruled rounds.
+
+MET — RR-0380 "drop the full engineering when arts can be sent" — docs/reports/panels/MF-95.json "task-431: drop Specs 126-128 from the review table after commit C lands" — recorded as the ruled followup, not folded into this task.
+
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — docs/reports/panels/MF-95.json "blockers": "[]" — task-430 does not block on step 1.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6 (the task-430 operator rulings; the 34 bylaw-133 bullets engage no file in this chunk)   Unmet: 0
+Rules met: none
+
+---
+⏱  92235ms (92.2s)
+📊 Tokens — total: 36617, input: 19085, output: 17532, reasoning: 16878

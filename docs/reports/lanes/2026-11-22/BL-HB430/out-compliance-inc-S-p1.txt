@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:39:26.239Z file_sha256=43acf0b20b014574e10d3efebe9a12a5063c68d6b05b400f1a6ed7f7abb75eeb prompt_sha256=b3ed80f177e07d019786c01d30c475dfab326b928eeee2f025b949ec0bfb796f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings, then MET lines, then verdict.
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md "+  - Dated note 2026-11-22 (M-246, prior text kept; MF-95 ... RR-0384, operator, verbatim: \"These look great - teh 13 are perfect\" ... (the scope sentence he pasted back is the orchestrator's text, which he approved)" — the queue records only the first sentence as the operator's verbatim and downgrades the binding three-part scope to second-hand text, so the ruling the row is built on is no longer quoted in full where the row lives — quote the scope sentence inside the same note and point it at the card's RR-0384 entry.
+
+DEFER severity=LOW — card Description "measured, one small document per call finds more than large or joined ones" — docs/reports/generated/rule-lists-by-kind.md "-| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |" changed to "+| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 111,851 | 3 |" and "+| total | 15 lists | | 722,506 | 20 |" against "679,963 | 18" — the register goes from one part to three, so the front-end review this task exists to shrink now carries three register calls and 42,543 more characters, and no pasted ruling names that split — RR-0379 allows rules to be added over time, so state in the MF-95 Done-condition that the register is now a 3-part list and why the parts grew.
+
+DEFER severity=LOW — RR-0378 "tasks 427 and 425 removed (names RR-0378)" and "you can remove step 7 right now" — NONE — none of the four files in this chunk records the removal of step 7 or of tasks 427 and 425, so that half of the ruling the task card cites cannot be seen in chunk 1 — confirm the removal in chunks 2 or 3 before merge.
+
+REJECT — queue clause "arm Q refuses a DONE heading without it" — the MF-95 block carries "  - FE rows owned: none." plus a dated-note bullet — the "exactly one bullet" form binds a DONE heading, and MF-95 is "Status: RUNNING", so the extra bullet is not a breach.
+
+MET — card Files line — docs/specs/00-architecture/00_system_map.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-95.json — all four changed paths are named in the card's Files line, no file outside it is touched.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/00-architecture/00_system_map.md row 135 adds exactly thirteen test paths, "src/tests/surfaces/client-glass-boundary.logic.test.ts" through "src/tests/surfaces/a11y-category.logic.test.ts", matching the thirteen reserved lock paths named in the lane note "(client-glass-boundary, ui-library-set, tunables-are-data, scratch-mocks-not-in-repo, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category)".
+
+MET — RR-0385 "Label all realted tasks McFix Final" — card line "labels: McFix, McFix V2, McFix Final".
+
+MET — queue clause "This file is the ONE source of MF task ids. A task not listed here is not done." — "+**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole, a Current reading on 12 lines and 13 new OWED register rows — RUNNING** (E)" with "MF-95 is taken by the INPUTS.2 row (id claimed in ~/Buildo-scratch/ids/MF-95)".
+
+MET — queue clause "(ids are never reused)" — "MF-94 is held by lane BL-MFRULES (task-388, not yet landed" and "next free id **MF-96**", so MF-94 is skipped, not reused.
+
+MET — card Description "nothing in Specs 126, 127, 128 deleted or rewritten" — system map rows "| 126 |", "| 127 |" and "| 128 |" are unmodified context lines in the hunk.
+
+MET — inc-S element table and "counts: {\"BUILT\":42,\"BUILT-NO-DATA\":7,\"NOT BUILT\":16}" — rule-lists-by-kind.md keeps "| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |" unchanged and no A.1-G.6 row is edited, so the governing list is not rewritten by this chunk.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  78846ms (78.8s)
+📊 Tokens — total: 37934, input: 22575, output: 15359, reasoning: 14156

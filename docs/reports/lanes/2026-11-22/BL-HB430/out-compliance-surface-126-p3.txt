@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:50:37.052Z file_sha256=254854b696270217260a15777822ec2010734c3db4b38047bca61f98afd36d27 prompt_sha256=f07237d818270c236df849f21ffd02da20f98c4db711a6e888e0ec0153d435e2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — RR-0390 "task-430 output review size: option A, one larger review message, tried once" — docs/reports/panels/MF-95.json:13 "the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the recorded output plan still budgets one compliance pass per governing rule list, i.e. several messages, not the single larger message the operator ruled, and RR-0390 is cited nowhere in the record — rewrite the output line as one larger review message covering every governing rule list and add RR-0390 to cards
+DEFER severity=MED — MF-95 row scope "Not in this row: dropping Specs 126-128 from the review table (task-431), the locks of the new rows (task-434)" — docs/specs/00-architecture/00_system_map.md:100 "src/tests/surfaces/client-glass-boundary.logic.test.ts, src/tests/surfaces/ui-library-set.logic.test.ts, ... src/tests/surfaces/a11y-category.logic.test.ts" — the same change publishes the 13 lock paths as Spec 135's tests while assigning those locks to task-434 and recording all 13 files absent, so the map declares checks this change does not deliver and no ruling asked for — keep the 13 owed lock paths out of the 135 row, or mark them owed, until task-434 lands
+DEFER severity=LOW — MF-95 row Status form "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — .cursor/MCFRONTEND-QUEUE.md:648 "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows) (lane BL-HB430, task-430)" — the same change records commits A, B and C landed at d429b287d, so the row's stated next step is already done at the merge point — set next to the owed output review when the row is refreshed
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — docs/reports/panels/MF-95.json:3 — the three ruled items are carried as commits A (no clipping), B (12 Current readings), C (13 OWED rows)
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — .cursor/MCFRONTEND-QUEUE.md:648 — the 126-128 drop is deferred to task-431 and no file under those three specs appears in the diff
+MET — RR-0385 "output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — docs/reports/panels/MF-95.json:10 — the round policy is recorded verbatim in the panel cards
+MET — 126 §5.0a "a RED canary proving the check itself fires" — docs/reports/panels/MF-95.json:12 "Tests first: red commit attempts recorded in the lane red.out" — red evidence is declared per commit A, B, C and Q9
+MET — 126 §5.0 consequence 2 "A draft may be honestly incomplete, and the incompleteness is counted" — .cursor/MCFRONTEND-QUEUE.md:648 "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each" — incompleteness is carried as OWED rows and a rendered count, not prose
+MET — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-96** (ids are never reused)" — MF-95 is claimed in the same line's dated note and MF-94 is held, so the id chain and the first-value rule hold
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  125774ms (125.8s)
+📊 Tokens — total: 47194, input: 23110, output: 24084, reasoning: 23187

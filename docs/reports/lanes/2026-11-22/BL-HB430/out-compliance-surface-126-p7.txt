@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:51:16.316Z file_sha256=bdc5c4893d491296ec24be36cec3f0fc06ba0d46830dc0d8604c191f7afcf05d prompt_sha256=41016117269ff853dcad103aba109c0c89d9a822c7649b7babd0873843624df2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §11b.2 Locks "conformance (FE-31), the contract binding kind (FE-32), generated-only incl. the vendored manifest (FE-02), no maths in bindings (FE-05), parity keyed by surface (FE-07) | Spec 135", pasted card "one reserved lock path each (the locks are task-434's)" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the Spec 135 Tests column now names 13 lock files that are not built (all 13 absent per the card), so a second home asserts locks the register marks OWED and task-434 owns — keep the reserved paths in the Spec 135 OWED rows only and add the Tests-column entries when task-434 lands the files.
+
+DEFER severity=LOW — §11b.5 "The decision mechanism is unchanged: Spec 128 §4 rulings, Spec 08 PLAN and OUTPUT panels per row, McBylaws owner review on gate code." — docs/reports/panels/MF-95.json:22 "\"integration, reality-check and regression seats (plan)\"" — no McBylaws owner seat or verdict line is recorded although the task edits `scripts/surfaces/generate-surface-handbook.mjs` and its `--check` lock — add the McBylaws owner seat to the panel, or record a ruling that the handbook generator is not gate code.
+
+MET — §11b.5 "Spec 08 PLAN and OUTPUT panels per row" — docs/reports/panels/MF-95.json:11-21 "PLAN-430-v1 ... every finding ruled by the separate plan grounder" and "OUTPUT review owed at the lane output stage" — the per-row panel exists with the plan ruled and the output review named as owed.
+
+MET — §11b.6 "tasks in `.cursor/MCFRONTEND-QUEUE.md`" — .cursor/MCFRONTEND-QUEUE.md:648 "**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole ... — RUNNING** (E)" — the task keeps one home, its row in the queue file; no second task home is created.
+
+MET — §11b.2 RULES.ACC 2026-11-20 note "is the orchestrator's summary of it, and is not a separate ruling" — .cursor/MCFRONTEND-QUEUE.md:651 "the scope sentence he pasted back is the orchestrator's text, which he approved" — the operator's words and the orchestrator's scope sentence are kept apart in both the queue row and the panel card.
+
+MET — pasted RR-0384 "stop the clipping, make each line reflect its notes, and add these 13 lines" — .cursor/MCFRONTEND-QUEUE.md:650 "the Spec 136 generator prints every Spec 135 ruling whole (no line ends in a clip ellipsis ...); the 12 rows of plan section 17.3 carry one Current reading dated note each ...; the 13 rows of plan section 17.2 are in Spec 135 as OWED" — the Done-condition restates exactly the three approved items and nothing beyond them.
+
+REJECT — §11b.2 (pipeline: Descriptor, Content, Generator, Binding, Goldens, Gate, Locks, Canaries) — the accusation that the diff never builds the 13 rows, the generator print change or the Spec 135/136 text — this material is chunk 1 of 3 cut at file boundaries and the pasted card lists those files, so their absence here is chunking, not omission.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  87138ms (87.1s)
+📊 Tokens — total: 43812, input: 27086, output: 16726, reasoning: 15872

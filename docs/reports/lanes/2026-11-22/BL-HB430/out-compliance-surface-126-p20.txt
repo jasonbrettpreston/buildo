@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:48:08.462Z file_sha256=290a5b792bc80128f00cbf1a99cf3f5ed6cfab144fca40f03e9eb44001dab6b6 prompt_sha256=fe71938796cfba305ff15fb2164730289e9b7ca8ca259bacc8e7e2b679466798
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p20.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §2.1 dated note 2026-11-09 "per D-2 the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4)" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.46** Libraries. \"the web library is Mantine 8.3\" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09)" — the new rule line cites the same dated note the pasted clause summarises but states Mantine 8.3 where that note states Mantine 9, so the handbook now contradicts the governing spec on the web library version and would drive the wrong install — correct fe.46 to the version the 126 note states, or cite the later ruling that moved it off Mantine 9, then regenerate Spec 136 and the rule map.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"; lane text restating the notes dated" — every Current reading is framed as an operator verbatim "Approved", a word present in none of the pasted operator words (RR-0384 verbatim reads "These look great - teh 13 are perfect."), so the generator puts a quote in the operator's mouth while its own frame says the text is "not an operator word" — use RR-0384's actual words, or drop the verbatim attribution from the frame.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;" — a row whose Status cell merely mentions the words "Current reading:" in ordinary prose and carries no reading note throws "the Current reading note does not parse in the strict form", so that legitimate row renders no line and --check fails — decide presence from the last segment only, not from the whole cell.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX;" plus handbook test A-T2 — Spec 136 lines no longer end in the clip ellipsis, and the 300 cap Spec 133 depends on is left alone.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.45 to fe.57 with scripts/surfaces/_schema/surface-rule-map.json — thirteen OWED lines, each naming exactly one lock owed, map regenerated from the same rows.
+
+MET — Spec 126 §3.4 "consumers[] ... \"none\" — written down, not omitted, and a `checks[]` entry at `severity: FAIL` asserts it stays empty while R-03 holds" — handbook fe.49 and fe.52 — the fence is restated and parcel_ref/parcel_pk named apart, lead_parcels still read by no surface.
+
+REJECT — Spec 126 §3.1 "ONE home for the profiles ... a second copy of a profile is a second thing to keep in sync" — the change is accused of copying the shared plain()/headlineOf logic into the generator — not a real issue: that clause governs the archetype required-field registry, and the copy is pinned to the shared function by A-T6 on real rows and planted cells.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  87403ms (87.4s)
+📊 Tokens — total: 54029, input: 36966, output: 17063, reasoning: 16221

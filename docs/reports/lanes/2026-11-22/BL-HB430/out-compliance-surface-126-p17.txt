@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:47:36.578Z file_sha256=f065183337c954cba6648dbe4d686f47b2e2e0e9f9b08b2fe90d23c1e3b08fdb prompt_sha256=f4e8e08b6eed893aaf11904a91fbbf06a315e2720d3f401b30ed7f9e050adba0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "| D n/a, P owed, F pass, S pass, H n/a, E pass |" — each of the thirteen new rows writes a Six value "owed", outside the closed pass/n/a/FAIL set, so the row form is broken thirteen times — replace every "P owed" with an allowed value plus its reason, e.g. "P n/a (lock owed: <path>)", in FE-45..FE-57
+
+BUG severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 "Current reading: The render-smoke clause is its own row, FE-33 ... The web footer is one shared component, footerNode.ts. (from notes dated 2026-11-09, 2026-11-11, 2026-11-20)" — the reading skips this row's 2026-11-10 dated note "`surface.schema.json` grows by `render.list.id_field`, `rows`, `row_actions[]` (delete, edit, toggle_active), the column `display: \"image\"`", so the printed line omits the one note that escalates the schema — add a sentence for the 2026-11-10 note and add its date to the parenthetical
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-01 "The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." against the same row's kept cell "Lock: `src/tests/surfaces/mcfrontend-status.infra.test.ts` (126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2)" — Spec 136 will print a reading that contradicts the status column of the same row on what the identical lock asserts — restate the cell in the same note or word the reading to say the lock wording was restated by the 2026-11-09 note
+
+DEFER severity=LOW — RR-0384 record as pasted "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "his reply pasted the orchestrator's message back and added two phrases of his own, \"These look great - teh 13 are perfect\" (first) and \"Approved\" (last, line 1903)" — the pasted RR-0384 entry ends at :1901 and contains no "Approved" and no "I have not started task 430" sentence, so that operator verbatim cannot be seen here — cite only the pasted words or paste :1902-1903 into the review context
+
+DEFER severity=LOW — task card "THIS TASK (step 2): add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-46 "no machine check yet, the lock is task-434's and the path is a reservation" — all thirteen rows create lock obligations and assign them to task-434, which no pasted ruling or card line names, so the rule-5 form is met only by a reservation nobody in the pasted context owns — name the owning task in a pasted ruling, or leave the lock cell as a plain OWED path without the task-434 assignment
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — thirteen rows added in item order, matching REPORT-429 section 3A items 1-13
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-53 — the row points at Spec 126 §11b.3 and §11b.7 and states "The tables are not copied here"
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md diff — the hunk touches only Spec 135, no 126/127/128 line is removed or reworded
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — every new row is OWED with a `src/tests/surfaces/*.logic.test.ts` path, recorded as "all 13 absent"
+MET — Spec 126 §11b.7 rule 3 amendment "The monthly plan is also offered as an Apple in-app purchase beside web checkout" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-50 — the row records the amendment at 126:1120 and that "the later operator ruling governs"
+MET — Spec 126 §13 "a RED canary per lock" and 128 rule 4 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-56 — the row states "a lock never red against the defect it names is not a lock" and reserves a planted-defect lock path
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+Rules met: none
+
+---
+⏱  75881ms (75.9s)
+📊 Tokens — total: 73160, input: 57810, output: 15350, reasoning: 13891

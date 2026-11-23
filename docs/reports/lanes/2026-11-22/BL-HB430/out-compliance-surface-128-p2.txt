@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:53:38.488Z file_sha256=2948807f923daed5c84bd74cb0412e109664948877ea2224322f3aea061cef64 prompt_sha256=27769d58daa67d5d8aab8002eb11fd87f2c99d0babbd615469ce41bf198a9100
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — ASK-06 "PD #2 makes the map the single source of truth" — docs/specs/00-architecture/00_system_map.md "src/tests/surfaces/a11y-category.logic.test.ts" — the map now lists all 13 reserved lock paths as Spec 135's tests while the same change records "one reserved lock path each (all 13 absent)", so the declared source of truth asserts test files that do not exist — until task-434 lands, derive the test column from files present on disk, or render the reserved paths as declared-not-built rather than as tests
+DEFER severity=LOW — Spec 128 §4.11 item 7 (cited by the row, not in this pasted part) — .cursor/MCFRONTEND-QUEUE.md "arm Q, Spec 128 section 4.11 item 7" — the exemption that lets MF-95 write "FE rows owned: none." rests on a clause outside §5-§8, so this run cannot confirm it — paste §4.11 item 7 with the row or restate the exemption without a citation this part cannot check
+DEFER severity=LOW — queue form "lanes R rulings · G gates · E one-writer build" — docs/reports/panels/MF-95.json ""class": "G"," — the queue row classifies MF-95 as lane E while its own panel record classes it G, so one of the two records is wrong — set the panel class to E for a one-writer build, or state in the panel why a lane-E task is classed G
+
+MET — card scope "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/reports/generated/rule-lists-by-kind.md "| surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |" — Specs 126/127/128 entries are byte-identical, no file under docs/specs/02-web-admin/ is written by this chunk
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/reports/panels/MF-95.json ""item": "INPUTS.2 (task-430): the Spec 136 generator prints each Spec 135 ruling whole (commit A), 12 rows gain one Current reading dated note printed on their line with a staleness lock (commit B), and 13 new OWED rows carry the RR-0384 list (commit C)."" — the panel record enumerates exactly the three approved arms and nothing else
+MET — dated note 2026-11-14 "its OUTPUT panel record `docs/reports/panels/MF-83.json`" — docs/reports/panels/MF-95.json ""task": "MF-95"," — the task ships its own OUTPUT panel record at the named path
+MET — queue rule "This file is the ONE source of MF task ids" — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-96** (ids are never reused)" — the row is added in the one source and the counter advances by exactly one, with MF-94 declared held
+MET — RR-0385 "two rounds, CRITICAL, HIGH and MED" — docs/reports/panels/MF-95.json "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — the panel cards carry the two-round seating as ruled
+MET — ASK-06 "**Stay in `02-web-admin/`.**" — docs/specs/00-architecture/00_system_map.md "| 135 | `02-web-admin/135_mcfrontend_decisions_register.md` |" — no `04-platform/` is created and the register stays where the ask rules it stays
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: R-13, R-19, R-24, R-25, R-27, R-33
+
+---
+⏱  102222ms (102.2s)
+📊 Tokens — total: 47255, input: 27392, output: 19863, reasoning: 18956

@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:51:09.164Z file_sha256=52d1a21beb6393740a00716cb83b9427afadb70c3bfc7687276bdf80351f4026 prompt_sha256=4beb90af8963b42aaee737b31c5660f87e5565afcfaae076ef658a6583131463
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+MET — 11a.7 golden render states — docs/reports/generated/rule-lists-by-kind.md:32 — this chunk only re-measures the Spec 135 and Spec 136 review-list counts and adds no golden tree or states.json, so the 108-file golden set of 11a.7 is untouched
+MET — 11b.1 import boundary — docs/specs/00-architecture/00_system_map.md:99 — the added lock paths sit in Spec 135's test column as the reserved OWED locks named by 11b.1 "Lock: Spec 135 FE-31", and no library import or wrapper module is added
+REJECT — step 4, nothing added that the card or ruling did not name — the MF-95 queue row, the MF-95 panel record and the 13 system-map lock paths — these are the declared records of RR-0384 "add these 13 lines" and of the card Files line, not new behaviour
+
+VERDICT: PASS
+Clauses checked: 2   Unmet: 0
+Rules met: none
+
+---
+⏱  95928ms (95.9s)
+📊 Tokens — total: 36355, input: 26156, output: 10199, reasoning: 9966

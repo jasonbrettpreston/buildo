@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:35:47.741Z file_sha256=dcae95bce5162c7ecfba5358eac4ef48116bc58b5feaad8edc673d0df9998201 prompt_sha256=dc4cc78d9a3d6d3c26132d46d49f0cc3b44e1cc3d54784f5c016030c9bc0dd0f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p6.txt (model: deepseek-reasoner)
+
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md "| FE-45 | The client is just glass." through "| FE-57 | Accessibility." — thirteen distinct rows added, each naming its own REPORT-429 section 3A item 1..13 once, no item duplicated or dropped.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md "| FE-53 | POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) ... The tables are not copied here." — item 9 landed as a pointer row with no copied page table.
+
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — 135_mcfrontend_decisions_register.md, diff hunk header "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — the whole diff touches only Spec 135; the 126/127/128 text the new rows cite is quoted, not edited.
+
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — "OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts`; added 2026-11-22 (RR-0384)" — all thirteen lock paths are `src/tests/surfaces/*.test.ts` names absent from the register's other rows and stated as reservations.
+
+MET — RR-0384 "make each line reflect its notes" — "Current reading: Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09" — the twelve Current reading notes restate their own row's dated notes and each is marked "lane text restating the notes dated ... not an operator word and not a ruling".
+
+REJECT — register rule 4 "`pass`/`n/a`/`FAIL`" — accused: the thirteen new rows carry "P owed" in the Six cell, outside the pass/n/a/FAIL list — not a real issue: the row for FE-31 records "The Six cell read \"F OWED per archetype ... before this note; it reads n/a with its reason because a RULED row's Six cell answers pass, n/a (reason) or FAIL", so an owed marker is the register's established value while the row is OWED.
+
+REJECT — "Operator verbatim as recorded" — accused: the new rows print orchestrator text under an operator-verbatim heading — not a real issue: each row says "his reply pasted the orchestrator's message back and added two phrases of his own, \"These look great - teh 13 are perfect\" (first) and \"Approved\" (last, line 1903)", so his words and the pasted text are separated.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — "Its own row is owed as FE-40, after FE-35..FE-39 land." — 135_mcfrontend_decisions_register.md "Current reading: The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b. (from notes dated 2026-11-11)." — the FE-02 reading keeps the note's first clause and silently drops the owed-FE-40 clause, and FE-40 now holds "| FE-40 | McTest: the real app is proven wired ...", so no line states where the standard's own row went — add one superseding sentence naming the row that now carries the standard, or record RR-0384 as dropping it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  145007ms (145.0s)
+📊 Tokens — total: 78078, input: 61448, output: 16630, reasoning: 15701

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T21:04:00Z'
+updated_date: '2026-11-23T02:10:00Z'
 labels:
   - McFix
   - McFix V2
@@ -48,6 +48,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-HB430/REPORT.md
 type: build
 ordinal: 130012
 ---
@@ -432,4 +433,11 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; o
 2026-11-22 lane BL-HB430 commit C: thirteen OWED rows added to Spec 135 as FE-45..FE-57 (placeholders: FE-45 is held by BL-MFRULES unlanded; FE-46..FE-58 claimed in ~/Buildo-scratch/ids for the renumbering), texts of plan 17.2, one reserved lock path each (all 13 absent); Next free id FE-58 by a dated note; Spec 136 and surface-rule-map.json regenerated (57 rules, 21 OWED); rule-lists-table pin computed from the register. Spec 136 section 2 measured 28,664 characters (file 32,207); Spec 135 112,035 bytes.
 
 2026-11-22 lane BL-HB430 ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): A-T6 reworded (short-provenance planted case keeps the bracket) and a pin that the failure-state row (FE-54 on this branch) keeps (Spec 128 Rule 12, 128:39); red on the staged generator before the wholeHeadline change; then wholeHeadline prints the plain cell also where the shared rule stripped a trailing bracket of an unclipped cell.
+
+2026-11-22 lane BL-HB430 acceptance on real inputs (plan section 9), after commit C d429b287d (commits 62b2ffed6, 0fe6e7712, 25755f51a, d429b287d):
+(1) Spec 136 lines ending in the clip ellipsis: 0 (grep -c); section 2 28,691 characters, 57 lines; the 16 formerly clipped lines whole (fe.18 604, fe.30 944, fe.35 1074, fe.39 1746, fe.42 1144 characters with their Status-free line text).
+(2) 12 rows carry a reading (FE-01 FE-02 FE-07 FE-11 FE-14 FE-18 FE-19 FE-20 FE-29 FE-31 FE-38 FE-39), 12 printed; planted later note on FE-39: [surface-handbook] FE-39: a dated note follows the Current reading; restate it.
+(3) 13 new lines fe.45..fe.57 (placeholders, plan 17.5), each Status: OWED · lock owed: <path> (client-glass-boundary, ui-library-set, tunables-are-data, scratch-mocks-not-in-repo, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category); Rules rendered: 57, 21 OWED; item 9 pointer row, item 4 own row; fe.54 keeps (Spec 128 Rule 12, 128:39) per ruling Q9.
+(4) git diff --stat 60b601cc9 HEAD -- docs/specs/01-pipeline/133_bylaw_handbook.md scripts/analysis/bylaw/: empty; bylaw handbook --check up to date (546 rules).
+(5) --check green: surface-handbook (57 rules), bylaw-handbook, surface-validate, surface-registry, spec-split-check, rule-lists page; commit hooks: commit C related run Tests 60 passed (60), GATE OK, POLICY CHECKS OK; red evidence for every planted case in the lane red.out (A, B, C, Q9). Full suite not run (push station only). Self-checklists in the lane CHECKLISTS.md.
 <!-- SECTION:NOTES:END -->

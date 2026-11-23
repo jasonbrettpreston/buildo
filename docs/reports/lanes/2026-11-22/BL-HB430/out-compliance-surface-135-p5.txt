@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:57:48.492Z file_sha256=800ee679e6f3ffe95059d67f9d2d09b8ab95ec17ca887daebb36b932414ed7b7 prompt_sha256=59b9734478b3359e2886026610acf58bd8ada9f69fea548693e4b3403c82930c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-135-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9)." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "D n/a, P owed, F pass, S pass, H n/a, E pass" — "owed" is not in the closed set pass/n/a/FAIL; FE-45..FE-57 all use "P owed" — replace "P owed" with an allowed value such as "P n/a (lock owed)" or the letter alone, and keep the owed status in the Status cell
+DEFER severity=LOW — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "RR-0384, operator, verbatim: 'Approved'" — the pasted RR-0384 quote stops at 'copying tables.' and does not contain 'Approved' or 'I have not started task 430. You said you would read the list first, and this is it.'; MORNING-DECISIONS.md:1902-1903 cannot be seen — cite lines 1901-1903 and confirm the operator words, or drop the extra sentences from 'recorded reply in full'
+MET — rule 3 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 — every new row reads OWED and carries one lock path in the last cell ("OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts`")
+MET — rule 5 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — each lock is under src/tests/surfaces/ with a .test.ts suffix and is stated as a reservation ("the path is a reservation")
+MET — RR-0384 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — thirteen rows are added and FE-53 is the pointer ("POINTER, not a copy")
+MET — Next free id — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — the line reads "**Next free id:** `FE-58`" and the thirteen added rows are FE-45..FE-57
+MET — task description — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — the diff touches only this file, so Specs 126, 127 and 128 are not deleted or rewritten
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+Rules met: none
+
+---
+⏱  155399ms (155.4s)
+📊 Tokens — total: 83036, input: 49510, output: 33526, reasoning: 32848

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:45:35.496Z file_sha256=be69288247dbf88e638fa6816a2952e1afc030d52e4b0b4ec96abb09bf606f4e prompt_sha256=d503ab7251523008815368aebe57415f8e4088acee2739f55777b447eaf8ff9a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 135 rule 4 "Six cell: letters D P F S H E (the six principles of Spec 126 0a), pass/n/a/FAIL (Spec 128 4.9). Applies to FE rows only." joined with FE-31 note "it reads n/a with its reason because a RULED row's Six cell answers pass, n/a (reason) or FAIL (Spec 128 4.9; Spec 135 rule 4)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "D n/a, P owed, F pass, S pass, H n/a, E pass" (same shape FE-45..FE-57) — all 13 new rows carry "P owed" and bare "n/a" with no reason, values rule 4 does not list and the FE-31 correction already rejected — replace "P owed" with "P n/a (lock owed: task-434)" or P pass/FAIL and add an "(reason)" to each bare n/a.
+
+DEFER severity=MED — Spec 126 0b item 11 "the Spec 136 generator refuses a gap in the FE numbering (scripts/surfaces/generate-surface-handbook.mjs readFeRows)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md next-free-id note "the line read Next free id: FE-45 before this note; FE-45..FE-57 are taken by the thirteen OWED rows ... FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch" — the register lands FE-45 while another unlanded branch also holds FE-45, so a BL-MFRULES-first merge produces two fe.45 lines that the gap-refusing reader does not catch — land the 13 as FE-46..FE-58 now (leaving FE-45 to BL-MFRULES) or prove the merge order that renumbers one side, as the pasted next-free line only plans.
+
+DEFER severity=LOW — Spec 126 0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-01 note "Dated note 2026-11-22 (M-246, prior text kept; FE-01 ... RR-0384, operator, verbatim: Approved; lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling)" — RR-0384's approval covered the 13-item list, not this 12-row restatement set, so the header attaches a ruling to lane text the operator did not rule even while the body disclaims it — cite the plan approval (RR-0378 "Plan approved") or the row's own dated source for the restatements, not RR-0384.
+
+DEFER severity=LOW — Spec 126 0b item 6 "The operator's own words with the date and the record path" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "The recorded reply in full: These look great ... I have not started task 430. You said you would read the list first, and this is it. Approved" — this verbatim block is longer than the pasted RR-0384 quote (which ends at "do not grow by copying tables") and includes a line the note itself labels a pasted-back orchestrator message — trim the Full text to the operator's own sentences and record the paste-back separately.
+
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — exactly 13 new rows are added, mapped item 1..13 to FE-45..FE-57.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-53 "POINTER, not a copy ... The tables are not copied here" — item 9 is a pointer row, no tables copied.
+
+MET — 135 rule 5 "an OWED row's lock path must be a valid src/tests/surfaces/*.test.ts that does NOT yet exist" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — each new row reserves one src/tests/surfaces/*.logic.test.ts path, none a .db.test.ts.
+
+MET — Spec 126 0b item 6 "landed as a Spec 135 FE row with one lock ... or as a dated note with the prior text kept (M-246)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 note "Dated note 2026-11-22 (M-246, prior text kept ... MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169)" — every note keeps prior text and gives date plus record path.
+
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — the diff edits only 135, adding rows and notes, deleting nothing from 126/127/128.
+
+MET — Spec 126 0b item 8 "Anything in a Stitch export with no source ... is left out and is not raised as a decision" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-48 "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo (126:79)" — the quote matches the spec text.
+
+VERDICT: PASS
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  121034ms (121.0s)
+📊 Tokens — total: 78110, input: 53785, output: 24325, reasoning: 22977

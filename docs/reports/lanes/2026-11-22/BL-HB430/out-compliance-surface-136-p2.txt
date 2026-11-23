@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:59:54.666Z file_sha256=cecbba5e6afe4142ea672a3471f60300759f7ec084e6d37c97bbdaa9f2a5281d prompt_sha256=fbf3dce3f1d29d44e3ba69df7ae155830259929f5507e2122b875ad0992dd43f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+BUG none raised. Findings and MET lines below.
+
+DEFER severity=MED — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch" — the diff defines FE-45 as the client-glass-boundary row while stating FE-45 is reserved by another unlanded branch, so two rows can carry one id in the register; the resolution is documented but depends on this branch landing first and BL-MFRULES renumbering, which is not enforced here — land only as first lander, or renumber this branch's rows to FE-46..FE-58 now and set next free id to FE-59.
+
+DEFER severity=LOW — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "'These look great - teh 13 are perfect' (first) and 'Approved' (last, line 1903)" — every new row's Ruling cell attributes a verbatim operator word "Approved" at :1903 that cannot be seen in the pasted RR-0384 quote (which ends at "copying tables"), so the verbatim attribution is uncorroborated in the material pasted — cite decision-169 or the raw :1901-1903 lines, or drop the extra "Approved" from the verbatim cell.
+
+MET — fe.08 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — the change edits the decisions register at the ruled path, no doc-set move.
+MET — fe.10 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — rows remain the rule source the Spec 136 generator reads, no new tooling in this chunk.
+MET — fe.16 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — the spec stays under docs/specs/02-web-admin.
+MET — fe.01 — diff "+Current reading: Phase 1 (the report page) is open since 2026-11-06 and Phase 2 ... names Phase 1 and Phase 2, not Phase 1 only." — matches fe.01 current reading, faithful restatement.
+MET — fe.53 — diff "+| FE-53 | POINTER, not a copy: ... The tables are not copied here." — matches RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables."
+MET — fe.45 — diff "+| FE-45 | The client is just glass. ... (128:55)." — row text reproduces the fe.45 clause verbatim, rules nothing new.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 29   Unmet: 0
+Rules met: fe.01, fe.02, fe.07, fe.08, fe.10, fe.11, fe.14, fe.16, fe.18, fe.19, fe.20, fe.29, fe.31, fe.38, fe.39, fe.45, fe.46, fe.47, fe.48, fe.49, fe.50, fe.51, fe.52, fe.53, fe.54, fe.55, fe.56, fe.57
+
+---
+⏱  102118ms (102.1s)
+📊 Tokens — total: 75874, input: 55332, output: 20542, reasoning: 19765

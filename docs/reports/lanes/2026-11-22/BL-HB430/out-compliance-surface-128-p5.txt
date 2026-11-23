@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:54:06.635Z file_sha256=a6022db7834633142e72982d0c7f5f1c3aba2207893f59a2940a6021cedc7a9f prompt_sha256=61738e2e84b22b60a819c133783dd775cc63f58a680d8eff87cbb4e1a623664d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-128-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — src/tests/surfaces/handbook-rule-map.logic.test.ts "RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated ${dates} of this row, not an operator word and not a ruling" — the reader frame (generate-surface-handbook.mjs READING_FRAME) and the test helper force every new dated note to record RR-0384 as a verbatim "Approved", a word the pasted RR-0384 text does not contain, so the 12 new readings restate the operator's ruling as words he did not say — either quote RR-0384's recorded words in the frame or cite by id the ruling that approved plan 17.3, and change the 12 notes and the helper in the same commit.
+
+DEFER severity=MED — Rule 20 "Every displayed field's `source` is in the closed set (Spec 126 §11a.1): catalogue row id, content id, input-contract id, ad-contract id, declared external embed. The set is in a protected file; adding a member needs a register row and a panel." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27)" — the regenerated line asserts a sixth member (`parcels`) beyond the five the pasted closed set names, and no panel record for that addition is visible in this chunk (FE-27's row and its panel cannot see) — cite FE-27's panel record on the line, or withhold `parcels` from the restated set until Rule 20's set is amended by a dated note.
+
+DEFER severity=MED — Spec 128 §4.4 "a rule without a lock is not yet a rule" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 57**: 57 in force (21 OWED, whose lock is still to land), 0 history." — the header counts 21 lock-less OWED rows as "in force", and C-T3 pins that count ("expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`)"), so the change locks in a statement §4.4 contradicts — print "36 in force (21 OWED, whose lock is still to land), 0 history" and pin that, or drop "in force".
+
+DEFER severity=LOW — Rule 1 "no surface behaviour lives only in a component, it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order." — scripts/surfaces/generate-surface-handbook.mjs "const SHARED_HEADLINE_MAX = 300;" — the shared clip cap and the shared plain() now also live as a literal copy inside the generator, held together only by the A-T6 drift test, which is the one rule declared at two sites that rule 1 orders away from — export the cap and plain() from the shared reader under a McBylaws task, or put both in one file the reader and the generator import.
+
+REJECT — Spec 128 §4.4 "a rule without a lock is not yet a rule" — the change is accused of adding 13 rule lines whose reserved lock paths do not exist — not a real issue: §4.10 "A row that is ruled and whose lock is not yet built reads OWED with its lock path" permits exactly this, and each new row reads "Status: OWED · lock owed: <one path>".
+
+REJECT — RR-0384 "so the page does not grow by copying tables" — the change is accused of growing Spec 136 — not a real issue: fe.53 is the pointer row ("POINTER, not a copy ... The tables are not copied here") and the added lines are the 13 rule lines the same ruling approved.
+
+MET — Rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)." — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(run(root, ['--write']).code).toBe(0);" and "expect(run(root, ['--check']).code).toBe(0);"
+
+MET — Spec 128 §4.10 "One lock per register row (multi-lock rows are split)." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts" (one path per new row, 136 and surface-rule-map.json in step)
+
+MET — Spec 128 §4.11 item 5 "`prereg-<task>-<k>.json` under scripts/analysis/bylaw-validation/coa-expected/ with non-empty `rules[]`, each RULED" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json "rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook). The new rows are OWED and are never cited."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+Rules met: none
+
+---
+⏱  144468ms (144.5s)
+📊 Tokens — total: 65017, input: 37124, output: 27893, reasoning: 26622

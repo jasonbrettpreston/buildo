@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:47:39.990Z file_sha256=838af4b41014b676e4c93fe530d85dbd82456648948ea3afd791249940855785 prompt_sha256=9684460cc96a5b4f61a805ae5a2109870b57724a1d6e36a7f8152b275049618a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p18.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §14 fence "Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.** `lead_parcels` is read by no surface. Only a declared **id-translation seam** exists" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock." — the row pins the fence as a rule while its own status records the fence already breached and defers the repair, and no pasted ruling authorises the exception — fix: land the descriptor-note naming as an operator-ruled exception row (or remove the naming) before FE-49's lock is claimed, so the row does not ship with its clause knowingly unmet.
+
+BUG severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — 135 FE-31 "Current reading: The render-smoke clause is its own row, FE-33, and this row's lock does not check it. ... The web footer is one shared component, footerNode.ts. (from notes dated 2026-11-09, 2026-11-11, 2026-11-20)." — the printed line omits the row's 2026-11-10 binding-standard note ("`surface.schema.json` grows by `render.list.id_field`, `rows`, `row_actions[]`") and its date list omits 2026-11-10, so this line does not reflect its notes — fix: add the 2026-11-10 reading and 2026-11-10 to the "(from notes dated ...)" list.
+
+DEFER severity=LOW — 126 §14 "(`lead_parcels.parcel_id` = `parcels.id` = `parcel_pk`; the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`)" — 135 FE-52 "The id-translation seam: \"the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`\" (126:1238, §14)." — the register's one home for the two names records only the consumer leg and drops `lead_parcels.parcel_id` = `parcel_pk` — fix: state both legs in the same sentence so a future non-fenced use cannot invent a fifth vocabulary.
+
+DEFER severity=LOW — 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — 135 FE-45 "D n/a, P owed, F pass, S pass, H n/a, E pass" (same form on all 13 new rows) — "owed" is outside the closed cell set the rule states — fix: use a value from the set with a reason bracket, or extend rule 4 by a dated note (FE-44 already uses the same form).
+
+DEFER severity=LOW — RR-0384 "stop the handbook clipping" — NONE — cannot see the generator or Spec 136: this chunk holds 135 only, so the clipping half of the ruling is unverified here — fix: judge it in the chunk that holds scripts/surfaces/generate-surface-handbook.mjs and 136.
+
+DEFER severity=LOW — RR-0384 "add these 13 lines" — 135 FE-46 "126 §11b.4 (126:1005, :1006, :925, :75)" — cannot see the approved item list (REPORT-429 section 3A) or the cited 126:1005, 126:75, 128:29, 128:30, 128:39, 128:127, 127:59 lines, so the 13 rows' content cannot be checked against what the operator approved — fix: paste the item list and the cited lines with the ruling.
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — 135 FE-45..FE-57 — thirteen rows in item order, item 9 landed as FE-53 "POINTER, not a copy ... The tables are not copied here."
+MET — 126 §14 "the product key is `parcel_tool`, not a brand string" — 135 FE-50 "on one account and the same `parcel_tool` entitlement".
+MET — 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135 FE-45..FE-57 — all 13 locks are `src/tests/surfaces/*.logic.test.ts`, none a `.db.test.ts` needing a test.yml step.
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff touches only docs/specs/02-web-admin/135_mcfrontend_decisions_register.md.
+MET — 126 §14 "`migrations/**` — no migration is authored by this spec" — no migration path appears in the diff.
+MET — 126 §14 "Spec 125 (**superseded by this spec**)" — no added row cites or revives Spec 125.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  131219ms (131.2s)
+📊 Tokens — total: 64876, input: 48505, output: 16371, reasoning: 15106

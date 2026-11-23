@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:34:39.232Z file_sha256=6e94890f5b8f36777615dc3e5126aa37aa132156c8543425ca88efa462297031 prompt_sha256=89d31fd65d610f3bc987cb75f856b7f3c4034a9586849121572d6e8a9f4b3900
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p15.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"" — the frame attributes to RR-0384 a verbatim word "Approved" that the pasted RR-0384 words do not contain, and every one of the 12 reading notes is parsed on this frame — cite the message that actually said "Approved" or quote the operator's pasted words in the verbatim field.
+
+DEFER severity=LOW — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — this returns the plain cell also for cells that were NOT clipped but where the shared rule stripped a trailing bracket, a behaviour change resting on "Ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md)" which is not in the pasted rulings — confirm Q9 in the pasted record, or scope the change to cells the shared reader actually clipped.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs wholeHeadline — bypasses the shared 300-character clip and the handbook lines fe.18/fe.30/fe.35/fe.39/fe.42 print whole, with no line ending in the ellipsis.
+
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs readingOf/lineRow — the last dated note in the strict form is appended as "Current reading (lane text, notes ...)" on the headline line, and refusals (i)..(vii) throw.
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.45..fe.57 and fe.53 "The tables are not copied here." — thirteen OWED rows with one lock owed each, and item 9 is a pointer, not a table copy.
+
+MET — m.367 "| M-367 | m.367 | RULED 2026-10-29 · OWED |" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.38 "This is a stopgap: it does not discharge MB-37 or M-367." — the change keeps the row OWED and does not claim to discharge it.
+
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten" — scripts/surfaces/_schema/surface-rule-map.json diff hunks — the changed paths and hunks add rows and regenerated data only; no Spec 126/127/128 text is deleted or rewritten.
+
+REJECT — bylaw-133 §3 OWED rows (M-220 through LC-36) — discharging work the register marks OWED — nothing in the diff names or changes any of those rows; the only bylaw id it quotes is M-367, and it keeps that row OWED.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: m.367
+
+---
+⏱  128903ms (128.9s)
+📊 Tokens — total: 57228, input: 32164, output: 25064, reasoning: 24302

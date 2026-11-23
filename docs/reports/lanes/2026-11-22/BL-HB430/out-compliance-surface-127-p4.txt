@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:52:42.879Z file_sha256=359c3ac0de5cb96a1d5b725387000f9e12db19ccd82ec39691c6705cdadca25d prompt_sha256=2f395cfc2f7ad470d8b3b4843c8f50084f3f08881c7fb675b852b92dce473fa4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-127-p4.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none — NONE — no CRIT-level clause violation found in this chunk — none required.
+
+DEFER severity=MED — Spec 135 rule 4 "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — diff, FE-45 row "D n/a, P owed, F pass, S pass, H n/a, E pass" — all 13 new FE rows answer the Six cell with `owed`, a value outside the three the pasted rule allows, and this cell is what the generated Spec 136 prints — restate each as `n/a (lock owed)` or `FAIL` per the FE-31 precedent note, or amend rule 4 by a dated note first.
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the handbook clipping, make each line reflect its notes, and add these 13 lines." — diff, FE-46 row "RR-0384, operator, verbatim: \"Approved\"" — the 13 new rows and the 12 Current-reading note headers attribute an operator verbatim "Approved" that the pasted RR-0384 text (MORNING-DECISIONS.md:1901) does not contain, while the rows themselves label the rest "lane text ... not an operator word and not a ruling" — quote the recorded reply span in the row, or drop the verbatim attribution from the note headers.
+DEFER severity=LOW — Spec 135 rule 3 form "the line read \"Next free id: FE-45\" before this note" — diff, Next free id note "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing and rewrites this line by a dated note" — the register lands an id it records as already claimed by another lane, so two rows can carry FE-45 until a prose-only renumber runs and nothing pasted makes that renumber a condition of landing — allocate this lane from FE-59 or add the renumber as an explicit landing clause with its own lock.
+DEFER severity=LOW — 128 R-03 as quoted in the same row "`lead_parcels` is read by no surface" — diff, FE-49 row "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock." — the row enters an OWED rule whose own quote the stated tree already contradicts and routes the contradiction to task-434 only, not to the defect ledger or the operator as Spec 127 §9.4 requires of a recorded finding — carry the exception as a defect-ledger item and cite it from the row.
+
+MET — RR-0384 "add these 13 lines" — diff, rows FE-45..FE-57 — thirteen rows added in item order 1..13, matching the implementation note "thirteen OWED rows added to Spec 135 as FE-45..FE-57".
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — diff, FE-53 "PROSE-ONLY: the lock below checks only that the two cited headings exist" — the pointer row cites 126 §11b.3 and §11b.7 rather than copying the page tables.
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten." — diff header "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — this chunk touches only the register file.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — diff, FE-45..FE-57 Status cells "OWED `src/tests/surfaces/... .logic.test.ts`" — all 13 paths are under src/tests/surfaces/ and absent per "one reserved lock path each (all 13 absent)".
+MET — RR-0384 "make each line reflect its notes" — diff, Current reading notes on FE-01, FE-02, FE-07, FE-11, FE-14, FE-18, FE-19, FE-20, FE-29, FE-31, FE-38, FE-39 — the 12 rows match the implementation note's list and each note names its source dates.
+MET — Spec 135 rule 3 form "the line read \"Next free id: FE-45\" before this note" — diff, removed line "**Next free id:** `FE-45`" — the note's stated prior value equals the removed text and the bold leading value now reads FE-58.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  83687ms (83.7s)
+📊 Tokens — total: 66899, input: 50716, output: 16183, reasoning: 15055

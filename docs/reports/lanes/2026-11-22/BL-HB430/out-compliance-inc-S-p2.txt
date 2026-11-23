@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:39:28.021Z file_sha256=c055a278de4ddf7a6a79a993f23e9d744d8c4a95087aaa5e7e9f407e827566ee prompt_sha256=e02e3518816d44a5936c29901d29fca1a4030458321555d6c3f2e67b906b4ef0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 4 "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 row "D n/a, P owed, F pass, S pass, H n/a, E pass", repeated in FE-46..FE-57 — the Six cell carries "owed", a value outside the closed set pass/n/a/FAIL, and the register already corrected this exact form once: FE-31 note "(6) The Six cell read "F OWED per archetype ..."; it reads n/a with its reason because a RULED row's Six cell answers pass, n/a (reason) or FAIL" — name P by letter only as the OWED precedent rows FE-04 ("F") and FE-17 ("D, S") do, and leave the owed state in the Status cell.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — 135_mcfrontend_decisions_register.md FE-32 status cell "the member is now a PATH `<contract_id>.<name|index>...`" and FE-33 "the mobile render smoke (MF-35) runs in mobile jest, outside the root suite, so it is prose-only here until MF-25" carry no Current reading — the 12 readings cover only FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39, so rows whose dated notes amend the headline still print the unamended Ruling cell — add a Current reading in the same strict form to FE-32, FE-33 (and FE-13) or state in each why no reading is owed.
+
+DEFER severity=LOW — 128 R-03 "`lead_parcels` is read by no surface." — 135_mcfrontend_decisions_register.md FE-49 "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock." — the new row prints a fence rule and records a live breach of it with no deviations row, adjudicator, date or operator ruling naming the exception — cite the ruling that allows the exception or record the deviation the way 128:55 requires, one row with an adjudicator and a date.
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135_mcfrontend_decisions_register.md FE-45..FE-57 — each new OWED row names a `src/tests/surfaces/*.test.ts` path stated absent ("no machine check yet, the lock is task-434's and the path is a reservation"), and none is a `.db.test.ts`.
+
+MET — RR-0384 "add these 13 lines" — 135_mcfrontend_decisions_register.md FE-45..FE-57 — thirteen rows added, in REPORT-429 section 3A item order 1..13 as each row cites ("item 5 of ... REPORT-429.md section 3A", "item 13 of ...").
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md FE-53 "POINTER, not a copy ... The tables are not copied here." — the pointer row is a pointer and copies no table.
+
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (whole chunk 2 diff) — only 135 is edited; no 126, 127 or 128 line appears in the diff.
+
+MET — task-430 "add the items the INPUTS.1 report lists, and the operator has read" — 135_mcfrontend_decisions_register.md FE-46 "This row says nothing on the toast library: RR-0384 did not rule it." — rows stay inside what RR-0384 ruled and mark unruled items as not ruled.
+
+REJECT — doc-2 "Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE · MISSED by the sweep | NOT BUILT" — the change is accused of contradicting it with FE-31's "The web footer is one shared component, footerNode.ts." — the register records a component landing after the doc-2 2026-11-19 sweep, and whether doc-2 is still true against the tree is Ground-truth A9, not this lens.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  120681ms (120.7s)
+📊 Tokens — total: 77967, input: 53582, output: 24385, reasoning: 23273

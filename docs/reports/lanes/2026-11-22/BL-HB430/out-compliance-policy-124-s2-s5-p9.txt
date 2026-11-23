@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:44:49.195Z file_sha256=eb2bce156e908ddbecdfc67bced09957afa089f86b4e0f9e831e9f71384106d7 prompt_sha256=daa340b8887704a7938db3e5f4581e87d380d84201ee11dee5b50c8a2f368343
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — the printed line also changes for cells the shared reader never clipped (it stripped a trailing provenance bracket), behaviour RR-0384 does not name and that rests only on the lane's own note "then wholeHeadline prints the plain cell also where the shared rule stripped a trailing bracket of an unclipped cell" — narrow the copy to the clipped case, or record operator words for the widened case before merge.
+DEFER severity=NIT — RR-0384 "make each line reflect its notes" — NONE (docs/specs/02-web-admin/135_mcfrontend_decisions_register.md is not in this chunk, cannot see) — the 12 readings' cited dates, note counts and row ids can only be checked against Spec 135, which chunk 3 of 3 does not carry, so refusal (ii) and the "+3 dated notes" counts are unverifiable here — rely on the green `--check` on the register at landing and do not treat this run as evidence for those rows.
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs (wholeHeadline, SHARED_HEADLINE_MAX guard on "/^\*\*/.test(ruleCell.trim())") — the shared 300-character clip no longer reaches Spec 136; a clipped cell prints its plain Ruling text whole, and A-T2 pins that no real headline ends in the ellipsis.
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" plus readingOf's seven throwing refusals — exactly one reading note, last in the Status cell, printed on the headline line for the pinned 12 rows.
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.45** The client is just glass." through "- **fe.57** Accessibility." — 13 new OWED lines, each with its own lock owed, and "**Rules rendered: 57**: 57 in force (21 OWED, whose lock is still to land), 0 history."
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.53 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) ... The tables are not copied here."
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — diff file list — no path under docs/specs/02-web-admin/126, /127 or /128 appears in any hunk; the change is confined to 136, its generator, its rule map, two tests and the prereg file.
+MET — task card "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, ... docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json" — all six paths in this chunk — every file touched in chunk 3 is named on the card's Files line.
+MET — R-DW / V3 / M17 — diff — none of their surfaces appear here (src/lib/admin/funnel.ts, /api/quality, STEP_EXPECTED_RANGES, step-validate, gate E compute literals, Spec 124 §5 register rows), so this chunk neither touches nor breaches them.
+REJECT — RR-0385 "unbuilt gates withdrawn" — the 13 new rows name 13 lock paths that do not exist ("expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);") — RR-0384 approved exactly these 13 rows, and the OWED "lock owed" form is the register's existing form (fe.12, fe.17, fe.21, fe.44), so this is not an added unbuilt gate.
+REJECT — R-Z "never two rows sharing one id." — the branch ships FE-45..FE-57 while "FE-45 is held by BL-MFRULES" — the pasted R-Z note governs the Spec 124 R- register ("The next ruling in this register is **`R-AA`**"), not the Spec 135 FE register, so it cannot be applied to these ids here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: R-DW, V3, M17
+
+---
+⏱  58275ms (58.3s)
+📊 Tokens — total: 43668, input: 32241, output: 11427, reasoning: 10271

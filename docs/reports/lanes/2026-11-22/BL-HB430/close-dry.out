@@ -1,0 +1,2 @@
+check-lane-close: task-430: the task's references lack the repo copy docs/reports/lanes/2026-11-22/BL-HB430/GROUNDER.md: backlog task edit task-430 --add-ref docs/reports/lanes/2026-11-22/BL-HB430/GROUNDER.md
+check-lane-close: task-430: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-HB430/ (a build or fix task always needs a separate grounder verdict)

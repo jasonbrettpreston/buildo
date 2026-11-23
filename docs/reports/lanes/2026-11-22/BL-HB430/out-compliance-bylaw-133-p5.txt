@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:35:38.253Z file_sha256=4e3719d2d3be98cfcc71423408d00ea410315d159ee4bc88698ca09c40509ac4 prompt_sha256=132b55ac42d1e03d93533509db39cc33a18576c66cce6bb1c1740295fb653495
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/00-architecture/00_system_map.md:100 "src/tests/surfaces/client-glass-boundary.logic.test.ts, src/tests/surfaces/ui-library-set.logic.test.ts, ... src/tests/surfaces/a11y-category.logic.test.ts" — the map now declares Spec 135 tested by 13 files that the same change records as absent ("one reserved lock path each (all 13 absent)", "the locks are task-434's"), a claim no pasted ruling names — remove the 13 paths until task-434 lands, or list them as owed on the row.
+DEFER severity=MED — RR-0390 "Let's try A." (card: "task-430 output review size: option A, one larger review message, tried once") — docs/reports/panels/MF-95.json:13 "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the record of the output review still describes the standard lens set and records neither option A nor the once-only trial, and nothing in the row or panel cites RR-0390 — add RR-0390 to cards and state the one larger message, tried once.
+DEFER severity=MED — RR-0385 "Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-95.json:16 "integration, reality-check and regression seats (plan)" — the seats recorded for the plan omit the engineering seat the ruling names, so this record cannot show the ruling was carried out — add the engineering seat to seats, or record that it was withdrawn.
+DEFER severity=LOW — queue file "the reference practice gains `task-N` beside the row: `task-N · MF-nn (item) · McFrontend queue · lane X · stage N`" — .cursor/MCFRONTEND-QUEUE.md:652 "MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384" — the task token trails the lane and no stage N is given, so the row is not in the prescribed practice — write "task-430 · MF-95 (INPUTS.2) · McFrontend queue · lane BL-HB430 · stage 8".
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — diff header "(... .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-95.json, docs/specs/00-architecture/00_system_map.md)" — none of Specs 126, 127 or 128 appears in the change.
+MET — queue file "`none` means the task builds no lock" / "arm Q refuses a DONE heading ... whose listed row is OWED" — .cursor/MCFRONTEND-QUEUE.md:651 "  - FE rows owned: none." — the new row declares none, consistent with its 13 register rows being OWED with their locks owed to task-434.
+REJECT — queue line "This file is the ONE source of MF task ids. A task not listed here is not done." — accused of taking MF-94 with no row in this file — the same retained text already carries held ids without rows ("MF-74 is held by MF-48 Stage B (claimed in the id ledger by wf1/mf48b-1112) and its row lands with that commit"), so a claimed, unlanded id is the established form.
+REJECT — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — accused of growing the handbook (surface-136 13,783 to 28,690 characters) — the operator's words forbid copying tables, and "stop the clipping" in the same ruling necessarily lengthens each formerly clipped line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  101044ms (101.0s)
+📊 Tokens — total: 41383, input: 21679, output: 19704, reasoning: 18763

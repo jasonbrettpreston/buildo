@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:39:36.430Z file_sha256=ead3cc2d961ae33cda95484707720a31625d86125e02953f0ff25052a0839d8b prompt_sha256=f6a8f29e0382772be2eb7cf38b4bfdf0afebba4b46f6a69ff09ee5f9d8afd2e0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/00-architecture/00_system_map.md row 135 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" against .cursor/MCFRONTEND-QUEUE.md "Not in this row: ... the locks of the new rows (task-434)" — the system map now declares 13 Spec 135 tests that the row itself says are task-434s and that the acceptance records as "all 13 absent", a fourth thing not among the three the ruling names — move the 13 test paths into task-434 with the locks, or mark them reserved in the map
+
+DEFER severity=MED — RR-0380 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" and "| total | 15 lists | | 722,506 | 20 |" (was 13,783 and 679,963) — the reviewer input this task exists to shrink has grown by 42,543 characters and the drop of 126-128 is deferred to task-431, which is only a followup line in docs/reports/panels/MF-95.json — land the task-431 drop with or immediately after commit C, or record the measured net change in the row so the growth is not left standing
+
+DEFER severity=LOW — Project objectives "standardization, observability, scalability, accuracy, understandability" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" against .cursor/MCFRONTEND-QUEUE.md "Spec 136 section 2 measured 28,664 characters (file 32,207)" and the acceptance "section 2 28,691 characters" — three different figures for one section, so the generated page is one character short of the post-Q9 measurement and may be stale — regenerate rule-lists-by-kind.md after the Q9 reword and keep one figure in the row and the acceptance note
+
+REJECT — Increment objectives "Search comes before increment 1" — the change is a handbook and review-input task that ships before the search page — the pasted operator rulings RR-0384 and RR-0385 direct exactly these three things now and the work is a supporting function for the review gate, not a search feature
+
+MET — RR-0384 "stop the clipping" — .cursor/MCFRONTEND-QUEUE.md — "the Spec 136 generator prints every Spec 135 ruling whole (no line ends in a clip ellipsis; Spec 133 and scripts/analysis/bylaw/ untouched)" with acceptance "(1) Spec 136 lines ending in the clip ellipsis: 0"
+
+MET — RR-0384 "make each line reflect its notes" — .cursor/MCFRONTEND-QUEUE.md — "the 12 rows of plan section 17.3 carry one Current reading dated note each, printed on their line and refused by `--check` when stale"
+
+MET — Task card "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/reports/generated/rule-lists-by-kind.md — "| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |" still listed at its prior size, with 127 and 128 unchanged
+
+MET — Project objectives "we need one plan - we can only execute one plan" — docs/reports/panels/MF-95.json — "PLAN-430-v1 on the task-430 card (Implementation Plan)" is the single plan of record
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  54171ms (54.2s)
+📊 Tokens — total: 27380, input: 17121, output: 10259, reasoning: 9304

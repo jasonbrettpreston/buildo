@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:32:15.681Z file_sha256=09bd66c330729a5bb3396b4eac3885bd274e9115fbf943872b888a462640d846 prompt_sha256=799fe70cd99711df41f69c1f2f42dd3219ebbbb0a2e31e6211245ba7e2fe111c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 new note "(from notes dated 2026-11-09, 2026-11-11, 2026-11-20)" and FE-20 new note "(from notes dated 2026-11-11, 2026-11-15)" — FE-31's reading omits its 2026-11-10 note (render.list.id_field, rows, row_actions, display "image" with alt_field, render.form options_from, errors.classes[].fields) and FE-20's omits "a bad entry is reverted by the audited admin FORM (D-4)" from its 2026-11-11 note — add those clauses to the two readings, or name the note left out and why.
+
+DEFER severity=MED — 08_agents.md §5.2 "Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST; a stale spec makes compliance-checking a check against fiction" — NONE — the pasted Implementation Notes prove the change by "Spec 136 lines ending in the clip ellipsis: 0", "--check green", character counts and "git diff --stat ... empty", and name no step that the pinned citations ("128:29", "128:30", "126:189", "128:206", "126:1120", "127:59", "00_engineering_standards.md:14") were read against the live files — record a ground-truth line for each cited file:line in the lane report before the register lands.
+
+DEFER severity=LOW — FE-45 note "the first value on the line, the one the Spec 136 generator reads, is FE-58. FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch ... ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — the branch lands FE-45..FE-57 while FE-45 is held by another lane, and the renumber case consumes exactly FE-46..FE-58, so in that case the landed next-free value FE-58 is occupied and FE-59 is unclaimed — claim FE-59 and write the renumbered line as FE-59 in the note.
+
+DEFER severity=LOW — FE-49 Ruling cell "`lead_parcels` is read by no surface." (128:205) with Status "Known standing exception: a platform_shared contract descriptor note already names lead_parcels" — the register lands a fence the live tree already breaks, defers the check to task-434, and names no path for the offending descriptor note — cite the descriptor note's file:line in the row so the exception is locatable.
+
+DEFER severity=LOW — FE-01 new note header "RR-0384, operator, verbatim: \"Approved\"; lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling" — Implementation Notes "the generator reads the last note in the strict 17.4 form and prints it on the headline line" — the operator-attribution slot carries a one-word "Approved" given to the 13-row list, so the generated handbook headline puts lane restatement under an operator attribution — cite RR-0384's full sentence in the header, or have the headline carry the "not a ruling" marker.
+
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — FE-45..FE-57 Status cells, e.g. "OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts` ... no machine check yet, the lock is task-434's and the path is a reservation" — all 13 are src/tests/surfaces *.test.ts, stated absent.
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer" — 13 rows FE-45..FE-57 present, item 9 landed as FE-53 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) ... The tables are not copied here."
+
+MET — Pasted context "nothing in Specs 126, 127, 128 deleted or rewritten." — the chunk's only changed path is docs/specs/02-web-admin/135_mcfrontend_decisions_register.md; every 126/127/128 reference in the diff is a context line or a quotation inside a new row.
+
+MET — Register Next-free-id convention "the first value on the line, the one the Spec 136 generator reads, is FE-58" — the changed line reads "**Next free id:** `FE-58`." with FE-58 as its first value.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+Rules met: none
+
+---
+⏱  87693ms (87.7s)
+📊 Tokens — total: 68842, input: 51319, output: 17523, reasoning: 16377
