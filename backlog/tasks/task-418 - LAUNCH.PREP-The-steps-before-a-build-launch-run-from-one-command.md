@@ -5,10 +5,11 @@ status: BUILT
 assignee:
   - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T06:56:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - McFix
   - McFix V2
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-375

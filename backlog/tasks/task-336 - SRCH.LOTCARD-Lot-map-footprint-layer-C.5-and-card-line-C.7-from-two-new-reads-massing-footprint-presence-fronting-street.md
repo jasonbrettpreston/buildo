@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
-updated_date: '2026-11-19T16:25:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-12

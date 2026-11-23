@@ -7,10 +7,11 @@ status: RUNNING
 assignee:
   - '@lane-BL-MASSING'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T20:06:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - McFix
   - McFix A
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-378

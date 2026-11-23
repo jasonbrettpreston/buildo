@@ -4,12 +4,13 @@ title: 'Web search page footer (E.2) has no task: where is it built?'
 status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-19T15:45:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - gap
   - plan:E.2
   - operator
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

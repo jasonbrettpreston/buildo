@@ -6,12 +6,13 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T20:13:00Z'
-updated_date: '2026-11-19T20:48:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - gap
   - plan:PROOF.TOOL
   - operator
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-SEMI3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:45:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-319

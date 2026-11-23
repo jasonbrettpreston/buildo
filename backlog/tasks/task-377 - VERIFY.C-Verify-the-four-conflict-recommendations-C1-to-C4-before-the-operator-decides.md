@@ -7,10 +7,11 @@ status: RUNNING
 assignee:
   - '@lane-BL-VERIFYC'
 created_date: '2026-11-20T13:38:00Z'
-updated_date: '2026-11-21T00:25:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - McFix
   - McFix E
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

@@ -5,10 +5,11 @@ status: BUILT
 assignee:
   - '@lane-BL-HYG'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:29:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.HYGIENE
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-320

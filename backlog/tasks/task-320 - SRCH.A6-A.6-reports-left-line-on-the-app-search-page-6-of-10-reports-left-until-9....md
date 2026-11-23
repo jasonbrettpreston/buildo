@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:52:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.A6
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

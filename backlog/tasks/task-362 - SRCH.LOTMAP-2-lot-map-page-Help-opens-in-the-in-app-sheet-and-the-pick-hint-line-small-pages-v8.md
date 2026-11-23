@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTMAP2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:25:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.LOTMAP
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-321

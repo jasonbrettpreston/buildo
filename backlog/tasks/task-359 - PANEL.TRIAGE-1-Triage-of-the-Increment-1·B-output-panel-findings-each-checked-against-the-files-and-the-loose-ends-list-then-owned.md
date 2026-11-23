@@ -7,8 +7,9 @@ status: BUILT
 assignee:
   - '@lane-BL-TRIAGE'
 created_date: '2026-11-19T22:07:00Z'
-updated_date: '2026-11-19T22:32:00Z'
-labels: []
+updated_date: '2026-11-23T16:06:00Z'
+labels:
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

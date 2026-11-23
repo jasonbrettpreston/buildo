@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-PROOF3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:41:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:PROOF.S
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-68

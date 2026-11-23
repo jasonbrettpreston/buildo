@@ -4,10 +4,11 @@ title: 'Report meter counts an unsure lot before the semi question shows: intend
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:38:00Z'
-updated_date: '2026-11-19T15:48:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - open-decisions
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

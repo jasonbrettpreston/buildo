@@ -7,10 +7,11 @@ status: BUILT
 assignee:
   - '@lane-BL-COMPLY3'
 created_date: '2026-11-20T13:23:00Z'
-updated_date: '2026-11-20T15:37:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - McFix E
   - McFix
+  - McFixReborn
 milestone: m-1
 dependencies: []
 references:

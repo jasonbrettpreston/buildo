@@ -7,10 +7,11 @@ status: DONE
 assignee:
   - '@lane-BL-METER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T16:58:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - S
   - plan:SRCH.METER
+  - McFixReborn
 milestone: m-1
 dependencies:
   - TASK-318
