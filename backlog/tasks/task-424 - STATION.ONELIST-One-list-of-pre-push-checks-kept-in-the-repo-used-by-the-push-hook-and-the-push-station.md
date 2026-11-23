@@ -3,11 +3,11 @@ id: TASK-424
 title: >-
   STATION.ONELIST One list of pre-push checks kept in the repo, used by the push
   hook and the push station
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:37:00Z'
+updated_date: '2026-11-23T14:48:00Z'
 labels:
   - McFix
   - McFix V2
@@ -32,6 +32,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-ONE424/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-ONE424/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-ONE424/TRIAGE.md
 type: build
 ordinal: 124012
 ---
@@ -321,4 +323,22 @@ A9: operator push. NOT run.
 Extra check: the hook's step() passes stdin to the command: printf 'refs/heads/x 111 refs/heads/x 000\n' | sh -c 'step() { shift; "$@"; }; step mcbylaws-gate cat' printed the line, rc=0.
 
 2026-11-23 BL-ONE424 output review round 1 (context-r3.md, fresh): 8 compliance lists, engineering eng-all, code-review, error-paths on DeepSeek; 40 finding lines listed untriaged in docs/reports/lanes/2026-11-23/BL-ONE424/FINDINGS.md. Task stays RUNNING: grounder owed (RR-0359).
+
+2026-11-23 BL-ONE424 pre-review self-check walk (plan section 9, engineering standards section 11), against the build commit 0c948a01d:
+(1) PASS: the list holds six step lines and nothing else executable: T2 green (commit.out, hooks-composition 54 tests passed); A3 printed 0 and 6.
+(2) PASS: the hook holds no check command, GATE_MODE=--push once and no --ci: T1 green and the moved MB-67 pin green (commit.out); A2 printed 0.
+(3) NOT YET: the station sources the list once. This is the orchestrator's station edit (plan section 4) and A5; station.sh is untouched by the lane.
+(4) PASS: the chain stops at the first failure for each of the six steps and passes when none fails: T4 green (commit.out).
+(5) PASS for the lane's part: the fork cap has one text and one parse: T5 green and the fork-cap test 8 of 8 green (commit.out); the A4 full suite is not a lane run (it runs at the station as A6).
+(6) PASS for the lane's part: the gate, the step-validate logic, the moved pins' strength and the hook's output and y prompt are unchanged: A1 green; the step-validate.mjs diff is the path, the error text and doc comments only (no logic line); the grounder's independent check (1) and (3) in GROUNDER.md agree. The live y prompt is seen only at A9.
+Acceptance still owed: orchestrator A4/A6 (station suite on the final tip), A5 (station edit checks), A7 and A8 (gate replays at 0f6ba8225 and 21adfde8a); operator A9 (the push).
+Output review round 1 ruled by the separate grounder Cairn-Ground-O424 (GROUNDER.md, TRIAGE.md in docs/reports/lanes/2026-11-23/BL-ONE424/, copied unchanged, cmp identical): 40 ids, 4 CONFIRMED all LOW and piled, 36 REJECTED; no fix round owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+BUILT, not DONE. The six non-interactive pre-push checks live in one repo file, .husky/pre-push-checks.sh (the plan's exact text: six step lines joined by &&); .husky/pre-push runs none itself and sets step(), GATE_MODE=--push and SUITE_ARGS, then sources the list; step-validate.mjs parses the fork cap from the list; CLAUDE.md:33 names it. Tests first: red at the designed assertions (lane red.out, 13 failed), green through the real hooks (build commit 0c948a01d, 137 passed). Output review round 1: 40 findings, ruled by Cairn-Ground-O424: 4 LOW piled, 36 rejected, no fix round. Still owed before the task works end to end: the orchestrator's station edit (plan section 4) with A5, the station suite A6 (also A4), the gate replays A7 and A8, and the operator's push A9. Lane report: docs/reports/lanes/2026-11-23/BL-ONE424/REPORT.md.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-23/BL-ONE424/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-ONE424/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
