@@ -7,7 +7,7 @@ status: DONE
 assignee:
   - '@lane-BL-LOOK440'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T14:39:00Z'
+updated_date: '2026-11-23T14:40:00Z'
 labels:
   - McFix
   - McFix Final
@@ -278,6 +278,8 @@ rg#5 MED folded scripts/analysis/mcb
 2026-11-23 lane BL-LOOK440: compliance lens run once per rule list (five-words, plan-protocol, inc-S, ms-S) on fresh context context-r2.md; 20 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-LOOK440/FINDINGS.md. Lens material: the brief's diff command excludes docs/reports/reviews/** and so prints nothing for the two Files paths; the material is the same diff without those excludes (stated in REPORT.md). Task left RUNNING: grounder owed (GROUNDER.md for the lens findings, GROUNDER-LOOK.md for the look), RR-0359.
 
 2026-11-23 landing (lane BL-LOOK440). Acceptance 7: GROUNDER-LOOK.md by the separate grounder Cairn-Ground-O440 copied unchanged (cmp of the grounder's file and docs/reports/reviews/task-440/GROUNDER-LOOK.md: no difference; same for GROUNDER.md and TRIAGE.md in docs/reports/lanes/2026-11-23/BL-LOOK440/); its 5 WRONG rows corrected in 7a60cc538 and the re-check items in 1e332d979, passed by the grounder at 1e332d979. Acceptance 8: git diff --name-only ba4ac48fd..HEAD lists only docs/reports/reviews/task-440/ (RULE-CHECKS.md, context-r1.md, context-r2.md), docs/reports/lanes/2026-11-23/BL-LOOK440/ records and the task file; nothing under src/, scripts/, mobile/, migrations/ or docs/specs/. Acceptance 9: DONE in the landing commit through the real hooks. check-lane-close.mjs --outcomes docs/reports/lanes/2026-11-23/BL-LOOK440: checked 7 ids.
+
+2026-11-23 dated note (M-246, prior text kept): operator ruling RR-0399 (decision-184, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2017), operator, verbatim: "mark partly", on the grounder's fe.36 observation (GROUNDER-LOOK.md section 3). RULE-CHECKS.md: fe.36 group 1 enforced to partly (five named exceptions still owed, nav-by-route.logic.test.ts:300-311, MF-49 and MF-50); group 1 now 29 enforced, 8 partly, 20 none. Status stays DONE.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
