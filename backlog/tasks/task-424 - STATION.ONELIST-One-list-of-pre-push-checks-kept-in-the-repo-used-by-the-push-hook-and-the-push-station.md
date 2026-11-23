@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:22:00Z'
+updated_date: '2026-11-23T14:29:00Z'
 labels:
   - McFix
   - McFix V2
@@ -305,4 +305,8 @@ rg#3 MED folded the parse of its com
 2026-11-23 taken on the board at lane launch (lane BL-ONE424, worktree /Users/brettpreston_macmini/Buildo-wt-one424, branch wf1/inc1b-one424), RR-0240
 
 2026-11-23 taken on the board at lane launch (lane BL-ONE424, worktree /Users/brettpreston_macmini/Buildo-wt-one424b, branch wf1/inc1b-one424b), RR-0240
+
+2026-11-23 BL-ONE424 build: tests first (plan section 5): T1-T5 added to src/tests/hooks-composition.infra.test.ts and the ten pins moved to the list text; fork-cap test reads .husky/pre-push-checks.sh with the existsSync guard. Red attempt: a commit with only the two test files and this task file staged (red.out in the lane dir).
+
+2026-11-23 BL-ONE424 red seen (lane red.out, rc=1, 13 failed | 49 passed): T1 'expected [ Array(5) ] to deeply equal []', T2 'expected [] to deeply equal [ …(6) ]', T4 'FAIL_AT=mcbylaws-gate: expected [] to deeply equal [ 'mcbylaws-gate' ]', T5 'expected +0 to be 1'; T3 green (not in the failed list); the moved pins red on the absent list. Build: .husky/pre-push-checks.sh (the plan's exact text), .husky/pre-push line 41 replaced by the plan's five lines, step-validate.mjs PRE_PUSH_HOOK_PATH and error text and doc comments, CLAUDE.md:33 phrase. Status stays RUNNING (protected path in this commit; check-lane-close.mjs:35).
 <!-- SECTION:NOTES:END -->

@@ -38,4 +38,8 @@
 #
 # MB-67 (R-KM, R-KP, R-LF): the McBylaws gate runs FIRST, because it reads git's ref pairs on stdin (nothing else in
 # this hook reads stdin). It prints the summary and asks the operator before the 71 s suite, so a "no" costs nothing.
-node scripts/analysis/mcbylaws/gate.mjs --push && node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test
+# task-424 (RR-0370 option C): the checks above run from ONE list, .husky/pre-push-checks.sh, which the push station sources too; this hook supplies the plain step runner and the gate mode.
+step() { shift; "$@"; }
+GATE_MODE=--push
+SUITE_ARGS=
+. ./.husky/pre-push-checks.sh

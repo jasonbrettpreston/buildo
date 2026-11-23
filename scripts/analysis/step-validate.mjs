@@ -1287,11 +1287,11 @@ function packageTestScript() {
   return pkg.scripts?.test ?? '';
 }
 
-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
 
 /**
  * PURE over an already-read hook string. Operator ruling 2026-09-21: the
- * step-validate default fork cap must EQUAL `.husky/pre-push`'s own
+ * step-validate default fork cap must EQUAL the pre-push check list's own
  * `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values, parsed out rather than
  * re-typed, so the two can never drift apart (single source of truth). Throws
  * if either var is missing from the hook text — a silent fallback would
@@ -1301,7 +1301,7 @@ export function parseForkCapFromHookText(hookText) {
   const minMatch = /\bVITEST_MIN_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
   const maxMatch = /\bVITEST_MAX_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
   if (!minMatch || !maxMatch) {
-    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
+    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push-checks.sh — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
   }
   return { min: minMatch[1], max: maxMatch[1] };
 }
@@ -1310,17 +1310,17 @@ export function parseForkCapFromHookText(hookText) {
  * The fork cap `runVitest()`'s spawned child inherits. Uncapped, vitest's
  * `forks` pool defaults to one fork per CPU (~12 on this host); `--all --write`
  * over 18 steps was OS/harness-killed for memory twice (2026-09-21, worked
- * around by 17 sequential single-step runs). `.husky/pre-push` already solved
+ * around by 17 sequential single-step runs). The pre-push check list already solved
  * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
  * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
  * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
- * The cap is whatever `.husky/pre-push` carries — MIN=8/MAX=8 since Spec 124
+ * The cap is whatever the pre-push check list carries — MIN=8/MAX=8 since Spec 124
  * R-CQ (2026-10-15, Amends R-BV, Mac mini 24 GB / 12 cores; never above ten).
  * Before that, MIN=2/MAX=2 under R-BV (2026-10-11) on the Windows PC, whose
  * "never above two" came from the 2026-09-21 WSL memory kill.
  * DEFAULT only — an operator (or CI) who already set either var in the env this
  * process inherited is never clobbered, so a caller can still widen the cap.
- * `hookText` is injectable (default: a live read of `.husky/pre-push`) so
+ * `hookText` is injectable (default: a live read of the pre-push check list) so
  * `selfTest()`/a vitest suite can exercise both directions — including a
  * tampered hook fixture — without touching `process.env` or the real file.
  * Never mutates `baseEnv`.

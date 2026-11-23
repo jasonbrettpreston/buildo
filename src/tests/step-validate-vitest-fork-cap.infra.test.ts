@@ -7,17 +7,20 @@
 // host), and `--all --write` over 18 steps was OS/harness-killed for memory
 // twice (2026-09-21), worked around by 17 sequential single-step runs.
 //
-// Operator ruling (2026-09-21, same day): the default must EQUAL
-// `.husky/pre-push`'s own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values. The cap
-// is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124 R-BV
+// Operator ruling (2026-09-21, same day): the default must EQUAL the pre-push
+// check list's own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values — since task-424
+// (RR-0370 option C, 2026-11-23) that is `.husky/pre-push-checks.sh`, the one
+// list `.husky/pre-push` and the push station both source (before it, the hook
+// text itself). The cap is whatever the pre-push check list carries — MIN=8/MAX=8
+// since Spec 124 R-CQ (2026-10-15); before that MIN=2/MAX=2 under Spec 124 R-BV
 // (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
 // (`review_followups.md` HIGH row, measured dying in
 // `src/tests/step-conformance.infra.test.ts`, one of `runVitest()`'s own
 // `VITEST_TARGETS`) was cured by suite-speed step 1 (feafc74c), measured by two
 // clean 2-fork full suites; never above two (the 2026-09-21 memory kill). So
 // `vitestChildEnv()` PARSES the
-// cap out of `.husky/pre-push` (single source of truth) instead of
-// re-typing it, per `parseForkCapFromHookText()` — this suite proves that
+// cap out of the pre-push check list `.husky/pre-push-checks.sh` (single source
+// of truth) instead of re-typing it, per `parseForkCapFromHookText()` — this suite proves that
 // parsing is genuinely load-bearing (a tampered hook fixture changes the
 // default), not merely a hardcoded literal in disguise, alongside the
 // explicit-caller-wins contract and the pre-fix defect — proven both
@@ -30,8 +33,9 @@ import { pathToFileURL } from 'url';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
-const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
-const LIVE_PRE_PUSH = fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8');
+// task-424: the fork cap's one source is the pre-push check list; a missing list fails the cases, not the import.
+const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push-checks.sh');
+const LIVE_PRE_PUSH = fs.existsSync(PRE_PUSH_HOOK_PATH) ? fs.readFileSync(PRE_PUSH_HOOK_PATH, 'utf8') : '';
 
 type VitestChildEnvFn = (
   baseEnv: Record<string, string | undefined>,
@@ -47,13 +51,13 @@ async function loadModule() {
   return mod;
 }
 
-describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on .husky/pre-push)', () => {
-  it('GREEN — the live .husky/pre-push carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
+describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on the pre-push check list .husky/pre-push-checks.sh)', () => {
+  it('GREEN — the live pre-push check list .husky/pre-push-checks.sh carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=8\b/);
     expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=8\b/);
   });
 
-  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=8/MAX=8, R-CQ)', async () => {
+  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE pre-push check list .husky/pre-push-checks.sh (MIN=8/MAX=8, R-CQ)', async () => {
     const { vitestChildEnv } = await loadModule();
     const out = vitestChildEnv({ PATH: '/usr/bin' });
     expect(out.VITEST_MIN_FORKS).toBe('8');
