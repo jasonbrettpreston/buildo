@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.307Z file_sha256=b0acc8ed7ee05fe39a5c01f1a6ec977e1da2946e49b84e69bd3d6ef17e78cb0c prompt_sha256=29ca67bd140732e980d8f1376a1e936bb20dc6e77b6de2ebdddf2e9a7a09b85d
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item (1) "the why text of each changed row made true again (for example :152 and :140)" — PLAN-448-v1 §3.2 ":121, anchor `the surface contract (Spec 126) and the surface policy (Spec 128)"` appends only `. task-448 ... Specs 126 and 128 are off; this row attaches no list`, NONE — the false clause is retained and the appended suffix contradicts it (same at :133 "DRAFT, attached anyway: the operator confirms it binds" and :219 "so an edit to a surface spec is reviewed with that spec", where the plan itself writes "so the sentence above no longer holds"), so each row's why is not made true again, and the plan's stated reason in §9 Q2 "Rewriting would risk the pinned phrases" is refuted by its own test edits at rule-lists.logic.test.ts:38-39 and backlog-lane.logic.test.ts:400, which drop the "draft, operator to confirm it binds" pin — rewrite the false clause in the why of :121, :127, :133 and :219 (append the task-448 sentence after it), since none of those phrases is in the plan's own pinned-phrase list.
+
+DEFER severity=MED — 11.9 TKT-1 dated note (2026-11-21) "The tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate ... requires their Seat lines in GROUNDER-PLAN.md" — PLAN-448-v1 §7 "Output review (lane)." lists only the output lenses and one grounder, NONE — the plan provisions no plan-stage seat lines although its Files line names tracked paths (scripts/analysis/rule-lists.json, backlog-lane.mjs), so the launch gate requirement is unaddressed and unchecked in A1 to A11 — add the three Seat lines to GROUNDER-PLAN.md in §7 with one acceptance row.
+
+DEFER severity=MED — 11.2 dated note (2026-11-21) "The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record" — PLAN-448-v1 §3.5 "This narrows \"re-executes every claim in the fold\" (:486) to the claims the fold changed.", NONE — the note reverses a later dated sentence without naming it (3.4 and 3.6 both name the words they supersede), leaving two contradictory notes in §11.2, and it rests on Q1 to the grounder rather than on a recorded ruling — name and supersede the "stays" words of the 2026-11-21 note inside 3.5 and make the note conditional on the grounder's ruling being recorded as a fold correction.
+
+DEFER severity=MED — 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" and "\"Approved on paper\" is not a verification state." — PLAN-448-v1 §4 "Designed red: every edited `not.toContain` and `toEqual` line, the inserted mobile-100/96 line and the new `under the SAME names` line fail on the unchanged table and brief." against §10 "Every red and green above is predicted from in-memory resolves. No test was run." — about 45 test-line expectations are stated as designed red without the runner ever being executed on them — run the three files on a scratch copy (red on the unedited table, green on the edited one) before plan-lock, or restate §4's red list as hypotheses owed to A1.
+
+DEFER severity=LOW — 7 rule 6 dated note (2026-11-20, task-399 FOLD.ADOPT) "the lane close now refuses unless every CONFIRMED or CONFLICT finding ... has one outcome line in the lane's TRIAGE.md ... Forms: `fixed:<sha> <path>` ... `ruling:RR-NNNN`" — PLAN-448-v1 §7 "Close. A separate records-only commit: lane report, review context, task file BUILT, grounder files." — the close step names no TRIAGE outcome lines or their forms, though the plan's own two output rounds can confirm a MED that must close by fixed or ruling — add the outcome forms and the `--outcomes` step to the close section.
+
+MET — card item (1) "16 rows with a lists change" — PLAN-448-v1 §3.1 — the table changes the lists of exactly 16 rows.
+MET — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — PLAN-448-v1 §2 "No edit to scripts/hooks/check-lane-close.mjs or scripts/analysis/rule-lists.mjs (RR-0422)" and A9.
+MET — 7 rule 6 dated note (task-437) "two rounds at most" — PLAN-448-v1 §7 "Two rounds at most (RR-0385 item 3, MD:1919)."
+MET — 7 rule 4 dated note (task-439) "they attach `surface-136` with their engineering lists" — PLAN-448-v1 §3.1 :151 keeps surface-136, eng-front, eng-shared after dropping mobile-100 and mobile-96.
+MET — 7 rule 9 dated note (task-436) "the seat that writes a task's plan and the lane that builds it run on Opus" — PLAN-448-v1 header "Plan seat: Opus, read-only (RR-0385 item 1, MD:1917)."
+MET — 11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — PLAN-448-v1 §4 — every edited assertion, its old and new text and the expected red are in the plan.
+MET — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — PLAN-448-v1 §7 step 4 runs `page --write` then `--check` inside the work commit.
+MET — 11.2 dated note (2026-11-21) "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder" — PLAN-448-v1 §3.5 has the plan grounder write FOLD-CHECK.md itself, once, after the last fold.
+
+REJECT — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — the plan leaves the brief and the refusal text disagreeing about the -rN form — the operator's ruling forbids the edit and the plan discloses the disagreement as a known limit; the discrepancy is his, not the plan's.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  114796ms (114.8s)
+📊 Tokens — total: 51103, input: 27269, output: 23834, reasoning: 22286

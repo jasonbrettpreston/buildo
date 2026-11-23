@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.320Z file_sha256=aba85a979de5cf25700195c9b68b7055d09d1a53bd9efd02d25b53e91595b18f prompt_sha256=d619c41576d03fe00162698842ea9a6832898c7333e18b18438fc31cb922fa5d
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item (1) "the why text of each changed row made true again (for example :152 and :140)" — PLAN-448-v1 3.2 ":219, anchor `so an edit to a surface spec is reviewed with that spec` → ... this row attaches surface-136 only, so the sentence above no longer holds" — the plan corrects only :146/:152 and appends a negation on :121, :127, :171, :183, :189, :195, :201, :207, :213 and :219, leaving each of those rows asserting that turned-off lists govern (and :219 says in terms that its own sentence "no longer holds"), so the why text is not made true — rewrite the false clause in place on those rows, keeping the five pinned phrases enumerated in 3.2 verbatim, and confirm with the three test files named in A8 (this settles Q2 without leaving it to the grounder).
+
+DEFER severity=MED — RR-0418 "the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table" with RR-0421 item 4 a "the lane-tools row keeps its process lists, every other row loses them" — PLAN-448-v1 3.4 "Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, doc-17 and the Spec 124 list stay on the lane-tools row only" — 3.1 leaves the lane-tools lists at ":163 unchanged" and never says which kept ids are the "process lists" the ruling preserves, so the policy list (policy-124-s2-s5) and doc-17 (an orchestrator-note list named as turned off by RR-0418) survive with no pasted ruling classifying them as process lists — enumerate each kept lane-tools list against a ruling, or turn policy-124-s2-s5 and doc-17 off on that row too.
+
+DEFER severity=LOW — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>` ... `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — PLAN-448-v1 3.4 "RR-0418, decision-203; RR-0421, decision-205" and 5 "Decisions 203 to 208 already exist" — the notes cite bare `decision-20N` with no log stem and no register row is shown, so the pre-commit `--check` result for commit 1 is unverified and is absent from 10 UNVERIFIED — cite each as `<log stem>#decision-20N` in the notes and add the `decision-log --check` outcome to the acceptance table.
+
+MET — RR-0421 item 1 a "old source specs 126, 127, 128, 135 off on every row" — PLAN-448-v1 3.1 :120, :126, :176, :218 "`\"lists\": [\"surface-126\", \"surface-128\"],` → `\"lists\": [],`" — the four source lists leave every row the plan touches and surface-136 is the only survivor.
+MET — RR-0421 item 2 a "phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — 3.1 :151 and :212 — both phone rows keep 90, 98, 99 and drop 100 and 96.
+MET — RR-0421 item 3 a "the four Airtight lists and storage-doc16 off" — 3.1 :88, :132, :139 — the four Airtight lists leave step-pipeline and compute-import, and storage attaches no list.
+MET — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — 2 "No edit to scripts/hooks/check-lane-close.mjs or scripts/analysis/rule-lists.mjs" and A9 `git diff --stat <launch>..HEAD -- scripts/hooks scripts/analysis/rule-lists.mjs .claude` expected empty — honored.
+MET — card item (2) "the tests that pin the table, edited first and seen red" — 4 "The lane writes these edits first. It stages only the three test files and the task file, and attempts the commit" — red-first order with red.out saved, and :552 is edited.
+MET — card item (3) "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — 7 item 4 "`node scripts/analysis/rule-lists.mjs page --write`, then `--check`" inside commit 1.
+MET — card item (4) "scripts/analysis/backlog-lane.mjs:188, one sentence ... with one test line" — 3.3 replaces the one sentence at that line and 4 inserts "`expect(e).toContain('under the SAME names');`" as the single test line.
+MET — card item (5) "only if the plan grounder rules Spec 08 section 11.2 and the gate allow it" — 3.5 plus Q1 "the part-2 grounder found the condition met (08_agents.md:486 and :489; gate :692-712)" — the fold-check narrowing is put to the grounder and the gate is described as form-only.
+
+REJECT — RR-0422 "Minimum and 1a." — accused of carrying items 2 a, 3 a and 4 a beyond the approved package — the pasted card restates all four RR-0421 items as this task's row edits and RR-0421 reads "1-4 recommendations approved".
+REJECT — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — accused of shipping a brief that contradicts check-lane-close.mjs:502 ("a later round (r2, r3, ...) is out-<lens>[-<list id>]-rN.txt") — the card forbids that edit and 8 records the divergence as a stated known limit, so the contradiction is the ruled state, not a defect.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+Rules met: none
+
+---
+⏱  105918ms (105.9s)
+📊 Tokens — total: 55940, input: 33045, output: 22895, reasoning: 21503

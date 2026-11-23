@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.313Z file_sha256=64ae33674f3a455172dec2ed8f45a32525ff5d6b26b76be0a863a8d2f848056c prompt_sha256=20f725c0fd8fbdf0f79229888ef1768476d62847ca5dad22f6a0126dabac5a9e
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item 1 "the why text of each changed row made true again (for example :152 and :140)" — PLAN-448-v1 3.2 :219 "task-448 (RR-0421 item 1 a, decision-205, reverses RR-0383): Specs 126, 127, 128 and 135 are off; this row attaches surface-136 only, so the sentence above no longer holds" — the specs-web-admin why still states "so an edit to a surface spec is reviewed with that spec" and is annotated as false instead of made true, while the same author rewrites the same defect at :152 ("got them through the specs-web-admin row until task-448") — rewrite :219 in the :152 form, for example "until task-448 an edit to a surface spec was reviewed with that spec; RR-0421 item 1 a (decision-205) reverses RR-0383, so this row attaches surface-136 only"
+
+DEFER severity=MED — card RR-0421 4 a "the lane-tools row keeps its process lists, every other row loses them" — PLAN-448-v1 acceptance A3 "resolve --files "mobile/src/app/" --type build --letter S | ids mobile-90, mobile-98, mobile-99, surface-136, eng-front, eng-shared, five-words, plan-protocol, inc-S, ms-S" — acceptance proves the turned-off lists are gone on named paths only; no command or test proves that no other row still attaches queue-137, agents-s5-1to3, agents-s7-s11, policy-124-s2-s5, orchestrator-doc17, any airtight list, storage-doc16, mobile-100 or mobile-96 — add one grep acceptance over scripts/analysis/rule-lists.json (or a table test) asserting those ids appear only on lane-tools and the rows the rulings keep
+
+DEFER severity=MED — card item 5 "including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it)" — PLAN-448-v1 3.5 "This narrows "re-executes every claim in the fold" (:486) to the claims the fold changed." — the note would narrow a standing spec clause before the plan grounder has ruled, while the card makes that text conditional on the ruling and the plan still carries it as open question Q1 — land only the named fact (grounder writes FOLD-CHECK.md once after the last fold) and make the :486 narrowing sentence conditional on the grounder's answer to Q1
+
+DEFER severity=LOW — card item 4 "a fix round re-makes every review file under the same names and round 1 is named by a history line" — PLAN-448-v1 3.3 "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name" against the stated known limit "the refusal at check-lane-close.mjs:502 still says "a later round (r2, r3, ...) is out-<lens>[-<list id>]-rN.txt"" — brief and gate refusal will disagree until a later task, so a lane following the brief can be refused — state in the brief which of the two texts a lane obeys when they disagree, or add that to the Spec 137 note of 3.6
+
+DEFER severity=LOW — card item 1 "the why text of each changed row made true again" — PLAN-448-v1 3.2 :89 "(every Airtight rule id has a line in Spec 132)" — the edit adds a new coverage claim to the why that section 10 UNVERIFIED does not list and no acceptance command checks, so a false why is replaced by an unchecked one — verify the claim with a grep and cite it in the why, or list it in section 10
+
+REJECT — card RR-0421 1 a "old source specs 126, 127, 128, 135 off on every row (reverses RR-0383)" — the change is accused of dropping the surface spec attachment that RR-0383 ordered — RR-0421 item 1 a pasted in the same block says it reverses RR-0383, so the later ruling governs and this is not a breach
+
+REJECT — doc-17 RR-0008 "RULED: a lot's numbers are computed on first open, track or owner input, then stored" — the change is accused of taking the storage rules out of review when storage-doc16 goes off — RR-0421 3 a pasted here names exactly that removal and no storage behaviour changes
+
+MET — card RR-0421 2 a — PLAN-448-v1 3.1 :151 and :212 — both phone rows keep 90, 98, 99 and drop 100, 96
+MET — card RR-0421 3 a — PLAN-448-v1 3.1 :88, :139, :132 — both Airtight rows and the storage row lose the four Airtight lists and storage-doc16
+MET — card item 2 — PLAN-448-v1 section 4 — the three named test files are edited first, staged and run red before the table, including :552
+MET — card item 3 — PLAN-448-v1 section 7 step 4 — `page --write` then `--check` inside the same commit
+MET — card item 4 — PLAN-448-v1 3.3 and backlog-lane.logic.test.ts after :298 — the sentence lands at backlog-lane.mjs:188 and one test line pins it
+MET — card RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — PLAN-448-v1 section 2 and A9 — no such edit, and A9 asserts the diff is empty
+MET — card RR-0419 "one task" — PLAN-448-v1 carries all five items in task-448 — no second task is opened
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: RR-0008, RR-0009, RR-0110
+
+---
+⏱  118329ms (118.3s)
+📊 Tokens — total: 51484, input: 26202, output: 25282, reasoning: 23906

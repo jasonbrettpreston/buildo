@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T20:20:29.328Z file_sha256=79559d26e7ea9c40e3621db08a74a5027864abcb5d8045bf735ea1dcd30dba30 prompt_sha256=2d2c3de3059d0bf7a5c2c98f264d96cf380bc0b0a54c97acb2265d55f16348b6
+🔍 Lens review of docs/reports/reviews/task-448/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §4 `rule-lists-table.logic.test.ts` :117-119 and :344 — test edits write `expect(lists(p), p)` / `expect(lists('mobile/x.ts'), l)` — two-arg `expect` is the Playwright/`assert` convention, not Vitest (one arg); under `typecheck`/`tsc` these files fail arity (TS2554), so A8 can never go green and red.out shows an arity error, not the designed assertion failures — change to `expect(actual)` and move the label into a `// comment`, or use `assert`/`expect.soft` if per-assert messages are truly wanted; confirm `vitest.typecheck` config before writing them.
+
+BUG severity=HIGH — §7 LANDING + whole §3.1 — the edits are applied "by the unique old text" pinned to the a75713110 read; if the working board moved after that read an anchor can duplicate or vanish and the edit lands on the wrong row of the protected, repo-wide `rule-lists.json`, and `validate`/`check-tasks` (A2/A6) would still pass because the table remains structurally valid — re-read `rule-lists.json` at the work head and assert `grep -c "<anchor>"` equals the expected count for all ~26 anchors before editing.
+
+DEFER severity=MED — §3.1 rows surface-importers :120, storage :132, review-followups :200 set `lists: []` — only the panel-records empty-lists resolve is exercised (A5); if the resolver treats a matched-but-empty row as "no governing spec found: operator ruling owed", three rows silently start demanding an operator ruling on every matching file — add A-steps resolving a surface-importer src file, a `docs/reference/*` file and a review-followups file and assert the four every-task ids with no ruling-owed text.
+
+DEFER severity=MED — §4 `backlog-lane.logic.test.ts` :400/:405/:552/:575 — A1/A8 rely on these going red then green, but §10 admits it is unverified that their fixtures read the repo table; if they read a static fixture they pass in both states and prove nothing — `sed -n '1,120p;380,410p' src/tests/backlog/backlog-lane.logic.test.ts` and confirm the fixture loads `scripts/analysis/rule-lists.json`, else add a real-table assertion.
+
+DEFER severity=MED — §7 "No branch holds unlanded edits to rule-lists.json (PLAN-418 F)" — unverified premise; if another branch holds `rule-lists.json` edits the protected self-edit rule (:753) plus a merge conflict can block this task's landing — verify via `git log --all --oneline -- scripts/analysis/rule-lists.json` and `git branch -a --contains HEAD` that only this work branch appears.
+
+DEFER severity=MED — §3.1 whole — the task requires "off on every row" (RR-0421 item 1a) but no A-step greps for stragglers; an un-enumerated row could still attach `surface-126/127/128/135`, `mobile-100/96`, `airtight-*`, `queue-137`, `agents-s7-s11` or `storage-doc16` — add `grep -nE "surface-12[678]|surface-135|mobile-(100|96)|airtight-|queue-137|agents-s7-s11|storage-doc16" scripts/analysis/rule-lists.json` and confirm hits are only list definitions and the lane-tools row.
+
+DEFER severity=MED — §3.2 all rows ("why ... made true again"), tied to Q2 — no A-step verifies a changed `why` no longer asserts a removed attachment, so a half-true `why` (pinned substring preserved, earlier clause now false) ships un-reviewed; the semantics are human-verifiable not test-verifiable — add a lane-report checklist asserting each of the ~20 `why` edits was read against its row's new `lists`.
+
+DEFER severity=LOW — §3.3 brief edit — removed phrases ("is filed beside them as out-…", "the round-1 file stays") may be asserted elsewhere; §4 pins only :290/:298 for the retained fragment — `grep -rn "the round-1 file stays\|is filed beside them" src/tests` before editing to confirm no stale assertion turns green→red.
+
+DEFER severity=LOW — §3.1 :6 `$comment` edit — replacing "(record-only tasks get the queue lists)" may trip a test that pins the comment text — `grep -rn "record-only tasks get the queue lists" src/` to confirm nothing pins it before changing it.
+
+DEFER severity=LOW — §3.3/§8 known-limit — the plan asserts the history line "matches the round count the close reads (check-lane-close.mjs:274-275)" but shows no excerpt; if the close instead counts `-rN` files, a round-2 close following the new brief (base-name overwrite) blocks until a later task edits the checker — `sed -n '270,280p;498,506p' scripts/hooks/check-lane-close.mjs` to confirm the count source.
+
+DEFER severity=LOW — §6 — this task's own output stage resolves 9 lists (its Files line names `backlog-lane.mjs`, i.e. the lane-tools row), so the "cost review" task's own review costs ~9-list context, not the 6 it delivers; not a defect, but state it in §0 so the operator is not surprised.
+
+REJECT — §3.1 bylaw/lane-tools `not` uses `prereg-MF-**` while the panel glob uses `prereg-MF-*.json` — looks like a match inconsistency — it is not: the real path matches the panel glob (`*` covers `96-1`) and the `**` in `not` additionally covers the resolver's `<path>/x` probe; A5 asserts the real path resolves to the four every-task ids only.
+
+REJECT — §7 rollback — concern that `git revert` leaves "old schema + new table" — there is no schema; the work commit carries `rule-lists.json` and the regenerated page together, so reverting it restores table and page consistently, and the separate records-only close commit reverts cleanly too.
+
+REJECT — Axis-1 network/concurrency categories — rate-limit, retry storm, webhook double-delivery, watermark drift and partial-deploy are all inapplicable here (offline JSON/text edit, single writer, no migration, no cache); nothing to verify in those buckets.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The two-arg `expect(actual, message)` edits in `rule-lists-table.logic.test.ts` may fail arity under typecheck and block A8 (cannot close), while obscuring the designed red in red.out.
+- Edit anchors pinned to the a75713110 read: a moved board can misplace an edit on the protected repo-wide `rule-lists.json` and still pass `validate`/`check-tasks`.
+- The empty-`lists: []` rows (surface-importers, storage, review-followups) are untested for clean resolve; if the resolver emits "operator ruling owed" they silently regress three rows.
+
+Top 3 unverified data premises (regardless of verdict):
+- No other branch holds unlanded `rule-lists.json` edits → `git log --all --oneline -- scripts/analysis/rule-lists.json | head; git branch -a --contains HEAD`.
+- `backlog-lane.logic.test.ts` :400/:405/:552/:575 fixtures read the repo table → inspect `sed -n '1,120p;380,410p' src/tests/backlog/backlog-lane.logic.test.ts` for the table source.
+- No fourth test file pins the turned-off ids and no un-enumerated row still attaches them → `grep -rlnE "agents-s7-s11|queue-137|storage-doc16|surface-12[678]|surface-135|mobile-(100|96)" src/tests/ scripts/analysis/rule-lists.json`.
+
+---
+⏱  124905ms (124.9s)
+📊 Tokens — total: 50293, input: 27532, output: 22761, reasoning: 20923

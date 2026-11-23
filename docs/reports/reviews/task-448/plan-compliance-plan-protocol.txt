@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.320Z file_sha256=5e4945716a88679d22d86f2836ca90670153178ff0624633bc4980f973dbf9e1 prompt_sha256=8df8e4d47888821e702fdbb32b3f64952aad1c1e07716d5f7117e9ed3a156975
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item (1) "the why text of each changed row made true again (for example :152 and :140)" — PLAN 3.2 ":140, anchor `because the compute gates scan scripts/lib/compute by path only` → `. task-448 (RR-0421 item 3 a, decision-205): the four Airtight lists are off; this row attaches step-132 only`" — the kept clause still says the four Airtight lists attach and a contradicting sentence is only appended, so :140 is corrected in the same way as :152 rather than made true; the same append-only pattern is used on :121, :133, :171, :177, :183, :189, :195, :201, :207 and :219, and the plan itself leaves this open in Q2 — rewrite the false clause in place per row (the pinned phrases are elsewhere) or record the grounder's answer to Q2 before the work commit.
+
+DEFER severity=MED — card item (5) "(only if the plan grounder rules Spec 08 section 11.2 and the gate allow it)" — PLAN 3.5 "This narrows \"re-executes every claim in the fold\" (:486) to the claims the fold changed." — the narrowing is written as settled spec text in the work commit while the permission for it is still Q1 to the grounder, inverting RR-0359's grounder-first order for that sentence — hold 3.5 out of commit 1 until the grounder rules, or word it as a conditional note.
+
+DEFER severity=LOW — card item (4) "scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5)" — PLAN 3.3 "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name;" — this is a second rule beyond the one sentence the card names — trim to the named content or cite the ruling that adds the -rN clause.
+
+DEFER severity=LOW — card item (1) "the row edits of PLAN-418-v1 section D as restated with RR-0421 in PLAN-418-part2-v2" — PLAN 1 "one `$comment` phrase corrected" — no pasted clause names a `$comment` edit and the source (PLAN-418-v1 section D) is not pasted, so the scope of that phrase cannot be seen — cite the section D line that carries it.
+
+REJECT — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — accused of leaving the brief and the close refusal disagreeing on the round-2 file names — the card forbids that edit and the plan states the limit openly: "The brief and the refusal disagree until a later task".
+
+MET — RR-0421 item 1a — PLAN 3.1 ":126 ... `\"lists\": [\"surface-136\"],`" and ":218 ... `\"lists\": [\"surface-136\"],`" — Specs 126, 127, 128 and 135 are off every row shown.
+MET — RR-0421 item 2a — PLAN 3.1 ":151 ... `\"lists\": [\"mobile-90\", \"mobile-98\", \"mobile-99\", \"surface-136\", \"eng-front\", \"eng-shared\"],`" — 100 and 96 drop, 90/98/99 stay.
+MET — RR-0421 item 3a — PLAN 3.1 ":132 ... `\"lists\": [],`" and ":139 ... `\"lists\": [\"step-132\"],`" — Airtight lists and storage-doc16 off.
+MET — RR-0421 item 4a — PLAN 3.1 lane-tools "insert ... (lists :163 unchanged)" with ":157 ... `\"lists\": [],`" — the process lists survive only on the lane-tools row.
+MET — RR-0422 — PLAN 2 "No edit to scripts/hooks/check-lane-close.mjs or scripts/analysis/rule-lists.mjs (RR-0422)" with A9 "git diff --stat ... -- scripts/hooks scripts/analysis/rule-lists.mjs .claude | empty".
+MET — RR-0359 — PLAN 7 "Then a separate grounder before any fold (RR-0359, MD:1687)".
+MET — RR-0392 — PLAN 0 "It adds no infrastructure (RR-0392, MD:1975)" and 2 "No new key, tool, hook, file kind or role."
+MET — plan-protocol 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN "#### 11. GUESS estimate" — labelled GUESS.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 1
+Rules met: none
+
+---
+⏱  94702ms (94.7s)
+📊 Tokens — total: 37253, input: 17609, output: 19644, reasoning: 18532

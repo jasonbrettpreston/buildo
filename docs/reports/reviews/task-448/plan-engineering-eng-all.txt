@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T20:20:29.311Z file_sha256=2f5c98a753f938f63221de72c0f2cfffb1a882e34f0b621a79ad8e957a4a297c prompt_sha256=babe43c634767a22ed39bc839b950db0ab4b640cdc405dcd04ccba90e0953cb2
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan "#### 8. Acceptance" table lists A1 to A11 with no PASS/FAIL self-check item and no WF3 sibling-bug list; section 4 goes straight from test edits to the red attempt — the always-applies self-skeptical checklist and the WF3 3-5 sibling-defect sweep ("list 3-5 sibling bugs that could share the same root cause and verify the fix covers them") are never scheduled — add a lane step in section 4 and an acceptance row: output a 5-10 item PASS/FAIL list built from Spec 08 section 7 rule 4 and section 11.2 against the actual diff, plus 3-5 sibling defects of the stale-row class, before the tests are run
+
+DEFER severity=LOW — 5. Testing Standards "Run the test and confirm it fails — only then implement the code to make it pass (Green Light)." — plan "The lane writes these edits first. It stages only the three test files and the task file, and attempts the commit. The pre-commit related run (.husky/pre-commit:56) fails; that output is saved as red.out." — the red proof is delegated to a hook whose file selection is outside the plan's control, so the "under the SAME names" line at backlog-lane.logic.test.ts and the mobile-100/96 line are only red if the related set happens to pick all three files — make the red step an explicit `npx vitest run` of the three named test files into red.out before the commit attempt
+
+REJECT — 10. Frontend/Backend Boundary "Frontend WFs must NOT modify files in scripts/, migrations/, or scripts/lib/" — the change edits scripts/analysis/rule-lists.json and scripts/analysis/backlog-lane.mjs — this is the review-tooling card itself, not a frontend WF, and no file under src/features/ or src/app/ is touched, so the ban does not reach it
+
+MET — 5. Testing Standards "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — plan "The lane writes these edits first. It stages only the three test files and the task file, and attempts the commit." (plus A1 reading red.out, then green in commit 1)
+
+MET — 5. Testing Standards "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — plan "Test edits in three files, written first and seen red." with the three files being rule-lists.logic.test.ts, rule-lists-table.logic.test.ts, backlog-lane.logic.test.ts, the correct layer for a table-resolver and brief-template change
+
+MET — 5. Test-Layer Map "Parity battery ... generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — plan "node scripts/analysis/rule-lists.mjs page --write, then `--check`." and "| A7 | lane | `node scripts/analysis/rule-lists.mjs page --check` | exit 0 |", page regenerated in the same work commit
+
+MET — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan "The three dated notes (3.4-3.6)." staged inside commit 1 with the table edits, and 3.6 explicitly retires the superseded words of the task-439 note
+
+MET — 3. Database Management and Scaling "Every migration file in migrations/ MUST contain both UP and DOWN blocks" — plan "No new key, tool, hook, file kind or role." and the Files line names no migrations/ path, so the migration rules are not engaged
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  43811ms (43.8s)
+📊 Tokens — total: 35625, input: 27180, output: 8445, reasoning: 7563

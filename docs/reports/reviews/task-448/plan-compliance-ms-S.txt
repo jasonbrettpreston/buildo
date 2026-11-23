@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.313Z file_sha256=b2ed1b04fe810a5377fcf37e5b8d0657fdcd13f858bcb805372f8630fc3eed53 prompt_sha256=24d3cdbb99b5ab95c05f1646e254580cab1da77b8ccb5b7c0069b19f2dd0c36a
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item (1) "and the why text of each changed row made true again (for example :152 and :140)" — PLAN-448-v1 §3.2 :140 "anchor `because the compute gates scan scripts/lib/compute by path only`" gets only the appended sentence ". task-448 (RR-0421 item 3 a, decision-205): the four Airtight lists are off; this row attaches step-132 only" — the card's named example :140 is not made true, the retained present-tense clause still says the Airtight lists are attached, unlike :152 which the plan rewrites, and Q2 leaves the clause to the grounder, which is a TODO for a named clause — rewrite the false clause on every row the way :152 is rewritten (for example ":140 becomes 'this row attaches step-132 only because the compute gates scan scripts/lib/compute by path only'") and keep the RR id in the sentence
+DEFER severity=MED — card item (4) "scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line" — PLAN-448-v1 §3.3 "Old: ... (each finding needs a verdict) and the round-1 file stays; New: ... is read for findings like any out- file but never stands in for a round-1 name;" — the replacement deletes the standing requirement that each finding needs a verdict, a deletion the card does not name while it names one sentence to add — restore "(each finding needs a verdict)" in the new text and drop only "the round-1 file stays"
+DEFER severity=LOW — RR-0418 "the back end the same with its own handbook" — PLAN-448-v1 §8 "| A3 | lane | ... --files "mobile/src/app/" ...", "| A4 | ... 02-web-admin/128_surface_standard_policy.md", "| A5 | ... prereg-MF-96-1.json" — no acceptance row resolves a back-end code path, so the back-end half of RR-0418 (engineering lists still attached after the Airtight lists come off :88 and :139) is only asserted, never checked — add one resolve check on a back-end path (for example --files "scripts/lib/compute/") with the expected engineering ids
+REJECT — Project objectives bullet 3 "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — the change is accused of not serving the designed report, details or search page — not a real issue here because RR-0418, RR-0421 and RR-0423 name this task and its measured effect (962k to 113k characters for task-367) is on the cost of the reviews that gate that build
+
+MET — RR-0421 item 1 a — PLAN-448-v1 §3.1 :120,:126,:132 no, :170,:176,:182,:188,:194,:206,:218 — surface-126/127/128/135 come off every row that held them, surface-136 is the only surface list kept
+MET — RR-0421 item 2 a — PLAN-448-v1 §3.1 :151,:212 and §4 :336 — both phone rows keep mobile-90/98/99 and lose mobile-100/96, and the test const matches
+MET — RR-0421 item 3 a — PLAN-448-v1 §3.1 :88,:132,:139 — step-pipeline and compute-import lose the four Airtight lists, storage loses storage-doc16
+MET — RR-0421 item 4 a — PLAN-448-v1 §3.1 :157,:170,:176,:182,:188,:194,:200,:206 with :163 unchanged — every row except lane-tools loses queue-137, agents-*, policy-124-s2-s5 and orchestrator-doc17
+MET — RR-0422 — PLAN-448-v1 §2 "No edit to scripts/hooks/check-lane-close.mjs or scripts/analysis/rule-lists.mjs (RR-0422)" and A9 — the close hook and the tool are untouched
+MET — card item (3) — PLAN-448-v1 §7 step 4 "node scripts/analysis/rule-lists.mjs page --write, then --check" — the regenerated page lands in the work commit
+MET — card item (2) — PLAN-448-v1 §4 and A1 — the three named test files are edited first and made red, including :552
+MET — RR-0359 — PLAN-448-v1 §7 "Then a separate grounder before any fold (RR-0359, MD:1687)" — no fold precedes the grounder
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 2
+Rules met: none
+
+---
+⏱  180079ms (180.1s)
+📊 Tokens — total: 56252, input: 15995, output: 40257, reasoning: 39161

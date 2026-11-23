@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:20:29.307Z file_sha256=6aa16076fe370280bfc7db1b62997ac062b88f7df5e2c0bddb2cdb1f9ac7846a prompt_sha256=8607ec68f07a69d0e2f6ac5674e83bdff6137c8dca5f5d0c94549438cefd78b1
+🔍 Lens review of docs/reports/reviews/task-448/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card item 5 "dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings, including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it)" — PLAN-448-v1 3.5 "This narrows 're-executes every claim in the fold' (:486) to the claims the fold changed." — the note rewrites the scope of a spec rule, which the card does not name and no pasted ruling grants (the commit trailer even says "no rule text moves"), and the plan's own Q1 leaves the narrowing unruled — fix: delete the narrowing sentence so 3.5 states only who writes FOLD-CHECK.md, when and where, or hold 3.5 until the grounder rules Q1.
+
+DEFER severity=MED — card item 1 "the why text of each changed row made true again (for example :152 and :140)" — PLAN-448-v1 3.2 ":219 ... this row attaches surface-136 only, so the sentence above no longer holds" — the specs-web-admin why is left false with a disclaimer instead of being made true, and :133 keeps "DRAFT, attached anyway: the operator confirms it binds" while attaching no list — fix: rewrite the false clauses at :219 and :133 in place the way :152 is rewritten.
+
+DEFER severity=MED — RR-0422 "the Minimum package; scripts/hooks/check-lane-close.mjs is NOT edited" — PLAN-448-v1 3.3 "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name" — the brief now forbids the -rN name the frozen close still demands (check-lane-close.mjs:502), and no acceptance runs the close against the new same-name record form — fix: add an acceptance that check-lane-close accepts the same-name form, or drop the "never stands in" clause.
+
+DEFER severity=MED — RR-0418 "a front-end task is reviewed against the front-end handbook (Spec 136), the engineering standard, the four lenses and the four every-task lists; the back end the same with its own handbook" — PLAN-448-v1 7 "DeepSeek, one compliance or engineering output per list, plus code-review and error-paths" — this task's own output review names two of the four lenses, ux and security are not run — fix: name all four lenses, or state the path rule that legitimately removes two.
+
+DEFER severity=LOW — card item 1 "scripts/analysis/rule-lists.json: the row edits ... and the why text of each changed row made true again" — PLAN-448-v1 1 "one `$comment` phrase corrected" — the :6 $comment edit is neither a row edit nor a row's why, so it sits outside the edit list the card enumerates — fix: drop it, or cite the ruling that names it.
+
+MET — card item 1 "16 rows with a lists change; a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json" — PLAN-448-v1 3.1 — exactly 16 list edits, `not` inserts on bylaw and lane-tools, panel-records glob adds prereg-MF-*.json.
+
+MET — RR-0421 "3 a the four Airtight lists and storage-doc16 off" and "2 a phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96" — PLAN-448-v1 3.1 :151 and :132 — mobile keeps 90/98/99 and drops 100/96, step-pipeline and compute-import drop the Airtight lists, storage becomes [].
+
+MET — RR-0422 "scripts/hooks/check-lane-close.mjs is NOT edited" — PLAN-448-v1 8 A9 — "git diff --stat <launch>..HEAD -- scripts/hooks scripts/analysis/rule-lists.mjs .claude" must print nothing.
+
+MET — card item 2 "edited first and seen red" — PLAN-448-v1 4 and 8 A1 — the three test files are staged alone and red.out is read for the edited assertions including :552.
+
+MET — card item 3 "the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit" — PLAN-448-v1 7 step 4 — page --write then --check inside commit 1.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — PLAN-448-v1 7 — a separate grounder runs before any fold.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 5
+Rules met: RR-0359, RR-0385, RR-0392, RR-0419, RR-0420, RR-0423
+
+---
+⏱  123695ms (123.7s)
+📊 Tokens — total: 48687, input: 21449, output: 27238, reasoning: 26112
