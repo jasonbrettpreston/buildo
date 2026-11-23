@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:57:12.382Z file_sha256=a9536da3b1cc76e061d59e6555b705d540fac86e762524692adb02eb1c956efe prompt_sha256=9da5176c9b47d728f8872bde506a31e395d7b10555b5b7387dfedc840fcd90a0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-135-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — FE-31 "generated and vendored files pass `--check`/manifest" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the committed generated count for Spec 136 section 2 (28,690) sits one character off the lane's own acceptance measurement of the same section ("section 2 28,691 characters, 57 lines" in the pasted task context), so the committed generated page may be one character stale against head and the claimed `--check` green cannot be confirmed from the material — regenerate the rule-lists page at the final head (after the Q9 generator change) and commit it, or record why the generator's count and the lane's measurement differ by one.
+
+DEFER severity=LOW — FE-29 "The report node contract has ONE home, `scripts/surfaces/_schema/report-tree.schema.json`" — docs/specs/00-architecture/00_system_map.md:100 "`src/lib/surfaces/report/core.ts`, `src/components/report/ReportView.tsx`, `src/components/surfaces/web/footerNode.ts`" — this commit edits the spec 135 row of the system map yet its Materials cell still names the renderer only, not the one contract home FE-29 creates nor the FE-34 page contract and page table, so the map's entry for the register cannot lead a reader to the contract files the rows rule — add `scripts/surfaces/_schema/report-tree.schema.json`, `scripts/surfaces/_schema/report-page.schema.json` and `scripts/surfaces/_schema/report-page.json` to the 135 Materials cell in this same commit.
+
+MET — FE-24 — docs/specs/00-architecture/00_system_map.md:100 — the 135 row keeps `src/tests/surfaces/new-row-zero-code.golden.test.ts`, the lock FE-24 records as landed in c33f4d01a.
+
+MET — FE-33 — docs/specs/00-architecture/00_system_map.md:100 — keeps `src/tests/surfaces/render-smoke.logic.test.ts`, and adds no mobile smoke row, matching the note that the mobile smoke is prose-only until MF-25.
+
+MET — FE-36 — docs/specs/00-architecture/00_system_map.md:100 — keeps `src/tests/surfaces/nav-by-route.logic.test.ts` beside the new reserved `nav-tab-switch.logic.test.ts`, so the ruled route lock is not displaced by the placeholder row.
+
+MET — FE-39 — docs/specs/00-architecture/00_system_map.md:100 — keeps `src/tests/surfaces/engine-inputs-bind.logic.test.ts`, so the OWED lock path of this row is still resolvable from the map after the edit.
+
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer" — .cursor/MCFRONTEND-QUEUE.md:650 — the MF-95 Done-condition lists exactly those three deliverables plus the item 9 pointer and the green `--check` and `handbook-rule-map.logic.test.ts`, so the row's scope matches the operator's words.
+
+MET — RR-0384 "These look great - teh 13 are perfect" — docs/reports/panels/MF-95.json:27 — the panel records the 13 rows as the operator's list with their lock paths reserved for task-434, so the count and ownership of the added rows match the ruling.
+
+REJECT — FE-39 — the change is accused of listing 13 lock paths in the map that do not exist yet ("all 13 absent") — FE-39's own register cell names its unbuilt lock as "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`" while that same path already sits in the 135 map row, so naming owed lock paths is the register's established form, not a new breach.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 0
+Rules met: FE-24, FE-30, FE-33, FE-36, FE-37, FE-38, FE-39, FE-40
+
+---
+⏱  76414ms (76.4s)
+📊 Tokens — total: 42266, input: 28006, output: 14260, reasoning: 13279

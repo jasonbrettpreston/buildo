@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T02:00:49.837Z file_sha256=4d9f715e55f73812dda83d032b09362946cfbaa1d3b0571f7e7182cc35ecf63a prompt_sha256=7a40e40a0aa6a4b3cc7d1013e0d29fcdbc23f5684d45f216e2ac591146cfbae3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — scripts/surfaces/generate-surface-handbook.mjs:101 "if (d === own) throw new Error(`[surface-handbook] ${id}: the Current reading cites its own date ${d}`);" — a reading that restates a note dated the same day as the reading is refused before the `earlier.has(d)` test runs, so a legal same-day row (this register routinely stacks notes on one date, see the two "Dated note 2026-11-22" notes on task-430) blocks --check/--write while the cited date really is an earlier note's date — check `!earlier.has(d)` first and refuse the own date only when it is not the date of an earlier note.
+
+BUG severity=MED — scripts/surfaces/generate-surface-handbook.mjs:93 "if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;" — the guard is on the whole Status cell, so any note that merely mentions the words "Current reading:" (for example "supersedes the Current reading of 2026-11-22") forces READING_RE.exec on a non-reading last segment and throws "does not parse in the strict form", blocking regeneration of the whole handbook with a message pointing at the wrong note — gate on `READING_FRAME.test(last)` alone and return null otherwise, keeping the prose case in B-T8 green.
+
+DEFER severity=MED — scripts/surfaces/generate-surface-handbook.mjs:64 "return clipped || shared !== plain ? plain : shared;" — removing the 300-character clip removes the only bound on a line (fe.39 already prints 1,746 characters, READING_MAX 800 caps only the reading), so an arbitrarily long Ruling cell now prints whole with no generator refusal and no lock budget, re-growing the reviewer input RR-0378 set out to shrink — add a ruling length cap that throws, or a section-2 size budget asserted in the lock.
+
+DEFER severity=MED — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(rows.slice(-13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));" — the pin requires the 13 new rows to stay the last 13 rows for ever, so the next rule row appended under RR-0379 ("we will add to the rules overtime") turns C-T2 red on a correct register — pin the 13 by lock path instead of by tail position.
+
+DEFER severity=LOW — scripts/surfaces/generate-surface-handbook.mjs:62 "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a future Ruling cell that starts with a bold span is routed to the shared, clipping headline, so A-T2's `expect(r.headline).toBe(plainCell(cell))` goes red for that row and the generator offers no route to print it whole — apply the clip test before the bold early return, or state the no-leading-bold authoring rule where rows are written.
+
+DEFER severity=LOW — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));" — an n+1 element array never equals an n element array, so the claimed planted case ("one id more than the register holds is refused") can never go red and checks nothing — assert the extra id is absent from ids, or compare against `range(n + 1)`.
+
+DEFER severity=LOW — scripts/surfaces/generate-surface-handbook.mjs:91 "if (READING_FRAME.test(s) && s.includes(READING_MARK)) throw new Error(`[surface-handbook] ${id}: a dated note follows the Current reading; restate it`);" — the second-time path (the same reading note pasted twice, or a new reading written before the old one is removed) hits this refusal with a message naming the wrong cause, and because a reading may only be the last note the superseded reading cannot be kept as history — distinguish a superseded reading from a trailing note and say which one the author hit.
+
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(run(root, ['--write']).code).toBe(0); expect(run(root, ['--check']).code).toBe(0);" — a re-run of the write looks like it could append the reading or the 13 rows twice — it is handled: both files are rendered from the register on every run with no append, and write then check then check proves a second write is a byte no-op.
+
+VERDICT: PASS on error-path safety
+Paths walked: register row parse failure, empty Status cell, missing reading note, malformed or wrong-row reading note, reading not last, same-day date cite, over-800 reading, bar in reading, empty or markup-only Ruling cell, bold-led Ruling cell, newline inside a reading, --check on stale files, --write repeat, concurrent --write, lens-input fe.01..fe.N, prereg totals   Unguarded: 1
+
+---
+⏱  230738ms (230.7s)
+📊 Tokens — total: 50894, input: 26728, output: 24166, reasoning: 23053

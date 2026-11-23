@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:35:35.515Z file_sha256=6b4da02d8159b0613da6803c9aacb5d7cdc5dc39d00919d853cd950323ecb71e prompt_sha256=ca8e973810dff5323cff28d812db82571d241d98fb21f64455c7e9bb3643d7c9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/00-architecture/00_system_map.md:100 "..., `src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — row 135's lock column gains 13 test paths for locks the lane itself records as absent (commit C: "one reserved lock path each (all 13 absent)"), a map edit not among RR-0384's three named things and whose own gates (system-map.infra.test.ts, spec-paths.infra.test.ts) are absent from the lane's green list — the Files line names the file so this is disclosure-level, not a breach; confirm those two infra tests are green with the reserved paths listed, or record the plan item that authorises listing absent locks.
+DEFER severity=LOW — m.513 "CITE-4 stage-6 prereg rules[] checklist." — NONE (scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json is not in this chunk, cannot see) — the queue row relies on that prereg for the stage-6 checklist but no chunk-1 file shows its rules[] — before output, confirm rules[] names FE-09, FE-10 and FE-16 as the row's dated note claims.
+
+MET — m.515 — .cursor/MCFRONTEND-QUEUE.md:5 "the line read \"Next free id: **MF-94**\" before this note. MF-94 is held by lane BL-MFRULES (task-388, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-94) and MF-95 is taken by the INPUTS.2 row (id claimed in ~/Buildo-scratch/ids/MF-95); next free id **MF-96**" — the one id ledger is advanced honestly: prior first value quoted, the held and the taken id both named with their ledger anchors, no id reused.
+MET — m.508 — .cursor/MCFRONTEND-QUEUE.md:647 "Status: RUNNING · since 2026-11-22 · expires 2026-11-29" — exactly the 7-day expiry on the new open row.
+MET — m.507 — .cursor/MCFRONTEND-QUEUE.md:647 "**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole, a Current reading on 12 lines and 13 new OWED register rows — RUNNING** (E)" — the work is one row on the one open-work list, status cell and Done-condition kept, and "  - FE rows owned: none." is correct because the 13 new rows are OWED.
+MET — RR-0380 — docs/reports/generated/rule-lists-by-kind.md "| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |" and "| surface-127 | ... | 50,606 | 1 |", "| surface-128 | ... | 77,169 | 1 |" all unchanged — no surface spec is deleted or rewritten; only the surface-136 and surface-135 counts move, and the totals reconcile (679,963 + 42,543 = 722,506, parts 18 + 2 = 20; phone 766,953 + 42,543 = 809,496).
+MET — m.448 — the whole pasted diff touches only ".md" and ".json" paths (no python, python3 or pip invocation appears) — the block-python hook has nothing to refuse.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: m.448, m.507, m.508, m.515
+
+---
+⏱  127661ms (127.7s)
+📊 Tokens — total: 53068, input: 27516, output: 25552, reasoning: 24658

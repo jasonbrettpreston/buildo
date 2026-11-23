@@ -43,9 +43,69 @@ const DATE = /\d{4}-\d{2}-\d{2}/;
 const DATED_NOTE = /Dated note \d{4}-\d{2}-\d{2}/g;
 const CLOSED_WORD = /^(RULED|OWED|RETIRED|SUPERSEDED|WITHDRAWN|PROPOSED)/;
 const NEXT_FREE = /\*\*Next free id:\*\*\s*`FE-(\d+)`/;
+// MF-95 commit A (task-430, RR-0384 "stop the clipping"; plan section 4, A1): the shared headlineOf clips at its HEADLINE_MAX (300,
+// scripts/analysis/bylaw/bylaw-register.mjs:38, not exported) for Spec 133, whose size cap has no room to grow. Spec 136 prints each ruling
+// whole: where the shared result was clipped (it ends in the ellipsis AND the plain cell is longer than the shared cap, so an authored
+// ellipsis is never mistaken for a clip; and the cell has no leading bold span, where the shared rule prints the bold title, not the cell),
+// the line is the plain text of the Ruling cell. Named reason for this one-line copy of the shared plain(): the shared reader is a layer23
+// McBylaws path (an edit needs a McBylaws task and panel). The copy does not call stripProvenance: a long ruling keeps a trailing
+// provenance bracket. Ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): the shared stripProvenance also drops a
+// trailing bracket that matches "spec 1nn" from a cell it does not clip; a handbook headline keeps it (its cite is the point), so a cell not led
+// by a bold span whose shared headline differs from its plain text prints the plain text. Drift lock: handbook-rule-map.logic.test.ts A-T6.
+const SHARED_HEADLINE_MAX = 300;
+const CLIP_MARK = '…';
+const plainCell = (text) => text.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
+function wholeHeadline(ruleCell) {
+  const shared = headlineOf(ruleCell);
+  const plain = plainCell(ruleCell);
+  if (/^\*\*/.test(ruleCell.trim())) return shared;
+  const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX;
+  return clipped || shared !== plain ? plain : shared;
+}
+
+// MF-95 commit B (task-430, RR-0384 "make each line reflect its notes"; plan sections 5, 17.3, 17.4). A Current reading is ONE dated note,
+// lane text that restates earlier dated notes of the same row, in this one strict form, LAST in the Status cell. The page prints it on the
+// headline's line. Refusals (each throws, so --check and the lock fail): (i) a reading note that is not the last note; (ii) a cited date that
+// is not the date of an earlier note of the row; (iii) more than 800 characters (chosen, not derived: keeps the page from growing; the longest
+// reading is under 500); (v) a last note holding "Current reading:" that does not parse strictly (also: the row id in the frame must be the
+// row); (vi) a cited date equal to the reading's own date; (vii) a bar in the reading text. (iv), the 12 pinned rows, is in the lock.
+const READING_MARK = 'Current reading:';
+const READING_MAX = 800;
+const READING_FRAME = /^Dated note \d{4}-\d{2}-\d{2} \(M-246, prior text kept; FE-\d+ · McFrontend queue · lane [A-Za-z0-9-]+; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated /;
+const READING_RE = /^Dated note (\d{4}-\d{2}-\d{2}) \(M-246, prior text kept; (FE-\d+) · McFrontend queue · lane [A-Za-z0-9-]+; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated ([0-9, -]+) of this row, not an operator word and not a ruling\): Current reading: (.+) \(from notes dated \3\)\. The cell text above is kept\.$/;
+const NOTE_DATE = /^Dated note (\d{4}-\d{2}-\d{2})/;
+
+/** The note segments of a Status cell: each runs from one "Dated note <date>" to the next (the text before the first is not a note). */
+function noteSegments(statusCell) {
+  const starts = [...statusCell.matchAll(/Dated note \d{4}-\d{2}-\d{2}/g)].map((m) => m.index);
+  return starts.map((s, i) => statusCell.slice(s, i + 1 < starts.length ? starts[i + 1] : undefined).replace(/(?:<br\s*\/?>|\s)+$/i, '').trim());
+}
+
+/** The Current reading of a row ({ text, dates }) or null; throws on any refusal above. */
+function readingOf(id, statusCell) {
+  const segs = noteSegments(statusCell);
+  const last = segs.length ? segs[segs.length - 1] : '';
+  segs.slice(0, -1).forEach((s) => {
+    if (READING_FRAME.test(s) && s.includes(READING_MARK)) throw new Error(`[surface-handbook] ${id}: a dated note follows the Current reading; restate it`);
+  });
+  if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;
+  const m = READING_RE.exec(last);
+  if (!m || m[2] !== id) throw new Error(`[surface-handbook] ${id}: the Current reading note does not parse in the strict form (plan 17.4)`);
+  const [, own, , dateList, text] = m;
+  const dates = dateList.split(', ');
+  const earlier = new Set(segs.slice(0, -1).map((s) => NOTE_DATE.exec(s)[1]));
+  for (const d of dates) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error(`[surface-handbook] ${id}: the Current reading note does not parse in the strict form (plan 17.4)`);
+    if (d === own) throw new Error(`[surface-handbook] ${id}: the Current reading cites its own date ${d}`);
+    if (!earlier.has(d)) throw new Error(`[surface-handbook] ${id}: the Current reading cites ${d}, which is not the date of an earlier dated note of the row`);
+  }
+  if (text.length > READING_MAX) throw new Error(`[surface-handbook] ${id}: the Current reading is ${text.length} characters (at most ${READING_MAX})`);
+  if (text.includes('|')) throw new Error(`[surface-handbook] ${id}: the Current reading holds a bar`);
+  return { text, dates };
+}
 
 /**
- * The FE rows of the register text, in file order: { id, headline, status, date, locks, notes }. The id set is the
+ * The FE rows of the register text, in file order: { id, headline, status, date, locks, notes, reading }. The id set is the
  * gate's own (parseRegisterRows); a row whose id cell is struck or bold, a row with the wrong cell count, a PROPOSED row, a
  * gap in the numbering or a "Next free id" that does not follow the last row all throw, so no row can vanish silently.
  */
@@ -79,11 +139,12 @@ export function readFeRows(text) {
     const date = DATE.exec(statusCell);
     return {
       id,
-      headline: headlineOf(cells[1]),
+      headline: wholeHeadline(cells[1]),
       status: g.status,
       date: date ? date[0] : '',
       locks: g.locks,
       notes: (statusCell.match(DATED_NOTE) || []).length,
+      reading: readingOf(id, statusCell),
     };
   });
 }
@@ -121,7 +182,8 @@ export function buildRuleMap(rows) {
 const lineRow = (r) => {
   const state = r.status === 'OWED' ? 'OWED' : `${r.status}${r.date ? ` ${r.date}` : ''}`;
   const owed = r.status === 'OWED' && r.locks.length ? ` · lock owed: ${r.locks.join(', ')}` : '';
-  return { id: r.id, headline: r.headline, status: `${state}${owed}`, enforcedBy: r.status === 'RULED' ? r.locks.join(', ') : '', notes: r.notes };
+  const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';
+  return { id: r.id, headline: `${r.headline}${reading}`, status: `${state}${owed}`, enforcedBy: r.status === 'RULED' ? r.locks.join(', ') : '', notes: r.notes };
 };
 
 // Paths the static header names; each must exist (the generator's one fact lock, like Spec 133's).
@@ -177,7 +239,7 @@ export function render(map, rows, root = ROOT) {
   out.push('');
   out.push(`**What is generated.** Everything below, from the Spec 135 register table by \`${SPEC.generator}\` (status and lock paths read by \`scripts/analysis/mcbylaws/cite-parse.mjs\` \`parseRegisterRows\`, the reader gate arm C uses). The rule map \`${SPEC.ruleMapRel}\` is generated from the same rows, not hand-written; \`src/tests/surfaces/handbook-rule-map.logic.test.ts\` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.`);
   out.push('');
-  out.push(`**Rules rendered: ${rows.length}**: ${inForce.length} in force (${inForce.filter((r) => r.status === 'OWED').length} OWED, whose lock is still to land), ${rows.length - inForce.length} history. Each line: its line id, the reading headline, the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.`);
+  out.push(`**Rules rendered: ${rows.length}**: ${inForce.length} in force (${inForce.filter((r) => r.status === 'OWED').length} OWED, whose lock is still to land), ${rows.length - inForce.length} history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.`);
   out.push('');
   out.push('**Contents.** 1 Standard and policy pairs · 2 Rules · 3 History');
   out.push('');

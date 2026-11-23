@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:51:53.706Z file_sha256=dc7a7f2b590be4f00a57e78d01ce63126146ea18e6f469f485e8ca663bde3bc9 prompt_sha256=8066a4568fa52b964af0e864d639c020d7ed41b602c2a7fb6665c60eb9d632cb
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 scope "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/00-architecture/00_system_map.md:100 "+ `src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts` | DRAFT |" — 13 test paths enter Spec 135's test column while the same change records "one reserved lock path each (all 13 absent)" and "the locks are task-434's", an edit named by neither the ruling's three items nor the commit 0/A/B/C notes — name the system-map edit in the panel and the queue row, or hold the 13 paths back until task-434 lands them.
+
+DEFER severity=LOW — MF-95 row status — ".cursor/MCFRONTEND-QUEUE.md:645 Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — docs/reports/panels/MF-95.json:8 "\"head\": \"prereg 1 (round 200); commits 0, A, B, C\"" — the queue row's next step names work the same change records as already landed (commit C d429b287d, acceptance run) — set next to the owed OUTPUT review so the row and the panel do not disagree.
+
+DEFER severity=LOW — queue Done-condition "`generate-surface-handbook.mjs --check` and `src/tests/surfaces/handbook-rule-map.logic.test.ts` are green." — docs/reports/generated/rule-lists-by-kind.md:32 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the printed count contradicts both measurements in the same change, "section 2 28,691 characters, 57 lines" and commit C's 28,664 — regenerate and state which number the generator actually prints.
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/reports/panels/MF-95.json:12 "the scope sentence he pasted back between them is the orchestrator text he approved." — the panel assigns the ruling's operative sentence to the orchestrator while the pasted ruling records that sentence as the operator's own words — correct one record so the binding text has a single named owner.
+
+DEFER severity=LOW — rule-lists part counts — docs/reports/generated/rule-lists-by-kind.md:30 "| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |" vs the review input header "LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 8 of 9" — the regenerated file still reports 4 parts for a list served in 9, so the part counts in this regeneration were not recomputed — recompute surface-126's parts in the same regeneration or record why the two splitters differ.
+
+DEFER severity=LOW — RR-0384 "add these 13 lines" — NONE — the 13 Spec 135 rows, the 12 Current readings and the clipping change live in files cut from chunk 1, so those items cannot be judged here — carry them to chunks 2 or 3 before this task is set BUILT.
+
+MET — §12 rule "There is ONE sequence in this programme, and it lives in Spec 127 §4.4" — docs/specs/00-architecture/00_system_map.md:98 — row 127 is unchanged, so no second sequence or reordering is introduced.
+
+MET — §13 "Infra: ... `generate-spec-mirror.mjs --check` clean (mirror drift)" — docs/reports/generated/rule-lists-by-kind.md:46 "| total | 15 lists | | 722,506 | 20 |" — the totals recompute exactly (679,963 + 14,907 + 27,636 = 722,506; parts 18 + 2 = 20; phone 766,953 + 42,543 = 809,496), so this chunk carries no silent arithmetic drift.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  104706ms (104.7s)
+📊 Tokens — total: 46138, input: 26803, output: 19335, reasoning: 18283

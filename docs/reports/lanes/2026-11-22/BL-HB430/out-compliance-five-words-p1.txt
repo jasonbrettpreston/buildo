@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:38:02.839Z file_sha256=485997bcc526e44c21e5e6202e505e12638473a58e194fedce854652f4dc94c2 prompt_sha256=cc7fa6aad1b3db9bbddca64eea5e8b83a84d00709db409aee4896e1aff904f16
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER/MET lines follow. Governing list is the Spec 132 Glossary (pasted); only the clauses that can bind a records/docs diff are walked.
+
+DEFER severity=MED — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the 135 row now registers 13 test files as Spec 135's locks while the lane records them as "one reserved lock path each (all 13 absent)", so the map asserts locks the pasted definition cannot satisfy until task-434 lands — mark the 13 as reserved/owed in the map (or defer the map edit to task-434) so the map lists only files that exist and assert a rule id.
+
+DEFER severity=MED — RR-0390 "task-430 output review size: option A, one larger review message, tried once (names task-430)" — docs/reports/panels/MF-95.json:13 "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the operator ruling that names this task's output review form is absent from the plan record, so the owed output stage can run per-lens messages again — add RR-0390 to "cards" and name the one-larger-message, tried-once form in "output".
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes, and add these 13 lines" (measurement carried by the same ruling set) — docs/reports/generated/rule-lists-by-kind.md:34 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the generated page reports 28,690 characters for section 2 while the lane acceptance record pasted here reports "section 2 28,691 characters, 57 lines" (and 111,851 vs "Spec 135 112,035 bytes" at line 38), one character and 184 units apart, so the page may predate the final commit — regenerate rule-lists-by-kind.md from the landed tip and restate the measured numbers.
+
+MET — operator ruling RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer" — .cursor/MCFRONTEND-QUEUE.md:650 "the Spec 136 generator prints every Spec 135 ruling whole (no line ends in a clip ellipsis; ...); the 12 rows of plan section 17.3 carry one Current reading dated note each ... refused by `--check` when stale; the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each" — all three parts plus the pointer item are carried in the row's Done-condition.
+
+MET — operator ruling RR-0380 "by-law tasks gain no engineering rules" — docs/reports/panels/MF-95.json:3 "Spec 133 and scripts/analysis/bylaw/ untouched." — the scope fence is recorded and the pasted acceptance (4) reports an empty diff over `docs/specs/01-pipeline/133_bylaw_handbook.md scripts/analysis/bylaw/`.
+
+MET — operator ruling RR-0385 "two rounds" / tests as the focus — docs/reports/panels/MF-95.json:10 "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — the two-round review and the red-first test order ("Tests first: red commit attempts recorded in the lane red.out") are recorded.
+
+MET — OWED "not a failure until the producer swaps" — .cursor/MCFRONTEND-QUEUE.md:652 "The new register rows are OWED, so this row owns none" — the 13 rows are declared OWED with their lock landings assigned to task-434, not treated as landed locks.
+
+MET — five words / ids never reused (the queue's own id clause carried in this clause set's context) — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-96** (ids are never reused)." — the header, the 2026-11-22 note and the panel note agree on MF-94 held by BL-MFRULES, MF-95 taken by this row, MF-96 next, with no id reused.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  83330ms (83.3s)
+📊 Tokens — total: 33803, input: 17911, output: 15892, reasoning: 14793

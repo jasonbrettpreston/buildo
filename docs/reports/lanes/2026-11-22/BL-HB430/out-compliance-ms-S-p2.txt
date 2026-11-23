@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:39:41.281Z file_sha256=85c61e4137d5f5206487ab3a410302aa3717290b25e34219e397ee4b694d28ef prompt_sha256=aaf43ce71b976ef866a384db7031e6222ee70f7f46998e774579644c7876dc85
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:131 "Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes" — FE-33's row carries "the mobile render smoke (MF-35) runs in mobile jest, outside the root suite, so it is prose-only here until MF-25", but the generated line has no Current reading and still presents mobile jest-expo as checked — add a Current reading for FE-33 that states the mobile smoke is prose-only until MF-25, and audit the other rows with substantive notes not in the 12-row list.
+
+MET — RR-0384 "stop the clipping" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:85 — fe.18 now prints "Labels, help text and legal copy are content fields, not an exception." with no clip ellipsis.
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:166 — fe.45 through fe.57 are present as generated lines, starting with fe.45 "The client is just glass."
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md:190 — fe.53 is the pointer row and says "The tables are not copied here."
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — diff header — only docs/specs/02-web-admin/135_mcfrontend_decisions_register.md and 136_mcfrontend_handbook.md are in the diff.
+MET — RR-0380 "once the handbook has been updated iwth the critical items" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 — "Rules rendered: 57" and fe.45 through fe.57 carry the 13 new critical items.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+Rules met: none
+
+---
+⏱  105840ms (105.8s)
+📊 Tokens — total: 80377, input: 58245, output: 22132, reasoning: 21621

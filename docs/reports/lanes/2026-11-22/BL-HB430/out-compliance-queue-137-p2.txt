@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:44:51.218Z file_sha256=b65f743fbc4084bcb65fd50200fd2ff8d8c7ec1a4a64346cd31d33170ae34097 prompt_sha256=9a92d8f8522be6804790ab0a4a1c53c3af635f21e4d06929b6b0298ea363172e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §5 step 7 "It checks that every FROZEN or DROPPED row has a quoted ruling, and that each "next free id" number is greater than every claimed id of its kind in the ID ledger." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:17 "**Next free id:** `FE-58`. Dated note 2026-11-22 ... (task-430 plan section 17.5; ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case)" — the first value on the line is itself a claimed FE id, so it is not greater than every claimed id of its kind and the generator will hand FE-58 to the next new row — set the first value to FE-59 and claim FE-59 in the ledger before the push.
+
+BUG severity=HIGH — Spec 137 §2 ID ledger "Which numbers are taken, and by which lane." and Spec 137 §4 Rule 2 source "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — :17 "FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing" with :67 "| FE-45 | The client is just glass. ..." — this change publishes FE-45 as a row id while the ledger has FE-45 taken by another lane, so one FE number would name two rows — number the new rows FE-46..FE-57 (this lane's claims) or claim FE-45 here and stop deferring the renumber to landing.
+
+DEFER severity=MED — Spec 137 §0 Citation form "A rule is quoted with its source; the source is never paraphrased in its place." — :23 "lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling): Current reading: Phase 1 (the report page) is open since 2026-11-06" plus task-430 Implementation Notes "the generator reads the last note in the strict 17.4 form and prints it on the headline line" — 12 rule lines are printed in the handbook as a lane paraphrase instead of the row's sourced quote — print the rule cell and its verbatim ruling on the headline line and keep the Current reading on its own labelled line.
+
+DEFER severity=MED — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — :67 "his reply pasted the orchestrator's message back and added two phrases of his own ... The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things ... Approved"" — the block labelled the operator's recorded reply contains sentences the same cell calls orchestrator text, so the verbatim quoted as his is not exactly his words — quote only "These look great - teh 13 are perfect" and "Approved" as the verbatim and cite the pasted-back message separately as orchestrator text.
+
+MET — Spec 137 §4 Rule 4 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:23 — the 12 appended notes use the M-246 form "Dated note 2026-11-22 (M-246, prior text kept; FE-01 · McFrontend queue · lane BL-HB430, task-430; ...)" with date, row, queue and lane.
+MET — Spec 137 §4 Rule 10 — :41 — every amended row keeps its prior text ("The cell text above is kept.").
+MET — Spec 137 §3 "Where the line sits" — :23 — register rows keep their own RULED/OWED form; the closed queue word list is not imposed on spec register rows.
+MET — Spec 137 §4 Rule 2 — :67 — the 13 approved list items become 13 rows, one row each (item 9 is the pointer row FE-53).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+Rules met: none
+
+---
+⏱  111793ms (111.8s)
+📊 Tokens — total: 80792, input: 57834, output: 22958, reasoning: 22002

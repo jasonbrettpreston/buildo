@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:34:03.070Z file_sha256=9e1edd749cc234b23533eef747062007aaecc9aa53b1cf851e3b34c5b730f390 prompt_sha256=5aa158b3de3926d683cd9c36eb0f3da5f959b35be6d4998f38689e5c08f43a6d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"" — the current reading frame attributes to RR-0384 a verbatim "Approved" that RR-0384 does not say, the pasted operator words are "These look great - teh 13 are perfect. Task 430 becomes three small things...", and because the frame is regex-required on every reading the misquote is printed under all 12 rows and forced onto every later reading — quote the real operator words, or cite the ruling that says "Plan approved" (RR-0378), per reading.
+
+BUG severity=HIGH — m.14 "Amendment status is tracked and shown, defaulting to not_verified," — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium" beside "Status: RULED 2026-11-11" and the unchanged headline "estimated low, user medium, verified high" — a substantive change to the rule is shown as lane text with no amendment status tracked or shown, and the line carries two contradicting confidences — record the confidence change as an amendment on FE-19 (status and date) or drop that clause from the reading.
+
+DEFER severity=MED — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a bold-led Ruling cell still prints the shared headline (the bold title), so a long bold-led ruling is still clipped to its title, and A-T2's "every headline is the plain text of its cell" holds only while no register row is bold-led, which this chunk cannot show — route bold-led cells through the plain cell too, or add a lock asserting no Spec 135 ruling cell starts with a bold span.
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things" — scripts/surfaces/generate-surface-handbook.mjs "so a cell not led by a bold span whose shared headline differs from its plain text prints the plain text" — this restores trailing provenance brackets the shared reader strips on cells that were never clipped, a display change beyond the three named items and a second place where Spec 136 and Spec 133 print one ruling differently — limit the plain-text fallback to cells that were actually clipped, or obtain an operator ruling for the bracket restore.
+
+MET — m.246 — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Current reading (lane text, notes 2026-11-12)" — the reading arrives as a dated note appended inside the row's Status cell, prior text kept, not as a rewritten cell.
+
+MET — m.75 — scripts/surfaces/generate-surface-handbook.mjs "The cell text above is kept." — the correction is appended as a note, no register text is edited or superseded in place.
+
+MET — m.321 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json "\"round\": 200" with "\"expected_moves\": []" — the round is pre-registered before the work commits with its expected moves stated as none.
+
+MET — m.1 — scripts/surfaces/_schema/surface-rule-map.json adds the fe.45..fe.57 lines and FE-45..FE-57 rules — the committed generated JSON is regenerated with the handbook and stays the read path checked by the drift lock.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: m.0, m.1, m.75, m.246, m.321
+
+---
+⏱  88561ms (88.6s)
+📊 Tokens — total: 56274, input: 40175, output: 16099, reasoning: 15224

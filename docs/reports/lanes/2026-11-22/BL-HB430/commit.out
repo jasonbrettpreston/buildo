@@ -1,0 +1,99 @@
+=== GREEN commit A 0fe6e7712 (2026-11-22): real hooks, tail ===
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ✓ src/tests/surfaces/handbook-rule-map.logic.test.ts (26 tests) 165ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  15:46:04
+   Duration  2.61s (transform 2ms, setup 4ms, collect 19ms, tests 165ms, environment 0ms, prepare 18ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 2 file(s)
+[wf1/inc1b-hb430 0fe6e7712] feat(136_mcfrontend_handbook): MF-95 A, Spec 136 prints each McFrontend ruling whole (no 300-character clip)
+ 5 files changed, 111 insertions(+), 26 deletions(-)
+
+=== commit 0 62b2ffed6 (records): tail ===
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 0 file(s)
+[wf1/inc1b-hb430 62b2ffed6] docs(135_mcfrontend_decisions_register): MF-95 INPUTS.2 queue row, prereg and panel record (Increment 1·B)
+ 4 files changed, 127 insertions(+), 2 deletions(-)
+ create mode 100644 docs/reports/panels/MF-95.json
+ create mode 100644 scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json
+
+=== GREEN commit B 25755f51a (2026-11-22): real hooks, tail ===
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ✓ src/tests/surfaces/handbook-rule-map.logic.test.ts (35 tests) 184ms
+
+ Test Files  1 passed (1)
+      Tests  35 passed (35)
+   Start at  15:50:11
+   Duration  2.67s (transform 2ms, setup 4ms, collect 20ms, tests 184ms, environment 0ms, prepare 18ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 2 file(s)
+[wf1/inc1b-hb430 25755f51a] feat(136_mcfrontend_handbook): MF-95 B, 12 Spec 136 lines carry a Current reading of their dated notes
+ 6 files changed, 176 insertions(+), 47 deletions(-)
+
+=== commit C REFUSED (2026-11-22): pre-commit system-map drift lock (src/tests/system-map.infra.test.ts), real hooks ===
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/system-map.infra.test.ts > system map — derived, never hand-edited (drift lock) > the committed map is byte-identical to what the specs currently generate (run `npm run system-map` to fix)
+AssertionError: expected '# Buildo System Map\n**Single Source …' to be '# Buildo System Map\n**Single Source …' // Object.is equality
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  15:53:15
+   Duration  503ms (transform 34ms, setup 8ms, collect 8ms, tests 290ms, environment 0ms, prepare 26ms)
+
+=== commit C attempt 2 REFUSED (2026-11-22, after Q8): pre-commit related run, 2 failed of 59 ===
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 A — Spec 136 prints every ruling whole (no clip) > A-T2 real register: no headline ends in an ellipsis; the 16 rows clipped before MF-95 are longer than 300; every headline is the plain text of its cell
+AssertionError: FE-54: expected 'A visible state for every failure. "a…' to be 'A visible state for every failure. "a…' // Object.is equality
+
+Expected: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39)."
+Received: "A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."."
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > MF-95 C — the thirteen RR-0384 rows > C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap
+Error: ENOENT: no such file or directory, open '/var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mf18-Jf9nMs/scripts/surfaces/_schema/surface-rule-map.json'
+ ❯ Object.mapped [as writeFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 57 passed (59)
+   Start at  16:00:48
+
+=== GREEN commit C d429b287d (2026-11-22, after Q8 and Q9): real hooks, tail ===
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-hb430
+
+ ✓ src/tests/surfaces/handbook-rule-map.logic.test.ts (39 tests) 332ms
+ ✓ src/tests/backlog/rule-lists-table.logic.test.ts (21 tests) 1211ms
+   ✓ V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none 378ms
+
+ Test Files  2 passed (2)
+      Tests  60 passed (60)
+   Start at  16:06:34
+   Duration  4.13s (transform 3ms, setup 11ms, collect 43ms, tests 1.54s, environment 0ms, prepare 39ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 3 file(s)
+[wf1/inc1b-hb430 d429b287d] feat(135_mcfrontend_decisions_register): MF-95 C, thirteen OWED register rows from the RR-0384 list, Spec 136 regenerated
+ 9 files changed, 339 insertions(+), 21 deletions(-)
+

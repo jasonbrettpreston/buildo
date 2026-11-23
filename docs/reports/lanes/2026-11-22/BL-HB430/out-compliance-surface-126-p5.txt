@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:50:48.853Z file_sha256=5adbcfc223a94ba3ed9a82f07f440473d8a04d3f8eba4f4e66ebf3b577d6748e prompt_sha256=d2d6763169f722cfa977c7ede1ffd3bfb9a34526ac86bf36e3f612c506af1087
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=MED — RR-0384 "make each line reflect its notes" (operator, "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines") — .cursor/MCFRONTEND-QUEUE.md "the 12 rows of plan section 17.3 carry one Current reading dated note each, printed on their line and refused by `--check` when stale" and pasted lane note "12 Current reading dated notes appended to Spec 135 rows FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39" — the ruling is written over "each line" but the done-condition and commit B cover 12 rows only, and no pasted text scopes the universal down to 12 — add to the row which lines are deliberately out (and under which task) or extend commit B to every non-OWED ruling line.
+
+DEFER severity=MED — RR-0390 "task-430 output review size: option A, one larger review message, tried once" / "Let's try A." — docs/reports/panels/MF-95.json "the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the panel's output plan prescribes one compliance run per governing rule list, not the single larger review message the ruling names — rewrite the output field as one combined review message covering the whole diff, tried once, and drop "once per governing rule list".
+
+DEFER severity=LOW — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-95.json "seats": "DeepSeek plan lens set, rounds 1 and 2 (grounded)", "integration, reality-check and regression seats (plan)", "separate plan grounder Cairn-Ground-P430", "DeepSeek output lens set (owed at output)" — the ruling-named engineering seat has no entry in the panel's seats list even though the panel's own card cites RR-0385 — add the engineering seat (and its holder) to seats.
+
+DEFER severity=LOW — pasted lane acceptance "section 2 28,691 characters, 57 lines" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the generated page records 28,690 for the same section the lane measured at 28,691 (and commit C noted 28,664), so one of the three figures is stale — regenerate the page and reconcile the figure with the acceptance measure.
+
+MET — RR-0384 "add these 13 lines" with "one reserved lock path each" — docs/specs/00-architecture/00_system_map.md — the Spec 135 row gains exactly the 13 lock paths named in the lane record (`client-glass-boundary`, `ui-library-set`, `tunables-are-data`, `scratch-mocks-not-in-repo`, `scope-fence`, `auth-checkout-hosted`, `nav-tab-switch`, `parcel-id-names`, `page-set-pointer`, `failure-state-declared`, `admin-same-descriptor`, `lock-planted-defect`, `a11y-category`).
+
+MET — RR-0380 "surface specs dropped once the handbook has the critical items" (transition kept out of this task) — .cursor/MCFRONTEND-QUEUE.md "Not in this row: dropping Specs 126-128 from the review table (task-431), the locks of the new rows (task-434)" — the deferral is declared in the row and in the panel followups.
+
+MET — RR-0384 "stop the handbook clipping" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" against the deleted "13,783", and the web-admin and phone totals move by exactly 14,907 + 27,636 = 42,543 with parts 18 to 20 — the measured growth matches an unclipped rules section.
+
+MET — queue rule "This file is the ONE source of MF task ids. A task not listed here is not done." + "FE rows owned: none." — .cursor/MCFRONTEND-QUEUE.md — the MF-95 row is added with "FE rows owned: none." (correct, its new register rows are OWED) and the first value on the line is moved to "Next free id: **MF-96**" with MF-94/MF-95 accounted for in the dated note.
+
+REJECT — Spec 126 §10 "One row per surface, every column derived, nothing typed" — accused of re-typing registry data in docs/specs/00-architecture/00_system_map.md — the edited row is Spec 00's TESTS list for Spec 135, not the /admin/surfaces registry page, and no pasted clause governs it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 0
+Rules met: none
+
+---
+⏱  89070ms (89.1s)
+📊 Tokens — total: 39222, input: 22035, output: 17187, reasoning: 15986

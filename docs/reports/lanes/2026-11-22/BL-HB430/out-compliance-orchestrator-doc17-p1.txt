@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:40:20.943Z file_sha256=1669c0fb2675df8752799693b9e493758eaab9c99750fb5a93cf3878f9798092 prompt_sha256=0afd0f7d66279eded74c59cf4955b22d77c6774c084e0d5eaa512013a4c6f775
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — .cursor/MCFRONTEND-QUEUE.md:651 "RR-0384, operator, verbatim: \"Approved\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1903`)" — the row's only ruling quote for a three-part scope is the one word at :1903, a line the pasted decisions do not carry (cannot see), while pasted RR-0384 records the operator's words at :1901 — cite :1901 and quote "These look great - teh 13 are perfect. Task 430 becomes three small things" so the row's authority matches the register.
+DEFER severity=MED — task-430 card "Not in this row: dropping Specs 126-128 from the review table (task-431), the locks of the new rows (task-434)" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts` ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the map row now declares the 13 task-434 lock files as Spec 135 test surfaces while the same change states all 13 paths are absent, so the row asserts locks the row itself excludes — land the map addition with the lock files (task-434) or keep the paths out of the tests column until they resolve.
+DEFER severity=LOW — pasted acceptance "(1) ... section 2 28,691 characters, 57 lines" — docs/reports/generated/rule-lists-by-kind.md:32 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the generated figure and the lane's acceptance figure disagree by one character, so one of the two is stale — regenerate and reconcile the count before the page is relied on.
+DEFER severity=LOW — RR-0390 task-430 output review size "Let's try A." (option A, one larger review message, tried once) — docs/reports/panels/MF-95.json:14 "\"cards\": [ RR-0384 ... RR-0385 ... ]" — the panel record lists RR-0384 and RR-0385 but not RR-0390, and the same diff shows surface-135 going to 3 parts (docs/reports/generated/rule-lists-by-kind.md:55 "| surface-135 | ... | 111,851 | 3 |"), the opposite of one larger message — record RR-0390 in the panel and state which single review message the output stage uses.
+
+MET — RR-0380 "drop the full engineering when arts can be sent" — docs/specs/00-architecture/00_system_map.md:99 — rows 126, 127 and 128 are context only, nothing deleted or rewritten from them, so the drop stays with task-431.
+MET — RR-0385 "Label all realted tasks McFix Final" — pasted card line "labels: McFix, McFix V2, McFix Final" — the label set is carried on the task card.
+MET — card "Files: ..., .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, ..., docs/specs/00-architecture/00_system_map.md" — every path in this chunk (MCFRONTEND-QUEUE.md, rule-lists-by-kind.md, panels/MF-95.json, 00_system_map.md) is named on the Files line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  95272ms (95.3s)
+📊 Tokens — total: 45520, input: 27328, output: 18192, reasoning: 17340

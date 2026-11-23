@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:40:45.159Z file_sha256=6a051123eb3f06c73f5244cdc04ebfccef7db31228ac8a723a2b9ab9a1349659 prompt_sha256=6b190cec2330354897fda575fc240bfdb941130996915667ba20b473c5e57ea2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-orchestrator-doc17-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things..." — scripts/surfaces/generate-surface-handbook.mjs:83 "RR-0384, operator, verbatim: \"Approved\"" — the reading frame requires a verbatim word that RR-0384 does not contain, so the Current reading notes present an operator quote that was never said — replace the frame with an actual RR-0384 excerpt or drop the word verbatim and label it a paraphrase
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs:67 "return clipped || shared !== plain ? plain : shared;" — the generator also prints the plain cell whenever the shared headline differs from plain, even when no clip occurred, which changes unclipped headlines and is not one of the three ruled changes — restrict the branch to the clipped case or obtain an operator ruling for the Q9 bracket behavior
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(rows.filter((r: Row) => readingOf(r)).map((r: Row) => r.id)).toEqual(READING_IDS);" — the lock pins exactly 12 rows with a Current reading, so lines that have dated notes and no reading still do not reflect their notes — add readings for every row with dated notes or narrow the clause by an operator ruling
+DEFER severity=MED — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs:65 "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a long Ruling cell that starts with a bold span still returns the shared headline, which clips at 300, so a clipping path remains — apply the clip test before the bold return or return the whole plain text when the shared headline ends in the clip mark and the plain cell is longer than 300
+MET — RR-0384 "stop the clipping" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.18 line — the formerly clipped rows now print whole and the handbook has no line ending in the clip mark
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.45 to fe.57 — thirteen new OWED lines are present, each with one reserved lock path
+MET — RR-0384 "Item 9 stays a pointer" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.53 — the pointer row states that the tables are not copied here
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+Rules met: none
+
+---
+⏱  141691ms (141.7s)
+📊 Tokens — total: 67624, input: 37813, output: 29811, reasoning: 29166

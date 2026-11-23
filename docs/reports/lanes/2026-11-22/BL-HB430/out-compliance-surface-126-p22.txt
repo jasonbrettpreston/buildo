@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:48:52.502Z file_sha256=6f03885e4715d9029a037646abaa42ea0886c5213894a66f543a4729c6c25f03 prompt_sha256=b23bcc84d6b308bff28f88060fdff0a1f210c8c129fac752194aac036ced9c27
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p22.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs (added hunk at +43,69) "RR-0384, operator, verbatim: 'Approved'; lane text restating the notes dated ([0-9, -]+) of this row, not an operator word and not a ruling" — the frame the generator enforces (and the lock helper `readingNote()` copies, src/tests/surfaces/handbook-rule-map.logic.test.ts "RR-0384, operator, verbatim: 'Approved'") attributes the word "Approved" to the operator under RR-0384, whose pasted words contain no such quote, so all 12 Current reading notes misquote the operator verbatim — remove the verbatim quote from the frame, or quote RR-0384's real sentence ("These look great - teh 13 are perfect").
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.19** ... Confidence by source: estimated low, user medium, verified high. ... Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium" — a RULED line now prints a reading that reverses its own headline while the same line still says "Status: RULED 2026-11-11", and the reading is labelled lane text and not a ruling although its source note is the amending ruling; the page shows two answers with no stated precedence — state the superseded clause in the reading and cite the note's authority, or drop the reading until it is a register note.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — src/tests/surfaces/handbook-rule-map.logic.test.ts "const READING_IDS = ['FE-01', 'FE-02', 'FE-07', 'FE-11', 'FE-14', 'FE-18', 'FE-19', 'FE-20', 'FE-29', 'FE-31', 'FE-38', 'FE-39'];" — readings exist only for 12 pinned rows, so any other RULED row whose later dated note supersedes its headline still prints the superseded text as its line; the register file docs/specs/02-web-admin/135_mcfrontend_decisions_register.md is not in this chunk (cannot see), so completeness at 12 is unverified — confirm at landing that these 12 are every row whose notes amend the ruling.
+
+DEFER severity=LOW — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs (added hunk at +43,69) "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a ruling cell led by a bold span still returns the shared headlineOf result, so clipping is removed only for cells with no leading bold span, and a bold-led cell over the 300-character cap would still print clipped — bounded today because the lock asserts no real headline ends in the clip ellipsis, but the branch is unguarded by that lock.
+
+DEFER severity=LOW — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.45** ... 'everything else is server-projected.' (Spec 128 Rule 2, 128:29)" — eight of the 13 published quotes rest on sources not pasted here (128:29, 128:30, 128:39, 128:55, 128:127, 128:205, 128:206, 127:59), so their accuracy against the cited line cannot be judged from the pasted context — verify each quote at landing, as fe.52 and fe.55 already check out against the pasted 126 text.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs (added hunk at +43,69) "function wholeHeadline(ruleCell)" — the clipped rows print the plain Ruling cell, and no rendered line ends in the clip ellipsis.
+
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs (added hunk at +182) "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — the reading is appended to the headline line and the Status line format is unchanged.
+
+MET — RR-0384 "add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json — exactly thirteen entries fe.45 to fe.57 added, each status owed with one handbook_line and one register anchor.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 ... The tables are not copied here." — item 9 is a pointer row, not a copied table.
+
+MET — 126 §6.2 rule 5 "The admin reads the same tables through RLS, not around it" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.55** The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience" — the new rule line restates the pasted clause, no second table, no conflict.
+
+MET — 126 §7 "**R-04:** `parcel_ref` = the municipal string, `parcel_pk` = the serial." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.52** ... parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." — the published rule matches the pasted R-04 wording.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 43   Unmet: 1
+Rules met: none
+
+---
+⏱  88272ms (88.3s)
+📊 Tokens — total: 55225, input: 37923, output: 17302, reasoning: 15881

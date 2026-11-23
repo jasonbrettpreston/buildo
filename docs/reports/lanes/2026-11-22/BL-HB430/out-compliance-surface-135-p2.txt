@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:57:38.520Z file_sha256=16f65c85fef67d5ab64bb3dfdaab7432241230de6d43776cf1593b99415cbe27 prompt_sha256=6183dcfc0cda7a8ebe2e2b66a3042f7a501c7fc5f9673f89ae9ef22e211ea713
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-14 "The lock wording is restated: no MF task outside Phase 0-2 or convert-on-touch" — .cursor/MCFRONTEND-QUEUE.md "**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole, a Current reading on 12 lines and 13 new OWED register rows" — the row is placed as a Phase 2 row (card note: "MF-95 queue row under Phase 2") but FE-01 defines Phase 2 as "every MaxBLD page on one standard (Spec 126 §11b)" and this task converts no page, so no pasted clause puts a review-inputs row inside Phase 0-2 — cite the operator ruling that assigns INPUTS.2 to Phase 2 in the row's dated note, or move the row to the convert-on-touch section.
+
+DEFER severity=LOW — FE-02 "rulings verbatim and cited" — .cursor/MCFRONTEND-QUEUE.md "· ruling: \"Approved\"" — the cited operator word is placed at MORNING-DECISIONS.md:1903, but the pasted RR-0384 text ends at :1901 ("These look great - teh 13 are perfect. Task 430 becomes three small things"), so the :1903 verbatim cannot be seen and the Status-line rule quote cannot be checked here — quote the :1903 line in the row's dated note beside the Status-line quote.
+
+DEFER severity=LOW — FE-09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves" — docs/specs/00-architecture/00_system_map.md "src/tests/surfaces/client-glass-boundary.logic.test.ts, ..., src/tests/surfaces/a11y-category.logic.test.ts" — the 13 reserved lock paths are now listed as Spec 135 locks while the lane records them "all 13 absent", so the Lock column resolves only as a reserved path until task-434 lands the files — mark the 13 entries as reserved in the same note that hands them to task-434, or leave the system map to task-434.
+
+MET — FE-16 — docs/reports/generated/rule-lists-by-kind.md "surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file" — 135 stays the register and 136 the generated handbook at the ruled paths, with no spec file moved.
+
+MET — FE-08 — docs/reports/generated/rule-lists-by-kind.md "surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1" — the handbook remains one generated spec at the ruled path, still one part.
+
+MET — FE-02 — .cursor/MCFRONTEND-QUEUE.md "the scope sentence he pasted back is the orchestrator's text, which he approved" — the ruling is quoted verbatim with a file:line and orchestrator text is flagged as not the operator's word.
+
+MET — FE-01 — .cursor/MCFRONTEND-QUEUE.md "MF-94 is held by lane BL-MFRULES (task-388, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-94)" — the chunk does not touch the 126 status line or the mcfrontend-status lock that FE-01's ruling governs.
+
+MET — FE-11 — docs/reports/panels/MF-95.json "blockers": [] — no admin task is added or moved; the Phase 2 admin list MF-30, MF-37, MF-40 is untouched by this chunk.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: FE-01, FE-02, FE-08, FE-09, FE-11, FE-16
+
+---
+⏱  136070ms (136.1s)
+📊 Tokens — total: 53349, input: 28010, output: 25339, reasoning: 24472

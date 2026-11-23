@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:44:49.656Z file_sha256=b651a294bd41c6cdde42f7d2f3f3f71c7702839cf5951b65af621208b4668968 prompt_sha256=be09895c989fe30a2215f37691fcb5a590a9cebb3b83f29e620e28cc3fc76c32
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 Rule 2 (McLane amendment) "A queue-row task: the queue row stays the record and the Backlog task mirrors it by hand under rule 3 (no synchroniser)." and §1 "their Backlog tasks link to them (label `queue-row`)" — pasted task-430 front matter "labels: McFix, McFix V2, McFix Final" — the change gives task-430 a queue row (MF-95) so it becomes a queue-row task, but the Backlog side carries no `queue-row` label and no MF-95 ref, so §5 step 4a ("For every task labelled `queue-row`, compare its Backlog status with the queue row's word") can never see this pair — add the `queue-row` label and an MF-95 ref to task-430 so the record/mirror link exists
+BUG severity=MED — Spec 137 §4 Rule 3 dated note (task-410) "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records." — the new row ".cursor/MCFRONTEND-QUEUE.md" "Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the amended Rule 3 moves the status only in the closing commit, whose staged-path whitelist does not name a queue file, so MF-95 cannot legally move to BUILT and merges still RUNNING with a `next` describing commits d429b287d already in the same change — record an operator ruling adding the queue file to the close paths, or state on the row which commit carries the status move
+DEFER severity=MED — Spec 137 §5 step 7 "each 'next free id' number is greater than every claimed id of its kind in the ID ledger" — pasted implementation note "FE-46..FE-58 claimed in ~/Buildo-scratch/ids for the renumbering ... Next free id FE-58 by a dated note" — FE-58 is inside the claimed range and is also set as the next free id, so the register counter and the ledger disagree by one (Spec 135 and the ledger are not in this chunk, so the register line is cannot see) — claim FE-46..FE-57 and keep FE-58 as the counter, or set the counter to FE-59
+MET — Spec 137 §3 Rule 1 (status line form) — .cursor/MCFRONTEND-QUEUE.md "+Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows) (lane BL-HB430, task-430) · ruling: "Approved"" — one status line, fields present, sitting directly under the bold heading per "Where the line sits"
+MET — Spec 137 §2 McFrontend home and heading form — the row is inserted in .cursor/MCFRONTEND-QUEUE.md just above "## Later: convert-on-touch" with heading "**MF-95 INPUTS.2: the McFrontend handbook (Spec 136) shows each line whole," ending in the status word
+MET — Spec 137 §3 closed word list — "Status: RUNNING" uses one of the nine listed words
+MET — Spec 137 §4 Rule 7 — "since 2026-11-22 · expires 2026-11-29" is the 7-day default, and opened (expires minus 7) equals the since date
+MET — Spec 137 §4 Rules 4 and 10 (M-246 dated note, verbatim) — "Dated note 2026-11-22 (M-246, prior text kept; MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384, operator, verbatim: "These look great - teh 13 are perfect" and "Approved"" keeps the earlier "the line read "Next free id: **MF-94**" before this note" text and the operator's words exactly
+MET — Spec 137 §2 note (the counter line is the one tools read) — head line now reads "Next free id: **MF-96** (ids are never reused)" with MF-94 (held, task-388) and MF-95 (taken) both accounted for
+MET — pasted card "nothing in Specs 126, 127, 128 deleted or rewritten" — the chunk touches no path under 126/127/128 and rule-lists-by-kind.md keeps their rows unchanged
+MET — pasted card Files line — all four paths under review (.cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/, docs/specs/00-architecture/00_system_map.md) are on the task's Files line
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  141865ms (141.9s)
+📊 Tokens — total: 55912, input: 26827, output: 29085, reasoning: 27945

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:42:09.322Z file_sha256=4918d2b9f33685dc08edea319424444256e17a68de17071ca10ea86136e5f886 prompt_sha256=05d4b07e558b87bb0b7069f474876ef2f7c7b3059e7b8a79c8b750a08f9e384a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — R-HK "a row citing an unknown decision or log" — .cursor/MCFRONTEND-QUEUE.md:648 "ruling: \"Approved\"" and "RR-0384, operator, verbatim: \"Approved\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1903`)" — the quote the row rests on is anchored at :1903, which is not in the pasted record of RR-0384 (its verbatim, per the decisions block, is the :1901 sentence only), so the row's ruling cannot be traced from what is pasted — cite the :1901 sentence as the row's ruling or add the :1903 line to the decision log.
+
+DEFER severity=LOW — RR-0385 "proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — docs/reports/panels/MF-95.json:10 "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — the seat and round content attributed to RR-0385 is not in the pasted verbatim of that ruling (cannot see the rest of the entry) — name the decision line that carries the seat/rounds text in the card.
+
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md:646 — the done-condition names exactly those three, in that order: no clip ellipsis, 12 Current readings printed and refused when stale, 13 OWED rows.
+MET — RR-0380 "drop the full engineering when arts can be sent" — docs/reports/panels/MF-95.json:25 — dropping Specs 126-128 is carried as task-431 and explicitly kept out of this row.
+MET — MCFRONTEND-QUEUE header "Next free id: **MF-96** (ids are never reused)" — .cursor/MCFRONTEND-QUEUE.md:5 — MF-94 recorded as held by BL-MFRULES, MF-95 claimed, no id reused, prior value :94 kept in the dated note.
+MET — R-GX "a historical spec ... carries a rule id not in it (a `rule-map.json` id whose `source.file` is the spec, or a register-shaped `| R-x |` row)" — docs/specs/00-architecture/00_system_map.md:100 — no role banner and no `| R-x |` row is written into any spec here; the only spec edit extends row 135's test list and the 13 new rows land in the Spec 135 register.
+MET — R-GW "A spec in `docs/specs` opens with exactly one `> **Role: <role>.** <what it decides>` line" — docs/specs/00-architecture/00_system_map.md:100 — the change adds no second banner and does not edit an existing header line.
+MET — R-HM "its outputs are generated, never hand-edited" — docs/reports/generated/rule-lists-by-kind.md:32 — the counts move by exactly the two spec deltas (679,963 + 14,907 + 27,636 = 722,506; parts 18 + 2 = 20), consistent with regeneration rather than a hand patch.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: R-GW, R-GX, R-GU, R-HM
+
+---
+⏱  160281ms (160.3s)
+📊 Tokens — total: 47601, input: 28867, output: 18734, reasoning: 17908

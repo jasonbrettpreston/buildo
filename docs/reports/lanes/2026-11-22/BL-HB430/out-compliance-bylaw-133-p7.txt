@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:36:06.803Z file_sha256=3803d3603eacbc425a57dba2dbaf71bf31d0ee50ba1b2288dfe1a1fbcc2e8dad prompt_sha256=682c476a4691d56dbb881aa6d4cc9af7cadda97659c8749dea38801cd480cf43
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "D n/a, P owed, F pass, S pass, H n/a, E pass" — "owed" is not one of the three permitted Six values, and the register's own FE-31 note reads "it reads n/a with its reason because a RULED row's Six cell answers pass, n/a (reason) or FAIL (Spec 128 §4.9; Spec 135 rule 4)", so all 13 new rows (FE-45..FE-57) break rule 4 — replace "P owed" on all 13 rows with "P n/a (lock owed)" or FAIL and keep the owed state in the Status and Lock cell.
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — 135_mcfrontend_decisions_register.md FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" against FE-10 "FE-10 leaves the FE-09 lock's pending-flip list in this commit." — FE-09 still prints "(FE-10 today)" and got no Current reading, so the operator's second item is met on only 12 of the rows whose dated notes qualify their headline — append a Current reading to FE-09 (and any other row whose notes qualify it) or record in the register why the 12 are the whole set.
+DEFER severity=LOW — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md FE-45 "operator, verbatim: \"Approved\"" — the pasted RR-0384 record ends at "copying tables." and contains no "Approved", which all 13 rows and 12 notes quote as the operator verbatim, and the cited MORNING-DECISIONS.md:1903 is not pasted — cannot see, confirm line 1903 in the lane record before the row cites the word as verbatim.
+MET — RR-0384 "add these 13 lines" — 135_mcfrontend_decisions_register.md FE-45..FE-57 — thirteen rows added, one per approved item, in item order.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md FE-53 "POINTER, not a copy ... The tables are not copied here." — the pointer row copies no table.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135_mcfrontend_decisions_register.md FE-45 "src/tests/surfaces/client-glass-boundary.logic.test.ts" — all 13 reserved paths are src/tests/surfaces/*.test.ts and the lane note records all 13 absent.
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — the chunk touches only Spec 135.
+MET — Spec 135 rule 3 form, prior text kept — 135_mcfrontend_decisions_register.md "Dated note 2026-11-22 (M-246, prior text kept; ...)" — the Next free id note keeps every earlier dated note and changes only the first value to FE-58, matching FE-45..FE-57.
+MET — RR-0384 "make each line reflect its notes" — 135_mcfrontend_decisions_register.md FE-19 "Confidence for a user lot-size entry reads high, not medium ..." — the reading restates the row's earlier notes and rules nothing new.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  150763ms (150.8s)
+📊 Tokens — total: 80339, input: 50092, output: 30247, reasoning: 29262

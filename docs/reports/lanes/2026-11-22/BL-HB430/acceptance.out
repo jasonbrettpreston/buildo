@@ -1,0 +1,26 @@
+(2) a later dated note after the FE-39 reading:
+[surface-handbook] FE-39: a dated note follows the Current reading; restate it
+real: FE-01 FE-02 FE-07 FE-11 FE-14 FE-18 FE-19 FE-20 FE-29 FE-31 FE-38 FE-39
+(3) new lines:
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+(4) Spec 133 and bylaw dir since launch base 60b601cc9:
+(empty above = untouched)
+(5) checks:
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (57 rules)
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+surface-validate current; S-gen ok · S-g
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+[spec-split-check] clean — 43 move(s) verified, 11539 citati
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current

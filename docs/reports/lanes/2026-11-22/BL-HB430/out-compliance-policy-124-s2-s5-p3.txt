@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:42:09.668Z file_sha256=51494648a6739ab2b74ac3e71179ffb36458c64f7ed909b9df2d95981e1aeeae prompt_sha256=f20fe100fe8d72e70d6ffe118086eab6173d913cf8a0d8b8b8cd6d260dc17134
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — R-Z "corrected to `R-AX` throughout before landing (never two rows sharing one id)" — docs/reports/panels/MF-95.json:28 "FE ids of the new rows are placeholders until landing: lane BL-MFRULES (task-388) holds the first free id on an unlanded branch; the second lander renumbers" — the branch lands its 13 rows as FE-45..FE-57 while FE-45 is already claimed by the unlanded BL-MFRULES lane, so two id sets circulate until the second lander moves them — start the 13 rows at the free, already-claimed range FE-46..FE-58 now and leave FE-45 to BL-MFRULES.
+DEFER severity=LOW — card scope "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each (the locks are task-434's)" — docs/specs/00-architecture/00_system_map.md:100 "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the Spec 135 row now lists the 13 task-434 lock tests as its tests while the run's own record says all 13 lock paths are absent — either add those paths with task-434 or mark them reserved in the row.
+DEFER severity=LOW — RR-0390 "task-430 output review size: option A, one larger review message, tried once" — docs/reports/panels/MF-95.json:13 "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the panel's output field does not record the RR-0390 size decision the owed review will be judged by — add one line naming option A, one larger message, tried once, to the output field.
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md:650 "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each (the locks are task-434's)" — the row carries exactly the three items and its "Not in this row" clause excludes task-431 and task-434.
+MET — card Files line "Files: scripts/surfaces/generate-surface-handbook.mjs, ... docs/specs/00-architecture/00_system_map.md" — docs/reports/generated/rule-lists-by-kind.md:32 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — every path touched in this chunk (queue, panel, rule-lists table, system map) is on the Files line.
+MET — R-Z "never a restart at `R-A` under a new sub-scheme, and never a silent renumbering to close the R-S gap" — .cursor/MCFRONTEND-QUEUE.md:5 "Next free id: **MF-96**" — MF-94 stays held and MF-95 is claimed in the ledger, the front value advances to MF-96 and all prior note text is kept, no id reused or resequenced.
+MET — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator" — docs/reports/panels/MF-95.json:10 "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — the panel card records the seat and the two review rounds.
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — .cursor/MCFRONTEND-QUEUE.md:650 "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each" — the new rules land OWED with their locks deferred to task-434, so the register grows over time rather than in one block.
+
+VERDICT: PASS
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  217201ms (217.2s)
+📊 Tokens — total: 47609, input: 21756, output: 25853, reasoning: 24859

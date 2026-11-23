@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:33:43.418Z file_sha256=fb4ae479ed1f12aa9e72670968aa72af01166a5d42af431720acf44ffa20338e prompt_sha256=12bc0dc7b8ca676c132c9d2063408e9b09841b29bb3ae88c0a6cbc8996793330
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45 "operator, verbatim: "Approved" ... (last, line 1903)" — the pasted RR-0384 record cites MORNING-DECISIONS.md:1901 and ends at "does not grow by copying tables.", so the words "I have not started task 430. You said you would read the list first, and this is it. Approved" cited for all 13 rows cannot be seen in this run — cite the :1901 approved sentence as the verbatim basis, or attach the :1903 reply text so the quote is checkable.
+
+DEFER severity=LOW — FE-02 note "Its own row is owed as FE-40, after FE-35..FE-39 land." against the same file "FE-40 is taken by the McTest row (MF-78), so the first value on the line, the one the Spec 136 generator reads, is FE-41." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-02 "Current reading: The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b." — the added reading leaves the stale FE-40 claim standing, so one line carries two answers about the same id — extend the FE-02 Current reading to record where that owed row went.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 "Current reading ... (from notes dated 2026-11-09, 2026-11-11, 2026-11-20)" against that row's 2026-11-10 note "`surface.schema.json` grows by `render.list.id_field`" — the reading restates three note dates and drops the 2026-11-10 schema-growth note, so the line still does not reflect all its notes — add the 2026-11-10 restatement, or name the note as not restated.
+
+DEFER severity=LOW — FE-49 clause quote "`lead_parcels` is read by no surface" against its own "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock." — no step removes the existing name, so the lock task-434 builds against this clause either fails red on delivery or needs a carve-out the row does not state — name the task that clears the descriptor note, or state the carve-out.
+
+DEFER severity=LOW — FE-01 "Current reading: ... The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." against that row's kept Status cell "(126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2)" — the line now gives two answers for one lock assertion and does not mark the cell parenthetical superseded — mark it superseded in the reading, or correct the cell text.
+
+MET — RR-0384 "add these 13 lines" — FE-45..FE-57 — thirteen OWED rows added, item 9 as the pointer row and item 4 as its own row.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — FE-53 — "POINTER, not a copy ... The tables are not copied here."
+
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten." — the chunk's only path is docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — no 126/127/128 line is edited.
+
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — the 13 Status cells — each path is `src/tests/surfaces/*.logic.test.ts`, reserved, "all 13 absent".
+
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — the diff adds only, "prior text kept" on every touched row.
+
+MET — RR-0384 "make each line reflect its notes" — FE-01, FE-07, FE-11, FE-14, FE-18, FE-19, FE-20, FE-29, FE-38, FE-39 — reading notes added, each labelled "lane text ... not an operator word and not a ruling".
+
+REJECT — bylaw-133 §3 "Rows with an OWED marker (222 in force)" — accused of discharging or re-marking a bylaw row — no hunk of this chunk touches docs/specs/01-pipeline/133_bylaw_handbook.md, so every pasted marker stays in force.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.220, m.247, m.251, m.256, m.259, m.265, m.307, m.312, m.316, m.317, m.318, m.319, m.320, m.321, m.322, m.323, m.324, m.325, m.326, m.327, m.329, m.330, m.332, m.333, m.334, m.335, m.336, m.337, m.338, m.339, m.340, m.341, m.342, m.343, m.344, m.345, m.346, m.347, m.348, m.349, m.350, m.351, m.352, m.353, m.354, m.355, m.356, m.357, m.358, m.360, m.361, m.362, m.363, m.364, m.365, m.366, m.367, m.368, m.369, m.371, m.372, m.373, m.374, m.376, m.378, m.379, m.380, m.381, m.382, m.384, m.377, m.385, m.386, m.387, m.388, m.389, m.390, m.391, m.392, m.393, m.400, m.401, m.402, m.403, m.394, m.395, m.396, m.397, m.398, m.399, m.404, m.405, m.406, m.407, m.408, m.409, m.410, m.411, m.412, m.413, m.414, m.415, m.416, m.417, m.418, m.419, m.420, m.421, m.422, m.423, m.424, m.425, m.426, m.427, m.428, m.429, m.430, m.431, m.432, m.433, m.434, m.435, m.436, m.437, m.438, m.439, m.440, m.441, m.442, m.443, m.444, m.445, m.446, m.447, m.449, m.450, m.451, m.452, m.453, m.454, m.455, m.456, m.457, m.458, m.459, m.460, m.461, m.462, m.463, m.464, m.465, m.466, m.467, m.468, m.469, m.470, m.471, m.472, m.473, m.474, m.475, m.476, m.477, m.478, m.479, m.480, m.481, m.482, m.483, m.484, m.485, m.486, m.487, m.488, m.489, m.490, m.491, m.492, m.493, m.494, m.495, m.496, m.497, m.498, m.499, m.500, lc.15, lc.16, lc.17, lc.18, lc.19, lc.20, lc.21, lc.22, lc.24, lc.25, lc.26, lc.27, lc.38, lc.40, lc.43, lc.44, lc.47, lc.48, lc.63, lc.64, lc.65, lc.66, lc.67, lc.68, lc.69, lc.2, lc.3, lc.14, lc.28, lc.29, lc.30, lc.31, lc.33, lc.34, lc.35, lc.36
+
+---
+⏱  143291ms (143.3s)
+📊 Tokens — total: 82372, input: 52686, output: 29686, reasoning: 27596

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:38:12.823Z file_sha256=9a1c0f9052a483edbc7582857f7c6fcaf6fcc9d3cf0bf4f8638619dc0b4b0a61 prompt_sha256=406b7fac63eda944cc8ef4529306d5c378042d2a2c7b04df9b67bada1427de34
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-430 title "added as rule lines in the existing form" and register rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9)." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:14, added FE-45 row "D n/a, P owed, F pass, S pass, H n/a, E pass" — all 13 added rows put "owed" in the P slot, which rule 4 does not list (pass, n/a, FAIL) — write "P n/a (lock OWED, task-434)" or "P FAIL" so the cell stays in the register's own closed vocabulary.
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — 135_mcfrontend_decisions_register.md, FE-44 unchanged "NOT built in MF-83 groups 1 and 2: the length parts are pending without fields today", no "(from notes dated ...)" reading — only the 12 rows plan 17.3 named carry a Current reading, so other rows whose last dated note changes the printed line (FE-32's member grammar becoming a PATH, FE-44's unbuilt lengths) still print their unamended cell — add a Current reading to every row whose last dated note changes the line, or record in the register which rows plan 17.3 excluded and why.
+
+DEFER severity=LOW — added Next free id note "the first value on the line, the one the Spec 136 generator reads, is FE-58" — 135_mcfrontend_decisions_register.md, same note "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — FE-58 is both the first value the generator reads and inside the range already claimed for the renumber case, so the declared next free id is a claimed id — claim FE-58..FE-70 for the renumber case, or state that FE-58 is the first id the second lander takes.
+
+DEFER severity=LOW — Glossary "lock": "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — 135_mcfrontend_decisions_register.md, added FE-53 "PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling." — a test that asserts only two headings exist cannot be FE-53's lock under the pasted definition, so the reserved lock path overstates enforcement — keep FE-53 PROSE-ONLY with no lock path, or have task-434's test name FE-53 and assert a page ruling.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — 135_mcfrontend_decisions_register.md, FE-01 Current reading "The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." against the row's 2026-11-09 note "the lock asserts that the 126 status line names Phase 1 and Phase 2 and points to Spec 126 §11b.3 for the Phase 2 surfaces, plus the assertions of the 2026-11-06 note" — the printed reading drops the §11b.3 pointer and the 2026-11-06 assertions, so the line understates what the lock must assert — restate the full assertion set in the Current reading.
+
+REJECT — Spec 128 rule 4 "A rule without a lock is not yet a rule" — accused of adding 13 rules with no existing lock — not a real issue because every added row is OWED with an absent, reserved lock path printed as "lock owed", and RR-0384 approved exactly these 13 lines.
+
+MET — RR-0384 "add these 13 lines" — 135_mcfrontend_decisions_register.md, added FE-45..FE-57 — thirteen rows, one per item 1..13 of REPORT-429 section 3A, each naming its item.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 135_mcfrontend_decisions_register.md, added FE-53 — "POINTER, not a copy ... The tables are not copied here".
+MET — task-430 "nothing in Specs 126, 127, 128 deleted or rewritten" — diff paths ["docs/specs/02-web-admin/135_mcfrontend_decisions_register.md"] — this chunk touches only 135, no line of 126, 127 or 128.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  128044ms (128.0s)
+📊 Tokens — total: 74027, input: 48918, output: 25109, reasoning: 24017

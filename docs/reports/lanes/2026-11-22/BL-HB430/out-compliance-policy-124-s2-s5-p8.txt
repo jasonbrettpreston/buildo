@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:44:04.526Z file_sha256=c0d782b1636c3752524a00274570c213f87b11b49120faf61615cf425d88cdef prompt_sha256=b98c27325757cfbcd5f910df445b9b7e5794ab6762fea2d350da8064f36890e8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "if (/^\*\*/.test(ruleCell.trim())) return shared;" — the clip is stopped for every cell form except one: a Ruling cell that begins with a bold span still returns the shared 300-character clipped headline, so "stop the clipping" is partial (A-T2 would go red before a real row did) — fix: for a bold-led cell compare shared against plainCell and return the plain text whenever the shared result ends in the clip mark.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — src/tests/surfaces/handbook-rule-map.logic.test.ts "const READING_IDS = ['FE-01', 'FE-02', 'FE-07', 'FE-11', 'FE-14', 'FE-18', 'FE-19', 'FE-20', 'FE-29', 'FE-31', 'FE-38', 'FE-39'];" — seven rows that carry dated notes (fe.03, fe.06, fe.10, fe.13, fe.15, fe.32, fe.33, e.g. docs/specs/02-web-admin/136_mcfrontend_handbook.md "fe.13 ... · +3 dated notes") still print only a note count and no Current reading, so "each line" holds only for the 12 the approved plan pins — rationale: plan 17.3 scopes the 12, the cost is deferred prose not an unmet ruling.
+
+DEFER severity=LOW — card Description "the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 57**: 57 in force (21 OWED, whose lock is still to land), 0 history." — nothing in the material bounds Spec 136's growth (Implementation Notes measure the file rising 22,983 to 32,207 B), and R-GU's size-cap form is written for Spec 132 only; whether 122_split_manifest.json carries a cap for 136 is not visible — rationale: the only growth constraint RR-0384 states covers copied tables, which fe.53 honours, so this is bounded drift not a breach.
+
+REJECT — R-GW "A spec in `docs/specs` opens with exactly one `> **Role: <role>.** <what it decides>` line" — the change is accused of regenerating Spec 136 without a role banner — a spec without a banner sits on the closed shrink-only `role_banner_pending` list until it gains one, so a generated-handbook edit owes no banner and R-GX arm (vii) already gates it.
+
+REJECT — R-GX "a historical spec has no `historical_rule_ids` baseline, carries a rule id not in it" — the change is accused of adding rule ids FE-45..FE-57 into a spec outside a rule-id baseline — Spec 136 is the generated handbook role, not a historical spec, and the ids land in Spec 135 (the register) and surface-rule-map.json, so the historical-id lock does not reach them.
+
+MET — RR-0384 "stop the clipping" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**fe.39** ... The amendment text is policy text of doc-16, not operator words." — the formerly clipped rulings print whole (A-T1, A-T2 in handbook-rule-map.logic.test.ts assert no clip mark and headline equals the plain cell).
+
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — the last note in the strict form is read and printed on the row's own line for the 12 pinned rows, with refusals (i) to (vii) throwing.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**- fe.45** The client is just glass ... through **fe.57** Accessibility." — thirteen OWED lines fe.45 to fe.57 are rendered, and surface-rule-map.json carries the same thirteen ids.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**- fe.53** POINTER, not a copy ... The tables are not copied here." — item 9 is a pointer to Spec 126 §11b.3 and §11b.7 with no table copied.
+
+MET — card "the generated Spec 136 carries them as lines, by the existing generator and its lock" — scripts/surfaces/_schema/surface-rule-map.json "{\"id\": \"FE-45\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.45\"" and src/tests/surfaces/handbook-rule-map.logic.test.ts "C-T3: Spec 136 renders every row and counts the OWED rows from the register" — the rows arrive through the existing generator and its lock, and the backlog pin is computed from the register rather than pinned to 44.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  90143ms (90.1s)
+📊 Tokens — total: 56887, input: 39352, output: 17535, reasoning: 16275

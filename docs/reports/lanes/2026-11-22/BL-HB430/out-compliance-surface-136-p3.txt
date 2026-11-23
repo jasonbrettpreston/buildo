@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T02:00:23.963Z file_sha256=66e54598f47f5b44b3d292a24ed00c1d25957719987f8c52d81c6d62d9d59ec1 prompt_sha256=0a7caf7653d1d6a6260199fe03ac7763fe1e0450f51c9e41ddf4e646d1e5d104
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "a cell not led by a bold span whose shared headline differs from its plain text prints the plain text" — Q9 prints the plain cell also where the shared reader did NOT clip but merely stripped a trailing provenance bracket, so unclipped rows (e.g. the failure-state row) change wording beyond "stop the clipping" — confine the plain-cell branch to cells the shared headlineOf actually clipped, or record an operator word for Q9.
+
+REJECT — fe.16 — the change edits the tooling file scripts/surfaces/generate-surface-handbook.mjs against "No tooling change." — RR-0384 (2026-11-22) is later than fe.16 (2026-11-09) and explicitly names the generator change, and fe.53 states "the later operator ruling governs", so fe.16 does not bar this edit.
+
+REJECT — fe.09 — the change adds 13 rows whose Lock column names files that do not exist (C-T2 asserts fs.existsSync false) against "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — the pasted list already carries OWED rows with "Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts", so OWED is the register's established not-yet-resolving state and the new rows follow the same convention.
+
+MET — fe.08 — docs/specs/02-web-admin/136_mcfrontend_handbook.md "v1 covers the 57 FE rulings of Spec 135." — 135 stays the decisions register and 136 the generated handbook, no path moved.
+
+MET — fe.10 — scripts/surfaces/generate-surface-handbook.mjs and src/tests/surfaces/handbook-rule-map.logic.test.ts — the generator and its FE-10 lock are changed together so every register row still has exactly one line.
+
+MET — fe.30 — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.30 line — the formerly clipped fe.30 now prints whole and matches the pasted fe.30 clause text.
+
+MET — fe.44 — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 line — printed whole, matching the pasted fe.44 unit clause.
+
+MET — fe.53 — docs/specs/02-web-admin/136_mcfrontend_handbook.md "The tables are not copied here." — item 9 stays a pointer row with no copied tables, as RR-0384 requires.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 0
+Rules met: fe.01, fe.02, fe.07, fe.08, fe.10, fe.11, fe.14, fe.18, fe.19, fe.20, fe.29, fe.30, fe.31, fe.38, fe.39, fe.44, fe.45, fe.46, fe.47, fe.48, fe.49, fe.50, fe.51, fe.52, fe.53, fe.54, fe.55, fe.56, fe.57
+
+---
+⏱  108600ms (108.6s)
+📊 Tokens — total: 46575, input: 34810, output: 11765, reasoning: 11024

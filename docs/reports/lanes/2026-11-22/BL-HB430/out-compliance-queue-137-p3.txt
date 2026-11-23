@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:45:17.475Z file_sha256=14bf70e38b741d9469b47e318e48930af055ca0776b12591adc0567d00a0414b prompt_sha256=825bbaf411cf78b300abee2c50ceaeb1397b6e57b66aff1ad95e9469700efd33
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"; lane text restating the notes dated" — the M-246 dated-note form is made to carry `operator, verbatim: "Approved"`, a word that is not in RR-0384's pasted words "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines.", and READING_RE makes that frame mandatory for all 12 readings — fix: put the operator's actual RR-0384 words in the verbatim slot, or carry the readings in a form that claims no operator verbatim.
+
+BUG severity=HIGH — Spec 137 §4 rule 2 source, MCINC-8 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — scripts/surfaces/_schema/surface-rule-map.json "\"id\": \"FE-45\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.45\"" — the branch uses FE-45/fe.45 for a new owed row although this lane holds FE-46..FE-58 only and the notes say "FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders", so a number claimed by another unlanded lane is used in the map and in the generated line — fix: start the 13 placeholder rows at FE-46, a number this lane holds, and let the second lander renumber.
+
+DEFER severity=MED — fe.56 (added by this diff) "a lock never red against the defect it names is not a lock" — src/tests/backlog/rule-lists-table.logic.test.ts "expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));" — the comment calls this "planted: one id more than the register holds is refused", but an array of n+1 ids can never equal range(n), so the planted case cannot fail — fix: assert the refusal itself (a lens input built to hold fe.N+1 is rejected, or a range built from n+1 is not produced).
+
+DEFER severity=MED — Spec 137 §1 rule 3 note "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — diff "diff --git a/scripts/surfaces/generate-surface-handbook.mjs b/scripts/surfaces/generate-surface-handbook.mjs" — the trailer and the task/draft file are not in the material (cannot see), and the acceptance block reports only "(5) --check green: surface-handbook (57 rules)" — fix: confirm each of commits A, B and C carries `Task: task-430` with the task file in the same diff.
+
+DEFER severity=MED — Spec 137 §4 task-366 note "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding", and the task-399 note's "the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id" — the lane notes "2026-11-22 lane BL-HB430 acceptance on real inputs (plan section 9), after commit C d429b287d" list five checks and no lane report directory, GROUNDER.md or TRIAGE.md (chunk 3 of 3, cannot see) — fix: name the lane report path and its GROUNDER.md/TRIAGE.md in the material so check-lane-close.mjs has its evidence.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "function wholeHeadline(ruleCell) {" and src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(r.headline.endsWith('…'), r.id).toBe(false);" — Spec 136 prints the plain Ruling cell where the shared 300-character clip fired, and the shared reader is untouched.
+
+MET — RR-0384 "and add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json "{\"id\": \"fe.45\", \"section\": \"rules\"}" through "{\"id\": \"fe.57\", \"section\": \"rules\"}" — thirteen new owed rule entries and matching map rows are present.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.53** POINTER, not a copy: ... The tables are not copied here." — item 9 is a pointer row that quotes headings, no page table is copied.
+
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — each reading prints on its headline line with the cited note dates and leaves the Status line unchanged.
+
+REJECT — Spec 137 §3 rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended." — the change is accused of appending a dated note to 12 Spec 135 Status cells — not an issue, because rule 10 with M-246 "prior text kept" is the sanctioned append form for dated notes, and §3 rule 1 governs the Status word of a queue row, not the register's note list.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  75722ms (75.7s)
+📊 Tokens — total: 52667, input: 37312, output: 15355, reasoning: 14008

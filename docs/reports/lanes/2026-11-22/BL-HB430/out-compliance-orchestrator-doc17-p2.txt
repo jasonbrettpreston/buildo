@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:40:30.687Z file_sha256=01188cc4b37b19c4d76af7778e37947a55da8e35dca524a88b9925e3a2cddb85 prompt_sha256=f1530a915d27b01199b868be55533a34f00a06225c4e00c58f0ff4d4ab63ff03
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-32 row "Dated note 2026-11-10 ... the member is now a PATH `<contract_id>.<name|index>...` ... No new row: the rule and its status are unchanged" — the diff appends Current readings to 12 rows but not to FE-32, whose 2026-11-10 note rewrites the contract binding grammar, so its generated handbook line still prints the superseded "the member must exist in that descriptor" and not its notes — add a Current reading for the 2026-11-10 PATH grammar (and for FE-31's 2026-11-10 schema escalation, also unreflected) in the strict form and regenerate.
+
+DEFER severity=MED — register Next free id convention "the first value on the line, the one the Spec 136 generator reads" — header "FE-45..FE-57 are taken by the thirteen OWED rows of the RR-0384 list (task-430), so the first value on the line ... is FE-58. FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch ... ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — one id (FE-45) is given two owners in the same sentence and FE-58 is named both next free and reserved for the renumbering case — number the 13 rows FE-46..FE-58 and set the next free id to FE-59, or remove FE-58 from the claimed range.
+
+DEFER severity=LOW — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — 13 rows "his reply pasted the orchestrator's message back and added two phrases of his own, ... \"Approved\" (last, line 1903)" — the pasted RR-0384 entry stops at :1901 and cannot show the \"Approved\" at :1903 on which all 13 Full text cells rest — verify :1903 and cite it in the pasted decisions, else drop the operator-verbatim attribution.
+
+DEFER severity=NIT — Spec 135 rule 4 "`pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — "| FE-45 | ... | D n/a, P owed, F pass, S pass, H n/a, E pass |" — "owed" is outside the pasted closed set (FE-44 already carries the same form) — state the Six cell in the closed set and carry the owed lock in the Status cell.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — FE-01 note "the lock asserts that the 126 status line names Phase 1 only, that the McFrontend queue carries the opening note, and that no Phase 1 surface commit lands without a McFrontend-Task trailer" — the new FE-01 Current reading keeps only the Phase 1/Phase 2 clause and drops the queue-note and trailer assertions its notes still hold — extend the FE-01 reading to the full 2026-11-09 lock restatement.
+
+MET — RR-0384 "add these 13 lines" — 135 register rows FE-45 through FE-57 — thirteen OWED rows added, item order preserved, item 9 as FE-53.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — FE-53 row "POINTER, not a copy ... The tables are not copied here." — item 9 is a pointer row with no tables copied.
+MET — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — FE-01 note "(lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling)" — the 12 readings are labelled non-rulings.
+MET — task description "nothing in Specs 126, 127, 128 deleted or rewritten" — diff header "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — this chunk touches only Spec 135.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — "OWED `src/tests/surfaces/tunables-are-data.logic.test.ts`" and "one reserved lock path each (all 13 absent)" — all 13 OWED lock paths are valid and stated absent.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  213784ms (213.8s)
+📊 Tokens — total: 84410, input: 58335, output: 26075, reasoning: 24991

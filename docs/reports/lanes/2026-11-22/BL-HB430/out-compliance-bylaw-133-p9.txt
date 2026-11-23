@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:36:36.288Z file_sha256=8bd062ff1d8112233e3cfe2f02dee2395222ac3fe9b621ff0287a65447d5c014 prompt_sha256=db1ac37153937dc2ee72cb24ff5143ba6e92185b8e04da14f727d63289f91a62
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — m.515 "McIncrement (MCINC-8): one ID ledger." and "exit 1 when an MF, FE or MB" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "FE-45..FE-57 are taken by the thirteen OWED rows of the RR-0384 list (task-430) ... FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch ... ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — one line double-claims FE-45, and the rows actually written (FE-45..FE-57) do not match the lane's ledger claim (card Implementation Notes: "round-200 and FE-46..FE-58 claimed by this lane; FE-45 is held by BL-MFRULES"), so no claim covers FE-45 as written and FE-58 is claimed but unwritten — write the rows as FE-46..FE-58 and set the next free id to FE-59, or drop the FE-46..FE-58 reservation.
+
+DEFER severity=MED — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — "| FE-45 | ... | D n/a, P owed, F pass, S pass, H n/a, E pass |" — all 13 new FE rows (FE-45..FE-57) put `P owed` in the Six cell, a value outside the closed pass/n/a/FAIL set the rule names and that FE-31's note restates ("a RULED row's Six cell answers pass, n/a (reason) or FAIL (Spec 128 §4.9; Spec 135 rule 4)") — use a closed value (`P FAIL` for the owed lock) or land a dated rule-4 note admitting `owed`.
+
+DEFER severity=LOW — Spec 135 rule 5 "a RULED row's lock paths must exist" — "The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only." sits in the same cell as "Lock: `src/tests/surfaces/mcfrontend-status.infra.test.ts` (126 status line names Phase 1 only; queue Phase 1 tasks WAIT on increment 2)" — the appended Current reading says the lock asserts the opposite of what the row says it asserts, and this chunk lands no lock edit — restate the note as what the lock actually asserts, or land the matching lock edit in the same commit.
+
+MET — RR-0384 "add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables." — diff "| FE-53 | POINTER, not a copy: ... The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist" — item 9 is a pointer row and the tables are not copied.
+
+MET — RR-0384 "these 13 lines" (items 1..13) — diff rows "| FE-45 | The client is just glass. ..." through "| FE-57 | Accessibility. ..." — 13 OWED rows, one per item, in item order.
+
+MET — RR-0378 "nothing in Specs 126, 127, 128 deleted or rewritten" — "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — the chunk edits 135 only; 126/127/128 appear only as quotations.
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — "OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts`" (and the other 12) with commit C "one reserved lock path each (all 13 absent)" — every new row names an absent src/tests/surfaces/*.test.ts.
+
+MET — RR-0384 "make each line reflect its notes" — "Dated note 2026-11-22 ... Current reading: ... (from notes dated 2026-11-11, 2026-11-15). The cell text above is kept." — 12 rows (FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39) carry a restated reading and keep prior text.
+
+MET — m.511 "CITE-2 cite by id and anchor" — "| FE-45 | ... (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169)" and "128 Rule 2, 128:29" — the new rows cite by ruling id with file:line anchors, not by summary.
+
+REJECT — RR-0378 "nothing in Specs 126, 127, 128 deleted or rewritten" — accused of rewriting 126/128 because the new rows quote their lines (126:1005, 128:39, 128:206) — not a real issue: the only file in this chunk is 135, and quoting a ruled line in a register row neither deletes nor rewrites the source.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: m.511
+
+---
+⏱  83654ms (83.7s)
+📊 Tokens — total: 74781, input: 58523, output: 16258, reasoning: 14979

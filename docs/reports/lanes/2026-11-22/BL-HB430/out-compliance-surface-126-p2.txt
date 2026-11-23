@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:47:56.592Z file_sha256=035432c0c8863f1cb92870c2bedd768920afa416032fea49ffc4ee0630e15987 prompt_sha256=b77a17a92bca478179cc8ecbeb22ef3b74445dd2eca4252d019cdc7f14fa39ea
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card RR-0384 "one reserved lock path each (all 13 absent)" and followup "task-434: build the locks of the 13 new OWED rows" — docs/specs/00-architecture/00_system_map.md "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the source-of-record system map now indexes 13 Spec 135 lock tests that the card states are absent and owned by task-434 — either hold these 13 test names out of row 135 until task-434 builds them, or confirm the system-map validator accepts declared-but-absent lock paths.
+DEFER severity=LOW — card "Spec 135 112,035 bytes" — docs/reports/generated/rule-lists-by-kind.md "| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 111,851 | 3 |" — the regenerated size (111,851) disagrees with the card's stated Spec 135 size (112,035 bytes), so the generated count is unverified against HEAD — regenerate the rule list at the same commit and basis (characters vs bytes) as the note, or correct the note.
+MET — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md:647 "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each ... the 12 rows of plan section 17.3 carry one Current reading dated note each" — the row's Done-condition states all three RR-0384 items.
+MET — RR-0385 "proceed ... two rounds ... tests are the focus" — docs/reports/panels/MF-95.json "the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — the panel cards encode the RR-0385 seat and round policy.
+MET — card Files line "docs/specs/00-architecture/00_system_map.md" — docs/specs/00-architecture/00_system_map.md:100 (row 135 edited) — the only spec file changed is one the card names in Files.
+MET — card "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff touches only .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md, docs/reports/panels/MF-95.json, docs/specs/00-architecture/00_system_map.md — none of Specs 126, 127, 128 is modified.
+MET — queue card "Spec 133 and scripts/analysis/bylaw/ untouched" — the diff contains no hunk under docs/specs/01-pipeline/133_bylaw_handbook.md or scripts/analysis/bylaw/ — the by-law is not touched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  199646ms (199.6s)
+📊 Tokens — total: 49311, input: 26481, output: 22830, reasoning: 22114

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:52:17.979Z file_sha256=77c93343cffbdbbf7830854257bd1a990f684a8cdaf33d9a845bea347ad618ff prompt_sha256=372f75d472c7787cd80577b67b719ac1981bac908b748c41e546e25133640a34
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-surface-127-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-32 row, unchanged in the diff) "the member is now a PATH" and FE-33 row "the mobile render smoke (MF-35) runs in mobile jest, outside the root suite, so it is prose-only here until MF-25" — the diff adds a Current reading note to 12 rows but not to FE-32 or FE-33, whose 2026-11-10 and 2026-11-09 notes change their rule, so the generated headline still prints the pre-note rule — append 2026-11-22 Current reading notes to FE-32 and FE-33 in the same form and frame as the other twelve.
+
+BUG severity=MED — "4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-45 row) "D n/a, P owed, F pass, S pass, H n/a, E pass" — "owed" is outside the pasted closed set and all 13 new rows use it, so the cell vocabulary the register declares is broken 13 times — write "P n/a (lock owed, task-434)" or "P pass (lock owed)" and keep the token in the closed set.
+
+DEFER severity=LOW — FE-02 row, the working standard "rulings verbatim and cited" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-45..FE-57 rows) "his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903)" — the pasted RR-0384 record at MORNING-DECISIONS.md:1901 ends at "copying tables." and line 1903 with "Approved" cannot be seen here, so 13 rows rest their operative operator word on a line not in the pasted context — cite the line the record actually shows, or paste 1902 to 1903 into the note so the verbatim claim is checkable.
+
+DEFER severity=LOW — Walk step 4, "A change that adds behaviour no pasted clause or ruling names is a finding" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (FE-49 row) "`lead_parcels` is read by no surface." against its own status cell "Known standing exception: a platform_shared contract descriptor note already names lead_parcels" — the row declares a fence its own text admits is already breached and still grades "D pass", with no adjudicator or ruling cite for the exception — name the descriptor note and the resolving task in the Ruling cell with a cite, or grade D n/a (exception recorded).
+
+DEFER severity=LOW — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (Next free id line) "the first value on the line, the one the Spec 136 generator reads, is FE-58" against "ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case" — FE-58 is declared free and claimed by this lane in the same sentence, so a second lane reading the first value takes FE-58 into the renumber range — move the renumber headroom to FE-59 or state the fallback range as FE-46..FE-59.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, rows FE-45..FE-57 — 13 OWED rows added, in item order 1..13 of REPORT-429 section 3A, each naming its item.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — FE-53 row — the row opens "POINTER, not a copy" and cites only the two Spec 126 headings, no table copied.
+
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten." — the patch — it touches only docs/specs/02-web-admin/135_mcfrontend_decisions_register.md.
+
+MET — "5. Locks: ... an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — FE-45..FE-57 Status cells — all 13 paths are src/tests/surfaces/*.logic.test.ts and each row states "the path is a reservation".
+
+MET — 127 §4.1 "A different party adjudicates than the one that discovered." — FE-45 row — "The scope and the list (item 1 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved", with the operator named and dated 2026-11-22 alongside RR-0384.
+
+MET — Spec 135 note form "M-246, prior text kept" — Next free id line — the superseded value is preserved inside the new note as "the line read "Next free id: FE-45" before this note", and every prior dated note on the line is kept.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+Rules met: none
+
+---
+⏱  108455ms (108.5s)
+📊 Tokens — total: 79296, input: 57631, output: 21665, reasoning: 20402

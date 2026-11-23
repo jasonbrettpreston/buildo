@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:43:17.648Z file_sha256=89ed167d646980c36c15e69175a621f92e213ead25a55e58c85037819dbb4fb0 prompt_sha256=0ac7155ce1e69df3dec86c4aee3a8b84eef5747023a34245a8a1aa55db4e04fa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — register rule 4 (Spec 135 header, pasted in the diff context) "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, added FE-45 "D n/a, P owed, F pass, S pass, H n/a, E pass" — all thirteen added rows put "P owed" in the Six cell, a value outside the pasted closed list pass/n/a/FAIL, so the regenerated Spec 136 prints a Six verdict the rule does not define — replace "P owed" with an allowed value plus its reason and keep OWED in the Status cell, or land a dated note extending rule 4 (the FE-44 precedent).
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, added FE-01 note "lane text restating the notes dated 2026-11-06, 2026-11-09 of this row, not an operator word and not a ruling): Current reading:" — the caveat that the reading is lane text sits in the parenthetical, while the "Current reading:" sentence is the text the generator prints, so the printed Spec 136 line can carry an unruled restatement without its caveat (the generator is not in this chunk, cannot see) — move the caveat inside the Current reading sentence so the printed line carries it.
+
+DEFER severity=LOW — pasted Description "THIS TASK (step 2): add the items the INPUTS.1 report lists ... by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — added FE-45 Status "no machine check yet, the lock is task-434's and the path is a reservation" — all thirteen rows assign the future lock to task-434, which no pasted ruling or card line names (the pasted rulings name 430, 431, 427, 425), so the register records lock work outside the approved scope — name the owner from the pasted plan, or drop the owner and leave the reservation bare.
+
+DEFER severity=LOW — added FE-49 Ruling "`lead_parcels` is read by no surface." (128:205, R-03) — added FE-49 Status "Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5)" — the row states the fence as governing and records the live exception only in a Status aside, so the line printed into Spec 136 reads as a clean fence the recorded tree does not hold — move the exception into the Ruling cell, or mark the row FAIL until task-434 clears it.
+
+REJECT — R-DW — the change is accused of not deriving admin range badges from each step's own declared bounds and not externalizing the 20 percent margin — not a real issue: R-DW binds `src/lib/admin/funnel.ts`, the seed and `/api/quality`, and this chunk touches only the McFrontend decisions register, with no badge, seed or API line in the diff.
+
+REJECT — Spec 124 id discipline "never two rows sharing one id" (the R-AW correction) — the change lands FE-45 while lane BL-MFRULES also holds FE-45 unlanded — not a real issue: the pasted card plan makes FE-45..FE-57 placeholders renumbered by the second lander (plan 17.5 landing checklist) and this diff carries that rule in its own next-free-id note.
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-45..FE-57 — thirteen rows added in item order, each OWED with one reserved lock path.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — added FE-53 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3" — item 9 is a pointer and the tables are not copied.
+
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — added FE-45..FE-57 Status cells — all thirteen paths are `src/tests/surfaces/*.logic.test.ts` and the card notes record all 13 absent.
+
+MET — pasted Description "nothing in Specs 126, 127, 128 deleted or rewritten" — the diff's only file is docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — no line of Specs 126, 127 or 128 is touched in this chunk.
+
+MET — register convention "the first value on the line, the one the Spec 136 generator reads" — "**Next free id:** `FE-58`." — the first value is the new id and a dated note records the change and the renumbering rule.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: R-DW, V3
+
+---
+⏱  169895ms (169.9s)
+📊 Tokens — total: 73312, input: 52763, output: 20549, reasoning: 19343

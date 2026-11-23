@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:36:48.207Z file_sha256=36fa3819f348da22d266a8caed4f1e2ea75f91998b4027d54d7ff1efff5338bf prompt_sha256=c8a430910244b4a43a17d88641887113545e8449e111046494b2001064d121f2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — eng-all §5.5 parity battery "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md:34 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" vs the card's own measurement "section 2 28,691 characters, 57 lines" — the committed generated page and the lane's measured generator output disagree by one character, so the drift guard is not demonstrably the file that `--check` produced — regenerate the page from the post-Q9 generator and commit it, or state in the generator which character (trailing newline) it excludes
+
+DEFER severity=MED — eng-all §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — task card Files line "Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, ..." (also MF-95 row Done-condition "the Spec 136 generator prints every Spec 135 ruling whole") — this is a McFrontend WF (lane E) that modifies two files under `scripts/`, and neither the queue row nor docs/reports/panels/MF-95.json records a carve-out or cites RR-0384 as the authority for crossing the fence — add one line to the row and the panel naming the exception (doc generator, no DB write) and the ruling that authorises it, or raise the §10.2 amendment
+
+DEFER severity=MED — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — .cursor/MCFRONTEND-QUEUE.md:649 "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each" — the item 9 pointer condition appears nowhere in the Done-condition, in the tests named, or in the panel, and is asserted only in the card's acceptance prose ("item 9 pointer row, item 4 own row"), which is a claim and not a check — add "item 9 remains a pointer row, no table copied" to the Done-condition or to the handbook-rule-map lock so arm Q and `--check` can refuse a copy
+
+DEFER severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — .cursor/MCFRONTEND-QUEUE.md:649 "the 12 rows of plan section 17.3 carry one Current reading dated note each" — the ruling says each line, the delivery carries readings on 12 of 57 rules and the row records no reason the other 32 pre-existing lines need none, so the narrowing to 12 is satisfied only by reference to plan 17.3 that the row does not quote — cite the approved 17.3 subset in the Done-condition (operator-approved, plan section 17.3) or schedule readings for the remaining lines
+
+MET — eng-all §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — card line "2026-11-22 lane BL-HB430 commit A red: tests A-T1, A-T2, A-T3 ... red.out holds the refused commit attempt" — red tests are recorded for commits A, B, C and ruling Q9 before each build commit
+
+MET — eng-all §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — docs/specs/00-architecture/00_system_map.md:100 (added `src/tests/surfaces/client-glass-boundary.logic.test.ts` through `a11y-category.logic.test.ts`) — all 13 reserved lock paths named in the card's acceptance item (3) appear in the Spec 135 row in the mandated `.logic.test.ts` form
+
+REJECT — eng-all §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the change is accused of adding a `scripts/` change without `pipeline.run`, `withTransaction` or `emitSummary` — `scripts/surfaces/generate-surface-handbook.mjs` is a document generator with no pool, no transaction and no DB write, so §9.4's DB-pipeline mandate does not reach it
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 4
+Rules met: none
+
+---
+⏱  168145ms (168.1s)
+📊 Tokens — total: 42149, input: 23378, output: 18771, reasoning: 17754

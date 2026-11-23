@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:37:08.136Z file_sha256=bb42b6a106484c2378f5002ec78378e67619b9c88f97c81ca1161882a3c9fb0a prompt_sha256=701a658ccdb96ca594bece17640cb1ddb489cb797c948958a3d07599d9675750
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+MET — RR-0384 "stop the clipping, make each line reflect its notes, and add these 13 lines" — .cursor/MCFRONTEND-QUEUE.md:647 "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the ruling's three things are exactly the three named commits, no fourth behaviour added.
+MET — RR-0385 "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — docs/reports/panels/MF-95.json:10 "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — the two-round, Opus, gated review is recorded as ruled.
+MET — RR-0390 "Let's try A." (one larger review message, tried once) — docs/reports/panels/MF-95.json:13 "OUTPUT review owed at the lane output stage: the lens set ... on the whole task diff" — a single larger output lens set, option A, filed once.
+MET — eng-all §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/00_system_map.md:97 (135 row test list extended to 13 new surfaces) and docs/reports/generated/rule-lists-by-kind.md:32 "surface-136 | ... | 28,690" — the system map and the regenerated rule-lists move with the ruling in this change set.
+MET — eng-all §12.8 / §12.10 (migration lint, real-DB test) — NONE, no migration files in this chunk — the SQL lint and db.test obligations are not triggered by these paths.
+MET — eng-all §12.11 footgun / §13.3 logging — NONE, docs-only paths — no pool, silent-catch, console.error or unlogged-handler pattern introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 0
+Rules met: none
+
+---
+⏱  54630ms (54.6s)
+📊 Tokens — total: 31951, input: 21499, output: 10452, reasoning: 9981

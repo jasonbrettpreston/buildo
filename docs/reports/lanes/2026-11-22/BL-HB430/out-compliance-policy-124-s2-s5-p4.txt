@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:42:27.627Z file_sha256=41c01dbad5422b9614db908ea11bb51fc553c78b49a490c90e7c61a36284eb1e prompt_sha256=a2e3fd9320675dbb40955f5be329b3e52bdb8ee01fb81db1fea9d708ae12c884
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes, and add these 13 lines" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-02 Status cell "Its own row is owed as FE-40, after FE-35..FE-39 land." against the new next-free-id note "FE-40 is taken by the McTest row (MF-78)" — FE-02's new Current reading repeats the 2026-11-11 note but leaves the stale claim that its own owed working-standard row lands as FE-40, an id this same diff assigns to McTest — restate in FE-02's 2026-11-22 reading that the row is still OWED and takes the next free id at landing, not FE-40.
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — FE-03 Status cell "Dated note 2026-11-09 (M-246, prior text kept; FE-03 flip, MF-42; operator, verbatim: "P42 decisions approved"" carries no appended "Current reading" while FE-01 carries "Current reading: Phase 1 (the report page) is open since 2026-11-06" — the clause is discharged for 12 rows only, so FE-03, FE-15, FE-16, FE-22, FE-23, FE-30, FE-32, FE-33, FE-34 and FE-35, whose cells each carry dated amending notes, still show prior text only on their handbook lines — append a reading to every row carrying a dated note, or record the judged-no-change list and its reason in the lane notes.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — FE-31 reading "The web footer is one shared component, footerNode.ts." against its own 2026-11-20 note "The mobile report keeps its own binding until a mobile footer is ruled." — the reading drops a stated scope limit, so the generated line reads as if the footer rule spans mobile — add the mobile sentence to the FE-31 reading.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — FE-39 note "SUPERSEDED, prior text kept above: those two sentences as written." against the same row's Six cell "F pass (stored headline, detail on demand)" — the Six cell still rests its F pass on the two sentences the row itself marks SUPERSEDED, and the 2026-11-22 reading does not restate the F reason — restate that Six cell's F reason to ST-5 as amended (one record per lot and option, computed on first open and stamped).
+
+DEFER severity=NIT — task card "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — NONE in this chunk, cannot see chunks 1 and 3 — whether the 13 rows actually reach Spec 136 as lines cannot be judged from this chunk — confirm in the chunk carrying surface-rule-map.json that fe.45..fe.57 are mapped and pinned by the generator lock.
+
+REJECT — Spec 124 §2 rule 1 "Nothing about a step's behaviour may live only in code" — the change is accused of hiding step behaviour in code — the material is a front-end decisions register only, it declares no step, check or compute, so rule 1 has no subject here.
+
+REJECT — Spec 124 §2 rule 3 "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`" — the change is accused of adding an unregistered tunable — FE-47 only records the rule as a register line and adds no step config, no descriptor and no literal.
+
+REJECT — Spec 124 §2 rule 13 "A step validates itself" — the change is accused of skipping the step:validate scorecard — no converted step, descriptor or scorecard artefact is touched by this diff, so the rule has nothing to enforce here.
+
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — "diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md" — only the 135 register is modified in this chunk, no 126, 127 or 128 line is added, removed or rewritten.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — FE-53 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032)" — item 9 is a pointer to the two spec headings and copies no table cell.
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — FE-45 "OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." — all 13 new rows are OWED and every path is a src/tests/surfaces/*.test.ts declared absent.
+
+MET — RR-0384 "add these 13 lines" and task card "the items the INPUTS.1 report lists, and the operator has read" — FE-45 through FE-57 in item order, "item 2 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A" — thirteen OWED rows added, each citing its item number, item 9 landing at FE-53.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 0
+Rules met: none
+
+---
+⏱  143537ms (143.5s)
+📊 Tokens — total: 74259, input: 57080, output: 17179, reasoning: 15841

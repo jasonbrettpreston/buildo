@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:43:49.749Z file_sha256=184129dd5c784355cc482c629ecc24d984994d7d8ef65ad36a0ec4df6a632815 prompt_sha256=be3a57c2c9436ad3ee81e90d3ff7bfb9811bfaf0e44934829a988af66d59fe77
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes, and add these 13 lines" — scripts/surfaces/generate-surface-handbook.mjs:94 "if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;" — the guard scans the WHOLE Status cell while the generator's own stated refusal (mjs:71) is scoped to "a last note holding" the mark and not parsing, so any register row whose earlier note prose contains the phrase and whose last note is not a reading throws "does not parse in the strict form" instead of printing as before (the B-T2 control shape is untested), a false red on --check — fix: test READING_MARK on `last` only.
+
+DEFER severity=MED — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs:62 "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell led by a bold span returns the shared headline unchanged, so a bold-led ruling longer than 300 characters is still clipped, the defect RR-0384 named to stop, and the new lock line handbook-rule-map.logic.test.ts "expect(r.headline, r.id).toBe(plainCell(cells.get(r.id)!));" would RED on such a row rather than the page printing it whole, so code and lock disagree on that cell shape — fix: fall back to plainCell when the shared result is still clipped for bold-led cells, or declare bold-led cells out of scope in the row text.
+
+DEFER severity=LOW — RR-0384 "make each line reflect its notes, and add these 13 lines" — scripts/surfaces/generate-surface-handbook.mjs:76 "const READING_MAX = 800;" — a new 800-character refusal limit is introduced that no pasted clause or operator ruling names (the comment itself says "chosen, not derived: keeps the page from growing"), so a longer but legitimate restatement of a row's notes is refused at --check with no ruling behind the number — fix: cite the plan section that authorised the cap in the row, or keep only the framing and bar refusals.
+
+REJECT — prereg-MF-95-1.json "No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched" — accused of touching a by-law path by adding scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json — not a real issue: bylaw-validation is a sibling directory of scripts/analysis/bylaw and the added file is a pre-registration record, not bylaw code, seed or reference data.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs:47-64 — wholeHeadline prints the plain Ruling cell where the shared 300-character clip fired, and all 16 formerly clipped rows (fe.18, fe.30, fe.31, fe.35, fe.39, fe.42 among them) now print whole in Spec 136 with 0 lines ending in the clip ellipsis.
+
+MET — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs lineRow "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — the 12 readings (FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39) print on their headline line and each row's dated-note count rises by exactly one (+2 to +3, +1 to +2).
+
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.45 to fe.57 plus scripts/surfaces/_schema/surface-rule-map.json FE-45 to FE-57 — 13 new OWED rows, each with exactly one owed lock path in item order (client-glass-boundary through a11y-category), and the rendered counts agree: "**Rules rendered: 57**: 57 in force (21 OWED, whose lock is still to land), 0 history."
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — 136_mcfrontend_handbook.md fe.53 — the row is a pointer to 126:963 and 126:1032 and states "The tables are not copied here."
+
+MET — Task Description "nothing in Specs 126, 127, 128 deleted or rewritten" — no file under Specs 126, 127 or 128 appears in the material, which touches only 136, the generator, the rule map, two tests and the pre-registration.
+
+MET — Task Description "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — the diff extends that generator and that lock, adds no second generator, and rule-lists-table.logic.test.ts now derives fe.01 to fe.N from "readFeRows(fs.readFileSync(path.join(ROOT, REGISTER_REL), 'utf8')).length" instead of a pinned 44.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  105704ms (105.7s)
+📊 Tokens — total: 57600, input: 36558, output: 21042, reasoning: 19822

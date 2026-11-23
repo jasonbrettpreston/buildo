@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:33:48.125Z file_sha256=61473897433dbdea070b55eeb5abdf96d107b9e358142bdf326a2e9edc036728 prompt_sha256=ec4fa5469f0041e892186ad233201c780dc66b8830be6b7bd9d90272c1b92b75
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws. / Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes" — the clause holds only for the 12 authored readings, while fe.03 (+1), fe.06 (+2), fe.13 (+3), fe.15 (+2), fe.30 (+1), fe.32 (+2) and fe.33 (+2) carry dated notes and still print only a count — author a reading for every row that carries dated notes, or record an operator ruling limiting the clause to the 12 rows
+DEFER severity=LOW — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — the second disjunct also replaces the shared headline of cells that were never clipped (the fe.54 line keeps a trailing "(Spec 128 Rule 12, 128:39)." the shared reader strips), behaviour RR-0384 does not name and only the grounder's Q9 covers — restrict that branch to cells the shared reader clipped plus a named row list, or get Q9 ruled by the operator
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.19** ... Confidence by source: estimated low, user medium, verified high ... Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium" — one printed line now gives two answers for the same field with nothing marking which governs, under a row that still reads RULED — mark the reading where it reverses the headline sentence, or hold it until the operator rules the change
+MET — RR-0384 "stop the clipping" — src/tests/surfaces/handbook-rule-map.logic.test.ts "expect(r.headline.endsWith('…'), r.id).toBe(false);" — no handbook line ends in the clip ellipsis and the formerly clipped rows print whole
+MET — RR-0384 "add these 13 lines" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.45** The client is just glass." through "- **fe.57** Accessibility." — thirteen new OWED lines, each with one reserved lock path, and matching FE-45..FE-57 entries in scripts/surfaces/_schema/surface-rule-map.json
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.53** POINTER, not a copy ... The tables are not copied here." — item 9 is a pointer row, no table copied into the page
+MET — task "nothing in Specs 126, 127, 128 deleted or rewritten" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.50** ... 'Checkout and billing are Stripe-hosted (Checkout, Customer Portal).' (126:928)" — Specs 126/127/128 are quoted inside new rows only; no such file is in the diff
+MET — task "Files: ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json ..." — every path changed in this chunk (136, prereg-MF-95-1.json, surface-rule-map.json, generate-surface-handbook.mjs, the two tests) is on the Files line
+MET — RR-0385 "Label all realted tasks McFix Final" — task card "labels: McFix, McFix V2, McFix Final" — the card carries the McFix Final label
+REJECT — m.360 "a test never asserts a red floor" — that the new `expect(n).toBeGreaterThanOrEqual(57)` and `expect(owed).toBeGreaterThanOrEqual(21)` are floor assertions — they are FE row counts in the handbook lock, not COA scorecard floors, and the prereg states "the floors file is unchanged and the floors check stays OK"
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.260
+
+---
+⏱  119533ms (119.5s)
+📊 Tokens — total: 63370, input: 40926, output: 22444, reasoning: 21408

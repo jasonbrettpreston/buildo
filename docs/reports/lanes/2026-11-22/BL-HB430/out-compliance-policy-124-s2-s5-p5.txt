@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:43:06.902Z file_sha256=9c2dcba7b121741cd109154f4266f889759c03f5364ff5827575b217f2bfc2fb prompt_sha256=5e53a1f6441896eaa9b806a9ad0255a5e2cdc698e0fbd90c044dec103ed76574
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9)" — 135_mcfrontend_decisions_register.md FE-45 "+| D n/a, P owed, F pass, S pass, H n/a, E pass |" (same form in FE-46..FE-57) — all thirteen new rows write a fourth Six value, `owed`, which the pasted closed vocabulary does not contain — fix: write `P n/a (lock owed: src/tests/surfaces/<slug>.logic.test.ts)` in the thirteen rows, or amend rule 4 by a dated note to admit `owed`.
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`" — 135 FE-45 "+Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169)" — the thirteen rows cite the decision by chat path and a backlog file, not by `<log stem>#<decision id>`, and no `docs/reports/decisions/<date>-<slug>.json` log is cited, so the row-to-decision join R-HK's `--check` performs cannot be seen to hold — fix: cite the routed log as `<log stem>#RR-0384` in the thirteen Ruling and Status cells, or land the log and emit the rows with `--write`.
+DEFER severity=MED — task card Files and "Decisions naming this task" (no task-434 named) — 135 FE-45 "+OWED `src/tests/surfaces/client-glass-boundary.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." (same in all thirteen) — thirteen rows commit their locks to a task-434 that no pasted card line, decision or ruling names — fix: name task-434 in the card's Decisions list (or land its queue row) before these rows land.
+DEFER severity=LOW — RR-0384 "make each line reflect its notes" — 135 FE-39 "+Current reading: ... The cost sentence is not amended; it waits for open point 3 of doc-16 section 7." — the reading drops the note's owed items "ENGINE-INPUTS-PLAN section 4.0 and ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:157 ... are owed the same change (not done)" and "ST-5 as amended is the Spec 69a note of this date", so the generated line reads as if nothing else is owed — fix: add those two clauses to the FE-39 Current reading.
+DEFER severity=LOW — RR-0384 "add these 13 lines" (no id-arbitration clause pasted) — 135 next-free-id note "+FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows" — the register now carries two claims on FE-45 resolved by a lane-to-lane agreement rather than by any pasted ruling — fix: land the thirteen rows as FE-46..FE-58 (the ids the lane claimed in ~/Buildo-scratch/ids) and write Next free id FE-59.
+MET — RR-0384 "add these 13 lines" — 135 FE-45..FE-57 — thirteen rows added, one per REPORT-429 section 3A item, cited item 1 to item 13 in order.
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — 135 FE-53 "The tables are not copied here." — item 9 is a pointer to 126:963 and 126:1032, no table copied.
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts`" — 135 FE-45..FE-57 Status and Lock cells — all thirteen paths are `src/tests/surfaces/<slug>.logic.test.ts` (non-existence cannot see).
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten" — diff headers (only 135_mcfrontend_decisions_register.md touched in this chunk) — no 126, 127 or 128 file appears in the chunk.
+MET — RR-0384 "make each line reflect its notes" — 135 FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39 — twelve rows carry a Current reading note restating their own dated notes, each labelled lane text, not an operator word.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  102244ms (102.2s)
+📊 Tokens — total: 81361, input: 59874, output: 21487, reasoning: 20336

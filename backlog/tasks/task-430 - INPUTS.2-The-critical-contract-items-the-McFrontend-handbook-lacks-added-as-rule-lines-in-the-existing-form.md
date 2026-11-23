@@ -3,11 +3,11 @@ id: TASK-430
 title: >-
   INPUTS.2 The critical contract items the McFrontend handbook lacks, added as
   rule lines in the existing form
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:41:00Z'
+updated_date: '2026-11-23T02:42:00Z'
 labels:
   - McFix
   - McFix V2
@@ -48,6 +48,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-HB430/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-HB430/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-HB430/TRIAGE.md
 type: build
 ordinal: 130012
 ---
@@ -57,7 +60,7 @@ ordinal: 130012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (step 2): add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts); nothing in Specs 126, 127, 128 deleted or rewritten. Scope and Files line are set at its plan review from the INPUTS.1 report.
 
-Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json, docs/specs/00-architecture/00_system_map.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -418,4 +421,34 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; o
 2026-11-22 taken on the board at lane launch (lane BL-HB430, worktree /Users/brettpreston_macmini/Buildo-wt-hb430, branch wf1/inc1b-hb430), RR-0240
 
 2026-11-22 lane BL-HB430 commit 0 (records, alone and first, plan 17.5): MF-95 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-96: MF-94 held by BL-MFRULES unlanded), prereg-MF-95-1.json (round 200, claimed in ~/Buildo-scratch/ids/round-200; rules FE-09, FE-10, FE-16 RULED), panel record docs/reports/panels/MF-95.json. Ledger: MF-95 (orchestrator), round-200 and FE-46..FE-58 claimed by this lane; FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders renumbered by the second lander (plan 17.5 landing checklist).
+
+2026-11-22 lane BL-HB430 commit A red: tests A-T1, A-T2, A-T3 (the :59/:61 clip pins become no headline ends in an ellipsis), A-T5, A-T6 in src/tests/surfaces/handbook-rule-map.logic.test.ts, staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit A: scripts/surfaces/generate-surface-handbook.mjs prints the plain Ruling cell where the shared headlineOf clipped (wholeHeadline; shared reader untouched); Spec 136 and rule-lists-by-kind.md regenerated; Spec 136 section 2 measured 19,551 characters (whole file 22,983); 0 lines end in the clip ellipsis; Spec 133 --check up to date (546 rules); git diff on scripts/analysis/bylaw/ empty.
+
+2026-11-22 lane BL-HB430 commit B red: tests B-T1..B-T11 and refusal (vii) in src/tests/surfaces/handbook-rule-map.logic.test.ts (the reading read through a cast so the attempt fails at its assertions, not at typecheck), staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit B: 12 Current reading dated notes appended to Spec 135 rows FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39 (texts and dates of plan 17.3, frame of 17.3, lane text, not rulings); the generator reads the last note in the strict 17.4 form and prints it on the headline line; refusals (i)..(vii) throw. Gate reader statuses and locks unchanged (0 of 44 differ). Spec 136 section 2 measured 22,993 characters (file 26,535).
+
+2026-11-22 lane BL-HB430 commit C red: tests C-T1, C-T2, C-T3 in src/tests/surfaces/handbook-rule-map.logic.test.ts (the 13 rows pinned by lock path in item order, not by id) and C-T5 in src/tests/backlog/rule-lists-table.logic.test.ts (the fe.01..fe.N range computed from the register), staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit C: thirteen OWED rows added to Spec 135 as FE-45..FE-57 (placeholders: FE-45 is held by BL-MFRULES unlanded; FE-46..FE-58 claimed in ~/Buildo-scratch/ids for the renumbering), texts of plan 17.2, one reserved lock path each (all 13 absent); Next free id FE-58 by a dated note; Spec 136 and surface-rule-map.json regenerated (57 rules, 21 OWED); rule-lists-table pin computed from the register. Spec 136 section 2 measured 28,664 characters (file 32,207); Spec 135 112,035 bytes.
+
+2026-11-22 lane BL-HB430 ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): A-T6 reworded (short-provenance planted case keeps the bracket) and a pin that the failure-state row (FE-54 on this branch) keeps (Spec 128 Rule 12, 128:39); red on the staged generator before the wholeHeadline change; then wholeHeadline prints the plain cell also where the shared rule stripped a trailing bracket of an unclipped cell.
+
+2026-11-22 lane BL-HB430 acceptance on real inputs (plan section 9), after commit C d429b287d (commits 62b2ffed6, 0fe6e7712, 25755f51a, d429b287d):
+(1) Spec 136 lines ending in the clip ellipsis: 0 (grep -c); section 2 28,691 characters, 57 lines; the 16 formerly clipped lines whole (fe.18 604, fe.30 944, fe.35 1074, fe.39 1746, fe.42 1144 characters with their Status-free line text).
+(2) 12 rows carry a reading (FE-01 FE-02 FE-07 FE-11 FE-14 FE-18 FE-19 FE-20 FE-29 FE-31 FE-38 FE-39), 12 printed; planted later note on FE-39: [surface-handbook] FE-39: a dated note follows the Current reading; restate it.
+(3) 13 new lines fe.45..fe.57 (placeholders, plan 17.5), each Status: OWED · lock owed: <path> (client-glass-boundary, ui-library-set, tunables-are-data, scratch-mocks-not-in-repo, scope-fence, auth-checkout-hosted, nav-tab-switch, parcel-id-names, page-set-pointer, failure-state-declared, admin-same-descriptor, lock-planted-defect, a11y-category); Rules rendered: 57, 21 OWED; item 9 pointer row, item 4 own row; fe.54 keeps (Spec 128 Rule 12, 128:39) per ruling Q9.
+(4) git diff --stat 60b601cc9 HEAD -- docs/specs/01-pipeline/133_bylaw_handbook.md scripts/analysis/bylaw/: empty; bylaw handbook --check up to date (546 rules).
+(5) --check green: surface-handbook (57 rules), bylaw-handbook, surface-validate, surface-registry, spec-split-check, rule-lists page; commit hooks: commit C related run Tests 60 passed (60), GATE OK, POLICY CHECKS OK; red evidence for every planted case in the lane red.out (A, B, C, Q9). Full suite not run (push station only). Self-checklists in the lane CHECKLISTS.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+INPUTS.2 built (lane BL-HB430): Spec 136 prints every McFrontend ruling whole (commit A 0fe6e7712), 12 lines carry a Current reading of their dated notes (commit B 25755f51a), 13 new OWED register rows from the RR-0384 list (commit C d429b287d, rulings Q8 and Q9); records 62b2ffed6 and 7393fbd43. Output review round 1: 116 outputs, ruled by the separate grounder Cairn-Ground-O430, fix list none. Left for the landing: the MF-95 queue row to DONE (plan 17.5), the FE-45..FE-57 renumbering against task-388 by landing order, and the system map line regenerated by the second lander.
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 33 pile; grounder docs/reports/lanes/2026-11-22/BL-HB430/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-HB430/TRIAGE.md
+post-build#1 MED fixed d429b28
+<!-- SECTION:FINAL_SUMMARY:END -->

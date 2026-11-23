@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:32:15.680Z file_sha256=6adc8db8954cd54be0514300f4b1c5bebe896dc184ae2d583e0aadfcb5e0e375 prompt_sha256=0e21feae8ed6878ba69b6481d3d5bf149b1c5c0eaa357f08935e7bfc7f94ec9f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-agents-s5-1to3-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0384 "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines." — scripts/surfaces/generate-surface-handbook.mjs "RR-0384, operator, verbatim: \"Approved\"; lane text restating the notes dated" — every reading note the change accepts must carry this frame, and the frame is copied into the lock helper (`readingNote`) and the A-T6/B-T* fixtures, so the change requires all 12 Spec 135 readings to attribute to the operator a verbatim ("Approved") that the pasted RR-0384 does not contain — replace the frame's quoted words with RR-0384's actual words, or drop "operator, verbatim" from READING_FRAME, READING_RE and the lock's readingNote, then regenerate Spec 135, Spec 136 and the rule map.
+
+DEFER severity=MED — RR-0384 "and make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws. Status: ... +3 dated notes" — the reading is printed for 12 pinned rows only, so rows whose line also rests on later notes (fe.06 +2, fe.13 +3, fe.32 +2, fe.33 +2) still show nothing but the note count; the operator's words are "each line" — extend the reading set to those rows or have the plan record, in the register itself, why their notes change nothing the line states.
+
+DEFER severity=MED — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell that leads with a bold span is still returned through the shared headlineOf and its 300-character clip, so the fix is conditional and the code's own claim "Spec 136 prints each ruling whole" is false for the first bold-led long row — strip the leading bold span and decide on plainCell length instead of returning the shared result, with a planted bold-led long cell in A-T5.
+
+DEFER severity=LOW — task card "FE-45 is held by BL-MFRULES, so the branch rows FE-45..FE-57 are placeholders renumbered by the second lander (plan 17.5 landing checklist)" — scripts/surfaces/_schema/surface-rule-map.json "\"id\": \"FE-45\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.45\"" — the rule map and the handbook commit FE-45..FE-57 as the register's binding anchors while the lane record itself says the ids are placeholders, and only the tests look the rows up by lock path — pin the 13 anchors by their reserved lock path in the map and handbook id note, or land the renumber as the same step.
+
+MET — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "return clipped || shared !== plain ? plain : shared;" — every non-bold-led cell whose shared headline was clipped now prints the plain Ruling cell, and A-T2 pins every real headline to plainCell of its Ruling cell.
+
+MET — RR-0384 "and add these 13 lines" — scripts/surfaces/_schema/surface-rule-map.json "{\"id\": \"FE-57\", \"kind\": \"fe-row\", \"status\": \"owed\", \"handbook_line\": \"fe.57\"" — exactly 13 anchors FE-45..FE-57 and 13 handbook lines fe.45..fe.57, each OWED with its one owed lock path and the header count moved 44/8 to 57/21.
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963)" — item 9 renders as a pointer to §11b.3 and §11b.7, not a copied table.
+
+MET — task card "nothing in Specs 126, 127, 128 deleted or rewritten." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "This amends the v22 in-place ruling." — 126/127/128 appear only as citations inside FE rows; no file under those specs is in the chunk's path list or its hunks.
+
+MET — task card "by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts)" — src/tests/surfaces/handbook-rule-map.logic.test.ts "A-T6 drift lock (ruling Q9)" — clipping, readings and the 13 rows are all carried by the named generator and pinned in the named lock.
+
+MET — 5.1 Compliance "does the code SATISFY every clause of the spec's Behavioral Contract" — scripts/surfaces/generate-surface-handbook.mjs "const reading = r.reading ? ` Current reading (lane text, notes ${r.reading.dates.join(', ')}): ${r.reading.text}` : '';" — the generated header's promise "Each line: its line id, the reading headline (then, where the row has one, its Current reading ...)" is exactly what lineRow emits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  199764ms (199.8s)
+📊 Tokens — total: 53382, input: 30797, output: 22585, reasoning: 21299

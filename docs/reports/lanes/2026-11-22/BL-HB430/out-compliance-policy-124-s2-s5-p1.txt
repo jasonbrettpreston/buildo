@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:41:56.290Z file_sha256=6e9b4f418b2048e5951c952ff6cea05cf8b10d124226ea4d52e873833686c99c prompt_sha256=c4374f411ff21f54d1bcda0e60453143956ff4d535dad7762610e2ccd0275349
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384/queue done-condition vs system map "the 13 rows of plan section 17.2 are in Spec 135 as OWED with one reserved lock path each (the locks are task-434's)" — docs/specs/00-architecture/00_system_map.md (spec 135 row) "`src/tests/surfaces/client-glass-boundary.logic.test.ts`, `src/tests/surfaces/ui-library-set.logic.test.ts`, `src/tests/surfaces/tunables-are-data.logic.test.ts`, ... `src/tests/surfaces/a11y-category.logic.test.ts`" — the map now asserts 13 test files as Spec 135's tests while the same row and the notes declare those lock paths absent until task-434, so the map claims coverage that does not exist — leave those 13 paths out of the 135 row until task-434 lands, or list them under an explicitly reserved marker
+DEFER severity=LOW — RR-0384 row state "next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — .cursor/MCFRONTEND-QUEUE.md MF-95 row "Status: RUNNING · since 2026-11-22 · expires 2026-11-29 · next: Land commits A (no clipping), B (12 Current readings) and C (13 OWED rows)" — the row's next step is already done per the pasted notes, which record A, B and C landed and accepted, so the queue row understates the state — restate next: as the output review (OUTPUT owed) and cite the landed commits
+DEFER severity=LOW — RR-0390 "RR-0390 task-430 output review size: option A, one larger review message, tried once" — docs/reports/panels/MF-95.json "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, and compliance once per governing rule list) on the whole task diff" — the panel's output line never records the one-message, tried-once decision the operator made for this task's output review — add RR-0390 to cards and state "one message, tried once" in the output line
+DEFER severity=LOW — RR-0385 "RR-0385 McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-95.json "integration, reality-check and regression seats (plan)" — the panel's seat list carries no engineering seat although the ruling names one, and the second round's scope is the only other element recorded — add the engineering seat (plan and output) to seats or state in one line why it is not convened
+DEFER severity=LOW — RR-0384 evidence "section 2 28,691 characters, 57 lines" — docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 28,690 | 1 |" — the generated row and the pasted acceptance measurement differ (28,690 against 28,691, and commit C recorded 28,664), so the printed list length is not one agreed number — regenerate and record one measure for section 2 in the acceptance note
+MET — RR-0384 three things "stop the clipping, make each line reflect its notes, and add these 13 lines" — .cursor/MCFRONTEND-QUEUE.md MF-95 row — the done-condition names no clip ellipsis, one Current reading on the 12 rows, and the 13 OWED rows
+MET — task description "nothing in Specs 126, 127, 128 deleted or rewritten" — diff file list (chunk 1) — no file under 02-web-admin/126, 127 or 128 is touched
+MET — RR-0380 "by-law tasks gain no engineering rules" — pasted implementation note "git diff on scripts/analysis/bylaw/ empty" — the bylaw handbook and its scripts are untouched and its --check is up to date
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables" — pasted acceptance note "(3) ... item 9 pointer row, item 4 own row" — item 9 stayed a pointer and no tables were copied
+MET — Rule 13 "generated-doc freshness" — docs/reports/generated/rule-lists-by-kind.md "| total | 15 lists | | 722,506 | 20 |" — the generated list is regenerated in the same change and its totals reconcile with the two changed rows (+14,907 and +27,636)
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  113399ms (113.4s)
+📊 Tokens — total: 39271, input: 26073, output: 13198, reasoning: 12109

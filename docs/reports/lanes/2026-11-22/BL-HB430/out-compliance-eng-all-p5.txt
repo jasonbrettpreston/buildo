@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:37:50.357Z file_sha256=4a419d01a757eeb01e06b00229194b223b9d9c37e2d2ea7890c313f2ea2c724f prompt_sha256=bd0b734bf0c93e96a67425b98d0aa4386a1298d9e3115dbd04e8be08eda69da1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-eng-all-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — scripts/surfaces/generate-surface-handbook.mjs "+const SHARED_HEADLINE_MAX = 300;" plus scripts/surfaces/_schema/surface-rule-map.json and the added scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json — a lane labelled "McFix, McFix V2, McFix Final" edits three files under scripts/ and no pasted clause or ruling records an exemption (RR-0384 names the clipping stop, not a scripts/ carve-out) — record the exemption as an operator ruling or a deviations[] row naming the three paths before merge, or land the generator and prereg edits on a non-frontend lane.
+
+BUG severity=MED — §5.3 "Code may not be written until the test demonstrably fails" — src/tests/backlog/rule-lists-table.logic.test.ts "expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));" — this assertion cannot fail (n+1 elements compared against n, so not.toEqual always passes), so the stated "planted: one id more than the register holds is refused" is untested — build a planted context carrying an extra fe row and assert the CLI refuses it, or remove the claim from C-T5.
+
+BUG severity=MED — RR-0384 "Task 430 becomes three small things: stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "+  if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell that begins with a bold span still prints the shared headline, so the clip returns with the next such row; A-T2 only proves no current row has that shape — print the plain cell for bold-led cells too, or add a lock that no bold-led cell exceeds the shared cap.
+
+BUG severity=MED — RR-0384 "stop the clipping, make each line reflect its notes, and add these 13 lines" — scripts/surfaces/generate-surface-handbook.mjs "+  return clipped || shared !== plain ? plain : shared;" — this also replaces headlines the shared reader left unclipped but stripped of a trailing provenance bracket (A-T6: "short with provenance: unclipped, the shared rule strips the bracket; the copy keeps it (Q9 ...)"), a fourth behaviour no pasted operator ruling names — cite an operator ruling for the Q9 text change, or restrict the plain-cell fallback to the clipped case.
+
+DEFER severity=LOW — §2.3 "If using `!`, you must document why in an inline comment" — src/tests/surfaces/handbook-rule-map.logic.test.ts "const r = readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-10'))))[1]!;" — the new tests add many non-null assertions with no inline justification — add one-line comments or an explicit guard per site.
+
+MET — §5.2 parity battery "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — src/tests/surfaces/handbook-rule-map.logic.test.ts "C-T1 and C-T3 planted ... expect(run(root, ['--write']).code).toBe(0); expect(run(root, ['--check']).code).toBe(0);" — handbook and rule map are re-derived and diffed against the committed copies.
+
+MET — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification" — src/tests/surfaces/handbook-rule-map.logic.test.ts "A-T1 ... headlineFor(long)" — the generator's string transforms are pinned in the logic layer, not faked in an infra test.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the changed file is scripts/surfaces/generate-surface-handbook.mjs, a .mjs document generator with no pool, no transaction and no DB write, outside the scripts/*.js pipeline set.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+Rules met: none
+
+---
+⏱  98719ms (98.7s)
+📊 Tokens — total: 51899, input: 33863, output: 18036, reasoning: 17094

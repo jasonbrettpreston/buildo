@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:34:00.046Z file_sha256=5ce688697a314111215550adff66b7f0770c32ea20148c99ca7ec835a4e419b7 prompt_sha256=068304152eaeedc8c9787e0d26cc540273e2accebc94a852c419c21dab159f9a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-hb430/docs/reports/lanes/2026-11-22/BL-HB430/in-out-compliance-bylaw-133-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0384 "make each line reflect its notes" — scripts/surfaces/generate-surface-handbook.mjs "if (!statusCell.includes(READING_MARK) && !READING_FRAME.test(last)) return null;" — six rows that already carry dated notes get no Current reading and the generator accepts that silently, so their lines still do not reflect their notes (docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.03 "· +1 dated note", fe.06 "· +2 dated notes", fe.13 "· +3 dated notes", and fe.15, fe.32, fe.33 "· +2 dated notes") — add the six readings, or throw when a row holds a dated note and no reading; deferred, not failed, because RR-0379 "we will add to the rules overtime" lets the readings land in later commits.
+
+DEFER severity=LOW — RR-0384 "stop the clipping" — scripts/surfaces/generate-surface-handbook.mjs "if (/^\*\*/.test(ruleCell.trim())) return shared;" — a Ruling cell that opens with a bold span still prints the shared headline and is clipped again past 300 characters, so the clip is stopped for every shape but that one — return the plain cell whenever the shared result was clipped, whatever the lead span.
+
+DEFER severity=LOW — FE-56, quoting 127:59, in the new line "a lock never red against the defect it names is not a lock" — src/tests/backlog/rule-lists-table.logic.test.ts "expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));" — this planted case can never be red, the two arrays differ in length by construction, so the diff comment "planted: one id more than the register holds is refused" is not shown by the lock — drop the line, or build the extra id into a register fixture and assert the reader refuses it.
+
+REJECT — FE-09 in the prereg rules list "FE-09 (register locks resolve)" — the change adds 13 rows whose lock paths do not exist, which looks like a broken rule — not a real issue: an OWED row names the lock it owes by design, Spec 136's header prints "OWED, whose lock is still to land", and test C-T2 asserts each path is absent on purpose.
+
+MET — RR-0384 "stop the clipping" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — fe.18, fe.30, fe.39 and the other formerly clipped lines now print whole with no trailing clip ellipsis (fe.39 ends "(ST-5 as amended; the two sentences it replaces are SUPERSEDED).").
+
+MET — RR-0384 "make each line reflect its notes" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — the 12 pinned rows print their reading on the headline line, fe.19 "Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium".
+
+MET — RR-0384 "Item 9 stays a pointer, so the page does not grow by copying tables." — docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.53 "POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963)" and "The tables are not copied here."
+
+MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK" with "expected_moves": [].
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: m.322, m.357
+
+---
+⏱  98147ms (98.1s)
+📊 Tokens — total: 48133, input: 29570, output: 18563, reasoning: 17682
