@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.060Z file_sha256=b9423e6c496b8baaf5335d04c5d50a55bfc7cbd009a19b8643e3754a5e53820a prompt_sha256=6b0a3decdf5d0c7253371beca3ecfe1db32299a195dcffa77b0c63368ddd5dbb
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+REJECT — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — accused of adding dated notes to both specs — not a real issue: that ruling dropped the Spec 08/137 work from task 427, and this card's approved Files line names docs/specs/00-architecture/08_agents.md and 137_mcqueue.md, so a dated note with prior text kept is the named form the ruling is recorded in.
+
+REJECT — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — accused of the new N1/N2 tests naming task-439 and decision ids rather than a rule id — not a real issue: the entry defines the four enforcement kinds, it does not require every ruling to carry a lock, and no pasted clause asks for one here.
+
+REJECT — Task card "THIS TASK: one table edit after task-430 lands" — accused of touching tests, two specs and the generated report as well as the table — not a real issue: the card's Files line names all five paths and docs/reports/generated/rule-lists-by-kind.md is a generated page that must be written for the change to be consistent.
+
+MET — Task card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — scripts/analysis/rule-lists.json:145 — surfaces row now reads `"lists": ["surface-136", "eng-all"],` and the mobile row at :151 reads `"lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "eng-front", "eng-shared"],`, so none of the four is attached.
+
+MET — Task card "the specs-web-admin row keeps them" — scripts/analysis/rule-lists.json:218 — `"lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],` is unchanged; only the `why` text moved.
+
+MET — RR-0383 "1. what is your recommendation. I approve it" (tasks that edit the surface specs keep those specs attached) — src/tests/backlog/rule-lists-table.logic.test.ts:360 — `expect(table().rows.find((r) => r.id === 'specs-web-admin')!.lists, 'row specs-web-admin').toEqual(expect.arrayContaining([...FOUR, 'surface-136']));` plus the planted row at :361, so an edit under docs/specs/02-web-admin/ still resolves the four.
+
+MET — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items" — docs/specs/00-architecture/08_agents.md:354 — the note states the handbook "now holds the 13 lines he approved for task-430 (RR-0384, decision-169)", which is the stated precondition for dropping the four.
+
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — docs/specs/00-architecture/08_agents.md:354 — the note records that "a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: \"we will add to the rules overtime\")", so the loss of unreached rules is named, not silent.
+
+MET — Task card "the specs-web-admin row keeps them" and the rule-lists why text — scripts/analysis/rule-lists.json:146 and :152 — both edited `why` strings say Specs 126, 127, 128 and 135 "are no longer attached to this row", so the table's own account matches its `lists`.
+
+MET — Glossary "stage" / "RE-FREEZE #N" / "slug" / "archetype vs shape" / "PH-0 … PH-8" / "① ② ③" / "Intent Ledger" / "seam" / "sources chain" / "OWED" / "bracket" / "class-A" — src/tests/backlog/rule-lists-table.logic.test.ts:334 — the change touches none of these vocabularies: no step descriptor, schema field, manifest entry, gate token or Intent Ledger row is added or deleted, so no glossary definition is contradicted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  67442ms (67.4s)
+📊 Tokens — total: 26752, input: 14248, output: 12504, reasoning: 11480

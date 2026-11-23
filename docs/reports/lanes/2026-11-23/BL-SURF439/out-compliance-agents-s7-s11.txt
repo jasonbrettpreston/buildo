@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.059Z file_sha256=8905441cd2532f745fd8fc9e988b03e966e969dd48408ad4e84349a93f91744f prompt_sha256=35d56551c00116c181663c1ddb3c260c7f0f52488c1e7e12b48a2096f74cce34
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — docs/specs/00-architecture/08_agents.md:356 "so the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169)" — the condition the whole drop rests on (RR-0380 Q1 "once the handbook has been updated iwth the critical items") is recorded only as task-430's 13 lines plus the single later line noted at launch (fe.58 for R-22), and no executed check that the rules of Specs 126/127/128/135 now have handbook lines is recorded, which rule 11.1 forbids ("a claim that COULD be executed but wasn't") — cite RR-0395 and the missing-lines task id in the note and record the handbook-line audit in the lane report
+DEFER severity=LOW — Spec 137 task-439 note "the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them" — src/tests/backlog/rule-lists-table.logic.test.ts:352 "an edit to a surface spec still gets the four specs and Spec 136 through the specs-web-admin row" — the note asserts four further rows keep Specs 126/127/128/135 but only specs-web-admin is exercised by any test or acceptance line in the material — add those four rows to N2 or record their resolve output in the acceptance block
+DEFER severity=LOW — rule 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — task card "Measured by the task-431 plan grounder: a front-end review goes from about 558,000 to about 83,000 characters." — the after-figure is not reproduced at this head: the resolved lists total 113,259 characters (eng-all 46,613 + surface-136 29,076 + five-words 5,367 + plan-protocol 8,825 + inc-S 20,869 + ms-S 2,509) per docs/reports/generated/rule-lists-by-kind.md:34 "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — re-measure and record the figure the lane finds, or drop the number
+DEFER severity=LOW — TKT-1 "`Done-condition:` (the task's acceptance criteria)" — task card "## Acceptance criteria" with no content following it — the card states no done-condition, so the close is judged only by the lane's own acceptance.out block — record the three resolve expectations (front-end 6 lists, phone 12 lists, surface-spec 12 lists) as the acceptance criteria
+
+MET — card "Specs 126, 127, 128 and 135 leave the front-end and phone rows; the specs-web-admin row keeps them" — scripts/analysis/rule-lists.json:145 "lists": ["surface-136", "eng-all"] — surfaces and mobile drop the four lists, specs-web-admin keeps all five
+MET — Spec 08 task-439 note "the mobile row keeps its five mobile lists" — scripts/analysis/rule-lists.json:154 "mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96" — the five mobile lists stay beside surface-136, eng-front, eng-shared
+MET — Spec 08 task-439 note "The words ... in the task-366 note of section 5.3 above now hold for those rows only" — docs/specs/00-architecture/137_mcqueue.md:136 "in the task-366 note above (Rule 12) now hold for those rows only" — the stale parenthetical is superseded in place by a dated note
+MET — Spec 137 task-439 note "the specs-web-admin row ... keep them" — scripts/analysis/rule-lists.json:218 "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"] — unchanged, so an edit under docs/specs/02-web-admin/ still resolves the four specs
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — src/tests/backlog/rule-lists-table.logic.test.ts:353 "const SPECS = ['126_maxbld_surface_standard.md', ...].map(...)" — N2 asserts every one of the four spec files still resolves the four plus surface-136
+MET — rule 11.3 "Every lock is proven in BOTH directions" — Implementation Notes "red.out refused, 2 failed | 26 passed: N1 at rule-lists-table.logic.test.ts:339" and "commit.out green, Tests 28 passed" — the new lock is red against the old row shape and green after the edit, with the planted rows asserted to throw
+
+REJECT — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — the change is accused of editing both specs — the two dated notes are the only place the task-366 parenthetical becomes false once the rows change, and the card's Files line approved under RR-0385 names both spec files
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+Rules met: none
+
+---
+⏱  74740ms (74.7s)
+📊 Tokens — total: 38373, input: 24732, output: 13641, reasoning: 12441
