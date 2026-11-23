@@ -1,0 +1,87 @@
+{
+ "$comment": "Pre-registration, task MF-96 (FINAL.9, task-446: one OWED Spec 135 row restating Spec 128 R-22, Spec 136, the rule map, the rule-lists page and the system map regenerated; documents and one root test only), prereg 1, committed alone and first, before the MF-96 work commit. Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-95 prereg total. rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook). The new row is OWED and is never cited. In-file round 201 (claimed in ~/Buildo-scratch/ids/round-201; MF-95 used 200).",
+ "schema": "coa-round-prereg-v1",
+ "round": 201,
+ "task": "MF-96",
+ "rules": [
+  "FE-09",
+  "FE-10",
+  "FE-16"
+ ],
+ "plan_ref": "backlog task-446 Implementation Plan (PLAN-446-v1 with the round 1 rulings, section 7); docs/reports/reviews/task-446/GROUNDER-PLAN.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993, :1999, :2002",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 40,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 67
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 40,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 67
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 28,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 49
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 28,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 49
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 56,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 72
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 56,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 72
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
+}

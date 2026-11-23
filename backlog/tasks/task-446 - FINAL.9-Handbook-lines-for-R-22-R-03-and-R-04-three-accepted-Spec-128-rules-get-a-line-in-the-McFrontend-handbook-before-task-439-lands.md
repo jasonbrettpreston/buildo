@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:12:00Z'
+updated_date: '2026-11-23T14:15:00Z'
 labels:
   - McFix
   - McFix Final
@@ -370,4 +370,8 @@ rg#1 MED folded When task-367 builds
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-23 taken on the board at lane launch (lane BL-HB446, worktree /Users/brettpreston_macmini/Buildo-wt-hb446, branch wf1/inc1b-hb446), RR-0240
+
+Dated note 2026-11-23 (M-246, prior text kept; RR-0396 · task-446 · Backlog; decision-181, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1999 and :2002; operator, verbatim, on the one-rule question with the fe.58 line text shown: "Question1 yes. push complete" and "Question2 No"): the launch gate of plan section 0 is met; task-446 adds the R-22 line only, with the line text as shown; no seam sentence is appended to fe.49.
+
+2026-11-23 lane BL-HB446 commit 0 (records, alone and first, plan section 7): MF-96 queue row under Phase 2 with "FE rows owned: none." (Next free id MF-97), prereg-MF-96-1.json (round 201, claimed in ~/Buildo-scratch/ids/round-201; rules FE-09, FE-10, FE-16 RULED; totals copied unchanged from prereg-MF-95-1.json; expected_moves empty), panel record docs/reports/panels/MF-96.json. Ledger: MF-96 and round-201 claimed by this lane; FE-58 handed over to BL-HB446 (FE-58/owner dated line); FE-59 not claimed.
 <!-- SECTION:NOTES:END -->
