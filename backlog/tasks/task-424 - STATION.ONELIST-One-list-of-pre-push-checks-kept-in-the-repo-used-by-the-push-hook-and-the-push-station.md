@@ -3,11 +3,10 @@ id: TASK-424
 title: >-
   STATION.ONELIST One list of pre-push checks kept in the repo, used by the push
   hook and the push station
-status: RUNNING
-assignee:
-  - '@lane-BL-ONE424'
+status: LATER
+assignee: []
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:13:00Z'
+updated_date: '2026-11-23T14:14:00Z'
 labels:
   - McFix
   - McFix V2
