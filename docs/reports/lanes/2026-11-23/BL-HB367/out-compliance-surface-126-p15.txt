@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:08:27.466Z file_sha256=9f39a0a9fdac7bfc1e972cb2c962bfbf3c1125c9bf178ef93af5e42a9112059a prompt_sha256=1965ecf10623ad498774f51d4024a016eb1b7b490dedfef5da1a1a3f1023ee31
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p15.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §6.1 "`database.tables[]` inside the owning CONTRACT (or JOB) descriptor" and §10 "the referenced CONTRACT descriptors' `database`" — src/tests/surfaces/scope-fence.logic.test.ts:85 "for (const k of ['inputs', 'outputs', 'evidence'] as const) {" — the fence reads only surface inputs/outputs/evidence tables and never a CONTRACT descriptor's database.tables[], the location 126 §6.1 declares and 126 §10 derives a surface's tables from, so a contract declaring lead_parcels stays green — scan contract descriptors' database.tables[] in findDescriptorHits and in the A walk
+
+BUG severity=MED — task card "one gate per rule that has no mechanical check and that 1·B code touches" — src/tests/surfaces/scope-fence.logic.test.ts:16 "LIMITS (stated, not widened): declared files only, no import hop ... a server file a descriptor does not declare is not scanned" — a lead_parcels read in an undeclared route or one import hop away is unseeable, so fe.49 has no mechanical check on those paths — extend the scan to route handlers and one import hop, or record the residue on the FE-49 note
+
+DEFER severity=MED — RR-0359 "Nothing is folded before the grounder has ruled" — pasted note "Task stays RUNNING, grounder owed (RR-0359)." — the diff is staged for fold while the grounder has not ruled — record the grounder's ruling before this merges
+
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — ownership is only a string that A2 regex-checks, no assertion reads the queue to confirm MF-49/MF-50 and MF-51/MF-52 exist and are LATER — add a check that reads .cursor/MCFRONTEND-QUEUE.md for each owner id and status
+
+DEFER severity=LOW — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE in this chunk (tests only) — cannot see the generated Spec 136 and rule-lists shrink here — confirm the OWED count drop in the chunk that carries the generator output
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:33-36 — ALLOW holds exactly two entries and A2 caps at 2
+
+MET — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 — FLIP_PENDING is ['FE-39'], FE-51 removed
+
+MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:126 — B and B2 plant a tab push and a reshaped constant, C gives 0, A asserts the clean tree
+
+MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:119 — B plants five linkage forms and a descriptor ref, C gives 0, A asserts the clean tree
+
+REJECT — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — accused of landing the parked gates A and B — these are handbook-rule test locks (fe.49, fe.51) under "handbook tests start fresh", not the parked gates A/B/C
+
+REJECT — AC#1 "The gate list is confirmed by the operator before any gate is built" — accused of building without operator confirmation — RR-0413 "yes to both A. Status flip." and RR-0417 "yes. worktrees removed" confirm the three rows
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+Rules met: none
+
+---
+⏱  141552ms (141.6s)
+📊 Tokens — total: 59094, input: 24879, output: 34215, reasoning: 33239

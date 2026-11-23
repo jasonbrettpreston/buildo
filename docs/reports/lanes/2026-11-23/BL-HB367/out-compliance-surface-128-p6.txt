@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:22:07.347Z file_sha256=7ff9998fd7c3a10e12e1c80d323c72b7d2a7cd23e3d1528c7a6b0611da35eb11 prompt_sha256=9c58b39023bca2f016c0518d5a48615a6ce782bf1d6c44208e19a3b5cdc0359b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — R-32 "It declares the `parcel_ref` ↔ `parcel_pk` mapping over `lead_parcels`" (against R-03 Lock "a check asserting no surface descriptor references `lead_parcels`") — src/tests/surfaces/scope-fence.logic.test.ts "const descs = inScopeDescriptors();" plus "filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''))" — the fence scans every descriptor kind, not just SURFACE, so R-32's sanctioned CONTRACT that maps over lead_parcels will be flagged red once it lands in scope — filter on d.kind === 'SURFACE' per R-03's own "surface descriptor" wording, or exempt the parcel_id_translation contract by id.
+DEFER severity=MED — R-03 "No linkage to LeadDetail, the flight board, or the lead feed" — src/tests/surfaces/scope-fence.logic.test.ts "if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);" with "const str = ... if (LEAD_TABLE_RE.test(s)) ... else if (leadRoute(s)) ..." — str never applies namesLeadScreen, so a dynamic import('@/screens/LeadDetail') or any string literal naming a lead screen is not caught — run namesLeadScreen over string and template literals too, or at least over dynamic import arguments.
+DEFER severity=LOW — R-03 "No linkage to LeadDetail, the flight board, or the lead feed" — src/tests/surfaces/scope-fence.logic.test.ts "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — /(app)/map is not one of the screens R-03 names, so unless it is the flight-board route this bans a route no ruling names — confirm /map is the flight board and cite it, or drop it.
+DEFER severity=LOW — R-03 "No linkage to LeadDetail, the flight board, or the lead feed" — src/tests/surfaces/scope-fence.logic.test.ts control "import { ok, err } from '@/features/leads/api/envelope';" expected to give 0 hits — permitting @/features/leads imports leaves a path into the lead feature open, which is the linkage R-03 bans if that module reads lead data — record the helper as a named exception in the FE-49 dated note and restrict it to the specific exported helpers.
+MET — R-03 — src/tests/surfaces/scope-fence.logic.test.ts "expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([])" — a fence check over descriptors and declared files exists, matching R-03's Lock "a check asserting no surface descriptor references `lead_parcels`".
+MET — RR-0417 — src/tests/surfaces/register-locks-resolve.infra.test.ts "left it in the MF-98 fix commit once the operator said yes (RR-0417)" — FE-51 removed from FLIP_PENDING consistent with "FE-51 tab switch may read RULED with its two named owned exceptions".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: R-04
+
+---
+⏱  103290ms (103.3s)
+📊 Tokens — total: 42894, input: 20222, output: 22672, reasoning: 21883

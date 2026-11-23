@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:23:50.694Z file_sha256=82e4f336b507e09399ac3caac90a4eab4ee8c5f329397d26a39250205e943bb6 prompt_sha256=8dc0e7f750c6abd41f913e2ce037c115319bcce3b89d518431e70af7af6a7858
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts findDescriptorHits "for (const k of ['inputs', 'outputs', 'evidence'] as const) {" — clause unmet for descriptors, an in-scope descriptor whose identity.route (or an x-draft file path) names a lead screen or a lead route gives no hit because findDescriptorHits reads table refs only and findFenceHits never parses the descriptor JSON, so the P pass on FE-49 cannot see that linkage form and the gate stays green — fix, have findDescriptorHits test d.identity?.route and every x-draft file against LEAD_ROUTES and LEAD_SCREENS and push a hit.
+
+DEFER severity=LOW — FE-49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — the ban list adds /(app)/map, a route no pasted clause or ruling names, so a MaxBLD page that routes to a map screen fails with nothing to cite — fix, drop /(app)/map or cite the ruling that names it.
+
+DEFER severity=LOW — FE-49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts "if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');" — a namespace import such as import * as LeadDetail from '@/screens/x' binds a lead screen name without NamedImports and without a matching module path, so the fence stays green — fix, also test c.namedBindings.name.text when the binding is a NamespaceImport.
+
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts "why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route'" — the ownership of each exception rests on queue rows MF-49/MF-50 and MF-51/MF-52 which are not pasted, so I cannot see that the rows exist, only that they are labelled owed — fix, cite the queue rows' lines in .cursor/MCFRONTEND-QUEUE.md in the allow entry or the row note.
+
+REJECT — FE-49 — the lock scans only the tracked files the in-scope descriptors declare, so an undeclared surface file reading lead_parcels is not seen — the FE-49 dated note fixes the fence as converted-surfaces.json programme_scopes, so the descriptor-declared file set is the ruled fence and not a defect of this diff.
+
+MET — FE-49 — src/tests/surfaces/scope-fence.logic.test.ts "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the lock the row names lands with the MF-98 work commit and test B carries the planted red case for each of the four linkage forms it does cover.
+
+MET — FE-49 — src/tests/surfaces/scope-fence.logic.test.ts "The platform_shared standing exception ... is outside the scope fence; its record is the FE-49 dated note." — matches the row's dated note, which keeps that descriptor out and names the note as its record.
+
+MET — FE-36 — src/tests/surfaces/nav-tab-switch.logic.test.ts "const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];" with toEqual([]) — FE-36's named router mechanisms are not flagged, so the new gate does not contradict FE-36.
+
+MET — FE-39 — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-39's row still reads OWED with its landed lock, so it correctly stays flip-pending and the comment's account of FE-51 is consistent with RR-0417.
+
+MET — RR-0417 — src/tests/surfaces/nav-tab-switch.logic.test.ts "expect(ALLOW.length).toBeLessThanOrEqual(2);" with exactly two entries — the gate carries exactly the two named tab-push exceptions, and A2 requires each why to start "owed: MF-".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 1
+Rules met: FE-36, FE-39
+
+---
+⏱  161572ms (161.6s)
+📊 Tokens — total: 59956, input: 26131, output: 33825, reasoning: 32697

@@ -1,0 +1,149 @@
+// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
+//
+// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
+//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
+// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
+// scope.programme_scopes, the manifest's own fence):
+//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
+//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
+//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
+//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
+//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
+// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
+// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
+// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
+// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
+// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
+// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
+// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
+// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import ts from 'typescript';
+import { describe, expect, it } from 'vitest';
+
+const ROOT = process.cwd();
+const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
+const LEAD_TABLE_RE = /lead_parcels/i;
+const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
+const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
+
+export interface Hit { file: string; line: number; what: string }
+type TableRef = string | { table?: string };
+export interface Descriptor {
+  kind?: string;
+  identity?: { id?: string; route?: string };
+  programme?: { scope?: string };
+  inputs?: { tables?: TableRef[] };
+  outputs?: { tables?: TableRef[] };
+  evidence?: { tables?: TableRef[] };
+  'x-draft'?: { files?: string[] };
+}
+
+const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
+const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
+const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
+const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
+
+/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
+export function findFenceHits(rel: string, text: string): Hit[] {
+  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
+  const hits: Hit[] = [];
+  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
+  const str = (n: ts.Node, s: string) => {
+    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
+    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
+  };
+  const visit = (n: ts.Node): void => {
+    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
+      const names = [n.moduleSpecifier.text];
+      if (ts.isImportDeclaration(n) && n.importClause) {
+        const c = n.importClause;
+        if (c.name) names.push(c.name.text);
+        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
+      }
+      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
+      const screen = names.map(namesLeadScreen).find(Boolean);
+      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
+      return; // the module path is checked above; its string is not a route or a table read
+    }
+    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
+    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
+    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
+    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return hits;
+}
+
+/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
+export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
+  const hits: Hit[] = [];
+  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
+    for (const t of d[k]?.tables ?? []) {
+      const name = typeof t === 'string' ? t : t.table ?? '';
+      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
+    }
+  }
+  return hits;
+}
+
+export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
+  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
+    .toString()
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((f) => f.endsWith('.descriptor.json'))
+    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
+    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
+}
+
+/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
+export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
+  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
+  const out = new Set<string>();
+  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
+  return [...out].sort();
+}
+
+describe('fe.49: the scope fence (Spec 128 R-03)', () => {
+  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
+    const descs = inScopeDescriptors();
+    const files = declaredFiles(descs);
+    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
+    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
+    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
+    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
+    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
+    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
+    expect(files.length).toBeGreaterThanOrEqual(41);
+    expect(descs.length).toBeGreaterThanOrEqual(45);
+    expect(mobile).toBeGreaterThanOrEqual(20);
+  });
+
+  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
+    const cases = [
+      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
+      "pool.query('SELECT * FROM lead_parcels');",
+      "pool.query('SELECT * FROM LEAD_PARCELS');",
+      "router.push('/(app)/[lead]?id=1');",
+      "fetch('/api/leads/feed');",
+    ];
+    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
+    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
+    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
+  });
+
+  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
+    const controls = [
+      '// lead_parcels',
+      "import { ok, err } from '@/features/leads/api/envelope';",
+      "router.push('/(app)/parcel-tool');",
+    ];
+    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
+    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
+  });
+});

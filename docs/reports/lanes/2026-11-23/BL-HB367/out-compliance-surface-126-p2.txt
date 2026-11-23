@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:10:49.099Z file_sha256=1368ab34f99067953fcfbc94a3526a9d8bc3d05f3621300a250bd2432cf07065 prompt_sha256=a92c8ee9e0bc4bcf3c0c8991f5c7906121ea1165079434712fa309d49b93ee11
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0406 "That would help to determine which running tasks and built tasks will close with that process." — backlog task-367 (pasted) "labels: McFix, McFix Final" — no line in the change adds the McFixReborn label that RR-0406 directs for tasks the process covers, and RR-0412 puts task-367 in it ("So both 442 and 367 should be running once this push lands."), so the ruling is unmet by the queue row and the panel — add McFixReborn to the task-367 card labels and cite it in the MF-98 row or its dated note.
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests" — .cursor/MCFRONTEND-QUEUE.md:662 "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" against :665 "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) in the MF-98 fix commit" — FE-51's lock is recorded as landing in commit 1 while its flip is recorded in the fix commit, so the row's own RR-0413 A condition is not what happened for FE-51 — record RR-0417 as the authority that moved FE-51's flip after its test commit, or state that RR-0417 supersedes the same-commit timing for FE-51.
+DEFER severity=LOW — RR-0413 "yes to both A. Status flip." — docs/reports/panels/MF-98.json:11 "(A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)" — the quoted verbatim stops before "A. Status flip." and the A/B meanings are a parenthetical the operator did not say, so the verbatim record is a truncation — quote the full utterance and move the A/B reading outside the quotation marks.
+DEFER severity=LOW — RR-0359 "That's ridiculous to fold before the grounder review - the focus is on getting it right" — docs/reports/panels/MF-98.json:16 "with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" — the panel head already reads "commits 0, 1, fix" yet its output field still describes round 1 as untriaged while the pasted lane note records "output round 1 fix (grounder Cairn-Ground-O367, parts A to H)", so a reader cannot see RR-0359 satisfied for round 1 — say round 1 is ruled and only round 2 is owed.
+REJECT — surface-126 §3 "an archetype gates which descriptor fields must be answered, it does not merely label a renderer" — accused of shipping an archetype whose profile answers are missing — no descriptor, contract or job file is added or edited in this chunk, so no archetype profile is engaged.
+REJECT — surface-126 §4 "Omission is a build failure; \"none\" is a valid value, and it applies PER FIELD, not per category" — accused of omitting a category value — the chunk holds a queue row, a generated report and a panel record, none with a category key, so there is nothing to omit.
+MET — RR-0386 — .cursor/MCFRONTEND-QUEUE.md:662 — the row keeps the parked gates out: "Not in this row: any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19), any other OWED row, the parked branch wf1/inc1b-gates (RR-0386)."
+MET — RR-0417 — .cursor/MCFRONTEND-QUEUE.md:665 — FE-51 reads RULED with exactly two named, owned exceptions and the row now owns it, as ruled.
+MET — RR-0412 — .cursor/MCFRONTEND-QUEUE.md:660 — the 367 row runs while "MF-97 is held by lane BL-FEDB442 (task-442, not yet landed; id claimed in ~/Buildo-scratch/ids/MF-97)", so both 442 and 367 run.
+MET — RR-0385 — docs/reports/panels/MF-98.json:3 — "No app, descriptor, mobile or gate-script change." matches tests are the focus and no gate landing.
+MET — surface-126 §5.7 "a value in two places is a drift source" — docs/reports/generated/rule-lists-by-kind.md:33 — the surface-136 count moves 29,076 to 29,166 and both totals move by exactly +90, consistent with a generator run, not a hand-typed edit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 31   Unmet: 1
+Rules met: none
+
+---
+⏱  188547ms (188.5s)
+📊 Tokens — total: 68285, input: 28190, output: 40095, reasoning: 38988

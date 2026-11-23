@@ -1,0 +1,564 @@
+LIST surface-126 sha256:8ed63335102d549a755c85cac16d28e26e0445f6a821a3d188e8943dcb314187 material sha256:92badd4777c0ac986803749a496d6f1d5a74c90b0a00dcdc78e58b99e049c3f4 part 1 of 6 chunk 2 of 3
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 1 of 6. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/135_mcfrontend_decisions_register.md","docs/specs/02-web-admin/136_mcfrontend_handbook.md","scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json","scripts/surfaces/_schema/surface-rule-map.json","src/tests/surfaces/failure-state-declared.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts"]
+
+# SPEC 126 — MaxBLD Surface Standard (the surface descriptor as contract)
+
+> **Status: DRAFT** — Authorized for McFrontend Phase 1 only (card answer Q-FE a: "A Spec 126-128 plan is authorized as documents only, named McFrontend. ... The build starts after McBylaws increment 2 closes"; scope mobile, web, admin and PDF). Phase 1 = the REPORT section (§11a) and the report-page conversion only. Every other phase stays "Not authorized for implementation" until touched for a product reason (card answer Q-MFS a: "Other screens convert only when touched for a product reason"). Companion specs, RULED 2026-11-04 (Q-MF1 a): 135 (decisions register) and 136 (generated handbook), in docs/specs/02-web-admin. Source of the rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`.
+>
+> Dated note 2026-11-09 (McFrontend Phase 2 (expansion); prior text kept, M-246; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): authorized also for **McFrontend Phase 2 (expansion)**: every MaxBLD page on one standard (§11b; D-0). Phase 2 surfaces are those listed in §11b.3 (queue rows MF-35, MF-37..MF-50, MF-30). The 2026-11-02 infra freeze is lifted by name for Phase 2, including the library dependencies and the Spec 33 amendment (D-1). Web first; the separate mobile app, checkout and the maxbld.ca front door are LATER, triggered rows. Other screens stay convert-on-touch; scope D stays fenced (Spec 128 R-03).
+>
+> Prior status line (2026-09-15, kept, M-246): authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation. A WF1 plan with PLAN LOCKED gates every phase below; `.cursor/wf1_spec126_128_active_task.md` is the authoring plan this spec was written under.
+>
+> **Placement note (measured, not chosen).** These three specs span mobile, web and admin, so `docs/specs/04-platform/` was the natural home. It is **not supported today**: `scripts/generate-system-map.mjs:24-31` defines `SECTIONS` as a hard-coded directory allow-list (`00-architecture`, `01-pipeline`, `02-web-admin`, `03-mobile`, `archive`, `reference`) and a directory absent from it is **silently dropped** from the system map — no throw, `collectSpecs` is simply never called for it. `src/tests/system-map.infra.test.ts` hard-codes the same four sub-directories at `:49`, `:300` and `:325`. Creating `04-platform/` therefore means a code change to a generator and a test that are outside this spec's Target Files. **Specs 126/127/128 land in `docs/specs/02-web-admin/` next to Spec 125, and the folder question is filed as `ASK-06` in Spec 128 §6.**
+>
+> ⚠️ **System-map coupling.** These specs list `src/` and `scripts/` paths in their Operating Boundaries, and `src/tests/system-map.infra.test.ts:49` asserts every such path appears in the committed system-map row for the spec. **`docs/specs/00-architecture/00_system_map.md` has been regenerated** (`node scripts/generate-system-map.mjs`) and is part of this change; re-run it whenever a boundary list changes. The map is derived, never hand-edited (PD #2).
+
+---
+
+
+## 0. What this supersedes — Spec 125 is absorbed
+
+**Spec 125 (`docs/specs/02-web-admin/125_schema_driven_ui_engine.md`) is SUPERSEDED by this spec and should be marked so at the commit that lands 126/127/128.** Spec 125 was an operator-supplied blueprint (§1–§13 verbatim) with an orchestrator correction block (§0). It was right about the *shape* — UI as a projection of a descriptor, an archetype registry, generated types, contract tests, one engine rather than N bespoke pages — and it is the reason this programme exists. It was written before the estate was censused, so its arithmetic and several of its mechanisms are wrong against the tree.
+
+This spec is the grounded successor. It is written against **`docs/reports/2026-09-15-spec126-surface-unit-and-schema-model.md`** (the census: 53 rendering surfaces, 61 API contracts, 87 tables, every count executed against this tree) and **`docs/reports/2026-09-15-spec125-mobile-parcel-cost-tool-gap-analysis.md`**.
+
+### 0.1 What carried over from Spec 125
+
+| Spec 125 idea | Where it lives now |
+|---|---|
+| UI as a projection; zero hard-coded business logic in a page | §5 arrow 3 · §2 (the SURFACE unit) · Spec 128 rule 2 |
+| Archetype registry mapping descriptor archetypes to components | §3 (derived from the census rather than proposed) |
+| Server-side heavy lifting (Next.js Server Components) | §5 arrow 3 — **true on web, false on mobile**; see §0.2 |
+| Contract versioning (`schema_version` per descriptor) | §4 `identity.contract_version` + `spec_version` |
+| Fail-safe fallback for an unknown archetype | §3.4 (and it is a `checks[]` entry, not only a render branch) |
+| Generated end-to-end types + runtime Zod parsing | §5 arrow 2 (the highest-value arrow) |
+| `eslint-plugin-boundaries`-style architecture guardrails | §9 Phase 1 — guardrails move to the FIRST phase, not the last |
+| Contract testing against live descriptors | §5 arrow 6 (goldens, as a PAIR) · Spec 127 §3 gate S8 |
+| Centralized telemetry on contract breaks | §7 · §10 |
+| The `app_outputs` materialised projection | §6.3 — now specified: written by a converted pipeline step at the end of chain `sources` |
+
+### 0.2 What was DROPPED from Spec 125, and why
+
+Each row is a deliberate retirement, not an oversight. Retiring it here is the Spec 128 §4 disposition `knowingly-retired`.
+
+| Dropped | Spec 125 site | Why |
+|---|---|---|
+| **"18 categories"**, everywhere | §2, §4, §5 Rule 3, §6 Phase 1, §10 | **20.** `scripts/steps/_schema/step.schema.json` `required.length` → 20 (re-measured at authoring). The "18" was already stale in Spec 122 §1.3, whose own amendment block records the correction propagating to 13 prose sites. §4's mirror is GENERATED from the schema so this cannot recur. |
+| **FlutterFlow** as a mobile option | §6 Phase 3 | The mobile client is Expo / React Native (Spec 90). `mobile/package.json` carries `@supabase/supabase-js`, `expo-router`, NativeWind; there is no Flutter anything in the tree. |
+| **"The database record *is* the specification"** | §6 (Spec-to-Schema Mechanics) | Git is the source; Supabase holds a **projection** (§6.4). Descriptors in a table lose AJV-before-compute validation, golden fingerprinting and diff review — three mechanisms that exist and work. `src/tests/golden-fingerprint.infra.test.ts` exists precisely because a descriptor edit after capture must force a recapture; a table row cannot participate in that. |
+| **Generating migrations from descriptors** | implied by §6 Phase 1 | `npm run db:generate` is `drizzle-kit introspect` — the arrow already runs DB→TS. Reversing it collides with `scripts/migrate.js` (filename-keyed `schema_migrations`), `scripts/hooks/validate-migrations.sh` and `scripts/hooks/check-migration-down-comments.sh`. Replaced by **declare-and-assert** (§6.1). |
+| **`FORM_INPUT` / `DATA_GRID`** as archetype keys | §12 Step 1 | Placeholders. The real vocabulary is derived from the census in §3 and every member is a file in this tree. |
+| **`StepEngine`** as the engine's name | §3, §12 Steps 2–3 | Renamed **`SurfaceEngine`**. "Step" is the pipeline's unit (Spec 122) and is not being renamed; a second meaning for it across the admin/web/mobile trees is exactly the vocabulary collision Spec 122 V1–V6 were ruled to prevent. |
+| **`/workflow/[stepId]/page.tsx`** as the single dynamic route | §6 Phase 2, §11, §12 Step 3 | There is no `workflow` concept in the product. Routes stay where they are; what changes is that each route becomes a thin archetype projection. A single dynamic route would also defeat Next.js route-segment caching and the existing `route-guard.ts` path classification. |
+| **The React Flow admin node-graph** | §4 | Deferred, not adopted. `react-flow` is in neither `package.json`; the pipeline's dependency data already has a generated home (`npm run lineage-docs`). A new dependency for a picture of something already rendered as text is not a Phase-1 spend. Re-opens as `ASK-05` (Spec 128 §6). |
+| **`dependency-cruiser`** code-architecture mapping | §4 | Same reason; the estate already gates architecture with ESLint + ast-grep shape rules. Not a new tool in Phase 1. |
+| **§7 as part of the engine spec** | §7 | Split, per Spec 125 §0 item 7 — but *not* into three specs. Offers + PDF/EXPORT + metering are "same descriptor, different renderer/gate" and are specified together (§7 here, and the product spec that follows). Specifying them apart produces three vocabularies. |
+| **`supagen`** | §3 | Not a dependency and not needed; `drizzle-kit introspect` already generates the DB types. |
+| **"Treat the engine as a one-time core infrastructure build"** | §8 | Retired as a mitigation. The estate's own evidence is that a one-time build is how `/api/leads/view` became a 153-line meter with 44 green tests and zero callers. The engine is built pilot-first, with a kill criterion (§8.3). |
+
+### 0a. The six principles (McFrontend, added 2026-11-04)
+
+Operator verbatim, Q-MFP: "Q-MFP a". The card text of the six, adopted by that answer:
+
+1. **Declared, not coded:** a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code.
+2. **Proven, not reviewed (no errors):** every declaration is checked against the live contracts and the McBylaws catalogue, with golden render states and both-directions locks; observability (usage and drift in-product, Spec 126 P6/P8) sits inside this.
+3. **Fast:** a performance budget per archetype (load, payload) for the user; for the team, a new field or scenario ships in hours.
+4. **Single source:** the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI.
+5. **Honest display:** disclosures, confidence, "at least", not_evaluated and not_modelled always shown, never hidden; status words come from a closed list.
+6. **Same everywhere:** mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15).
+
+Each principle has a Lock in Spec 135 (FE-02..FE-07). The principles table of §2.2.1 reads P2 = no derive differently, P6 = drift shown in-product and P8 = orphans (not "usage"); the operator's "P6/P8" is kept in the operator's words, with no gloss.
+
+### 0b. How McFrontend work is done (the working standard, added 2026-11-11)
+
+Operator, verbatim (2026-11-11): "just to be clear - we are using the queu rules/system, wiring the pages - using a standardized approach with minimal code - I just want to make sure we are not randomly making stuff up or doing it on the side - we dont want a mess at the end - complaince to a standard always - wiring - testing etc. this standrd needs to be written down and we make decisions which are sotres.. rulling and we cite the rulings alwsy." and "x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook". Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the last two 2026-11-11 entries. M-246 form: nothing above is changed. This section gathers rules that already exist and points to each by spec and line (read at `e088bf072`); it restates none of them. Items 7 and 8 write down two working rules that until now lived only in the operator's words and the scratch logs. When this section and a cited rule disagree, the cited rule governs and the gap goes to the operator.
+
+1. **Queue row first.** No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md` ("A task not listed here is not done", `.cursor/MCFRONTEND-QUEUE.md:3`). Wider scope than the row is a new row, not a longer brief (Spec 08 §11.9 TKT-1, `08_agents.md:494`).
+2. **The Spec 08 lane process, per row.** Plan with its tests written in (`08_agents.md:464`, §11.4) → PLAN panel (`08_agents.md:299`, §6.4; §11b.5 below, "Spec 08 PLAN and OUTPUT panels per row") → one decision list to the operator, answers recorded verbatim (item 6) → pre-registration committed alone before the code (`prereg-MF-n-k.json`, Spec 128:171 and :183) → red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7) → build on the current tip through the real hooks → OUTPUT panel (`08_agents.md:471`, the lean pair; the frontend nuance `08_agents.md:472`, §11.5-FE) → one full suite on the current origin tip before "ready" (`08_agents.md:488`, MCINC-4) → the operator pushes (the pre-push "Approve this push? [y/N]", `scripts/analysis/mcbylaws/gate.mjs:543`).
+3. **Screens are declared as data and drawn by the shared bindings; no page code.** Every page is descriptor + content + standard components configured by schema (§0a principle 1, :59; §11b.1, :880-882; Spec 135 FE-02, FE-24, FE-31). Every value binds through the closed binding set (§11a.1; FE-18, FE-27, FE-32). Operator, verbatim (2026-11-11): "just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations".
+4. **Existing components only.** Every build reuses the existing components, bindings and patterns; nothing new is built where an existing one serves (operator, verbatim, 2026-11-11 morning: "also we should be building anything just using existing components"; §11b.1, :881; the import boundary of FE-31). The first use of an archetype on a platform pays only the §11b.5 costs; a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built.
+5. **The server formats every value; the UI does no maths.** FE-05 (Spec 135:27); a page part is the server-formatted string as sent, and a number throws (FE-34). A display transform lives on the server or in content, never in a binding.
+6. **Every operator ruling is recorded verbatim, dated, landed and cited.** The operator's own words with the date and the record path ("Operator verbatim" = the operator's own words, Spec 135:3); landed as a Spec 135 FE row with one lock (Spec 135 rules 2, 3 and 5) or as a dated note with the prior text kept (M-246, `69a_mcbylaw_register.md:141`); cited by every commit, prereg and lock that relies on it (the `McFrontend-Task:` trailer and the prereg `rules[]`, each RULED, Spec 128:170-171; the `Operator-Ruling:` line, as on the landed lane commits). A ruling does not stay only in a scratch file: it lands with its row's next docs commit or a lane R docs commit.
+7. **Pre-approved decisions are logged and confirmed.** Operator, verbatim (2026-11-08): "I can pre-approve some decisions - that meet the folloowing conditions (1)  compliant (show citations),standardized (follows similar rules) observable, understandable - no scope creep and simple. Finally you have high level of confidence with the decision.  I need to see the decisions made and how they met the criteria in the morning". The orchestrator takes such a decision only when all six hold, each with its evidence, and logs it with a D-nn id in the dated pre-approval log (`~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`); never for a push, a DB job, a night go, a spec amendment, a protected-path change or the reversal of a ruling. The operator confirms the log (e.g. "2 y" for D-37..D-39, 2026-11-11), and a landing cites "pre-approved D-nn" (the form of the §11b.2 dated note 2026-11-10, :907).
+8. **Scratch mocks are design inputs only.** Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo (§11b.7 report sub-note item 5, :1058). Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision (operator, verbatim, 2026-11-11: "dont worry about things in the stitch screen that have no source - dont add them - its just an example - not law").
+9. **No rule, no decision on the side.** Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling (Spec 135 rule 1: a different party adjudicates).
+10. **Testing.** Goldens per state per target and one render smoke per archetype per platform (FE-31, FE-33); the gate `surface-validate.mjs --check` (FE-13); the McFront proof canaries (FE-15). Dated note 2026-11-12 (M-246, prior text kept; McTest · McFrontend queue · lane R; MF-78..MF-82; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's", McTest D-1..D-14 all (a); Record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "McTest + MF-46 rulings (2026-11-12)"; plan `~/Buildo-scratch/mctest/PLAN.md`, `scenarios.yaml`, `DECISIONS.md`): testing also proves the real app is wired, end to end, by McTest (FE-40). The cases are rows of one catalogue, `tests/e2e/scenarios.json`; each names its owning task and a status, and a step whose task is not built shows as WAITS. The runs use a separate local test stack and seeded users, never the dev DB on 127.0.0.1:54322. Layers: API journeys and a dead-wire crawler (MF-79), the lot sweep (MF-80), stress and failure drills (MF-81), phone runs (MF-82). One results page and failure cards are written under `~/Buildo-scratch/mctest/runs/` for the orchestrator to route; McTest never edits a queue file. Lock: `src/tests/mctest/catalogue.infra.test.ts`.
+11. **Navigation is a route.** Dated note 2026-11-11 (M-246, prior text kept; navigation lock · McFrontend queue · lanes G and R; MF-75). Operator, verbatim (2026-11-11): "with impeccable review - can we ensuring all novaigation buttons use actual components or router pushes rather than local state toggles", then "yes" to landing the lock now with the six known violations as named exceptions, each tied to the task that will fix it (MF-46, MF-48/MF-74, MF-49), and to writing this item. Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the two 2026-11-11 entries; audit `~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md` (70 controls: 6 violations, 13 flags). It extends §5.3 item 5 ("`expo-router` owns which route is mounted") to every MaxBLD screen, web and mobile. A control that takes the user to another screen or view uses the platform's router: web `<Link>` (or Mantine `Button component={Link}`), `redirect()`/`notFound()` on the server, `router.push/replace` after an action; mobile expo-router `router.push/replace/navigate`, with `router.canGoBack()` before `back()`. A view is never swapped by local state: if Back should undo it, or someone could link to it, it is a route (a path or a search param). Local state is for disclosure only: details panels, How?, sheets, dialogs, modals, selection and edit modes, and the result of a submit. A tab switch uses `navigate`, not `push`. Every pressable that navigates has a role and a name. Leaving the origin (Stripe) uses `window.location`. Lock: `src/tests/surfaces/nav-by-route.logic.test.ts` (rules NAV-1 state-as-route, NAV-2 non-semantic control, NAV-3 unnamed navigating pressable, NAV-4 location hack, NAV-5 back with no `canGoBack`, NAV-6 web button that navigates). Its allow-list is fail-closed both ways (an unexplained finding fails; an entry that no longer matches fails) and holds the six violations as exceptions, each "owed: <row>": audit #3 the report detail Back chevron (MF-48 Stage B / MF-74), #15 and #16 the mobile sign-in email form and its Back, #22 the sign-up "Sign in" link (MF-49), #29 and #30 the web `LoginForm` sign-in/sign-up swap (MF-46). It also lists the disclosure the rules reach (the report toggle wrapper, the phone sheets) and the audited flags they reach (#10 MF-53; #45, #46 MF-44/MF-52), each with its reason and owner. The owning row removes its entry in the commit that fixes the control. Two sentences above are convention, not checked by the lock: a tab switch uses `navigate` (the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52), and the one origin exit (Stripe, `window.location.assign`) is an `ok` allow-list entry of NAV-4. Register row: owed, FE-36 (reserved; FE-35 is MF-62's, not yet in the register, and the Spec 136 generator refuses a gap in the FE numbering, `scripts/surfaces/generate-surface-handbook.mjs` `readFeRows`); until FE-35 lands this item is the row's home. Row text to land: "| FE-36 | Navigation is a route: a control that moves the user uses the platform router (web `<Link>`, `redirect()`, `router.push/replace` after an action; mobile expo-router with `canGoBack()` before `back()`); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses `window.location`. | 126 §0b item 11; 126 §5.3 item 5 | D pass, P pass, F n/a (no payload), S pass (one mechanism per platform), H n/a, E pass (web and mobile) | Operator, verbatim (2026-11-11): \"with impeccable review - can we ensuring all novaigation buttons use actual components or router pushes rather than local state toggles\" and \"yes\". Record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`. | RULED 2026-11-11, lock landed (MF-75). Lock: `src/tests/surfaces/nav-by-route.logic.test.ts` |".
+
+Register row for this section: owed, FE-40 (reserved). It lands once FE-35..FE-39 are in the register, since the Spec 136 generator refuses a gap in the FE numbering (`scripts/surfaces/generate-surface-handbook.mjs` `readFeRows`); until then this section is the home and Spec 135 FE-02 and FE-31 carry dated notes pointing here.
+
+---
+
+<requirements>
+
+
+## 1. Goal & User Story
+
+**Every surface in this estate is the same surface, except for its projection.**
+
+A *surface* (a mobile screen, a web page, an admin tool, an overlay, an exported PDF) declares what it is in a machine-readable descriptor — its archetype, the contracts it reads and writes by reference, its guards and entitlements, its render states, the events it emits, the tunables it consumes — and a small archetype component set renders it. Nothing about how a surface is gated, guarded, validated, metered or observed is a per-surface invention.
+
+**User story.** As the operator, I can open one admin page and see every surface in the product, which contract it reads, which tables that contract touches, which entitlement gates it, which render states are pinned by a golden, whether its checks pass, and how many times it was used in the last 7 days — because all of it is derived from declarations, and none of it is typed by hand.
+
+**The measured case for it, in one line:** the estate's only usage meter (`POST /api/leads/view`, 153 lines, 44 test cases) has **no production caller**, so `user_profiles.lead_views_count` never moves and `mobile/src/components/paywall/PaywallScreen.tsx:153`'s `leadViewsCount > 0` branch is unreachable in production. No test, no spec and no code review found it, because nothing in this estate holds the join between *"a contract exists"* and *"a surface calls it"*. That join is this spec.
+
+</requirements>
+
+---
+
+<architecture>
+
+
+## 2. The unit set — 3 descriptor kinds + 2 registries
+
+> 📋 **The estate itself is rendered, not described here.** Every surface, contract and job named in this spec has a row — with a plain-language purpose, its gate, its edges, the tables and columns it touches, and its 21 category answers — in the generated **surface registry**: `docs/reports/generated/127-surface-registry.md` (source of record `scripts/surfaces/_schema/surface-census.json`, drift-locked by `src/tests/surface-registry.infra.test.ts`). Spec 127 §8 says how to read it. **Read the registry to review the estate; read this spec to review the standard.**
+
+The operator's proposed unit was **SURFACE = screen + its API contract + its tables**. The census tested it and it breaks at both ends: **13 of 29 mobile surfaces call no API route at all**, **17 of 61 contracts have no static call site anywhere**, and **one contract (`/api/user-profile`) is reached from 11 surfaces + 2 shells by two different idioms**. Folding the contract into the screen destroys the one property that makes MAX-SERVER-SIDE possible: *one contract, N projections*.
+
+| # | Unit | What it declares | Measured today | Schema artifact |
+|---|---|---|---:|---|
+| **1** | **SURFACE** | one thing that renders — archetype · `platforms[]` · the contracts it reads/writes **by reference** · states · guards · emitted events | **53** rendering surfaces (19 mobile screens + 10 mobile overlays + 24 web pages — the 13-line redirect page counted once among them, as STATIC) **+ 6** navigation shells = **59** descriptors | `surfaces/_schema/surface.schema.json`, archetype-gated |
+| **2** | **CONTRACT** | one API route — request · response projection · **tables** · auth class · rate buckets · consumers | **61** route files / 80 method handlers | `contracts/_schema/contract.schema.json` |
+| **3** | **JOB** | server work with no screen and no request — schedule · target · idempotency · ledger rows | **6** non-pipeline, all archetype `SCHEDULED` (4 `pg_cron` + `pipeline-watchdog.yml` + `mutation.yml`); `chain-wsib.yml` has no `schedule:` block and is not a JOB | `jobs/_schema/job.schema.json` — **its own schema; R-14** |
+| **4** | *registry* **ENTITLEMENT** | the closed product vocabulary · per-product statuses · gate sites | **2** products today (`lead_gen`, `flight_center`) → **4** after a single CHECK widening that adds **`parcel_tool`** (R-01) **and `agent_reports`** (R-09) in the same statement | `seeds/entitlements.json`, mirrored into `docs/specs/_contracts.json` |
+| **5** | *registry* **LEDGER** | the closed event vocabulary the usage spine records | 4 existing event tables; **exactly 1** new — `usage_events`. **There is no second ledger:** an earlier draft added a `surface_ledger` for the fan-out graph and it is deleted (R-25) — those edges are the CONTRACT's own `consumers[]`, and a table recording the same join would be a second source of truth for a fact the descriptor already declares | `seeds/usage-events.json` |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): counts are the 2026-09-15 census; the generated registry is the live count (`docs/reports/generated/127-surface-registry.md:20` read 73 surfaces, 62 contracts, 6 jobs at `ac9200aa8`); do not restate a count in prose. The reconcile and generation work is deferred to convert-on-touch (MF-31, `.cursor/MCFRONTEND-QUEUE.md`).
+
+**Two things deliberately NOT units** — this is the scope reduction:
+
+- **PROJECTION is a field, not a unit.** `mobile/app/(app)/map.tsx` and `mobile/app/(app)/index.tsx` are one contract, one Zod schema (`LeadFeedResultSchema`), one hook (`useLeadFeed`), two projections. It becomes `render.projection: list | map | grid | detail`. Making it a unit would have produced a phantom `MAP` archetype and a second descriptor for one payload.
+- **EXPORT is a render target, not a unit.** A PDF of the property preview is the same descriptor with `render.targets: ["screen","pdf"]`. This is the strongest single argument for the approach: *"100% data parity between the web view and the exported document"* stops being a discipline and becomes a golden-capture comparison. (The route that emits the file is a CONTRACT of archetype `EXPORT`.)
+
+**SHELL is an archetype on SURFACE, not a fourth unit** — and the 6 navigation shells sit alongside the 53, not inside them (§3.1) — a shell in this estate is not inert. `mobile/app/(app)/_layout.tsx:236-265` is the sole subscription gate for all five tabs and `mobile/app/_layout.tsx:88` is the sole routing authority (9 branches per `decideAuthGateRoute.ts`). Those are declarations.
+
+### 2.0 What this spec governs — the programme partition
+
+**The estate shares one repository. It does not share one programme.** Every descriptor declares `programme.scope` from a closed set of four, with a measured one-line reason, and the generated registry renders in that order:
+
+| § | Scope | n | What it is | Governed by this spec? |
+|---|---|---:|---|---|
+| **A** | `parcel_product` | **6** | The MaxBLD parcel cost tool itself — the surfaces and contracts a customer touches, plus the five business requirements hanging off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. | **Yes.** This is the programme. |
+| **B** | `parcel_admin` | **13** | The admin surfaces that *operate* the parcel product: usage and entitlements, placements and advertiser accounts, the PDF audit, the `app_outputs` recompute, and the descriptor-native registry / fan-out / orphan / drift / roles pages. | **Yes** — and they convert **with** the product, not after it. An unobservable product is not shipped. |
+| **C** | `platform_shared` | **72** | Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Used by both products, owned by neither. | **Yes** — and changing one changes both products, which is why it is its own scope rather than filed under whichever product noticed it first. |
+| **D** | `estate_other` | **46** | The OTHER product: lead generation, the flight center, the lead feed, permit and job detail, builders and entities. | **No — inventory and seam only.** |
+
+**Scope D is fenced, and the fence is Spec 128 R-03.** Spec 100 §1 states the parcel tool *"is **not** coupled to the Lead Feed, Flight Center, or LeadDetail"*, and this spec does not reverse that. Scope D is inventoried for exactly one reason: so that a contract it **shares** with scope C, or a contract with **no caller at all**, is visible rather than hidden — which is the whole argument for the registry (`/api/leads/view`: a live metered route with 44 passing tests and zero callers, unnoticed for months). Those surfaces convert under this same standard in a later programme. The registry renders them **one line each**, deliberately: expanding them would bury the programme it exists to review.
+
+**Consequences, stated so they are not rediscovered:**
+
+1. **Spec 127 §4.4 batches scopes A–C only.** A scope-D row carries `programme.phase: "not_scheduled"`, and that is an answer rather than an omission.
+2. **The descriptor tree is partitioned by scope**, not merely tagged: `scripts/surfaces/<scope>/<kind>/<id>.descriptor.json`. The standard stays estate-wide — all 137 are emitted and all 137 are validated — but a reader, a checker and the SurfaceEngine each address one programme at a time.
+3. **The pilot is exactly one surface.** `mobile_parcel_detail` carries `programme.pilot: true`; nothing else may.
+4. **A scope-C change is a two-product change.** Its plan says so, and its review panel is sized for it.
+
+### 2.1 `platforms[]` — one descriptor set, three renderers
+
+Every SURFACE declares `platforms[]` from the closed set `web | mobile | pdf`:
+
+| Surface class | `platforms` | Renderer |
+|---|---|---|
+| Admin surfaces (the 15 pages under `src/app/admin/` + `login`, `dashboard`, `subscribe*`, `auth/callback`) | `["web"]` | Next.js RSC + the admin archetype set (Shadcn/Tailwind) |
+| Product surfaces (parcel preview, search, marketing/landing, `permits/[id]`, `builders*`) | `["web","mobile"]` | RSC on web · fetched projection + the RN archetype set on mobile |
+| Export-bearing surfaces | adds `"pdf"` | the same descriptor, a PDF renderer, parity asserted by golden |
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (i)-(ii), `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; operator, verbatim: "D-0-D-4 approved", D-2): (i) `login`, `subscribe*` (registry S-050..S-053) and `auth/callback` in the admin row are web-only customer pages in scope C (§2.0), not admin pages; `dashboard` is scope D (S-069). (ii) shadcn/ui is not installed (Spec 33:44); per D-2 the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4), which supersedes "Shadcn/Tailwind" in the admin row.
+
+**Admin surfaces are descriptored in the SAME pass as the product ones** — one archetype vocabulary, one schema, one validator, one registry page. The admin web tree is where the estate's largest single-file surfaces live (`src/components/admin/` is 13 files / 4,322 lines, `LeadDetailInspector.tsx` alone 727L), and it is where `GenericFieldRenderer.tsx` (83 lines, a type-aware renderer for ~120 heterogeneous DB fields) already proves the archetype-renderer idea works in this repo. Splitting admin into a later pass would produce a second vocabulary; that is the exact failure Spec 122 V1–V6 were ruled to prevent.
+
+### 2.2 The admin estate — catalogued in the same pass
+
+**The admin is not a product; it is the fifth projection of the same descriptor set** — and the one projection allowed to render the *descriptor itself* rather than only its output. Source: `docs/reports/2026-09-15-spec126-admin-best-in-class.md`.
+
+**22 admin surfaces**, assigned the same archetypes: **11 exist today** (the 15 `page.tsx` under `src/app/admin/`, of which 4 collapse into rows below and one — `admin/lead-feed/flight-center` — is a 13-line `permanentRedirect`), **11 are new**, and **11 of the 22 are 100%-or-mostly generated**.
+
+| Group | Surfaces (descriptor id · archetype · Gen?) |
+|---|---|
+| **A. Operations** | `admin_pipeline_dashboard` DASHBOARD · `admin_step_output` REPORT (partial) · `admin_data_quality` DASHBOARD · `admin_engine_health` DASHBOARD · **`admin_run_ledger` LIST (gen, NEW)** · `admin_stale_run_reaper` FORM-console *(exists but wrong shape — `reapStaleRunningRows()` fires only inside `GET /api/admin/stats:189`; no page, no button, no job)* |
+| **B. Recompute triggers** | `admin_recompute_console` FORM (partial; today fragmented across 4 routes, only `resync` has a UI caller) · `admin_global_config` FORM **(gen — the canonical precedent: `logic-variable-groups.json` → `GlobalConfigCard.tsx:20`)** |
+| **C. Usage & entitlements** | `admin_usage_funnel` DASHBOARD (partial) · **`admin_entitlements` LIST+DETAIL (gen)** · `admin_user_detail` DETAIL *(the only page whose mutations are fully audited)* · `admin_user_list` LIST |
+| **D. Advertiser layer** | **`admin_advertiser_accounts` LIST+DETAIL (gen, NEW)** · **`admin_placements` FORM (gen, NEW)** · **`advertiser_self_metrics` DASHBOARD (gen, NEW — role `advertiser`, RLS-scoped, NOT `is_admin`-gated: the first non-admin principal ever admitted to an admin-shaped surface)** |
+| **E. Export / PDF** | **`admin_export_audit` LIST (gen, NEW)** |
+| **F. Descriptor-native — the generated core** | **`admin_surface_registry` LIST (100% gen — the admin PILOT)** · **`admin_contract_fanout` REPORT (100% gen)** · **`admin_orphan_panel` LIST (100% gen)** · **`admin_drift_status` DASHBOARD (100% gen)** · **`admin_role_matrix` REPORT (100% gen)** · **`admin_ledger_visualiser` REPORT (100% gen)** |
+
+**Deliberately NOT in this catalogue:** the lead-feed family (`admin/lead-feed`, `.../inspector`, `admin/flight-center`, `admin/notifications`, `admin/security`). It is Spec 36/91 lead-gen product admin, it is the bulk of the 4,322 hand-built lines, and it converts **last**, not first.
+
+#### 2.2.1 The eleven admin principles
+
+Each names a precedent that already ships **in this repo** and the measured anti-pattern it retires.
+
+| # | Principle | Measured anti-pattern it retires |
+|---|---|---|
+| **P1** | **The admin is a projection, not a product.** An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path. | `src/lib/admin/parcel-lookup.ts` **326L** vs `src/lib/parcels/consumer-lookup.ts` **159L** — two resolvers over the same parcel, diverging independently; the admin twin is 2.1× the consumer's size for the same subject. |
+| **P2** | **No admin-only business logic.** The admin may *reveal* more fields; it may not *derive* differently. | `src/lib/admin/funnel.ts:154-158` hardcodes five SLA thresholds (48 / 8760 / 2160 / 744 / 192 h) and `:166` an eight-slug `LOADER_SLUGS` literal — admin-only policy, invisible to the pipeline producing the rows it judges. |
+| **P3** | **Every admin mutation writes exactly one ledger row**; an audit failure fails the request. `src/lib/admin/admin-audit.ts` already does this correctly (centralised `redactPii`, `scrubAdminAuditForTarget`, and a header that calls an unaudited mutation *"a compliance hole"*). | **9 of the 15 mutating admin routes write no `admin_audit_log` row** — including `control-panel/configs` **PUT**, which rewrites `logic_variables` + three more tunable tables. |
+| **P4** | **All tunables are data; zero thresholds in `src/`.** | `funnel.ts:154-166` and `SearchPermitsModal.tsx:34 DEBOUNCE_MS = 300` — which the SEARCH archetype turns into a required `config.debounce_ms` declaration. |
+| **P5** | **Generated pages over hand-built ones, and the generator is locked by a RED canary.** | **4,322 lines across 13 files** in `src/components/admin/`; `GenericFieldRenderer.tsx` (83L) is the one file that already knows the answer. |
+| **P6** | **Drift is shown in-product, not only in CI.** A checker with no reader is a checker nobody acts on. | `check-spec99-matrix.mjs` wired to nothing; **nine** generated reports under `docs/reports/generated/`, **zero** rendered by an admin page. |
+| **P7** | **Role and policy are data, checked against the live catalogue** (§6.2). | `/builders` gated, `/api/builders` public — nothing in the estate holds that join. |
+| **P8** | **Orphans are a first-class rendered concept.** | `/api/leads/view` (153L, 44 tests, zero callers) **plus 5 of the 29 `/api/admin/*` routes with no call site of any kind** — `builders`, `pipelines/runs`, `rules`, `suppliers/leads`, `sync`. Scoped deliberately: two further routes first counted as orphans (`leads/inspect/[id]`, `pipelines/[slug]`) **are** called, via template literals, and `/api/quality/refresh` is excluded because it is not under `/api/admin/*`. The census's own 17-contract orphan list additionally names `/api/admin/pipelines/history` and `/api/admin/pipelines/schedules`; **that disagreement is not resolved here** — reconciling the two sweeps is part of `ASK-13`, and an orphan count that two passes disagree about is exactly why the panel is a rendered join rather than a remembered number. |
+| **P9** | **Deep links by id, and a command palette over the registry.** | `src/app/admin/page.tsx` (165L) is a hand-maintained hub of `<Link>`s calling no API of its own — a new admin page is invisible until someone edits that file. |
+| **P10** | **Time-travel is the ledger, not a snapshot table** — replay `pipeline_runs` + `usage_events` + `admin_audit_log`, all append-only with PK-as-dedup. | `user_profiles.lead_views_count` — a denormalised counter that never moves, because its only writer has no caller. |
+| **P11** | **Architecture boundaries enforced mechanically, not by review.** A boundaries rule is a config line on a gate (`.husky/pre-commit` → `npm run lint`) that already fires. | `src/components/DataQualityDashboard.tsx` fetches **four** admin contracts from one component — a tile grid with no per-tile `degrade_independently`, which DASHBOARD makes a required declaration. |
+
+#### 2.2.2 The admin pilot — `/admin/surfaces`, and why
+
+`admin_surface_registry` is the admin pilot because **it is 100% generated, so it cannot be faked.** Every other candidate can be shipped by hand and still look right; if the descriptor set is incomplete or the archetype profiles are wrong, this page is visibly empty or visibly wrong on commit 1 — which is the point of a pilot, and the same reason `assert_schema` was pilot 1 on the pipeline side. It is read-only, writes nothing, touches no migration (the `parcel_detail` risk profile). It has a real defect to close on day one (the orphan panel's red rows). It is the direct descendant of the `logic-variable-groups` precedent — generate → commit → import → lock — so the review panel argues about content, not mechanism. And once it exists, `src/app/admin/page.tsx`'s 165 hand-maintained lines become a query over the registry, retiring P9 as a side effect.
+
+**What the admin pilot needs FROM the product pilot** — these are acceptance criteria on `parcel_detail`, not admin follow-ups: (1) a committed `parcel_detail` surface descriptor with a real `archetype: REPORT`; (2) a `parcels_lookup` contract descriptor with a populated **`consumers[]`** — the fan-out graph's edges *are* `consumers[]`; (3) `guards.entitlement: "parcel_tool"` + `metering`; (4) `render.targets: ["screen","pdf"]` + a screen-side golden; (5) the `guards.session` ↔ `auth_class` check declared on a real surface. **What the admin owes the product pilot:** `admin/parcel-cost` (`ParcelCostTool.tsx`, 425L) as the third projection — the fastest available refutation of "one contract, N projections", learned for 425 lines instead of 4,322.
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+index 1cd71f760c4362f4b0933f3e849aa1d3fd754645..3fa53d8147f7c92d5e3073b1557bdd7fb582f4af 100644
+--- a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
++++ b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+@@ -68,12 +68,12 @@
+ | FE-46 | Libraries. "the web library is Mantine 8.3" with `@rjsf/mantine` and `mantine-datatable` (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it. | 126 §11b.4 (126:1005, :1006, :925, :75) | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 2 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/ui-library-set.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-31 checks the listed binding modules only. |
+ | FE-47 | Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" (128:30, Rule 3). "All tunables are data; zero thresholds in `src/`." (126:189, admin principle P4, 126:180). | 128 rule 3 (128:30); 126:189 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 3 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/tunables-are-data.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. The schema requires config.debounce_ms on SEARCH only. |
+ | FE-48 | Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence. | 126 §0b item 8 (126:79); FE-31 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 4 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks the first sentence today. |
+-| FE-49 | The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. `lead_parcels` is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147). | 128 R-03 (128:205); 126:140, :147 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 5 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. R-03 stays ACCEPTED in Spec 128 until MF-31 moves it. Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock. |
++| FE-49 | The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. `lead_parcels` is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147). | 128 R-03 (128:205); 126:140, :147 | D pass, P pass, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 5 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`<br>OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. R-03 stays ACCEPTED in Spec 128 until MF-31 moves it. Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock.<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. The platform_shared standing exception is outside the lock (the fence is converted-surfaces.json programme_scopes; the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433), so it stays out of the scope-fence test with this note as its record, and a widening of the test to platform_shared is a later batch row of task-367. The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-50 | Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same `parcel_tool` entitlement" (queued as MF-70); "the later operator ruling governs". | 126:928; 126:1120 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 6 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/auth-checkout-hosted.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks this today. |
+-| FE-51 | Navigation extras that FE-36 does not state. "A tab switch uses `navigate`, not `push`." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists. | 126 §0b item 11 (126:82); FE-36 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 7 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule. |
++| FE-51 | Navigation extras that FE-36 does not state. "A tab switch uses `navigate`, not `push`." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists. | 126 §0b item 11 (126:82); FE-36 | D pass, P pass, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 7 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0417), the lock landed in the MF-98 work commit and the flip rides its fix commit. Lock: `src/tests/surfaces/nav-tab-switch.logic.test.ts`<br>OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule.<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); RR-0417, operator, verbatim: "yes. worktrees removed" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2134`), put to him as: "may FE-51 read RULED with its two named exceptions, yes or no?"; Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" and the PROSE-ONLY words in the rule cell are prior text: the lock now checks the tab-push half. Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52), as FE-36 reads RULED with its named exceptions. Not in the lock: a route held in a variable, and the web half (no tab bar today). The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-52 | The two parcel ids have two names. "`parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal); `parcel_pk` = `parcels.id` `SERIAL`." and "`usage_events.subject_kind` is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`" (126:1238, §14). | 128 R-04 (128:206); 126 §7, §3.4, §14 (126:1238) | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 8 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/parcel-id-names.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Spec 128 marks the R-04 lock pending and R-04 stays ACCEPTED there until MF-31 moves it; nothing checks UI or route code. |
+ | FE-53 | POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling. | 126 §11b.3 (126:963), §11b.7 (126:1032) | D n/a, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 9 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/page-set-pointer.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. The page rulings are pinned only where a page test exists. |
+-| FE-54 | A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39). | 128 rule 12 (128:39); FE-28, FE-31 | D pass, P owed, F n/a, S pass, H pass, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 10 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/failure-state-declared.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Goldens per declared state exist for converted surfaces only (FE-31). |
++| FE-54 | A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39). | 128 rule 12 (128:39); FE-28, FE-31 | D pass, P pass, F n/a, S pass, H pass, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 10 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`<br>OWED `src/tests/surfaces/failure-state-declared.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Goldens per declared state exist for converted surfaces only (FE-31).<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. The lock is declaration-only for contract readers in programme scope and the error state only; 32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open). The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-55 | The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1). | 126 §2.2.1 P1 (126:186); FE-05, FE-11 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 11 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/admin-same-descriptor.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks it today. |
+ | FE-56 | Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6). | 128 rule 4 (128:127, :150); 127:59; FE-03 | D n/a, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 12 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/lock-planted-defect.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Today only the red-evidence file is checked, for an OWED flip. |
+ | FE-57 | Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists. | 126 §4 row 24 (126:351); 00_engineering_standards.md:14; FE-31 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 13 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/a11y-category.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Labels, dark-mode tokens, safe-area and reduced-motion have no check. |
+diff --git a/docs/specs/02-web-admin/136_mcfrontend_handbook.md b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+index fc0600d5a95739878486da6f852849b086b574ba..6e7a0e9ff375af57da02c5a76dd1c865ba2f00f9 100644
+--- a/docs/specs/02-web-admin/136_mcfrontend_handbook.md
++++ b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+@@ -25,7 +25,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+ 
+ **What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
+ 
+-**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
++**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+ 
+ **Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
+ 
+@@ -176,13 +176,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+ 
+ - **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+-  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+ 
+ - **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+   Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+ 
+ - **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+-  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+ 
+ - **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+   Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+@@ -191,7 +191,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+ 
+ - **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+-  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+ 
+ - **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+   Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..457c47f1ed125462eb7111eb17aaa63ed90185b1
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+@@ -0,0 +1,88 @@
++{
++ "$comment": "Pre-registration, task MF-98 (COMPLY.3, task-367: three tests for McFrontend handbook rules no machine checks, fe.54 failure state declared, fe.49 scope fence, fe.51 tab switch; the register rows whose flip the operator approved read RULED; Spec 136, the rule map and the rule-lists page regenerated; tests and documents only), prereg 1, committed alone and first, before the MF-98 work commit. Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-96 prereg total (the newest prereg). rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook), FE-36 (navigation is a route; the tab-switch lock sits beside its lock). The rows this task locks are OWED at this commit and are never cited. In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202).",
++ "schema": "coa-round-prereg-v1",
++ "round": 203,
++ "task": "MF-98",
++ "rules": [
++  "FE-09",
++  "FE-10",
++  "FE-16",
++  "FE-36"
++ ],
++ "plan_ref": "backlog task-367 Implementation Plan (PLAN-367-v1 as folded after plan review round 1, sections 3 and 6); docs/reports/reviews/task-367/GROUNDER-PLAN.md, QUESTIONS-RULED.md, FOLD-CHECK.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913, :1930, :2108",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/surface-rule-map.json b/scripts/surfaces/_schema/surface-rule-map.json
+index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..d777bec35efbd61e31fb654275f755e86916970d 100644
+--- a/scripts/surfaces/_schema/surface-rule-map.json
++++ b/scripts/surfaces/_schema/surface-rule-map.json
+@@ -793,7 +793,7 @@
+     {
+       "id": "FE-49",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.49",
+       "source": {
+         "register": true,
+@@ -815,7 +815,7 @@
+     {
+       "id": "FE-51",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.51",
+       "source": {
+         "register": true,
+@@ -848,7 +848,7 @@
+     {
+       "id": "FE-54",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.54",
+       "source": {
+         "register": true,
+diff --git a/src/tests/surfaces/failure-state-declared.logic.test.ts b/src/tests/surfaces/failure-state-declared.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd228607eae155a765d192059b644c704be91090
+--- /dev/null
++++ b/src/tests/surfaces/failure-state-declared.logic.test.ts
+@@ -0,0 +1,93 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.54 (Spec 128 Rule 12, 128:39):
++//   "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."
++// TESTED: every SURFACE descriptor in the programme scope (scripts/surfaces/_schema/converted-surfaces.json scope.programme_scopes, the
++// manifest's own fence, not a second list) that reads a contract (`inputs.answer === 'contract'`) declares an `error` entry in `states[]`
++// and an `errors.answer` that is neither `none` nor `UNRESEARCHED`.
++// LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at
++// mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here; it is owned by the
++// task-343 leftovers. Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged.
++// Files come from `git ls-files`, so an untracked descriptor never counts. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const SURFACE_RE = /^scripts\/surfaces\/.+\/surfaces\/[^/]+\.descriptor\.json$/;
++const SAMPLE = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const BAD_ERRORS = new Set(['none', 'UNRESEARCHED']);
++
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string };
++  programme?: { scope?: string };
++  inputs?: { answer?: string };
++  states?: Array<{ name?: string }>;
++  errors?: { answer?: string };
++}
++export interface Scanned { path: string; d: Descriptor }
++
++const readJson = <T>(rel: string): T => JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;
++const scope = readJson<{ scope: { programme_scopes: string[]; expected_count: number } }>(MANIFEST).scope;
++
++/** Problems of the in-scope SURFACE descriptors that read a contract. Pure: descriptors and scopes in, one line per problem out. */
++export function failureStateProblems(list: Scanned[], scopes: readonly string[]): string[] {
++  const out: string[] = [];
++  for (const { path, d } of list) {
++    if (d.kind !== 'SURFACE' || !scopes.includes(d.programme?.scope ?? '')) continue;
++    if (d.inputs?.answer !== 'contract') continue;
++    const id = d.identity?.id ?? path;
++    if (!(d.states ?? []).some((s) => s.name === 'error')) out.push(`${id}: reads a contract but declares no error state`);
++    const ea = d.errors?.answer ?? 'none';
++    if (BAD_ERRORS.has(ea)) out.push(`${id}: reads a contract but its errors answer is ${ea}`);
++  }
++  return out;
++}
++
++function scanned(): Scanned[] {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => SURFACE_RE.test(f))
++    .map((f) => ({ path: f, d: readJson<Descriptor>(f) }));
++}
++
++const copy = (mut: (d: Descriptor) => void): Scanned => {
++  const d = structuredClone(readJson<Descriptor>(SAMPLE));
++  mut(d);
++  return { path: `${SAMPLE} (copy)`, d };
++};
++const noErrorState = (d: Descriptor) => { d.states = (d.states ?? []).filter((s) => s.name !== 'error'); };
++
++describe('fe.54: a contract-reading surface declares its failure state', () => {
++  it('A. the real tree: no problem in the programme scope, and the scanned SURFACE count equals the manifest count', () => {
++    const list = scanned();
++    const problems = failureStateProblems(list, scope.programme_scopes);
++    const inScope = list.filter(({ d }) => d.kind === 'SURFACE' && scope.programme_scopes.includes(d.programme?.scope ?? ''));
++    const readers = inScope.filter(({ d }) => d.inputs?.answer === 'contract');
++    console.log(`fe.54: scanned ${list.length} surface descriptors, ${inScope.length} in scope, ${readers.length} read a contract, ${problems.length} problems`);
++    expect(problems, `fe.54 (Spec 128 Rule 12, 128:39) contract readers with no declared failure state:\n  ${problems.join('\n  ')}`).toEqual([]);
++    expect(inScope.length).toBe(scope.expected_count);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem', () => {
++    const cases: Array<[Scanned, string]> = [
++      [copy(noErrorState), 'mobile_parcel_search: reads a contract but declares no error state'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'none' }; }), 'mobile_parcel_search: reads a contract but its errors answer is none'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'UNRESEARCHED' }; }), 'mobile_parcel_search: reads a contract but its errors answer is UNRESEARCHED'],
++    ];
++    for (const [s, line] of cases) expect(failureStateProblems([s], scope.programme_scopes)).toEqual([line]);
++  });
++
++  it('C. controls: the unchanged copy, a STATIC page with no contract input, and an out-of-scope descriptor give 0', () => {
++    expect(failureStateProblems([copy(() => {})], scope.programme_scopes)).toEqual([]);
++    const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });
++    expect(failureStateProblems([staticPage], scope.programme_scopes)).toEqual([]);
++    const outOfScope = copy((d) => { d.programme = { scope: 'estate_other' }; noErrorState(d); });
++    expect(failureStateProblems([outOfScope], scope.programme_scopes)).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+index c0c7c4d89f8d571749532996ca9237272ccd4591..8588eed2edd6f848258fd3ccff151005d357162b 100644
+--- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
++++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+@@ -8,6 +8,7 @@
+ // the Spec 135 FE rows". Every RED case plants a defect in an in-memory register text or a temp root, never in the repo. No DB, no network.
+ // The shared CLI shell (runHandbookCli, scripts/analysis/gates/rule-map.mjs) is exercised here through the 136 entry (case H6).
+ import { afterAll, describe, expect, it } from 'vitest';
++import { execFileSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -256,31 +257,53 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
+ // that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
+ // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
+ const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
++// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
++// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
++const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
++// the ! is safe: the pattern has one capture group, so every match holds m[1]
++const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)].map((m) => m[1]!);
++const trackedLocks = new Set(execFileSync('git', ['ls-files', '--', ...BUILT_BY_367], { cwd: ROOT, stdio: 'pipe' }).toString().split('\n').filter(Boolean));
+ const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
+ 
+ describe('MF-95 C — the thirteen RR-0384 rows', () => {
+   const rows = realRows();
+   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
+ 
+-  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
++  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each with exactly its one lock path; OWED with no lock file, or (task-367) tracked and RULED or OWED on FLIP_PENDING', () => {
+     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
+     // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
+     const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
+     expect(at).toBeGreaterThanOrEqual(0);
+     expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+     expect(rows.length).toBeGreaterThanOrEqual(57);
++    expect(FLIP_PENDING_SRC, 'FLIP_PENDING not found in register-locks-resolve.infra.test.ts').not.toBeNull();
++    // the ! below is safe: fresh holds only rows with exactly one lock (its filter above)
+     for (const r of fresh) {
++      if (BUILT_BY_367.includes(r.locks[0]!)) {
++        expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);
++        if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);
++        continue;
++      }
+       expect(r.status, r.id).toBe('OWED');
+       expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
+     }
+   });
+ 
+-  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
++  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by", or RULED (task-367) with "Enforced by" its lock', () => {
+     const text = read(SPEC.handbookRel);
+     const owed = rows.filter((r: Row) => r.status === 'OWED').length;
+-    expect(owed).toBeGreaterThanOrEqual(21);
++    // task-367: the floor is 21 minus the rows of BUILT_BY_367 that read RULED (18 when all three flip).
++    // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++    expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);
+     expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
+-    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
++    for (const r of fresh) {
++      // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++      const lock = r.locks[0]!.replace(/[.]/g, '\\.');
++      if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));
++      else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));
++    }
+   });
+ 
+   it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
+

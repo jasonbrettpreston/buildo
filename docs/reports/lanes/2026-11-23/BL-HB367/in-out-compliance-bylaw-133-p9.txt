@@ -1,0 +1,838 @@
+LIST bylaw-133 sha256:74ae4f322ff2756821c813188b00bb4aa4a65809654b4fd702b43064d54660f5 material sha256:ac011743d9391516b16db3cb92e358caf560ffc7beb684965a7de5e81c1aadb7 part 3 of 3 chunk 3 of 3
+RULE LIST bylaw-133 (docs/specs/01-pipeline/133_bylaw_handbook.md, sections 2. Rules by provision family; 3. Rows with an OWED marker), part 3 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/handbook-rule-map.logic.test.ts","src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+- **m.447** McProof (MCPROOF-13): Gemini tie-break and parking. Text home: Spec 08 §11.7.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
+- **m.448** Block python: a Claude Code hook refuses python, python3 and pip for every session and agent.
+  Status: RULED 2026-10-31 · Enforced by: Enforced outside the repo by the hook ~/.claude/hooks/block-python.sh (DONE 2026-10-31, MB-77 QUEUE-ENTRY);…
+- **m.449** An unseeded setting makes the run refuse to start (SB-4); no silent default.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the step refuses on an unseeded setting (red test); record:…
+- **m.450** HT-5 and GFA-13 move to the later options increment.
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-64: the two examples are moved to the options increment (MB-27); record:…
+- **m.451** LV-7 and LV-8 are kept, tagged for increment 5 (garden suite).
+  Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-64: LV-7 and LV-8 tagged for increment 5; record: src/tests/chat-rulings-register.logic.test.ts ›…
+- **m.452** A-2: a Spec 69a row stops being OWED when a dated note in its status cell names a lock that has landed; the register generator reads the note (build owed to a new MB-79 item, lane G).
+  Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-79 (a new lane G item; the queue letter is assigned by the orchestrator): the generator read in…
+- **m.453** MB-80: post-signing edits to the MB-64 increment-1 key, as one ledger row (cases PERM-5, FY-14, SB-3, SB-6).
+  Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-80: the edits P1-P4 and the independent re-check P5 (MB-80/plan.md); OWED -> MB-31 (requested by…
+- **m.454** An out-of-bounds setting refuses the run before compute (follows R-G); amends M-428.
+  Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-31: the step shell names setting_out_of_bounds in the refusal (config.js:92-93 gives below_min /…
+- **m.460** W, the front and rear wall width in the set-back plate, is the narrowest width that fits the footprint.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the W row, locked by layer3-catalogue.logic.test.ts and golden-25.logic.test.ts; record:…
+- **m.462** Roof assembly depth is the smallest Building Code rafter that spans the half-width, plus sheathing and ceiling board, from one cited settings table.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the settings table (RP-3), the selector row and the reason word, locked by…
+- **m.466** The Layer 3 grammar gains sqrt, for unitless arguments only (dated note on M-72, as a row because M-72 sits in the frozen M19 block, the M-377 form).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> the M-72 sqrt item (lane E): src/tests/bylaw-m72-sqrt.logic.test.ts (new), red first (RP-5); record:…
+- **m.467** When one roof form or arm is not evaluated, the headline is the evaluated one as "at least X", flagged headline_lower_bound.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the headline row, the flag word and its examples, locked by layer3-catalogue.logic.test.ts…
+- **m.474** The set-back plate F − 2 × s_up × W is floored at 0: the additional storey is not built, the flat form equals n_w × F, and it is disclosed.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the plate row with max(0; ...) and the disclosure, locked by layer3-catalogue.logic.test.ts…
+- **m.475** Phase 2 stores side_setback_street_m as unregulated by absence where the zone has no street-side article; Layer 3 never reads not_evaluated:no_candidate as unregulated.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the Phase 2 storage of unregulated by absence for the zones without the article, with its…
+- **m.476** A switched-off increment-2 formula row reverts its target to the increment-1 formula, and the result's trace lists the switch as off.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the revert behaviour in the formula catalogue and the trace field, locked by…
+- **m.479** MCPROOF A7: the increment-2 answer key's 81 re-run examples are re-signed, with 7 one-line wording fixes and ROOF-13 accepted as a note, as one ledger row.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the answer-key cells of the 81 cases, locked by golden-25.logic.test.ts and…
+- **m.480** The Layer 3 grammar gains three forms, refuse(<reason>), flag(<word>; <expr>) and best_of(<rows>; ceiling: <expr>), plus the reason word pitched_form_not_offered and the interim flag headline_lower_bound: main_wall_shares_not_resolved (dated note on M-72, as a row because M-72 sits in the frozen…
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27 (the M-72 forms item, lane E, red first, before the roof-axis night):…
+- **m.481** Each reading row of the switchboard carries a confidence (high, medium, medium-low or low) and an evidence pointer, and every result shows the confidence beside each reading it rests on (dated amendment to M-378, as a row, the M-466 form).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27 (the switchboard confidence item, lane E, red first, with the M-72 forms build):…
+- **m.483** Spec 134 type amendment: row_sha, table_version and evaluator_version on bylaw_resolution_lots are stored as bytea(32) at the database boundary (migration 295) and read as hex through the view bylaw_resolution_lot_stamps; the values are unchanged and JavaScript stays hex.
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 P3 (lane E, the last code push before the axis night): migration 295 (the retype, the three…
+- **m.487** The Layer 3 catalogue gains the increment-2 row gfa_pitched_m2 = best_of(gfa_pitched_a_m2; gfa_pitched_b_m2; ceiling: min(storeys_max × footprint_max_m2; l2(fsi) × lot_area_m2; l2(gfa_m2))) (the M-480 form, with the ceiling of gfa_max_m2): the larger pitched arm, the report's one "Pitched, max"…
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27 (lane E, after the M-480 forms build lands): the row in …
+- **m.488** McIncrement (MCINC-1): scope and answer key (McProof first). Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.489** McIncrement (MCINC-2): one impact map, measured on the current origin tip. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.490** McIncrement (MCINC-3): one decision list. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.491** McIncrement (MCINC-4): build on the tip. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.492** McIncrement (MCINC-5): at most one Layer 2 night per increment, from the standard checklist. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.493** McIncrement (MCINC-6): close. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
+- **m.494** Increment 3 adds the building type detached_houseplex: every increment-1 and increment-2 row runs on the houseplex class rows, plus the new unit and bedroom rows; it depends on the houseplex roof option rows (D5) on the increment-3 Layer 2 night.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: scripts/seeds/bylaw/building-types.json gains detached_houseplex and…
+- **m.495** One Layer 3 catalogue row per field: each row's building_type becomes a list, and a class's Phase 2 rows are read through the building-types table (the houseplex row gets its own units); increment-1 results stay unchanged.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: building_type as a list on every row of scripts/seeds/bylaw/layer3-catalogue.json with the…
+- **m.496** The houseplex per-unit area rests on two settings: the circulation share 0.10 ("operator value, not a cited OBC figure", confidence low) and the minimum livable unit size 30 m2 net (confidence medium); the OBC 13.5 m2 floor is reference only.
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27: the two settings with their labels (a logic-variable home; a DB mirror is held to its Layer 3…
+- **m.498** The increment-3 batch and its one Layer 2 night are planned as one set: the Spec 131 split, then ONE increment-3 batch; the night last; storage carried whole and gated by the 780 MiB stop; the held figures, one migration, the C1 baseline, the 25-lot stop for the houseplex class and the…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27.L2: the night checklist (night-checklist-inc3 v2) and its prereg name each of these, locked by…
+- **m.500** The Layer 3 build of increment 3 is settled for eight items: golden-25 gains the houseplex class (RP-G25H); the uncapped O-3 reading is a Layer 3 reading row and shows its own headline; the unit-count floors, the per-unit area row, the 19 m release depth input and the 2-storey option are fixed as…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27: the golden-25 houseplex rows (RP-G25H, one oracle-only round with its own prereg), the…
+- **m.501** TKT-1 ticket header. Text home: Spec 08 §11.9.
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.502** TKT-2 closed reply status. Text home: Spec 08 §11.9, §10.1.
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.503** TKT-3 McProof answer-first. Text home: Spec 08 §11.9 (§11.7 note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.504** TKT-4 empty or truncated is failed. Text home: Spec 08 §11.9, §9.
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.505** TKT-5 lane-to-lane through the orchestrator, no agent teams. Text home: Spec 08 §C.6 and §11.9.
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.506** ORCH-1 orchestrator split. Text home: Spec 08 §7 rule 9 (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.507** BOARD-1 one open-work list. Text home: Queue lane board (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.508** EXP-1 7-day expiry. Text home: Queue lane board (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.509** PUSH-1 planned push windows. Text home: Queue Process 9 (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.510** CITE-1 stage-1 commit-message pre-check. Text home: Queue Process 1 (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.511** CITE-2 cite by id and anchor. Text home: Spec 08 §7 rule 10 (dated note); dated note on M-381.
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.512** CITE-3 four-line compliance block. Text home: Spec 08 §7 rule 10 (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
+- **m.513** CITE-4 stage-6 prereg rules[] checklist. Text home: Queue Process 2 (dated note).
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231… · +13 dated notes
+- **m.514** McIncrement (MCINC-7): rehearse every DB job before the go. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-12 · Enforced by: the rehearsal gate ~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh (scratch tooling, sourced in each…
+- **m.515** McIncrement (MCINC-8): one ID ledger. Text home: Spec 08 §11.8.
+  Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB… · +13 dated notes
+- **m.516** McStorage strategy ST-3: every Layer 2 night and every Layer 3 write night sizes storage twice on the final tree before the go: the exact G-STOR plus a measured test write. Text home: this row; pointers in Spec 08 §11.8 step 5 and M-492 follow with the build.
+  Status: RULED 2026-11-12 · Enforced by: the night tooling (gstor-final.zsh, pgsize.mjs, scratch) and the G-STOR record… · +10 dated notes
+- **lc.15** The step is born V3, with McBylaws Airtight inputs.
+  Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
+- **lc.16** The scenario set (closed): detached house; detached houseplex; semi-detached houseplex; house with a secondary suite; renovation_addition; renovation_interior; renovation_basement; a rear-suite add-on on every row.
+  Status: RULED · OWED · Enforced by: P5.11 scenario_totality
+- **lc.18** Houseplex unit split. Count = min('u', the cap of 4 / 6, floors including the basement); per-unit area = floor area − circulation share; the basement is livable but outside GFA; bedrooms are capped per 40.1(8)/(7)/(6).
+  Status: RULED · OWED · Enforced by: P5.11 units_within_cap; P5.13
+- **lc.19** Both roof forms are computed and the larger is headlined:
+  Status: RULED · OWED · Enforced by: P5.13 vectors
+- **lc.20** The main-wall envelope. Walls ≤ max(7.0 m, H − 2.5 m) on one pair: the side walls for 70 %, or front and rear for 60 / 50 / 40 % by frontage tier.
+  Status: RULED · OWED · Enforced by: P5.13; M-29 sample
+- **lc.21** Houseplex: no FSI cap and no storey cap; house with a secondary suite: no FSI cap.
+  Status: RULED · OWED · Enforced by: M-183 red vectors (P2-0 seat)
+- **lc.23** Step decisions D-1, O-1..O-11 are recorded once, in Spec 78 P5.0.
+  Status: RULED · Enforced by: Spec 78 P5.0
+- **lc.24** Renovation .71(3) rule. An up-addition on a lot of ≤ 12.2 m frontage keeps the existing setbacks; every other lawfully-existing relief is disclosed.
+  Status: RULED · OWED · Enforced by: P5.13 vector at 12.0 vs 13.0 m
+- **lc.25** User-input-first renovation. The three renovations share one existing-house input (footprint box, storeys, basement).
+  Status: RULED · OWED · Enforced by: P5.6; P5.13
+- **lc.26** Provenance precedence: user input > pipeline estimate.
+  Status: RULED · OWED · Enforced by: P5.10 CHECKs; app spec (APP-RENO)
+- **lc.27** The low-confidence threshold. existing_confidence is built on the Spec 65 ES-6 mislink checks, the link confidence and a shared-footprint penalty.
+  Status: RULED · OWED · Enforced by: P5.9 variable (R-CV seed); P5.13
+- **lc.37** Trust model. New-build rows are high trust by design (by-law + geometry); the existing house is the only low-trust input; a lawfully-existing effect on a new build is a disclosure.
+  Status: RULED · Enforced by: INV-22; P5.14
+- **lc.38** Trust tier per field; row trust computed, never asserted.
+  Status: RULED · OWED · Enforced by: INV-22 (trust_level_computed); INV-24
+- **lc.39** Missing-data register ML-1..ML-13: each item has its handling (larger setback, disclosure, not_evaluated) and owner.
+  Status: RULED · Enforced by: trust_checks register ids; P5.13
+- **lc.40** existing_storeys is user input only
+  Status: RULED · OWED · Enforced by: INV-20
+- **lc.41** The P5.10 table is generated from docs/reference/maxbld-field-lineage.json; every clause, unit, column and logic variable resolves.
+  Status: RULED · Enforced by: INV-24: generate-maxbld-lineage.mjs --check; bylaw-maxbld-trace.infra
+- **lc.42** Every operator envelope answer has a verified disposition
+  Status: RULED · Enforced by: INV-25: generate-answer-tracker.mjs --check; bylaw-maxbld-trace.infra
+- **lc.43** Invariants INV-1..INV-25 are enforced
+  Status: RULED · OWED · Enforced by: P5.11 checks; the two generators; evaluator-lane tests (INV-18, INV-19)
+- **lc.44** "High trust" only when G-HT-1..G-HT-9 all hold
+  Status: RULED · OWED · Enforced by: the G-HT gates
+- **lc.45** Forms not modelled are disclosed:
+  Status: RULED 2026-10-18 · Enforced by: P5.12 codes; P5.1
+- **lc.47** Review corrections (R flat roof, RM 12.0 m, semi cap 4, attic GFA, houseplex 19 m, explicit setbacks, extension, landscaping, laneway arms, suite GFA reductions, renovation caps, R FSI 0.6).
+  Status: RULED 2026-10-18 · OWED · Enforced by: P5.13 vectors; INV-5, INV-9, INV-11
+- **lc.48** Coxwell generous reading with the mandatory disclosure and a logic-variable switch.
+  Status: RULED · OWED · Enforced by: INV-10; P5.13
+- **lc.49** CoA tier in the first release by M-65 unchanged, tier precedent_estimate.
+  Status: RULED 2026-10-18 · Enforced by: INV-23; lineage coa_status · +1 dated note
+- **lc.50** enrich_parcels consumer gate: no max-build column switches or retires until every listed coa / permits / sources / src consumer is migrated or confirmed; value changes recapture in replay-all.
+  Status: RULED · Enforced by: Spec 78 O-11 list; R-CZ / R-DQ
+- **lc.51** The per-lot CoA list is the one already decided; no new field.
+  Status: RULED 2026-10-18 · Enforced by: lineage comparable_builds_ref, nearby_coa_builds_gfa_sqm; generate-maxbld-lineage.mjs --check
+- **lc.52** Disclosure wording is plain. Each P5.12 code has one template of at most 45 words in a homeowner's words.
+  Status: RULED 2026-10-18 · Enforced by: bylaw-maxbld-trace.infra.test.ts (template lint) · +1 dated note
+- **lc.53** Verified by named lock; no partial green.
+  Status: RULED 2026-10-19 · Enforced by: INV-25; verifyLock + red arms in bylaw-maxbld-trace.infra
+- **lc.57** Validation (2026-10-19). (1) Q1 (y): an optional "may" variation with no value keeps the base limit, disclosed.
+  Status: RULED 2026-10-19 · Enforced by: bylaw-validation-fixes.logic.test.ts; G-EVAL
+- **lc.58** Front averaging, floored and adjusted for porches (2026-10-19).
+  Status: RULED 2026-10-19 · Enforced by: bylaw-front-setback-reliability.logic.test.ts
+- **lc.60** CoA u is unfitted at the first release (2026-10-20).
+  Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); INV at ① (OWED)
+- **lc.61** Scenario cards may show before the shadow passes; the headline may not (2026-10-20).
+  Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
+- **lc.62** The renovation section is in v1.
+  Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
+- **lc.63** The attic and dormer cross-section model is checked against golden cases.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+- **lc.64** Maximum bedrooms: 4 per unit at 2 units, 3 per unit at 3 or more.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+- **lc.65** houseplex_min_units = 2 is a pinned logic variable.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+- **lc.66** A row with no applicable trust checks has row_trust_level = not_applicable.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+- **lc.67** P5.2 applies the main-wall share caps only where main_wall_height_m is a number.
+  Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
+- **lc.68** Layer 2 design-choice flags follow the golden-lot defaults.
+  Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
+- **lc.69** Box shape disclosed; footprint_shape_factor hook with the switch off.
+  Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
+- **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
+  Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
+- **lc.2** Norm window and sample floor. Norms use a 5-year permit window (BUILD_NORM_WINDOW_YEARS).
+  Status: RULED · OWED · Enforced by: build-norms.logic; migration 199 partial-unique index
+- **lc.3** One observation per (dominant parcel, kind),
+  Status: RULED · OWED · Enforced by: build-norms.logic; compute-build-norms.db
+- **lc.4** The existing-ratio method. The pre-reno current-home fraction is clamp(1 − addition_delta ÷ max_build_gfa, 0, 1) (p25/p50), distinct from the new-build build_ratio_p50.
+  Status: RULED · Enforced by: build-norms.logic
+- **lc.5** Measuring the existing structure from massing is abandoned for headline answers
+  Status: RULED · Enforced by: Spec 65 ES-6 locks (enrich-parcels-existing-dq.db)
+- **lc.6** As-of-right never exceeds the max-build envelope.
+  Status: RULED · Enforced by: optimal-config.logic
+- **lc.7** CoA is up, not out: storeys_p90 at the same footprint.
+  Status: RULED · Enforced by: optimal-config.logic
+- **lc.8** Garden/laneway constants (P2.1, consolidation 2025).
+  Status: SUPERSEDED (in part) · Enforced by: contracts.infra (optimal_config group); optimal-config.logic
+- **lc.9** The 20 % all-ancillary cap is shared
+  Status: RULED · Enforced by: optimal-config.logic
+- **lc.10** Suite fit is conservative. It is measured against the current building's rear yard; a shallow yard shrinks the suite rather than failing it.
+  Status: RULED · Enforced by: optimal-config.logic
+- **lc.11** Confidence degradation. opt_config_confidence falls with lot-size confidence, FSI absence, a suspected existing accessory and comp count.
+  Status: RULED · Enforced by: optimal-config.logic (confidence degradation)
+- **lc.12** Holding zone gates the as-of-right suite;
+  Status: RULED · Enforced by: optimal-config.logic
+- **lc.13** comp_fsi_p50 uses new-build comps only,
+  Status: RULED · Enforced by: enrich-parcels-comps.logic
+- **lc.14** The McBylaw Phase 3 report (§6): report fields as declared formulas over Layer 2; the scenario catalogue; two closed status levels; PROHIBIT wins at the same rank; the CoA axis; parking never a size constraint.
+  Status: RULED 2026-10-07 · OWED · Enforced by: Spec 78 §6.9 gate table (PLANNED)
+- **lc.28** One shared pure calculation. All renovation math lives in src/features/leads/lib/renovation-shared.js, which the step and the app both call (precedent cost-model-shared.js, Spec 83 §7.2).
+  Status: RULED · OWED · Enforced by: compute-closure purity scan (G0–G13, gate E #32); JS/TS parity test
+- **lc.29** The ground-truth store. With consent, user-entered dimensions are stored beside the estimate snapshot (existing_house_reports) as an accuracy oracle.
+  Status: RULED · OWED · Enforced by: Spec 78 P5.8
+- **lc.30** When the low-confidence label may drop
+  Status: OWED · Enforced by: —
+- **lc.31** The enrich_parcels max-build columns are kept
+  Status: RULED · OWED · Enforced by: §6.9 shadow classifier (PLANNED)
+- **lc.34** Estimate design choices: the pipeline never reads user entries (O-12); storeys take the upper value (O-13) (superseded by LC-40); basement unknown (O-14); confidence seeds 0.5 / 0.6 are uncalibrated logic variables (O-15).
+  Status: RULED · OWED · Enforced by: Spec 78 P5.0, P5.9
+## 3. Rows with an OWED marker (222 in force)
+
+The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
+
+| Rule | Line | Status |
+|---|---|---|
+| M-220 | m.220 | APPLIED 2026-10-18 · OWED |
+| M-247 | m.247 | RULED 2026-10-21 · OWED |
+| M-251 | m.251 | RULED 2026-10-21 · OWED |
+| M-256 | m.256 | RULED 2026-10-21 · OWED |
+| M-259 | m.259 | RULED 2026-10-21 · OWED |
+| M-265 | m.265 | RULED 2026-10-21 · OWED |
+| M-307 | m.307 | RULED 2026-10-21 · OWED |
+| M-312 | m.312 | OWED 2026-10-21 |
+| M-316 | m.316 | OWED |
+| M-317 | m.317 | RULED 2026-10-22 · OWED |
+| M-318 | m.318 | RULED 2026-10-22 · OWED |
+| M-319 | m.319 | RULED 2026-10-22 · OWED |
+| M-320 | m.320 | RULED 2026-10-22 · OWED |
+| M-321 | m.321 | RULED 2026-10-22 · OWED |
+| M-322 | m.322 | RULED 2026-10-22 · OWED |
+| M-323 | m.323 | RULED 2026-10-22 · OWED |
+| M-324 | m.324 | RULED 2026-10-22 · OWED |
+| M-325 | m.325 | RULED 2026-10-22 · OWED |
+| M-326 | m.326 | RULED 2026-10-22 · OWED |
+| M-327 | m.327 | RULED 2026-10-22 · OWED |
+| M-329 | m.329 | RULED 2026-10-22 · OWED |
+| M-330 | m.330 | RULED 2026-10-22 · OWED |
+| M-332 | m.332 | RULED 2026-10-22 · OWED |
+| M-333 | m.333 | RULED 2026-10-22 · OWED |
+| M-334 | m.334 | RULED 2026-10-22 · OWED |
+| M-335 | m.335 | RULED 2026-10-22 · OWED |
+| M-336 | m.336 | RULED 2026-10-22 · OWED |
+| M-337 | m.337 | RULED 2026-10-22 · OWED |
+| M-338 | m.338 | RULED 2026-10-22 · OWED |
+| M-339 | m.339 | RULED 2026-10-22 · OWED |
+| M-340 | m.340 | RULED 2026-10-22 · OWED |
+| M-341 | m.341 | RULED 2026-10-22 · OWED |
+| M-342 | m.342 | RULED 2026-10-22 · OWED |
+| M-343 | m.343 | RULED 2026-10-22 · OWED |
+| M-344 | m.344 | RULED 2026-10-22 · OWED |
+| M-345 | m.345 | RULED 2026-10-22 · OWED |
+| M-346 | m.346 | RULED 2026-10-22 · OWED |
+| M-347 | m.347 | RULED 2026-10-22 · OWED |
+| M-348 | m.348 | RULED 2026-10-22 · OWED |
+| M-349 | m.349 | RULED 2026-10-23 · OWED |
+| M-350 | m.350 | RULED 2026-10-23 · OWED |
+| M-351 | m.351 | RULED 2026-10-23 · OWED |
+| M-352 | m.352 | RULED 2026-10-23 · OWED |
+| M-353 | m.353 | RULED 2026-10-23 · OWED |
+| M-354 | m.354 | RULED 2026-10-23 · OWED |
+| M-355 | m.355 | RULED 2026-10-23 · OWED |
+| M-356 | m.356 | RULED 2026-10-23 · OWED |
+| M-357 | m.357 | RULED 2026-10-23 · OWED |
+| M-358 | m.358 | RULED 2026-10-24 · OWED |
+| M-360 | m.360 | RULED 2026-10-29 · OWED |
+| M-361 | m.361 | RULED 2026-10-29 · OWED |
+| M-362 | m.362 | RULED 2026-10-29 · OWED |
+| M-363 | m.363 | RULED 2026-10-29 · OWED |
+| M-364 | m.364 | RULED 2026-10-29 · OWED |
+| M-365 | m.365 | RULED 2026-10-29 · OWED |
+| M-366 | m.366 | RULED 2026-10-29 · OWED |
+| M-367 | m.367 | RULED 2026-10-29 · OWED |
+| M-368 | m.368 | RULED 2026-10-29 · OWED |
+| M-369 | m.369 | RULED 2026-10-29 · OWED |
+| M-371 | m.371 | RULED 2026-10-29 · OWED |
+| M-372 | m.372 | RULED 2026-10-29 · OWED |
+| M-373 | m.373 | RULED 2026-10-29 · OWED |
+| M-374 | m.374 | RULED 2026-10-29 · OWED |
+| M-376 | m.376 | RULED 2026-10-29 · OWED |
+| M-378 | m.378 | RULED 2026-10-30 · OWED |
+| M-379 | m.379 | RULED 2026-10-30 · OWED |
+| M-380 | m.380 | RULED 2026-10-30 · OWED |
+| M-381 | m.381 | RULED 2026-10-30 · OWED |
+| M-382 | m.382 | RULED 2026-10-30 · OWED |
+| M-384 | m.384 | RULED 2026-10-30 · OWED |
+| M-377 | m.377 | RULED 2026-10-30 · OWED |
+| M-385 | m.385 | RULED 2026-10-30 · OWED |
+| M-386 | m.386 | RULED 2026-10-30 · OWED |
+| M-387 | m.387 | RULED 2026-10-30 · OWED |
+| M-388 | m.388 | RULED 2026-10-30 · OWED |
+| M-389 | m.389 | RULED 2026-10-30 · OWED |
+| M-390 | m.390 | RULED 2026-10-30 · OWED |
+| M-391 | m.391 | RULED 2026-10-30 · OWED |
+| M-392 | m.392 | RULED 2026-10-30 · OWED |
+| M-393 | m.393 | RULED 2026-10-30 · OWED |
+| M-400 | m.400 | RULED 2026-10-30 · OWED |
+| M-401 | m.401 | RULED 2026-10-30 · OWED |
+| M-402 | m.402 | RULED 2026-10-30 · OWED |
+| M-403 | m.403 | RULED 2026-10-30 · OWED |
+| M-394 | m.394 | RULED 2026-10-30 · OWED |
+| M-395 | m.395 | RULED 2026-10-30 · OWED |
+| M-396 | m.396 | RULED 2026-10-30 · OWED |
+| M-397 | m.397 | RULED 2026-10-30 · OWED |
+| M-398 | m.398 | RULED 2026-10-30 · OWED |
+| M-399 | m.399 | RULED 2026-10-30 · OWED |
+| M-404 | m.404 | RULED 2026-10-30 · OWED |
+| M-405 | m.405 | RULED 2026-10-30 · OWED |
+| M-406 | m.406 | RULED 2026-10-30 · OWED |
+| M-407 | m.407 | RULED 2026-10-30 · OWED |
+| M-408 | m.408 | RULED 2026-10-30 · OWED |
+| M-409 | m.409 | RULED 2026-10-30 · OWED |
+| M-410 | m.410 | RULED 2026-10-30 · OWED |
+| M-411 | m.411 | RULED 2026-10-30 · OWED |
+| M-412 | m.412 | RULED 2026-10-30 · OWED |
+| M-413 | m.413 | RULED 2026-10-30 · OWED |
+| M-414 | m.414 | RULED 2026-10-30 · OWED |
+| M-415 | m.415 | RULED 2026-10-30 · OWED |
+| M-416 | m.416 | RULED 2026-10-30 · OWED |
+| M-417 | m.417 | RULED 2026-10-30 · OWED |
+| M-418 | m.418 | RULED 2026-10-30 · OWED |
+| M-419 | m.419 | RULED 2026-10-30 · OWED |
+| M-420 | m.420 | RULED 2026-10-30 · OWED |
+| M-421 | m.421 | RULED 2026-10-30 · OWED |
+| M-422 | m.422 | RULED 2026-10-31 · OWED |
+| M-423 | m.423 | RULED 2026-10-31 · OWED |
+| M-424 | m.424 | RULED 2026-10-31 · OWED |
+| M-425 | m.425 | RULED 2026-10-31 · OWED |
+| M-426 | m.426 | RULED 2026-10-31 · OWED |
+| M-427 | m.427 | RULED 2026-10-31 · OWED |
+| M-428 | m.428 | RULED 2026-10-31 · OWED |
+| M-429 | m.429 | RULED 2026-10-31 · OWED |
+| M-430 | m.430 | RULED 2026-10-31 · OWED |
+| M-431 | m.431 | RULED 2026-10-31 · OWED |
+| M-432 | m.432 | RULED 2026-10-31 · OWED |
+| M-433 | m.433 | RULED 2026-10-31 · OWED |
+| M-434 | m.434 | RULED 2026-10-31 · OWED |
+| M-435 | m.435 | RULED 2026-10-31 · OWED |
+| M-436 | m.436 | RULED 2026-10-31 · OWED |
+| M-437 | m.437 | RULED 2026-10-31 · OWED |
+| M-438 | m.438 | RULED 2026-10-31 · OWED |
+| M-439 | m.439 | RULED 2026-10-31 · OWED |
+| M-440 | m.440 | RULED 2026-10-31 · OWED |
+| M-441 | m.441 | RULED 2026-10-31 · OWED |
+| M-442 | m.442 | RULED 2026-10-31 · OWED |
+| M-443 | m.443 | RULED 2026-10-31 · OWED |
+| M-444 | m.444 | RULED 2026-10-31 · OWED |
+| M-445 | m.445 | RULED 2026-10-31 · OWED |
+| M-446 | m.446 | RULED 2026-10-31 · OWED |
+| M-447 | m.447 | RULED 2026-10-31 · OWED |
+| M-449 | m.449 | RULED 2026-10-31 · OWED |
+| M-450 | m.450 | RULED 2026-10-31 · OWED |
+| M-451 | m.451 | RULED 2026-10-31 · OWED |
+| M-452 | m.452 | RULED 2026-11-01 · OWED |
+| M-453 | m.453 | RULED 2026-11-01 · OWED |
+| M-454 | m.454 | RULED 2026-11-01 · OWED |
+| M-455 | m.455 | RULED 2026-11-02 · OWED |
+| M-456 | m.456 | RULED 2026-11-02 · OWED |
+| M-457 | m.457 | RULED 2026-11-03 · OWED |
+| M-458 | m.458 | RULED 2026-11-03 · OWED |
+| M-459 | m.459 | RULED 2026-11-03 · OWED |
+| M-460 | m.460 | RULED 2026-11-03 · OWED |
+| M-461 | m.461 | RULED 2026-11-03 · OWED |
+| M-462 | m.462 | RULED 2026-11-03 · OWED |
+| M-463 | m.463 | RULED 2026-11-03 · OWED |
+| M-464 | m.464 | RULED 2026-11-03 · OWED |
+| M-465 | m.465 | RULED 2026-11-03 · OWED |
+| M-466 | m.466 | RULED 2026-11-03 · OWED |
+| M-467 | m.467 | RULED 2026-11-03 · OWED |
+| M-468 | m.468 | RULED 2026-11-03 · OWED |
+| M-469 | m.469 | RULED 2026-11-03 · OWED |
+| M-470 | m.470 | RULED 2026-11-03 · OWED |
+| M-471 | m.471 | RULED 2026-11-03 · OWED |
+| M-472 | m.472 | RULED 2026-11-03 · OWED |
+| M-473 | m.473 | RULED 2026-11-03 · OWED |
+| M-474 | m.474 | RULED 2026-11-03 · OWED |
+| M-475 | m.475 | RULED 2026-11-03 · OWED |
+| M-476 | m.476 | RULED 2026-11-03 · OWED |
+| M-477 | m.477 | RULED 2026-11-03 · OWED |
+| M-478 | m.478 | RULED 2026-11-03 · OWED |
+| M-479 | m.479 | RULED 2026-11-03 · OWED |
+| M-480 | m.480 | RULED 2026-11-03 · OWED |
+| M-481 | m.481 | RULED 2026-11-03 · OWED |
+| M-482 | m.482 | RULED 2026-11-04 · OWED |
+| M-483 | m.483 | RULED 2026-11-04 · OWED |
+| M-484 | m.484 | RULED 2026-11-03 · OWED |
+| M-485 | m.485 | RULED 2026-11-03 · OWED |
+| M-486 | m.486 | RULED 2026-11-03 · OWED |
+| M-487 | m.487 | RULED 2026-11-04 · OWED |
+| M-488 | m.488 | RULED 2026-11-06 · OWED |
+| M-489 | m.489 | RULED 2026-11-06 · OWED |
+| M-490 | m.490 | RULED 2026-11-06 · OWED |
+| M-491 | m.491 | RULED 2026-11-06 · OWED |
+| M-492 | m.492 | RULED 2026-11-06 · OWED |
+| M-493 | m.493 | RULED 2026-11-06 · OWED |
+| M-494 | m.494 | RULED 2026-11-03 · OWED |
+| M-495 | m.495 | RULED 2026-11-03 · OWED |
+| M-496 | m.496 | RULED 2026-11-04 · OWED |
+| M-497 | m.497 | RULED 2026-11-04 · OWED |
+| M-498 | m.498 | RULED 2026-11-06 · OWED |
+| M-499 | m.499 | RULED 2026-11-06 · OWED |
+| M-500 | m.500 | RULED 2026-11-06 · OWED |
+| LC-15 | lc.15 | RULED · OWED |
+| LC-16 | lc.16 | RULED · OWED |
+| LC-17 | lc.17 | RULED · OWED |
+| LC-18 | lc.18 | RULED · OWED |
+| LC-19 | lc.19 | RULED · OWED |
+| LC-20 | lc.20 | RULED · OWED |
+| LC-21 | lc.21 | RULED · OWED |
+| LC-22 | lc.22 | RULED · OWED |
+| LC-24 | lc.24 | RULED · OWED |
+| LC-25 | lc.25 | RULED · OWED |
+| LC-26 | lc.26 | RULED · OWED |
+| LC-27 | lc.27 | RULED · OWED |
+| LC-38 | lc.38 | RULED · OWED |
+| LC-40 | lc.40 | RULED · OWED |
+| LC-43 | lc.43 | RULED · OWED |
+| LC-44 | lc.44 | RULED · OWED |
+| LC-47 | lc.47 | RULED 2026-10-18 · OWED |
+| LC-48 | lc.48 | RULED · OWED |
+| LC-63 | lc.63 | RULED 2026-10-22 · OWED |
+| LC-64 | lc.64 | RULED 2026-10-22 · OWED |
+| LC-65 | lc.65 | RULED 2026-10-22 · OWED |
+| LC-66 | lc.66 | RULED 2026-10-22 · OWED |
+| LC-67 | lc.67 | RULED 2026-10-22 · OWED |
+| LC-68 | lc.68 | RULED 2026-10-23 · OWED |
+| LC-69 | lc.69 | RULED 2026-10-30 · OWED |
+| LC-2 | lc.2 | RULED · OWED |
+| LC-3 | lc.3 | RULED · OWED |
+| LC-14 | lc.14 | RULED 2026-10-07 · OWED |
+| LC-28 | lc.28 | RULED · OWED |
+| LC-29 | lc.29 | RULED · OWED |
+| LC-30 | lc.30 | OWED |
+| LC-31 | lc.31 | RULED · OWED |
+| LC-33 | lc.33 | RULED · OWED |
+| LC-34 | lc.34 | RULED · OWED |
+| LC-35 | lc.35 | RULED · OWED |
+| LC-36 | lc.36 | RULED 2026-10-18 · OWED |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+index c0c7c4d89f8d571749532996ca9237272ccd4591..8588eed2edd6f848258fd3ccff151005d357162b 100644
+--- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
++++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+@@ -8,6 +8,7 @@
+ // the Spec 135 FE rows". Every RED case plants a defect in an in-memory register text or a temp root, never in the repo. No DB, no network.
+ // The shared CLI shell (runHandbookCli, scripts/analysis/gates/rule-map.mjs) is exercised here through the 136 entry (case H6).
+ import { afterAll, describe, expect, it } from 'vitest';
++import { execFileSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -256,31 +257,53 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
+ // that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
+ // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
+ const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
++// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
++// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
++const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
++// the ! is safe: the pattern has one capture group, so every match holds m[1]
++const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)].map((m) => m[1]!);
++const trackedLocks = new Set(execFileSync('git', ['ls-files', '--', ...BUILT_BY_367], { cwd: ROOT, stdio: 'pipe' }).toString().split('\n').filter(Boolean));
+ const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
+ 
+ describe('MF-95 C — the thirteen RR-0384 rows', () => {
+   const rows = realRows();
+   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
+ 
+-  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
++  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each with exactly its one lock path; OWED with no lock file, or (task-367) tracked and RULED or OWED on FLIP_PENDING', () => {
+     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
+     // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
+     const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
+     expect(at).toBeGreaterThanOrEqual(0);
+     expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+     expect(rows.length).toBeGreaterThanOrEqual(57);
++    expect(FLIP_PENDING_SRC, 'FLIP_PENDING not found in register-locks-resolve.infra.test.ts').not.toBeNull();
++    // the ! below is safe: fresh holds only rows with exactly one lock (its filter above)
+     for (const r of fresh) {
++      if (BUILT_BY_367.includes(r.locks[0]!)) {
++        expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);
++        if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);
++        continue;
++      }
+       expect(r.status, r.id).toBe('OWED');
+       expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
+     }
+   });
+ 
+-  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
++  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by", or RULED (task-367) with "Enforced by" its lock', () => {
+     const text = read(SPEC.handbookRel);
+     const owed = rows.filter((r: Row) => r.status === 'OWED').length;
+-    expect(owed).toBeGreaterThanOrEqual(21);
++    // task-367: the floor is 21 minus the rows of BUILT_BY_367 that read RULED (18 when all three flip).
++    // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++    expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);
+     expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
+-    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
++    for (const r of fresh) {
++      // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++      const lock = r.locks[0]!.replace(/[.]/g, '\\.');
++      if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));
++      else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));
++    }
+   });
+ 
+   it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

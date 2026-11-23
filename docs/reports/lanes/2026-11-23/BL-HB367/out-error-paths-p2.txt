@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T20:34:14.115Z file_sha256=63791a8d1928a3714030e376e170c093057f2482e331ccb6e9722252230bcabd prompt_sha256=c5d63e365ee65183f08e04a726be5696b8ec9b5ba3febb8e8165f6a81efa5a9a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:122 "expect(files.length).toBeGreaterThanOrEqual(41);" — an empty or zero-row git walk yields zero files and zero hits, so the equal([]) at :120 would pass green, but the count floors at :122-124 (:45 descriptors, :20 mobile) fail red first — handled, the empty path is guarded.
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:95 "return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })" — a missing git binary, wrong cwd or non-repo throws and fails the test red, never green — handled, fail-closed needs no catch here.
+
+DEFER severity=MED — src/tests/surfaces/scope-fence.logic.test.ts:106 "const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));" — no timeout option: a stalled git (index.lock, NFS, an askpass prompt) blocks the event loop synchronously and vitest's per-test timer cannot interrupt a synchronous call, so the run hangs rather than failing — pass timeout: 30000 (same at :95) so execFileSync kills the child and throws.
+
+DEFER severity=LOW — src/tests/surfaces/scope-fence.logic.test.ts:45 "const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;" — the cast is unchecked, so if the manifest lacks scope the value is undefined and :101 "scope.programme_scopes.includes(d.programme?.scope ?? '')" throws an opaque TypeError inside test A only — assert Array.isArray(scope?.programme_scopes) with a named message first.
+
+DEFER severity=LOW — src/tests/surfaces/scope-fence.logic.test.ts:100 ".map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))" — every tracked descriptor is parsed before the :101 scope filter, so one malformed out-of-scope .descriptor.json aborts test A even though it is irrelevant to the fence — move the scope filter before the parse, or wrap the parse per file and fail with the path.
+
+DEFER severity=LOW — src/tests/surfaces/scope-fence.logic.test.ts:116 "const sources = files.map((f) => ({ rel: f, text: readText(f) }));" — a git-tracked but working-tree-deleted or renamed declared file throws ENOENT and aborts test A with a raw fs error rather than a named assertion naming the file — catch ENOENT and fail with the file path in the message.
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:69 "if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }" — the early return plus the single str() call at :72-74 give one hit per node, so a second visit or a re-run cannot double count, and the file performs no writes so there is no double-submit surface — handled, idempotent and deterministic.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (missing git, manifest read/parse, descriptor parse), empty (zero-file walk, empty tables array, missing optional table field, missing scope), retry/time-out (execFileSync unbounded), double-submit/idempotency (one hit per node, no writes), degrade (count floors fail closed)   Unguarded: 0
+
+---
+⏱  58940ms (58.9s)
+📊 Tokens — total: 21854, input: 8627, output: 13227, reasoning: 12390

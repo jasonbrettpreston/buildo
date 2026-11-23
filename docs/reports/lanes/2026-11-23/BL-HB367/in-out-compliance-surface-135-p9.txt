@@ -1,0 +1,349 @@
+LIST surface-135 sha256:13dec10f7b0a21359a538eb512ff5b623a4cb507c9f94531d5e037bb0524a9d4 material sha256:b413d5fb4851e32ae924c1dad87ee49de319c8862285f40e81b820e7a57b3830 part 1 of 4 chunk 3 of 3
+RULE LIST surface-135 (docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, whole file), part 1 of 4. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+# SPEC 135 — McFrontend Decisions Register
+
+> **Status: DRAFT** — number and folder RULED 2026-11-04 (Q-MF1 a): `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`. Form: the Spec 124a Appendix B7 LIVE REGISTER (124a:109) and Spec 69a (69a:37). Source of the rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`. "Operator verbatim" = the operator's own words; "card answer" = the card's text, not the operator's words. Line cites (`file:line`) were read at `ac9200aa8`, before the McFrontend Phase 0 documents landed.
+
+> **Role: authority register.** The live register of McFrontend rulings (`FE-nn` rows). Policy Spec 128; contract Spec 126; procedure Spec 127; handbook Spec 136 (generated, not yet landed: its generator is Phase 1 code). The move of R-01..R-34 here is DEFERRED (Spec 128 §5 dated note 2026-11-04); those ids stay in Spec 128 for now. This register decides McFrontend rulings only; it does not decide McBylaws numbers, which McBylaws owns.
+
+> **Land order.** This file must be in HEAD in an EARLIER commit than the gate registers-array change (Spec 128 §4.11 item 1). Until that change lands (it waits for the named freeze lift), the McBylaws gate does not read this register, and FE ids are not matched by its `ID_RE`.
+
+
+## Rules of the register
+
+1. Protocol: Spec 124 section 4 inherited (the Spec 128 §4 mirror). A different party adjudicates.
+2. A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it).
+3. Status words: `RULED <date>` · `OWED` · `PROPOSED` · `RETIRED`. A ruled row whose lock is not built reads `OWED` with the lock path. Never an OWED marker with no lock path (`statusOf` reads it OWED forever: `cite-parse.mjs:57-70`).
+4. `Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only.
+5. Locks: a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist; a `.db.test.ts` lock must be named in a CI step (test.yml). Lock: `register-locks-resolve.infra.test.ts` (FE-09).
+
+**Next free id:** `FE-59`. Dated note 2026-11-23 (M-246, prior text kept; MF-96 · McFrontend queue · lane BL-HB446, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved"; Spec 135 rule 3 form): the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446), so the first value on the line, the one the Spec 136 generator reads, is FE-59. Dated note 2026-11-22 (M-246, prior text kept; MF-95 · McFrontend queue · lane BL-HB430, task-430; RR-0384, operator, verbatim: "Approved"; Spec 135 rule 3 form): the line read "Next free id: FE-45" before this note; FE-45..FE-57 are taken by the thirteen OWED rows of the RR-0384 list (task-430), so the first value on the line, the one the Spec 136 generator reads, is FE-58. FE-45 is also held by lane BL-MFRULES (task-388) on an unlanded branch: whichever of the two lands second renumbers its rows to the next free id at landing and rewrites this line by a dated note (task-430 plan section 17.5; ids FE-46..FE-58 claimed in ~/Buildo-scratch/ids for that case). Dated note 2026-11-12 (M-246, prior text kept; MF-78 · McFrontend queue · lane R; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's"; Spec 135 rule 3 form): the line read "Next free id: FE-40" before this note; FE-40 is taken by the McTest row (MF-78), so the first value on the line, the one the Spec 136 generator reads, is FE-41. Dated note 2026-11-12 (M-246, prior text kept; MB-94 · McBylaws queue · engine-inputs lane; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"): the line read "Next free id: FE-38" before this note. FE-38 (EI-D1) and FE-39 (EI-D2..EI-D8) are taken by the engine-inputs rulings, so the first value on the line, the one the Spec 136 generator reads, is FE-40. Dated note 2026-11-11 (M-246, prior text kept; MF-76 · McFrontend queue · lane E; operator D-2 (a), verbatim "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y"; Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-37" before this note; FE-37 is taken by the STATIC server reads row (MF-76, the Spec 128 §4 escalation of this date), so the first value on the line, the one the Spec 136 generator reads, is FE-38. Dated note 2026-11-11 (M-246, prior text kept; MF-75 · McFrontend queue · lane R; Spec 126 §0b item 11 dated note 2026-11-11, which held the FE-36 row text "until FE-35 lands"; Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-36" before this note; FE-36 is taken by the "Navigation is a route" row (MF-75), landed from the row text in Spec 126 §0b item 11 unchanged now that FE-35 is in the register below it, so the first value on the line, the one the Spec 136 generator reads, is FE-37. Dated note 2026-11-11 (M-246, prior text kept; MF-62; operator, verbatim: "x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook"; Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-35" before this note; FE-35 is taken by the "What we checked" row (MF-62; first committed as FE-38 in 90f5e8d72 while FE-35..FE-37 were reserved for MF-44, MF-19 and MF-48, none of which used an FE row; renumbered to the next free id after FE-34), so the first value on the line, the one the Spec 136 generator reads, is FE-36. Dated note 2026-11-11 (M-246, prior text kept; MF-57; operator, verbatim: "y to all as built", D-A (a); Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-34" before this note; FE-34 is taken by the report page contract row (MF-57 below), so the first value on the line, the one the Spec 136 generator reads, is FE-35. Dated note 2026-11-09 (M-246, prior text kept; MF-42; operator, verbatim: "P42 decisions approved" and "approved smaller version"; P42-D5 a; Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-33" before this note; FE-33 is taken by the render-smoke row (MF-42 below), so the first value on the line, the one the Spec 136 generator reads, is FE-34. Dated note 2026-11-09 (M-246, prior text kept; next free id line, D-16; Spec 135 rule 3 form of the D-08 flips): the line read "Next free id: FE-31" before this note; it reads FE-33 because FE-31 and FE-32 are taken (MF-41 note below), so the first value on the line is the one the Spec 136 generator reads. Dated note 2026-11-09 (M-246, prior text kept; MF-41): FE-31 and FE-32 are taken by the McFrontend Phase 2 rows; next free id **`FE-33`**.
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

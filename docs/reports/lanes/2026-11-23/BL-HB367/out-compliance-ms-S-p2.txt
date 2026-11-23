@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:55:45.055Z file_sha256=de523700787c514624cee2995d94f124ce166cefdd8c4db90e644233ec2cb8b8 prompt_sha256=4fe756a15b47498ecafed1410c87d067856ffbb9ad811e5de9e33819920a77b6
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/scope-fence.logic.test.ts:16 "// LIMITS (stated, not widened): declared files only, no import hop" — the row reads RULED on a gate whose own stated limit leaves every server file no descriptor declares unscanned, and the limit lives only in the test header, not as a named owned exception in the fe.49 dated note the way RR-0417 records FE-51's two, cannot see any note that carries it — add the declared-files-only limit to the fe.49 dated note as a named owned exception, or keep fe.49 OWED until it is recorded.
+
+DEFER severity=MED — "Each gate: red first on a planted defect, both directions." — src/tests/surfaces/scope-fence.logic.test.ts:60 "if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {" — header line 9 promises a lead screen named "in its module path or its bound names", but a namespace binding is never added to names, so "import * as LeadFeed from './feed'" and "export * as LeadFeed from './feed'" (NamespaceExport, path innocent) give 0 hits and :127 has no planted case for them — push the namespace binding name for NamespaceImport and NamespaceExport into names and add one planted case per shape.
+
+DEFER severity=LOW — "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/surfaces/scope-fence.logic.test.ts:120 "// Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit." — with :121 "expect(files.length).toBeGreaterThanOrEqual(41);" a shrink from 46 to 41 stays green, so the stated accuracy property is not the one asserted and the floor is a hand-copied constant — keep the live counts in one recorded baseline and assert against it.
+
+DEFER severity=LOW — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — this chunk holds only the test file, so the Spec 136, rule-map and rule-lists regeneration evidence is not in front of this review, cannot see — state the generator outputs and exit codes in the chunk that carries them, or name this chunk test-only so the reviewer does not read AC3 as met here.
+
+REJECT — grounder verdict "SAFE TO FOLD AS REPORT-ONLY; NOT safe to block. Must fix before any gate blocks" — accused of landing a hard-failing gate before grounder clearance — the six named fixes are compute-reach.mjs, mobile-never-do.mjs, mobile-literals.mjs and ast-grep of the parked lane, none of them this file, and AC2 requires the gate to actually fail on a planted defect.
+
+REJECT — increment objective "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — accused of running non-search work ahead of search — the operator ruled "Add the tasks to incr 1b" and the card's Files list names src/tests/surfaces/scope-fence.logic.test.ts.
+
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:134 — planted defect expects exactly one hit, :119 clean tree expects [].
+
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "yes to both A. Status flip." — the operator confirmed the three rows these tests lock.
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/scope-fence.logic.test.ts:111 — this file's scope is FE-49 alone, FE-51 is not claimed here.
+
+MET — RR-0386 "gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts:1 — a fresh FE-49 test with its SPEC LINK, not a landed parked gate A/B.
+
+MET — "we need one plan - we can only execute one plan" — src/tests/surfaces/scope-fence.logic.test.ts:3 — lane BL-HB367 / MF-98 work under the one plan, the earlier gates plan parked.
+
+MET — grounder "print the scanned-file count, fail on a zero-file walk" — src/tests/surfaces/scope-fence.logic.test.ts:118 — the run prints the scanned file, mobile and descriptor counts and :121 fails a zero walk.
+
+MET — "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/surfaces/scope-fence.logic.test.ts:1 — the file is the machine lock for handbook rule FE-49, named in the card Files list.
+
+VERDICT: PASS
+Clauses checked: 24   Unmet: 0
+Rules met: none
+
+---
+⏱  122283ms (122.3s)
+📊 Tokens — total: 35842, input: 9505, output: 26337, reasoning: 25187

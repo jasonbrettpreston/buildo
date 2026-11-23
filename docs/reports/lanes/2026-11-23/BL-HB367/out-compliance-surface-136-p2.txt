@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:31:15.991Z file_sha256=14caad8c0ce278decd3d1fc6d60a5fc5396732a45c729722f8df3ce3a8cfe6c1 prompt_sha256=40477f8b77f85f31411691440dbc8956234a9fe2a42e66dd3149c6d3c00275b2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.54 "a surface declares what the user sees when it fails" — src/tests/surfaces/failure-state-declared.logic.test.ts:88 "const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });" — the lock's own control accepts a non-contract surface with no error state, so the clause is read narrower than "a surface" — record the static-page (fe.37 leave-out) reading as a dated note the operator confirms, or extend the check to non-contract surfaces.
+
+DEFER severity=MED — fe.49 "lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:17 "a server file a descriptor does not declare is not scanned" — a lead_parcels read in an undeclared server module is not caught, so the clause is proven only for declared files — extend the scan to the server modules the in-scope routes import, or record the gap as a dated note.
+
+DEFER severity=LOW — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:146 "'router.replace(PARCEL_TAB_ROUTE.lookup);'" — the control treats a tab switch by replace as clean, so the positive "uses navigate" form is unchecked — record the FE-36 replace reading as a dated note or test replace.
+
+MET — fe.09 — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 — the FLIP_PENDING comment is updated and the list stays ['FE-39'] so the Lock column keeps resolving.
+
+MET — fe.10 — src/tests/surfaces/handbook-rule-map.logic.test.ts:264 — the rule-map lock accepts RULED rows with "Enforced by" and reads FLIP_PENDING from the register lock, both directions.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: fe.09, fe.10
+
+---
+⏱  185666ms (185.7s)
+📊 Tokens — total: 68253, input: 24308, output: 43945, reasoning: 43473

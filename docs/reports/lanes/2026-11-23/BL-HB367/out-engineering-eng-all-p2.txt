@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T20:32:40.432Z file_sha256=c7b8c707e68037f003d7963fb4b9bc4a847bcf02e92be28507eba3f8b4a0ad67 prompt_sha256=4fa657aec19d48576f3d87c5b8fb3fa9d94b07888ed2df99434bd8d4a5d0f67c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5.5 Test-Layer Map "a green suite in the wrong layer is false confidence" — src/tests/surfaces/failure-state-declared.logic.test.ts:8 "LIMITS (stated, not widened): declarations only, and the error state only. Code is not read" — fe.54 flips to RULED on a lock that proves descriptor declarations only, while the register's own FE-54 note says 8 of the 32 out-of-scope contract readers "would fail the finder today" and the live break mobile/src/lib/maxbldHelp.ts:19 stays uncaught, so the "not a blank screen" half of Rule 12 is green by omission — either scope the row's RULED claim in words to the declaration half or land the code-reading check in the same batch
+DEFER severity=LOW — 5.5 Test-Layer Map "Two surfaces that MUST agree stay in lockstep" — scripts/surfaces/_schema/surface-rule-map.json:796 "\"status\": \"active\"" — the map flip's currency against the register is evidenced in the pasted notes only by `generate-surface-handbook.mjs --check` and `rule-lists.mjs page --check` runs, and I cannot see a committed assertion that the map's status is derived from the register status, so a hand-edited map would pass the handbook test — confirm the FE-10 drift guard in handbook-rule-map.logic.test.ts also reads surface-rule-map.json status, or add that assertion
+REJECT — 5.1 Typed Factories Only "Never write untyped inline mocks" — the test's case objects are typed `Scanned`/`Descriptor` and cloned from a tracked repo fixture (`structuredClone(readJson<Descriptor>(SAMPLE))`), not untyped inline mocks, so factories.ts does not apply to JSON descriptor fixtures
+REJECT — 10.2 Frontend/Backend Boundary "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — task-367 is a COMPLY.3 compliance-tooling card, not a frontend WF, and both touched paths are a pre-registration record and a generated rule map, not data ingress
+MET — 2.3 Assumption Documentation — src/tests/surfaces/handbook-rule-map.logic.test.ts:265 "// the ! is safe: the pattern has one capture group, so every match holds m[1]" — every non-null assertion added in the hunks carries an inline justification, and optional chaining guards the reads (`FLIP_PENDING_SRC?.[1] ?? ''`, `d.errors?.answer ?? 'none'`, `d.programme?.scope ?? ''`)
+MET — 5.3 Red-Green Test Cycle — pasted Implementation Notes "red proven first at the designed (A) assertions (docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11))" — and case B plants its own KNOWN_BAD defects in memory ("B. RED planted (KNOWN_BAD, in memory)")
+MET — 5.2 Test File Pattern "`*.logic.test.ts` Pure functions, scoring, classification" — src/tests/surfaces/failure-state-declared.logic.test.ts:44 "export function failureStateProblems(list: Scanned[], scopes: readonly string[]): string[]" — the derivation is pure and sits in the logic layer, with the tree scan as the drift guard the parity row also assigns to `.logic.test.ts`
+MET — 5.5 Test-Layer Map "Two surfaces that MUST agree stay in lockstep" — src/tests/surfaces/handbook-rule-map.logic.test.ts C-T3 "Status: RULED [^\n]* · Enforced by: ${lock}" — the regenerated Spec 136 lines are asserted against the register rows and the OWED count, so the generated handbook cannot drift from its source rows without a red test
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  93605ms (93.6s)
+📊 Tokens — total: 52016, input: 33207, output: 18809, reasoning: 17913

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:29:02.867Z file_sha256=6b5b81f92ac3350d28762313512adef29720179863870f81ff188b9bcadd5d27 prompt_sha256=be4ee945bb2e3f4c551d9cc459ce3a78bf5a46831b9cf9b39f79317fb186f61f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.54 "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39) — src/tests/surfaces/failure-state-declared.logic.test.ts "LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at" — the row reads RULED "Enforced by" this lock, but the behavioral half (not a blank screen) and non-error states are satisfied only by this comment, and the live unhandled state mobile/src/lib/maxbldHelp.ts:19 is not caught — name maxbldHelp.ts:19 as an owned exception in the FE-54 row (as FE-51 names its two) or widen the lock to the error/empty/timeout states before RULED.
+
+DEFER severity=MED — fe.51 "The navigation rule reaches 'every MaxBLD screen, web and mobile'" (126:82) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "Not in the lock: a route held in a variable, and the web half (no tab bar today)." — the web half of the clause is excluded from the lock and was not among RR-0417's two named exceptions, yet the row reads RULED — record the web half and the route-in-variable gap as named owned exceptions, or hold the web half OWED.
+
+DEFER severity=LOW — fe.54 note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — src/tests/surfaces/failure-state-declared.logic.test.ts "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." — the test's out-of-scope count (8) contradicts the row's 32 contract readers, an inconsistent record — correct the comment to "32 contract readers outside scope, 8 would fail".
+
+REJECT — fe.51 — the nav-tab-switch lock keeps two live tab pushes as green exceptions — RR-0417 approved exactly that ("may FE-51 read RULED with its two named exceptions, yes or no?" "yes. worktrees removed"), so the later operator ruling governs.
+
+REJECT — fe.56 — the failure-state lock is declaration-only and cannot catch a blank screen — the defect it names ("reads a contract but declares no error state") is exactly what its "B. RED planted" case proves red, so "a lock never red against the defect it names is not a lock" (127:59) is satisfied for the lock's scope.
+
+REJECT — fe.49 — the diff flips FE-49 to RULED while the platform_shared exception stays outside the lock — FE-49 is not a row of this pasted part (part 3 owns it), so it is not judged here; the diff's quoted clause is cross-part.
+
+MET — fe.56 — src/tests/surfaces/failure-state-declared.logic.test.ts — "B. RED planted (KNOWN_BAD, in memory)" shows the lock red on the exact defect it names.
+
+MET — fe.52 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — row unchanged, still OWED, no false RULED.
+
+MET — fe.53 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — row unchanged, still OWED, no false RULED.
+
+MET — fe.55 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — row unchanged, still OWED, no false RULED.
+
+MET — fe.57 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — row unchanged, still OWED, no false RULED.
+
+MET — fe.58 — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — row unchanged, still OWED, no false RULED.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+Rules met: fe.52, fe.53, fe.55, fe.56, fe.57, fe.58
+
+---
+⏱  133040ms (133.0s)
+📊 Tokens — total: 55433, input: 26321, output: 29112, reasoning: 28147

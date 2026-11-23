@@ -1,0 +1,547 @@
+LIST surface-126 sha256:1d9f37176d58437e1e9db63f8b99dec39ad00f6efb56dcc0b15968be7188a0cb material sha256:b413d5fb4851e32ae924c1dad87ee49de319c8862285f40e81b820e7a57b3830 part 6 of 6 chunk 3 of 3
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 6 of 6. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+### 11b.7 MaxBLD page set (operator 2026-11-09)
+
+> Dated addition 2026-11-09 (MaxBLD page set · McFrontend queue · lane R; M-246, prior text kept, nothing above changed; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator direction 2026-11-09: the MaxBLD page set" and the two operator lines below it; source: the master list the operator approved, `maxbld-pages.html`, and the page inventory `pages-inventory.json`, read at `67d47542f`). This subsection commits the page set, as the last message below asks. §11b.3 stays the descriptor table; this subsection is the page list, its connections and the rules the operator gave for it.
+
+Operator, verbatim (four messages):
+
+- "some of these pages are confused between the MaxBLd and Buildo. MaxBld for the appt (1) Search Page (2) Search Page if two parcels selected (3) Report Page (4) Report Detail Page Still Needed (1) Account Profile Info (2) Saved Reports (provide Notifications to these lots COA updates) Web Only (3) Login Web: (1) Landing Page (2) Login (3) all the mobile pages (4) check-out (ie buy / cancel subscription / trial (5) onboarding is option - builder/realtor (but not necessary. Can you think of another others?"
+- "A. just expanded B. Im not sure but sometimes on a phone you get logged out - I dont know why - if you buy on the web - you would need to log in once on your phone. c. should come later. Let's get it working. your right we need 1-6 as well. Can you make a master list of all the MAxblf pages required and perhaps how they are connected as well. We need to add this to a spec. maybe even the McFront-end. also when should I provide the layout for these pages? Let's organize what we have here into a master list and how they connect and anything unique about them. however , it is normally done"
+- "As part of the sunscriptions we want to offer a free trial"
+- "Looks great! Commit the page set - we already have a brand spec - they should work together"
+
+Reading (record, same section): A = the report detail is the expanded card; B = login in the app too, the app keeps the session; C = PDF/share later; "1-6" = sign-up and password reset, Terms and Privacy, delete account in Account, notification settings in Account, the report-limit state on the Report page, a support contact link.
+
+**Ownership.** Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look (colours, type, tokens). A page here takes its look only from 117 via the generated theme (Spec 117 §7 dated note 2026-11-09; §11b.4). Spec 117 §6 already holds per-page layout guidance: §6.1 the search page (S-002, incl. the suggestion chips), §6.2 the shelf (S-004: Lookup · Tracked Lots · Account) and §6.3 Tracked Lots (S-072, its tokens and layout). Per-page layouts live in Spec 117 §6; the page set lives here. The page name "Tracked Lots" follows the app (`mobile/app/(app)/parcel-tool/_layout.tsx:12`, `tracked.tsx:7`) and Spec 117 §6.2-§6.3.
+
+**Phone app.** Routes are today's routes in the Buildo app's `parcel-tool` group and the shared `(auth)` group; the group moves to the MaxBLD app with MF-49.
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| A1 | Sign in, sign up, reset password | `/(auth)/sign-in`, `/(auth)/sign-up`, `/(auth)/confirm?code=`; reset: not set | shared with Buildo; a customer who bought on the web signs in once on the phone; the app keeps the session, and an unexpected sign-out is a bug | MF-49 |
+| A2 | Search | `/(app)/parcel-tool` (index) | address entry, Toronto only; shows the reports left this month | MF-35 |
+| A3 | Choose your parcel | `/(app)/parcel-tool/disambiguate?q=&kind=` | shown when an address matches two or more parcels; pick on a map or list; a stub today (Back button only) | MF-35 |
+| A4 | Report | `/(app)/parcel-tool/[parcelId]` | scenario cards with headline numbers; each card expands to every field (no detail page); one Street View photo, the photo space collapses when none is available; per-scenario ad slot and report images from admin; each new report counts toward the monthly limit, with a "limit reached" state; a Save button; PDF and share later | MF-48 (also MF-20 ad slot, MF-38 images, MF-39 photo, MF-45 limit) |
+| A5 | Tracked Lots (saved reports) | `/(app)/parcel-tool/tracked` | the lots the customer tracks (the Save button on the Report adds one); a CoA update on a tracked lot sends an alert and marks the lot; today example rows, no API | MF-51 |
+| A6 | Account | `/(app)/parcel-tool/account` | profile, plan and reports used; notification settings for the CoA alerts; delete account (app-store rule); support, Terms, Privacy, sign out; plan changes link to the web, no purchase in the app | MF-52 |
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-53 · McFrontend queue · lane E; operator, verbatim: ""choose your lot" and "address issues" screens should be built now and we should only be using the new report obviosuly"): row A3 is built by MF-53 (the stub is gone): one address over several lots shows the lots on a map with letters and cards (area, frontage, zoning) and opens the chosen lot through the same report route as a single match; an address found with no linked lot shows "No lot linked yet" with the pin and faint neighbouring lots; several such addresses the message only; more than 10 lots on one address "This address has many lots. Add a unit number or pick a nearby address."; an intersection "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected at open. "Report incorrect lot match" arrives with MF-46. W5 stays MF-44 (a web map needs a web map library outside §11b.4).
+
+**Web (maxbld.ca).**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| W1 | Landing | `/` | the front door: what MaxBLD does, Sign in and Start trial; today it still sells Buildo ("Find Construction Leads") | MF-46 |
+| W2 | Sign in, sign up, reset password | `/login`; `/signup` (listed public in `src/lib/auth/route-guard.ts:46`, no page); reset: not set | the same account as the app, MaxBLD wording | MF-46 |
+| W3 | Checkout | `/subscribe`, `/subscribe/success`, `/subscribe/cancel` | buy, start a trial or cancel through Stripe-hosted Checkout and Customer Portal; sells Buildo lead-gen today | MF-47 |
+| W4 | Search | not set (under the nested `(maxbld)` layout) | A2 rendered for the browser from the same descriptor | MF-44 |
+| W5 | Choose your parcel | not set (same) | A3 for the browser | MF-44 |
+| W6 | Report | not set (same) | A4 for the browser, same rules | MF-44 |
+| W7 | Tracked Lots | not set | A5 for the browser | MF-51 |
+| W8 | Account | not set | A6 for the browser; Manage plan opens the Stripe portal directly | MF-52 |
+| W9 | Terms, Privacy | not set | plain pages; the app stores need a privacy link and Stripe needs terms | MF-46 |
+| W10 | Onboarding: builder or realtor | not set | optional, later; not in the first version | none (later) |
+
+**Admin pages that feed MaxBLD.**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| D1 | Report preview | `/admin/report-preview` | shows the report exactly as customers see it; the only page already on the shared report renderer | none (exists) |
+| D2 | Media library | not set | upload report images and advertiser creatives | MF-37 |
+| D3 | Ads and placements | not set | which offer appears in each scenario's ad slot | MF-40 |
+| D4 | Parcel cost | `/admin/parcel-cost` | checks the cost numbers the report shows | none (parked, §11b.3) |
+
+**Connections** (solid = a link the customer follows; content = reaches the page from elsewhere):
+
+- Landing -> Sign in / sign up / reset (front door)
+- Sign in -> Checkout (no plan yet, web)
+- Sign in -> "Subscribe at maxbld.ca" message (no plan yet, app; no purchase in the app)
+- Checkout -> Search (plan bought)
+- Sign in -> Search (has a plan)
+- Search -> Report (one parcel matches)
+- Search -> Choose your parcel (two or more match) -> Report
+- Report -> Tracked Lots (Save) -> Report (open a tracked lot)
+- CoA update on a tracked lot -> Tracked Lots (alert, content)
+- Report -> "Limit reached: upgrade on the web" (monthly limit reached)
+- Search -> Account (menu)
+- Account -> Checkout (manage plan, web only)
+- Account -> Terms / Privacy / Support
+- Admin media library -> Report (report images, content)
+- Admin ads and placements -> Report (ad slot, content)
+
+**Rules from the rulings:**
+
+1. The report detail is the expanded card; there is no separate detail page (A).
+2. Login is on the phone too: buy on the web, sign in once on the phone, and the app keeps the session (B).
+3. No purchase inside the app; plan changes link to the web (D-11, unchanged).
+4. PDF and share come later (C).
+5. The subscription offers a free trial (Stripe trial on the price, MF-47). Owed before MF-47 builds: the trial length, whether a card is required up front, and the report allowance during the trial.
+6. The basic plan allows 15-20 reports a month; the exact number is owed (MF-45).
+7. One Street View photo per report; when none is available the report still shows and the photo space collapses (operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; MF-39).
+8. Delete account and notification settings live in Account (MF-52).
+9. Terms, Privacy and a support contact are required (MF-46 web; linked from Account).
+10. Onboarding (builder or realtor) is optional and later; no row now.
+11. Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35); (2) Report, the card order and highlights only, since the report schema sets its contents (MF-48, MF-44); (3) Landing, Sign in and Checkout (MF-46, MF-47; Stripe supplies the checkout screens); (4) Tracked Lots and Account, once their rows exist (MF-51, MF-52). A rough sketch or an annotated screenshot is enough; the standard components set the look.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): rules 5 and 6 are answered for the report allowance. The basic plan allows 20 reports a month (record "Operator rulings 2026-11-10 (fourth message): report count, expo-linking") and the trial allows 20 (record "Operator rulings 2026-11-10 (second message): MF-53, free trial, report review"). Both numbers are logic variables, `parcel_tool_report_limit_plan` and `parcel_tool_report_limit_trial` (seed group "MaxBLD Plan", min 1, max 1000), listed and edited in the existing Admin Control Panel (operator, verbatim, 2026-11-11, relayed by the orchestrator: "we should be able to change the number of reports per month in the amdin"); the meter reads them and refuses to serve outside the seed bounds (fail closed). The count resets on the billing date, `entitlements.current_period_end`, else on the monthly date of `entitlements.created_at` (D-2 a). A lot counts once per period; re-opening it is free (D-3 a). A `parcel_tool` holder is metered everywhere; a `lead_gen`-only holder keeps the App A shelf unmetered until MF-50 removes that path (D-4 a). A trial takes the trial allowance; active, past due and admin-managed take the plan allowance; there is no unlimited state (D-5 a). Limit reached is the 403 class with code `REPORT_LIMIT_REACHED`, fields `reportsLimit` and `resetsOn`, and no report data (D-6 a). The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05). These rulings also answer small-pages items 6 and 7. The trial length stays with MF-47. Rules 5 and 6 above are unchanged.
+
+> Dated note 2026-11-11 (M-246, prior text kept, nothing above changed; rulings landing · McFrontend queue · lane R; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the 2026-11-11 entries named per item; the working standard §0b items 6 and 8). The operator's 2026-11-11 rulings on the page set, each verbatim. The MF-65, MF-66, MF-70 and MF-72 rows are added by the queue docs commit b7cdf1e3c (not yet on origin):
+>
+> 1. **Rule 3 amended: in-app purchase.** Operator, verbatim: "a" (after the App Store Review Guidelines 3.1.1 / 3.1.3(b) were explained, the operator having asked "1. i dont understand - people will buy from our website and then dowload - is that okay? 2. that's fine"). The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same `parcel_tool` entitlement; Google Play billing policy for Canada is checked first; an MF-49 decision list item, queued as MF-70. Conflict check: this replaces rule 3 "No purchase inside the app" (D-11) and the A6 cell "no purchase in the app" for the app's purchase path; the later operator ruling governs. Until MF-70 lands, the app shows the ruled MF-52 D-5 (a) text. Item 2 ("that's fine"): account deletion offers "delete now" beside the 30-day window, and deleting during the free trial never triggers the first charge (App Store 5.1.1(v)); queued as MF-65.
+> 2. **Rule 5, the trial and checkout (MF-47).** Operator, verbatim: "all a - we should be able to change the number of reports per month in the amdin" (record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, bottom): D-2 yes (the D-8 trigger is met); D-3 (a) a trial only for an account that never had a MaxBLD plan; D-5 (a) the trial length lives in one admin-editable setting (`parcel_tool_trial_months` = 1) and each checkout sends the trial end to Stripe, so the Stripe price carries no trial (this amends rule 5 "Stripe trial on the price"); D-6 (a) Stripe "trialing" maps to `trial` in the one shared mapping, the row-claim rule unchanged; D-7 (a) a check for an existing subscription before checkout, with (b) as the follow-up MF-66; D-1: the operator sets the Stripe values in admin. The reports-per-month allowance is editable in admin. Small-pages item 4, operator "4 y": Stripe's trial-ending email is turned on, and the line "We'll email you before your trial ends" is shown once the Stripe documentation confirms that email fires for a per-checkout trial end.
+> 3. **Rule 9: support, Terms and Privacy.** Operator, verbatim: "We haven't done the landing yet for MAxbld or can show it to me? 1 y 4 y 6 just use [the operator's own address, held out of the repo] for now 7 yes to both 8. you write and validate it with an agent" (record `~/Buildo-scratch/mcfrontend/small-pages-v2/DECISIONS.md`, bottom). Item 6: the Help & Support inbox is ONE admin-editable setting, set by the operator to the address given "for now"; no page, content file or spec types the address. Item 8: the orchestrator drafts Terms and Privacy and an independent agent validates them (`~/Buildo-scratch/mcfrontend/legal-v1`); a lawyer review before launch stays owed (MF-72; MF-58's lawyer check unchanged). Item 1: the tagline "Lot Intelligence" is signed off for every sign-in page and Search (Spec 117 §2.2, OD-B2 dated note of this date).
+> 4. **A3 / W5 choose your lot, and the address-issue states.** Item 7, "yes to both": state (i), no lot linked, as drawn; state (ii), more than ten lots, reads "This address has many lots. Add a unit number or pick a nearby address." Operator, verbatim: "a) - as per where things stand \"choose your lot\" and \"address issues\" screens should be built now and we should only be using the new report obviosuly": both build now (MF-53).
+> 5. **Only the new report.** Same words: the MaxBLD flow uses only the v21 report in the shared renderer (§11a.7, FE-34); the old hand-built report screen is not used in MaxBLD.
+> 6. **Internal live preview (a).** Same words, option (a): an admin-only internal preview of the full flow on real lots, read from the stored Layer 3 results of increments 1-4, behind a switch that is off for customers. Customers see nothing live until MB-44. This pulls an internal admin-only slice of MB-44 forward by operator ruling; the customer-facing MB-44 stays where it is in increment order (McBylaws queue MB-44 dated note of this date).
+> 7. **W1 Landing (MF-46).** Audience: real estate agents (operator, verbatim: "Let's turn our attenention to the landing page - We are targeting real estate agents." ...). The trust lines are ruled: four words or fewer, past tense, true (operator, verbatim: "1-9 these are incredibley long sentences - we need four words each or less"); labels are editable content and the numbers are read from data, changeable without code (operator, verbatim: "looks good we should be able to change these as we go."). The five lines as ruled: "496,536 lots scanned", "4,356 by-law rules searched", "427,077 buildings measured", "194,110 builds examined", "27,759 map areas checked" (operator, verbatim: "Pushing. 1. change review for scanned 2. ok 3. yes 4. builds doesn tmean new builds - it means something is built 5. 27759 map areas checked" and "id like to keep builds for now"; accuracy note kept: active permits and CoA applications include work not built yet). The headline and the line under it are NOT ruled: the operator rejected the draft ("This is the worst landing page ive ever seen. ...") and asked for research on each section and the layout; the options stay pending. The numbers follow FE-05 (read from data, never typed).
+> 8. **One public address.** Operator, verbatim: "Teh web address will just be maxbld.ca - is that okay?" and "5. yes and yes recommend" (record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md`): maxbld.ca (apex only) is the one address of the MaxBLD web product; buildo.com stays the Buildo product (card D-9). MF-46 D-8 is landed (a9f89373a, 0b2964a0c: one same-origin guard `src/lib/auth/safe-redirect.ts`); MF-46 adds only the MaxBLD branch (fallback the search page, §11b.3 `web_login`). D-9 is dropped: no preview host list; the pages are reviewed on maxbld.ca once attached, before announcement. D-3: `src/middleware.ts`, the new `src/lib/auth/host-policy.ts` and the landed `src/lib/auth/safe-redirect.ts` join the protected list in one MB-67 owner commit before the MF-46 middleware commit.
+> 9. **Tracked Lots and Account (MF-51, MF-52).** MF-51, operator "D-A a": MF-51's migration adds only the `favourite_scenario_key` column (record `~/Buildo-scratch/mcfrontend/MF-51/DECISIONS-v2.md`); D-B is answered by MF-48 D-2 (a). MF-52, operator "D-1 a, D-3 y, D-4 y as long as they are complaint and we have grounded the claims" and "a" (D-2) (record `~/Buildo-scratch/mcfrontend/MF-52/DECISIONS.md`): D-1 (a) delete works for every account (the profile row is created if missing, with MF-47 D-4); D-2 (a) the Account form binding honours read-only fields, prefilled from the read contract; D-3 (a) a deleted account cannot open billing (403 `ACCOUNT_DELETED`); D-4 (a) no data-export step, access requests go through Help & Support (PIPEDA Principle 4.9).
+
+> Dated note 2026-11-14 (M-246, prior text kept; MF-47 · McFrontend queue · lane B1; operator, verbatim: "I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded" (2026-11-14); record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, "Ruled 2026-11-14 under the operator's acceptance", and the seat `~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md`; build plan `~/Buildo-scratch/mcfrontend/MF-47/build-plan.md`): **Rule 5 (the trial and checkout, MF-47) as built.** Amends nothing above; it records the second ruling round. (1) One trial setting for both plans: `parcel_tool_trial_months` (1, bounds 1-12) is sent as `subscription_data.trial_end` on each checkout (Stripe's 48-hour floor refused in code); the Stripe price carries no trial (this restates the note above that amended rule 5, "Stripe trial on the price"). (2) Basic and Pro are two Stripe Products; the price ids and the portal configuration id are admin settings, empty until the operator sets them (migration 219 pattern); an unset, non-`price_` or unmapped price refuses with a named code and no Stripe call. (3) HST/GST/PST through Stripe Tax automatic, behind the setting `stripe_tax_enabled` (0 until the operator has added the registrations in the Stripe dashboard). (4) The Customer Portal opens with the MaxBLD configuration (Switch plan on, the two Products listed, trial kept on a plan change; Stripe offers no scheduled downgrade between two Products). (5) Hard stop at the allowance stays (cap 0). The overage row (extras, consent page, cap, reporter) comes after; its first decision is the Stripe mechanism (billing meter vs pending invoice items): the seat found the meter path loses late events, keys events to the customer and blocks plan changes in the portal. No sweep attaches a metered item to live subscriptions. (6) The consent text is versioned content (`src/lib/stripe/overage-consent.content.json`, version PLACEHOLDER; the final sentence is an operator value and the text goes to the lawyer list). (7) Quality: the meter query limit is 5000 ms as a setting (a pool-wide limit only after measuring). Server actions only; the plans, success and cancel pages are a separate ruled row. Locks: `src/tests/migration-322-plan-checkout.infra.test.ts`, `src/tests/parcel-checkout.infra.test.ts`, `src/tests/parcel-webhook.infra.test.ts`, `src/tests/db/mf47-checkout.db.test.ts`.
+
+**Outside the MaxBLD set.** Buildo's lead-gen pages are not MaxBLD pages and are not listed above: web `/dashboard`, `/builders`, `/builders/[id]`, `/permits/[id]`; mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`, `/(app)/map`, `/(app)/settings`, the flight board `/(app)/flight-board` and `/(app)/[flight-job]?id=`; the trade onboarding `/(onboarding)/` screens (`profession`, `path`, `address`, `supplier`, `first-permit`, `terms`, `complete`, `manufacturer-hold`). Admin pages other than D1-D4 are estate admin, not MaxBLD pages.
+
+> Dated sub-note 2026-11-09 — **Report page (W6/A4)** (MaxBLD report page · McFrontend queue · push-17 lane; M-246, prior text kept, nothing above changed). Operator, verbatim: on the agreed brief, "This looks like it"; then "teh rear suite should be an add one to other scenarios". Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md` (last entry); the agreed brief `~/Buildo-scratch/mcfrontend/REPORT-LAYOUT-v2.md` (2026-11-04) and the later rulings listed with it in `~/Buildo-scratch/mcfrontend/layouts/REPORT-STITCH-SUMMARY.md`.
+>
+> 1. **Page.** The lot card, then one card per scenario of the Spec 78 §P5.1 closed set, in catalogue order, as each scenario's rows land.
+> 2. **Rear suite.** An add-on inside the other scenario cards, never its own card (Spec 78 §P5.1 "Rear-suite add-on (every row)"). This replaces "Rear suite (5)" in REPORT-LAYOUT-v2 §A.2; no Spec 78 change.
+> 3. **Card frame** (REPORT-LAYOUT-v2 §C, same for every scenario): headline, confidence badge and reason, as-of-right per option, "+X m² with a CoA" (an estimate, after the as-of-right line, never the headline; §11a and the Q-MF7 a rules), photos, CoA decisions for this scenario, then More detail (collapsed).
+> 4. **Placement** (D0 SIMPLIFIED, 2026-11-09, recorded in the same record): one ordered headline list per scenario in `scripts/surfaces/_schema/report-v2-seed/row-presentation.json`; a row not listed is detail, in catalogue order; no priority numbers and no groups. This replaces the six tiers of REPORT-LAYOUT-v2 §C ("Tier is data").
+> 5. **Field names.** Taken from the field generator `~/Buildo-scratch/mcfrontend/fields/extract-fields.mjs` (read-only on origin) and its summary builder `build-stitch-summary.mjs`; every field binds to a DB field (§11a.1, Q-MF3). The brief and the summary are references, not copied into the repo.
+>
+> Dated note 2026-11-10 (MF-53, prior text kept, items 1-5 unchanged). Operator, verbatim: "they need the address but not a map - they already know where it is..".
+>
+> 6. **Lot card location.** The lot card shows the address and no map. This amends REPORT-LAYOUT-v2 §B row 2 "Address / map pin": the lot-card location fields (`parcel.lot.centroid_lat`, `parcel.lot.centroid_lng`, `parcel.lot.outline_geojson`) and the map embed (the FE-21 `external_embed` map tiles) are dropped from the lot card.
+>
+> Dated note 2026-11-11 (MF-57 page table, brief v4 open items 1-5; M-246, prior text kept, items 1-6 unchanged; rulings landing · McFrontend queue · lane R). Operator, verbatim: "push complete 1.a 2. a 3. did the neighbors build bigger - we can tell the difference between detached homes, houseplexes and rear suites correct? these should be allocated to the right scenario. your question is whether the summary answer should match the cards. We should always have something here correct - reach farther depending on the scenario (houseplexes we need to reach farther - because its relevant althought its farther away - becuas there are fewer of them.  4. yes 5. yes" and "as well as secndary suites". Record: `~/Buildo-scratch/mcfrontend/fields/REPORT-LAYOUT-BRIEF-v4.md`, "Open for the operator" and the two entries at its end; `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the same two entries.
+>
+> 7. **Size panel rows with no stored field (item 1 a).** Lot coverage, floor space index, rear setback, side setbacks and main wall height stay pending parts (FE-34); McBylaws pass-through catalogue rows for them are queued after increment 4 (a McBylaws LATER row in the queue docs commit b7cdf1e3c, not yet on origin). No value is derived in the UI (FE-05).
+> 8. **Houseplex units (item 2 a).** The title, the Units row and "(average of N units)" bind `unit_count`, not `units_max`.
+> 9. **"Did the neighbours build bigger?" (item 3).** The summary answer and the cards use the same per-scenario set: detached, houseplex (2 Unit / 3+ Unit) and rear suite allocated by the stored CoA classification (`coa_applications.structure_type`, `rear_suite_type`), and the house with a secondary suite, found by a classification rule on the description in the existing `scope_tags` pattern, moved out of the detached set. Something is always shown: the server widens the search distance per scenario until the minimum sample is met (the houseplex and the suite reach farther) and the distance is shown. Server counts only (FE-05); queued as MF-71 (b7cdf1e3c).
+> 10. **Lot-level notes (item 4, "yes").** Exception, ravine and heritage notes are shown once, under About this lot; each card's note count covers its card notes only.
+> 11. **Wording set (item 5, "yes").** The unruled wording of brief v4 item 5 is confirmed as drawn; the How? steps keep the lawyer check (MF-58, MF-72). The picture caption is "Illustrative — not this lot" (MF-38, "y to all as built").
+> Dated note 2026-11-12 (M-246, prior text kept, items 1-11 unchanged; MB-94 parts (d)-(e) · McBylaws queue · engine-inputs lane; Spec 135 FE-39 (EI-D5, EI-D7); plan §8 R-5; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §3.4, §4c, §4d, §6 M-5/M-6, §11 D-5, D-7):
+>
+> 12. **Neighbour reach is a fixed admin setting per scenario (applies item 9).** New `logic_variables` keys, admin group "MaxBLD Report", seeded by one settings migration (an operator DB job):
+>     - `nearby_coa_reach_m_detached` 400;
+>     - `nearby_coa_reach_m_secondary_suite` 400;
+>     - `nearby_coa_reach_m_rear_suite` (garden / laneway suite) 750;
+>     - `nearby_coa_reach_m_houseplex` 1000;
+>     - `nearby_coa_since_date` NULL (all years).
+>
+>     The defaults come from the measured CoA density (plan §3.4: within 25 m, 92-100 % of lots have no decided neighbour application). Item 9's "the server widens the search distance until the minimum sample is met" is replaced by the fixed reach as ruled (propose-minimum-first). The expanding ring stays a later option if testing shows too many empty answers. The reach, and any date window, is always printed. "Decided" is keyed on the classified decision text only (approved: `approv|conditional|condition|modified`; refused: `refus`), never on `decision_date`. Counts are server counts (FE-05).
+> 13. **Copy (EI-D7).**
+>     - Neighbours: "At least {approved} nearby applications to build bigger were approved within {reach} m, some with conditions. {refused} were refused."
+>     - Zero case: "We found no decided {family} applications within {reach} m in the City records we could classify."
+>     - "Can you build bigger?" (once filled): "Possibly. Similar homes nearby were approved by the Committee of Adjustment for up to about {size}. Approval is not guaranteed." It shows only after the M-70 fit passes a stated accuracy bar.
+>     - The cost-scope line ("Building only. Excludes land, permits and design.") stays in See details (the 2026-11-11 report-face ruling) and goes to the lawyer list (MF-72).
+
+
+## 12. Phases
+
+**There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
+
+**The rule: guardrails are Phase 1, not Phase 4.** Spec 125 §6 put them last. The estate's own evidence says a guardrail added after the fact guards nothing that already shipped — a 153-line meter with 44 green tests and no caller; a drift checker nothing runs; four workflow headers claiming a `schedule:` was commented out while all four were live.
+
+| Phase | Spec 127 §4.4 id | Deliverable | Gate |
+|---|---|---|---|
+| **P0** | — (pre-batch) | Close the nine unaudited admin mutations: one `writeAdminAudit` call per site, audit-failure fails the request, plus a lock asserting *every* mutating `/api/admin/**` export writes a row. One WF3, nine sites. Adjudicate the six genuinely-uncalled `/api/admin/*` routes in the same pass (`ASK-13`) | `admin_audit_log` covers 15/15; the lock proven both directions |
+| **P0b** | — (pre-batch) | Wire the checkers that already exist: `mobile/scripts/check-spec99-matrix.mjs` into `mobile-ci.yml`; correct the four stale `schedule: committed COMMENTED OUT` workflow headers (all four chain crons are live) | the checker runs somewhere |
+| **P1** | — (foundation) | `surface.schema.json` + `contract.schema.json` + `job.schema.json` with the archetype `allOf` profiles; the archetype registry as data; `surface-validate.mjs` seeded from the three existing mobile lint tests; the golden-PAIR harness; **`seeds/roles.json` + RLS class D**; **the `surface-exports` Storage bucket per Spec 114 §6** (R-31); the boundary lint rules; `generate-spec-mirror.mjs --check` wired into `npm run verify`. **Deliverable is the schema + validator, not a converted surface** | Spec 127 §3 S0–S9 pass on a fixture surface; every RED canary fires |
+| **P2** | **B1 — REPORT** | `parcel_detail` → REPORT (+ SLOT + EXPORT + GATE), full nine-commit form; the generated mobile Zod mirror replacing the four-site transcription; `usage_events`; the single `chk_entitlements_product` widening (`parcel_tool` + `agent_reports`); **`pdf_exports`** and the export parity golden; `app_outputs` declared (its pipeline step is the pipeline programme's slot); `parcel_id_translation` declared with `consumers: "none"` | the pilot's generated scorecard ≥14/17 with S6–S8 full; S-parity and S-schema green |
+| **P2b** | **B1a — the admin generated core** | `admin_surface_registry` → `/admin/surfaces`, 100% generated, staleness lock + RED canary; then fan-out, orphans, drift, role matrix on the same engine | the page is visibly empty or wrong if the descriptor set is incomplete — that *is* the gate |
+| **P3** | **B2 — SEARCH + DETAIL** | `parcel_search` → SEARCH; `admin/parcel-cost` as the third projection of the pilot's contract; `permits/[id]`, `builders/[id]` — **and close the `/builders` auth mismatch first** | per-archetype eligibility declared, not assumed (§12.1) |
+| **P4** | **B3 — DASHBOARD + LIST** | `admin/market-metrics` (the cleanest DASHBOARD member), `admin/users`, `admin/lead-feed` | tiles and lists degrade independently by declaration |
+| **P5** | **B4 — FORM + WIZARD_STEP (rebuild)** | `settings` and the 8 `(onboarding)` screens — resume/skip/advance logic is entirely client-side today, the purest example of business logic max-server-side wants back | S7 full; the rebuilt logic is server-projected |
+| **P6** | **B5 — GATE / SLOT / STATIC / SHELL** | the paywall family, `SponsorSlot`'s remaining placements, the landing page, AuthGate | AuthGate is the sole routing authority and converts last |
+| **P7** | **(web projection)** | the RSC renderer over the same descriptors; the public-route decision; the MaxBLD consumer surface | one contract, three surfaces, visible to a customer |
+| **never** | **(fenced)** | `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines) — they talk to the Supabase Auth SDK, not to our contracts | — |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): **P2-REPORT** = Phase 1 of McFrontend: the catalogue-to-report generator, one REPORT renderer, the goldens and their locks (§11a). It precedes P2b. The admin pilot (P2b) is convert-on-touch: operator verbatim, Q-MF6: "Q-Mf6 a"; card answer: no fixed admin pilot; admin screens convert when changed for a product reason, and `/admin/surfaces` is built when the admin next needs that view. Admin market-metrics stays DASHBOARD (P4 above); its descriptor's REPORT is an error, fixed at its conversion (operator doc-set answer 5).
+
+> Dated note 2026-11-09 (McFrontend Phase 2; prior text kept, M-246; operator, verbatim: "D-0-D-4 approved", D-1; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): McFrontend Phase 2 pulls work forward from P2, P2b, P3 and P5-P7 for the pages of §11b.3 only; the other members of those phases keep their place. The order is in Spec 127 §4.4 (dated note 2026-11-09), the ONE sequence.
+
+### 12.1 What the pilot must carry, because it cannot be deferred
+
+Three things an earlier draft scheduled *after* the pilot and that have to move *with* it, because the pilot cannot be honestly gated without them:
+
+1. **Roles, class D and `seeds/roles.json`** — the pilot ships a SLOT, a SLOT reads `offers`, and `offers` is the first Class-D table. Landing the role model afterwards would mean the pilot's own RLS is unasserted at the moment it is reviewed.
+2. **The Storage bucket** (`ASK-07` ruled → R-31: Supabase Storage, private, created by migration, Spec 114 §6's conventions unchanged) — the pilot declares `render.targets: ["screen","pdf"]`, so S-parity has nowhere to write without it.
+3. **`pdf_exports`** — the same reason: the parity fingerprint needs a row to live on.
+
+**And the honest consequence for R-PACE-1.** The pilot converts `SponsorSlot`, which is the estate's **only** SLOT member today (n=1, §3.1). So after B1 the SLOT archetype has **one** proven member, not two, and the compressed 3-commit form is **not** unlocked for it — the remaining SLOT placements in B5 land in full form unless a second member appears first. The same applies to **SEARCH**: B1 contains no SEARCH member, so SEARCH is not eligible at B2 and `parcel_search` converts in full form. Eligibility is declared data per Spec 127 §4.4, and these two rows are the reason it is declared rather than assumed.
+
+**Placement.** P0–P2b touch no `scripts/` step file and can run on the Admin / Cross-Domain slot in parallel with the pipeline programme's batch conversion. The `app_outputs` pipeline step (§6.3.1) and anything else under `scripts/` waits for the pipeline slot.
+
+</behavior>
+
+---
+
+<testing>
+
+
+## 13. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** `*.logic.test.ts` — archetype profile resolution (each archetype's required-field set, and that a missing required field throws); `platforms[]` gating; the `surface.guards.session` vs `contract.guards.auth_class` cross-check, proven both directions against the measured `/builders` mismatch; `usage_events` PK dedup (same input twice writes one row); the generated Zod mirror set-equalling the engine's `PARCEL_COST_LINES`.
+- **UI:** `*.ui.test.tsx` — every archetype renderer against its golden rendered-tree snapshot, per declared state; the unknown-archetype fallback rendering **and** raising its FAIL check; the `schema_drift` state rendering rather than blanking.
+- **Infra:** `*.infra.test.ts` — `generate-spec-mirror.mjs --check` clean (mirror drift); descriptor↔`surface_descriptors` bidirectional seed drift; the declared-schema ↔ introspected-types drift lock of §6.1 step 4 including the stamped `DECLARED-SCHEMA-SHA256`; declared RLS policies equalling `pg_policies` in both directions; **a RED canary per lock**, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires.
+<!-- TEST_INJECT_END -->
+</testing>
+
+---
+
+<constraints>
+
+
+## 14. Operating Boundaries
+
+### Target Files
+- `docs/specs/02-web-admin/126_maxbld_surface_standard.md` — this spec
+- `docs/specs/02-web-admin/127_surface_conversion_procedure.md` — the procedure
+- `docs/specs/02-web-admin/128_surface_standard_policy.md` — the policy register
+- `scripts/violations/generate-spec-mirror.mjs` — the mirror generator (`--check`, `--self-test`)
+- *(Phase 1, not yet authored)* `src/surfaces/_schema/surface.schema.json`, `src/surfaces/_schema/contract.schema.json`, `src/surfaces/_schema/job.schema.json`, `scripts/surfaces/surface-validate.mjs`, `scripts/seeds/apply-surface-descriptors.js`
+
+### Out-of-Scope Files
+- `scripts/steps/_schema/step.schema.json` — the pipeline's contract; this spec MIRRORS it and must never edit it. "Step" keeps its pipeline meaning; the engine is `SurfaceEngine`.
+- `scripts/manifest.json` and every `scripts/**/*.descriptor.json` — the `app_outputs` step (§6.3.1) is Backend/Pipeline work on the pipeline programme's own slot.
+- `scripts/dispatch-notifications.js` (and `scripts/lib/push-dispatch.js`) and `scripts/classify-lifecycle-phase.js` — named in §3.3 **only** as the two measured members of the JOB archetype `DISPATCH`, to show the archetype is not empty. Both are chained pipeline steps governed by Spec 101 / Spec 84 and the Spec 122 standard; this spec describes their shape and edits neither. A JOB descriptor for either is Backend/Pipeline work on the pipeline programme's slot, gated on `ASK-01`.
+- `migrations/**` — no migration is authored by this spec; §6 specifies the flow, the phase that needs a table writes it.
+- `mobile/app/(auth)/*.tsx` (1,302 lines) — these talk to the Supabase Auth SDK, not to our contracts; a descriptor would be describing someone else's protocol. Deliberately out of scope.
+- `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`'s scope fence — Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.** `lead_parcels` is read by no surface. Only a declared **id-translation seam** exists (`lead_parcels.parcel_id` = `parcels.id` = `parcel_pk`; the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`), declared so a future non-fenced use cannot invent a fifth vocabulary.
+- `src/app/api/quality/**`, `src/lib/quality/**` — held by another programme.
+
+### Cross-Spec Dependencies
+- **Relies on:** Spec 122 (+122a) §1.2/§1.3/§1.10 (the 20-category contract and the archetype-gating mechanism this spec mirrors) · Spec 123 §6/§7 (the gate ladder and commit form Spec 127 mirrors) · Spec 124 §2/§4/§5 (the rules, the ruling protocol and the register Spec 128 mirrors) · Spec 90 §3 (Dumb Glass — the posture this spec makes enforceable) · Spec 99 §2/§3/§4/§7.7/§8.6 (the state matrix that becomes the `state` category) · Spec 100 (the pilot surface and its fence) · Spec 116 §4 N2/N3/N5 + §5 OD3/OD5 (OD5's recommended default is *"fold into `lead_gen`"* with the stated override *"Override if the parcel tool should gate separately from day one"* — R-01 exercises that override, legitimately, and supersedes `DEFAULT_PRODUCT`'s OD5 comment at `src/lib/entitlements/index.ts:42-43`) · Spec 117 (brand; the rename is BREAKING and rides the migration, so the product key is `parcel_tool`, not a brand string) · Spec 26 §3.4 (the 87-table auth/disclosure ruling §4.2 cites) · Spec 113/114 (Supabase infrastructure and the RLS policy catalog §6.2 extends) · Spec 48 §3.6 (the observability rows the admin side lacks)
+- **Consumed by:** Spec 127 (the conversion procedure) · Spec 128 (the policy register) · the product spec that will own offers + EXPORT + metering · Spec 125 (**superseded by this spec**)
+
+</constraints>
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

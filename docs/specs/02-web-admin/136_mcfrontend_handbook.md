@@ -25,7 +25,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
 
 **What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
 
-**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
 
@@ -176,13 +176,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
   Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
 
 - **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
-  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
 
 - **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
   Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
 
 - **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
-  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
 
 - **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
   Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
@@ -191,7 +191,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
   Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
 
 - **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
-  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
 
 - **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
   Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts

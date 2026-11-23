@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:04:43.527Z file_sha256=a4539de9d096ba8c0588268c2d19baba72740bd0a1becc62138fff665767f876 prompt_sha256=e3aa5cd64999cc91c0fb78a8e6a269582f157aee93b95172a12dedd3bf3bb562
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised.
+
+DEFER severity=LOW — Spec 137 Rule 10 "A ruling enters a row as a verbatim dated note. The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — src/tests/surfaces/register-locks-resolve.infra.test.ts:30 "// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit ... and left it in the MF-98 fix commit once the operator said yes (RR-0417)" — the lane's in-tree record of RR-0417 paraphrases the words ("said yes") instead of quoting them — LOW: the comment imitates the M-246 dated-note form, so a later reader may take the paraphrase for the ruling; the row's own note is in chunk 1 and cannot be seen here, so the blast radius is bounded.
+
+MET — Spec 137 Rule 2 (source quoting Spec 08 §11.8 MCINC-8 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere") — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json:1 — "In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202)." the round number is claimed in the ID ledger before use.
+
+MET — Spec 137 Rule 4 "A ruling is kept as a verbatim dated note on its row" — docs/specs/02-web-admin/136_mcfrontend_handbook.md:179 — "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note", the flip is carried with a dated note counted on the row (the register note text is in chunk 1, cannot see).
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/136_mcfrontend_handbook.md:28 — "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history." the count drops 22 to 19 with fe.49, fe.51 and fe.54 reading RULED and their locks named.
+
+MET — RR-0417 "yes. worktrees removed" (FE-51 tab switch may read RULED with its two named owned exceptions) — src/tests/surfaces/nav-tab-switch.logic.test.ts:36 — "{ file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 ...'" exactly two named, owned, counted exceptions and FLIP_PENDING back to "const FLIP_PENDING: readonly string[] = ['FE-39'];".
+
+MET — Task acceptance "#2 Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:71 — "describe('fe.54: a contract-reading surface declares its failure state'", case B plants three defects in memory and case A asserts the clean tree, in each of the three new locks.
+
+MET — RR-0386 "gates parked, handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts:130 — "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit'" the material adds tests only, no gate or hook wiring.
+
+REJECT — Spec 137 §3 "The `Status:` line is the current word" — the fe.51 line still reads "so it is PROSE-ONLY until the lock below exists" (136_mcfrontend_handbook.md:184) while its status now reads RULED — Spec 137 §3 keeps older prose as prior text under M-246 and makes the Status line the current word, so the leftover sentence is not a compliance breach.
+
+REJECT — Spec 137 Rule 1 "Word list (closed; nine words)" — the register lines read RULED and OWED, words outside the nine — Rule 1's list governs queue rows, cards and claimed ids (§3 "Where the line sits"), none of which is a Spec 135 register row, so the register's own words are Spec 135's and not judged here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: Rule 1, Rule 2, Rule 3, Rule 4, Rule 13
+
+---
+⏱  97006ms (97.0s)
+📊 Tokens — total: 50881, input: 30092, output: 20789, reasoning: 19725

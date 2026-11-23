@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:08:03.661Z file_sha256=4863ef9491d57b43a4e3490f3548f69d7125e4126a13d4d03f2354e8e8573980 prompt_sha256=7813ed74e8eae72fb182abb706b81e7343f5e4de60985c4f3f66c5413002b610
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §3.4 "a `checks[]` entry at `severity: FAIL` asserts it stays empty while R-03 holds. That check *is* the fence, mechanically." — src/tests/surfaces/scope-fence.logic.test.ts:85 "for (const k of ['inputs', 'outputs', 'evidence'] as const) {" — the fence is built as a bespoke AST scan; nothing in the reviewed material asserts the TRANSLATION contract's `consumers[]` stays `"none"`, so the mechanical check the clause names is not the check that was built — add the `checks[]` FAIL entry on `parcel_id_translation`, or assert `consumers: "none"` in the test.
+
+BUG severity=HIGH — Spec 126 §3.1 QUERY "`database.reads[]`" and §4 row 16 "a screen does not touch a table; its contract does." — src/tests/surfaces/scope-fence.logic.test.ts:38 "inputs?: { tables?: TableRef[] };" — the descriptor arm never reads `database.reads[]` or `database.writes[]`, so an in-scope CONTRACT that reads `lead_parcels` keeps fe.49 green — scan `database.reads[]` and `database.writes[]` in `findDescriptorHits`.
+
+BUG severity=MED — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — src/tests/surfaces/scope-fence.logic.test.ts:28 "const LEAD_TABLE_RE = /lead_parcels/i;" — the fence vocabulary (LEAD_SCREENS, LEAD_ROUTES, LEAD_TABLE_RE) and the tab exceptions (ALLOW) are re-typed in test code rather than read from the registry the card names — read them from `scripts/surfaces/_schema/surface-rule-map.json` or the descriptors' `checks[]`.
+
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:12 "LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar" — an expo-router `<Link href>` to a tab route is neither detected nor listed, an undeclared third blind spot under a RULED row — add a `<Link href={PARCEL_TAB_ROUTE.x}>` case to the finder and the controls, or declare it in LIMITS.
+
+DEFER severity=LOW — Spec 126 §4 "**Counts (derived, not typed):** 20 pipeline categories in · 17 carried over · 3 dropped · 4 net-new · **21 SURFACE categories out.**" — src/tests/surfaces/scope-fence.logic.test.ts:123 "expect(descs.length).toBeGreaterThanOrEqual(45);" — hand-typed registry counts sit in a gate, so a legitimate descriptor retirement reds it for no compliance reason — derive the floor from the generator output, or keep a non-zero walk assertion plus the generator's `--check`.
+
+DEFER severity=LOW — Acceptance #3 "The handbook no-check lists shrink by the rules gated, by their generators" — NONE — the regenerated artifacts (Spec 136 OWED count, rule-lists page) are not in the reviewed chunk, so AC3 is carried only by the implementation notes — attach the `generate-surface-handbook.mjs --check` and `rule-lists.mjs page --check` output to the closing commit.
+
+MET — RR-0413 (the rows flip to RULED with their tests) — src/tests/surfaces/scope-fence.logic.test.ts:1 — SPEC LINK to FE-49 is present and the row's own rule text is quoted in the header.
+
+MET — RR-0417 (two named, owned exceptions) — src/tests/surfaces/nav-tab-switch.logic.test.ts:32 — ALLOW holds exactly two entries, each `why: "owed: MF-..."`, and A2 asserts `ALLOW.length <= 2`, unique keys and `count > 0`.
+
+MET — Acceptance #2 (red on a planted defect, green on the clean tree) — src/tests/surfaces/nav-tab-switch.logic.test.ts:138 — the in-memory plants yield exactly one finding each and test A asserts an empty unexplained/miscounted set on the real tree.
+
+MET — RF-0417 pattern in the register — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 — FE-51 leaves FLIP_PENDING after the operator's yes, leaving FE-39 alone as the comment states.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: RR-0413, RR-0417
+
+---
+⏱  108265ms (108.3s)
+📊 Tokens — total: 48679, input: 24295, output: 24384, reasoning: 23290

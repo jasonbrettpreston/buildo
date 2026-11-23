@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:09:52.007Z file_sha256=e9a0f4861764a1b07b8aef2f02a9adc908fb7a32a00c5cb3139cd61f844f25da prompt_sha256=b792a7b2dc96c04794cb0cfea73d75762b9e5ffd6ccba25fc84a36cd704637ac
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p17.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings below. All quotes are from the pasted diff or the pasted rulings.
+
+DEFER severity=MED — FE-49 / Spec 128 R-03 "lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts "a server file a descriptor does not declare is not scanned." — the gate scans only descriptor-declared tracked files, so an undeclared server file reading lead_parcels passes while the ruled text is a total claim — record the scope limit as a named FE-49 note or widen the scan roots before this gate is used as a blocking check
+DEFER severity=MED — FE-49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts "the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes" — the envelope/error-mapping exemption is asserted NOT BANNED with no recorded ruling, unlike the neighbouring platform_shared exception whose "record is the FE-49 dated note" — record the envelope exemption in the FE-49 dated note so the green control C rests on a recorded ruling
+DEFER severity=LOW — FE-51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts "a route held in a variable is missed" — a push of a variable-held tab route escapes the gate, so the rule is broader than what is checked — state the residual explicitly in the FE-51 done note, or add a call-site check later; not a blocker
+DEFER severity=LOW — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts "RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions" — the comment's wording reads as if RR-0413 did not flip FE-51, but RR-0413 names three rows (FE-51 among them) flipping to RULED; the fix now cites RR-0417 alone — cite RR-0413 for the status flip and RR-0417 for the two exceptions so the register provenance matches both rulings
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts — ALLOW holds exactly two entries keyed `router.push(PARCEL_TAB_ROUTE[tab])` (owed MF-49/MF-50) and `router.push(PARCEL_TAB_ROUTE.account)` (owed MF-51/MF-52), the two named owned exceptions
+MET — acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory)...'" and src/tests/surfaces/scope-fence.logic.test.ts "it('B. RED planted (KNOWN_BAD, in memory)...'" — in-memory planted defect cases assert length 1 and a stale entry mismatches
+MET — RR-0386 "handbook tests start fresh" — src/tests/surfaces/scope-fence.logic.test.ts and src/tests/surfaces/nav-tab-switch.logic.test.ts (both new files) — fresh handbook rule tests, not the parked gates
+MET — acceptance #3 register consistency — src/tests/surfaces/register-locks-resolve.infra.test.ts "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-51 is out of FLIP_PENDING, the list is FE-39 alone
+
+REJECT — RR-0417 — the change is accused of allowing fewer than two exceptions via "expect(ALLOW.length).toBeLessThanOrEqual(2)" — shrink-only is intended and judge() keys each entry to an exact count, so removing a fixed exception stays fail-closed, not a loophole
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  88377ms (88.4s)
+📊 Tokens — total: 42769, input: 22989, output: 19780, reasoning: 18857

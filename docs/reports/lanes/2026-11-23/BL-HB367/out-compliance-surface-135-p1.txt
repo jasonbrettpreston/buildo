@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:22:59.684Z file_sha256=b9734fba92144c6ba2662f7c71deac080e8f3f66b43a49462d9da547a4cc2ab7 prompt_sha256=123f2091f361babf27477ac8c069497a5baacd957ab62d43c6e2ccfac4b099fd
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+MET — task-367 acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — .cursor/MCFRONTEND-QUEUE.md added MF-98 row — "each proven red at its designed assertion through the real commit hooks, then green" records the red proof and the green run.
+MET — RR-0413 "yes to both A. Status flip." — .cursor/MCFRONTEND-QUEUE.md added MF-98 row — "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" matches the ruling's flip timing.
+MET — RR-0417 "yes. worktrees removed", put as "may FE-51 read RULED with its two named exceptions, yes or no?" — .cursor/MCFRONTEND-QUEUE.md added MF-98 row — "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) in the MF-98 fix commit" matches the ruling.
+MET — RR-0386 "a" (park the gates, handbook tests start fresh) — .cursor/MCFRONTEND-QUEUE.md added MF-98 row — "Not in this row: ... the parked branch wf1/inc1b-gates (RR-0386)" keeps the parked gates out of this row.
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json — "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" gates BUILT on the grounder.
+MET — RR-0385 "two rounds" — docs/reports/panels/MF-98.json — "round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" records the two-round plan.
+REJECT — RR-0406 "McFixReborn label on the tasks that process covers (names task-367)" — the change is accused of omitting the McFixReborn label — the label is a board field, not a plan or diff change; the pasted card mirror "labels: McFix, McFix Final" cannot be verified against the board, and RR-0412 already runs task-367 under McFixReborn, so no pasted clause is unmet by this diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  184236ms (184.2s)
+📊 Tokens — total: 58986, input: 18423, output: 40563, reasoning: 40002

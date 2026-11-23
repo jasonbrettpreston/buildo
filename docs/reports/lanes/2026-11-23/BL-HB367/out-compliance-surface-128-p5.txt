@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:21:15.298Z file_sha256=49b6dfe8024352ac9725f220fa4a8f43a66d8ce5bdf8720724c53b118024e01d prompt_sha256=1541fd14aeff8d8d601d96e29d6163e1d61bddad35044769f1df1442626065f7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-128-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:101 ".filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''))" — the row reads RULED (RR-0413 "yes to both A. Status flip.") on a lock whose universe is descriptors inside `scope.programme_scopes` only, so a surface outside the programme scope can read `lead_parcels` and this lock stays green — fix: word the FE-49 row to the programme scope it actually proves, or drop the programme-scope filter from the descriptor walk and scan every surface descriptor.
+
+DEFER severity=MED — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:135 "for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);" — the in-file RED plants a string into a pure function against a synthetic path (`'planted.tsx'`), so case B never shows the shipped real-tree assertion at :120 red; that proof lives in docs/reports/reviews/task-367/red.out, which is not in this material — fix: cite the red.out line where case A fails on the staged plant lines alongside the diff.
+
+DEFER severity=LOW — fe.49 "The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`)" — src/tests/surfaces/scope-fence.logic.test.ts:108 "/\.tsx?$/.test(p)" — the `identity.route` leg is filtered to file-shaped strings, so if a descriptor's route is a route path (the form used at :144 "router.push('/(app)/parcel-tool')") that route module is never scanned while the header claims it is; I cannot see the descriptor field's shape — fix: resolve `identity.route` to its module file, or drop `identity.route` from the claimed file set.
+
+DEFER severity=LOW — §4.4 "A rule without a lock is not yet a rule — the same commit that records the ruling adds a both-directions test" — src/tests/surfaces/scope-fence.logic.test.ts:18 "its record is the FE-49 dated note." — the platform_shared carve-out is carried by a dated note with no lock and nothing in the diff pins the excluded notes string, so the fence's one written exception is unenforced — fix: put the platform_shared path in a declared exception list with a control case, or give it a register row.
+
+DEFER severity=NIT — fe.49 "NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping" — src/tests/surfaces/scope-fence.logic.test.ts:143 "import { ok, err } from '@/features/leads/api/envelope';" — only the envelope half of the stated allowance has a control case, "error-mapping" has none — fix: add the error-mapping helper as a control line or drop it from the note.
+
+MET — §4.4 both-directions — src/tests/surfaces/scope-fence.logic.test.ts:127-148 — planted linkage cases (B) plus zero-hit controls (C) give the ruling its red-and-green pair.
+MET — Acceptance #1 "The gate list is confirmed by the operator before any gate is built" — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — this gate is one of the three operator-confirmed rows, so the build order clause holds.
+MET — 2026-11-20 grounder verdict "(3) print the scanned-file count, fail on a zero-file walk" — src/tests/surfaces/scope-fence.logic.test.ts:119,122 — the scanned count is printed and floors of 41 files, 45 descriptors, 20 mobile fail a silently shrinking walk.
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/register-locks-resolve.infra.test.ts:32 "so the list is FE-39 alone again" with `FLIP_PENDING` = ['FE-39'] — FE-51 leaves the flip-pending list on the operator's yes.
+MET — grounder "(5) 8 fixtures lack SPEC LINK (G-059)" — src/tests/surfaces/scope-fence.logic.test.ts:1 — the SPEC LINK line names FE-49 (Spec 136 §fe.49).
+MET — §4.8 "it holds a path, a file:line, or a commit SHA, and it is resolved mechanically" — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — the change adds history as a comment only, no prose lock and no unresolved evidence token.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  106865ms (106.9s)
+📊 Tokens — total: 44208, input: 19469, output: 24739, reasoning: 23561

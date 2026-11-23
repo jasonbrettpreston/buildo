@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:19:09.958Z file_sha256=100812c004d2e7543128db4b2ad247ed22253fdccff8ffa78bd86ac8947e0592 prompt_sha256=8e79837ccf8eb35bd2016315f04c29aedc8a6e7c58e4c7f236a2fbf864abb99d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-127-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §11 Target Files "`src/tests/surface-registry.infra.test.ts`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)" (same at scope-fence.logic.test.ts:1 and the register-locks edit at line 31) — none of the three paths this chunk writes appears in §11's enumerated target set, so the change writes outside the spec's operating boundary and leaves §11 false as pasted — add the three `src/tests/surfaces/*` paths to §11 Target Files in this change, or attach a ruling that names them.
+
+BUG severity=MED — Spec 127 §11 Target Files "`scripts/surfaces/_schema/surface.schema.json`" and "`scripts/surfaces/_schema/features.json`" — src/tests/surfaces/nav-tab-switch.logic.test.ts:25 "const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';" (scope-fence.logic.test.ts:27 is the same) — the gates take their programme scope from a `_schema` manifest no pasted clause names, so which files are scanned and which descriptors are in scope is set by an unlisted input — name `converted-surfaces.json` in §11 or derive the scope from `features.json` / the descriptors themselves.
+
+BUG severity=MED — Spec 136 fe.49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:30 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — `/(app)/map` is not named by the quoted rule, so the gate will fail a declared file that legitimately carries the map route, red on clean code — drop `/(app)/map` or cite the clause that names it.
+
+BUG severity=MED — Spec 136 fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:74 "n.expression.name.text === 'push'" — the finder matches any receiver's `push` with a tab-route argument (an array or Set push, not only navigation), which is wider than the rule and forces an allow-list entry or a red run on non-navigation code — require the receiver to be the router/navigation object(s) the mobile app actually uses.
+
+DEFER severity=LOW — task card "#2 Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/nav-tab-switch.logic.test.ts:132 "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" with line 134 "toHaveLength(1)" — the in-diff planted case asserts a hit and is green on the clean tree; the actual red run (docs/reports/reviews/task-367/red.out) cannot see in this chunk — keep the plant-and-revert run cited by path in the commit record, or add a case that plants into the real file set and reverts.
+
+DEFER severity=LOW — task card "#1 The gate list is confirmed by the operator before any gate is built" (RR-0417 "yes. worktrees removed") — src/tests/surfaces/nav-tab-switch.logic.test.ts:124 "expect(ALLOW.length).toBeLessThanOrEqual(2);" — a hard ceiling of two exceptions is behaviour no pasted clause names; RR-0417 authorizes two today and nothing rules out a later approved third, which this gate would then fail — assert shrink against a recorded baseline count instead of a fixed ceiling.
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:33 "const ALLOW: Allow[] = [" — exactly two entries, each with an MF owner row and a count.
+
+MET — RR-0413 "task-367: the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts:34 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-51 has left FLIP_PENDING after RR-0417.
+
+MET — Spec 127 §11 Out-of-Scope "This spec MIRRORS them and must never edit them" — the diff touches neither scripts/analysis/step-validate.mjs nor Spec 123.
+
+MET — Spec 127 §11 Out-of-Scope "`supabase/tests/**`" — no pgTAP file appears in the diff.
+
+REJECT — RR-0413 "yes to both A. Status flip." — that a blocking FE-51 gate was built before the gate list was confirmed — RR-0417 names this lock's two owned exceptions and permits RULED, so this gate is operator-confirmed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+Rules met: none
+
+---
+⏱  97871ms (97.9s)
+📊 Tokens — total: 34605, input: 13063, output: 21542, reasoning: 20356

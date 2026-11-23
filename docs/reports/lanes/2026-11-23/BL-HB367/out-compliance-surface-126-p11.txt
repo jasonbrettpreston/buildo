@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:06:20.614Z file_sha256=8a31103c160b861ce31a7dfe08c6dc7237db6bad4957acd34629ee31a4e582fc prompt_sha256=180a6a68838570e65b6d23ebcaeb7360e8cbd072d2f7128a2b7a1cef636ed174
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-54 "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." vs docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them ... would fail the finder today" — the lock header says 8 out-of-scope descriptors are unjudged while the register note in the same change says 32 (8 of which would fail), so the RULED flip's stated limit is understated and inaccurate — correct the header to "32 out of scope, 8 would fail" (or point it at the register note) so the limit matches the register.
+
+DEFER severity=LOW — FE-54 "a surface declares what the user sees when it fails" — src/tests/surfaces/failure-state-declared.logic.test.ts "declarations only, and the error state only. Code is not read" — the lock enforces only the declaration half, so the rule's "not a blank screen" behavior is unverified (and, per the register, 8 known contract readers would fail today) while the row reads RULED — record the declaration-only scope in the rule cell wording, or keep FE-54 OWED/FLIP_PENDING until rendering is checked.
+
+DEFER severity=LOW — FE-51 "A tab switch uses navigate, not push." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts" while the same line ends "so it is PROSE-ONLY until the lock below exists" — the regenerated handbook line for fe.51 says both PROSE-ONLY and RULED, contradicting the no-check-list shrink in the same line — update the FE-51 rule cell (or have the generator drop the superseded PROSE-ONLY sentence) so the handbook line reports one status.
+
+DEFER severity=LOW — FE-49 "lead_parcels is read by no surface." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "a widening of the test to platform_shared is a later batch row of task-367" — FE-49 reads RULED but the scope-fence lock excludes platform_shared, where the one known lead_parcels mention lives, so the exclusion is held only by a note, not the lock — keep FE-49 OWED/FLIP_PENDING until the platform_shared widening, or have the lock assert the notes-string exception explicitly.
+
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts — case A asserts the real tree clean and case B plants in-memory defects each yielding exactly one problem.
+
+MET — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md — "58 in force (19 OWED...)", down from 22 by the three gated rows.
+
+MET — §11b.2 "A converted-surfaces manifest has two-direction totality ... an empty manifest is a finding" — src/tests/surfaces/failure-state-declared.logic.test.ts — reads "scope.programme_scopes ... the manifest's own fence, not a second list" and checks inScope against "scope.expected_count".
+
+MET — §11b.5 "one planted-defect case" — scripts/surfaces/_schema/surface-rule-map.json — FE-49/FE-51/FE-54 "status": "active" matches the RULED handbook lines, no duplicate list.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  102970ms (103.0s)
+📊 Tokens — total: 52935, input: 31987, output: 20948, reasoning: 20034

@@ -8,6 +8,7 @@
 // the Spec 135 FE rows". Every RED case plants a defect in an in-memory register text or a temp root, never in the repo. No DB, no network.
 // The shared CLI shell (runHandbookCli, scripts/analysis/gates/rule-map.mjs) is exercised here through the 136 entry (case H6).
 import { afterAll, describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -256,31 +257,53 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
 // that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
 // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
 const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
+// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
+// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
+// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
+const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
+const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
+// the ! is safe: the pattern has one capture group, so every match holds m[1]
+const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)].map((m) => m[1]!);
+const trackedLocks = new Set(execFileSync('git', ['ls-files', '--', ...BUILT_BY_367], { cwd: ROOT, stdio: 'pipe' }).toString().split('\n').filter(Boolean));
 const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
 
 describe('MF-95 C — the thirteen RR-0384 rows', () => {
   const rows = realRows();
   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
 
-  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
+  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each with exactly its one lock path; OWED with no lock file, or (task-367) tracked and RULED or OWED on FLIP_PENDING', () => {
     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
     // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
     const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
     expect(at).toBeGreaterThanOrEqual(0);
     expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
     expect(rows.length).toBeGreaterThanOrEqual(57);
+    expect(FLIP_PENDING_SRC, 'FLIP_PENDING not found in register-locks-resolve.infra.test.ts').not.toBeNull();
+    // the ! below is safe: fresh holds only rows with exactly one lock (its filter above)
     for (const r of fresh) {
+      if (BUILT_BY_367.includes(r.locks[0]!)) {
+        expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);
+        if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);
+        continue;
+      }
       expect(r.status, r.id).toBe('OWED');
       expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
     }
   });
 
-  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
+  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by", or RULED (task-367) with "Enforced by" its lock', () => {
     const text = read(SPEC.handbookRel);
     const owed = rows.filter((r: Row) => r.status === 'OWED').length;
-    expect(owed).toBeGreaterThanOrEqual(21);
+    // task-367: the floor is 21 minus the rows of BUILT_BY_367 that read RULED (18 when all three flip).
+    // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
+    expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);
     expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
-    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
+    for (const r of fresh) {
+      // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
+      const lock = r.locks[0]!.replace(/[.]/g, '\\.');
+      if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));
+      else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));
+    }
   });
 
   it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {

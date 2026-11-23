@@ -1,0 +1,789 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:37e10ef6c17516e57196ecccfbdfde5ee790ac9d9c20090a6863015dc3a98635 part 1 of 1 chunk 2 of 2
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json","scripts/surfaces/_schema/surface-rule-map.json","src/tests/surfaces/failure-state-declared.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts","src/tests/surfaces/nav-tab-switch.logic.test.ts","src/tests/surfaces/register-locks-resolve.infra.test.ts","src/tests/surfaces/scope-fence.logic.test.ts"]
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..457c47f1ed125462eb7111eb17aaa63ed90185b1
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+@@ -0,0 +1,88 @@
++{
++ "$comment": "Pre-registration, task MF-98 (COMPLY.3, task-367: three tests for McFrontend handbook rules no machine checks, fe.54 failure state declared, fe.49 scope fence, fe.51 tab switch; the register rows whose flip the operator approved read RULED; Spec 136, the rule map and the rule-lists page regenerated; tests and documents only), prereg 1, committed alone and first, before the MF-98 work commit. Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-96 prereg total (the newest prereg). rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook), FE-36 (navigation is a route; the tab-switch lock sits beside its lock). The rows this task locks are OWED at this commit and are never cited. In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202).",
++ "schema": "coa-round-prereg-v1",
++ "round": 203,
++ "task": "MF-98",
++ "rules": [
++  "FE-09",
++  "FE-10",
++  "FE-16",
++  "FE-36"
++ ],
++ "plan_ref": "backlog task-367 Implementation Plan (PLAN-367-v1 as folded after plan review round 1, sections 3 and 6); docs/reports/reviews/task-367/GROUNDER-PLAN.md, QUESTIONS-RULED.md, FOLD-CHECK.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913, :1930, :2108",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/surface-rule-map.json b/scripts/surfaces/_schema/surface-rule-map.json
+index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..d777bec35efbd61e31fb654275f755e86916970d 100644
+--- a/scripts/surfaces/_schema/surface-rule-map.json
++++ b/scripts/surfaces/_schema/surface-rule-map.json
+@@ -793,7 +793,7 @@
+     {
+       "id": "FE-49",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.49",
+       "source": {
+         "register": true,
+@@ -815,7 +815,7 @@
+     {
+       "id": "FE-51",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.51",
+       "source": {
+         "register": true,
+@@ -848,7 +848,7 @@
+     {
+       "id": "FE-54",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.54",
+       "source": {
+         "register": true,
+diff --git a/src/tests/surfaces/failure-state-declared.logic.test.ts b/src/tests/surfaces/failure-state-declared.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd228607eae155a765d192059b644c704be91090
+--- /dev/null
++++ b/src/tests/surfaces/failure-state-declared.logic.test.ts
+@@ -0,0 +1,93 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.54 (Spec 128 Rule 12, 128:39):
++//   "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."
++// TESTED: every SURFACE descriptor in the programme scope (scripts/surfaces/_schema/converted-surfaces.json scope.programme_scopes, the
++// manifest's own fence, not a second list) that reads a contract (`inputs.answer === 'contract'`) declares an `error` entry in `states[]`
++// and an `errors.answer` that is neither `none` nor `UNRESEARCHED`.
++// LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at
++// mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here; it is owned by the
++// task-343 leftovers. Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged.
++// Files come from `git ls-files`, so an untracked descriptor never counts. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const SURFACE_RE = /^scripts\/surfaces\/.+\/surfaces\/[^/]+\.descriptor\.json$/;
++const SAMPLE = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const BAD_ERRORS = new Set(['none', 'UNRESEARCHED']);
++
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string };
++  programme?: { scope?: string };
++  inputs?: { answer?: string };
++  states?: Array<{ name?: string }>;
++  errors?: { answer?: string };
++}
++export interface Scanned { path: string; d: Descriptor }
++
++const readJson = <T>(rel: string): T => JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;
++const scope = readJson<{ scope: { programme_scopes: string[]; expected_count: number } }>(MANIFEST).scope;
++
++/** Problems of the in-scope SURFACE descriptors that read a contract. Pure: descriptors and scopes in, one line per problem out. */
++export function failureStateProblems(list: Scanned[], scopes: readonly string[]): string[] {
++  const out: string[] = [];
++  for (const { path, d } of list) {
++    if (d.kind !== 'SURFACE' || !scopes.includes(d.programme?.scope ?? '')) continue;
++    if (d.inputs?.answer !== 'contract') continue;
++    const id = d.identity?.id ?? path;
++    if (!(d.states ?? []).some((s) => s.name === 'error')) out.push(`${id}: reads a contract but declares no error state`);
++    const ea = d.errors?.answer ?? 'none';
++    if (BAD_ERRORS.has(ea)) out.push(`${id}: reads a contract but its errors answer is ${ea}`);
++  }
++  return out;
++}
++
++function scanned(): Scanned[] {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => SURFACE_RE.test(f))
++    .map((f) => ({ path: f, d: readJson<Descriptor>(f) }));
++}
++
++const copy = (mut: (d: Descriptor) => void): Scanned => {
++  const d = structuredClone(readJson<Descriptor>(SAMPLE));
++  mut(d);
++  return { path: `${SAMPLE} (copy)`, d };
++};
++const noErrorState = (d: Descriptor) => { d.states = (d.states ?? []).filter((s) => s.name !== 'error'); };
++
++describe('fe.54: a contract-reading surface declares its failure state', () => {
++  it('A. the real tree: no problem in the programme scope, and the scanned SURFACE count equals the manifest count', () => {
++    const list = scanned();
++    const problems = failureStateProblems(list, scope.programme_scopes);
++    const inScope = list.filter(({ d }) => d.kind === 'SURFACE' && scope.programme_scopes.includes(d.programme?.scope ?? ''));
++    const readers = inScope.filter(({ d }) => d.inputs?.answer === 'contract');
++    console.log(`fe.54: scanned ${list.length} surface descriptors, ${inScope.length} in scope, ${readers.length} read a contract, ${problems.length} problems`);
++    expect(problems, `fe.54 (Spec 128 Rule 12, 128:39) contract readers with no declared failure state:\n  ${problems.join('\n  ')}`).toEqual([]);
++    expect(inScope.length).toBe(scope.expected_count);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem', () => {
++    const cases: Array<[Scanned, string]> = [
++      [copy(noErrorState), 'mobile_parcel_search: reads a contract but declares no error state'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'none' }; }), 'mobile_parcel_search: reads a contract but its errors answer is none'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'UNRESEARCHED' }; }), 'mobile_parcel_search: reads a contract but its errors answer is UNRESEARCHED'],
++    ];
++    for (const [s, line] of cases) expect(failureStateProblems([s], scope.programme_scopes)).toEqual([line]);
++  });
++
++  it('C. controls: the unchanged copy, a STATIC page with no contract input, and an out-of-scope descriptor give 0', () => {
++    expect(failureStateProblems([copy(() => {})], scope.programme_scopes)).toEqual([]);
++    const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });
++    expect(failureStateProblems([staticPage], scope.programme_scopes)).toEqual([]);
++    const outOfScope = copy((d) => { d.programme = { scope: 'estate_other' }; noErrorState(d); });
++    expect(failureStateProblems([outOfScope], scope.programme_scopes)).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+index c0c7c4d89f8d571749532996ca9237272ccd4591..8588eed2edd6f848258fd3ccff151005d357162b 100644
+--- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
++++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+@@ -8,6 +8,7 @@
+ // the Spec 135 FE rows". Every RED case plants a defect in an in-memory register text or a temp root, never in the repo. No DB, no network.
+ // The shared CLI shell (runHandbookCli, scripts/analysis/gates/rule-map.mjs) is exercised here through the 136 entry (case H6).
+ import { afterAll, describe, expect, it } from 'vitest';
++import { execFileSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -256,31 +257,53 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
+ // that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
+ // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
+ const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
++// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
++// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
++const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
++// the ! is safe: the pattern has one capture group, so every match holds m[1]
++const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)].map((m) => m[1]!);
++const trackedLocks = new Set(execFileSync('git', ['ls-files', '--', ...BUILT_BY_367], { cwd: ROOT, stdio: 'pipe' }).toString().split('\n').filter(Boolean));
+ const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
+ 
+ describe('MF-95 C — the thirteen RR-0384 rows', () => {
+   const rows = realRows();
+   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
+ 
+-  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
++  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each with exactly its one lock path; OWED with no lock file, or (task-367) tracked and RULED or OWED on FLIP_PENDING', () => {
+     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
+     // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
+     const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
+     expect(at).toBeGreaterThanOrEqual(0);
+     expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+     expect(rows.length).toBeGreaterThanOrEqual(57);
++    expect(FLIP_PENDING_SRC, 'FLIP_PENDING not found in register-locks-resolve.infra.test.ts').not.toBeNull();
++    // the ! below is safe: fresh holds only rows with exactly one lock (its filter above)
+     for (const r of fresh) {
++      if (BUILT_BY_367.includes(r.locks[0]!)) {
++        expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);
++        if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);
++        continue;
++      }
+       expect(r.status, r.id).toBe('OWED');
+       expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
+     }
+   });
+ 
+-  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
++  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by", or RULED (task-367) with "Enforced by" its lock', () => {
+     const text = read(SPEC.handbookRel);
+     const owed = rows.filter((r: Row) => r.status === 'OWED').length;
+-    expect(owed).toBeGreaterThanOrEqual(21);
++    // task-367: the floor is 21 minus the rows of BUILT_BY_367 that read RULED (18 when all three flip).
++    // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++    expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);
+     expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
+-    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
++    for (const r of fresh) {
++      // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++      const lock = r.locks[0]!.replace(/[.]/g, '\\.');
++      if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));
++      else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));
++    }
+   });
+ 
+   it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/register-locks-resolve.infra.test.ts b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+index e4b5f3602633fe59f9fed64324e16ef2818a6960..3386ece9f0fca415a71e7624985e83b5a229cec2 100644
+--- a/src/tests/surfaces/register-locks-resolve.infra.test.ts
++++ b/src/tests/surfaces/register-locks-resolve.infra.test.ts
+@@ -27,6 +27,9 @@ const SENTINEL = 'FE-01';
+ // Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+ // recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+ // commit removes the id and the list shrinks back to empty.
++// Dated 2026-11-23 (task-367, MF-98, lane BL-HB367): FE-51 joined it in the MF-98 work commit (its lock src/tests/surfaces/nav-tab-switch.logic.test.ts landed while
++// RR-0413 did not cover RULED with the lock's two named, owned tab-push exceptions) and left it in the MF-98 fix commit once the operator said yes (RR-0417),
++// so the list is FE-39 alone again (the MF-37 pattern above).
+ const FLIP_PENDING: readonly string[] = ['FE-39'];
+ 
+ type Row = { status: string; locks: string[] };
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

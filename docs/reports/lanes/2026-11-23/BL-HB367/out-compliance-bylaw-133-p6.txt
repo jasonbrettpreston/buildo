@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:51:12.813Z file_sha256=cc039bf1625110eddc45306ab0f5bc62a26341997546bac82c050e65117464a3 prompt_sha256=441ca25e43dec8fbf97ce4004d6a9ef390cdcca95debc95c4d961af7578fdf26
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-54 (Spec 128 Rule 12, 128:39) "a surface declares what the user sees when it fails" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them" vs src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged" — the register note and the lock's LIMITS state different out-of-scope populations for the same fence, so the declared limit the operator confirmed is not the limit the code states — reword the test LIMITS to "32 outside scope, 8 of them would fail the finder" to match the confirmed note.
+
+DEFER severity=LOW — FE-54 "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." — src/tests/surfaces/failure-state-declared.logic.test.ts:39 "if (d.inputs?.answer !== 'contract') continue;" — the lock judges contract readers only; test C accepts a static in-scope surface that declares no error state "staticPage ... d.errors = { answer: 'none' }" — the narrowing is declared and the row was confirmed with it, so record a follow-up row if the rule is meant to reach every surface rather than leaving the gap implicit.
+
+DEFER severity=LOW — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 "the lock is proven red and green (docs/reports/reviews/task-367/red.out)" — cannot see scope-fence.logic.test.ts, nav-tab-switch.logic.test.ts or red.out in this chunk, so only FE-54's planted arms ("RED planted (KNOWN_BAD, in memory)") are verifiable here — confirm the other two gates' red evidence when chunk 1 of 3 is reviewed.
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 cell "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`" — FE-49 and FE-54 flip to RULED with their dated notes and named locks, as confirmed.
+
+MET — RR-0417 "yes. worktrees removed" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 cell "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52)" — FE-51 reads RULED with exactly the two named owned exceptions the operator approved.
+
+MET — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (19 OWED, whose lock is still to land)" with scripts/surfaces/_schema/surface-rule-map.json "status": "active" for FE-49, FE-51, FE-54 — three gated rules leave the OWED list and the generated artifacts follow.
+
+MET — m.511 "CITE-2 cite by id and anchor" — src/tests/surfaces/failure-state-declared.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)" — the lock cites its rule by id and anchor.
+
+MET — m.513 "CITE-4 stage-6 prereg rules[] checklist" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json "rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 ..., FE-16 ..., FE-36" — the prereg carries its rules[] array and states why the OWED rows this task locks are not cited.
+
+REJECT — RR-0417 — FE-51 reading RULED while two live tab pushes remain in the tree — the operator ruling is explicitly "RULED with its two named exceptions" and both are named, owned and tied to MF-49/MF-50 and MF-51/MF-52, so this is the authorised form, not a violation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.511, m.513
+
+---
+⏱  51350ms (51.4s)
+📊 Tokens — total: 42613, input: 32274, output: 10339, reasoning: 9215

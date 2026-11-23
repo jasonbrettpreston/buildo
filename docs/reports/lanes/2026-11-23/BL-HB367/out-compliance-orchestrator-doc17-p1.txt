@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:56:14.418Z file_sha256=01bddfe53acbd15585ff1087ee275b525145c82aae9964a6cd376a758241bc2a prompt_sha256=e84644b36712e18b1af2249eaa8898d71650cf7c6e5d32df31f49f048bb6008b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — docs/reports/panels/MF-98.json "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — a process statement sits as the fifth card beside four cards prefixed "Operator, verbatim", while the pasted operator words for RR-0385 are "proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept", so the owed output review is at risk of taking an orchestrator line as operator-ruled — carry the same flag the queue itself uses ("orchestrator reading, flagged and not the operator's words", .cursor/MCFRONTEND-QUEUE.md MF-93 dated note) on this card, or drop it.
+
+DEFER severity=LOW — task-367 Acceptance criteria #2 "Each gate is shown red on a planted defect and green on the clean tree" — NONE in this chunk, the three lock files and docs/reports/reviews/task-367/red.out are not in the pasted diff — cannot see the red and green proof here, only the prose claim "the lock is proven red and green (docs/reports/reviews/task-367/red.out)" in the FE-49 and FE-51 and FE-54 cells — verify the red.out evidence and the three test files in chunk 2 before merge.
+
+MET — Acceptance criteria #1 "The gate list is confirmed by the operator before any gate is built" — .cursor/MCFRONTEND-QUEUE.md added MF-98 row — exactly three gates are built, "the three locks src/tests/surfaces/failure-state-declared.logic.test.ts, scope-fence.logic.test.ts and nav-tab-switch.logic.test.ts", matching the pasted RR-0413 "yes to both A. Status flip." and its note "the operator confirms the three rows".
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 cell — "RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit", the flip is dated and tied to the commit that lands the test, as ruled.
+
+MET — RR-0417 "yes. worktrees removed" (FE-51 may read RULED with its two named owned exceptions) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 cell — "the row reads RULED 2026-11-23" with "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52)".
+
+MET — Acceptance criteria #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land)" and docs/reports/generated/rule-lists-by-kind.md "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — three rows leave the OWED list (22 to 19) and the generated page totals move by the same 90 characters in the web table (226,944) and the phone table (308,007).
+
+MET — doc-17 "The operator's rulings are the decisions." — every ruling id cited by the added lines (RR-0384, RR-0385, RR-0386, RR-0413, RR-0417) is present in the pasted task card with its verbatim, for example "RR-0417 FE-51 tab switch may read RULED with its two named owned exceptions (names task-367, RR-0417)" — no reading id from this part's list is cited as authority anywhere in the change.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json "verdict": "PLAN RULED; OUTPUT owed" and the queue row "Status: RUNNING · since 2026-11-23 ... next: Land the closing commit, which sets task-367 BUILT after the output review and its grounder" — this change sets no BUILT flip.
+
+REJECT — doc-17 "They are NOT the operator's words as a ruling" — the change is accused of flipping three handbook rows on orchestrator summaries rather than operator words — RR-0413 "yes to both A. Status flip." and RR-0417 "yes. worktrees removed" are pasted as operator verbatim decisions naming task-367, so the accusation does not hold.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  81760ms (81.8s)
+📊 Tokens — total: 53623, input: 37047, output: 16576, reasoning: 15364

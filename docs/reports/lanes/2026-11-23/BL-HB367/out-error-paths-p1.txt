@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T20:34:11.887Z file_sha256=19a1f1610a99f56d3c8798b84ffe980d63789916bda991270f49e08f1c6d8ea3 prompt_sha256=ba1eb9d064633e0dde3182d2ac895b054a0732ad9056fb38717c010a0635744c
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT findings, error-path lens only.
+
+DEFER severity=MED — src/tests/surfaces/failure-state-declared.logic.test.ts "expect(inScope.length).toBe(scope.expected_count);" — the only defence against an empty scan is a number read from the same JSON as the scope list, so a regenerated manifest that drops scope.programme_scopes entries and expected_count together makes A pass on zero in-scope descriptors, unlike nav-tab-switch which pins a literal floor — add a literal floor beside it, e.g. expect(scope.programme_scopes.length).toBeGreaterThan(0) and expect(readers.length).toBeGreaterThan(0), so an empty walk cannot pass green.
+DEFER severity=LOW — src/tests/surfaces/failure-state-declared.logic.test.ts "return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })" — no timeout and no maxBuffer, so a wedged git (index.lock on a mounted worktree, a slow filesystem) blocks the vitest run indefinitely instead of failing, and an ENOBUFS throw is loud but unlabelled — pass { timeout: 30000, maxBuffer: 64 * 1024 * 1024 } as nav-tab-switch already does.
+REJECT — src/tests/surfaces/failure-state-declared.logic.test.ts "const ea = d.errors?.answer ?? 'none';" — a missing errors block looks like it would slip through — it is handled: the default 'none' is in BAD_ERRORS, so an absent optional field is flagged rather than passing.
+REJECT — src/tests/surfaces/failure-state-declared.logic.test.ts "if (d.kind !== 'SURFACE' || !scopes.includes(d.programme?.scope ?? '')) continue;" — a descriptor that loses its programme block reads as out of scope and is silently skipped — that is handled by the same case's expect(inScope.length).toBe(scope.expected_count), which drops by one and fails.
+REJECT — src/tests/surfaces/nav-tab-switch.logic.test.ts "expect(files.length).toBeGreaterThanOrEqual(20);" — an empty git ls-files walk would make judge() return no findings and pass — it is handled: the literal floor fails first, and the mobileFiles() output is git-tracked only, so a zero walk cannot go green.
+REJECT — src/tests/surfaces/nav-tab-switch.logic.test.ts ".filter(({ a, n }) => n !== a.count)" — a fix that removes a push without removing its allow entry, or a second identical push in the same file, would double-count silently — it is handled: entries are keyed by file plus call text (keyOf), a stale entry matches 0 and fails as miscounted, and ALLOW is capped at 2 so a new exception cannot be added quietly.
+REJECT — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384)" — the FE-51 cell now carries both RULED and OWED wording, so a status reader could resolve the row twice differently on a regeneration — it is handled: the regenerated Spec 136 line "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts" and the C-T3 regex prove the reader takes the leading status, and the retained OWED words are inside the lock cell only.
+
+VERDICT: PASS on error-path safety
+Paths walked: descriptor JSON parse, empty git walk, failed git call, missing states/errors/inputs/programme fields, empty programme scope, stale and duplicate allow-list entries, module-scope parse throw on a reshaped tab constant, register status double-text, execFileSync hang and buffer overflow   Unguarded: 1
+
+---
+⏱  72236ms (72.2s)
+📊 Tokens — total: 43781, input: 35116, output: 8665, reasoning: 7770

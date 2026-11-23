@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:26:04.000Z file_sha256=0225f41982f14d3e3ec480999cc0fbf2c0f75d47bd5d9ad004ae63dd354f0d1f prompt_sha256=1c701c99cb86b653dccd46c55694f14286a87d84b6fc59bf668e35cb6e634297
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — FE-09 "one OWED row whose lock has landed waits on a shrink-only pending-flip list in the lock (FE-10 today)" — .cursor/MCFRONTEND-QUEUE.md:+ "the fe.51 row reads RULED with the two named, owned tab-push exceptions ... and leaves FLIP_PENDING" — the shrink is asserted only by a dated note; register-locks-resolve.infra.test.ts is not in this chunk, so the lock's list state is unverified here — confirm in the chunk carrying the lock that FE-51 is absent from the pending-flip list and the list only shrank.
+
+DEFER severity=LOW — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-98.json:+ "\"output\": \"OUTPUT review owed at the lane output stage ... with FINDINGS.md untriaged\"" — the panel still calls FINDINGS.md untriaged while the card records round 1 grounded (Cairn-Ground-O367, parts A to H) and fixed — restate the record as round 1 grounded and round 2 owed so it does not read as un-grounded.
+
+MET — FE-02 — .cursor/MCFRONTEND-QUEUE.md:+ (MF-98 row) — the queue row lands alone and first (commit 0) and every ruling is quoted verbatim with file:line (:1913, :1930, :2108, :2134), satisfying "queue row first ... rulings verbatim and cited".
+
+MET — FE-08 — docs/reports/generated/rule-lists-by-kind.md:+ "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 |" — the generated handbook is at the ruled path.
+
+MET — FE-16 — docs/reports/generated/rule-lists-by-kind.md:+ "docs/specs/02-web-admin/136_mcfrontend_handbook.md" — 136 exists at the spec path the register (135) rules, both under docs/specs/02-web-admin.
+
+MET — FE-11 — .cursor/MCFRONTEND-QUEUE.md:+ MF-98 added before "## Later: convert-on-touch" — the new row sits in Phase 2, so no MF task falls outside Phase 0-2 or convert-on-touch.
+
+MET — FE-14 — .cursor/MCFRONTEND-QUEUE.md:+ (MF-98 placement, panel class "T") — the change stays within Phase 2 and adds no parallel infra, matching LEAN's "no MF task outside Phase 0-2 or convert-on-touch".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: FE-02, FE-08, FE-11, FE-14, FE-16
+
+---
+⏱  106936ms (106.9s)
+📊 Tokens — total: 53872, input: 30568, output: 23304, reasoning: 22668

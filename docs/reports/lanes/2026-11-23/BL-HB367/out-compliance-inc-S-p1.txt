@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:54:30.898Z file_sha256=388939812f9259972b4409af0cca7ce9753fcf3bf8b25bce126d90a72b5bbb70 prompt_sha256=8b1f4a53e3f3a19ac6754044df460d8cca04453ad047746aaa68388b7f4044b8
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-54, Spec 135 rule text "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — the row now reads RULED 2026-11-23 (RR-0413) with P pass while eight contract-reading surfaces in the tree have no declared failure state and the quoted rule carries no scope fence — narrow the Ruling cell by dated note to the programme-scope fence the lock actually enforces, or hold FE-54 OWED until those eight declare an error state
+DEFER severity=LOW — RR-0413 "the rows flip from OWED to RULED in the commit that lands their tests" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "the lock landed in the MF-98 work commit and the flip rides its fix commit" — FE-51's lock and its row flip land in two different commits, against the letter of RR-0413 A, though RR-0417 later allowed the flip and no untested RULED window is created — record the fix-commit reason in the row's dated note, no code change
+MET — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "58 in force (19 OWED, whose lock is still to land)" and docs/reports/generated/rule-lists-by-kind.md "| surface-136 | ... | 29,166 | 1 |" — the OWED count shrank by the three gated rules through the generator and the rule-lists page was regenerated
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — .cursor/MCFRONTEND-QUEUE.md "RR-0413, operator, verbatim: \"yes to both\" ... the operator confirms the three rows" — the three gates were confirmed by the operator before the build
+MET — RR-0386 "gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md "Not in this row: ... the parked branch wf1/inc1b-gates (RR-0386)" — no gate A or B script lands and the parked branch is untouched
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 "RULED 2026-11-23 (RR-0417)" with "two named, owned tab-push exceptions" — FE-51 reads RULED exactly as the operator allowed, exceptions named and owned
+MET — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts "B. RED planted (KNOWN_BAD, in memory)" and "C. controls" — each planted defect yields exactly one problem and the unchanged, static and out-of-scope copies yield zero
+MET — inc-S element table, all NOT BUILT and BUILT-NO-DATA rows ("A.11 | Clear (x) button inside the box | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT") — docs/reports/panels/MF-98.json "No app, descriptor, mobile or gate-script change." — the diff claims no built state for any inc-S element, so no inc-S status is contradicted
+REJECT — inc-S "Built state ... counts: {\"BUILT\":42,\"BUILT-NO-DATA\":7,\"NOT BUILT\":16}" — accused of leaving the increment requirements stale — this change is docs, register, prereg and test files only, the inc-S file is not in the task's Files list, so no inc-S clause is moved or owed
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  74102ms (74.1s)
+📊 Tokens — total: 50765, input: 35824, output: 14941, reasoning: 13970

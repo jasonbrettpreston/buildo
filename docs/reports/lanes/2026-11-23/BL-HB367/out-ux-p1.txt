@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T20:34:29.311Z file_sha256=19a1f1610a99f56d3c8798b84ffe980d63789916bda991270f49e08f1c6d8ea3 prompt_sha256=7a5c32c7e290e41b198aedd0030aff04edf7d0bf0518fea3d4ab9553e085820d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — docs/specs/02-web-admin/136_mcfrontend_handbook.md:184-185 "so it is PROSE-ONLY until the lock below exists." followed by "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note" vs design "My only direction is the task 367 the handbook rules are key." — the reader of the key handbook line is told in the same block that the tab-switch rule is unchecked and that it is enforced, and the two exceptions the operator ruled on appear nowhere on the line — add a Current reading to the FE-51 register row (the handbook already renders one) saying the lock checks the tab-push half with the two named, owned pushes, so the generated line carries the correction instead of the superseded sentence.
+
+DEFER severity=MED — docs/specs/02-web-admin/136_mcfrontend_handbook.md:194 "Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note" — the reader takes every surface as declaring its failure state, while the FE-54 row states "The lock is declaration-only for contract readers in programme scope and the error state only" and "8 of them (6 estate_other, 2 platform_shared) would fail the finder today", and the fe.49 line at :179 hides its platform_shared gap the same way — give each flipped row a Current reading naming what the lock does not judge, so the handbook line is not wider than its lock.
+
+DEFER severity=MED — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:76 "the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open)" vs .cursor/MCFRONTEND-QUEUE.md "A task not listed here is not done." — the person who taps Help gets a tap that shows nothing and no MF row exists to close on the fix — name the owning MF-nn row in the note, or say plainly that no queue row holds it yet.
+
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md MF-98 done-condition "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" vs docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:73 "RULED 2026-11-23 (RR-0417), the lock landed in the MF-98 work commit and the flip rides its fix commit" — the operator reading the row cannot see that FE-51 flipped one commit later than the condition the row states, on a separate ruling — add RR-0417 to the done-condition or name the fix commit.
+
+REJECT — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:73 "Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52)" — the person pressing the parcel shelf tab or the Tracked Lots account button still gets a push, so back behaves wrong there — matches the design: RR-0417 "yes. worktrees removed" let FE-51 read RULED with these two named exceptions, each owned by a LATER row.
+
+REJECT — docs/reports/panels/MF-98.json "No app, descriptor, mobile or gate-script change." — no screen, copy or control the person uses is drawn or altered, so first view, loading, answered, error, empty, offline, back and repeat visit are all untouched and nothing regresses — matches the design: the card says "Not in this row: any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19)", tests and documents only.
+
+VERDICT: FAIL on the person's experience
+States checked: app first view, loading, answered, error, empty, offline, back, repeat visit (none drawn); reader states: queue row, register row, handbook line, panel record   Dead ends found: 1
+
+---
+⏱  74886ms (74.9s)
+📊 Tokens — total: 50697, input: 35115, output: 15582, reasoning: 14591

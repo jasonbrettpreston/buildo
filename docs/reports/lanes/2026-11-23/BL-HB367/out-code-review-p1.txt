@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T19:44:22.610Z file_sha256=19a1f1610a99f56d3c8798b84ffe980d63789916bda991270f49e08f1c6d8ea3 prompt_sha256=38278c9a329985085e05f157247a0bc6698c8df09241da446c67df6a01a9fe4e
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/surfaces/failure-state-declared.logic.test.ts:44 "const ea = d.errors?.answer ?? 'none';" — folds an absent `errors` block into the literal `'none'`, so the emitted line "its errors answer is none" can be false when no `errors` key exists at all; conflates "declared none" with "not declared" — check `d.errors?.answer` presence with a distinct message, e.g. "declares no errors answer".
+DEFER severity=LOW — src/tests/surfaces/nav-tab-switch.logic.test.ts:118 "expect(files.length).toBeGreaterThanOrEqual(20);" — a hard-coded floor (also `toBeLessThanOrEqual(2)` on ALLOW and `21 - ...` in handbook-rule-map C-T3) breaks silently the moment the mobile file set legitimately grows or shrinks; move the expected minimum to the descriptor manifest or derive it.
+DEFER severity=LOW — src/tests/surfaces/nav-tab-switch.logic.test.ts:96 "const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());" — runs at module load, so a reshaped `PARCEL_TAB_ROUTE` throws during collection and the named test B2 ("a reshaped tab constant fails closed") never reports its regex message; the fail-closed behaviour exists but its assertion is dead in that scenario, so build `routes` lazily or inside the tests that need it.
+DEFER severity=NIT — src/tests/surfaces/nav-tab-switch.logic.test.ts:105 "for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/')" — `identity.route` is a URL route, not a file path, so it can never satisfy `startsWith('mobile/')`; that half of the array is dead code against the stated file filter — drop `d.identity?.route` or document why a descriptor could carry a `mobile/` path there.
+REJECT — src/tests/surfaces/nav-tab-switch.logic.test.ts:73 "n.arguments.length > 0 && isTab(n.arguments[0]!)" — the `!` looks like it could hide a null first argument — the preceding `n.arguments.length > 0` proves the index exists, so the assertion is safe.
+REJECT — src/tests/surfaces/handbook-rule-map.logic.test.ts:266 ".map((m) => m[1]!)" — the `!` on a `matchAll` capture looks unchecked — the pattern `/'(FE-\d+)'/g` has exactly one group, so `m[1]` is always defined for every match; correct.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  90269ms (90.3s)
+📊 Tokens — total: 55052, input: 35099, output: 19953, reasoning: 19302

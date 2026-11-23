@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:45:52.956Z file_sha256=350555877a9f86b3d370dbff877b5336a162b4bdd0bfd95c549db098c1719dc5 prompt_sha256=efcb1d13794c0f8acdb6e367139f0c7225aac0d5443a5ab3dadc87220b1016c7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 §11.2 "**an expanded edit set kills every restated scope claim**" — docs/reports/panels/MF-98.json:16 "\"output\": \"OUTPUT review owed at the lane output stage: the lens set ... with FINDINGS.md untriaged\"" — the record restates the output stage as never run although the pasted card records round 1 complete (78 of 78 lens outputs, 285 findings) and the RR-0417 fix applied, so the restated claim outlives the fix's expanded edit set — rewrite the output field to record round 1 done, its fix, and round 2 owed.
+
+DEFER severity=LOW — rule 10 (C2) "the id governs and the verbatim-quote check of arm D is unchanged" — docs/reports/panels/MF-98.json:11 "\"Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): \\\"yes to both\\\" (A: ...; B: the three rows are the list)\"" — the verbatim tag drops the recorded words "A. Status flip." and pairs the quote with a B gloss the pasted record does not hold, so the quote cannot be checked verbatim — quote the recorded line whole and label the B gloss as an orchestrator reading.
+
+MET — MCINC-8, M-515 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — .cursor/MCFRONTEND-QUEUE.md:660 "id claimed in ~/Buildo-scratch/ids/MF-98 (owner: lane BL-HB367)" — MF-98 recorded as claimed before use, next free id advanced to MF-99 with the two held ids (MF-97, MF-98) named.
+
+MET — rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — .cursor/MCFRONTEND-QUEUE.md:660 "RR-0417, operator, verbatim: \"yes. worktrees removed\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2134`)" — the operator words carry the locator the pasted card also records at :2134.
+
+MET — rule 4, dated note 2026-11-23 (task-439) "they attach `surface-136` with their engineering lists" — docs/reports/generated/rule-lists-by-kind.md:56 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the phone row keeps surface-136 with eng-front and eng-shared, and only the character counts move.
+
+MET — rule 6, dated note 2026-11-22 "round 2 ... resolves CRITICAL and HIGH only; two rounds at most" — docs/reports/panels/MF-98.json:23 "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — the task is not recorded BUILT while the output round and its grounder remain owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: MCINC-8, M-515
+
+---
+⏱  107816ms (107.8s)
+📊 Tokens — total: 51582, input: 28193, output: 23389, reasoning: 22626

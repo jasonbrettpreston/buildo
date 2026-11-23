@@ -3,11 +3,11 @@ id: TASK-367
 title: >-
   COMPLY.3 Gates for handbook rules no machine checks, the ones Increment 1·B
   code touches first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:32:00Z'
+updated_date: '2026-11-23T20:52:00Z'
 labels:
   - McFix
   - McFix Final
@@ -49,6 +49,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-HB367/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-HB367/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-HB367/TRIAGE.md
 type: build
 ordinal: 67012
 ---
@@ -516,4 +519,45 @@ Dated note 2026-11-23 (M-246, prior text kept; RR-0386, RR-0412 · task-367 · B
 2026-11-23 taken on the board at lane launch (lane BL-HB367, worktree /Users/brettpreston_macmini/Buildo-wt-hb367, branch wf1/inc1b-hb367), RR-0240
 
 2026-11-23 lane BL-HB367 commit 0 (plan section 6, alone and first): the MF-98 row in Phase 2 of .cursor/MCFRONTEND-QUEUE.md (RUNNING; FE rows owned: FE-49, FE-54; Next free id MF-99 by dated note, MF-97 held by BL-FEDB442), prereg-MF-98-1.json (round 203, rules FE-09, FE-10, FE-16, FE-36; totals copied from prereg-MF-96-1.json, the newest) and docs/reports/panels/MF-98.json. Q-D is not answered: the build follows the plan NOT-YES branch (fe.51 lock lands, row stays OWED on FLIP_PENDING).
+
+2026-11-23 lane BL-HB367 red attempt: the three tests staged with T1's and T2's plant lines and T3's empty allow-list, plus this task file; self-skeptical checklist (9 items, all PASS) walked against the diff first (lane CHECKLIST.md); typecheck clean, lint 0 errors beforehand. Output saved to docs/reports/reviews/task-367/red.out.
+
+2026-11-23 lane BL-HB367 commit 1 (work): the three locks land with the plant lines removed and the two owned nav-tab-switch entries in; red proven first at the designed (A) assertions (docs/reports/reviews/task-367/red.out: Test Files 3 failed (3), Tests 3 failed | 8 passed (11)). Q-D unanswered, NOT-YES branch: FE-49 and FE-54 read RULED (RR-0413, "yes to both") with dated notes; FE-51 stays OWED and joins FLIP_PENDING in register-locks-resolve.infra.test.ts; handbook-rule-map.logic.test.ts reads FLIP_PENDING from that file's text (no second list). Spec 136, the rule map and the rule-lists page regenerated (generate-surface-handbook.mjs --write/--check, rule-lists.mjs page --write/--check, both exit 0); Spec 136 OWED count 20. MF-98 row stays RUNNING, next: the closing commit.
+
+2026-11-23 lane BL-HB367 acceptance (plan section 8), run on the lane head d5e3695b9; items 1-6 are the lane's, item 7 (pre-push list) waits for the orchestrator:
+AC1: 3
+AC2: red.out 'Test Files  3 failed (3)' lines: 1; 'mobile_parcel_search: reads a contract but declares no error state' 3; useLeadFeed 1; _layout.tsx 1; tracked.tsx 1
+AC3: Status: OWED count 20 (NOT-YES branch: 20)
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (58 rules)
+AC3 generate-surface-handbook --check exit 0
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+AC3 rule-lists page --check exit 0
+AC4: trailers: 2 of 2; FE-id count in message: 0
+AC4 (commit 0 too): FE-id count 0
+AC5: diff --stat cf5c7be0668a6addd4a1d24bf98dca5eb31d740b..HEAD over mobile src/app src/lib src/components scripts/surfaces (minus the rule map) prints []
+AC6 failure-state-declared: // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)
+AC6 scope-fence: // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
+AC6 nav-tab-switch: // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
+Item 7 own green: the related run of commit d5e3695b9 passed: register-locks-resolve (15), failure-state-declared (3), scope-fence (3), nav-tab-switch (5), handbook-rule-map (41): Test Files 5 passed (5), Tests 67 passed (67).
+
+2026-11-23 lane BL-HB367 output review round 1 (context docs/reports/reviews/task-367/context-r3.md, made by backlog-brief.mjs with --board ~/Buildo-wt-board): 78 lens inputs made by rule-lists.mjs lens-input (15 compliance lists, engineering eng-all, code-review, ux, error-paths, security); 43 outputs ran, 35 failed at DeepSeek with 402 Insufficient Balance (operator-only blocker: top up). Findings of the 43, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (174: 1 CRIT, 42 HIGH, 71 MED, 60 LOW). Task stays RUNNING, grounder owed.
+
+2026-11-23 lane BL-HB367 output review round 1 completed after the DeepSeek top-up (operator: "deepseek is updated", relayed by the orchestrator): the 35 missing outputs ran under their names at concurrency 3, 0 failed; 78 of 78 outputs present. Findings, untriaged: docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (285: 2 CRIT, 73 HIGH, 115 MED, 95 LOW). Task stays RUNNING, grounder owed (RR-0359).
+
+2026-11-23 lane BL-HB367 output round 1 fix (grounder Cairn-Ground-O367, parts A to H): RR-0417, operator, verbatim: "yes. worktrees removed" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2134), put to him as "may FE-51 read RULED with its two named exceptions, yes or no?". The plan YES branch now applies: fe.51 reads RULED with its two named, owned tab-push exceptions and leaves FLIP_PENDING; the three Six cells read P pass; the fe.49 and fe.54 notes cite MORNING-DECISIONS.md:2108; the fe.54 note gives the 32 out-of-scope contract readers (8 would fail the finder); the MF-98 row owns fe.49, fe.51 and fe.54; the panel record carries RR-0417 and no blocker. Acceptance 3 now reads 19 (grep -c Status: OWED on Spec 136); generate-surface-handbook.mjs --check and rule-lists.mjs page --check exit 0. Task stays RUNNING; output round 2 is owed.
+
+2026-11-23 lane BL-HB367 output review round 2 (RR-0385 item 3, the last round): fresh context docs/reports/reviews/task-367/context-r4.md; 90 lens inputs re-made by rule-lists.mjs lens-input on the diff cf5c7be06..9f47c3454 under the round-1 base names; 90 of 90 outputs; findings untriaged in docs/reports/lanes/2026-11-23/BL-HB367/FINDINGS.md (round 2: 315;  36 severity=HIGH; 146 severity=LOW; 125 severity=MED; 6 severity=NIT;). Task stays RUNNING; the grounder rules round 2.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-367 (COMPLY.3, MF-98): three locks for the handbook rules fe.54 (failure-state-declared), fe.49 (scope-fence) and fe.51 (nav-tab-switch) at their reserved src/tests/surfaces paths, each seen red at its designed assertion then green; fe.49, fe.51 and fe.54 read RULED (RR-0413, RR-0417); Spec 136, the rule map and the rule-lists page regenerated (19 OWED); commits 7dc3b9132 (records), d5e3695b9 (work), 9f47c3454 (round 1 fix); red in docs/reports/reviews/task-367/red.out
+
+Review round 1: 4 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb367-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 3cb6f98d6); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hb367-lane/grounder/r1/TRIAGE.md
+out-compliance-policy-124-s2-s5-p6#1 MED fixed 9f47c34
+out-compliance-surface-126-p7#2 MED fixed 9f47c34
+out-compliance-surface-135-p7#1 MED fixed 9f47c34
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/lanes/2026-11-23/BL-HB367/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-HB367/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

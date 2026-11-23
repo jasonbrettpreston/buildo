@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T20:35:13.131Z file_sha256=63791a8d1928a3714030e376e170c093057f2482e331ccb6e9722252230bcabd prompt_sha256=834f6cd6bb6e4a522c6a6b1fbeacf0cac857577d377456f2befff5d2f8b4b1f1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-ux-p2.txt (model: deepseek-reasoner)
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:119 "console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`)" — the gate prints counts only, so a reader of the green output cannot see which files were scanned — harmless here: no person-facing state is drawn and the pasted plan asks only that the scanned-file count be printed and a zero-file walk fail.
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:113 "it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {" — the assertion name reads wider than the fence it proves — harmless: the same file states its own limit, "LIMITS (stated, not widened): declared files only, no import hop", so no reader is left believing a server file outside the descriptors was scanned.
+
+REJECT — src/tests/surfaces/scope-fence.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)" — the whole diff is a vitest file with no route, screen, control or copy a person can reach — matches the design text, which binds the gate to code and descriptors ("the MaxBLD code and descriptors of the programme scope"), not to any surface the person sees.
+
+VERDICT: PASS on the person's experience
+States checked: none drawn (test-only change, no route, screen, control, loading, empty, error, offline, back or repeat-visit state exists in this file)   Dead ends found: 0
+
+---
+⏱  15676ms (15.7s)
+📊 Tokens — total: 12106, input: 8626, output: 3480, reasoning: 3104

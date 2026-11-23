@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:05:17.430Z file_sha256=2812aa0b3a425e76e538a7a7d93c6c0a590471d2a854de25306cf10d944308d7 prompt_sha256=3291fc5de11c8b273445865852c748cb92f96313f1dd8e09b2315706d05c6b17
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG — none at CRIT/HIGH.
+
+DEFER severity=MED — Spec 126 §0b item 6 "The operator's own words with the date and the record path ("Operator verbatim" = the operator's own words, Spec 135:3)" — docs/reports/panels/MF-98.json:13 "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only." — the `cards` array is the operator-verbatim record and this entry carries no operator words, no ruling date and no record path, unlike the spec's own practice of flagging a reading "orchestrator reading, flagged and not the operator's words" — move it to `notes` labelled as an orchestrator reading, or delete it.
+DEFER severity=MED — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited" — docs/reports/panels/MF-98.json:9 "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913): "My only direction is the task 367 the handbook rules are key."" against the pasted rulings list "RR-0385 McFix Final plan ... "proceed. Are there any more questions - Label all realted tasks McFix Final..." (:1915)" — one id RR-0385 now carries two different operator texts at two line numbers (the same quote is dated 2026-11-22 in the card and 2026-11-23 in the queue row), so the ruling's own date and id cannot be verified from the citation — give the 1913 quote its own RR id and date in both the queue row and the panel.
+DEFER severity=MED — Spec 126 §0b item 11 "a tab switch uses `navigate` (the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52)" — .cursor/MCFRONTEND-QUEUE.md:664 "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)" — the pasted clause names three tab-switch flags with three owning pairs, and the RULED row names two, so flag #6 and its owner MF-35/MF-52 drop out of the row that now claims fe.51 is satisfied — name the third flag and its owner in the row, or state why #6 needs no exception.
+DEFER severity=LOW — card acceptance "#2 Each gate is shown red on a planted defect and green on the clean tree" — .cursor/MCFRONTEND-QUEUE.md:662 "each proven red at its designed assertion through the real commit hooks, then green" — the two-direction proof, and the lock files themselves, are outside this chunk (chunk 1 of 3), so the red-then-green evidence for fe.49, fe.51 and fe.54 is cannot see; only the card's own summary is pasted — carry the red.out assertions and the green run into the closing commit so the proof is visible in the material.
+
+MET — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — .cursor/MCFRONTEND-QUEUE.md:660 — the row exists, "**MF-98 COMPLY.3: three tests for McFrontend handbook rules no machine checks ... — RUNNING** (E)", with its Done-condition and FE rows on the following bullets.
+MET — Spec 126 §0b item 2 "pre-registration committed alone before the code (`prereg-MF-n-k.json` ...) → red first ... → OUTPUT panel" — .cursor/MCFRONTEND-QUEUE.md:664 — "Prereg: scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json (round 203, tests and documents only, nothing moves). Panel record: docs/reports/panels/MF-98.json." and docs/reports/panels/MF-98.json:23 "PLAN RULED; OUTPUT owed".
+MET — Spec 126 §0b item 6 "cited by every commit, prereg and lock that relies on it" — .cursor/MCFRONTEND-QUEUE.md:664 — RR-0413 and RR-0417 are quoted ("yes to both" :2108, "yes. worktrees removed" :2134) with the path, and the MF-98 row owns "FE-49, FE-51, FE-54".
+MET — Spec 126 §0b item 11 "each tied to the task that will fix it" — docs/reports/panels/MF-98.json:27 — "MF-49/MF-50 and MF-51/MF-52: the row that fixes mobile/app/(app)/parcel-tool/_layout.tsx or tracked.tsx removes its nav-tab-switch entry in the same commit".
+MET — Spec 126 §3 / §2 "The map is derived, never hand-edited (PD #2)" — docs/reports/generated/rule-lists-by-kind.md:33 — "| total | 11 lists | | 226,944 | 11 |": the total moves by exactly the surface-136 delta (29,076 to 29,166, +90) in both tables (307,917 to 308,007), so the page is regenerated, not hand-edited.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  104151ms (104.2s)
+📊 Tokens — total: 48859, input: 27336, output: 21523, reasoning: 20251

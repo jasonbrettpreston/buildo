@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:52:54.585Z file_sha256=ea57e8bb35f6799a7dcc5249d20c2b95d31728e70994c094b2e0e7ba16315c4a prompt_sha256=7af3332c09390d6f9537b8ab4bc47a28fd4839e22eba2cb9e06e865339e4b2c8
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 row "RULED 2026-11-23 (RR-0417), the lock landed in the MF-98 work commit and the flip rides its fix commit." and .cursor/MCFRONTEND-QUEUE.md "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" — the FE-51 flip is not in the commit that lands its test, so the row's own done-condition is not met as written for one of the three rows — reword the MF-98 done-condition to admit RR-0417's later flip, or land the FE-51 flip in the commit that lands nav-tab-switch.logic.test.ts.
+DEFER severity=LOW — "OWED: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land)" — the shipped artefacts carry a second OWED sense (register lock not landed) that the governing glossary does not define — rationale: that sense predates this diff (RR-0384, task-434) and is scoped to Spec 135, so no clause is broken and one pointer line would separate the two senses.
+DEFER severity=LOW — RR-0413 "the operator confirms the three rows" — src/tests/surfaces/failure-state-declared.logic.test.ts:10 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." against the confirmed FE-54 row "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them ... would fail the finder today" — the lock's stated LIMITS understate the unjudged population fourfold, so the confirmed row and its lock state different facts — rationale: comment only, no enforcement effect, but the two texts should agree.
+MET — "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/failure-state-declared.logic.test.ts:1 — under src/tests, names FE-54 in the SPEC LINK line and asserts the rule in cases A to C.
+MET — "lock / lock-db / check / hook" — src/tests/surfaces/nav-tab-switch.logic.test.ts:1 — under src/tests, names FE-51 and asserts it, with the two operator-named exceptions counted shrink-only.
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 — the allow list is exactly the two audited tab pushes (_layout.tsx, tracked.tsx), each keyed by file and call text with count 1.
+MET — AC#2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/failure-state-declared.logic.test.ts:77 — "B. RED planted (KNOWN_BAD, in memory)" plants each defect in a copy and case A asserts the clean tree.
+MET — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md:33 — surface-136 29,076 to 29,166 and totals +90, which is exactly +30 characters for each of the three flipped status lines, so the generated page matches the handbook header 22 to 19 OWED.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  106152ms (106.2s)
+📊 Tokens — total: 59291, input: 36784, output: 22507, reasoning: 21583

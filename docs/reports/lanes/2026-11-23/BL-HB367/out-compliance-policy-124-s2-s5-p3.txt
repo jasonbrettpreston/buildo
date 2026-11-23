@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:00:34.764Z file_sha256=ebbc508fa708697c5ee68318f53099a5cdc9b671c2aaed3f12f42d450bd712d2 prompt_sha256=49488b777c292f6da89588a1b952a35f0dddad68a7ad69cb367ee608b86f22ef
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the only generator artifact in this chunk records the surface-136 list growing 29,076 to 29,166 (totals 226,854 to 226,944), while the shrink is asserted only in card prose ("Spec 136 OWED count 20", later "Acceptance 3 now reads 19"), so the shrink is not evidenced here and 20 to 19 is a one-rule drop for three gated rules — cannot see Spec 136 in this chunk, verify the OWED removal in the chunk that carries 136 and reconcile the 20/19 counts.
+
+DEFER severity=LOW — RR-0385 "output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — docs/reports/panels/MF-98.json:16 "OUTPUT review owed at the lane output stage: the lens set ... with FINDINGS.md untriaged" — the panel still describes the output review as wholly owed although the card record has round 1 complete (285 findings, 2 CRIT, 73 HIGH) and the round-1 fix landed under RR-0417, so the two-round rule cannot be audited from the panel record — record round 1 and its resolution in the panel and set verdict "PLAN RULED; OUTPUT round 2 owed".
+
+MET — AC1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json:11 — RR-0413 card "B: the three rows are the list", and the row at .cursor/MCFRONTEND-QUEUE.md:661 builds exactly fe.54, fe.49 and fe.51 at the three reserved lock paths.
+
+MET — RR-0386 "gates parked, handbook tests start fresh; landing gates A and B is a later decision with its own card" — .cursor/MCFRONTEND-QUEUE.md:663 "Not in this row: ... the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates are excluded and this chunk touches no gate script or mobile source.
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — docs/reports/panels/MF-98.json:27 "MF-49/MF-50 and MF-51/MF-52: the row that fixes mobile/app/(app)/parcel-tool/_layout.tsx or tracked.tsx removes its nav-tab-switch entry in the same commit" — matches .cursor/MCFRONTEND-QUEUE.md:662 "fe.51 reads RULED with its two named, owned tab-push exceptions".
+
+REJECT — RR-0385 same ruling id carries two verbatims — docs/reports/panels/MF-98.json:9 "RR-0385, operator, verbatim: \"My only direction is the task 367 the handbook rules are key.\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913`)" — the card's own Implementation Notes dated 2026-11-22 use the same attribution, so the material follows the task card; the conflict with the Decisions block (:1915 "proceed. Are there any more questions ...") is a defect in the card's Decisions list, not in this diff.
+
+REJECT — AC2 "Each gate is shown red on a planted defect and green on the clean tree" — accused of landing gates with no red evidence — the three lock files and docs/reports/reviews/task-367/red.out are outside chunk 1 of 3 and are reviewed in their own runs.
+
+REJECT — register id order "never a restart at `R-A` under a new sub-scheme, and never a silent renumbering" — accused of jumping MF-97 to MF-99 — MF-97 is held by lane BL-FEDB442 (task-442, not landed) per .cursor/MCFRONTEND-QUEUE.md:5 "MF-97 is held by lane BL-FEDB442 (task-442, not yet landed ...) and MF-98 is taken by the COMPLY.3 row", so MF-99 is one past the largest allocated id, MF-72 stays retired never reused, and the later-lander rewrites the line by dated note.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  114967ms (115.0s)
+📊 Tokens — total: 43353, input: 20191, output: 23162, reasoning: 22115

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T20:32:04.184Z file_sha256=901423bc65dbe310cbe357e5402b9dbbbd212cf2b2139ae390dd140f162e2e85 prompt_sha256=1c939f171fa1a973c13efd8ba11739e08dd3018e3cfb1fd2bb5be1fd06e16795
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5. Testing Standards §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the regenerated page is guarded only by the manual "rule-lists.mjs page --check exit 0" noted in the task, no test file in the material locks the committed page to its generator — cite or add a *.logic.test.ts / *.infra.test.ts that runs the generator to a buffer and diffs the committed page, as §5.5 requires.
+DEFER severity=LOW — 14. The Prevention Loop "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — .cursor/MCFRONTEND-QUEUE.md:660 "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) in the MF-98 fix commit, so this row now owns it" — the Spec 135/136 register flips this row claims are asserted in chunk 1 but the spec edits are not in this chunk, cannot see — confirm the Spec 135 and Spec 136 edits land in the same commit as the row that claims them.
+DEFER severity=LOW — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — task-367 Implementation Notes "self-skeptical checklist (9 items, all PASS) walked against the diff first (lane CHECKLIST.md)" — the checklist exists only as a task note, the CHECKLIST.md file itself is not in the material under review — paste the 9 PASS/FAIL items into the review record so the gate is auditable, not asserted.
+MET — 5. Testing Standards §5.2 "Parity battery ... generated doc ↔ generator (drift guard)" — docs/reports/generated/rule-lists-by-kind.md:33,47 — the generated page is regenerated, and the one changed rule-list count moves with both totals it feeds: surface-136 29,076 to 29,166, document total 226,854 to 226,944, phone total 307,917 to 308,007, each +90.
+MET — 10. Frontend/Backend Boundary §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — .cursor/MCFRONTEND-QUEUE.md:660 — the diff touches only .cursor/MCFRONTEND-QUEUE.md, docs/reports/generated/rule-lists-by-kind.md and docs/reports/panels/MF-98.json, no scripts/ or migrations/ file.
+MET — 14. The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — task-367 context "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)" — all three reserved lock paths are recorded with both the spec and its §fe.NN section, and §14 requires both directions be updated for new couplings.
+REJECT — 11. Plan Compliance Checklist "If Database Impact = YES" / "If API Route Created/Modified" / "If UI Component Created/Modified" — the change is accused of missing UP+DOWN migration, envelope, try-catch and touch-target items — no DB column, route handler or component is touched by this chunk, so those §11 conditionals do not apply.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  36168ms (36.2s)
+📊 Tokens — total: 35360, input: 28104, output: 7256, reasoning: 6387

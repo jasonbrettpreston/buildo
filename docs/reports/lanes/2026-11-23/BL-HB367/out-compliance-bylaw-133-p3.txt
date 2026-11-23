@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:49:26.640Z file_sha256=ab0474c7d261d4011cc408c8231ae9975b25d2f762c1f2d997c89cfb62d1477f prompt_sha256=50d62f4b1e0ce09a26cc6417fcbfbf5987fff834ab20d8cc470dd0d95b0726a7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — m.513 "**m.513** CITE-4 stage-6 prereg rules[] checklist." — .cursor/MCFRONTEND-QUEUE.md:663 "  - FE rows owned: FE-49, FE-51, FE-54." (prereg content per pasted note "prereg-MF-98-1.json (round 203, rules FE-09, FE-10, FE-16, FE-36; totals copied from prereg-MF-96-1.json, the newest)") — the stage-6 prereg rules[] checklist names four rules this task does not gate and omits the three it does gate, so the checklist does not describe the round it preregisters — rewrite prereg-MF-98-1.json rules[] to FE-49, FE-51, FE-54 (plus any bylaw row the round touches) and re-run the prereg checker before the closing commit.
+DEFER severity=MED — task card acceptance "#1 The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json:11 ""Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): \"yes to both\" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)."" — the pasted operator verbatim is "yes to both A. Status flip." and B ("the three rows are the list") exists only as an orchestrator gloss inside a card labelled "Operator, verbatim", so AC1's operator confirmation of the gate list is not evidenced by any pasted operator words — record the question put to the operator and his answer to B verbatim in the panel and the queue note, or mark the gate list as orchestrator-read.
+DEFER severity=LOW — RR-0413 "the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md:662 "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)" — FE-51's test landed in commit 1 while its row stayed OWED, and the flip moved to the fix commit under RR-0417, so the row's own Done-condition no longer states when FE-51 flips — amend the Done-condition clause to name the fix commit as FE-51's flip point.
+MET — m.507 — .cursor/MCFRONTEND-QUEUE.md:2 "This file stays the home of its own rows." — the MF-98 row lands in the queue file that owns its rows, so the open-work list is not duplicated.
+MET — m.508 — .cursor/MCFRONTEND-QUEUE.md:661 "Status: RUNNING · since 2026-11-23 · expires 2026-11-30" — the row carries a 7 day expiry.
+MET — m.511 — .cursor/MCFRONTEND-QUEUE.md:664 "RR-0385, operator, verbatim: "My only direction is the task 367 the handbook rules are key." (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913`)" — every cited ruling carries its id and its file:line anchor.
+MET — m.515 — .cursor/MCFRONTEND-QUEUE.md:2 "MF-98 is taken by the COMPLY.3 row (id claimed in ~/Buildo-scratch/ids/MF-98); next free id **MF-99**" — the id is claimed in the one ledger and the next free id advances past it, with MF-97 noted as held by an unlanded lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: m.507, m.508, m.511, m.515
+
+---
+⏱  103144ms (103.1s)
+📊 Tokens — total: 49663, input: 29275, output: 20388, reasoning: 19506

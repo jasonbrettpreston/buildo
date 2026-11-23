@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:59:42.417Z file_sha256=ef943d711fcfa9f5d300ba5b72516701153e2ade51462a864e80db90d24d88e8 prompt_sha256=3b9cd04b78788d0453782bdd0dc1125f7f6f1867bb4aa54be613eb473e7b1bad
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG: none raised at CRIT/HIGH.
+
+DEFER severity=MED — RR-0359 "Nothing is folded before the grounder has ruled (names RR-0359)" — docs/reports/panels/MF-98.json:7 ""head": "prereg 1 (round 203); commits 0, 1, fix"" — the panel lists the fix commit the output grounder authorised, yet its output field and verdict still read "OUTPUT owed" and no grounder ruling appears, so RR-0359 rests only on the card notes and cannot be seen in the panel — record output round 1 (285 findings), the grounder ruling (parts A to H) and round 2 owed in output/seats/verdict.
+DEFER severity=MED — card AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md:33 "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the only generated artifact in this chunk grows by 90 characters (29,076 to 29,166) and the shrink to 19 OWED rests on Spec 136, which is not in this chunk (cannot see) — cite the Spec 136 hunk or its OWED count line in a reviewed chunk so the shrink is evidenced by an artifact, not row prose.
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`" — docs/reports/panels/MF-98.json:9 ""Operator, verbatim (RR-0413, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108): "yes to both" ..."" — RR-0413 and RR-0417 appear in this chunk only as hand-cited quotes in a queue row and a panel card, no decision log under docs/reports/decisions/ and no routed register row is visible (cannot see) — point the row at the decision log stem and the register row each ruling routes to.
+DEFER severity=LOW — pasted decision RR-0385 "proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — .cursor/MCFRONTEND-QUEUE.md:665 "RR-0385, operator, verbatim: "My only direction is the task 367 the handbook rules are key." (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913`)" — one id carries two different verbatims across the pasted record, the decisions list puts RR-0385 at :1915 with the plan quote — reconcile the id or cite only the log line for the :1913 quote.
+DEFER severity=LOW — card AC #1 "The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json:9 ""yes to both" (A: the rows flip from OWED to RULED in the commit that lands their tests; B: the three rows are the list)"" — the confirmation is recorded as the orchestrator's gloss of question B and the question actually put to the operator is not quoted — record the question text beside the two-word answer.
+
+MET — RR-0386 "Task-367: gates parked, handbook tests start fresh" — .cursor/MCFRONTEND-QUEUE.md:663 — row excludes "any fix of a live break (the two owned tab pushes, mobile/src/lib/maxbldHelp.ts:19), any other OWED row, the parked branch wf1/inc1b-gates (RR-0386)".
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — .cursor/MCFRONTEND-QUEUE.md:666 — "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52) ... so this row now owns it".
+MET — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — .cursor/MCFRONTEND-QUEUE.md:664 — "FE rows owned: FE-49, FE-51, FE-54." one bullet, exactly the three rows confirmed.
+MET — queue id rule "This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-99**" — .cursor/MCFRONTEND-QUEUE.md:5 — MF-98 row lands here and the line advances to MF-99 with MF-97 recorded held and MF-98 taken.
+MET — queue bullet form "Bullets never start with `- MF-` (that is the DONE-list form)." — .cursor/MCFRONTEND-QUEUE.md:663 — new bullets start "- Lane E.", "- FE rows owned", "- Dated note".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  100940ms (100.9s)
+📊 Tokens — total: 49757, input: 30037, output: 19720, reasoning: 18562

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:08:58.199Z file_sha256=4e09832df826a660dca8b8433444df3f70bf370109d5ad0e6100ee93c04ad361 prompt_sha256=3d6032998bf8b0c0d553921dfb6bb55a1fdfd94757dd60b7d39e31ae485511f1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p16.txt (model: deepseek-reasoner)
+
+MET — AC #2 — src/tests/surfaces/nav-tab-switch.logic.test.ts:139 "it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails'" and scope-fence.logic.test.ts:134 "it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit'" — red shown on planted defects and green on the clean tree by the A assertions.
+MET — AC #3 — pasted Implementation Notes "AC3 generate-surface-handbook --check exit 0" / "AC3 rule-lists page --check exit 0" — the no-check lists are regenerated and current, OWED count moves 20 to 19.
+MET — RR-0413 "yes to both A. Status flip." — scope-fence.logic.test.ts:1 "SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49" and nav-tab-switch.logic.test.ts:1 "FE-51" — the three rows flip to RULED with their tests.
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:34 "const ALLOW: Allow[] = [" with exactly two entries LAYOUT and TRACKED — exactly two named owned exceptions.
+MET — RR-0417 — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-51 left FLIP_PENDING after the operator said yes, FE-39 alone remains.
+REJECT — 11b.1 "Library imports are allowed only in the declared binding modules" — scope-fence appears to import "@/features/leads/api/envelope" — it is a control string inside an in-memory planted case, never a real module import; the file imports only node:child_process, node:fs, node:path, typescript, vitest.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  70958ms (71.0s)
+📊 Tokens — total: 41913, input: 26116, output: 15797, reasoning: 15308

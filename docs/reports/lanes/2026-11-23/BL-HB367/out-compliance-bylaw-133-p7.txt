@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:51:32.448Z file_sha256=0871f9e4e9ffb1fe01b0e799150c8725c7ea6c0c14672c08778440b7588a04e4 prompt_sha256=fe6febfc225165c77994c6ded703d74ba2a1ac09808eefb9259111c3f6d3487a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling, dated note 2026-11-23 fix round "fe.51 reads RULED with its two named, owned tab-push exceptions and leaves FLIP_PENDING" — src/tests/surfaces/handbook-rule-map.logic.test.ts:281 "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" — a BUILT_BY_367 row (FE-51 included) still passes C-T2 while reading OWED on FLIP_PENDING, a state RR-0417 removed, so the lock does not enforce the ruled end state — require r.status === 'RULED' for every BUILT_BY_367 row and assert its id is absent from FLIP_PENDING on the same case.
+
+DEFER severity=MED — lane acceptance record "Acceptance 3 now reads 19 (grep -c Status: OWED on Spec 136)" — src/tests/surfaces/handbook-rule-map.logic.test.ts:262 "expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);" — the floor resolves to 18 against an actual 19, so one further row silently flipping RULED (or one row leaving the register) stays green — assert the exact count (19) or subtract from the real baseline of 22, not the old 21 floor.
+
+DEFER severity=MED — fe.49 "No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:33 "const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];" — the gate adds /(app)/map as a banned prefix, a linkage the pasted clause text does not name, so a lawful MaxBLD map route in a declared file turns the fence red on an unnamed clause — drop '/(app)/map' or record it in the FE-49 dated note with its clause basis before the row reads RULED.
+
+DEFER severity=MED — fe.49 "lead_parcels is read by no surface" — src/tests/surfaces/scope-fence.logic.test.ts:15 "LIMITS (stated, not widened): declared files only, no import hop ... a server file a descriptor does not declare is not scanned." — FE-49 reads RULED on a gate that asserts "no surface" only over descriptor-declared files, so an undeclared server reader of lead_parcels is invisible to the check — either scan undeclared server files under the same fence (a listing without an import hop) or make this limit the FE-49 dated note that accompanies the RULED flip.
+
+DEFER severity=LOW — fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:22 "LIMITS (stated, not widened): a route held in a variable is missed" — the RULED lock leaves a push of a variable-held tab route undetected while the header alone carries the limit, and a comment is not a ruling — split the route-constant lookup so a variable initialised from PARCEL_TAB_ROUTE is followed, or attach the limit to the FE-51 dated note.
+
+MET — RR-0413 "the three handbook rows flip to RULED with their tests" — src/tests/surfaces/register-locks-resolve.infra.test.ts:30 "const FLIP_PENDING: readonly string[] = ['FE-39'];" with handbook-rule-map reading it "from that file's text, not copied" — one source for the OWED/FLIP_PENDING state across both locks.
+
+MET — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:36 "const ALLOW: Allow[] = [" holding exactly the two audited entries with "owed: MF-49/MF-50" and "owed: MF-51/MF-52" owners — the two exceptions are named, counted and owned.
+
+MET — Acceptance #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:135 "B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit" and nav-tab-switch B/B2 planted cases — each new lock carries a planted-defect red and a clean-tree green case.
+
+MET — Acceptance #1 "The gate list is confirmed by the operator before any gate is built" — pasted ruling "RR-0413 ... the operator confirms the three rows" with src/tests/surfaces/handbook-rule-map.logic.test.ts:265 "const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map(...)" — the built set is exactly the three operator-confirmed rows, nothing else.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  68734ms (68.7s)
+📊 Tokens — total: 45008, input: 31077, output: 13931, reasoning: 12739

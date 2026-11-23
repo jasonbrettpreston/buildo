@@ -1,0 +1,191 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:be488eb82b3e76b9cbe051728f1b70de83deafa8da5ee6d60ed558f643d7d184 part 1 of 1 chunk 2 of 2
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/scope-fence.logic.test.ts"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/scope-fence.logic.test.ts b/src/tests/surfaces/scope-fence.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bf1faea3adf0c57b72baf27bdd602ba52c27d8
+--- /dev/null
++++ b/src/tests/surfaces/scope-fence.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49 (Spec 136 §fe.49)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.49 (Spec 128 R-03, 128:205):
++//   "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface."
++// TESTED, over the MaxBLD code and descriptors of the programme scope (scripts/surfaces/_schema/converted-surfaces.json
++// scope.programme_scopes, the manifest's own fence):
++//   (1) a string, template text or identifier that holds lead_parcels in any letter case (SQL folds case);
++//   (2) an import or export that names a lead screen (LeadDetail, lead-detail, FlightBoard, flight-board, LeadFeed, lead-feed, useLeadFeed,
++//       useFlightBoard, useLeadDetail, [lead], [flight-job]) in its module path or its bound names;
++//   (3) a route string that starts /api/leads, /(app)/[lead], /(app)/[flight-job], /(app)/flight-board or /(app)/map;
++//   (4) a descriptor table ref (inputs.tables, outputs.tables, evidence.tables) that names lead_parcels.
++// NOT BANNED: the shared API helpers @/features/leads/api/envelope and error-mapping, used by the three parcel routes
++// (src/app/api/parcels/lookup/route.ts, entitlement/route.ts, lot-size/route.ts); they are not lead screens.
++// The file set is the TRACKED .ts/.tsx files the in-scope descriptors declare (`identity.route` plus `x-draft.files`); comments are skipped
++// by the AST (mobile/src/hooks/useTrackedLots.ts holds one lead word, in a comment).
++// LIMITS (stated, not widened): declared files only, no import hop (one hop adds 64 files and false hits in shared mobile/src/lib/schemas.ts
++// and authStore.ts); a server file a descriptor does not declare is not scanned. The platform_shared standing exception (a notes string in
++// scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json, not a table ref) is outside the scope
++// fence; its record is the FE-49 dated note. Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const LEAD_TABLE_RE = /lead_parcels/i;
++const LEAD_SCREENS = ['LeadDetail', 'lead-detail', 'FlightBoard', 'flight-board', 'LeadFeed', 'lead-feed', 'useLeadFeed', 'useFlightBoard', 'useLeadDetail', '[lead]', '[flight-job]'];
++const LEAD_ROUTES = ['/api/leads', '/(app)/[lead]', '/(app)/[flight-job]', '/(app)/flight-board', '/(app)/map'];
++
++export interface Hit { file: string; line: number; what: string }
++type TableRef = string | { table?: string };
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string; route?: string };
++  programme?: { scope?: string };
++  inputs?: { tables?: TableRef[] };
++  outputs?: { tables?: TableRef[] };
++  evidence?: { tables?: TableRef[] };
++  'x-draft'?: { files?: string[] };
++}
++
++const readText = (rel: string) => readFileSync(join(ROOT, rel), 'utf8');
++const scope = (JSON.parse(readText(MANIFEST)) as { scope: { programme_scopes: string[] } }).scope;
++const namesLeadScreen = (s: string) => LEAD_SCREENS.find((n) => s.includes(n));
++const leadRoute = (s: string) => LEAD_ROUTES.find((r) => s.startsWith(r));
++
++/** Fence hits (1) to (3) in one source file. Pure: path and text in, hits out; one hit per offending node. */
++export function findFenceHits(rel: string, text: string): Hit[] {
++  const kind = rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kind);
++  const hits: Hit[] = [];
++  const hit = (n: ts.Node, what: string) => hits.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, what });
++  const str = (n: ts.Node, s: string) => {
++    if (LEAD_TABLE_RE.test(s)) hit(n, `lead_parcels text: ${JSON.stringify(s)}`);
++    else if (leadRoute(s)) hit(n, `lead route: ${JSON.stringify(s)}`);
++  };
++  const visit = (n: ts.Node): void => {
++    if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
++      const names = [n.moduleSpecifier.text];
++      if (ts.isImportDeclaration(n) && n.importClause) {
++        const c = n.importClause;
++        if (c.name) names.push(c.name.text);
++        if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      }
++      if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause)) for (const e of n.exportClause.elements) names.push(e.name.text, e.propertyName?.text ?? '');
++      const screen = names.map(namesLeadScreen).find(Boolean);
++      if (screen) { hit(n, `lead screen import: ${screen} from ${JSON.stringify(n.moduleSpecifier.text)}`); return; }
++      return; // the module path is checked above; its string is not a route or a table read
++    }
++    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);
++    else if (ts.isTemplateExpression(n)) str(n, [n.head.text, ...n.templateSpans.map((s) => s.literal.text)].join('${}'));
++    else if (ts.isIdentifier(n) && LEAD_TABLE_RE.test(n.text)) hit(n, `lead_parcels identifier: ${n.text}`);
++    if (ts.isTemplateExpression(n)) { n.templateSpans.forEach((s) => visit(s.expression)); return; }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return hits;
++}
++
++/** Fence hit (4): a descriptor table ref that names lead_parcels. Pure. */
++export function findDescriptorHits(rel: string, d: Descriptor): Hit[] {
++  const hits: Hit[] = [];
++  for (const k of ['inputs', 'outputs', 'evidence'] as const) {
++    for (const t of d[k]?.tables ?? []) {
++      const name = typeof t === 'string' ? t : t.table ?? '';
++      if (LEAD_TABLE_RE.test(name)) hits.push({ file: rel, line: 0, what: `${k}.tables names ${name}` });
++    }
++  }
++  return hits;
++}
++
++export function inScopeDescriptors(): Array<{ path: string; d: Descriptor }> {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => f.endsWith('.descriptor.json'))
++    .map((f) => ({ path: f, d: JSON.parse(readText(f)) as Descriptor }))
++    .filter(({ d }) => scope.programme_scopes.includes(d.programme?.scope ?? ''));
++}
++
++/** The tracked .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files), sorted. */
++export function declaredFiles(descs: Array<{ d: Descriptor }>): string[] {
++  const tracked = new Set(execFileSync('git', ['ls-files'], { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n'));
++  const out = new Set<string>();
++  for (const { d } of descs) for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  return [...out].sort();
++}
++
++describe('fe.49: the scope fence (Spec 128 R-03)', () => {
++  it('A. the real tree: no declared MaxBLD file and no in-scope descriptor links to the lead product', () => {
++    const descs = inScopeDescriptors();
++    const files = declaredFiles(descs);
++    const sources = files.map((f) => ({ rel: f, text: readText(f) }));
++    const hits = [...sources.flatMap((s) => findFenceHits(s.rel, s.text)), ...descs.flatMap(({ path, d }) => findDescriptorHits(path, d))];
++    const mobile = files.filter((f) => f.startsWith('mobile/')).length;
++    console.log(`fe.49: scanned ${files.length} files (${mobile} mobile) and ${descs.length} descriptors, ${hits.length} hits`);
++    expect(hits.map((h) => `${h.file}:${h.line} ${h.what}`), 'fe.49 (Spec 128 R-03, 128:205) lead linkage in MaxBLD code').toEqual([]);
++    // Today's counts (41 files, 20 mobile, 45 descriptors): a listing that silently shrinks turns this red; a rise needs no edit.
++    expect(files.length).toBeGreaterThanOrEqual(41);
++    expect(descs.length).toBeGreaterThanOrEqual(45);
++    expect(mobile).toBeGreaterThanOrEqual(20);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each linkage form gives exactly one hit', () => {
++    const cases = [
++      "import { useLeadFeed } from '@/hooks/useLeadFeed';",
++      "pool.query('SELECT * FROM lead_parcels');",
++      "pool.query('SELECT * FROM LEAD_PARCELS');",
++      "router.push('/(app)/[lead]?id=1');",
++      "fetch('/api/leads/feed');",
++    ];
++    for (const code of cases) expect(findFenceHits('planted.tsx', code), code).toHaveLength(1);
++    const desc = { path: 'planted.descriptor.json', d: { inputs: { tables: [{ table: 'lead_parcels' }] } } as Descriptor };
++    expect(findDescriptorHits(desc.path, desc.d)).toHaveLength(1);
++  });
++
++  it('C. controls: a comment, the shared envelope helper and a parcel-tool route give 0', () => {
++    const controls = [
++      '// lead_parcels',
++      "import { ok, err } from '@/features/leads/api/envelope';",
++      "router.push('/(app)/parcel-tool');",
++    ];
++    for (const code of controls) expect(findFenceHits('control.tsx', code), code).toEqual([]);
++    expect(findDescriptorHits('control.descriptor.json', { inputs: { tables: [{ table: 'parcels' }] } })).toEqual([]);
++  });
++});
+

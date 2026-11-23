@@ -1,0 +1,709 @@
+LIST surface-128 sha256:43cfba743a22d707ddab64116c7895afe6ba2d4708121f6a73f67cc5dde383d6 material sha256:9549047bf30347018a070d6d90475e1d5b317d8d55d10c4cfbf35ed8facfd4df part 1 of 2 chunk 2 of 3
+RULE LIST surface-128 (docs/specs/02-web-admin/128_surface_standard_policy.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/135_mcfrontend_decisions_register.md","docs/specs/02-web-admin/136_mcfrontend_handbook.md","scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json","scripts/surfaces/_schema/surface-rule-map.json","src/tests/surfaces/failure-state-declared.logic.test.ts","src/tests/surfaces/handbook-rule-map.logic.test.ts","src/tests/surfaces/nav-tab-switch.logic.test.ts"]
+
+# SPEC 128 — Surface Standard Policy (the durable half)
+
+> **Status: DRAFT** — authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation.
+>
+> **Placement note.** See Spec 126's header: a `docs/specs/04-platform/` folder is not supported by `scripts/generate-system-map.mjs:24-31`'s hard-coded `SECTIONS` allow-list (a directory absent from it is silently dropped — no throw) nor by `src/tests/system-map.infra.test.ts:49,300,325`. Filed as **`ASK-06`** below.
+>
+> ⚠️ **System-map coupling.** `docs/specs/00-architecture/00_system_map.md` **has been regenerated** as part of this change (`node scripts/generate-system-map.mjs`); re-run it whenever a boundary list changes.
+
+---
+
+
+## §1. Purpose
+
+Every surface in this estate is the same surface, except for its projection. Nothing about how a surface is gated, guarded, validated, metered, recovered or observed is a per-surface invention — it is a declaration chosen from a closed menu, and the schema, the engine and a small set of shape rules make every other answer either impossible to omit or impossible to hide. A surface author's discretion begins and ends at the projection.
+
+**This spec is the durable half** — the part that must still be true after the conversion programme finishes and the packaging Spec 127 describes is forgotten. Spec 126 is the contract; Spec 127 is the procedure; this is the policy, the ruling register, and the open asks.
+
+---
+
+
+## §2. The rules
+
+Thirteen rules, mirrored from Spec 124 §2 by `node scripts/violations/generate-spec-mirror.mjs`. The source rows are parsed from that spec, so this table cannot drift from it without `--check` failing. Each surface rule states what its pipeline ancestor becomes on a surface; the enforcement artifact for each lands in Phase 1 and is scored in Spec 127 §5's policy-coverage matrix.
+
+<!-- generated:mirror:128-rules -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: docs/specs/01-pipeline/124_step_standard_policy.md §2 (13 rules parsed).
+
+| # | Spec 124 rule (source text, abridged) | Source anchor | Surface rule | What it means on a surface |
+|---:|---|---|---|---|
+| 1 | Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 1 | **Nothing hidden** | no surface behaviour lives only in a component — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order. |
+| 2 | Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 2 | **The client is just glass** | the surface analogue of "compute is just compute", and it is not new: Spec 90 §3 already mandates Dumb Glass and already carves out optimistic UI by name. Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected. |
+| 3 | Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is al… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 3 | **Tunables externalized** | every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture — same registry, same presence/validity split (R-G). |
+| 4 | A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 4 | **Projection rule declared** | which fields render, in which order, with which labels, is a declaration the server owns — not a component's implicit knowledge. The measured defect: one contract declared at four sites, locked at one. |
+| 5 | `checks` may never be `"none"` — every step declares at least one. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 5 | **checks ≥ 1** | inherited verbatim; `checks` may never be `"none"` on any surface, contract or job. |
+| 6 | Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 6 | **Omission fails** | a category present with fields missing is the same "we forgot something again" the standard exists to answer. `"none"` is legal; silence is not. |
+| 7 | A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 7 | **Archetype gates categories** | the load-bearing operator ruling — a UI archetype selects a required-field profile, exactly as `identity.archetype` does at `scripts/steps/_schema/step.schema.json`. REPORT forces `outputs`/`state` to `"none"`; SLOT forces `disclosure`. |
+| 8 | A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 8 | **Per-target write discipline** | moves to CONTRACT with the vocabulary unchanged; a surface declares only its optimistic write and its rollback. |
+| 9 | A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (p… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 9 | **Banned write needs a ledger row** | a metered action with no `usage_events` row is the dead-meter defect repeating (`/api/leads/view`, 44 green tests, zero callers, an unreachable paywall branch). |
+| 10 | The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 10 | **Verdict row-derived** | a surface's check verdict is derived from its own audit rows, never a parallel boolean — inherited verbatim, including R-Q's severity split. |
+| 11 | A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1). | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 11 | **Render-order re-derive** | the phase-order analogue: when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched. |
+| 12 | A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why. | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 12 | **Truthful failure posture** | a surface declares what the user sees when it fails — the crash-posture analogue. An unhandled state is a FAIL, not a blank screen. |
+| 13 | A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track). | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 13 | **A surface validates itself** | ONE command generates the scorecard and the policy-coverage matrix from artifacts; a hand-written scorecard is not evidence. |
+
+**The rule about rules, inherited verbatim (Spec 124 §4.4):** *a rule without a lock is not yet a rule* — the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new.
+<!-- /generated:mirror:128-rules -->
+
+### §2.1 Rule 2's boundary, named once
+
+Rule 2 ("the client is just glass") is the one rule whose boundary must be written down rather than inferred, because "everything server-side" has five legitimate exceptions and a reviewer who cannot name them will either over-apply the rule or waive it. The five, declared per surface:
+
+1. **Device state** — GPS, push token, permission status. The server cannot know these.
+2. **Optimistic UI** — declared as `outputs.optimistic`, not improvised. Spec 90 §3 explicitly encourages it.
+3. **Offline cache** — the MMKV projection; a server-driven screen must still render with no network.
+4. **Animation / gesture** — Spec 99 §2.1's hard rule; orthogonal to layers 1–4.
+5. **Navigation position** — which route is mounted; `expo-router` owns it.
+
+Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date.
+
+### §2.2 Two rules with no pipeline ancestor — and the gates that enforce them
+
+The thirteen above are mirrored. Two more exist only here, because the surface estate has two properties the pipeline does not: a schema it *declares but does not generate*, and a projection that must render *identically to more than one target*. Each is stated as a rule so that Spec 127's gate has something to score.
+
+**Rule 14 — a declared schema is asserted against the live catalog, never against its own migration.** Every column, type, nullability, index and RLS policy a descriptor declares is proven against the introspected types and `pg_policies` / `pg_class.relrowsecurity` / `pg_roles`, in **both** directions: a column live but undeclared fails exactly as a column declared but absent does. Reading the migration text back is not an assertion — it is the declaration restated. *Enforced by:* Spec 127 gate **S-schema**, under `BUILDO_TEST_DB=1 npm run test:db`, each lock carrying a RED canary. *Violation reads as:* a red `surface-schema-drift` lock naming the column or policy and which side it was missing from.
+
+**Rule 15 — parity between render targets is a comparison, not a discipline.** A surface declaring more than one `render.targets[]` entry proves its projections equal on the shared field set, by golden comparison. "100% data parity between the web view and the exported document" was a promise in Spec 125 §7 and is a diff here. *Enforced by:* Spec 127 gate **S-parity**, over the golden PAIR. *Violation reads as:* a field present in one target's projection and absent or different in another's, named by the differential.
+
+Both rules are scored in Spec 127 §5's policy-coverage matrix alongside rules 1–13, and both are `PROSE-ONLY GAP` until Phase 1 lands their artifacts — which is the honest status, not a placeholder.
+
+### §2.2a McFrontend rules 16-20, and a real lock for Rule 15 (added 2026-11-04)
+
+Added by the McFrontend Phase 0 documents (prior text kept, M-246). Rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`; principles: Spec 126 §0a; register: Spec 135. Scope: the REPORT archetype now. Each lock is OWED until Phase 1, one lock per row in Spec 135. Task ids are the McFrontend queue's (`.cursor/MCFRONTEND-QUEUE.md`).
+
+| Rule | Text | Lock (OWED until Phase 1) |
+|---|---|---|
+| **16 Single source** | A REPORT surface displays values read from the contract; it does not add, subtract, round or compare to produce a displayed number. Formatting is the only transformation, from one named helper with its own test (output = input digits only). | `src/tests/surfaces/report-no-maths.logic.test.ts`: an AST scan of EVERY file under the projection dirs AND the generator; bans arithmetic BinaryExpression, `Math.*`, `reduce`, `Number()`/`parseFloat` on field values, numeric literals other than 0 and 1 outside the formatter; allow-lists the formatter by name; plus a generator pass-through check (output value = catalogue value). One RED fixture per bypass. |
+| **17 Honest display** | Status words come from the closed list (Spec 126 §11a.3). `at_least` renders "at least"; a required disclosure renders; `not_modelled`/`not_evaluated` render as such. The renderer throws on an unknown field or status. | `src/tests/surfaces/report-honest.logic.test.ts`: oracle = the catalogue flags (at_least, not_modelled, not_evaluated, required disclosure): for each flagged row the real per-target output contains the marker. Plant: drop "at least" from renderer output. |
+| **18 Performance budget (REPORT)** | REPORT declares a payload limit (and load) in protected archetype data, tighten-only. Load time is PROSE-ONLY. The numbers are measured first, then ruled (operator "QMf5 a"; Spec 126 §11a.8). | `src/tests/surfaces/budget.infra.test.ts`: payload bytes on golden fixtures <= limit; RED fixture = padded payload. |
+| **15 Parity (existing) gets a real lock** | Rule 15 above says parity by golden comparison, and the paragraph after it admits PROSE-ONLY GAP. Lock: compare what each target actually emits (React Native test-renderer text, server-rendered DOM text, admin render, extracted PDF text), each normalised to `{field, label, value, status, confidence, provenance, disclosures}`, over the WHOLE declaration; any per-target difference fails. A comparison of one builder's tree does not count. | `src/tests/surfaces/parity.golden.test.ts`; RED fixture: change one value in ONE real target's output (one RED per target, admin included). |
+| **19 No hand-written scenario field** | Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern). | `src/tests/surfaces/report-generated-only.infra.test.ts` (a hand edit of generated output: `--check` red) |
+| **20 Binding** | Every displayed field's `source` is in the closed set (Spec 126 §11a.1): catalogue row id, content id, input-contract id, ad-contract id, declared external embed. The set is in a protected file; adding a member needs a register row and a panel. | `src/tests/surfaces/report-binding.logic.test.ts`; RED fixture: a node with an invented field. |
+
+Principle map: 1 = rules 1, 19; 2 = §4.4, rule 14, surface-validate; 3 = 18; 4 = 16; 5 = 17; 6 = 15; binding = 20.
+Canary b = three checks: generator `--check` (hand edit), the Rule 20 lock (invented field), the Rule 16 AST numeric-literal scan. Arm L (literal-scan) is not used for surfaces.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): Rule 16's scope gains the binding modules listed in `scripts/surfaces/_schema/bindings.json` (`modules`): the FE-05 lock reads them as files and fails closed (card §2.4 "No maths (FE-05) | binding modules"). Formatting stays server-side; a comparison-only client sort over a declared `sort_field` stays legal.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-23 · McFrontend queue · lane T; operator, verbatim: "all approved as recommended", MF-23 D-3; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: all as recommended (summary list)", item 4): Rule 17's oracle is "the catalogue flags". Measured at 34b5ff12c: the generator `seed-report-v2.mjs` emits no flag, no `at_least` marker and no disclosure code, and `report-presentation.json` `disclosure_texts` holds no codes, so a flag-driven oracle cannot yet be built. Until the flags exist, canary a ("a-now", `src/tests/surfaces/mcfront-proof.infra.test.ts`) plants the named defects (drop "at least"; drop a disclosure) in a temp copy and requires shipped locks to go red. Measured red: the at_least leg in `report-render.logic.test.ts` and `report-generated-only.infra.test.ts` (the golden compare; `parity.golden.test.ts` and `report-honest.logic.test.ts` read the stored golden tree and stay green); the disclosure leg in `parity.golden.test.ts` and `report-view.ui.test.tsx`. The oracle is the shipped locks and the golden compare, not the catalogue flags. The disclosure leg runs on synthetic trees only. Corrected 2026-11-09 after the MF-23 OUTPUT panel (the first wording named the honest and parity locks). What is NOT proven: the link from a catalogue flag to its marker. That is card MF-23-F1 (`.cursor/MCFRONTEND-QUEUE.md`). The table cell above is unchanged.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-16 · McFrontend queue · lane T; operator, verbatim: "2. MF-16 approved provided its ocmplaint", D-2 a; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): Rule 16 says the scan covers "EVERY file under the projection dirs AND the generator". Scope of the `report-no-maths` scan: the three projection directories, `src/lib/surfaces/report/`, `src/components/report/` and `src/app/admin/report-preview/`, found by directory walk. "The generator" means code that produces a displayed value. `scripts/surfaces/seed-report-v2.mjs` emits declarations, not displayed values (its hits are array indices, an indent and source notes), so it is outside the scan. The value pass-through (output digits = input digits) stays pinned by the runtime test in `report-render.logic.test.ts`. No formatter is allow-listed because none is named and the projection files hold no numeric operation. If a generator ever produces a displayed value, it joins the scan.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-38 · McFrontend queue · lane MF-38; operator, verbatim: "0-1 b"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-38 O-1"; plan `~/Buildo-scratch/mcfrontend/MF-38/plan.md` with `plan.delta-1.md`): Rule 16: the FE-05 scan also covers `src/lib/surfaces/report-images/` (the pure image selection: comparisons only; the frontage edges are injected `logic_variables` values, never literals). Rule 15: the image node is identical in the tree on every target and every target renders the same one image; the FE-07 parity lock compares the image leg too.
+
+### §2.3 Archetype variance
+
+The Spec 124 §3 variance table has a surface analogue: `✓` = must answer per the archetype's required-field profile, `N/A` = the profile forces `"none"`. The full table is generated per archetype from `surface.schema.json`'s `allOf` blocks once Phase 1 lands, on exactly the mechanism Spec 126 §3 mirrors. Until then, the per-archetype MUST/MUST-BE-`"none"` columns in Spec 126 §3.1–§3.3 are the register of record.
+
+---
+
+
+## §3. Budget and refresh rules
+
+**Rule B1 — the descriptor budget is declared before commit 1, and it is a kill criterion.** No descriptor in this repo is under 200 lines; the smallest real one is **388** (`scripts/compute-centroids.descriptor.json`), the largest **8,225**. Fifty-three surfaces at 388 lines is ~20,000 lines of declaration. The archetype required-field profiles are the only mechanism that prevents 53 × 400 lines of `"none"`. **If the pilot descriptor lands over ~250 lines, the profile design is wrong** — that is a stated kill criterion, not a retrospective observation.
+
+**Rule B2 — a proposal to add a declaration carries its measured cost, and the operator rules.** The pipeline's P3 discipline, inherited: every added box, declared check or audit row costs per surface × per render × per user. Visibility wins by default; the cost is *stated*. The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size), never hand-computed once and forgotten.
+
+**Rule B3 — a declared check's READ cost is part of its price, stated against the target it actually runs on.** The EP-D17 extension, inherited and load-bearing here: five `enrich_parcels` post-checks declared `cost_ms` of 180–260 ms from a single local golden sample while the same queries measured 568,601–573,235 EXPLAIN cost against the production heap — and cloud-measured 16–30 s on a vacuumed heap versus 40+ minutes against 1.35M dead tuples, a 150× cliff keyed on heap state alone. **A number an author wrote down once and nobody re-checked is not a cost.** Every surface check that queries pairs a declared ceiling with a per-entry `duration_ms` audit row.
+
+**Rule B4 — goldens refresh on fingerprint, never on request.** A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment.
+
+**Rule B5 — the register is refreshed at every cutover, not periodically.** A `§R Reflection` section is required after every conversion's cutover (Spec 127 gate S9, binary): a low-confidence table and a recurring / standard-shaping table. The second feeds §4.6's promotion criterion. A ruling with no recurrence claim stays a ledger row.
+
+**Rule B6 — the pre-batch rule. → §5 R-12 is the single home; this is a pointer, not a second statement.** An unaudited admin mutation blocks conversion of the surface that calls it. Measured: **9 of the 15 mutating admin routes write no `admin_audit_log` row**, including `control-panel/configs` **PUT**, which rewrites `logic_variables` plus three more tunable tables. `src/lib/admin/admin-audit.ts`'s own header calls an unaudited admin mutation *"a compliance hole"*, and the mechanism to close each one already exists and is centralised. Closing them is independent of every Spec 126 decision and gets more expensive once the routes are regenerated. **Status: ACCEPTED at R-12** (decided by the measurement plus `admin-audit.ts`'s own header, not by this pass).
+
+---
+
+
+## §4. When the policy is unclear — the ruling protocol
+
+Inherited from Spec 124 §4 without modification. The steps, mirrored:
+
+<!-- generated:mirror:128-register-shape -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: docs/specs/01-pipeline/124_step_standard_policy.md §4 (7 protocol steps) + §5 (register columns).
+
+**Register columns, mirrored from docs/specs/01-pipeline/124_step_standard_policy.md §5:** `#` · `Ruling (one line)` · `Amends` · `Full text` — plus one column this register adds, **`Lock`**, because Spec 124 §4.4's "a rule without a lock is not yet a rule" was prose there and is a COLUMN here.
+
+| # | Step of the ruling protocol (source, abridged) | Source anchor | Applies here as |
+|---:|---|---|---|
+| 1 | An agent pass (or a reviewer) **discovers** the ambiguity and proposes a disposition, using the closed Intent Ledger vocabulary (`preserved-in-runner \| preserved-in-validator \| preserved-in-compute \| encoded-as-descriptor-field \| encod… | docs/specs/01-pipeline/124_step_standard_policy.md §4.1 | verbatim — this register inherits the protocol unchanged |
+| 2 | **A different party adjudicates — never the pass that discovered it.** This is a **policy rule**, not merely a procedure step (Spec 123 §7.1, restated here per R-I.3): the same pass may never both discover a fence/ambiguity and rule on its… | docs/specs/01-pipeline/124_step_standard_policy.md §4.2 | verbatim — this register inherits the protocol unchanged |
+| 3 | The ruling is recorded in **§5's Register of rulings** with an id, the statement, and what it amends. | docs/specs/01-pipeline/124_step_standard_policy.md §4.3 | verbatim — this register inherits the protocol unchanged |
+| 4 | **A rule without a lock is not yet a rule** — the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new) proving it. | docs/specs/01-pipeline/124_step_standard_policy.md §4.4 | verbatim — this register inherits the protocol unchanged |
+| 5 | If the ruling changes what §2 says generically (not just for one step), this spec is amended in the same commit as the lock — a ruling that only lives in a pilot report or a defect-ledger row has not yet reached policy. | docs/specs/01-pipeline/124_step_standard_policy.md §4.5 | verbatim — this register inherits the protocol unchanged |
+| 6 | **Promotion criterion — pilot-local → estate-wide.** A ruling stays pilot-local (a Defect Ledger row, `<PREFIX>-D<n>`) until it is **expected to recur in another archetype** — that expectation is what promotes it into this register as a le… | docs/specs/01-pipeline/124_step_standard_policy.md §4.6 | verbatim — this register inherits the protocol unchanged |
+| 7 | **A document move or consolidation this protocol produces is verified by a line-set diff before commit (R-I.4)** — every non-empty moved line found verbatim in the destination, nothing dropped; a mismatch is filed as a defect, never silent… | docs/specs/01-pipeline/124_step_standard_policy.md §4.7 | verbatim — this register inherits the protocol unchanged |
+<!-- /generated:mirror:128-register-shape -->
+
+### §4.7a ⚠️ Specs 126, 127 and 128 cannot ground each other
+
+Stated here because the protocol above makes it load-bearing. All three specs were authored in **one WF1 pass**, on one date, by one author. §4's step 2 — *a different party adjudicates, never the pass that discovered it* — is a **policy rule** (Spec 124 §4.2, restated per R-I.3), so **a §5 row whose `Amends` cell points only at Spec 126 or 127 is citing its own author.** That is not disqualifying, but it changes what the register is worth for such a row: the value is **the lock, not the rule**.
+
+Two consequences, applied throughout §5:
+
+1. Every `ACCEPTED` row names a **deciding source outside this pass** — a ratified spec, an executed code fact, a prior operator ruling, or law. A row that cannot name one is `PROPOSED`, however obviously right it looks.
+2. `Lock` cells are honest: none resolves yet, so **no row reads `BUILT`** (§4.8). `ACCEPTED` means the decision is made and not re-litigated; it does not mean the rule is enforced.
+
+### §4.8 The BUILT-evidence lock (this register's own addition)
+
+**Adopt the resolver, not just the table.** `src/tests/programme-backlog.infra.test.ts`'s `evidenceResolves()` passes only if an evidence token is a real path (`file:line` allowed) or a `git cat-file -e`-resolvable object, with a **RED canary asserting that `'trust me'` fails**. Two commits on this branch (`fc08ff8d`, `b9e3ba8c`) exist solely because evidence strings failed that resolver at pre-push.
+
+Therefore, in this register:
+
+1. The **`Lock`** column is not prose — it holds a path, a `file:line`, or a commit SHA, and it is resolved mechanically.
+2. A row may not read `BUILT` unless its `Lock` resolves. A ruling whose lock does not resolve reads `PARTIAL` at best.
+3. The same commit that records a ruling adds its both-directions test. **A rule without a lock is not yet a rule** — which is why `Lock` is a column here and was prose in Spec 124.
+4. Ask rows (§6) carry a recommended default and a reversibility note, never a lock — an Ask is not a ruling.
+
+### §4.9 The six-principle check (McFrontend, added 2026-11-04) — FE rows only
+
+A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions, one per Spec 126 §0a principle: Declared, Proven, Fast, Single source, Honest, Same everywhere, each `pass`, `n/a (reason)` or `FAIL`; a FAIL row is not RULED. It applies to FE rows only; R-rows moved later are not re-checked (deferred).
+
+### §4.10 Status vocabulary and one lock per row (McFrontend, added 2026-11-04)
+
+The McBylaws gate's `statusOf` (`scripts/analysis/mcbylaws/cite-parse.mjs:57-70`, comment at :67, read at `ac9200aa8`) maps RETIRED/SUPERSEDED/WITHDRAWN to RETIRED; PROPOSED; a leading `OWED` or `OWED:`/`OWED ->` anywhere to OWED; else RULED. Spec 135 words: `RULED <date>`, `PROPOSED`, `RETIRED`, `OWED`. The form `RULED <date>. **OWED:** x` reads OWED (not RULED) to arm C; an OWED marker is never written with zero lock paths (it would be permanently uncitable). A row that is ruled and whose lock is not yet built reads OWED with its lock path.
+
+One lock per register row (multi-lock rows are split). `lockLands` uses `some` (`cite-arms.mjs`); changing it to `every` is NOT proposed (it would change McBylaws gate behaviour).
+
+### §4.11 What arm C needs before it judges FE rows (all code changes WAIT for the named freeze lift; McBylaws owner review)
+
+A change list, written now; no code lands with it.
+
+1. **Register list:** `CITE_INPUTS.registers` (`gate.mjs:31-34`, three paths). Add 135. `citeInputs` returns null if any file is missing (`gate.mjs:106-113`); the caller substitutes the empty sentinel (`gate.mjs:198-199`, :269, :323); fail-closed comes from `sentinelsOk` in cite-arms.mjs `run` (needs M-361, LC-15 owed and M-180 RULED), and only for commits touching a layer23 path. Arm C reads the PARENT (HEAD) and the index: Spec 135 must land in an EARLIER commit than the registers-array change (the same commit is not enough).
+2. **Row form:** `parseRegisterRows` (`cite-parse.mjs:78-91`), `ROW_HEAD_RE` at :13; id `[A-Z]{1,2}-\d+`; the first id wins (:85). FE-nn and R-nn both match.
+3. **Status and locks:** status = the LAST pipe cell (`lastCell`, `cite-parse.mjs:41`); locks = backticked paths ending .test.ts/.tsx/.mjs (`locksOf`, :44-55). The OWED exception also needs the lock added or modified in the SAME commit AND a new file under docs/reports/red-evidence/ (existence only).
+4. **Ids and trailer:** `ID_RE` (`cite-parse.mjs:8`): add `FE-\d+`. `TRAILER_RE` (:9): accept `McFrontend-Task: MF-n`.
+5. **Prereg machinery:** `prereg-<task>-<k>.json` under scripts/analysis/bylaw-validation/coa-expected/ with non-empty `rules[]`, each RULED; the task shape is `MB-\d+`: change `prereg-name.mjs` and `PREREG_RE` (cite-arms.mjs `findPrereg`) to accept MF-n.
+6. **Policy:** surface paths (`scripts/surfaces/**`, `src/lib/surfaces/**`, `src/tests/surfaces/**`) are NOT layer23 today, so gate `staged()` returns [] and arm C never runs on them. Until Phase 1 opens, put them in `pending_globs`/held (hold.mjs) so a commit is refused (this makes FE-01 mechanical); at Phase 1 open move them to `layer23` (`paths.mjs:9, :100`). Add the FE register and golden dirs to `protected`.
+7. **Arm Q** (`mcbylaws-queue-check.mjs`): hard-wired to `.cursor/MCBYLAWS-QUEUE.md` and `MB-nn`. Parameterise the queue path and id prefix; convert the MF queue to the heading+status+@sha form; add: a DONE MF task whose FE row is still OWED is refused (MF-24). Dated note 2026-11-09 (M-246, prior text kept; MF-34; operator, verbatim: "approve D-1 - D-8 as recommended"): the refusal is built in `mcbylaws-queue-check.mjs` (Q6, MF prefix only). A DONE heading in `.cursor/MCFRONTEND-QUEUE.md` must hold one `- FE rows owned: none.` or `- FE rows owned: FE-nn, FE-mm.` bullet; a listed row that is OWED, or absent from Spec 135, fails (`FAIL:Q:done-fe-owed`, `done-fe-unknown`; a missing bullet is `done-fe-undeclared`); an unreadable Spec 135 is `cannot-decide`. The done-condition is that a DONE task DECLARES an OWED row; whether a declaration is complete is judged at the McBylaws owner review (follow-up MF-34-F1). The check re-judges every DONE heading at the tip. Arm Q runs only on a push that touches the MF queue or a surface path, so a push that edits only Spec 135 is not re-judged.
+8. **Hooks and CI:** `.husky/pre-commit` + test.yml: `surface-validate.mjs --check`, generator `--check`, handbook `--check` lines (.husky/* is protected: panel arm P + APPROVED). Add a CI step in test.yml that runs the `*.db.test.ts` locks (npm test and pre-push exclude them).
+9. **Lock-must-run:** `register-locks-resolve` fails an OWED/RULED lock that is a `.db.test.ts` and is not named in a CI step.
+
+Order: Spec 135 landed first; then the gate changes; then the policy globs flip from held to layer23. Not changed: `lockLands` some/every. The pre-push summary may print the count of OWED FE rows: visibility, not a lock.
+
+> Dated note 2026-11-06 (M-246, prior text kept; operator answer to the McFrontend opening decision list D-1..D-9, verbatim "yes. proceed", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; map `~/Buildo-scratch/mcfrontend/phase1/opening-map.md`). How items 1-7 are built (MF-17 early gate batch and MF-24a; the McBylaws verdict of every MB-trailer commit stays unchanged):
+> - **Item 6 (D-2 b).** The surface paths go in a separate, optional policy list `frontend` in `mcbylaws/protected-paths.json`, not in `layer23`. Arms H, C, P, the push prompt and arm Q read it (`paths.mjs isFrontend`); `classify` and the McBylaws loop gate (`loop-oracle.mjs loadLayer23`) do not, so `layer23` keeps meaning by-law code (R-LI). `pending_globs` only exempts a glob from the dead-glob lint (it refuses nothing); the earlier words "so a commit is refused" did not hold (opening map finding 2). The flip fills `frontend` after the gate code lands (D-1 b).
+> - **Item 1.** Spec 135 is read into a second row set (`feRows` = the three registers, then 135) used only by the McFrontend judgement; `CITE_INPUTS.registers` stays three paths, so a rev without 135 changes nothing for a McBylaws commit. A missing 135, or a 135 parse without FE-01, makes the McFrontend judgement cannot-decide.
+> - **Item 4.** `ID_RE` and `TRAILER_RE` are unchanged; `parseFrontendMessage` reads `McFrontend-Task: MF-n` and the `FE-n` ids for the McFrontend judgement only. A surface path needs the MF trailer: a McBylaws trailer never passes it (opening map finding 3); a commit with both kinds of path needs both judgements and both panel records (`docs/reports/panels/MF-n.json`, D-3).
+> - **Item 5.** `PREREG_FORM_RE` and `parsePreregName` stay McBylaws-only (the loop imports them); `MF_PREREG_FORM_RE` reads `prereg-MF-n-k.json` in the same directory, newest k only, with no legacy-name fallback. An MF prereg added alone is the R-LE(a) bootstrap commit, as for McBylaws; the McBylaws legacy scan never reads a `prereg-MF-` file.
+> - **Item 3.** Unchanged (`lockLands` some; red evidence is existence of a new file): a cite of an OWED FE row is refused unless its lock lands with red evidence in the same commit.
+> - **Item 7 (D-9 b).** MF-24a: arm Q takes a queue path and an id prefix; the McFrontend queue is in the heading form; arm Q reads it at push and CI for a range that changes it or a surface path. The OWED-FE refusal is MF-34.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-76 · McFrontend queue · lane E; operator, verbatim: "Wow this looks great! 1. y 2. add not legal advice as well. 3. keep it 4. I think we need subscription boxes ..." (landing v9 rulings), "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y" (D-1 a, D-2 a, D-5 a, D-6 a), "3 y" (D-3 a) and "you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios"; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md` ("Operator round (2026-11-11 ~15:45)" and the rulings after it); plan `~/Buildo-scratch/mcfrontend/MF-46/plan.md` v3 (§3, §12, §13, §13a, §13b)). **§4 escalation, ruled (D-2 a): a STATIC page may read declared stored values on the server.** `scripts/surfaces/_schema/surface.schema.json` describes STATIC as "content or a redirect, with no data fetch"; the MaxBLD landing (`web_landing`) shows counts, allowances and a sample built from data. The ruling: a STATIC page's values are content templates with one `{value}` slot filled on the server with a server-formatted string (FE-05; the FE-35 pattern), each from a DECLARED server read named in the page table (`scripts/surfaces/_schema/static-page.json`, a part's `value`) and listed by the page's server module (`src/lib/surfaces/maxbld-landing.ts` `LANDING_READS`). No API contract and no client fetch; the closed render vocabulary is not widened (the descriptor says `inputs.answer: app_outputs`, the stored row a pipeline step writes, plus `config.logic_variables`). A read that throws, a missing stored row, a zero value or an out-of-bounds setting leaves its part out on the server (logged, never a 500, never a partial group); the binding never skips a part silently (a missing value throws). Register row: Spec 135 FE-37. Lock: `src/tests/surfaces/web-landing.logic.test.ts` (with `src/tests/surfaces/web-landing.ui.test.tsx`); red evidence `docs/reports/red-evidence/MF-76/landing-red.txt`.
+
+> Dated note 2026-11-15 (M-246, prior text kept; MF-19 · McFrontend queue · lane MF19-B; operator, verbatim: "R-1 thru R-6 recommendations approved" (MF-19 plan v3 R-1..R-6, 2026-11-15) and the amendment "b" (2026-11-14: the entry is width (frontage) + depth with one ft/m switch, plus the link "My lot isn't a rectangle — enter the area instead"); record `~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md` and `~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`): the closed part-role list of the report page's sheet section (`scripts/surfaces/_schema/report-page.json` "roles", closed per section kind, fail closed) grows by one role, `link`: a text part that names a link inside the sheet. Reason: the ruling requires a link ("My lot isn't a rectangle — enter the area instead") and no existing role carries one; a `cancel`-style button would mislabel the part (R-3 (a)). Method (the closed-list growth precedent, §4 steps 1-4): the plan panel (`~/Buildo-scratch/mcfrontend/MF-19/panel-v3/record.md`, Spec lens finding 1) required this note before the role is built; the operator ruled it (R-3 (a)); the lock is the report-page roles test and the sheet goldens, red first. The `link` part is text only: it carries no href and no action in the page tree (the sheet's client island swaps the form when the form is mounted: MF-44 web, MF-48 mobile). The sheet's two unit roles `unit.sqft` and `unit.m2` become `unit.ft` and `unit.m` in the same change (the entry takes width and depth in feet or metres).
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+index 1cd71f760c4362f4b0933f3e849aa1d3fd754645..3fa53d8147f7c92d5e3073b1557bdd7fb582f4af 100644
+--- a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
++++ b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+@@ -68,12 +68,12 @@
+ | FE-46 | Libraries. "the web library is Mantine 8.3" with `@rjsf/mantine` and `mantine-datatable` (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it. | 126 §11b.4 (126:1005, :1006, :925, :75) | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 2 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/ui-library-set.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-31 checks the listed binding modules only. |
+ | FE-47 | Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" (128:30, Rule 3). "All tunables are data; zero thresholds in `src/`." (126:189, admin principle P4, 126:180). | 128 rule 3 (128:30); 126:189 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 3 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/tunables-are-data.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. The schema requires config.debounce_ms on SEARCH only. |
+ | FE-48 | Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence. | 126 §0b item 8 (126:79); FE-31 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 4 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks the first sentence today. |
+-| FE-49 | The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. `lead_parcels` is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147). | 128 R-03 (128:205); 126:140, :147 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 5 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. R-03 stays ACCEPTED in Spec 128 until MF-31 moves it. Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock. |
++| FE-49 | The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. `lead_parcels` is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147). | 128 R-03 (128:205); 126:140, :147 | D pass, P pass, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 5 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/scope-fence.logic.test.ts`<br>OWED `src/tests/surfaces/scope-fence.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. R-03 stays ACCEPTED in Spec 128 until MF-31 moves it. Known standing exception: a platform_shared contract descriptor note already names lead_parcels (REPORT-429 section 3A item 5); task-434 meets it when it builds the lock.<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. The platform_shared standing exception is outside the lock (the fence is converted-surfaces.json programme_scopes; the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433), so it stays out of the scope-fence test with this note as its record, and a widening of the test to platform_shared is a later batch row of task-367. The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-50 | Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same `parcel_tool` entitlement" (queued as MF-70); "the later operator ruling governs". | 126:928; 126:1120 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 6 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/auth-checkout-hosted.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks this today. |
+-| FE-51 | Navigation extras that FE-36 does not state. "A tab switch uses `navigate`, not `push`." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists. | 126 §0b item 11 (126:82); FE-36 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 7 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule. |
++| FE-51 | Navigation extras that FE-36 does not state. "A tab switch uses `navigate`, not `push`." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists. | 126 §0b item 11 (126:82); FE-36 | D pass, P pass, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 7 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0417), the lock landed in the MF-98 work commit and the flip rides its fix commit. Lock: `src/tests/surfaces/nav-tab-switch.logic.test.ts`<br>OWED `src/tests/surfaces/nav-tab-switch.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. FE-36's nav-by-route lock covers the rest of the rule.<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); RR-0417, operator, verbatim: "yes. worktrees removed" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2134`), put to him as: "may FE-51 read RULED with its two named exceptions, yes or no?"; Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" and the PROSE-ONLY words in the rule cell are prior text: the lock now checks the tab-push half. Two tab pushes stay in the lock as named, owned exceptions, each removed with its fix: mobile/app/(app)/parcel-tool/_layout.tsx (NAV-AUDIT #1; MF-49/MF-50) and mobile/app/(app)/parcel-tool/tracked.tsx (NAV-AUDIT #12; MF-51/MF-52), as FE-36 reads RULED with its named exceptions. Not in the lock: a route held in a variable, and the web half (no tab bar today). The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-52 | The two parcel ids have two names. "`parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal); `parcel_pk` = `parcels.id` `SERIAL`." and "`usage_events.subject_kind` is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's `parcelId` = `parcels.parcel_id` = `parcel_ref`" (126:1238, §14). | 128 R-04 (128:206); 126 §7, §3.4, §14 (126:1238) | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 8 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/parcel-id-names.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Spec 128 marks the R-04 lock pending and R-04 stays ACCEPTED there until MF-31 moves it; nothing checks UI or route code. |
+ | FE-53 | POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling. | 126 §11b.3 (126:963), §11b.7 (126:1032) | D n/a, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 9 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/page-set-pointer.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. The page rulings are pinned only where a page test exists. |
+-| FE-54 | A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39). | 128 rule 12 (128:39); FE-28, FE-31 | D pass, P owed, F n/a, S pass, H pass, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 10 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/failure-state-declared.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Goldens per declared state exist for converted surfaces only (FE-31). |
++| FE-54 | A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39). | 128 rule 12 (128:39); FE-28, FE-31 | D pass, P pass, F n/a, S pass, H pass, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 10 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: `src/tests/surfaces/failure-state-declared.logic.test.ts`<br>OWED `src/tests/surfaces/failure-state-declared.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Goldens per declared state exist for converted surfaces only (FE-31).<br>Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`); Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). The lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. The lock is declaration-only for contract readers in programme scope and the error state only; 32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged, and 8 of them (6 estate_other, 2 platform_shared) would fail the finder today; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open). The Six cell read P owed before this note; the lock is proven red and green (docs/reports/reviews/task-367/red.out), so P reads pass. |
+ | FE-55 | The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1). | 126 §2.2.1 P1 (126:186); FE-05, FE-11 | D pass, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 11 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/admin-same-descriptor.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Nothing checks it today. |
+ | FE-56 | Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6). | 128 rule 4 (128:127, :150); 127:59; FE-03 | D n/a, P owed, F n/a, S pass, H n/a, E n/a | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 12 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/lock-planted-defect.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Today only the red-evidence file is checked, for an OWED flip. |
+ | FE-57 | Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists. | 126 §4 row 24 (126:351); 00_engineering_standards.md:14; FE-31 | D pass, P owed, F n/a, S pass, H n/a, E pass | Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item 13 of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new. | OWED `src/tests/surfaces/a11y-category.logic.test.ts`; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation. Labels, dark-mode tokens, safe-area and reduced-motion have no check. |
+diff --git a/docs/specs/02-web-admin/136_mcfrontend_handbook.md b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+index fc0600d5a95739878486da6f852849b086b574ba..6e7a0e9ff375af57da02c5a76dd1c865ba2f00f9 100644
+--- a/docs/specs/02-web-admin/136_mcfrontend_handbook.md
++++ b/docs/specs/02-web-admin/136_mcfrontend_handbook.md
+@@ -25,7 +25,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+ 
+ **What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
+ 
+-**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
++**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline (then, where the row has one, its Current reading: lane text restating the row's dated notes, never a ruling), the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+ 
+ **Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
+ 
+@@ -176,13 +176,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+ 
+ - **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+-  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+ 
+ - **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+   Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+ 
+ - **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+-  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+ 
+ - **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+   Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+@@ -191,7 +191,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
+   Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+ 
+ - **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+-  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
++  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+ 
+ - **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+   Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..457c47f1ed125462eb7111eb17aaa63ed90185b1
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-98-1.json
+@@ -0,0 +1,88 @@
++{
++ "$comment": "Pre-registration, task MF-98 (COMPLY.3, task-367: three tests for McFrontend handbook rules no machine checks, fe.54 failure state declared, fe.49 scope fence, fe.51 tab switch; the register rows whose flip the operator approved read RULED; Spec 136, the rule map and the rule-lists page regenerated; tests and documents only), prereg 1, committed alone and first, before the MF-98 work commit. Pre-registered moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-96 prereg total (the newest prereg). rules[] holds RULED rows only: FE-09 (register locks resolve), FE-10 (the generator lives in the spec; handbook lock), FE-16 (Spec 136 is the generated handbook), FE-36 (navigation is a route; the tab-switch lock sits beside its lock). The rows this task locks are OWED at this commit and are never cited. In-file round 203 (claimed in ~/Buildo-scratch/ids/round-203; MF-96 used 201, task-442 holds 202).",
++ "schema": "coa-round-prereg-v1",
++ "round": 203,
++ "task": "MF-98",
++ "rules": [
++  "FE-09",
++  "FE-10",
++  "FE-16",
++  "FE-36"
++ ],
++ "plan_ref": "backlog task-367 Implementation Plan (PLAN-367-v1 as folded after plan review round 1, sections 3 and 6); docs/reports/reviews/task-367/GROUNDER-PLAN.md, QUESTIONS-RULED.md, FOLD-CHECK.md; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913, :1930, :2108",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/surface-rule-map.json b/scripts/surfaces/_schema/surface-rule-map.json
+index f68da2c4fb70787e6346ab1fd46f1c83e60d48a8..d777bec35efbd61e31fb654275f755e86916970d 100644
+--- a/scripts/surfaces/_schema/surface-rule-map.json
++++ b/scripts/surfaces/_schema/surface-rule-map.json
+@@ -793,7 +793,7 @@
+     {
+       "id": "FE-49",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.49",
+       "source": {
+         "register": true,
+@@ -815,7 +815,7 @@
+     {
+       "id": "FE-51",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.51",
+       "source": {
+         "register": true,
+@@ -848,7 +848,7 @@
+     {
+       "id": "FE-54",
+       "kind": "fe-row",
+-      "status": "owed",
++      "status": "active",
+       "handbook_line": "fe.54",
+       "source": {
+         "register": true,
+diff --git a/src/tests/surfaces/failure-state-declared.logic.test.ts b/src/tests/surfaces/failure-state-declared.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd228607eae155a765d192059b644c704be91090
+--- /dev/null
++++ b/src/tests/surfaces/failure-state-declared.logic.test.ts
+@@ -0,0 +1,93 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 (Spec 136 §fe.54)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.54 (Spec 128 Rule 12, 128:39):
++//   "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen."
++// TESTED: every SURFACE descriptor in the programme scope (scripts/surfaces/_schema/converted-surfaces.json scope.programme_scopes, the
++// manifest's own fence, not a second list) that reads a contract (`inputs.answer === 'contract'`) declares an `error` entry in `states[]`
++// and an `errors.answer` that is neither `none` nor `UNRESEARCHED`.
++// LIMITS (stated, not widened): declarations only, and the error state only. Code is not read: the known break at
++// mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged; task-440 RULE-CHECKS.md:102) is not caught here; it is owned by the
++// task-343 leftovers. Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged.
++// Files come from `git ls-files`, so an untracked descriptor never counts. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const SURFACE_RE = /^scripts\/surfaces\/.+\/surfaces\/[^/]+\.descriptor\.json$/;
++const SAMPLE = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const BAD_ERRORS = new Set(['none', 'UNRESEARCHED']);
++
++export interface Descriptor {
++  kind?: string;
++  identity?: { id?: string };
++  programme?: { scope?: string };
++  inputs?: { answer?: string };
++  states?: Array<{ name?: string }>;
++  errors?: { answer?: string };
++}
++export interface Scanned { path: string; d: Descriptor }
++
++const readJson = <T>(rel: string): T => JSON.parse(readFileSync(join(ROOT, rel), 'utf8')) as T;
++const scope = readJson<{ scope: { programme_scopes: string[]; expected_count: number } }>(MANIFEST).scope;
++
++/** Problems of the in-scope SURFACE descriptors that read a contract. Pure: descriptors and scopes in, one line per problem out. */
++export function failureStateProblems(list: Scanned[], scopes: readonly string[]): string[] {
++  const out: string[] = [];
++  for (const { path, d } of list) {
++    if (d.kind !== 'SURFACE' || !scopes.includes(d.programme?.scope ?? '')) continue;
++    if (d.inputs?.answer !== 'contract') continue;
++    const id = d.identity?.id ?? path;
++    if (!(d.states ?? []).some((s) => s.name === 'error')) out.push(`${id}: reads a contract but declares no error state`);
++    const ea = d.errors?.answer ?? 'none';
++    if (BAD_ERRORS.has(ea)) out.push(`${id}: reads a contract but its errors answer is ${ea}`);
++  }
++  return out;
++}
++
++function scanned(): Scanned[] {
++  return execFileSync('git', ['ls-files', '--', 'scripts/surfaces/'], { cwd: ROOT, stdio: 'pipe' })
++    .toString()
++    .split('\n')
++    .map((s) => s.trim())
++    .filter((f) => SURFACE_RE.test(f))
++    .map((f) => ({ path: f, d: readJson<Descriptor>(f) }));
++}
++
++const copy = (mut: (d: Descriptor) => void): Scanned => {
++  const d = structuredClone(readJson<Descriptor>(SAMPLE));
++  mut(d);
++  return { path: `${SAMPLE} (copy)`, d };
++};
++const noErrorState = (d: Descriptor) => { d.states = (d.states ?? []).filter((s) => s.name !== 'error'); };
++
++describe('fe.54: a contract-reading surface declares its failure state', () => {
++  it('A. the real tree: no problem in the programme scope, and the scanned SURFACE count equals the manifest count', () => {
++    const list = scanned();
++    const problems = failureStateProblems(list, scope.programme_scopes);
++    const inScope = list.filter(({ d }) => d.kind === 'SURFACE' && scope.programme_scopes.includes(d.programme?.scope ?? ''));
++    const readers = inScope.filter(({ d }) => d.inputs?.answer === 'contract');
++    console.log(`fe.54: scanned ${list.length} surface descriptors, ${inScope.length} in scope, ${readers.length} read a contract, ${problems.length} problems`);
++    expect(problems, `fe.54 (Spec 128 Rule 12, 128:39) contract readers with no declared failure state:\n  ${problems.join('\n  ')}`).toEqual([]);
++    expect(inScope.length).toBe(scope.expected_count);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): each defect in a copy of mobile_parcel_search gives exactly one problem', () => {
++    const cases: Array<[Scanned, string]> = [
++      [copy(noErrorState), 'mobile_parcel_search: reads a contract but declares no error state'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'none' }; }), 'mobile_parcel_search: reads a contract but its errors answer is none'],
++      [copy((d) => { d.errors = { ...d.errors, answer: 'UNRESEARCHED' }; }), 'mobile_parcel_search: reads a contract but its errors answer is UNRESEARCHED'],
++    ];
++    for (const [s, line] of cases) expect(failureStateProblems([s], scope.programme_scopes)).toEqual([line]);
++  });
++
++  it('C. controls: the unchanged copy, a STATIC page with no contract input, and an out-of-scope descriptor give 0', () => {
++    expect(failureStateProblems([copy(() => {})], scope.programme_scopes)).toEqual([]);
++    const staticPage = copy((d) => { d.inputs = { answer: 'none' }; noErrorState(d); d.errors = { answer: 'none' }; });
++    expect(failureStateProblems([staticPage], scope.programme_scopes)).toEqual([]);
++    const outOfScope = copy((d) => { d.programme = { scope: 'estate_other' }; noErrorState(d); });
++    expect(failureStateProblems([outOfScope], scope.programme_scopes)).toEqual([]);
++  });
++});
+diff --git a/src/tests/surfaces/handbook-rule-map.logic.test.ts b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+index c0c7c4d89f8d571749532996ca9237272ccd4591..8588eed2edd6f848258fd3ccff151005d357162b 100644
+--- a/src/tests/surfaces/handbook-rule-map.logic.test.ts
++++ b/src/tests/surfaces/handbook-rule-map.logic.test.ts
+@@ -8,6 +8,7 @@
+ // the Spec 135 FE rows". Every RED case plants a defect in an in-memory register text or a temp root, never in the repo. No DB, no network.
+ // The shared CLI shell (runHandbookCli, scripts/analysis/gates/rule-map.mjs) is exercised here through the 136 entry (case H6).
+ import { afterAll, describe, expect, it } from 'vitest';
++import { execFileSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -256,31 +257,53 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
+ // that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
+ // set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
+ const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++// task-367 (MF-98, lane BL-HB367; RR-0413 "yes to both"): the three locks it builds. A row on this list has its lock TRACKED and reads RULED, or
++// reads OWED and is on FLIP_PENDING of register-locks-resolve.infra.test.ts (none today: RR-0417 let FE-51 read RULED). FLIP_PENDING is read from
++// that file's text, not copied, so the two locks cannot disagree. Every other row of the thirteen stays OWED with no lock file.
++const BUILT_BY_367 = ['failure-state-declared', 'scope-fence', 'nav-tab-switch'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
++const FLIP_PENDING_SRC = /const FLIP_PENDING: readonly string\[\] = \[([^\]]*)\];/.exec(read('src/tests/surfaces/register-locks-resolve.infra.test.ts'));
++// the ! is safe: the pattern has one capture group, so every match holds m[1]
++const flipPending = (): string[] => [...(FLIP_PENDING_SRC?.[1] ?? '').matchAll(/'(FE-\d+)'/g)].map((m) => m[1]!);
++const trackedLocks = new Set(execFileSync('git', ['ls-files', '--', ...BUILT_BY_367], { cwd: ROOT, stdio: 'pipe' }).toString().split('\n').filter(Boolean));
+ const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
+ 
+ describe('MF-95 C — the thirteen RR-0384 rows', () => {
+   const rows = realRows();
+   const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
+ 
+-  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each OWED with exactly its one reserved lock path, none of which exists', () => {
++  it('C-T2 RED: thirteen rows, in item order, are contiguous, in item order (task-446 appends after them), each with exactly its one lock path; OWED with no lock file, or (task-367) tracked and RULED or OWED on FLIP_PENDING', () => {
+     expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
+     // the ! is safe: the first expect of this case proves fresh holds the thirteen locks
+     const at = rows.findIndex((r: Row) => r.id === fresh[0]!.id);
+     expect(at).toBeGreaterThanOrEqual(0);
+     expect(rows.slice(at, at + 13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+     expect(rows.length).toBeGreaterThanOrEqual(57);
++    expect(FLIP_PENDING_SRC, 'FLIP_PENDING not found in register-locks-resolve.infra.test.ts').not.toBeNull();
++    // the ! below is safe: fresh holds only rows with exactly one lock (its filter above)
+     for (const r of fresh) {
++      if (BUILT_BY_367.includes(r.locks[0]!)) {
++        expect(trackedLocks.has(r.locks[0]!), r.locks[0]).toBe(true);
++        if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);
++        continue;
++      }
+       expect(r.status, r.id).toBe('OWED');
+       expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
+     }
+   });
+ 
+-  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
++  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by", or RULED (task-367) with "Enforced by" its lock', () => {
+     const text = read(SPEC.handbookRel);
+     const owed = rows.filter((r: Row) => r.status === 'OWED').length;
+-    expect(owed).toBeGreaterThanOrEqual(21);
++    // task-367: the floor is 21 minus the rows of BUILT_BY_367 that read RULED (18 when all three flip).
++    // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++    expect(owed).toBeGreaterThanOrEqual(21 - fresh.filter((r: Row) => BUILT_BY_367.includes(r.locks[0]!) && r.status === 'RULED').length);
+     expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
+-    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
++    for (const r of fresh) {
++      // the ! is safe: fresh holds only rows with exactly one lock (its filter above)
++      const lock = r.locks[0]!.replace(/[.]/g, '\\.');
++      if (r.status === 'RULED') expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: RULED [^\\n]* · Enforced by: ${lock}(?: · [^\\n]*)?$`, 'm'));
++      else expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${lock}$`, 'm'));
++    }
+   });
+ 
+   it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
+diff --git a/src/tests/surfaces/nav-tab-switch.logic.test.ts b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c983d2a6add9c6a85330cda8d471ebb8b76b829
+--- /dev/null
++++ b/src/tests/surfaces/nav-tab-switch.logic.test.ts
+@@ -0,0 +1,149 @@
++// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 (Spec 136 §fe.51)
++//
++// task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413). The rule, Spec 136 fe.51 (126:82, §0b item 11):
++//   "A tab switch uses navigate, not push." Spec 126 called it "convention, not checked by the lock" (126:82); this test checks it.
++// TESTED: in the mobile files the in-scope descriptors declare (the mobile part of the scope-fence.logic.test.ts file set, 20 today), a call `<x>.push(arg)`
++// whose arg is `PARCEL_TAB_ROUTE[...]`, `PARCEL_TAB_ROUTE.<tab>` or a string literal equal to a tab route. The tab routes are parsed by AST
++// from PARCEL_TAB_ROUTE (mobile/src/lib/parcelSearchMatch.ts), not copied; the parse is fail-closed: exactly the three tabs lookup, tracked
++// and account, or the test fails, so a renamed or reshaped constant cannot leave (A) passing on an empty map.
++// The allow-list is fail-closed both ways, in the nav-by-route.logic.test.ts form: a finding no entry explains fails, and an entry that
++// matches a different number of findings than its `count` (a stale entry: 0) fails. Entries are keyed by file + call text, never by line.
++// The list only shrinks: the row that fixes a control removes its entry in the same commit. The two entries are the audited tab pushes
++// NAV-AUDIT #1 and #12 (126:82), each owned by an existing LATER queue row.
++// LIMITS (stated, not widened): a route held in a variable is missed; the lead-gen five-tab bar is not MaxBLD; web has no tab bar (no Tabs in
++// src/app/(maxbld), src/components/surfaces or src/components/report). Files come from `git ls-files`. No DB, no network.
++import { execFileSync } from 'node:child_process';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++import ts from 'typescript';
++import { describe, expect, it } from 'vitest';
++
++const ROOT = process.cwd();
++const TAB_SOURCE = 'mobile/src/lib/parcelSearchMatch.ts';
++const TAB_CONST = 'PARCEL_TAB_ROUTE';
++const TABS = ['account', 'lookup', 'tracked'];
++const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++
++export interface Finding { file: string; line: number; call: string }
++export interface Allow { file: string; call: string; count: number; why: string }
++
++const LAYOUT = 'mobile/app/(app)/parcel-tool/_layout.tsx';
++const TRACKED = 'mobile/app/(app)/parcel-tool/tracked.tsx';
++// Named, owned exceptions (plan PLAN-367-v1 section 3 T3). Shrink-only: never add an entry.
++const ALLOW: Allow[] = [
++  { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE[tab])', count: 1, why: 'owed: MF-49/MF-50 (NAV-AUDIT #1, 126:82): the parcel shelf tab press pushes its tab route' },
++  { file: TRACKED, call: 'router.push(PARCEL_TAB_ROUTE.account)', count: 1, why: 'owed: MF-51/MF-52 (NAV-AUDIT #12, 126:82): the Tracked Lots account button pushes the Account tab' },
++];
++
++const parse = (rel: string, text: string) => ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, rel.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
++
++/** The tab routes of the PARCEL_TAB_ROUTE object literal: key to route. Throws unless exactly the three tabs, each a string literal. */
++export function tabRoutes(rel: string, text: string): Map<string, string> {
++  const sf = parse(rel, text);
++  const out = new Map<string, string>();
++  let found = 0;
++  const visit = (n: ts.Node): void => {
++    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === TAB_CONST) {
++      found++;
++      const init = n.initializer;
++      if (init && ts.isObjectLiteralExpression(init)) {
++        for (const p of init.properties) {
++          if (ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && ts.isStringLiteral(p.initializer)) out.set(p.name.text, p.initializer.text);
++        }
++      }
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  const keys = [...out.keys()].sort();
++  if (found !== 1 || keys.join(',') !== TABS.join(',')) throw new Error(`${rel}: ${TAB_CONST} must be one object literal with exactly the tabs ${TABS.join(', ')}; found ${found} declaration(s) with ${keys.join(', ') || 'no'} string routes`);
++  return out;
++}
++
++/** Every `<x>.push(arg)` whose arg is a tab route. Pure: path, text and the tab routes in, findings out. */
++export function findTabPushes(rel: string, text: string, routes: ReadonlySet<string>): Finding[] {
++  const sf = parse(rel, text);
++  const out: Finding[] = [];
++  const isTab = (a: ts.Expression): boolean => {
++    if (ts.isElementAccessExpression(a) || ts.isPropertyAccessExpression(a)) return ts.isIdentifier(a.expression) && a.expression.text === TAB_CONST;
++    if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return routes.has(a.text);
++    return false;
++  };
++  const visit = (n: ts.Node): void => {
++    // the ! is safe: the length check before it proves the first argument exists
++    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push' && n.arguments.length > 0 && isTab(n.arguments[0]!)) {
++      out.push({ file: rel, line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, call: n.getText(sf).replace(/\s+/g, ' ') });
++    }
++    ts.forEachChild(n, visit);
++  };
++  visit(sf);
++  return out;
++}
++
++const keyOf = (a: { file: string; call: string }) => `${a.file} ${a.call}`;
++
++/** Findings no entry explains, and entries whose match count is not their `count` (a stale entry matches 0). */
++export function judge(findings: Finding[], allow: Allow[]): { unexplained: string[]; miscounted: string[] } {
++  const keys = new Set(allow.map(keyOf));
++  const unexplained = findings.filter((f) => !keys.has(keyOf(f))).map((f) => `${f.file}:${f.line} ${f.call}`);
++  const miscounted = allow
++    .map((a) => ({ a, n: findings.filter((f) => keyOf(f) === keyOf(a)).length }))
++    .filter(({ a, n }) => n !== a.count)
++    .map(({ a, n }) => `${keyOf(a)}: expected ${a.count}, found ${n}`);
++  return { unexplained, miscounted };
++}
++
++const routes = new Set(tabRoutes(TAB_SOURCE, readFileSync(join(ROOT, TAB_SOURCE), 'utf8')).values());
++const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 }).toString().split('\n').map((s) => s.trim());
++/** The tracked mobile .ts/.tsx files the in-scope descriptors declare (identity.route plus x-draft.files): the scope-fence file set, mobile part. */
++function mobileFiles(): string[] {
++  const scopes = (JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) as { scope: { programme_scopes: string[] } }).scope.programme_scopes;
++  const tracked = new Set(git(['ls-files']));
++  const out = new Set<string>();
++  for (const f of git(['ls-files', '--', 'scripts/surfaces/']).filter((p) => p.endsWith('.descriptor.json'))) {
++    const d = JSON.parse(readFileSync(join(ROOT, f), 'utf8')) as { programme?: { scope?: string }; identity?: { route?: string }; 'x-draft'?: { files?: string[] } };
++    if (!scopes.includes(d.programme?.scope ?? '')) continue;
++    for (const p of [d.identity?.route, ...(d['x-draft']?.files ?? [])]) if (p && p.startsWith('mobile/') && /\.tsx?$/.test(p) && tracked.has(p)) out.add(p);
++  }
++  return [...out].sort();
++}
++function scanTree(): { files: string[]; findings: Finding[] } {
++  const files = mobileFiles();
++  return { files, findings: files.flatMap((f) => findTabPushes(f, readFileSync(join(ROOT, f), 'utf8'), routes)) };
++}
++
++describe('fe.51: a tab switch uses navigate, not push', () => {
++  it('A. the real tree: every tab push is explained by an allow-list entry, and every entry matches exactly its count', () => {
++    const { files, findings } = scanTree();
++    console.log(`fe.51: scanned ${files.length} mobile files, ${routes.size} tab routes, ${findings.length} tab pushes, ${ALLOW.length} owned exceptions`);
++    expect(judge(findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
++    expect(files.length).toBeGreaterThanOrEqual(20);
++  });
++
++  it('A2. the allow-list only shrinks; each entry has an owner row and a count', () => {
++    expect(ALLOW.length).toBeLessThanOrEqual(2);
++    for (const a of ALLOW) {
++      expect(a.why).toMatch(/^owed: MF-\d+/);
++      expect(a.count).toBeGreaterThan(0);
++    }
++    expect(new Set(ALLOW.map(keyOf)).size).toBe(ALLOW.length);
++  });
++
++  it('B. RED planted (KNOWN_BAD, in memory): a push of a tab route gives exactly one finding; a stale entry fails', () => {
++    for (const code of ['router.push(PARCEL_TAB_ROUTE.tracked);', "router.push('/(app)/parcel-tool/account');"]) {
++      expect(findTabPushes('planted.tsx', code, routes), code).toHaveLength(1);
++    }
++    const stale: Allow = { file: LAYOUT, call: 'router.push(PARCEL_TAB_ROUTE.lookup)', count: 1, why: 'owed: MF-49 (stale)' };
++    expect(judge(scanTree().findings, [...ALLOW, stale]).miscounted).toEqual([`${keyOf(stale)}: expected 1, found 0`]);
++  });
++
++  it('B2. RED planted: a reshaped tab constant fails closed', () => {
++    expect(() => tabRoutes('x.ts', "export const PARCEL_TAB_ROUTE = { lookup: '/a', tracked: '/b' };")).toThrow(/exactly the tabs/);
++    expect(() => tabRoutes('x.ts', 'export const OTHER = {};')).toThrow(/found 0 declaration/);
++  });
++
++  it('C. controls: navigate, replace and a non-tab push give 0', () => {
++    const controls = ['router.navigate(PARCEL_TAB_ROUTE.tracked);', 'router.replace(PARCEL_TAB_ROUTE.lookup);', 'router.push(trackedLotRoute(id));'];
++    for (const code of controls) expect(findTabPushes('control.tsx', code, routes), code).toEqual([]);
++  });
++});
+

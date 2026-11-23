@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:45:43.971Z file_sha256=a33e7e5a4619227963abf69c799f12338105cb1fbba002ab8df50cc713a8580c prompt_sha256=4b39b80ff9eb078460d060231aadd6e72d4c36fc98f6a01814cf6fbecd7012cb
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 136 fe.49 "No linkage to LeadDetail, the flight board, or the lead feed." — src/tests/surfaces/scope-fence.logic.test.ts:72 "if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) str(n, n.text);" — a require('@/screens/LeadDetail') or a dynamic import('...LeadDetail') module path is a lead linkage the scan never sees, because the lead-screen name check runs only on import/export declarations (line 60) and str() tests only lead_parcels and the route prefixes — treat require() and import() module specifiers as module paths and run namesLeadScreen on them, with a planted case in B.
+
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — src/tests/surfaces/nav-tab-switch.logic.test.ts:3 "task-367 COMPLY.3 (MF-98 · McFrontend queue · lane BL-HB367; RR-0385 item 6, RR-0413)." — the gate whose whole allowance rests on RR-0417 cites only RR-0413, while the register file cites the ruling that actually permits the two exceptions, so the authority for the exception set is not traceable from the test — add RR-0417 to the SPEC LINK header or the ALLOW comment.
+
+DEFER severity=LOW — Spec 136 fe.51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:13 "LIMITS (stated, not widened): a route held in a variable is missed" — a push of a tab route held in a variable (const r = PARCEL_TAB_ROUTE.account; router.push(r)) is green, so a real breach of the rule it gates passes the gate; the limit is declared but no owning row is named for that form — resolve one level of const initializer, or name the queue row that owns the residue.
+
+MET — AC #2 "Each gate is shown red on a planted defect and green on the clean tree" — src/tests/surfaces/scope-fence.logic.test.ts:112 "B. RED planted (KNOWN_BAD, in memory)" — every linkage form is planted and asserted at exactly one hit, case C asserts the controls give zero, and A asserts the real tree is empty.
+
+MET — RR-0417 "yes. worktrees removed" (FE-51 RULED with its two named owned exceptions) — src/tests/surfaces/nav-tab-switch.logic.test.ts:33 "const ALLOW: Allow[] = [" — exactly the two named, owned entries (NAV-AUDIT #1 on _layout.tsx, #12 on tracked.tsx) are allowed and A2 caps the list at 2.
+
+MET — RR-0413 "yes to both A. Status flip." — src/tests/surfaces/register-locks-resolve.infra.test.ts:33 "const FLIP_PENDING: readonly string[] = ['FE-39'];" — FE-49 and FE-51 are no longer held in FLIP_PENDING and the list is back to the single FE-39 lock.
+
+MET — card Files line "src/tests/surfaces/scope-fence.logic.test.ts, src/tests/surfaces/nav-tab-switch.logic.test.ts, src/tests/surfaces/register-locks-resolve.infra.test.ts" — every path in this chunk is named on the Files line, so no behaviour is added outside the card.
+
+REJECT — AC #3 "The handbook no-check lists shrink by the rules gated, by their generators" — accused of not shrinking the no-check lists — the generator output (Spec 136, rule-lists-by-kind.md) is not in chunk 2, and the card's acceptance record shows generate-surface-handbook --check and rule-lists page --check exit 0, so it is judged in its own chunk run.
+
+REJECT — Spec 136 fe.51 "A tab switch uses navigate, not push." — accused of leaving two tab pushes in the tree while the row reads RULED — RR-0417 permits exactly those two named, owned exceptions, so the allow list implements the ruling rather than breaching the rule.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  106901ms (106.9s)
+📊 Tokens — total: 39161, input: 16215, output: 22946, reasoning: 21979

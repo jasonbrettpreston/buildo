@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:13:04.659Z file_sha256=13b988533e7bbe926263d259da8b2871dfec4f1982855a9c7e512d0b3c28c733 prompt_sha256=1322645b50ebb58168d167d13da4c1e17bc0b0d06fcbe5cd7f6b37fd559d6a9b
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task card "Waits on: task-365 grounded; the operator confirms the gate list before the build" — `.cursor/MCFRONTEND-QUEUE.md` "Status: RUNNING · since 2026-11-23 · expires 2026-11-30" — the row runs with no task-365 grounding artefact visible in the pasted material, only RR-0413's list confirmation — cite the task-365 grounding (or the operator's replacement) in a dated note before the closing commit.
+DEFER severity=LOW — RR-0359 "Nothing is folded before the grounder has ruled" — `docs/reports/panels/MF-98.json` "\"output\": \"OUTPUT review owed at the lane output stage ... with FINDINGS.md untriaged\"" — the panel, whose head is "prereg 1 (round 203); commits 0, 1, fix", still records untriaged findings and an owed output review while the card notes record round 1 completed and a grounder fix applied — update the panel output/verdict wording to round 1 fixed, round 2 owed.
+REJECT — AC3 "The handbook no-check lists shrink by the rules gated, by their generators" — the change is accused of growing the handbook because `docs/reports/generated/rule-lists-by-kind.md` shows "29,076" to "29,166" — that +90 is the regenerated "2. Rules" lens list, not the no-check list, which is edited in Spec 136 (a different chunk), so no defect is shown here.
+MET — AC1 — `.cursor/MCFRONTEND-QUEUE.md` "RR-0413, operator, verbatim: \"yes to both\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2108`)" — the three-row gate list is recorded as operator-confirmed before the build.
+MET — AC3 — `docs/reports/generated/rule-lists-by-kind.md` "| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |" — the generated page is regenerated in this commit and the row names generate-surface-handbook.mjs --check and rule-lists.mjs page --check.
+MET — RR-0359 — `docs/reports/panels/MF-98.json` "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" — the grounder gate precedes the BUILT flip.
+MET — RR-0386 — `.cursor/MCFRONTEND-QUEUE.md` "the parked branch wf1/inc1b-gates (RR-0386)" — the parked gates branch and its records are excluded from the row.
+MET — queue id rule — `.cursor/MCFRONTEND-QUEUE.md` "next free id **MF-99**, now also the first value on the line, the one tools read" — the id line is advanced with the file's dated-note form (MF-97 held, MF-98 claimed).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  98199ms (98.2s)
+📊 Tokens — total: 49582, input: 26884, output: 22698, reasoning: 21979

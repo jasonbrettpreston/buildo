@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:52:04.241Z file_sha256=26f6416dc8632fe3f416de0f2fd94082a88f38c00f4a037370cd27fb2d08acfa prompt_sha256=b730f2b1a3dd3d9ef037c8020c5d7088d3406d92236261bc459a926464a079b3
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-bylaw-133-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-49 "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." — src/tests/surfaces/scope-fence.logic.test.ts:70 "return; // the module path is checked above; its string is not a route or a table read" — import and export nodes return before testing module paths or bound names for lead_parcels, and namespace imports are not inspected, so an ES import of a lead_parcels module or a namespace LeadFeed import passes the fence — check the module specifier and every bound name, including namespace imports, against both LEAD_TABLE_RE and LEAD_SCREENS before returning
+BUG severity=HIGH — RR-0413 "task-367: the three handbook rows flip to RULED with their tests; the operator confirms the three rows" — src/tests/surfaces/handbook-rule-map.logic.test.ts:286 "if (r.status !== 'RULED') expect([r.status, flipPending().includes(r.id)], r.id).toEqual(['OWED', true]);" — the lock still allows any BUILT_BY_367 row to read OWED when it is on FLIP_PENDING, so the ruling's RULED status flip is not enforced — require r.status to be RULED for every BUILT_BY_367 row, or assert FE-49, FE-51 and FE-54 are absent from FLIP_PENDING
+BUG severity=MED — FE-51 "A tab switch uses navigate, not push." — src/tests/surfaces/nav-tab-switch.logic.test.ts:74 "ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'push'" — a computed router['push'](PARCEL_TAB_ROUTE.lookup) is a push but is not detected because only PropertyAccessExpression is accepted — also accept an ElementAccessExpression whose argument is the string literal 'push'
+MET — RR-0417 — src/tests/surfaces/nav-tab-switch.logic.test.ts:34-35 — the ALLOW list carries exactly the two named tab-push exceptions with owner rows and counts.
+MET — RR-0386 — src/tests/surfaces/handbook-rule-map.logic.test.ts:263 — the change adds handbook rule tests, not the parked gates A and B.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+Rules met: none
+
+---
+⏱  146576ms (146.6s)
+📊 Tokens — total: 63695, input: 30945, output: 32750, reasoning: 32200

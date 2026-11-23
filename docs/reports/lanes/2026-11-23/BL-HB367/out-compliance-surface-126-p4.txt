@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:11:51.628Z file_sha256=8593ff8e0049a86ef06e09985114914a81020dee87da2a1f131bea99478a5b04 prompt_sha256=eaebae3547b788ad4c6583ab959d12e85e8e829b69ef5f2623a136899adc034f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 "McFix Final plan: Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — docs/reports/panels/MF-98.json:16 "\"output\": \"OUTPUT review owed at the lane output stage: the lens set ... with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).\"" and :23 "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — the panel filed by this change records the output review and the grounder as not yet run, while the pasted run record for the same change states "78 of 78 outputs present", "output round 1 fix (grounder Cairn-Ground-O367, parts A to H)" and "Task stays RUNNING; output round 2 is owed", so the record misstates at which round and gate the task stands, and the two-round ruling cannot be checked from it — fix: set the output field to round 1 complete with its grounder ruling, round 2 owed, and set verdict to PLAN RULED, OUTPUT ROUND 1 GROUNDED, ROUND 2 OWED.
+
+DEFER severity=MED — acceptance "#3 The handbook no-check lists shrink by the rules gated, by their generators" — docs/reports/generated/rule-lists-by-kind.md "-\| surface-136 \| docs/specs/02-web-admin/136_mcfrontend_handbook.md \| 2. Rules \| 29,076 \| 1 \|" and "+\| surface-136 \| ... \| 2. Rules \| 29,166 \| 1 \|", totals "-\| total \| 11 lists \| \| 226,854 \| 11 \|" to "+\| total \| 11 lists \| \| 226,944 \| 11 \|" — the only generated evidence in this chunk shows the surface-136 selection and both totals growing by 90 characters with no list or part count change, so the shrink AC#3 asks for is not shown here and the handbook text and OWED count are in another chunk (cannot see) — fix: cite the greppable OWED-count before and after (the row note says 20, then 19) beside the generated page, and show the 136 diff in the chunk that carries it.
+
+DEFER severity=LOW — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions" — docs/reports/panels/MF-98.json:25-27 "\"followups\": [ \"task-367 later batches: the other OWED rows of Spec 136 ...\", \"MF-49/MF-50 and MF-51/MF-52: the row that fixes mobile/app/(app)/parcel-tool/_layout.tsx or tracked.tsx removes its nav-tab-switch entry in the same commit\" ]" — the two exceptions are named and handed to rows, but those rows' own text (that they own the removal) is not in this chunk and cannot be seen — fix: name the removal obligation in the MF-49/MF-50 and MF-51/MF-52 rows themselves, not only as a followup of MF-98.
+
+DEFER severity=LOW — RR-0385 "proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915) — .cursor/MCFRONTEND-QUEUE.md:665 "RR-0385, operator, verbatim: \"My only direction is the task 367 the handbook rules are key.\" (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913`)" and docs/reports/panels/MF-98.json:9 "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1913)" — the same ruling id is pinned to the :1913 words while the pasted list gives RR-0385 the :1915 words, so one of the two citations carries the wrong id — fix: confirm the RR-0385 block spans :1913-:1915 or re-cite :1913 under its own id.
+
+MET — RR-0413 "yes to both A. Status flip." — .cursor/MCFRONTEND-QUEUE.md:661 — the row states "the register rows whose flip the operator approved read RULED in the commit that lands their tests (RR-0413 A)", tying every flip to the landing commit.
+
+MET — RR-0386 "a" — .cursor/MCFRONTEND-QUEUE.md:663 — "Not in this row: any fix of a live break ... any other OWED row, the parked branch wf1/inc1b-gates (RR-0386).", so the parked gates A and B are not landed by this row.
+
+MET — RR-0412 "So both 442 and 367 should be running once this push lands." — .cursor/MCFRONTEND-QUEUE.md:661 — the MF-98 row is "RUNNING · since 2026-11-23".
+
+MET — RR-0417 "yes. worktrees removed" — .cursor/MCFRONTEND-QUEUE.md:665 — "the fe.51 row reads RULED with the two named, owned tab-push exceptions (MF-49/MF-50 and MF-51/MF-52)", the two exceptions named exactly as ruled.
+
+MET — acceptance "#1 The gate list is confirmed by the operator before any gate is built" — docs/reports/panels/MF-98.json:11 — the confirmed item is the three handbook tests ("B: the three rows are the list"), and no gate is built.
+
+MET — acceptance "#2 Each gate is shown red on a planted defect and green on the clean tree" — .cursor/MCFRONTEND-QUEUE.md:663 — "each proven red at its designed assertion through the real commit hooks, then green", with the red result recorded ("Test Files 3 failed (3), Tests 3 failed \| 8 passed (11)").
+
+MET — 11a.1 closed binding set — docs/reports/panels/MF-98.json:3 — "No app, descriptor, mobile or gate-script change.", so no field, source or node is added and the closed set is untouched.
+
+MET — 11b.1 "No hand-built standard component." — docs/reports/panels/MF-98.json:3 — "No app, descriptor, mobile or gate-script change.", so no component is hand-built or rewired.
+
+REJECT — 11a.7 render states — accused of leaving the golden state list short of 108 files — this change touches no golden tree or states.json, and the state count is carried by the report lanes' own runs.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 0
+Rules met: none
+
+---
+⏱  72949ms (72.9s)
+📊 Tokens — total: 46009, input: 30011, output: 15998, reasoning: 14396

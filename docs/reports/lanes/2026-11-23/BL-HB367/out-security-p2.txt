@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T20:34:26.308Z file_sha256=63791a8d1928a3714030e376e170c093057f2482e331ccb6e9722252230bcabd prompt_sha256=a645303b3af85d0d1825b2f4a2136f82488ede739dcf70996b0ec359e02e9b41
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-security-p2.txt (model: deepseek-reasoner)
+
+NOT APPLICABLE: the material is a vitest static-analysis test (src/tests/surfaces/scope-fence.logic.test.ts) that greps tracked files and descriptors for lead_parcels linkage; it touches no money, auth, entitlement, PII or admin path at runtime, and its only inputs are `git ls-files`, `readFileSync` and the repo's own descriptor JSON.
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  2922ms (2.9s)
+📊 Tokens — total: 9058, input: 8617, output: 441, reasoning: 337

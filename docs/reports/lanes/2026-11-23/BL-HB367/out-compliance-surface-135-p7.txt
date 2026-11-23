@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T20:28:44.951Z file_sha256=3a0759c68173842424d7d09cc1b4d57dac7b9ace03f4d15357718eb9553fe3d9 prompt_sha256=6b8d81f4a9210a92400b423db40a0b369741d9d5e40909aae3050c3ec953842a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB367/in-out-compliance-surface-135-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-54 "An unhandled state is a FAIL, not a blank screen." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-54 dated note "8 of them (6 estate_other, 2 platform_shared) would fail the finder today" — eight real unhandled states stay uncaught while the row reads "D pass, P pass" and RULED, and unlike FE-51 they are not named as owned exceptions — name each of the eight as an owned exception with its fix, or widen the finder, before P reads pass.
+
+DEFER severity=MED — AC#1 "The gate list is confirmed by the operator before any gate is built" — Implementation Notes "commit 1 (work): the three locks land ... FE-49 and FE-54 read RULED (RR-0413)" against RR-0413 "yes to both A. Status flip." — no pasted operator words confirm the gate list before the build, the confirmation rides the same commit that lands the locks, and RR-0386 parked the earlier gates — record the pre-build gate-list confirmation explicitly, or reorder confirmation ahead of the build.
+
+DEFER severity=LOW — FE-54 test LIMITS vs the FE-54 dated note — src/tests/surfaces/failure-state-declared.logic.test.ts:11 "Descriptors outside the programme scope (8 today: 6 estate_other, 2 platform_shared) are not judged." against the note "32 contract-reading descriptors outside scope (14 estate_other, 18 platform_shared) are not judged" — the comment understates the excluded set (8 vs 32) by conflating "would fail" with "out of scope" — correct the comment to 32 out of scope, 8 failing.
+
+DEFER severity=LOW — FE-51 "The navigation rule reaches \"every MaxBLD screen, web and mobile\"" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 dated note "Not in the lock: a route held in a variable, and the web half (no tab bar today)" — the lock reaches neither the web half nor variable-held routes, so "every MaxBLD screen, web and mobile" is not fully enforced — record the web half as not-applicable today and the variable-route gap as a named owned exception.
+
+MET — RR-0413 "yes to both A. Status flip." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-49/FE-51/FE-54 — each row now reads "RULED 2026-11-23" with a dated note naming the operator words and the lock.
+
+MET — RR-0417 "yes. worktrees removed" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-51 — reads RULED with the two named owned exceptions (_layout.tsx NAV-AUDIT #1, tracked.tsx NAV-AUDIT #12).
+
+MET — FE-56 "Prove each lock RED on a fixture that declares a column or a policy that does not exist" — src/tests/surfaces/failure-state-declared.logic.test.ts case "B. RED planted (KNOWN_BAD, in memory)" plants three defects and asserts one problem each; case A asserts green.
+
+MET — AC#3 "The handbook no-check lists shrink by the rules gated, by their generators" — docs/specs/02-web-admin/136_mcfrontend_handbook.md "**Rules rendered: 58**: 58 in force (19 OWED, whose lock is still to land)" (22 to 19), with fe.49/fe.51/fe.54 rewritten to "Status: RULED 2026-11-23 · Enforced by:".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: FE-49, FE-56
+
+---
+⏱  120997ms (121.0s)
+📊 Tokens — total: 60372, input: 35129, output: 25243, reasoning: 24369
