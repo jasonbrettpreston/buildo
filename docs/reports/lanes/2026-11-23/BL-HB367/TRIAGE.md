@@ -1,0 +1,18 @@
+# TRIAGE BL-HB367 (task-367), ROUND 2 only (grounder Cairn-Ground-O367): 16 CONFIRMED (all LOW); no CRITICAL, HIGH or MED stands (RR-0385 item 3: round 2 resolves CRITICAL and HIGH only, LOW and NIT are recorded). Round 1 (16 CONFIRMED: 3 MED and 1 LOW fixed in 9f47c3454, 12 LOW piled) is in the round 1 triage outside the repo, named in the Final Summary history line.
+out-code-review-p1#1 pile:"an absent errors block prints as answer none; the schema requires errors, so no tree case; piled, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#1 pile:"import bindings and module paths are not tested for lead_parcels; a bound name that is used is caught by the identifier arm, none in the tree, same as round 1 out-code-review-p1#2, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#3 pile:"a table ref of an unknown shape reads as an empty name and passes; the schema fixes the shape, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#6 pile:"no planted case reaches the identifier branch, same as round 1 out-compliance-five-words-p2#3, LOW is recorded (RR-0385 round 2)"
+out-compliance-bylaw-133-p4#2 pile:"the header says 8 today, the register note says 32 contract readers outside scope and 8 that would fail; reconcile at the fold, LOW is recorded (RR-0385 round 2)"
+out-compliance-bylaw-133-p7#1 pile:"C-T2 still accepts a built row that reads OWED on FLIP_PENDING; all three read RULED today and the generator count holds the end state, LOW is recorded (RR-0385 round 2)"
+out-compliance-bylaw-133-p8#3 pile:"a computed router['push'] call is not matched; plan T3 names the dot form and the tree has none, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-126-p13#2 pile:"the lock header and the two why strings cite RR-0413 and not RR-0417; the register notes cite it, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-126-p14#2 pile:"the descriptor arm reads inputs, outputs and evidence tables; no in-scope descriptor has a database block (0 of 45, checked in memory) and none holds lead_parcels text, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-126-p4#1 pile:"the panel output and verdict fields still read output owed after both rounds; the fold refreshes them as in task-442, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-127-p1#1 pile:"the Done-condition says rows flip in the commit that lands their tests, FE-51 flipped in the fix commit under RR-0417 (dated note); piled, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-127-p5#2 pile:"no committed case plants an unlisted push through judge; the real-tree run was red on it (red.out:750-751), LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-127-p6#4 pile:"any receiver named push matches, so an array push of a tab route is a false red; none in the 20 files, LOW is recorded (RR-0385 round 2)"
+out-compliance-surface-135-p11#1 pile:"a declared route path is read as a file, its name is not tested for a lead screen; the 41 files hold 0 hits, LOW is recorded (RR-0385 round 2)"
+out-error-paths-p1#1 pile:"the empty-scan guard reads the count from the same manifest as the scope list; the 25 readers have no floor, LOW is recorded (RR-0385 round 2)"
+out-ux-p1#1 pile:"the generated fe.51 line keeps the prior PROSE-ONLY words beside RULED; the condition has passed, a Current reading is a later row, LOW is recorded (RR-0385 round 2)"
+No fix round is owed on code or tests; the closing commit must hold the records only.

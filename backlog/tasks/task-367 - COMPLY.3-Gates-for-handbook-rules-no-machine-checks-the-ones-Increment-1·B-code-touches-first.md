@@ -3,11 +3,11 @@ id: TASK-367
 title: >-
   COMPLY.3 Gates for handbook rules no machine checks, the ones Increment 1·B
   code touches first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HB367'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T20:51:00Z'
+updated_date: '2026-11-23T20:52:00Z'
 labels:
   - McFix
   - McFix Final
@@ -50,6 +50,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-HB367/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-HB367/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-HB367/TRIAGE.md
 type: build
 ordinal: 67012
 ---
@@ -556,4 +558,6 @@ Review round 1: 4 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder /Users/b
 out-compliance-policy-124-s2-s5-p6#1 MED fixed 9f47c34
 out-compliance-surface-126-p7#2 MED fixed 9f47c34
 out-compliance-surface-135-p7#1 MED fixed 9f47c34
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder docs/reports/lanes/2026-11-23/BL-HB367/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-HB367/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->
