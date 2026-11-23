@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.059Z file_sha256=2b5ab280bf4293440e9d642ff44436f651f1a134a6c27af131ca3a71ceb24390 prompt_sha256=a023bad0582fb294f8731059c7f19f00b04284346a53112b92bb6126b8b569b9
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent" — docs/specs/00-architecture/08_agents.md:356 "the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169)" — the ruling's precondition is asserted only in the change's own prose, no task-430 commit and no file under docs/specs/02-web-admin/ appears in the diff or the lane notes, so a reviewer cannot check the transition is not early — record the task-430 commit sha and the measured 13-line count in the note and in acceptance.out.
+DEFER severity=LOW — RR-0383 "tasks that edit the surface specs keep those specs attached" — docs/specs/00-architecture/137_mcqueue.md:136 "the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them (the Spec 08 section 7 rule 4 note of task-439 has the whole account)" — the note cited as the whole account names only specs-web-admin and says "Every other row is unchanged", so the four keeper rows exist only in 137 — name the four row ids in the 08 note or drop the "whole account" reference.
+DEFER severity=LOW — RR-0383 "tasks that edit the surface specs keep those specs attached" — src/tests/backlog/rule-lists-table.logic.test.ts:354 "it('N2 (survive-the-fix, RR-0383): an edit to a surface spec still gets the four specs and Spec 136 through the specs-web-admin row" — only specs-web-admin and the four spec paths are pinned, so a later edit that drops surface-126 or surface-128 from the importer, census-route, panel-record or generated-127 row passes every test — add one resolve assertion per keeper row to N1 or N2.
+MET — task card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — scripts/analysis/rule-lists.json:145 — surfaces row reduced to ["surface-136", "eng-all"] and the mobile row reduced at :151, four specs gone from both.
+MET — task card "the specs-web-admin row keeps them" — scripts/analysis/rule-lists.json:218 — the five surface lists on that row are untouched, only its why string changes.
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — src/tests/backlog/rule-lists-table.logic.test.ts:355 — N2 resolves each of the four web-admin spec paths and expects the four specs plus surface-136.
+MET — task-431 note "The phone row gets `eng-front` and `eng-shared`" — scripts/analysis/rule-lists.json:151 — eng-front and eng-shared stay on the mobile row alongside mobile-90, 98, 99, 100, 96 and surface-136.
+MET — task-366 note "`scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code" — the diff changes row data and why strings only, no change to the path resolution code or to the protected-paths reuse.
+MET — task-410 note "(1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref" — scripts/analysis/rule-lists.json — none of those four keys appears in the diff, so the board-owned keys are untouched.
+MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — Implementation Notes "task-446 is folded on the board at 2fe7fa150" — recorded as landed before this lane's launch, the ordering the ruling asks for.
+REJECT — RR-0376 "Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — the change appends dated notes to both files — the card's Files line names both files and each note is additive with prior text kept, so the task-427 step-2 scope that ruling addresses is not touched.
+REJECT — task-423 note "a list is never trimmed in either form" — accused of trimming lists by removing surface-126, 127, 128 and 135 — the rows are re-pointed, no list's text or selection is shortened, and the four lists stay whole on the rows that still attach them.
+VERDICT: PASS
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  151603ms (151.6s)
+📊 Tokens — total: 45976, input: 16649, output: 29327, reasoning: 28310

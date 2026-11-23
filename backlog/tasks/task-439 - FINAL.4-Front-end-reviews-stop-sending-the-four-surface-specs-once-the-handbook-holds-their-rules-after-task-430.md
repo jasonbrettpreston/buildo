@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SURF439'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T16:02:00Z'
+updated_date: '2026-11-23T16:06:00Z'
 labels:
   - McFix
   - McFix Final
@@ -218,4 +218,32 @@ rg#1 MED folded (guards the hand edi
 2026-11-23 (lane BL-SURF439): tests written first (N1, N2 and the changed tests at rule-lists-table.logic.test.ts:165, :180, :183, :198); red attempt with only the test file and this task file staged (red.out).
 
 2026-11-23 (lane BL-SURF439): red.out: commit attempt refused, 2 failed | 26 passed: N1 at rule-lists-table.logic.test.ts:339 "src/components/report/ReportPage.tsx: expected [ 'eng-all', 'surface-136', …(8) ] to not include 'surface-126'" (designed assertion) and the changed golden path at :165; N2 green (survive-the-fix). Work: surfaces and mobile rows drop surface-126/127/128/135 (why texts identical to QUESTIONS-RULED Q-D), specs-web-admin why updated; Spec 08 note after the task-431 note of section 7 rule 4 and Spec 137 note after the task-366 note of Rule 12, inserted by text, identical to the plan with date 2026-11-23; page --write: web kind 11 lists 226,854, phone kind 12 lists 307,917.
+
+2026-11-23 (lane BL-SURF439) ACCEPTANCE on the work commit 48f251d38 (acceptance.out):
+$ rule-lists.mjs validate
+rule-lists: ok 58 lists, 23 rows
+$ rule-lists.mjs page --check
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+$ resolve --type build --letter S --files src/components/report/ReportPage.tsx
+6 lists: eng-all surface-136 five-words plan-protocol inc-S ms-S
+$ resolve --type build --letter S --files mobile/src/app/x.tsx
+12 lists: mobile-90 mobile-98 mobile-99 mobile-100 mobile-96 surface-136 eng-front eng-shared five-words plan-protocol inc-S ms-S
+$ resolve --type build --letter S --files docs/specs/02-web-admin/128_surface_standard_policy.md
+12 lists: eng-all agents-s7-s11 queue-137 surface-136 surface-126 surface-127 surface-128 surface-135 five-words plan-protocol inc-S ms-S
+$ resolve --type build --letter S --files src/lib/parcels/lot-size-entry.ts
+9 lists: eng-back eng-shared surface-126 surface-128 storage-doc16 five-words plan-protocol inc-S ms-S
+$ rule-lists.mjs check-tasks
+exit=0
+FAILED lines: 0
+check-tasks: open 305: resolve 104, not yet resolvable 201
+$ page totals
+24:| total | 11 lists | | 194,014 | 11 |
+43:| total | 11 lists | | 226,854 | 11 |
+63:| total | 12 lists | | 307,917 | 12 |
+85:| total | 14 lists | | 566,443 | 17 |
+102:| total | 9 lists | | 211,730 | 9 |
+117:| total | 7 lists | | 165,455 | 7 |
+N1, N2 and the changed tests: red.out refused (2 failed, N1 at :339 and golden path at :165); commit.out green, Tests 28 passed (28). The planted defects of N1 and N2 are asserted in the same tests (each designed assertion throws on its planted table) and pass in the green run.
+
+2026-11-23 (lane BL-SURF439): output review round 1 run on DeepSeek with fresh context context-r3.md: compliance once per list (9 lists; policy-124-s2-s5 in two parts), engineering eng-all, code-review, error-paths; 13 outputs, all exit 0; 29 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-SURF439/FINDINGS.md. Grounder owed (RR-0359); task stays RUNNING.
 <!-- SECTION:NOTES:END -->

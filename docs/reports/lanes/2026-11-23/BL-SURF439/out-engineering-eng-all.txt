@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T16:03:35.069Z file_sha256=0a64ea9de16b13b38dec0d2efe906a96a7c93f7cf45b2aaee72bcb744902d687 prompt_sha256=35551ab9fdd6cf84e5f43de8b2f58591ab20748493a113c098eba0e204166e21
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=MED — 2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists-table.logic.test.ts:340 "table().rows.find((r) => r.id === id)!.lists, `row ${id}`" — two new non-null assertions on `.find()` (also :350 "table().rows.find((r) => r.id === 'specs-web-admin')!.lists") with no inline justification, so a renamed row id crashes with a TypeError instead of a clear assertion diff — replace each with an explicit guard helper that throws "missing row <id>", or add the required one-line comment on each `!`
+
+DEFER severity=LOW — 11 "Pre-Review Self-Checklist (always applies, every WF): Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — the material records red.out, commit.out and acceptance.out but shows no 5-10 item PASS/FAIL checklist for this commit — record the checklist in the lane report next to the acceptance output (cannot see beyond the pasted diff)
+
+MET — 5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — src/tests/backlog/rule-lists-table.logic.test.ts:339 — the notes show red.out refused with "2 failed | 26 passed: N1 at rule-lists-table.logic.test.ts:339 ... and the changed golden path at :165" before the json/spec/doc edits landed
+
+MET — 5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/rule-lists-table.logic.test.ts:334 — the config-derivation change is pinned in the pure-logic layer (N1/N2, planted-table assertions), not in an infra or UI layer
+
+MET — 5.2 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md — the page is regenerated in the same commit (`page --write: web kind 11 lists 226,854, phone kind 12 lists 307,917`) and acceptance reports "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current"
+
+MET — 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/08_agents.md:356, docs/specs/00-architecture/137_mcqueue.md:136 — both specs that carry the task-366 attachment wording gain the task-439 dated note in this same commit
+
+REJECT — 10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the diff edits scripts/analysis/rule-lists.json — this clause binds Frontend WFs; task-439 is review-input tooling (McFix Final), and the file is review-config data, not frontend work
+
+REJECT — 5.2 "Pin a load-bearing behavior a diff must NOT retire ... When altering/deleting code the Regression Guardian flags as a fence" — the diff rewrites the SURFACE expectations at rule-lists-table.logic.test.ts:180 ":183" that pinned Specs 126/127/128/135 to front-end reviews — that attachment is deliberately retired by RR-0380 Q1 (decision-165) and kept for the specs-web-admin row by RR-0383 (decision-168), and the replacement is pinned by new N1/N2
+
+REJECT — 12.13 mutation testing — the golden id array at rule-lists-table.logic.test.ts:165 "expect(j.lists.map((l) => l.id)).toEqual([...])" is a snapshot-style assertion — the rule's mutation surface is the four named modules (cost-model, distance, record-lead-view, builder-query); the rule-lists table is not one of them
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  57209ms (57.2s)
+📊 Tokens — total: 34837, input: 24643, output: 10194, reasoning: 9253

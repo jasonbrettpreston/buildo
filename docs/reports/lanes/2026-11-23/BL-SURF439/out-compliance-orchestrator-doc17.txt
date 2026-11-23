@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.059Z file_sha256=7781f3d1aaa5fd0785d49739bf77c2d21a519b070d9e97aeb9ff96111174813d prompt_sha256=6da7ece42d714dcbd1550a9a06491f698d2c955fc66f7b7efa2c4c4f56cbee3d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; ...)" (and the parallel docs/specs/00-architecture/137_mcqueue.md "Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4 ...)") — clause unmet: the diff appends a dated note to both Spec 08 and Spec 137, the two specs the pasted ruling says to leave as they are, and neither note cites an authority superseding RR-0376 — remove the two dated notes, or add to each the operator ruling / approved-plan reference that authorizes editing Spec 08 and Spec 137.
+MET — Card Description "Specs 126, 127, 128 and 135 leave the front-end and phone rows; the specs-web-admin row keeps them" — scripts/analysis/rule-lists.json "lists": ["surface-136", "eng-all"] and ["mobile-90", ..., "surface-136", "eng-front", "eng-shared"] — the four are removed from surfaces and mobile while specs-web-admin keeps ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"].
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — scripts/analysis/rule-lists.json "id": "specs-web-admin", "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"] — unchanged, so a surface-spec edit still resolves all five; test N2 pins it.
+MET — RR-0380 "surface specs dropped once the handbook holds the critical items" — scripts/analysis/rule-lists.json surfaces and mobile "lists" — the four specs dropped, surface-136 kept, matching the ruling.
+REJECT — doc-17 readings (RR-0001, RR-0076, RR-0110, ...) — the change is accused of not honouring the readings as rulings — doc-17 states the entries "are NOT the operator's words as a ruling and never feed a review as a ruling", so no reading in that list binds this diff.
+REJECT — card "one table edit" scope — the change is accused of touching five files beyond a single table edit — the card "Files:" line names all five files, so the file set is authorized (the content conflict with RR-0376 is the HIGH finding, not a file-scope issue).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+Rules met: none
+
+---
+⏱  91642ms (91.6s)
+📊 Tokens — total: 41726, input: 23665, output: 18061, reasoning: 17437

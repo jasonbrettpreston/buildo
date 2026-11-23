@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.064Z file_sha256=8250a5e1e7289436697999ddf69b4d375361f7c46584c75f0367dfcc892e1153 prompt_sha256=0a734220bb7eb0f0a8592b4dbaed7679e8629b628f35b1661d2ff92cc3c7ef8a
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none. No CRIT finding.
+
+DEFER severity=MED — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — docs/specs/00-architecture/08_agents.md:356 "Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final ...)" and docs/specs/00-architecture/137_mcqueue.md:137 "the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach Specs 126, 127, 128 and 135" — the card scopes the task as "THIS TASK: one table edit after task-430 lands" yet the diff edits both specs the pasted ruling says to leave as they are, and no pasted ruling names a dated note in Spec 08 or Spec 137 for task-439 — cite the authorising ruling in each note (or in the lane report) and keep the spec edits out, or show the plan-review line that added both files to the Files line.
+
+DEFER severity=MED — plan-protocol dated note 2026-11-20 item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce ... plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)." — NONE (cannot see the lane report for BL-SURF439) — the material lists red.out, commit.out and acceptance.out only; no GROUNDER.md verdict lines and no per-list `out-compliance-<id>` for the lists the task resolves (acceptance shows 6 to 12 lists per file), so the narrow-set clause is unproven by what is pasted — attach the grounder verdict lines and the per-list outputs, or state in the lane report where they live.
+
+DEFER severity=LOW — docs/specs/00-architecture/137_mcqueue.md:137 "the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them" — Implementation Notes "`$ resolve --type build --letter S --files src/lib/parcels/lot-size-entry.ts` 9 lists: eng-back eng-shared surface-126 surface-128" — a row reached by a `src/lib/parcels` path still attaches two of the four specs and is not one of the five rows the new note names, so the account the note gives reads as exhaustive when the tree has another keeper — either name every row that keeps them in the note or word it as "the rows that already attached them are unchanged".
+
+DEFER severity=LOW — card "Specs 126, 127, 128 and 135 leave the front-end and phone rows; the specs-web-admin row keeps them." — src/tests/backlog/rule-lists-table.logic.test.ts:357 "for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md'])" — N2 proves the specs-web-admin row from a comma-joined Files string only; the real resolve path for a spec edit alone is proven by the acceptance line, not by an assertion, so the RR-0383 guarantee rests partly on measurement — add one assertion on the single spec path (`docs/specs/02-web-admin/128_surface_standard_policy.md`) rather than the joined string.
+
+MET — card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — scripts/analysis/rule-lists.json:145 `"lists": ["surface-136", "eng-all"]` and the mobile row `"lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "eng-front", "eng-shared"]` — both rows drop the four ids and keep Spec 136.
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — scripts/analysis/rule-lists.json:219 `"lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"]` — the specs-web-admin row is unchanged and N2 plants its removal.
+MET — RR-0380 "once the handbook has been updated iwth the critical items" — docs/specs/00-architecture/08_agents.md:356 "the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169)" — the switch is conditioned on the landed handbook lines and cites RR-0384.
+MET — plan-protocol section 0 "- Every new task carries its SOURCE ... A task with no source is not added." — scripts/analysis/rule-lists.json:147 and :220 — no task is added; every changed line carries RR-0380 Q1, RR-0383 and RR-0384 citations.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  85855ms (85.9s)
+📊 Tokens — total: 30535, input: 15072, output: 15463, reasoning: 14312

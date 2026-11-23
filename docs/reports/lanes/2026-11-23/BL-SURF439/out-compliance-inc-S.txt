@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.064Z file_sha256=b4922c0e7d14220765be2cefa689162d239291f86fdc24ecc743d72f5f5986bf prompt_sha256=3dff15843cf7378fec36a1ec92d7e0759155ba3a6ff78a8f4a12df6e8583a9e4
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings: none. The diff implements exactly the table edit the task card names, and every pasted ruling that binds it is satisfied; the one apparent tension (RR-0376) is a documentation convention already established in the same sections and is rejected below.
+
+MET — RR-0380 Q1 "drop the full engineering when arts can be sent ... once the handbook has been updated iwth the critical items" — scripts/analysis/rule-lists.json (surfaces row) `"lists": ["surface-136", "eng-all"],` — the surfaces row no longer attaches surface-126, surface-127, surface-128 and surface-135.
+MET — task card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — scripts/analysis/rule-lists.json (mobile row) `"lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "eng-front", "eng-shared"],` — the phone row drops the four and keeps its five mobile lists.
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — scripts/analysis/rule-lists.json (specs-web-admin row) `"lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],` — the row keeps all five, and test N2 asserts it.
+MET — RR-0395 "one small task adds the missing handbook lines before task-439 lands" — Implementation Notes "task-446 is folded on the board at 2fe7fa150, so the handbook now holds one more line than the plan counted (fe.58 for R-22)" — precondition met before this change.
+MET — Spec 08 note "Every other row is unchanged" — docs/reports/generated/rule-lists-by-kind.md diff hunks touch only the web, phone, storage and spec-only kind blocks that follow from the three edited rows — no other row changed.
+MET — task-439 measured effect "goes from about 558,000 to about 83,000 characters" — rule-lists.json surfaces row cut `surface-126` 256,412 + `surface-127` 50,606 + `surface-128` 77,169 + `surface-135` 113,756 = 497,943 removed, giving web kind `| total | 11 lists | | 226,854 | 11 |` and spec-kind totals +2,241 matching the two note lengths.
+MET — generated page current — docs/reports/generated/rule-lists-by-kind.md `| total | 11 lists | | 226,854 | 11 |` equals old `724,797 - 497,943`, and `| total | 12 lists | | 307,917 | 12 |` equals old `805,860 - 497,943`.
+REJECT — RR-0376 "Leave Spec 137 and Spec 08 as they are" — the diff is accused of editing both architecture specs — this is not real: the change only appends dated notes that "keep prior text" (`+   Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4 ... now hold for those rows only.`), the identical convention used by the existing 2026-11-20/21/22 notes in the same sections, and the approved task-439 Files line names both files.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  104409ms (104.4s)
+📊 Tokens — total: 37976, input: 18912, output: 19064, reasoning: 18279

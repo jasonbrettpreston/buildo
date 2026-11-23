@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T16:03:35.071Z file_sha256=3493dffc80a7abe7e84b74d1cd66b04c749d59cf54ca84d8ae265cdb7d9c7a03 prompt_sha256=75f9f43cf08e36d93a13a1fda342d6a15c12d316640026d7bdca371ddefba3b9
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-code-review.txt (model: deepseek-reasoner)
+
+NIT severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts:340 "for (const id of ['surfaces', 'mobile']) handbookOnly(table().rows.find((r) => r.id === id)!.lists, `row ${id}`);" — the non-null assertion on `.find()` hides `undefined`: a renamed or removed row makes `.lists` throw a TypeError at runtime instead of failing with a readable message naming the missing row id — assert the row exists first (`const row = table().rows.find(...); expect(row, id).toBeDefined();`) or use optional chaining with an assertion.
+NIT severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts:330 "@@ -330,4 +330,34 @@ describe('task-431: the engineering standards sent by side', () => {" — the new task-439 tests N1 and N2 are appended inside the `task-431` describe block, breaking the file's one-describe-per-task pattern (neighbour: `describe('task-384: ...')`, `describe('task-431: ...')`), so a regression in N1/N2 reports under the wrong task — move N1/N2 under a new `describe('task-439 ...')` block.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  60608ms (60.6s)
+📊 Tokens — total: 24139, input: 12336, output: 11803, reasoning: 11505

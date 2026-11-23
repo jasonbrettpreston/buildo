@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.069Z file_sha256=5f13fa803907912c69e395359f076ccd363239dc21d3d0a22de058f4d9320b9b prompt_sha256=8d5a2d7e71059f8c8fac33186613790682dc914a478b5cca21eb9568f4ad3aef
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — RR-0395 "one small task adds the missing handbook lines before task-439 lands" ("Agreed. Plan approved") — docs/specs/00-architecture/08_agents.md "+   Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, ... a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: "we will add to the rules overtime")" — the ruling's precondition is not evidenced: the only recorded landing is one extra handbook line (fe.58, task-446 "the tree reads 58 and 22"), and the change ships the four-spec drop while the lane's own note keeps the unlined-rules exposure open — cite task-446's handbook commit and the handbook rows it closed in the lane report, or hold the four specs' removal until those lines land.
+DEFER severity=NIT — task card "the specs-web-admin row keeps them" — docs/specs/00-architecture/137_mcqueue.md "+Dated note 2026-11-23 ... the specs-web-admin row and the importer, census-route, panel-record and generated-127 rows keep them" — the note asserts four further rows keep the four specs, but the material under review shows only the specs-web-admin row's membership (the other rows are untouched in the diff, so their lists cannot be seen) — confirm those four rows' lists in the acceptance output or narrow the note to the row the diff shows.
+REJECT — RR-0376 — accused of editing Spec 08 and Spec 137 after "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — not a real issue: that ruling re-scoped task-427's step 2, both files are on this card's Files line, and a dated note with prior text kept is the record form the surrounding task-431/task-366 notes already use.
+REJECT — Spec 124 §2 Rules 1-12 — accused of descriptor, checks, compute, write-discipline, verdict, ordering and crash-posture non-compliance — not a real issue: the diff contains no step descriptor, compute file, checks[], write target, verdict code or scorecard, so those rules have no object here; Rule 13 is the only one with a surface (generated-doc freshness).
+MET — task card "Specs 126, 127, 128 and 135 leave the front-end and phone rows" — scripts/analysis/rule-lists.json:145 — surfaces row lists now ["surface-136", "eng-all"] and the mobile row drops the four, keeping mobile-90/98/99/100/96.
+MET — task card "the specs-web-admin row keeps them" — scripts/analysis/rule-lists.json:218 — that row still carries ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"].
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — src/tests/backlog/rule-lists-table.logic.test.ts (N2) — asserts each docs/specs/02-web-admin/*.md path still resolves surface-126/127/128/135 plus surface-136, with a planted-defect leg.
+MET — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items" — scripts/analysis/rule-lists.json surfaces "why" — names the handbook (Spec 136 section 2, task-430/RR-0384 13 lines) as the reason the four specs are no longer attached.
+MET — RR-0379 "we will add to the rules overtime" — docs/specs/00-architecture/08_agents.md added note — discloses that a rule of those specs with no handbook line reaches no front-end review until a line is added.
+MET — Rule 13 gate J, generated-doc freshness — docs/reports/generated/rule-lists-by-kind.md — regenerated with reconciled totals (web 15 lists/724,797 chars to 11/226,854; phone 16/805,860 to 12/307,917; parts 20 to 11 and 21 to 12), matching the acceptance "page --check is current".
+MET — task card Files line — all five named files (rule-lists.json, rule-lists-table.logic.test.ts, 08_agents.md, 137_mcqueue.md, rule-lists-by-kind.md) appear in the diff and nothing outside them.
+MET — RR-0385 "tests are the focus" — rule-lists-table.logic.test.ts N1/N2 — both carry planted-defect assertions (four re-added on surfaces/mobile, mobile-99 dropped, specs-web-admin narrowed) that must throw.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 25   Unmet: 0
+Rules met: none
+
+---
+⏱  81597ms (81.6s)
+📊 Tokens — total: 37487, input: 22410, output: 15077, reasoning: 13990

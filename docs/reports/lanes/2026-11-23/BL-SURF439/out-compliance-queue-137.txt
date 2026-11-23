@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T16:03:35.060Z file_sha256=c351f18b58de8277639709579407e3be3258915d1d67ca7818b41e1a517aa2c3 prompt_sha256=dc2224133f5e290276c14140ec2cff3bee0e73a3e24aa5b5170a1b1895842681
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SURF439/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=MED — RR-0376 "Exactly 1. Leave Spec 137 and Spec 08 as they are, and drop that part of task 427." — docs/specs/00-architecture/137_mcqueue.md:137 "+Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165; ...)" and docs/specs/00-architecture/08_agents.md:356 same — the change edits both files the operator ruled to leave as they are, where the card says "THIS TASK: one table edit" — drop both notes and leave the account on the card (decision-165, decision-168 already name the task), or take a fresh operator ruling that lifts RR-0376 for these two notes before merge.
+
+BUG severity=LOW — Spec 137 §2 "the section or note name is the pointer" — 137_mcqueue.md:137 "the Spec 08 section 7 rule 4 note of task-439 has the whole account" vs 08_agents.md:356 "the task-366 note of section 5.3 above" — the two added notes place the same task-439 account in different sections (section 7 rule 4 in the Spec 137 note, section 5.3 in the Spec 08 note, which is inserted beside item "5. **Panel sizing scales to stakes.**"), so one pointer sends the reader to the wrong section — make both notes name one section.
+
+BUG severity=LOW — RR-0380 Q1 "Pushing 1 transition once the handbook has been updated iwth the critical items" — 08_agents.md:356 "the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169)" — the condition the ruling puts on the drop is satisfied only by prose in the note; no diff line, test or acceptance check pins the handbook contents, so a tree without those 13 lines loses the four specs with nothing sending their rules — name the commit that landed task-430 (or print the handbook rule count) in the lane record and the note.
+
+NIT severity=NIT — Spec 137 §4 Rule 4 "Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")" — 137_mcqueue.md:137 "task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165" — the note header carries a label in the lane slot and no queue, while the lane is BL-SURF439 — add ", lane BL-SURF439" to both added note headers.
+
+REJECT — Rule 12 task-423 note "a list is never trimmed in either form" — that dropping four lists from the front-end rows trims rules — the sentence governs packing a resolved list, not which lists a row attaches; RR-0379 "we will add to the rules overtime" and RR-0380 Q1 set that, and the Spec 08 note records the resulting gap.
+
+MET — Spec 137 §4 Rule 12 task-366 note "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" — 137_mcqueue.md:137 — the new note narrows those words to the rows that keep the specs and leaves the prior text untouched.
+MET — RR-0380 Q1 (surface specs leave the front-end and phone rows) — scripts/analysis/rule-lists.json:145 "lists": ["surface-136", "eng-all"] and the mobile row without the four — both rows send the handbook and keep their engineering lists.
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — scripts/analysis/rule-lists.json:218 "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"] — specs-web-admin keeps all five, and test N2 plants their loss and fails.
+MET — Spec 137 §4 Rule 3 amended "the status line moves in the commit that closes the task, after the work commits" — the diff holds only the work, the card stays "status: RUNNING", no status line is edited here.
+MET — Spec 137 §4 Rule 10 "the prior row text is kept" — 137_mcqueue.md:137 and 08_agents.md:356 — notes appended, no earlier line removed.
+MET — RR-0379 "we will add to the rules overtime" — 08_agents.md:356 "a rule of those specs with no handbook line yet reaches no front-end review until a line is added" — the loss of reach is recorded rather than hidden.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+Rules met: none
+
+---
+⏱  122748ms (122.7s)
+📊 Tokens — total: 45840, input: 23390, output: 22450, reasoning: 21374
