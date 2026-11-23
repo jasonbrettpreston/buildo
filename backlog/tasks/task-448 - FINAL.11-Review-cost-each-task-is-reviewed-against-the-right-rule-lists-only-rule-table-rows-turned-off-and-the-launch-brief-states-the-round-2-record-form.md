@@ -7,7 +7,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T21:07:00Z'
+updated_date: '2026-11-23T21:28:00Z'
 labels:
   - McFix
   - McFix Final
@@ -26,7 +26,7 @@ ordinal: 148012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Card opened 2026-11-23 by the orchestrator, Spec 137 rule 2, on the operator's rulings. RR-0418 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2140 and :2144, verbatim: "IT was these"): a front-end task is reviewed against the front-end handbook (Spec 136), the engineering standard, the four lenses and the four every-task lists; the back end the same with its own handbook; the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table; nothing new is built. RR-0419 (:2149, verbatim: "Approved. Are there any other surprises in teh reviews that sonnet or anybody else does?"): one task. RR-0420 (:2155): the other review-cost problems join it. RR-0421 (:2161, verbatim: "1-4 recommendations approved"): 1 a old source specs 126, 127, 128, 135 off on every row (reverses RR-0383); 2 a phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96; 3 a the four Airtight lists and storage-doc16 off; 4 a the lane-tools row keeps its process lists, every other row loses them. RR-0422 (:2166, verbatim: "Minimum and 1a. Let's add these small fixes to the cost review task."): the Minimum package; scripts/hooks/check-lane-close.mjs is NOT edited, except as RR-0424 says below. RR-0423 (:2171, verbatim: "add teh first two.  Plan approved.  Move forward with the task"). RR-0424 (:2176-2177, verbatim: "add it"): task 448 also changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346. WHY, measured: task-367's output review resolved 16 lists (961,597 characters, 78 DeepSeek calls, 285 findings to rule); with the table edit it resolves 6 lists (113,259 characters). THIS TASK, all of it turning things off or correcting text: (1) scripts/analysis/rule-lists.json: the row edits of PLAN-418-v1 section D as restated with RR-0421 in PLAN-418-part2-v2 (16 rows with a lists change; a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json), and the why text of each changed row made true again (for example :152 and :140); (2) the tests that pin the table, edited first and seen red: src/tests/backlog/rule-lists.logic.test.ts, rule-lists-table.logic.test.ts, backlog-lane.logic.test.ts (including :552, named by the plan grounder); (3) the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit; (4) scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line; (5) dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings, including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it). NOT in this task: any edit to rule-lists.mjs, any edit to check-lane-close.mjs other than the one clause at :502 (RR-0424), any new tool, hook, key or role. Inputs (outside the repo, saved verbatim): ~/Buildo-scratch/lanes-20261119/inc1b/lists418/PLAN-418-v1.md, GROUNDER-PLAN-418-v1.md (PASS WITH CORRECTIONS, nine corrections), PLAN-418-part2-v2.md. Known limit, told to the operator: tasks already launched are judged by the table at their own base; this helps every task launched after it lands. Principles served: simple, standardized, understandable.
+Card opened 2026-11-23 by the orchestrator, Spec 137 rule 2, on the operator's rulings. RR-0418 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2140 and :2144, verbatim: "IT was these"): a front-end task is reviewed against the front-end handbook (Spec 136), the engineering standard, the four lenses and the four every-task lists; the back end the same with its own handbook; the queue, agent, policy and orchestrator-note lists and the old source specs are turned off in the existing table; nothing new is built. RR-0419 (:2149, verbatim: "Approved. Are there any other surprises in teh reviews that sonnet or anybody else does?"): one task. RR-0420 (:2155): the other review-cost problems join it. RR-0421 (:2161, verbatim: "1-4 recommendations approved"): 1 a old source specs 126, 127, 128, 135 off on every row (reverses RR-0383); 2 a phone rows keep mobile-90, mobile-98, mobile-99 and lose mobile-100, mobile-96; 3 a the four Airtight lists and storage-doc16 off; 4 a the lane-tools row keeps its process lists, every other row loses them. RR-0422 (:2166, verbatim: "Minimum and 1a. Let's add these small fixes to the cost review task."): the Minimum package; scripts/hooks/check-lane-close.mjs is NOT edited, except as RR-0424 says below. RR-0423 (:2171, verbatim: "add teh first two.  Plan approved.  Move forward with the task"). RR-0424 (:2176-2177, verbatim: "add it"): task 448 also changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only; the only edit to that file) with the one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346. RR-0426 (:2186, verbatim: "1 and 2 as recommended"): task 448 also corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only); by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads. WHY, measured: task-367's output review resolved 16 lists (961,597 characters, 78 DeepSeek calls, 285 findings to rule); with the table edit it resolves 6 lists (113,259 characters). THIS TASK, all of it turning things off or correcting text: (1) scripts/analysis/rule-lists.json: the row edits of PLAN-418-v1 section D as restated with RR-0421 in PLAN-418-part2-v2 (16 rows with a lists change; a not on the bylaw and lane-tools rows for prereg-MF files; the panel-records glob gains prereg-MF-*.json), and the why text of each changed row made true again (for example :152 and :140); (2) the tests that pin the table, edited first and seen red: src/tests/backlog/rule-lists.logic.test.ts, rule-lists-table.logic.test.ts, backlog-lane.logic.test.ts (including :552, named by the plan grounder); (3) the regenerated page docs/reports/generated/rule-lists-by-kind.md in the same commit; (4) scripts/analysis/backlog-lane.mjs:188, one sentence: a fix round re-makes every review file under the same names and round 1 is named by a history line (task-446, d04026fe5), with one test line; (5) dated notes in docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the rulings, including that the plan grounder writes the fold check itself, once, after the last fold (only if the plan grounder rules Spec 08 section 11.2 and the gate allow it). NOT in this task: any edit to rule-lists.mjs, any edit to check-lane-close.mjs other than the one clause at :502 (RR-0424), any new tool, hook, key or role. Inputs (outside the repo, saved verbatim): ~/Buildo-scratch/lanes-20261119/inc1b/lists418/PLAN-418-v1.md, GROUNDER-PLAN-418-v1.md (PASS WITH CORRECTIONS, nine corrections), PLAN-418-part2-v2.md. Known limit, told to the operator: tasks already launched are judged by the table at their own base; this helps every task launched after it lands. Principles served: simple, standardized, understandable.
 
 Files: scripts/analysis/rule-lists.json, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
@@ -68,6 +68,7 @@ Rulings, with the verbatim words at these MD lines:
 - RR-0422: :2166 "Minimum and 1a. Let's add these small fixes to the cost review task." decision-207.
 - RR-0423: :2171 "add teh first two.  Plan approved.  Move forward with the task". decision-208.
 - RR-0424: :2176-2177, operator verbatim "add it". decision-209. Task 448 also changes the one refusal-message clause at scripts/hooks/check-lane-close.mjs:502 (text only) and one test comment at src/tests/backlog/check-lane-close.logic.test.ts:346. It is the only edit to the close check; the rest of RR-0422 stands.
+- RR-0426: :2186, operator verbatim "1 and 2 as recommended". decision-211. 1 yes: task 448 also corrects the stale comment at scripts/analysis/backlog-lane.mjs:12 (comment only; section 3.3b). 2 no: by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads (A5).
 
 Where each judge reads its table:
 - **Launch gate:** the board's table (backlog-lane.mjs:78).
@@ -108,6 +109,7 @@ Known loss under RR-0421 item 1a and 4a (part-2 grounder correction 1):
 3. The regenerated page docs/reports/generated/rule-lists-by-kind.md, in the work commit (pre-commit :44 runs `page --check`).
 4. One sentence in scripts/analysis/backlog-lane.mjs:188 (the round-2 record form), with one test line.
    - By RR-0424 (decision-209), also one clause of the refusal message at scripts/hooks/check-lane-close.mjs:502 and one comment at src/tests/backlog/check-lane-close.logic.test.ts:346, text only (section 3.3a).
+   - By RR-0426 (decision-211), also the stale comment at scripts/analysis/backlog-lane.mjs:12, text only (section 3.3b).
 5. Dated notes:
    - one under Spec 08 section 7 rule 4;
    - one under Spec 08 section 11.2 (the fold check);
@@ -120,7 +122,7 @@ Known loss under RR-0421 item 1a and 4a (part-2 grounder correction 1):
 - No change to `exempt`, `every_task`, `kinds` or any list definition. The lists stay defined; they are only unattached.
 - Not fixed, known stale texts:
   - rule-lists.mjs:257 says a record task "defaults to the queue lists" (the file may not be edited);
-  - the comment at backlog-lane.mjs:12 says the same (the card names one sentence in that file).
+  - (the comment at backlog-lane.mjs:12 said the same; RR-0426 has it corrected here, section 3.3b, and rule-lists.mjs may not be edited).
 - The refusal clause at check-lane-close.mjs:502 is changed here (RR-0424, section 3.3a); nothing else in the close check is.
 
 ## 3. The exact texts
@@ -236,6 +238,13 @@ RR-0423 item 1 (decision-208): the stale why notes are made true. Where a why sa
 - **Test comment, src/tests/backlog/check-lane-close.logic.test.ts:346.** Old: `  // the form the brief gives for a later round: out-<lens>[-<list id>]-r2.txt beside the round-1 file (green-both: it holds before and after this task's edit; it pins what the brief now promises)`. New: `  // what the close check does with a round file out-<lens>[-<list id>]-r2.txt: it reads it like any out- file and it never stands in for a round-1 name; the brief and the refusal message now say the same (task-448, RR-0424; green-both: it holds before and after this edit)`.
 - The title of the test at :347 stays: it is true (its last refusal shows that the round-1 file out-code-review.txt is still required when an -r2 file exists). No assertion changes.
 - The red-first pin is the new parity fragment of section 4 (backlog-lane.logic.test.ts:290): red while either text lacks it.
+
+### 3.3b backlog-lane.mjs:12 comment (RR-0426, decision-211; comment text only)
+
+- **File:** scripts/analysis/backlog-lane.mjs, line 12, a `//` comment. Edit by the old text; it occurs once in the file and no test pins it (the test title at backlog-lane.logic.test.ts:548 is a separate text, changed in section 4; the same words in 08_agents.md:229 are superseded by the 3.4 note).
+- **Old:** `(a record-only task gets the queue lists)`
+- **New:** `(a record-only task gets the every-task, increment and milestone lists only, since task-448)`
+- The new words are true of the table after this task: the queue-records default row attaches no list (3.1), so a record-only task with no Files line gets the every-task lists, its increment list and its milestone lists. The line stays one line. The message at rule-lists.mjs:257 keeps its words (that file stays closed).
 
 ### 3.4 Dated note, Spec 08 section 7 rule 4 (insert after 08_agents.md:356, before :357 "5. **Panel sizing**", with the same 3-space indent)
 
@@ -395,7 +404,7 @@ Always allowed: the task file, docs/reports/reviews/task-448/, docs/reports/lane
 **Commit 1 (work), after the red attempt of section 4.** Before it the lane writes a 5-item PASS or FAIL self-check in its reply (engineering standards section 11), built from Spec 08 section 7 rule 4 and section 11.2 and checked against its own diff. In order:
 1. The test edits (already written).
 2. The table edits (3.1, 3.2).
-3. The brief sentence (3.3), the refusal clause and the test comment (3.3a).
+3. The brief sentence (3.3), the refusal clause and the test comment (3.3a), and the comment at backlog-lane.mjs:12 (3.3b).
 4. The three dated notes (3.4-3.6).
 5. `node scripts/analysis/rule-lists.mjs page --write`, then `--check`: the last edit before git add. The page prints the characters of each list as the review receives it, the notes change the counts of agents-s7-s11 (Spec 08 sections 7 and 11) and queue-137 (the whole of Spec 137), and .husky/pre-commit:44 runs `page --check` on the worktree. Any later edit to rule-lists.json, 08_agents.md, 137_mcqueue.md or another list document means `page --write` and `--check` again before git add.
 6. The task file with status RUNNING.
@@ -433,11 +442,12 @@ Always allowed: the task file, docs/reports/reviews/task-448/, docs/reports/lane
 | A11 | orchestrator | the pre-push check list at push (.husky/pre-push-checks.sh) | PASS |
 | A12 | lane | `node scripts/analysis/rule-lists.mjs resolve --files "scripts/steps/_schema/converted.json" --type build --letter S` | step-132, eng-back, eng-shared, five-words, plan-protocol, inc-S, ms-S, and no airtight id (the back-end half of RR-0418) |
 | A13 | orchestrator | `grep -c 'never stands in for a round-1 name' scripts/analysis/backlog-lane.mjs scripts/hooks/check-lane-close.mjs` | 1 for each file |
+| A14 | orchestrator | `grep -c 'gets the queue lists' scripts/analysis/backlog-lane.mjs` | 0 |
 
 **Known limits, stated, not fixed:**
 - Tasks already launched are judged at close by the table at their own range base (check-lane-close.mjs:766-767, :842). This helps every task launched after the landing. Tasks 367 and 442 gain nothing unless they merge the board, and a fold is a merge that the check skips (:720-721).
 - **The brief and the refusal agree from this task (RR-0424):** both say that a fix round re-makes every file under the same names and that an -rN file never stands in for a round-1 name; the refusal carries it in its one clause at :502.
-- The record-only message at rule-lists.mjs:257 and the comment at backlog-lane.mjs:12 still say "queue lists".
+- The record-only message at rule-lists.mjs:257 still says "queue lists" (that file may not be edited); the comment at backlog-lane.mjs:12 is corrected by RR-0426 (3.3b).
 - The known loss of section 0.
 - A task whose Files line names only Spec 08, Spec 137 or the queue documents is no longer reviewed against them; those rules reach a review only through a Files path on the lane-tools row.
 - A by-law pre-registration record (scripts/analysis/bylaw-validation/coa-expected/prereg-MB-*.json) is a file of the lane-tools row and keeps bylaw-133 and the five lane-tools lists, as RR-0421 item 4 a reads (A5).
@@ -446,7 +456,7 @@ Always allowed: the task file, docs/reports/reviews/task-448/, docs/reports/lane
 
 - **Q1.** Is the scope sentence of 3.5 ("the claims the fold added or changed ... are not run again") an acceptable narrowing of "re-executes every claim in the fold" (:486) under RR-0423? Or must it stay "every claim in the fold"? The part-2 grounder found the condition met (08_agents.md:486 and :489; gate :692-712). Ruled by the grounder: no narrowing. RR-0423 names who writes the fold check and when, not its scope; the note of 3.5 says only that, and the scope of :486 stays. The gate allows the plan grounder as the checker (:692-712 reads the form and that the checker is not the lane or an assignee).
 - **Q2.** Are the appended `why` suffixes (prior text kept, current state appended) "made true again" in the sense of RR-0423 item 1? Or must the false clauses be rewritten? Rewriting would risk the pinned phrases. Ruled by the grounder: the false clause is rewritten in place on every row whose why it made false (3.2); the append-only form stays only where the why is still true (:95, :164, :213); no pinned phrase is inside a rewritten text.
-- **Q3.** Should the comment at backlog-lane.mjs:12 ("a record-only task gets the queue lists") be corrected here, since the file is already edited? The card names one sentence, so I left it. Ruled by the grounder: left, not folded. The comment is a stale text no ruling names; it stays in the lists of sections 2 and 8, and the operator is asked whether to add it.
+- **Q3.** Should the comment at backlog-lane.mjs:12 ("a record-only task gets the queue lists") be corrected here, since the file is already edited? The card names one sentence, so I left it. Ruled by the grounder: left, not folded. The comment is a stale text no ruling names; it stays in the lists of sections 2 and 8, and the operator is asked whether to add it. Answered by the operator (RR-0426, decision-211, MD:2186): yes, the comment is corrected here (3.3b).
 
 ## 10. UNVERIFIED
 
