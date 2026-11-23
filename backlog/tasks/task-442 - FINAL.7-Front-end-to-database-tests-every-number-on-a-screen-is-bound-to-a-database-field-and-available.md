@@ -3,7 +3,7 @@ id: TASK-442
 title: >-
   FINAL.7 Front end to database tests: every number on a screen is bound to a
   database field and available
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-FEDB442'
 created_date: '2026-11-22T20:24:00Z'
@@ -393,4 +393,6 @@ task-442 (FINAL.7, MF-97): front end to database tests B1 (fe.05, fe.18), T11 (f
 
 Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 15 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fedb442-lane/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at 80a3401b8); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fedb442-lane/grounder/r1/TRIAGE.md
 out-compliance-orchestrator-doc17#2 MED fixed bf257b6
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-23/BL-FEDB442/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-FEDB442/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->
