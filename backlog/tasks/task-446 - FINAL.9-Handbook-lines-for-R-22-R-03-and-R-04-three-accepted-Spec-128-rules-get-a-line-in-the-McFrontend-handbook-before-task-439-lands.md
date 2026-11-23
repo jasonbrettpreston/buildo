@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB446'
 created_date: '2026-11-23T12:33:00Z'
-updated_date: '2026-11-23T14:35:00Z'
+updated_date: '2026-11-23T14:38:00Z'
 labels:
   - McFix
   - McFix Final
@@ -48,6 +48,7 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-23/BL-HB446/FINDINGS.md
+  - docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md
 type: build
 ordinal: 146012
 ---
@@ -408,4 +409,6 @@ $ 9 diff stat generator/128/rule-lists.json since launch 240e559e3
 Item 7: the pre-commit related run of commit 2905df62d ran src/tests/surfaces/handbook-rule-map.logic.test.ts (41 passed) and src/tests/system-map.infra.test.ts (13 passed); register-locks-resolve, rule-lists-table, rule-lists and mcfrontend-queue were not in the related run and the lane may not call the runner directly: UNVERIFIED until the push-station suite. Items 10 and 11 are the orchestrator's and the push station's. Item 12: the RR-0396 reply is the first dated note on this task and is in the FE-58 Full text cell.
 
 2026-11-23 lane BL-HB446 output review round 1 (RR-0385): fresh context docs/reports/reviews/task-446/context-r3.md (backlog-brief.mjs); the whole task diff 240e559e3..2905df62d (Files-line paths); DeepSeek lenses compliance per list (15 lists, 47 parts), engineering eng-all (2 parts), code-review, error-paths, ux, security; 52 outputs and their inputs in docs/reports/lanes/2026-11-23/BL-HB446/, findings listed untriaged in FINDINGS.md there (CRIT 2, HIGH 5, MED 39, LOW 77, NIT 6 as printed). Grounder owed (RR-0359): the task stays RUNNING.
+
+2026-11-23 lane BL-HB446: out-compliance-policy-124-s2-s5-p1.txt re-run once (its first run printed no VERDICT line; the close check refused it); FINDINGS.md relisted (134 findings); lane REPORT.md copied to docs/reports/lanes/2026-11-23/BL-HB446/REPORT.md. Grounder owed; the task stays RUNNING.
 <!-- SECTION:NOTES:END -->

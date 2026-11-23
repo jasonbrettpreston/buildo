@@ -1,9 +1,31 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:23:52.196Z file_sha256=cd7d6033fdac0aae0f93e265b72b939f6b72d1b80c94f42fb8b8243f4118b60a prompt_sha256=196cf33622e1d753828f85b9ea91b3f4125e633029ce84a780153e7bf4c309e9
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T14:36:39.714Z file_sha256=cd7d6033fdac0aae0f93e265b72b939f6b72d1b80c94f42fb8b8243f4118b60a prompt_sha256=196cf33622e1d753828f85b9ea91b3f4125e633029ce84a780153e7bf4c309e9
 🔍 Lens review of docs/reports/lanes/2026-11-23/BL-HB446/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
 
+BUG/DEFER/REJECT findings:
 
+DEFER severity=LOW — 124 §2 rule 4 "as a check's `why`, not a comment." — src/tests/surfaces/handbook-rule-map.logic.test.ts:309-312 "// when task-367 builds the lock and flips the row, the same commit edits T2's status line and the Spec 136 pattern." — the obligation that task-367 must edit T2 and the Spec 136 pattern when FE-58 flips lives only in this comment, not in the FE-58 lock cell ("the lock is task-367's ... and the path is a reservation") nor in the panel's task-367 followup — add that one sentence to the FE-58 lock cell and to the task-367 followup line in docs/reports/panels/MF-96.json.
+
+DEFER severity=LOW — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9)." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 "D pass, P owed, F n/a, S pass, H n/a, E pass" — `owed` is a fourth value outside the register's own closed vocabulary, so the new row does not satisfy the cell rule it is written under — either state `P` as `pass`/`n/a`/`FAIL` or extend rule 4 by dated note to admit `owed` (the 13 precedent rows FE-45..FE-57 use it too, which is why this is deferred).
+
+DEFER severity=LOW — card "NOT in this task: any other lower-rank rule (added over time, RR-0379)" — src/tests/surfaces/handbook-rule-map.logic.test.ts:319-320 "for (const [rule, cite] of [['R-03', '128:205'], ['R-04', '128:206'], ['R-22', '128:224']] as const)" — T1 pins single-statement uniqueness for R-03 and R-04, which RR-0396 did not ask for and the card's out-of-scope line excludes — drop the R-03/R-04 pairs from the loop or record the extra pin as a named deviation in the panel record.
+
+REJECT — card "NOT in this task: ... a new check or lock for these rules" — accused: T2 is a new lock on R-22 — not a real issue: the card's own Files list names src/tests/surfaces/handbook-rule-map.logic.test.ts and the queue Done-condition requires it green, while the R-22 lock proper stays reserved (135:80 "no machine check yet, the lock is task-367's").
+
+REJECT — Spec 135 rule 2 / FE-56 "a lock never red against the defect it names is not a lock" — accused: replacing `rows.slice(-13)` with a findIndex window weakens the MF-95 lock — not a real issue: the new form still pins contiguity, item order, OWED status and lock non-existence, and the card records red attempt 2 with the old forms going red once the row was added.
+
+MET — RR-0396 "Question2 No" (no seam sentence appended to fe.49) — docs/specs/02-web-admin/136_mcfrontend_handbook.md hunk @@ -202,6 +202,9 @@ — only the fe.58 line is added; fe.49 is not touched anywhere in the diff.
+
+MET — card "one OWED Spec 135 row restating Spec 128 R-22 (128:224) with one reserved lock path" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:80 — one FE-58 row, status OWED, exactly one lock OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`, Ruling cell quoting R-22 at 128:224.
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135:80 — the reserved path matches the pattern and is absent from the diff (no such file added).
+
+MET — card "Files: ..." and "NOT in this task: ... a generator change, a rule-table change" — every changed path is on the card's Files list, and no generator (`generate-surface-handbook.mjs`, `rule-map.mjs`) or Spec 128 file appears in the diff; surface-rule-map.json and Spec 136 change only by the fe.58 entries and their counts.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 0
+Rules met: 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12
 
 ---
-⏱  623692ms (623.7s)
-📊 Tokens — total: 39967, input: 35250, output: 4717, reasoning: 4717
+⏱  71083ms (71.1s)
+📊 Tokens — total: 50154, input: 35250, output: 14904, reasoning: 13796
