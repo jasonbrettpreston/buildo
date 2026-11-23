@@ -3,11 +3,11 @@ id: TASK-438
 title: >-
   FINAL.3 Engineering seat: a review seat named engineering, separate from
   compliance, at plan and at output
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ENG438'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T23:47:00Z'
+updated_date: '2026-11-23T00:02:00Z'
 labels:
   - McFix
   - McFix Final
@@ -31,6 +31,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-ENG438/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/TRIAGE.md
 type: build
 ordinal: 138012
 ---
@@ -240,3 +242,11 @@ Full suite: UNVERIFIED (push station only).
 
 2026-11-22 BL-ENG438 output review round 2 (after fix d98ab4dd3): round-1 lens files renamed to the -r1 form (BL-GAPS419 precedent); full lens set re-run on the new whole-range diff with context-r4.md: 23 outputs, 70 ids (10 HIGH, 30 MED, 29 LOW, 1 placeholder), untriaged in FINDINGS.md. Grounder owed (round 2: CRITICAL and HIGH, RR-0385). Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 33 pile; grounder docs/reports/lanes/2026-11-22/BL-ENG438/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-ENG438/TRIAGE.md
+out-code-review-r1-p1#2 MED fixed d98ab4d
+Round 2 ran (23 outputs, 70 ids, 17 LOW piled, no CRITICAL, HIGH or MED open); the full suite is unverified until the push station.
+<!-- SECTION:FINAL_SUMMARY:END -->
