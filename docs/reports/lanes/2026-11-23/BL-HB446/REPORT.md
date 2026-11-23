@@ -24,7 +24,15 @@ FE-58 (handed over to BL-HB446 in ~/Buildo-scratch/ids/FE-58/owner, second line)
 Fresh context docs/reports/reviews/task-446/context-r3.md (backlog-brief.mjs, round 3). Diff made with the brief's command, base 240e559e3, nine Files-line paths, 72,560 bytes. Lenses on DeepSeek (deepseek-reasoner): compliance per list (15 lists, 47 parts), engineering eng-all (2 parts), code-review, error-paths, ux, security (one part each: out-<lens>-p1.txt). out-compliance-policy-124-s2-s5-p1.txt printed no VERDICT on its first run and was re-run once. Findings by id, untriaged: docs/reports/lanes/2026-11-23/BL-HB446/FINDINGS.md. The two CRIT lines read "none" / "none found." in their own text; the five HIGH lines: out-compliance-bylaw-133-p3#1, -p6#1, out-compliance-surface-126-p11#1 (text "none found"), out-compliance-surface-127-p1#1, -p1#2. No verdicts from the lane.
 
 ## Close check on a throwaway clone (task staged BUILT)
-CLOSE-CHECK-PLACEHOLDER
+Real scripts/hooks/check-lane-close.mjs in a shared clone at 337b627ac, task-446 set BUILT in the clone index only, output pasted whole:
+
+```
+check-lane-close: task-446: the task's references lack the repo copy docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md: backlog task edit task-446 --add-ref docs/reports/lanes/2026-11-23/BL-HB446/GROUNDER.md
+check-lane-close: task-446: GROUNDER.md is missing in docs/reports/lanes/<date>/BL-HB446/ (a build or fix task always needs a separate grounder verdict)
+exit=1
+```
+
+No refusal about the review material remains: the two lines left are the grounder file and its reference, which the separate grounder writes. (The first run, at bd5e8a815, also refused out-compliance-policy-124-s2-s5-p1.txt, "no VERDICT line"; re-run, then clear.)
 
 ## Not done (by the brief)
 No closing commit, no BUILT, no push, no merge or rebase of the board. The clone in the lane dir is removed after the check.
