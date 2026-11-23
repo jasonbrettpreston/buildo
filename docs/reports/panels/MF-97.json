@@ -1,0 +1,34 @@
+{
+  "task": "MF-97",
+  "item": "FINAL.7 (task-442): front-end-to-database tests T1 (fe.05, fe.18: every number in an option section is a McBylaws row the engine writes for that section's building type), T2 (fe.27: a parcels column the page binds but the stored read does not select fails at load) and T3 (fe.05: no digit reaches the page through a content text except three listed entries); the houseplex text row.unit_size_basis_value becomes exactly: the basement, not shared stairs and halls (RR-0405), with its generated copies regenerated and the K2 test changed. No renderer, engine, setting or workflow change.",
+  "class": "T",
+  "stage": 8,
+  "date": "2026-11-23",
+  "head": "prereg 1 (round 202); commits 0, 1",
+  "cards": [
+    "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915): \"This is the focus for both compliance and engineering standards and interface between the frontend and databse\".",
+    "Operator, verbatim (RR-0402, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2034): \"a\" (drop the percent, words only).",
+    "Operator, verbatim (RR-0403, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2040): \"a\" (the text fix is done inside task-442; task-447 merged into it).",
+    "Operator, verbatim (RR-0405, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2052): \"option a\" (the text reads: the basement, not shared stairs and halls).",
+    "RR-0385: the building seat runs on Opus; output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only."
+  ],
+  "plan": "PLAN-442-v1 on the task-442 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-442/context-r1.md and context-r2.md (plan lens set and three seats); every finding ruled by the separate plan grounder in docs/reports/reviews/task-442/GROUNDER-PLAN.md, the open questions in QUESTIONS-RULED.md, the fold checked in FOLD-CHECK.md. Tests first: red commit attempts recorded in the lane red.out; sections 3, 6 and 7b of the plan govern.",
+  "output": "OUTPUT review owed at the lane output stage: the lens set (code-review, ux, error-paths, security, compliance once per governing rule list, engineering) on the whole task diff, filed in docs/reports/lanes/2026-11-23/BL-FEDB442/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).",
+  "seats": [
+    "DeepSeek plan lens set, rounds 1 and 2 (grounded)",
+    "integration, reality-check and regression seats (plan)",
+    "separate plan grounder (docs/reports/reviews/task-442/GROUNDER-PLAN.md)",
+    "DeepSeek output lens set (owed at output)"
+  ],
+  "verdict": "PLAN RULED; OUTPUT owed",
+  "blockers": [],
+  "followups": [
+    "task-367: the OWED handbook locks (fe.45, fe.52, fe.56, fe.21, fe.25, fe.26, fe.44, fe.39, fe.15, fe.58); if it moves fe.05 checks into a surfaces lock, T1 and T3 can move with them",
+    "task-441: the engineering-standards rows",
+    "later rounds of this card: fe.24, fe.30, fe.31, fe.32, fe.37, fe.38, fe.41, fe.42 and the other content-registry blocks for fe.05"
+  ],
+  "evidence": "docs/reports/lanes/2026-11-23/BL-FEDB442/",
+  "notes": [
+    "Live breaks named, not fixed (task-442 plan section 4): item 2 (the S-001 whitelist paths, ruled not a break by the plan grounder Q4) and item 3 (the main-only db tests of fe.19, fe.20, fe.27 and fe.38; a workflow change, not opened, RR-0392). Item 1 (the typed 10 % circulation text) is fixed in this task."
+  ]
+}

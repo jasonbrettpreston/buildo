@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FEDB442'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T18:25:00Z'
+updated_date: '2026-11-23T18:29:00Z'
 labels:
   - McFix
   - McFix Final
@@ -337,4 +337,6 @@ Dated note 2026-11-23 (M-246, prior text kept; RR-0404 (decision-189, MORNING-DE
 Dated note 2026-11-23 (M-246, prior text kept; RR-0405 (decision-190, MORNING-DECISIONS.md:2052, option A: the basement, not shared stairs and halls) · task-442 · Backlog; operator, verbatim: "option a")
 
 2026-11-23 taken on the board at lane launch (lane BL-FEDB442, worktree /Users/brettpreston_macmini/Buildo-wt-fedb442, branch wf1/inc1b-fedb442), RR-0240
+
+2026-11-23 commit 0 (plan section 6, alone and first): the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md (next free id MF-98; FE rows owned: none), scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json (round 202, rules FE-05, FE-18, FE-24, FE-27, FE-29, all RULED; totals copied from prereg-MF-96-1.json, nothing moves) and docs/reports/panels/MF-97.json (the MF-95.json form). Ids from ~/Buildo-scratch/ids/MF-97 and round-202 (owner lane BL-FEDB442).
 <!-- SECTION:NOTES:END -->
