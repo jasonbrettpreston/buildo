@@ -1,22 +1,27 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.899Z file_sha256=492d80fc7e3140c1bc6781293bbcbe1a429a1983424c7c282f3ce5ef8fc081de prompt_sha256=3655cbfe4abb23361cbfeffeff2ad211c5fe9de5fc3b5904fa00d47881637c98
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p6.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:14:50.320Z file_sha256=6d699e14e9c994b817582e164bf9fda8d2dc95c62b3025e997914c4781c045a4 prompt_sha256=5dd8a4854edc4a166909f1c5550452909987f11cb2c4b8ba7b8f1f327225b162
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-r2-p6.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — task-442 card "each test is proven red on a planted defect before it counts" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — the only pasted red for this assertion is the live pre-fix text ("expected 'the basement; 10 % circulation' not to match /\d/"), while the planted digit was put in B2's row.unit_size_basis, so this assertion has a red-at-the-designed-assertion but no planted-defect red on record — add one planted-defect run that re-adds the percent to row.unit_size_basis_value and is refused at :55, or state in the lane record why the live defect stands as its red.
+DEFER severity=NIT — m.496 "The houseplex per-unit area rests on two settings: the circulation share 0.10 ("operator value, not a cited OBC figure", confidence low) and the minimum livable unit size 30 m2 net" — src/tests/surfaces/report-honest-k2.logic.test.ts "describe('K2 unit-size tile: See details says the figure includes the basement, not shared stairs and halls, in words only (M-496 formula unchanged; RR-0402, RR-0405)', () => {" — the describe title still claims M-496 unchanged but the body now asserts nothing about houseplex_circulation_share, so inside this file the M-496 claim rests on a test name only — drop the M-496 reference from the title or add one assertion that the setting still carries 0.10.
 
-MET — RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — the percent is dropped and any digit in the basis text is refused.
-MET — RR-0405 — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "expect(t).toBe('the basement, not shared stairs and halls');" — the asserted wording is the ruled words verbatim.
-MET — RR-0403 — src/tests/surfaces/report-honest-k2.logic.test.ts:44 (path in the card Files line "src/tests/surfaces/report-honest-k2.logic.test.ts") — the fix lands inside task-442's own file list, no separate task-447 path.
-MET — m.496 — src/tests/surfaces/report-honest-k2.logic.test.ts:45 "M-496 formula unchanged; RR-0402, RR-0405" — the diff changes only the expected words, no formula or setting, and the words say the figure covers the basement and not the shared stairs and halls, consistent with the 0.10 deduction.
-MET — lc.18 — src/tests/surfaces/report-honest-k2.logic.test.ts:45 "M-496 formula unchanged" — per-unit area (floor area minus circulation share, basement livable) is untouched.
-MET — lc.52 — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "the basement, not shared stairs and halls" — seven plain homeowner words, well under 45.
+DEFER severity=LOW — RR-0402 "circulation text: option A, drop the percent; card opened" (dated note: "drop the percent, words only") — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the no-digit guard covers row.unit_size_basis_value only, the row label row.unit_size_basis is unguarded in this file — the pasted red-T3.out shows the label digit is caught by B2 ("unexplained: row.unit_size_basis (1 digit run)"), so the gap closes only while B2 lives; keep both or move the guard.
 
-REJECT — m.496 — accused of losing the stored circulation setting by removing the LV.houseplex_circulation_share read — RR-0402 "drop the percent" and RR-0405 rule the surface wording, and the setting itself stays in logic_variables.json (red-T3.out quotes the text derived from it), so no setting is dropped.
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t).toBe('the basement, not shared stairs and halls');" — the operator wording is asserted verbatim.
+
+MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the typed percent is removed and its return is blocked.
+
+MET — RR-0401 "This needs to be investigated - it looks like an error to be corrected" — src/tests/surfaces/report-honest-k2.logic.test.ts "-    const pct = Math.round(Number(LV.houseplex_circulation_share.default) * 100);" — the erroneous typed 10 percent text is corrected and the numeric binding that protected it is dropped.
+
+MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — Files line "src/tests/surfaces/report-honest-k2.logic.test.ts" — the fix lands inside task-442's file list with no separate ticket.
+
+MET — task-442 "each test is proven red on a planted defect before it counts" — pasted A1 red-T3.out "AssertionError: no digit in the basis text (RR-0402): expected 'the basement; 10 % circulation' not to match /\d/ ... report-honest-k2.logic.test.ts:55:59" — red proof is at the same line the diff now asserts green.
+
+MET — lc.52 "Disclosure wording is plain. Each P5.12 code has one template of at most 45 words in a homeowner's words." — src/tests/surfaces/report-honest-k2.logic.test.ts "the basement, not shared stairs and halls" — one plain template, seven words, no figures.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 0
-Rules met: m.496, lc.18, lc.52
+Clauses checked: 7   Unmet: 0
+Rules met: lc.52
 
 ---
-⏱  54015ms (54.0s)
-📊 Tokens — total: 28237, input: 17168, output: 11069, reasoning: 10421
+⏱  33306ms (33.3s)
+📊 Tokens — total: 24367, input: 17483, output: 6884, reasoning: 6048

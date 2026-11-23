@@ -1,24 +1,35 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.900Z file_sha256=41660264db654bc860aa874c877391360b439b347185488dc8ea189a2eec9824 prompt_sha256=6b538e08cae1bb644f965dfaf820d0c9a2fc85edf9d19e047918adad60e4c170
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p1.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:11:05.462Z file_sha256=80199042c4a00a5960627b74771bd9e7f0fdb6294d7758e2e24208106f471d71 prompt_sha256=14b6c74c37cd8edaacc604767d4ad8f5b2c36abd4f3b65b756c37fd17162bd58
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-r2-p1.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — card task-442 "FINAL.7 Front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts "+    expect(DIGIT_TEXTS.map((e) => e.key)).toEqual(['legal.line', 'sheet.width_placeholder', 'sheet.depth_placeholder']);" — three digit-bearing page texts stay as unbound numbers on the screen and the test locks the carve-out as fixed, while no pasted clause or ruling names them — file a dated operator ruling for the three texts or bind them, and until ruled assert them as known findings, not as the closed list
-DEFER severity=MED — card task-442 "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts "the other registry blocks (status_text, display_label, disclosure_texts, trust_label and the rest) are the next round of this card for fe.05: today their digits are notes, ids and ruling labels, plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — a digit-bearing status text the comment admits is shown is left unscanned, deferred by comment only — extend the B2 scan to that shown status text now, or record the deferral in a ruling
-DEFER severity=MED — fe.18 "FE-18 (every displayed field binds to a source in the closed set)" — src/tests/admin-report-preview-live.logic.test.ts "user_input (the lot-size entry, a design exception by fe.18)" — the two user_input bindings are excluded from T1 and excused only by a comment, and no pasted fe.18 text names a user_input exception — cover the user_input bindings in T1 or cite the pasted ruling that makes them an exception
-DEFER severity=LOW — card task-442 "Every build task of this plan follows the six steps, plan written and built on Opus (his words: \"I want this plan for each task and built by opus\")" — NONE, cannot see — no artefact in the pasted material shows the build seat was Opus, the panel lists review seats only — record the build seat on docs/reports/panels/MF-97.json
-DEFER severity=LOW — RR-0405 "option a" (the text reads: the basement, not shared stairs and halls) — .cursor/MCFRONTEND-QUEUE.md "+  - Lane E. Done-condition: ... src/tests/surfaces/report-honest-k2.logic.test.ts asserts no digit and the exact words." — the K2 exact-words lock and the regenerated copies are claimed here but are not in this chunk (cannot see) — verify them in chunk 2
-MET — RR-0402 "a" (drop the percent, words only) — scripts/surfaces/_schema/report-presentation.json "-    \"row.unit_size_basis_value\": \"the basement; 10 % circulation\"" / "+    \"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"" — percent dropped, no digit left, same edit in the seed and the F06 landing sample
-MET — RR-0405 "option a" (the text reads: the basement, not shared stairs and halls) — scripts/surfaces/_schema/report-v2-seed/page-text.json "+    \"row.unit_size_basis_value\": \"the basement, not shared stairs and halls\"" — the exact words are set in all three pasted copies
-MET — RR-0359 "That's ridiculous to fold before the grounder review" — docs/reports/panels/MF-97.json "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — nothing folded, the output grounder is still owed before BUILT
-MET — card task-442 "each test is proven red on a planted defect before it counts" — implementation notes "T1 B1 (a) toEqual([]) received [\"o1 storeys_max detached_house\", \"o2 storeys_max detached_house\"]" — T1, T2 and T3 each red at the designed assertion through the real hooks
-MET — RR-0385 "This is the focus for both compliance and engineering standards and interface between the frontend and databse" — src/tests/customer-report-read.logic.test.ts "T11 fe.27: a parcels column the page binds but the static parcels read does not select fails at load (task-442)" — the front-end-to-database seam is tested in both files
-MET — m.322 "Accuracy floors only go up." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "\"expected_floors\": \"no floor line falls; the floors file is unchanged and the floors check stays OK\"" — before and after totals are identical, no floor falls
-MET — m.360 "a test never asserts a red floor, the --accept door counts RULED rows" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "rules[] holds RULED rows only" — no red floor asserted, only RULED rules listed
+DEFER severity=MED — queue protocol, FE rows owned (pasted note 2026-11-09, M-246 form) "naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135" — .cursor/MCFRONTEND-QUEUE.md, new row: "  - FE rows owned: none." plus "The tests add no new lock path: they extend two existing test files, so this row owns none." — the row's own title ("front-end-to-database tests for fe.05, fe.18 and fe.27") and its SPEC LINK edits say these tests are the fe.05, fe.18 and fe.27 locks, so "none" is contradicted by the row itself and arm Q could accept a DONE flip without those rows — name FE-05, FE-18, FE-27 in the bullet, or cite per row the existing lock that already covers it.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 17   Unmet: 3
-Rules met: m.322, m.360
+DEFER severity=LOW — RR-0385 "output review rounds: round 1 resolves CRITICAL, HIGH and MED, round 2 CRITICAL and HIGH only" — docs/reports/panels/MF-97.json "output": "OUTPUT review owed at the lane output stage ... FINDINGS.md untriaged", while the same change's notes record "output review round 1 filed in docs/reports/lanes/2026-11-23/BL-FEDB442/ ... 103 findings, CRIT 2, HIGH 5, MED 38" — the panel added by this change still presents round 1 as unfiled, so the record understates a completed round — update the panel "output" and "verdict" to round 1 filed, round 2 and grounder owed.
+
+DEFER severity=NIT — pasted reference practice "the reference practice gains `task-N` beside the row: `task-N · MF-nn (item) · McFrontend queue · lane X · stage N`" — .cursor/MCFRONTEND-QUEUE.md: "Status: RUNNING · since 2026-11-23 · expires 2026-11-30 · next: Land the closing commit, which sets task-442 BUILT after the output review and its grounder (lane BL-FEDB442, task-442) · ruling: \"option a\"" — lane and task are named but not the stage, though the panel records "stage": 8 — add "stage 8" so the practice line is complete.
+
+MET — RR-0405 "the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json "row.unit_size_basis_value": "the basement, not shared stairs and halls", identical in page-text.json and web_landing.sample.json "text" — exact words applied, no paraphrase.
+
+MET — RR-0402 "circulation text: option A, drop the percent" — scripts/surfaces/_schema/report-v2-seed/page-text.json "row.unit_size_basis_value": "the basement, not shared stairs and halls" — the typed percentage is gone.
+
+MET — RR-0403 "the text fix is done inside task-442" — the text edit and both test files land in this one change, panel: "the text fix is done inside task-442; task-447 merged into it" — no separate process opened.
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json "a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359)" and the row "Status: RUNNING · since 2026-11-23" — BUILT is not claimed before the grounder.
+
+MET — task card "each test is proven red on a planted defect before it counts" — Implementation Notes "T1 B1 (a) toEqual([]) received [\"o1 storeys_max detached_house\", ...]", "T2 T11 (a) rejects.toThrow", "K2 no digit in the basis text (RR-0402)", each with its assertion file:line — red recorded per test through the real hooks.
+
+MET — task card Files line (scope) — every path in this chunk, "scripts/surfaces/_schema/report-v2.decl.json", ".cursor/MCFRONTEND-QUEUE.md", "docs/reports/panels/MF-97.json", is listed in the card's Files — nothing out of scope added.
+
+MET — m.322 "Accuracy floors only go up." — prereg-MF-97-1.json "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK", and no bylaw, seed or engine path appears in the change — no floor can fall.
+
+REJECT — RR-0405 exact-words assertion — accused of being satisfied only by the string, with no test asserting it in this chunk — the assertion lives in src/tests/surfaces/report-honest-k2.logic.test.ts, which the card Files line and the row Done-condition name and chunk 2 carries.
+
+REJECT — card title "every number on a screen is bound to a database field" — accused of auditing only the `page` block — the panel's followups name "the other content-registry blocks for fe.05" as later rounds of the same card, which RR-0385 accepted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: m.322
 
 ---
-⏱  72563ms (72.6s)
-📊 Tokens — total: 52326, input: 37191, output: 15135, reasoning: 13950
+⏱  112621ms (112.6s)
+📊 Tokens — total: 61700, input: 37415, output: 24285, reasoning: 23073

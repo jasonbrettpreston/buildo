@@ -1,14 +1,12 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T18:42:28.257Z file_sha256=615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 prompt_sha256=1131b6fe35fd5fbd5f92a83a899b4b4360571338173d9f5cb579301a4753ffbf
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-security.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T19:25:10.657Z file_sha256=fcc009b73674c1d679d01be45a74c292093fb82ef69fb528aff1836dad50b49b prompt_sha256=31fd69d3c778ee1468684824d9f033c4d8d4afa859f391ad796fb562f9161f35
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-security-r2.txt (model: deepseek-reasoner)
 
-NOT APPLICABLE: the diff is queue and panel bookkeeping (`.cursor/MCFRONTEND-QUEUE.md`, `docs/reports/panels/MF-97.json`, `prereg-MF-97-1.json`), one customer-facing wording string in the presentation/seed registries plus their regenerated golden, and test-only code; no money, auth, entitlement, PII or admin surface changes.
+NOT APPLICABLE: the diff changes report display copy ("row.unit_size_basis_value"), its generated seed and landing-sample mirrors, a task-queue row, panel and prereg record JSON, and three test blocks; no money, auth, entitlements, PII or admin code path is altered. Wording and hash-only changes to `report-presentation.json`, `page-text.json`, `report-v2.decl.json` and `web_landing.sample.json` carry no request, identity, flag or query surface; the added tests (B1, B2, T11) read fixtures and plant defects in a sandboxed module registry, not a live path.
 
-```
 VERDICT: NOT APPLICABLE on exploitability
 Surfaces touched: none
-```
 
 ---
-⏱  4762ms (4.8s)
-📊 Tokens — total: 21488, input: 20769, output: 719, reasoning: 610
+⏱  3975ms (4.0s)
+📊 Tokens — total: 21580, input: 20987, output: 593, reasoning: 434

@@ -1,26 +1,35 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.900Z file_sha256=08e6219ecf63b779bfa07a8cc688649d0b2b5db2863203b0865d629ab441e05b prompt_sha256=4d80a78baf497163ae1919b6c165b9210659c29f97352ea3c334c6ecda0de73c
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:11:05.462Z file_sha256=040887c4ee33be13eaad531596e92ede17ef66f694333a55018f4f8a53ef892a prompt_sha256=6d51bbfae9c1012c2cb837ac8c30b178c109c037c11ad67a1f333583a7670a64
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-agents-s7-s11-r2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — §11.1 "a line citation is read, not remembered" — docs/reports/panels/MF-97.json "Operator, verbatim (RR-0385, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915): \"This is the focus for both compliance and engineering standards and interface between the frontend and databse\"" against the pasted decisions entry "- RR-0385 ... \"proceed. Are there any more questions - Label all realted tasks McFix Final. Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept\" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1915)" — two different verbatim quotes are anchored to the same line 1915, so one of the two citations was not read — re-read :1915 and correct the panel's anchor or quote, or cite decision-170 instead of a line.
+DEFER severity=MED — 11.9 TKT-1 dated note 2026-11-21 "the review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten (N = the context-r*.md files already there + 1)" — docs/reports/panels/MF-97.json ""plan": "PLAN-442-v1 ... reviewed by the repo review tool on docs/reports/reviews/task-442/context-r1.md and context-r2.md"" against Implementation Notes "context docs/reports/reviews/task-442/context-r4.md" — only two plan rounds are recorded (r1, r2) yet the output round 1 runs on context-r4, so one context file (r3) belongs to no round named anywhere in the material, and a third plan round would breach RR-0385 "two rounds at most" — name the round context-r3 records and add it to the panel record, or renumber the output round's context to r3.
 
-DEFER severity=MED — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — no golden file appears in the change although the card Files line names "src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/", so either the stated basis for FE-24 and FE-29 is false or the change omits the refreshed goldens — run the stat of the work commit and either drop the "refreshes the goldens" basis or add the refreshed golden files.
+DEFER severity=LOW — 7.6 dated note 2026-11-20 (task-399) "CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light)" — Implementation Notes "103 findings, CRIT 2, HIGH 5, MED 38, LOW 55, NIT 2" — the material records one MED fixed and 15 LOW/NIT piled, and no fixed: or ruling: line for the 2 CRIT and 5 HIGH is visible (TRIAGE.md and GROUNDER.md cannot be seen) — file the outcome lines for the 2 CRIT and 5 HIGH before the row is set BUILT.
 
-DEFER severity=LOW — §11.3 "Survive-the-fix locks (green-both) are stated as such per case." — src/tests/admin-report-preview-live.logic.test.ts "// task-442 (FINAL.7, plan section 3; operator RR-0385 \"interface between the frontend and databse\"), red first through the real hooks:" — B1 (b), (c), (d), B2 (b), (c) and T11 (b) pass both before and after the text fix and none is stated as a survive-the-fix lock, only red-first is claimed — label each green-both case as such, per case.
+DEFER severity=LOW — 11.9 TKT-1 "`Done-condition:` (the task's acceptance criteria)" — pasted card "## Acceptance criteria" with nothing under the heading — the row's Done-condition is written by the plan and has no card acceptance criteria to be generated from, so the source TKT-1 names is empty — write the acceptance criteria into the task card.
 
-DEFER severity=LOW — §11.1 "a claim that COULD be executed but wasn't" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "prereg 1, committed alone and first, before the MF-97 work commit" against the card note "commit 0 (plan section 6, alone and first): the MF-97 row under Phase 2 of .cursor/MCFRONTEND-QUEUE.md ... scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json ... and docs/reports/panels/MF-97.json" — the prereg was not committed alone, commit 0 carries three files — change the $comment to state only that it precedes the work commit.
+DEFER severity=NIT — 11.3 "a lock that was never red against the defect it names is not a lock" — src/tests/admin-report-preview-live.logic.test.ts "const texts = { ...PAGE_TEXT };" with "expect(scanned).toBe(Object.keys(PAGE_TEXT).length);" — this guard compares the scanned count with itself and cannot fail, the coverage weight rests on the "expect(scanned).toBeGreaterThanOrEqual(90);" line beside it — drop the tautological line or assert scanned against a fixed count.
 
-MET — RR-0405 "option a" — scripts/surfaces/_schema/report-presentation.json "row.unit_size_basis_value": "the basement, not shared stairs and halls" (identical string in report-v2-seed/page-text.json and parcel_product/F06/surfaces/web_landing.sample.json) — the ruled words are carried in every copy.
-MET — RR-0402 "a" (drop the percent, words only) — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — no figure remains and the no-digit state is locked.
-MET — §11.3 "Red must land at the DESIGNED assertion" — card note "T2 T11 (a) rejects.toThrow, \"promise resolved ... instead of rejecting\" (red-T2.out)" — red is recorded at the designed assertion for T1 (line 177), T2 (line 421) and T3 (lines 229, 235, K2 line 55).
-MET — §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — docs/reports/panels/MF-97.json "PLAN-442-v1 on the task-442 card (Implementation Plan), reviewed ... every finding ruled by the separate plan grounder" — T1, T2 and T3 are plan section 3 tests, ruled before the code existed.
-MET — §11.9 task-375 note "Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head" — docs/reports/panels/MF-97.json "integration, reality-check and regression seats (plan)" — all three tool seats are named for this launch.
-MET — §11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/admin-report-preview-live.logic.test.ts "expect(scanned).toBeGreaterThanOrEqual(90)" — every key of the page block is scanned, not a sample.
+MET — RR-0405 — scripts/surfaces/_schema/report-v2-seed/page-text.json ""row.unit_size_basis_value": "the basement, not shared stairs and halls"" — the ruled wording is used exactly, and report-honest-k2.logic.test.ts asserts "expect(t).toBe('the basement, not shared stairs and halls');".
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 33   Unmet: 4
-Rules met: MCINC-8
+MET — RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the percent is dropped and no digit remains in the basis text.
+
+MET — 11.3 — Implementation Notes "T1 B1 (a) toEqual([]) received ["o1 storeys_max detached_house", "o2 storeys_max detached_house"] ... T2 T11 (a) rejects.toThrow ... T3 B2 (a) received ["unexplained: row.unit_size_basis (1 digit run)", "unexplained: row.unit_size_basis_value (1 digit run)"]" — each red lands at its designed assertion and the unplanted controls pass.
+
+MET — 11.2 dated note 2026-11-21 — docs/reports/panels/MF-97.json "the fold checked in FOLD-CHECK.md" — the plan fold carries its committed grounder record.
+
+MET — MCINC-8 — .cursor/MCFRONTEND-QUEUE.md "id claimed in ~/Buildo-scratch/ids/MF-97" and prereg-MF-97-1.json "In-file round 202 (claimed in ~/Buildo-scratch/ids/round-202; MF-96 used 201)" — both numbers are recorded as claimed before use.
+
+MET — 7.4 dated note 2026-11-22 (task-438) — docs/reports/panels/MF-97.json "the lens set (code-review, ux, error-paths, security, compliance once per governing rule list, engineering)" — the engineering seat is held separate from compliance at output.
+
+MET — RR-0359 — Implementation Notes "round-1 fix (grounder Cairn-Ground-O442, CONFIRMED MED out-compliance-orchestrator-doc17#2; Spec 137 rule 3, 137_mcqueue.md:98)" — the one fold follows a grounder ruling, nothing is folded ahead of it.
+
+REJECT — RR-0405 — the change is accused of inventing the wording "not shared stairs and halls" — that is the operator's ruled option a as recorded in the card, so it is not an added behaviour.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: 7.4, 7.10, 11.1, 11.2, 11.4, 11.5, MCINC-8
 
 ---
-⏱  121028ms (121.0s)
-📊 Tokens — total: 59879, input: 33239, output: 26640, reasoning: 25444
+⏱  214274ms (214.3s)
+📊 Tokens — total: 81073, input: 33453, output: 47620, reasoning: 46395

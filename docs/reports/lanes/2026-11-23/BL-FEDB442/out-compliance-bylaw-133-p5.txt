@@ -1,22 +1,23 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.899Z file_sha256=00885da7d36b79f27e414b401706eab8ce5cae0371f76c6980facb7778634317 prompt_sha256=be080efd2bf0abcc9fd0e1f72199790522a0593b365b76c0d8e28a9fee11856f
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p5.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:14:39.818Z file_sha256=44f5ba6e170f952f717fe3d0713826e21bf12ef461193fe0d440135fab5f1aab prompt_sha256=3cba4010bf09c6885f58053f0f994afbab36f14e3edb1385f998521f96c2a227
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-r2-p5.txt (model: deepseek-reasoner)
 
-```
-DEFER severity=LOW — RR-0402 "circulation text: option A, drop the percent; card opened" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the ruling names the percent, the assertion bans every digit in that row, so a figure the ruling does not forbid would fail citing RR-0402 — assert the percent form (/\d+\s*%/) and let the RR-0405 exact-text pin carry the wording
-DEFER severity=LOW — task-442 "each test is proven red on a planted defect before it counts" — docs/reports/lanes/2026-11-23/BL-FEDB442/red-T3.out "AssertionError: no digit in the basis text (RR-0402): expected 'the basement; 10 % circulation' not to match /\d/" — the red refusal lands on the no-digit assertion, so the added line "expect(t).toBe('the basement, not shared stairs and halls');" is never itself shown red — add one red run that plants a wording defect so the RR-0405 pin has its own red evidence
-DEFER severity=LOW — task-442 "every number on a screen is bound to a database field and available" — src/tests/surfaces/report-honest-k2.logic.test.ts "-const LV = readJson('scripts/seeds/logic_variables.json');" — with the only logic-variable read gone from this file, the self-check arm "three seed reads non-vacuous PASS (catalogue 128 rows, switchboard 3 keys, logic variables 1085)" has no visible source in this chunk (cannot see the file that supplies it) — confirm which file keeps that non-vacuous read, or mark the self-check item stale
-MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t).toBe('the basement, not shared stairs and halls');" — the pinned wording is the ruling verbatim
-MET — RR-0401 "This needs to be investigated - it looks like an error to be corrected" — src/tests/surfaces/report-honest-k2.logic.test.ts "-    expect(t).toContain(`${pct} % circulation`);" — the typed percent is removed from the asserted basis text and the correction is pinned by RR-0405 wording
-MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — src/tests/surfaces/report-honest-k2.logic.test.ts "+++ b/src/tests/surfaces/report-honest-k2.logic.test.ts" — the fix lands inside a path named on task-442's own Files line, not in a separate task
-MET — RR-0385 "tests are the focus ... each test is proven red on a planted defect before it counts" — docs/reports/lanes/2026-11-23/BL-FEDB442/red-T3.out "expected 'the basement; 10 % circulation' not to match /\d/" — the changed K2 assertion was refused red against the pre-fix text before the green commit
-MET — m.0 "each change says what it replaces" — src/tests/surfaces/report-honest-k2.logic.test.ts "+describe('K2 unit-size tile: See details says the figure includes the basement, not shared stairs and halls, in words only (M-496 formula unchanged; RR-0402, RR-0405)'" — the rename states what is dropped (in words only, with no figure) and keeps the M-496 claim
-MET — Files "src/tests/surfaces/report-honest-k2.logic.test.ts" — src/tests/surfaces/report-honest-k2.logic.test.ts "diff --git a/src/tests/surfaces/report-honest-k2.logic.test.ts b/src/tests/surfaces/report-honest-k2.logic.test.ts" — the only path changed is a path the card names
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 0
-Rules met: m.0
-```
+BUG severity=HIGH — task-442 card, Description "each test is proven red on a planted defect before it counts" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the K2 assertion counts without a planted-defect red: its only recorded red is the pre-fix live copy ("AssertionError: no digit in the basis text (RR-0402): expected 'the basement; 10 % circulation' not to match /\d/"), and the plan's plant went into a different key ("with one temporary line in B2 (a) that adds a digit to row.unit_size_basis"), which the assertion does not read (it reads row.unit_size_basis_value via text('row.unit_size_basis_value')) — plant a digit in row.unit_size_basis_value and record that refused commit as the K2 red.
+
+DEFER severity=LOW — m.0 "edge cases are not chased" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — RR-0402 names one figure to drop ("circulation text: option A, drop the percent"); the test bans every digit in the row, foreclosing a legitimately bound figure that task-442's own premise ("every number on a screen is bound to a database field") would allow — assert the absence of the percent (/circulation|%/i) rather than of all digits.
+
+MET — RR-0405 — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "expect(t).toBe('the basement, not shared stairs and halls');" — the assertion pins the ruling's exact wording ("the basement, not shared stairs and halls").
+
+MET — RR-0403 — src/tests/surfaces/report-honest-k2.logic.test.ts:1 "src/tests/surfaces/report-honest-k2.logic.test.ts" — the fix lands inside task-442's own Files list ("circulation text fix merged into task-442; no separate process for task-447").
+
+MET — m.1 — src/tests/surfaces/report-honest-k2.logic.test.ts:16 "const PRESENTATION = readJson('scripts/surfaces/_schema/report-presentation.json');" — the assertion reads the committed generated JSON, not prose or a hard-coded setting.
+
+MET — m.246 — task-442 Implementation Notes "2026-11-23 (M-246, prior text kept; RR-0402 (...))" — the rulings are appended as dated notes with prior text kept.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: m.1, m.246
 
 ---
-⏱  58552ms (58.6s)
-📊 Tokens — total: 34424, input: 22383, output: 12041, reasoning: 11085
+⏱  35589ms (35.6s)
+📊 Tokens — total: 29980, input: 22535, output: 7445, reasoning: 6802

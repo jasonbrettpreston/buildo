@@ -1,6 +1,8 @@
-LIST bylaw-133 sha256:8183a200257d6293580f24d3e250c247beec90632b2f4230ee7f2732d9dc66e1 material sha256:ec63215c11a38c4d31d0bf042b9859f53b18efa5f4aeb5913df5e77b4596985b part 3 of 3 chunk 2 of 2
+LIST bylaw-133 sha256:749f7d252dae03d7786356cc40f5ff8b38e4a794aa8e88191772066c3d531a43 material sha256:ec63215c11a38c4d31d0bf042b9859f53b18efa5f4aeb5913df5e77b4596985b part 3 of 3 chunk 2 of 2
 RULE LIST bylaw-133 (docs/specs/01-pipeline/133_bylaw_handbook.md, sections 2. Rules by provision family; 3. Rows with an OWED marker), part 3 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/report-honest-k2.logic.test.ts"]
 
+- **m.462** Roof assembly depth is the smallest Building Code rafter that spans the half-width, plus sheathing and ceiling board, from one cited settings table.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the settings table (RP-3), the selector row and the reason word, locked by…
 - **m.466** The Layer 3 grammar gains sqrt, for unitless arguments only (dated note on M-72, as a row because M-72 sits in the frozen M19 block, the M-377 form).
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> the M-72 sqrt item (lane E): src/tests/bylaw-m72-sqrt.logic.test.ts (new), red first (RP-5); record:…
 - **m.467** When one roof form or arm is not evaluated, the headline is the evaluated one as "at least X", flagged headline_lower_bound.

@@ -1,4 +1,4 @@
-LIST bylaw-133 sha256:608de5bcda180726c70587e94ca26ea181613f7d33b7a4fc4c171fdf003aa12a material sha256:ec63215c11a38c4d31d0bf042b9859f53b18efa5f4aeb5913df5e77b4596985b part 2 of 3 chunk 2 of 2
+LIST bylaw-133 sha256:8265b3f06a4f1de5ff90fe78cccfeea5e2ef4006ed567b06ee0bd24ee3a3913f material sha256:ec63215c11a38c4d31d0bf042b9859f53b18efa5f4aeb5913df5e77b4596985b part 2 of 3 chunk 2 of 2
 RULE LIST bylaw-133 (docs/specs/01-pipeline/133_bylaw_handbook.md, sections 2. Rules by provision family; 3. Rows with an OWED marker), part 2 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/report-honest-k2.logic.test.ts"]
 
 ### General / cross-cutting
@@ -513,8 +513,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-31: the step shell names setting_out_of_bounds in the refusal (config.js:92-93 gives below_min /…
 - **m.460** W, the front and rear wall width in the set-back plate, is the narrowest width that fits the footprint.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the W row, locked by layer3-catalogue.logic.test.ts and golden-25.logic.test.ts; record:…
-- **m.462** Roof assembly depth is the smallest Building Code rafter that spans the half-width, plus sheathing and ceiling board, from one cited settings table.
-  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the settings table (RP-3), the selector row and the reason word, locked by…
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/surfaces/report-honest-k2.logic.test.ts b/src/tests/surfaces/report-honest-k2.logic.test.ts
 index deb578e7ad7a7dc370516a5df847faac44d6c4d4..780b5e3fb1a0141b2a1df5429012e7a07ba10ed4 100644

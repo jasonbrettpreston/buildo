@@ -1,33 +1,31 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:38:28.533Z file_sha256=00da53c3d4767c2957d0e0a0a0bfbb24f74a0ac621f662709c82f292d5d918fb prompt_sha256=2b11dcb49a458abafaec3651f45f427c86630ff1eb9db5107764355d4cedd4d7
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:15:23.722Z file_sha256=8144fd0d9f62535135e95fdaefcba54775a9a5d609fbe398bd11acc6a1842756 prompt_sha256=af120a5ae82651f413beb41164f5beb83d5b2009f2857a56cc163d78098f1d00
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-ms-S-r2.txt (model: deepseek-reasoner)
 
-BUG severity=MED — task-442 "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:167 "if (!r || String(r.reason ?? '').startsWith('switched_off:')) findings.push(pair);" — a stored row that exists and is not switched off passes T1 even when its value is null (not_evaluated, no answer), so "available" is asserted nowhere, only that the row was written — add one red-proven case per option section asserting the stored value of each catalogue-bound pair is present, not only that the row exists.
+DEFER severity=MED — task-442 title "front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts "const DIGIT_TEXTS: DigitText[] = [" and "{ key: 'legal.line', count: 1, kind: 'legal'" — the test lets three displayed digit texts through unbound (legal line and two entry-box examples) and no pasted ruling names them, so the "every number is bound" clause is tested only outside an allowlist the diff invents — name the three exceptions and their authority in the MF-97 row and panel, or scan only texts that carry a lot value
 
-BUG severity=MED — task-442 "every number on a screen is bound to a database field" — src/tests/admin-report-preview-live.logic.test.ts:208 "{ key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' }," — the audit ships an allowlist of three on-screen digit texts that are not bound to a database field, and the only authority quoted for them (fe.18, 136:85) is not in the pasted context, so no pasted clause or ruling grants the exemption — record an operator ruling for the three exemptions in the MF-97 row, or bind the three texts to a source the audit can check.
+DEFER severity=MED — RR-0385 "round 1 resolves CRITICAL, HIGH and MED" — Implementation Notes "103 findings, CRIT 2, HIGH 5, MED 38" and "The 15 CONFIRMED LOW and NIT are piled" — only one CONFIRMED MED fix is recorded, so the disposition of the 2 CRIT and 5 HIGH findings is not evidenced anywhere in the material — record the grounder ruling for each CRIT and HIGH in the MF-97 row before the closing commit sets task-442 BUILT
 
-DEFER severity=LOW — task-442 "every number on a screen is bound to a database field" — src/tests/admin-report-preview-live.logic.test.ts:200 "plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — the status_text block, which does reach the page, is knowingly outside the digit audit and deferred to "the next round of this card", a deferral no pasted ruling names — extend digitAudit to the status_text block or record the deferral ruling in the row and panel.
+DEFER severity=LOW — RR-0401 "This needs to be investigated - it looks like an error to be corrected" — src/tests/surfaces/report-honest-k2.logic.test.ts "-const LV = readJson('scripts/seeds/logic_variables.json');" — the diff deletes the only tie between the displayed basis text and the stored circulation share and records no result of the RR-0401 investigation, so nothing in the material supports the new exclusion wording beyond the operator's option — record the investigation finding in the MF-97 row or panel, so the claim the page now makes is traceable
 
-DEFER severity=LOW — pasted card note "2026-11-23 work commit (plan sections 3, 6, 7b)" — .cursor/MCFRONTEND-QUEUE.md:662 "next: Land the work commit (tests T1, T2 and T3, the K2 change, the text and its regenerated copies) after the red attempts" — the row's next step still names the work commit that this same chunk lands, so the record misstates what remains (the output review and its grounder) — point the next field at the output review and its grounder, as the panel verdict already does.
+DEFER severity=LOW — RR-0404 "planner redirect approved: task-447 planner returns a section for task-442" — docs/reports/panels/MF-97.json "(RR-0403 ... the text fix is done inside task-442; task-447 merged into it.)" — RR-0404 and the task-447 planner section it approved are cited nowhere in the row, panel or prereg plan_ref — cite RR-0404 in the MF-97 dated note or drop the reliance on it
 
-MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 and scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — both now read exactly "the basement, not shared stairs and halls", the landing sample copy carries the same text, and the K2 test asserts that exact string.
+DEFER severity=LOW — task-442 Description "each test is proven red on a planted defect before it counts" — Implementation Notes "the throwing line read-stored.ts:29 deleted in the working tree only (never staged)" — the recorded T2 red comes from deleting the production guard, not from the planted binding inside the test, so the red proves the guard existed rather than that the test catches the planted column — show one red at T11 (a) from the planted max_build_fsi binding alone, or note the guard deletion as the plant in the row
 
-MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — the test asserts "no digit in the basis text (RR-0402)" with not.toMatch(/\d/), and the pasted red output shows the old "the basement; 10 % circulation" failing that assertion.
+REJECT — task-442 Files line — the change is accused of editing scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json outside the task — it is a regenerated capture of the ruled text and the card's Files line names that path
 
-MET — RR-0403 "the text fix is done inside task-442; no separate process for task-447" — docs/reports/panels/MF-97.json:16 — "(the text fix is done inside task-442; task-447 merged into it)", and no separate task-447 row appears anywhere in the chunk.
+MET — RR-0405 — scripts/surfaces/_schema/report-v2-seed/page-text.json "the basement, not shared stairs and halls" — the wording is exactly the operator's option A, mirrored in report-presentation.json and the F06 sample
+MET — RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — the percent is dropped and the absence of a digit is asserted
+MET — RR-0403 — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json "(RR-0402, RR-0403, RR-0405)" — the text fix rides inside task-442, no separate task-447 process
+MET — RR-0359 — .cursor/MCFRONTEND-QUEUE.md "next: Land the closing commit, which sets task-442 BUILT after the output review and its grounder" — nothing is folded; the row stays RUNNING on the grounder
+MET — RR-0392 — .cursor/MCFRONTEND-QUEUE.md "Not in this row: any other live break of the task-442 plan section 4, any renderer, engine, setting or workflow change" — no infrastructure beyond the four is added
+MET — task-442 Files line — all ten reviewed paths, from .cursor/MCFRONTEND-QUEUE.md to src/tests/surfaces/report-honest-k2.logic.test.ts, are named on the card
+MET — task-442 Description "each test is proven red on a planted defect before it counts" — red-T1.out, red-T2.out and red-T3.out record refusals at B1 (a), T11 (a), B2 (a) and the K2 no-digit assertion
 
-MET — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json:31 — "verdict": "PLAN RULED; OUTPUT owed", with a separate grounder named before BUILT and the queue row left RUNNING.
-
-MET — task-442 Description "each test is proven red on a planted defect before it counts" — pasted A1 note, red-T1.out:740, red-T2.out:741, red-T3.out:791 — three red outputs at the designed assertions with the planted defect named for each (dropped storeys_max rows, deleted read-stored guard, added digit).
-
-MET — RR-0392 "no other infrastructure beyond this" — .cursor/MCFRONTEND-QUEUE.md:663 "The tests add no new lock path: they extend two existing test files, so this row owns none." — no workflow, gate or infrastructure file is in the chunk.
-
-MET — task-442 Files line — every changed path in this chunk — all eleven paths (queue row, panel, prereg, four surface schema/sample files, three test files) are named in the card's Files line, so nothing outside the card scope was added.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 15   Unmet: 3
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 0
 Rules met: none
 
 ---
-⏱  92768ms (92.8s)
-📊 Tokens — total: 41625, input: 21965, output: 19660, reasoning: 18564
+⏱  100282ms (100.3s)
+📊 Tokens — total: 42787, input: 22179, output: 20608, reasoning: 19478

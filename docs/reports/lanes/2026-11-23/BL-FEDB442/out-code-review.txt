@@ -1,19 +1,18 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T18:41:35.759Z file_sha256=615b93098ffc7f23008d98f4bf802531cdd41a88a8982dfcdc821c2507b2cb06 prompt_sha256=87d6b10efa384be425538ca10e4e7630f190804b3cd623ff8a8ab1e3cdacb6a2
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-code-review.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T19:24:08.108Z file_sha256=fcc009b73674c1d679d01be45a74c292093fb82ef69fb528aff1836dad50b49b prompt_sha256=4e44f994e3a6ae6a4fbec8aad3f7feabee085c7be0a4ce44f53320a72ba1fb6d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-code-review-r2.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "expect(scanned).toBe(Object.keys(PAGE_TEXT).length);" — scanned is Object.keys of the spread copy `const texts = { ...PAGE_TEXT }`, so this assertion can never fail and the "every key is scanned" claim is unproven — compare against the registry read afresh (or drop it and keep the `>= 90` guard).
-
-DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — the unchecked cast asserts every page value is a string, and digitAudit's `String(text)` renders a nested object as "[object Object]", so a digit inside it is silently missed in a fail-closed audit — type the read as Record<string, unknown> and flag or stringify non-string values explicitly.
-
-DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const k = KEY[0] as Json;" — the cast is either redundant or hides that KEY[0] may be undefined, so a missing first entry reaches storedRowsOf unchecked — assert KEY.length > 0 (or type the access) instead of casting.
-
-DEFER severity=LOW — src/tests/customer-report-read.logic.test.ts "{ query: script(CURRENT_LOT) as never }" — casting the scripted pool to never disables all checking of the fake's shape, so a change in the read's query interface cannot be caught by the type checker — cast to the expected pool/query type or give script() that return type.
-
-DEFER severity=NIT — src/tests/admin-report-preview-live.logic.test.ts "kind: 'legal' | 'input_hint' | 'exception'" — the 'exception' member can never be used, its only reference is the test asserting no entry has it, so it is a dead union value — drop it and keep the exact-key assertion as the guard.
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — the unchecked cast plus `String(text).match(/\d+/g)` in digitAudit means a non-string value in the `page` block (a nested object renders as "[object Object]", no digit) is silently accepted, so B2's claim to scan every key holds only for string values — add a `typeof text !== 'string'` problem inside digitAudit and drop the cast.
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts:230 "expect(scanned).toBe(Object.keys(PAGE_TEXT).length);" — tautology: `scanned` is `Object.keys(texts).length` and `texts = { ...PAGE_TEXT }`, so this can never fail and proves no coverage — delete it or have digitAudit return the key list and compare that.
+DEFER severity=LOW — src/tests/customer-report-read.logic.test.ts "await mod.readLotFacts({ query: script(CURRENT_LOT) as never }, REF);" — `as never` switches off type checking of the query parameter in the one test whose subject is the parcels read — type the scripted fake against the parameter type instead of casting to never.
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const k = KEY[0] as Json;" — unchecked element cast: if KEY were empty, `storedRowsOf(undefined)` fails inside the harness with an opaque error rather than at the assertion — guard `expect(KEY.length).toBeGreaterThan(0)` before taking KEY[0].
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "type Bindings = ReturnType<typeof pageBindings>;" — the diff adds no import line for `pageBindings`, `StoredRow` or `readJson` in this file; cannot see whether they already exist, so the grounder should confirm, otherwise the file does not compile at all.
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const PAGE_TEXT = readJson('scripts/surfaces/_schema/report-presentation.json').page as Record<string, string>;" — B2 reads only the presentation registry, while the MF-97 row names page-text.json as the single hand edit, so a digit typed into the seed alone leaves B2 green; cannot see whether another test compares SEED_TEXT to PRESENTATION.page.
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const o3Pairs = new Set(pageBindings().flatMap((b) => (b.section === 'o3' && b.source.kind === 'catalogue' ? [b.source.field_id] : []))).size;" — counts distinct field_ids while `unwritten` dedupes by section+field+building_type, so if o3 ever binds one field for two building types the length comparison fails for the wrong reason — key the Set with the same `section field_id building_type` string the helper uses.
+NIT severity=NIT — src/tests/admin-report-preview-live.logic.test.ts "interface DigitText { key: string; count: number; kind: 'legal' | 'input_hint' | 'exception'; why: string }" — no entry ever carries kind 'exception', so that union member is dead except for test (c) asserting it is absent — drop the member or drop the assertion that keeps it alive.
 
 VERDICT: PASS on code correctness
 
 ---
-⏱  119881ms (119.9s)
-📊 Tokens — total: 46915, input: 20762, output: 26153, reasoning: 25705
+⏱  88595ms (88.6s)
+📊 Tokens — total: 39191, input: 20980, output: 18211, reasoning: 17421

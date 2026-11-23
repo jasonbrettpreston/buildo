@@ -1,19 +1,27 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:37:29.899Z file_sha256=8dfde23464691b72a1e93482ea4cd0a1fbd380c4c881a9d8c60bb43df840d39f prompt_sha256=13120c631b0b25f5417ff3ecdcc70f227f93c9770d1aac7819f9f7f756304ba3
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-p4.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:14:39.474Z file_sha256=8dfde23464691b72a1e93482ea4cd0a1fbd380c4c881a9d8c60bb43df840d39f prompt_sha256=b8a4d1a68ceb36b8d37427f86aaa96e0d3d65ac00b57ae28facd40c5172b1ed7
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-bylaw-133-r2-p4.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — task-442 "each test is proven red on a planted defect before it counts" — "❯ src/tests/surfaces/report-honest-k2.logic.test.ts:55:59" (red-T3.out) — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "expect(t).toBe('the basement, not shared stairs and halls');" — the ruled-wording equality is never exercised red, the planted digit aborts the block at the prior assertion (line 55) so line 56 has no red proof of its own — plant the wording defect (old text "the basement; 10 % circulation") against line 56 alone, or reorder so the equality is the first assertion proved red.
-DEFER severity=LOW — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — NONE — this chunk carries only the asserting test, the shipped wording in scripts/surfaces/_schema/report-presentation.json and scripts/surfaces/_schema/report-v2-seed/page-text.json is in the other chunk and cannot be seen here, so the operative wording is unverified in this run — confirm from chunk 1 of 2 that row.unit_size_basis_value reads exactly "the basement, not shared stairs and halls" and that seed-report-v2 --check and report-page-capture --check exit 0.
+BUG severity=<CRIT> — none — none — none — none (no CRIT finding; the change does what the pasted rulings name) — none
 
-REJECT — RR-0402 "circulation text: option A, drop the percent" — the change is accused of over-broad refusal of every digit via "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" — the ruling's own recorded form is "option A: drop the percent, words only", so a figure-free sentence is exactly what was ruled, not an extension.
-MET — RR-0402 — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — the percent assertion is replaced by a no-digit assertion on the same text and the LV read that sourced the percent is deleted.
-MET — RR-0405 — src/tests/surfaces/report-honest-k2.logic.test.ts:56 — the test pins the exact ruled wording and keeps the /basement/i check on the same value.
-MET — RR-0403 — src/tests/surfaces/report-honest-k2.logic.test.ts (whole diff) — the fix lands in the file named on task-442's Files line, inside task-442, with no separate task-447 process introduced.
+DEFER severity=LOW — task-442 "each test is proven red on a planted defect before it counts" — src/tests/surfaces/report-honest-k2.logic.test.ts:56 "expect(t).toBe('the basement, not shared stairs and halls');" — the recorded red exercises only the digit assertion ("791:AssertionError: no digit in the basis text (RR-0402): expected 'the basement; 10 % circulation' not to match /\d/", "❯ src/tests/surfaces/report-honest-k2.logic.test.ts:55:59"), so the new exact-wording binding this diff adds has no red of its own — add one refused-commit run with a planted wording defect (e.g. "the basement, shared stairs and halls") at :56 and record it beside red-T3.out
+
+MET — RR-0402 "circulation text: option A, drop the percent; card opened" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/);" with the stored-percent read removed ("-const LV = readJson('scripts/seeds/logic_variables.json');"), no figure remains in the basis row
+
+MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — src/tests/surfaces/report-honest-k2.logic.test.ts:56 — "expect(t).toBe('the basement, not shared stairs and halls');" asserts the ruled wording verbatim
+
+MET — RR-0403 "circulation text fix merged into task-442" — src/tests/surfaces/report-honest-k2.logic.test.ts:45 — "M-496 formula unchanged; RR-0402, RR-0405" carries the fix inside task-442's own file, no separate card
+
+MET — task-442 "Files: ... src/tests/surfaces/report-honest-k2.logic.test.ts ..." — src/tests/surfaces/report-honest-k2.logic.test.ts:15 — the diff touches only the listed file (one hunk in the import block, one in the K2 describe)
+
+MET — RR-0401 "investigate the typed 10 percent circulation text on the houseplex option" — src/tests/surfaces/report-honest-k2.logic.test.ts:45 — the investigated text is now ruled and the test asserts the ruled wording, closing the investigation arm
+
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — "Status stays RUNNING: output review and its grounder owed (RR-0359)." — status not closed by this work commit
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 0
+Clauses checked: 8 Unmet: 0
 Rules met: none
 
 ---
-⏱  26445ms (26.4s)
-📊 Tokens — total: 26582, input: 21636, output: 4946, reasoning: 4361
+⏱  26842ms (26.8s)
+📊 Tokens — total: 27158, input: 21867, output: 5291, reasoning: 4627

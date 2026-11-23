@@ -1,37 +1,22 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T18:41:01.751Z file_sha256=ea0bcd74ce87c622cd7bfc13a972b428bfc9566392d697424c4dc586b1891095 prompt_sha256=87059418db676a9ba03f808f4aa4411a3678bf0dffccaa4ee64edd37cca321fd
-🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T19:22:22.694Z file_sha256=77b558731036d4eae01b1b85c549752147ba78b23f1049518b7dd23ae4d6d19f prompt_sha256=05a973b55bb06c37f2c37d050f823bd7f9aac7e9b762749cf67306d0a68cc3e2
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-FEDB442/in-out-compliance-surface-128-r2-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — task-442 "Front end to database tests: every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:217 "{ key: 'legal.line', count: 1, kind: 'legal', why: 'legal copy is a content field (fe.18, 136:85)' }" — a digit shown in legal copy (plus the two lot-size placeholder hints) is a number on a screen that binds to no database field, and its only authority is a code comment citing 136:85, a line not pasted in this context — bind the digit, or record the exemption as a named residual with an owning row in docs/reports/review_followups.md, the way R-12 holds its two residuals.
-
-DEFER severity=MED — task-442 "every number on a screen is bound to a database field and available" — src/tests/admin-report-preview-live.logic.test.ts:214 "plus one shown status text (not_evaluated:coa_factor_unfitted:suite) that cites Q-4" — a digit reaches the screen through a shown status text the B2 scan deliberately excludes, and case (c) "expect(DIGIT_TEXTS.filter((e) => e.kind === 'exception')).toEqual([])" leaves no way to even write that gap down — extend digitAudit to the status_text block, or add a named followup entry for that exact key.
-
-DEFER severity=LOW — panel card "Operator, verbatim (RR-0402, ...:2034): \"a\" (drop the percent, words only)" — src/tests/admin-report-preview-live.logic.test.ts:211 "Limits: digits only (a number written in words passes)" — the new fe.05 guard would pass a page that shows a figure spelled out, so the only word-level lock on this class is the single K2 exact-text assertion — extend the exact-text form to every content key that states a figure, or add the banned words (percent, per cent, %) to the audit.
-
-DEFER severity=LOW — dated note 2026-11-14 (MF-83) "each has its register row, its goldens and planted-fault locks" — NONE: the material shows "report-page-capture --check \"page goldens current (40 and the landing sample)\" exit 0" but no file under src/tests/fixtures/report-page/ or src/tests/fixtures/surfaces/report/ changes — if any of the 40 page goldens or 72 captured goldens embeds row.unit_size_basis_value, the "current" claim is contradicted by a diff with no golden change — state in the commit note which golden files carry the text, or that none does.
-
-MET — RR-0405 "houseplex size basis wording: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-presentation.json:322 and report-v2-seed/page-text.json:44 and web_landing.sample.json:1555 — the ruled words appear identically in all three copies, and the K2 assertion "expect(t).toBe('the basement, not shared stairs and halls')" locks them.
-
-MET — RR-0402 "circulation text: option A, drop the percent" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 "expect(t, 'no digit in the basis text (RR-0402)').not.toMatch(/\d/)" — the percent is gone and a no-digit lock prevents its return.
-
-MET — RR-0403 "circulation text fix merged into task-442; no separate process for task-447" — .cursor/MCFRONTEND-QUEUE.md MF-97 Done-condition "the text of row.unit_size_basis_value reads exactly: the basement, not shared stairs and halls" — the text fix sits inside the task-442 row and no MF-447 row is added.
-
-MET — queue rule "This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-98** (ids are never reused)" — .cursor/MCFRONTEND-QUEUE.md:5 — the MF-97 row is added with its claimed id, the MF-96 note is kept verbatim and the first value on the line advances to MF-98.
-
-MET — dated note 2026-11-14 (MF-83) "its OUTPUT panel record `docs/reports/panels/MF-83.json`" — docs/reports/panels/MF-97.json:2 — the panel record exists in the MF-95/MF-96 form with task, item, verdict and the OUTPUT-owed line.
-
-MET — task-442 Description "each test is proven red on a planted defect before it counts" — Implementation Notes "Red evidence, each a refused commit through the real hooks, at the designed assertion" — three reds are recorded at the designed assertions (red-T1.out:740 toEqual([]), red-T2.out:741 rejects.toThrow, red-T3.out:748 and :791).
-
-MET — §8 Out-of-Scope Files "docs/specs/01-pipeline/124_step_standard_policy.md ... scripts/steps/_schema/step.schema.json ... migrations/**" — none of those three paths appears in the material.
-
-REJECT — R-28 "No new fingerprint" — the change updates `inputs_sha256_16` in report-v2.decl.json — the field predates this change and is refreshed only because its seed text changed; R-28 bars a new third hash (the DECLARED-SCHEMA-SHA256 header), which the diff does not add.
-
-REJECT — R-19 "No generated migrations" — the diff rewrites report-presentation.json and web_landing.sample.json — those are descriptor copies regenerated from page-text.json, not migrations; no file under migrations/ is added or generated.
+```
+DEFER severity=LOW — task-442 card Files "<Files: ... src/tests/fixtures/report-page/, src/tests/fixtures/surfaces/report/ ...>" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-97-1.json:4 "FE-24 and FE-29 (the golden rules report-capture.ts cites; the work commit refreshes the goldens)" — the prereg asserts the work commit refreshes the goldens, yet no fixture file appears in the material and the notes record "checked 72 goldens; 0 stale" (nothing refreshed) — correct the prereg wording to "goldens checked, none stale" or land the golden diff
+DEFER severity=LOW — RR-0403 "the text fix is done inside task-442; task-447 merged into it" — docs/reports/panels/MF-97.json:9 "(the text fix is done inside task-442; task-447 merged into it)" — the merge is asserted only in the panel record; no task-447 queue or backlog row is removed or marked merged anywhere in the visible change — record the task-447 row disposition or cite the record where it was absorbed
+DEFER severity=NIT — RR-0359 "Nothing is folded before the grounder has ruled" — docs/reports/panels/MF-97.json:24 "\"verdict\": \"PLAN RULED; OUTPUT owed\"" — the panel verdict and "head" (commits 0, 1) were not advanced after the notes record "output review round 1 filed ... 103 findings" and the round-1 Status-line fix — update the panel verdict/head to the round-1 position
+MET — RR-0405 "the text reads: the basement, not shared stairs and halls" — scripts/surfaces/_schema/report-v2-seed/page-text.json:44 — text is exactly "the basement, not shared stairs and halls"
+MET — RR-0402 "drop the percent, words only" — src/tests/surfaces/report-honest-k2.logic.test.ts:55 — "no digit in the basis text (RR-0402)" not.toMatch(/\d/) plus toBe of the words-only phrase
+MET — RR-0359 "Nothing is folded before the grounder has ruled" — .cursor/MCFRONTEND-QUEUE.md:663 — Status stays RUNNING, next is "Land the closing commit ... after the output review and its grounder"
+MET — task-442 card "T3 (fe.05: no digit reaches the page through a content text except three listed entries)" — src/tests/admin-report-preview-live.logic.test.ts:229 — digitAudit over the whole page block with a three-entry, fail-closed, shrinking list
+MET — task-442 card "T1 (fe.05, fe.18 ...)" and "T2 (fe.27 ...)" — src/tests/admin-report-preview-live.logic.test.ts:149 and src/tests/customer-report-read.logic.test.ts:405 — B1/T11 landed in the two named files with red evidence recorded (red-T1/T2/T3.out)
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 0
-Rules met: R-19, R-28
+Clauses checked: 12   Unmet: 0
+Rules met: R-05, R-26, R-28, R-29
+```
 
 ---
-⏱  116174ms (116.2s)
-📊 Tokens — total: 57903, input: 32236, output: 25667, reasoning: 24340
+⏱  105368ms (105.4s)
+📊 Tokens — total: 55419, input: 32450, output: 22969, reasoning: 22235
