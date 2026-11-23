@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:29.999Z file_sha256=95d882a2a55227893f9cfdc6f34ff2262ef4636fb22018645eb5eaf71b25f89a prompt_sha256=ac304591a32c9e389e35ffbb400cd22907470e96389fe318bafb6334e329a6a6
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria" — plan section 8 "1. `node scripts/surfaces/generate-surface-handbook.mjs --check`: exit 0" (no canary step among items 1-11) — the plan's acceptance carries none of canaries a-f, so fe.15 is not visibly met for this McFrontend plan — add the canaries to section 8 or record a ruling that they are N/A to a docs-only handbook task.
+DEFER severity=LOW — fe.49 ""lead_parcels is read by no surface." (128:205, R-03)" — plan "fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205)." — fe.49 remains a partial restatement of an accepted row and the plan defers the gap (Q2) without a gate — have the operator sitting confirm the omitted sentence is not owed here, or add it.
+DEFER severity=LOW — RR-0395 "Agreed. Plan approved" and card "brought to the operator with the grounded plan before launch" — plan "This goes to the operator with the line text anyway" but section 8 items 1-11 contain no such step — dropping R-03 and R-04 lands on an orchestrator reading the card itself calls "not a ruling", with the operator confirmation only in prose — make the pre-launch operator confirmation of the one-line scope an explicit acceptance or landing gate.
+REJECT — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — the plan reserves a lock at a file that does not exist (`test -e ...; echo $?`: 1) — not a real issue because OWED rows in this same list carry owed lock paths (fe.04 "lock owed: src/tests/surfaces/budget.infra.test.ts") and register-locks-resolve is run in acceptance 7.
+REJECT — RR-0395 "Agreed. Plan approved" / card "one handbook line (Spec 136 section 2) for each of the three" — the plan "adds ONE row and ONE line, for R-22" — not a real issue because fe.49 (128:205) and fe.52 (128:206) already state R-03 and R-04, so all three rules end with a handbook line once fe.58 is added.
+MET — fe.08 — plan files "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md" — the new FE row is appended to the 135 register and 136 is regenerated, both under docs/specs/02-web-admin.
+MET — fe.10 — plan "No generator change: scripts/surfaces/generate-surface-handbook.mjs renders an OWED row as it is" — the generator is unchanged and handbook-rule-map.logic.test.ts (its enforcing lock) is extended to cover the new row.
+MET — fe.56 — plan "The red.out holds T1 red at R-22, T2 red at toHaveLength(1), and the old C-T2 and C-T1 forms red after the row" — the new checks are proven red before the fix, per "Prove each lock RED".
+MET — fe.52 — plan "R-04 ... is already stated by FE-52 (135:74), rendered as fe.52 (136:187-188)" — R-04's parcel_ref/parcel_pk and subject_kind sentences are already carried, so no duplicate line is needed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: fe.08, fe.10, fe.16, fe.52, fe.56
+
+---
+⏱  120243ms (120.2s)
+📊 Tokens — total: 42549, input: 17901, output: 24648, reasoning: 23767

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:30.033Z file_sha256=559d028d9de2bf225135f9efde7290d884bd8bf471eb94e4c04cd25570123bf1 prompt_sha256=7273bd92b72acfb559b3c9db28925847b4f1ba05712dfe6be1353c286cb90a17
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "THIS TASK: one handbook line (Spec 136 section 2) for each of the three, added the way task-430 added its 13 lines" — plan §0 "Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates." — the approved deliverable is three lines, no pasted ruling withdraws two, and the plan's own Q4 leaves the drop to the grounder rather than the operator — fix: take the three-to-one scope to the operator with the line text before launch and record his word, then lock
+BUG severity=HIGH — 08_agents.md §11.1 "a census grep runs at the full scope its conclusion covers" — plan §4 "Census: a grep of src/tests, scripts and docs/specs for ... No other literal pin exists." — the conclusion is tree-wide while the scope omits docs/reports and .cursor, and the plan's own §7 lists "docs/reports/reviews/task-439/context-r1.md:33 (57 lines), :56 (28,690)", hits the census claims do not exist — fix: re-run the census as a whole-tree git grep at 4382d48d3 and list every hit before the "no other literal pin" sentence
+BUG severity=HIGH — 08_agents.md §11.8 MCINC-8 "If mkdir fails, the number is taken: take the next one." — plan §5 "~/Buildo-scratch/ids/FE-58/owner is held by BL-HB430 ... the orchestrator therefore adds task-446's lane to FE-58/owner (it matches by substring, :153)" — the plan takes a number whose ledger entry already exists by editing another lane's owner file, leaving two landers on FE-58 — fix: claim the next free id (the FE-59 note is already drafted) or record an operator ruling retiring the BL-HB430 claim before the edit
+DEFER severity=MED — card Description "The line texts restate the accepted Spec 128 rows" — plan §0 "fe.49 does not carry R-03's last sentence, 'What exists is a declared id-translation seam only.' (128:205)" — dropping R-03 as already stated leaves that sentence unstated, so the plan's own principle "no rule is stated twice and none is missing" fails for R-03 — fix: state the sentence under R-03, as an FE-49 edit or its own row, and record which
+DEFER severity=MED — 08_agents.md §11.1 "a data claim carries its query **run**" — plan §10 "The exact section 2 size after the row, and whether it stays one part (about 29,100 against 30,000)." — a ~900-character margin to the part boundary is executable arithmetic left unrun, and a split changes the output names the plan's pins assume — fix: apply the row text to a scratch copy, run the packer size step, print the value and the part count
+DEFER severity=MED — 08_agents.md §11.1 "a line citation is **read**, not remembered" — plan §7 "UNVERIFIED whether 445 changes the page output." — task-445's Files line and plan are on the board at 4382d48d3 and reading them settles it — fix: read task-445's page steps and state yes or no, with the second-lander rerun consequence
+DEFER severity=MED — 08_agents.md §7.4 dated note "the per-list rule ... now reads `out-compliance-<id>` or `out-engineering-<id>`, by the seat of the list" — plan §7 "Close. Lane records and the task file only, in a separate closing commit" — the landing and close steps name no rule list resolved for task-446 and no compliance or engineering output, so the close's outputs and their context hash have no planned source — fix: name the resolved lists and their out-<seat>-<id> names in the close step, with `rule-lists.mjs lens-input` and `--context`
+
+MET — 08_agents.md §7.2 "validate the spec against reality before checking code against the spec" — plan §0 — the register was read at 4382d48d3 and FE-49 (135:71) and FE-52 (135:74) checked before the new row was written
+MET — 08_agents.md §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — plan §4 — cases, red expectation, planted defect and the `npx vitest run` invocation are all in the plan
+MET — 08_agents.md §11.3 "Every lock is proven in BOTH directions" — plan §4 — "Planted defect: readFeRows(...) gives length 2, so a duplicate is seen."
+MET — 08_agents.md §7.9 dated note "the seat that writes a task's plan ... run on Opus" — plan header — "Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1916)"
+MET — 08_agents.md §11.8 MCINC-8 "runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command" — plan §8 item 10 — the push-check command is an acceptance item
+MET — 08_agents.md §7.10(a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan §0 — R-22 is carried with "128:224" and its Ruling text
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+Rules met: none
+
+---
+⏱  61293ms (61.3s)
+📊 Tokens — total: 34071, input: 21569, output: 12502, reasoning: 11207

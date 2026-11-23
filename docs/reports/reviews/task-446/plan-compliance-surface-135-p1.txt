@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:30.016Z file_sha256=0cd530ac0e0fe760c171e20f2cd132918b05dab06d7da049c99d6aba644d4983 prompt_sha256=1d5c165383a579cb307d6c1eac8144212eb62c4b010d1b6439245ce6d5b6b612
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card clause "THIS TASK: one handbook line (Spec 136 section 2) for each of the three" — plan "Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates." — two of the three approved lines are not delivered, and the plan leaves its own question open, "Or does it need his word first (RR-0385 item 4(ii))?", so an approved scope is narrowed on an orchestrator reading with no ruling pasted that names the drop — fix: add the R-03 and R-04 rows, or obtain a dated operator ruling that names the two-line drop and paste it before plan-lock.
+BUG severity=HIGH — register rule 4 "`pass`/`n/a`/`FAIL` (Spec 128 §4.9)" — plan "**Six:** `D pass, P owed, F n/a, S pass, H n/a, E pass`" — the token "owed" is not one of the three values the pasted clause allows, and the plan records the cell as its own judgement (Q3), so the row's Six cell is non-conforming as written — fix: use an allowed token (for example P FAIL or P n/a) with the reason recorded, or have Spec 128 §4.9 amended to admit "owed".
+DEFER severity=MED — card clause "The line texts restate the accepted Spec 128 rows" — plan "fe.49 does not carry R-03's last sentence, \"What exists is a declared id-translation seam only.\" (128:205)" and "Partial wording, stated and not fixed here (Q2)" — R-03 is stated only in part, so the duplicate claim rests on a line that omits part of the accepted row, and T1 cannot see the omission because it counts the cite "128:205" in headlines, not restatement — fix: state the omitted sentence in the FE-49 line or rule by dated note that the omission is decided, then close Q2.
+DEFER severity=MED — card clause "Lands before task-439" — plan "The push check of a range carrying them will also see FE-45, whose owner is BL-MFRULES." — the pre-push id check (acceptance step 10, "node ~/Buildo-scratch/ids/check.mjs") has no step that clears the FE-45/BL-MFRULES owner clash the same push range carries, so the landing order the card requires is not assured — fix: name the owner resolution, or a split range, as a step in commit 1 or in LANDING.
+DEFER severity=LOW — plan "The cell must hold no \"Dated note\" and no \"Current reading\"." — plan "``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added <date of the work commit> (RR-0395); no machine check yet, the lock is task-367's ...``" — the last cell is given only as a template with a live placeholder, and no acceptance item or T2 assertion pins the register cell text, only the rendered 136 line, so register rule 3's "reads `OWED` with the lock path" is unverified for the actual cell — fix: give the literal cell text and assert it in T2.
+REJECT — card clause "NOT in this task: ... a new check or lock for these rules" — the change is accused of adding a lock by naming src/tests/surfaces/mobile-no-rsc.logic.test.ts — the pasted register rules 3 and 5 require an OWED row to carry a src/tests/surfaces/*.test.ts path that does not yet exist, and plan "test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?" expects 1.
+MET — register rule 2 "ONE lock per row; the Lock is in the LAST cell with the status" — plan "**Status and Lock:** ``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`" — one lock, last cell, with the status.
+MET — register rule 3 "a RULED row whose lock is not built reads `OWED` with the lock path" — plan "135:13: \"A ruled row whose lock is not built reads OWED with the lock path.\"" — the new row is OWED and carries its path.
+MET — register rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — plan "`ls src/tests/surfaces | grep -i rsc` is empty" — path fits the pattern and is absent.
+MET — next free id line form — plan "the line read \"Next free id: FE-58\" before this note; FE-58 is taken by the OWED R-22 row (task-446), so the first value on the line ... is FE-59." — same dated-note form as the pasted notes, first value FE-58 to FE-59.
+MET — card clause "tests first" — plan "The lane writes these cases first and runs them against the board. It saves the first red in its red.out before adding the row."
+MET — card clause "a generator change, a rule-table change (task-439's)" — plan "git diff --stat ... generate-surface-handbook.mjs ... scripts/analysis/rule-lists.json: empty" (acceptance 9).
+MET — RR-0379 "We can run step 1 in parellel - we will add to the rules overtime" — plan "No other lower-rank rule (RR-0379, :1859)".
+MET — RR-0392 "I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan "It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976)."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  74392ms (74.4s)
+📊 Tokens — total: 26980, input: 12079, output: 14901, reasoning: 13564

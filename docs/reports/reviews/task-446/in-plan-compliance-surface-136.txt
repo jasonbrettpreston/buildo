@@ -1,0 +1,423 @@
+LIST surface-136 sha256:5ec071573033f3d7e93f4d0eda15e74b9d7564c433b961be0d08c22de35e0d90 material sha256:52f1e0a3bc815231f32ce5283c1960830cf15a3bcd11dffc17bd08a3285a65b8 part 1 of 1
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: OWED · lock owed: src/tests/surfaces/scope-fence.logic.test.ts
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/nav-tab-switch.logic.test.ts
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: OWED · lock owed: src/tests/surfaces/failure-state-declared.logic.test.ts
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-23 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0395 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993, decision-180). Operator, verbatim: "Agreed. Plan approved". THE GAP, read at the board head: task-439 (planned, not launched) takes Specs 126, 127, 128 and 135 off the front-end and phone rows of the rule table, so a rule of those specs with no handbook line reaches no front-end or phone review (RR-0379, :1859, "we will add to the rules overtime"). Three ACCEPTED rules of Spec 128 are neither machine-enforced nor stated in the handbook (REPORT-429, ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md:234, ungrounded): R-22 React Native has no Server Components (docs/specs/02-web-admin/128_surface_standard_policy.md:224), R-03 Spec 100 stays fenced (:205), R-04 the two parcel ids are named distinctly (:206). Open task-390 would lose R-22. THIS TASK: one handbook line (Spec 136 section 2) for each of the three, added the way task-430 added its 13 lines: rows in the Spec 135 register table, the handbook and rule map regenerated by the existing generator, tests first. The line texts restate the accepted Spec 128 rows and are brought to the operator with the grounded plan before launch (as RR-0384). Orchestrator reading, not a ruling: 'Agreed' covers the three rules as recommended. NOT in this task: any other lower-rank rule (added over time, RR-0379), a new check or lock for these rules, a generator change, a rule-table change (task-439's). Lands before task-439. McFix Final process (RR-0385): Opus plan, three Sonnet seats, compliance and engineering lenses, separate grounder, Opus build, output review, two rounds at most.
+
+Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json, docs/specs/00-architecture/00_system_map.md
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+#### PLAN-446-v1
+
+Planner: Opus, read-only (RR-0385 item 1, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1916). Board ~/Buildo-wt-board, read at 4382d48d3. Paths are relative to the board unless they start with ~. Nothing was run except git, grep, sed and the backlog viewer. Every claim has a file:line or is marked UNVERIFIED. Principles served: accurate (no rule is stated twice and none is missing), understandable (one plain line), standardized (task-430's row form, with no new form), observable (a test shows each of the three rules stated exactly once). It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976).
+
+#### 0. Finding that changes the card: R-03 and R-04 are already handbook lines
+
+- R-03 (128:205) is already stated by FE-49 (135:71), rendered as fe.49 (136:178-179). It quotes "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03), and its status is OWED with lock `src/tests/surfaces/scope-fence.logic.test.ts`.
+- R-04 (128:206) is already stated by FE-52 (135:74), rendered as fe.52 (136:187-188). It quotes the parcel_ref / parcel_pk sentence and the subject_kind sentence (Spec 128 R-04, 128:206, ACCEPTED), and its status is OWED with lock `src/tests/surfaces/parcel-id-names.logic.test.ts`.
+- Where they came from: task-430 added both lines as RR-0384 items 5 and 8 (task-430 plan 17.2, items 5 and 8; commit d429b287d). REPORT-429:234 ("Unenforced and unstated: R-03 ..., R-04 ..., R-22") was written before that commit. That report was the input task-430 drew those items from, and the card and RR-0395 rely on it (MORNING-DECISIONS.md:1992 also marks R-03 and R-04 "UNVERIFIED by me").
+- R-22 (128:224) is stated nowhere and enforced nowhere:
+  - `grep -n "128:224"` returns nothing in 135 or 136.
+  - `grep -rn "128:224\|R-22\b" src/tests scripts` returns no hits.
+  - The only RSC mentions in scripts/surfaces are `why` strings of web admin descriptors (for example scripts/surfaces/parcel_admin/F03/surfaces/admin_export_audit.descriptor.json:146). None of them is a check.
+- Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates.
+  - The new test T1 (section 4) proves that each of the three rules is stated by exactly one line.
+  - This goes to the operator with the line text anyway (card; RR-0395 reading, MORNING-DECISIONS.md:1995). His question, "R-22 only, or R-22, R-03 and R-04?", rested on a fact that is no longer true (RR-0385 item 4(ii), :1918-1919).
+- Partial wording, stated and not fixed here (Q2):
+  - fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205). fe.52 does carry the seam itself (126:1238).
+  - fe.52 does not carry R-04's "Blast radius, measured" sentence (128:206). That sentence is a measurement, not an obligation.
+
+#### 1. Scope
+
+- One new Spec 135 FE row that restates Spec 128 R-22 (128:224), OWED, with one reserved lock path.
+- The "Next free id" line moved by a dated note.
+- Spec 136, the rule map, the rule-lists page and the system map regenerated by their existing commands.
+- Tests first in src/tests/surfaces/handbook-rule-map.logic.test.ts:
+  - two new cases;
+  - three survive-the-fix edits to the task-430 C tests, which assume the thirteen rows are the last rows of the register.
+- One MF queue row (MF-96), its prereg and its panel record, as task-430's commit 0 did (62b2ffed6).
+
+#### 2. NOT in scope
+
+- No new check or lock: the R-22 lock is only reserved.
+- No generator change: scripts/surfaces/generate-surface-handbook.mjs renders an OWED row as it is (fe.57 at 136:202-203 is the model).
+- No change to Spec 128, and no rule-table change (scripts/analysis/rule-lists.json is task-439's).
+- No edit to FE-49 or FE-52, and no other lower-rank rule (RR-0379, :1859).
+- No change to Spec 133 or scripts/analysis/bylaw/**.
+
+#### 3. The exact texts
+
+#### Register row (Spec 135), appended after FE-57 (135:79). Six cells, no pipe inside a cell. Id: see section 5.
+
+- **Id:** FE-58 (placeholder, section 5).
+- **Ruling:** `No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).`
+  - The quote is the 128:224 Ruling cell with its bold marks removed. Nothing is added to it.
+- **Amends:** `128 R-22 (128:224); Spec 125 §1`
+  - This is R-22's own Amends cell, "Spec 125 §1" (128:224).
+- **Six:** `D pass, P owed, F n/a, S pass, H n/a, E pass`
+  - This follows the FE-49 pattern, with E pass because R-22 is about the render path of each platform (Spec 126 §0a item 6, 126:63).
+  - It is my judgement (Q3).
+- **Full text:**
+  - Operator verbatim as recorded (2026-11-23, RR-0395, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993 and backlog/decisions/decision-180): "Agreed. Plan approved".
+  - What was put to him is orchestrator text (MORNING-DECISIONS.md:1992): one handbook line per missing rule before task-439 lands, recommended for R-22, R-03 and R-04.
+  - R-03 and R-04 were already lines (FE-49, FE-52, RR-0384), so this row carries R-22 only.
+  - The Ruling cell quotes Spec 128 R-22; this row rules nothing new.
+  - If the operator says anything at the line-text sitting, those words are appended verbatim with their RR id.
+- **Status and Lock:** ``OWED `src/tests/surfaces/mobile-no-rsc.logic.test.ts`; added <date of the work commit> (RR-0395); no machine check yet, the lock is task-367's (task-434 merged into it, RR-0385 item 6) and the path is a reservation. Spec 128 names the lock owed as "a check that no mobile descriptor declares an RSC-only mechanism" (128:224); R-22 stays ACCEPTED in Spec 128 until MF-31 moves it.``
+  - The cell must hold no "Dated note" and no "Current reading". The generator counts dated notes (generate-surface-handbook.mjs:43) and parses readings (:77-79).
+
+Lock path:
+- `src/tests/surfaces/mobile-no-rsc.logic.test.ts` does not exist (`ls src/tests/surfaces | grep -i rsc` is empty).
+- That satisfies Spec 135 rule 5 (135:15) and register-locks-resolve.infra.test.ts.
+
+Status: OWED, like task-430's 13 rows.
+- 135:13: "A ruled row whose lock is not built reads OWED with the lock path."
+- The lock it owes is R-22's own Lock cell, "(none yet — the two renderers, and a check that no mobile descriptor declares an RSC-only mechanism)" (128:224).
+
+#### Next free id line (135:17)
+
+The first value becomes `FE-59`. One dated note goes in front of the existing notes, in the form of the task-430 note:
+
+`Dated note <date> (M-246, prior text kept; MF-96 · McFrontend queue · lane <lane>, task-446; RR-0395, operator, verbatim: "Agreed. Plan approved"; Spec 135 rule 3 form): the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446), so the first value on the line, the one the Spec 136 generator reads, is FE-59.`
+
+#### The handbook line it renders to (136, after fe.57 at :202-203, before "## 3. History")
+
+```
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+```
+
+- The plain cell is printed because the trailing "(Spec 128 ...)" bracket is the Q9 case (generate-surface-handbook.mjs:52-63).
+- The header lines change by themselves:
+  - 136:11 becomes "v1 covers the 58 FE rulings".
+  - 136:28 becomes "**Rules rendered: 58**: 58 in force (22 OWED, ...".
+- Size: section 2 is 28,690 today (docs/reports/generated/rule-lists-by-kind.md:33) plus about 420, so about 29,100. That is still one part under the 30,000 nominal (task-430 plan section 3 cites rule-lists.mjs:529). The exact value is measured at page --write.
+
+#### 4. TESTS FIRST (src/tests/surfaces/handbook-rule-map.logic.test.ts only)
+
+The lane writes these cases first and runs them against the board. It saves the first red in its red.out before adding the row (08_agents.md:462, :489). The new cases go in one new describe block, "task-446 — the R-22 line (RR-0395)", placed after the MF-95 C describe (:261-299).
+
+**T1 RED — each of R-03, R-04 and R-22 is stated by exactly one line.**
+- `citing = (rs, cite) => rs.filter(r => r.headline.includes(cite)).map(r => r.id)`.
+- For [R-03 '128:205', R-04 '128:206', R-22 '128:224']: `expect(citing(realRows(), cite), rule).toHaveLength(1)`.
+- Designed red today: at R-22 (length 0). R-03 and R-04 are green today (FE-49 and FE-52 only, 135:71 and :74).
+- Planted defect: readFeRows(reg([...GOOD, row('FE-04', 'OWED `src/tests/surfaces/z.logic.test.ts`', 'A (128:205).'), row('FE-05', 'OWED `src/tests/surfaces/w.logic.test.ts`', 'B (128:205).')])) gives length 2, so a duplicate is seen.
+
+**T2 RED — the R-22 row and its line.**
+- `R22_LOCK = 'src/tests/surfaces/mobile-no-rsc.logic.test.ts'` and R22_HEADLINE = the exact plain text of section 3.
+- `const hit = realRows().filter(r => r.locks.includes(R22_LOCK)); expect(hit).toHaveLength(1)`. This is the designed red today: 0.
+- Then:
+  - status is 'OWED';
+  - locks equal [R22_LOCK];
+  - headline === R22_HEADLINE;
+  - `fs.existsSync(R22_LOCK)` is false;
+  - Spec 136 matches `^- \*\*fe\.<n>\*\* <escaped headline>\n {2}Status: OWED · lock owed: <escaped lock>$` (m).
+- The row is found by its lock path, not its id, so a renumber at landing needs no test edit (the same device as :255-258).
+
+**Changed in the same commit (SURVIVE-THE-FIX: green before and after the row; the old form goes red once the row is added, and that red is recorded):**
+- **C-T2, :267.** `rows.slice(-13)` assumes the 13 are the last rows. It becomes `const at = rows.findIndex(r => r.id === fresh[0]!.id); expect(rows.slice(at, at + 13).map(r => r.id)).toEqual(fresh.map(r => r.id))`. The it-title at :265 "are the LAST rows of the register" becomes "are contiguous, in item order (task-446 appends after them)".
+- **C-T1, :287.** `stripRows(REGISTER, ids, rows.length - 12)` would leave FE-58 after a gap, so build throws "no gap or reorder" (generator :124). It becomes `const tail = rows.slice(rows.findIndex(r => r.id === ids[0])).map(r => r.id)` with `stripRows(REGISTER, tail, rows.length - tail.length + 1)`.
+- **C-T1, :297.** `stripRows(REGISTER, [ids[12]!], rows.length)` would leave a gap at FE-57. It becomes `[rows.at(-1)!.id]`.
+
+**Pins that count, all floors, true after the row and NOT changed:**
+- handbook-rule-map.logic.test.ts:268 `>= 57` (becomes 58);
+- :278 `>= 21` (becomes 22);
+- src/tests/backlog/rule-lists-table.logic.test.ts:218 `>= 57` (its range is computed from the register, :209-222).
+- Census: a grep of src/tests, scripts and docs/specs for "Rules rendered: 5", "21 OWED", "57 FE", "fe.57", "FE-58", "28,690" and "111,851" outside 135 and 136 hits only the generated surface-rule-map.json (:256, :881). No other literal pin exists.
+
+**Must NOT change:**
+- H1 contiguity and Next free id (:48-55);
+- A-T1..A-T6;
+- B-T1..B-T11 and READING_IDS (:177), since the new row has no reading;
+- the Q9 pin (:167-170);
+- C-T3 (:275-281), which computes the counts;
+- FE-10 H2-H6 (:301-481);
+- rule-lists-table.logic.test.ts;
+- rule-lists.logic.test.ts (page --check);
+- register-locks-resolve.infra.test.ts;
+- mcfrontend-queue.infra.test.ts;
+- spec133-bylaw-handbook.logic.test.ts.
+
+#### 5. Ids
+
+- **FE id: the value "Next free id" reads at the board head when the work commit is made** (FE-58 today, 135:17). The generator throws on a gap (generate-surface-handbook.mjs:123-127), so no other value is possible.
+- **The clash with task-388:**
+  - Lane BL-MFRULES (task-388, RUNNING, not in the board: `git merge-base --is-ancestor wf1/inc1b-mfrules HEAD` is false) holds FE-45 (~/Buildo-scratch/ids/FE-45/owner).
+  - task-430 has landed FE-45..FE-57 on the board (d429b287d). So task-388 is already a second lander and renumbers to the next free id.
+  - Whichever of task-388 and task-446 lands first takes FE-58. The other renumbers with the 135:17 dated-note form and runs `--write` then `--check` (task-430 plan 17.5).
+- **Ledger:**
+  - ~/Buildo-scratch/ids/FE-58/owner is held by BL-HB430 for "renumbered to FE-58 if task-388 lands first". That case cannot happen now that task-430 is on the board (orchestrator reading, Q1).
+  - ids/check.mjs:153 fails an introduced id whose owner text names neither the branch nor the lane. Before launch, the orchestrator therefore adds task-446's lane to FE-58/owner (it matches by substring, :153) and claims FE-59 for the renumber case.
+  - Spec 137 §5 item 7 (137:158) wants each "next free id" to be greater than every claimed id. Today FE-58 is both claimed and "next" (a drift); after this task it reads FE-59.
+- **MF id: MF-96** (.cursor/MCFRONTEND-QUEUE.md:5 "Next free id: MF-96"; MF-95 is task-430's, ~/Buildo-scratch/ids/MF-95/owner; MF-96 is not in the ledger yet). The orchestrator claims it before launch. The queue line moves to MF-97 by a dated note.
+- **Prereg round: 201** (round-200 is the last in the ledger, owner BL-HB430). The orchestrator claims it.
+
+#### 6. Files
+
+Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, scripts/surfaces/_schema/surface-rule-map.json, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json, docs/specs/00-architecture/00_system_map.md
+
+Always allowed, as for task-430 (task-430 plan section 16): the task file, docs/reports/reviews/task-446/ and docs/reports/lanes/.
+
+#### 7. LANDING
+
+**Commit 0 (records), alone and first.** It copies 62b2ffed6.
+- The MF-96 row goes under "## Phase 2" (.cursor/MCFRONTEND-QUEUE.md:246), beside MF-95 (:648).
+  - Title, with no FE token: "MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components)".
+  - Bullet: "- FE rows owned: none." (arm Q; the row is OWED).
+  - A dated note quoting RR-0395 verbatim.
+  - The Next free id line moved to MF-97.
+- The prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json:
+  - schema coa-round-prereg-v1, round 201;
+  - rules ["FE-09", "FE-10", "FE-16"] (all RULED: 135 rows FE-09, FE-10, FE-16);
+  - totals and floors copied unchanged from prereg-MF-95-1.json;
+  - expected_moves empty.
+  - The gate reads the newest prereg of MF-96 from the PARENT tree (cite-arms.mjs:9), so commit 0 must be the parent of commit 1.
+- The panel record docs/reports/panels/MF-96.json, in the form of MF-95.json (task, item, plan, output non-empty).
+- The task file goes in the same diff.
+- Trailers: `Task: task-446`, `McFrontend-Task: MF-96`, `Operator-Ruling: RR-0395 (2026-11-23, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1993, "Agreed. Plan approved")`, `Spec-diff: queue row and records only, no spec rule text moves`.
+
+**Commit 1 (work).** In order:
+1. Write T1, T2 and the three edits, and record the red.
+2. Add the row and the 135:17 note.
+3. Run `node scripts/surfaces/generate-surface-handbook.mjs --write` (136 and surface-rule-map.json), then `--check`.
+4. Run `node scripts/analysis/rule-lists.mjs page --write` (rule-lists-by-kind.md pins the 135 and 136 sizes, :33, :37, :60, :64).
+5. Run `npm run system-map`. The Spec 135 row of the map lists the reserved lock paths (00_system_map.md:100), as in d429b287d.
+6. Edit the MF-96 status line in the same commit (137:98; see Q5).
+
+Commit 1 trailers and gates:
+- Trailers: `Task: task-446`, `McFrontend-Task: MF-96`, the same Operator-Ruling line, `Spec-diff: one register row added (OWED, no lock built); generated handbook and rule map follow`.
+- No FE token anywhere in the message: arm C reads every FE-nn in it and refuses an OWED id (task-430 plan section 8). Name the line "fe.58", or name none.
+- Protected or frontend paths: src/tests/surfaces/**, scripts/surfaces/** (frontend), Spec 135, the queue and panels (protected) (mcbylaws/protected-paths.json). The owner is prompted at push. No hook is bypassed.
+
+**Close.** Lane records and the task file only, in a separate closing commit (137:100, :136). check-lane-close.mjs runs before BUILT.
+
+**Order against the other open tasks:**
+- **task-445** (RUNNING; Files task-445:42) shares no file with this task. If 445 changes the page output of rule-lists.mjs, the second lander re-runs `page --write`. UNVERIFIED whether 445 changes the page.
+- **task-388:** see section 5.
+- **task-439** (planned): this task lands first (card, RR-0395 :1994).
+  - task-439 owes no test or code edit. Its N1 and N2 pin no fe id or size (task-439 plan :68). Its lists are agents-s5-1to3, agents-s7-s11, five-words, inc-S, ms-S, orchestrator-doc17, plan-protocol, policy-124-s2-s5, queue-137 and eng-all (docs/reports/reviews/task-439/in-plan-*). None of them is surface-135 or surface-136, so its launch-gate input comparison (task-439 plan :104) is not staled.
+  - Both tasks regenerate docs/reports/generated/rule-lists-by-kind.md. task-439 re-runs `page --write` at its own landing.
+  - Prose readings in task-439's plan evidence that go stale. They are stated readings at a sha, not gate inputs:
+    - task-439 :67 "57 in force (21 OWED" becomes 58 / 22.
+    - task-439 :69 "Specs 126, 127, 128 and 135 (496,038 characters)" grows by the new row (about 1.5K, UNVERIFIED until measured).
+    - task-439 :69 "390 loses R-22" becomes false: R-22 now has fe.58.
+    - task-439 :146 "The 21 OWED locks" becomes 22.
+    - docs/reports/reviews/task-439/QUESTIONS-RULED.md:7 ("57 ... lines") and :10 (496,038).
+    - docs/reports/reviews/task-439/context-r1.md:33 (57 lines), :56 (28,690), :58 (496,038).
+    - docs/reports/reviews/task-439/GROUNDER-PLAN.md:88, :92.
+  - Still true: task-439 :66 "fe.45 to fe.57 (136:166-202), fe.53 the pointer (136:190)", because the new line goes after :203.
+  - Recommendation: one dated line in task-439's notes at its launch naming fe.58 and the new figures. No re-review (no CRITICAL or HIGH; RR-0385 item 4). See Q4.
+
+#### 8. Acceptance (command, then expected output)
+
+1. `node scripts/surfaces/generate-surface-handbook.mjs --check`: exit 0.
+2. `grep -c '^- \*\*fe\.' docs/specs/02-web-admin/136_mcfrontend_handbook.md`: 58.
+3. `grep -n 'Rules rendered' docs/specs/02-web-admin/136_mcfrontend_handbook.md`: `**Rules rendered: 58**: 58 in force (22 OWED, whose lock is still to land), 0 history.`
+4. `for c in 128:205 128:206 128:224; do grep -c "$c" docs/specs/02-web-admin/136_mcfrontend_handbook.md; done`: 1, 1, 1.
+5. `grep -n 'mobile-no-rsc' docs/specs/02-web-admin/136_mcfrontend_handbook.md`: one line, `  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts`.
+6. `test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?`: 1.
+7. `npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts src/tests/surfaces/register-locks-resolve.infra.test.ts src/tests/backlog/rule-lists-table.logic.test.ts src/tests/backlog/rule-lists.logic.test.ts src/tests/surfaces/mcfrontend-queue.infra.test.ts`: all pass. The red.out holds T1 red at R-22, T2 red at `toHaveLength(1)`, and the old C-T2 and C-T1 forms red after the row.
+8. `node scripts/analysis/rule-lists.mjs page --check`: exit 0. The surface-136 "2. Rules" row shows 1 part.
+9. `git diff --stat <launch>..HEAD -- scripts/surfaces/generate-surface-handbook.mjs docs/specs/02-web-admin/128_surface_standard_policy.md scripts/analysis/rule-lists.json`: empty.
+10. The orchestrator, before the push: `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>`. The FE row, MF-96 and round 201 are claimed by this lane. The full push range also carries task-430's ids (section 9).
+11. `npm run test` at pre-push: pass.
+
+#### 9. Questions for the grounder
+
+- **Q1.** Is the FE-58 ledger claim of BL-HB430 dead, now that task-430 is on the board before task-388? I read it as dead, so the orchestrator adds this lane to FE-58/owner. Or must this row wait for task-388 and take FE-59?
+- **Q2.** Is fe.49's omission of "What exists is a declared id-translation seam only." (128:205) a missing statement that this task owes? Recommended no: fe.52 states the seam (126:1238), and an FE-49 edit is outside "one line per missing rule".
+- **Q3.** The Six cell (my judgement): E pass or E n/a?
+- **Q4.** RR-0395's reading covers three rules (:1995). Is dropping R-03 and R-04 as duplicates within "Agreed", with the fact shown to the operator alongside the line text? Or does it need his word first (RR-0385 item 4(ii))? Recommended: shown with the line text, which the card already requires.
+- **Q5.** Which status word does the MF-96 line take in the work commit? The two-commit close stages no queue file (137:136). The MF-95 precedent still reads RUNNING (.cursor/MCFRONTEND-QUEUE.md:648-649) after BUILT.
+- **Q6.** Lock owner: does the row name task-367 (RR-0385 item 6, :1922) or task-434, as the 13 rows do? task-434 is still LATER on the board.
+
+#### 10. UNVERIFIED
+
+- The exact section 2 size after the row, and whether it stays one part (about 29,100 against 30,000).
+- That the McBylaws gate accepts commit 0 (prereg under layer23 scripts/analysis/bylaw-validation/**) on the McFrontend trailer alone. Precedent: 62b2ffed6 landed so.
+- task-430's commits are not on origin/wf1/mb-rulings (`git merge-base --is-ancestor d429b287d origin/wf1/mb-rulings` is false). The push check of a range carrying them will also see FE-45, whose owner is BL-MFRULES. That is task-430's issue, but it shares the push.
+- Whether task-445 changes the page output.
+- The size of the Spec 135 growth that task-439 :69 quotes.
+
+#### 11. GUESS estimate
+
+About 1.5 agent-hours of lane time: about 30 lines of tests, one row and one note, four regenerations, commit 0. Plus the plan review and the close.
+

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-23T12:44:30.087Z file_sha256=d2b85d5de82d6fb81ce8fe1f1a6f93f8dac5728d3d0b09036912926606d44ce5 prompt_sha256=684acaecbd3f0ac6dc88abdb58485df9e30c07bec436c546ed00cc5555190aa2
+🔍 Lens review of docs/reports/reviews/task-446/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — plan section 0 / Q2 "fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205)" — after task-439 takes Spec 128 off the front-end rule table the handbook is the carrier, so a reviewer reading fe.49 never learns that a declared id-translation seam is allowed, only that lead_parcels is read by no surface — at the line-text sitting, add that sentence to the FE-49 line or have it recorded as owed.
+
+DEFER severity=LOW — "fe.52 does not carry R-04's "Blast radius, measured" sentence (128:206). That sentence is a measurement, not an obligation." — the reader of fe.52 loses the measured blast radius that explains why the two parcel ids are named distinctly — have the grounder confirm on the pasted rule that the sentence states no obligation, otherwise state it at the sitting.
+
+DEFER severity=MED — card "one handbook line (Spec 136 section 2) for each of the three" vs plan "Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates." — the operator agreed to three lines and would receive one, with his "Agreed. Plan approved" recorded in the register beside R-22 only — the Q4 sitting must happen before launch and show him the two already-stated lines, because the facts the drop rests on (135:71, 135:74) cannot be seen in this material.
+
+DEFER severity=LOW — card title "three accepted Spec 128 rules get a line" vs "MF-96 FINAL.9: one McFrontend handbook line for Spec 128 R-22 (React Native has no Server Components)" — a board reader sees a three-line card and a one-line queue row with no cross-note — record the reduction in the card or a dated note citing RR-0395.
+
+DEFER severity=LOW — "the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446)" vs "Whichever of task-388 and task-446 lands first takes FE-58." — if task-388 lands first the templated register note names the wrong id for the R-22 row — write the note from the id the row actually takes at landing.
+
+REJECT — "Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts" with acceptance "test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?: 1" — a reader may take the path as a guard that exists today — it matches 135:13 "A ruled row whose lock is not built reads OWED with the lock path", so the reader is told the lock is owed, not built, which is the approved form.
+
+DEFER severity=NIT — "No new check or lock: the R-22 lock is only reserved." — this change draws no screen, control, touch target or focus state, so loading, error, empty, offline and back states are not reachable here — design silent on any UI for this task, it edits the handbook, register, queue and tests only.
+
+VERDICT: PASS on the person's experience
+States checked: handbook first view of fe.58, register row append and next-free-id note, board and queue row view, operator line-text sitting before launch, reviewer reading the regenerated handbook after task-439, repeat visit after regeneration   Dead ends found: 0
+
+---
+⏱  45890ms (45.9s)
+📊 Tokens — total: 28734, input: 20224, output: 8510, reasoning: 7735

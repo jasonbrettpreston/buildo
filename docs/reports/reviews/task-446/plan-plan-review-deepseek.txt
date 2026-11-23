@@ -1,0 +1,49 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-23T12:44:30.092Z file_sha256=d2b85d5de82d6fb81ce8fe1f1a6f93f8dac5728d3d0b09036912926606d44ce5 prompt_sha256=93e7e29210c8a4dc15a573764d89843cc5f46456889220e07ff846361222add5
+🔍 Lens review of docs/reports/reviews/task-446/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §7 commit 0/1 / cite-arms parent relationship — the plan writes "commit 0 must be the parent of commit 1" as a precondition but never enforces it: if the two commits are pushed separately, or an interleaving push/rebase lands between them, cite-arms.mjs reads a different parent tree and the gate silently accepts a request with no prereg / wrong prereg — Fix: restrict to a single push carrying both commits, add a pre-push `node …/cite-arms.mjs --check` dry-run against `HEAD^` and record its output in the lane record.
+
+BUG severity=HIGH — §2 NOT-in-scope vs §3 Status/Lock — the plan asserts "The lock path … does not exist … That satisfies Spec 135 rule 5 (135:15) and register-locks-resolve.infra.test.ts" with NO line citation in the infra test; if that test resolves every lock path (or requires existence), acceptance #7 fails and the whole reserve-not-build approach breaks — Fix: read register-locks-resolve.infra.test.ts now and cite the exact OWED-handling line; if it doesn't already exempt non-existent OWED lock paths, that's a second scope item.
+
+DEFER severity=MED — §5 Ids / §8 acceptance #10 — the "orchestrator adds this lane to FE-58/owner" and the MF-96 + round-201 claims are assigned to the orchestrator before launch but are not gates in this plan's own test set; if missed, ids/check.mjs (:153) fails at push and blocks the whole range — Fix: make "orchestrator edits FE-58/owner; claims MF-96 and round 201; run `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>` green" an explicit gate the first commit waits on.
+
+DEFER severity=MED — §7 task-439 stale readings — the plan asserts the stale reviews (task-439 :67, :69, :146 and the review-doc files) are "stated readings at a sha, not gate inputs" and that "its launch-gate input comparison (task-439 plan :104) is not staled" — that claim has no line citation — Fix: read task-439 plan :104 and cite the compared paths; if any review doc is an input, add the dated-note edit to task-439's notes at its launch.
+
+DEFER severity=MED — §10 bullet 1 — 30,000-byte boundary headroom is estimated, not measured: 30,000 − 28,690 = 1,310 B today; the new row is ~420 B and the Next-free-id note's exact length is not measured, so if the note exceeds ~890 B the page splits into 2 parts and acceptance #8 ("1 part") fails — Fix: `wc -c` the section-2 slice now and pre-size the note; if headroom runs short, trim the note within Spec 135 rule 3's form.
+
+DEFER severity=MED — §3 Next free id note "in the form of the task-430 note" — the exact template isn't pasted; any delimiter/whitespace drift breaks H1 (135:48-55), which the plan explicitly lists as "must NOT change" — Fix: paste the verbatim 135:17 note text from d429b287d and match its form exactly.
+
+DEFER severity=MED — §3 T2 / R22_HEADLINE — the expected rendered line is hand-transcribed from §3 and asserted via a regex on 136; any drift in the generator's Q9 plain-cell emit (whitespace, trailing period, escaping of the quoted sentences) breaks the assertion — Fix: after `--write`, derive R22_HEADLINE and the match pattern from the actual 136 bytes; do not hand-copy the string.
+
+DEFER severity=MED — §4 C-T1 (:287) — the fix `rows.slice(rows.findIndex(r => r.id === ids[0]))` silently returns the last row if `findIndex` returns -1 (renumbered ids after task-388/task-430 rebase), turning the check green on the wrong slice — Fix: assert `idx >= 0` and `rows.length - idx >= ids.length` before slicing.
+
+DEFER severity=MED — §4 census scope — the pins grep is limited to src/tests, scripts, docs/specs and excludes docs/reports/reviews even though the plan itself lists stale review prose (task-439 :67, :69, :146) outside that scope — Fix: add `grep -rn '57 in force\|21 OWED\|R-22 has no handbook\|fe\.57' docs/reports/reviews/` to the launch note so downstream review-doc drift is caught too.
+
+REJECT — §2 "No generator change" — the plan claims the Q9 branch renders the new OWED row as a plain cell (FE-57 model at 136:202-203) with no generator edit — Correct: the change is a data-only append; the generator (generate-surface-handbook.mjs:52-63, :123-127) already handles the row shape and the gap-check, so no edit is owed.
+
+DEFER severity=LOW — §5 / REPORT-429:234 — the "three missing rules" premise derives from one line of REPORT-429; the plan re-verifies R-22 in detail but does not re-sweep the report for any other pre-task-430 "unenforced/unstated" claims elsewhere in the same file — Fix: `sed -n` REPORT-429 for any other "unenforced/unstated" occurrence and fold into the launch note.
+
+DEFER severity=LOW — §4 T1/T2 helpers — the tests call `realRows()`, `readFeRows()`, `reg()`, and `row()` as if they exist by name; the plan never cites their definitions in handbook-rule-map.logic.test.ts — Fix: read the file's helper section and confirm names before writing the cases; rename if needed.
+
+DEFER severity=LOW — §3 Six cell (Q3) — the D/P/F/S/H/E cell for R-22 is the planner's judgement (E=pass) and no test pins it; if the operator later prefers E=n/a the change is invisible to the suite — Fix: record Q3's answer inside the row's Full-text cell so the judgement is auditable per row.
+
+DEFER severity=LOW — §8 acceptance #6 (`test -e … mobile-no-rsc.logic.test.ts; echo $?`) — this passes only while the lock is unbuilt; once task-367 (task-434 merged) lands the check, this assertion flips — Fix: note in the plan that #6 is point-in-time at this landing only, not a permanent invariant.
+
+DEFER severity=LOW — §7 "task-445 shares no file" — order against task-445 is UNVERIFIED; if it (or any concurrent lane) also runs `rule-lists.mjs page --write`, the second lander's output must be regenerated from the then-current register — Fix: state explicitly "whichever of 445/446 lands second re-runs `page --write` then `page --check` immediately before its own push."
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- register-locks-resolve.infra.test.ts OWED-handling is asserted, not verified — if it resolves paths, the reserve-not-build design fails acceptance #7.
+- cite-arms parent relationship (commit 0 = parent of commit 1) is a precondition with no single-push guarantee or pre-push dry-run.
+- FE-58/owner edit + MF-96/round-201 claims assigned to the orchestrator outside any gate in this plan; a missed edit fails ids/check.mjs at push.
+
+Top 3 unverified data premises (regardless of verdict):
+- Section-2 byte size and 30,000-part headroom; verify with `awk '/^## 2\. Rules/{f=1;next}/^## 3\./{f=0}f' docs/specs/02-web-admin/136_mcfrontend_handbook.md | wc -c` (should read 28,690 today) plus the exact byte length of the new row + note.
+- Round-200 is the highest prereg in the ledger; verify with `ls scripts/analysis/bylaw-validation/coa-expected/prereg-MF-*.json | sort -t- -k4 -n | tail -3`.
+- FE-58/owner currently names BL-HB430 and check.mjs:153 will accept this lane after the orchestrator edit; verify with `cat ~/Buildo-scratch/ids/FE-58/owner` and `node ~/Buildo-scratch/ids/check.mjs ~/Buildo-wt-board --lane <lane>`.
+
+---
+⏱  137465ms (137.5s)
+📊 Tokens — total: 37109, input: 21111, output: 15998, reasoning: 14060

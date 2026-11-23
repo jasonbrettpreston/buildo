@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:30.079Z file_sha256=3fd0fdbd6709b5ec0488e0a28d1b8b0212442d1499e26b10113f290c4374c7bd prompt_sha256=1ffca43de241429508039140ec8deb38a13f6316ae57ed1a7e8a9b435959447f
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card description, "THIS TASK: one handbook line (Spec 136 section 2) for each of the three" and "Orchestrator reading, not a ruling: 'Agreed' covers the three rules as recommended" — PLAN-446-v1 §0 "Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates." — the approved scope names three lines, the plan delivers one, and no landing step gates launch on the operator's word for dropping two (Q4 hands it to the grounder) — add a pre-launch gate that records the operator's word on the R-03/R-04 drop, or add the two rows so each of the three is stated by its own line.
+
+DEFER severity=MED — card description, "McFix Final process (RR-0385): Opus plan, three Sonnet seats, compliance and engineering lenses, separate grounder, Opus build, output review, two rounds at most." — PLAN-446-v1 §7 "Close. Lane records and the task file only, in a separate closing commit (137:100, :136). check-lane-close.mjs runs before BUILT." — no step runs the compliance and engineering lenses on the output and no output review sits between commit 1 and close, while §11 names only "the plan review and the close" — insert the output review, with the two round cap, before the closing commit.
+
+DEFER severity=MED — rule list note, "and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs" — PLAN-446-v1 §7 "Close. Lane records and the task file only" and §6 "Always allowed ... docs/reports/lanes/" — the plan names neither the GROUNDER.md path nor its one line per BUG or DEFER finding, so the artifact the close check refuses without is never planned — name docs/reports/lanes/<date>/<lane>/GROUNDER.md and its one CONFIRMED or REJECTED line per BUG/DEFER finding in the close step.
+
+DEFER severity=LOW — RR-0384, "make each line reflect its notes" — PLAN-446-v1 §0 "Partial wording, stated and not fixed here (Q2): fe.49 does not carry R-03's last sentence" — dropping R-03 and R-04 as duplicates leaves 128:205 and 128:206 partly unstated on the two lines this task declines to touch, with only a question and no answer recorded — answer Q2 in the plan (state the sentence in fe.49, or record the operator's acceptance of the omission) so it does not return next round.
+
+MET — card description "NOT in this task: any other lower-rank rule (RR-0379), a new check or lock for these rules, a generator change, a rule-table change (task-439's)" — PLAN-446-v1 §2 — "No new check or lock: the R-22 lock is only reserved. No generator change", plus §8 item 9's empty diff for the generator and rule-lists.json.
+
+MET — card description "tests first" — PLAN-446-v1 §4 — "The lane writes these cases first and runs them against the board. It saves the first red in its red.out".
+
+MET — card description "Lands before task-439" — PLAN-446-v1 §7 — "task-439 (planned): this task lands first (card, RR-0395 :1994)".
+
+MET — rule list §5.1, "HARD DEPENDENCY: Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST" — PLAN-446-v1 §0 — the plan greps 128:224 in 135, 136, src/tests and scripts and reads 135:71 and 135:74 before writing any row.
+
+MET — RR-0392, "I don't think we need any other infastrcuture beyond this" — PLAN-446-v1 §0 — "It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976)."
+
+MET — RR-0379, "We can run step 1 in parellel - we will add to the rules overtime" — PLAN-446-v1 §2 — "No edit to FE-49 or FE-52, and no other lower-rank rule (RR-0379, :1859)."
+
+MET — card description Files line — PLAN-446-v1 §6 — the nine paths match the card's Files line one for one.
+
+REJECT — card description "a new check or lock for these rules" — the plan is accused of adding an R-22 lock — the row only reserves a lock path, and §8 item 6 asserts "test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?" returns 1.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: none
+
+---
+⏱  97063ms (97.1s)
+📊 Tokens — total: 26819, input: 13888, output: 12931, reasoning: 11797

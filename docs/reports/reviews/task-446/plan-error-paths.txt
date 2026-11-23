@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T12:44:30.118Z file_sha256=d2b85d5de82d6fb81ce8fe1f1a6f93f8dac5728d3d0b09036912926606d44ce5 prompt_sha256=136ddf61d1f6ee8f42c8fc15514d54f78ecc4eb56a3c6f07218880154819bd8b
+🔍 Lens review of docs/reports/reviews/task-446/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — "Whichever of task-388 and task-446 lands first takes FE-58. The other renumbers with the 135:17 dated-note form and runs `--write` then `--check` (task-430 plan 17.5)." — the double-submit path for the row id is keyed on a human renumber step, not on uniqueness: two rows can both land as FE-58 (T1 dedups by cite string, not by id, and the generator's "no gap or reorder" throw at generate-surface-handbook.mjs:123-127 is not stated to reject a duplicate id), and the surface-rule-map.json is keyed by that id — add a uniqueness assertion on ids in the handbook-rule-map test and name a duplicate-id red in the red.out.
+DEFER severity=MED — "`fs.existsSync(R22_LOCK)` is false;" — the red/green guard is the absence of a file on a CWD-relative path: it reddens the moment the owed lock is built (task-367), and it passes silently when vitest runs from any directory where the relative path does not resolve — assert the register row's status/lock relation instead of file absence, or resolve the path against the repo root and state that the task-367 landing must edit this assertion.
+DEFER severity=LOW — "It becomes `const tail = rows.slice(rows.findIndex(r => r.id === ids[0])).map(r => r.id)` with `stripRows(REGISTER, tail, rows.length - tail.length + 1)`." — the not-found/empty path is unguarded: `findIndex` returns -1, `slice(-1)` yields the last row, so the strip targets the wrong row and the test either passes for the wrong reason or fails with the generator's misleading "no gap or reorder" error — assert `expect(idx).toBeGreaterThanOrEqual(0)` before slicing, in both the C-T1 and C-T2 edits.
+DEFER severity=LOW — "added <date of the work commit> (RR-0395)" — a template placeholder sits inside a cell that no test inspects (T2 checks status and locks only), so the literal `<date of the work commit>` can ship green — add the date to the R22_HEADLINE/register assertion or drop the placeholder from the cell text.
+REJECT — "Run `node scripts/surfaces/generate-surface-handbook.mjs --write` (136 and surface-rule-map.json), then `--check`." — a partially written handbook or rule map looks like an inconsistent generated state — it self-heals, both artifacts regenerate from the register on the next run and the generator throws on a gap or reorder.
+REJECT — "The gate reads the newest prereg of MF-96 from the PARENT tree (cite-arms.mjs:9), so commit 0 must be the parent of commit 1." — a re-based, squashed or missing commit 0 looks like a silent gate bypass — it fails closed, a missing prereg in the parent tree blocks rather than passes.
+
+VERDICT: PASS on error-path safety
+Paths walked: register id allocation under two racing landers, generator --write/--check retry, missing lock file, missing prereg in the parent tree, missing id in findIndex, placeholder fields, lock built later by task-367, T1/T2 red-before-green   Unguarded: 3
+
+---
+⏱  95443ms (95.4s)
+📊 Tokens — total: 31083, input: 20225, output: 10858, reasoning: 10120

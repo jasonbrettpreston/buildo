@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-23T12:44:30.140Z file_sha256=d2b85d5de82d6fb81ce8fe1f1a6f93f8dac5728d3d0b09036912926606d44ce5 prompt_sha256=974479b01991efb8137abcb7e9f047a7cf7528948a6708deefc3730e95109367
+🔍 Lens review of docs/reports/reviews/task-446/context-r1.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: docs-only and test-only change; it adds Spec 135 register rows, Spec 136 handbook lines, generated markdown/JSON, a queue row and a prereg record. No money, auth, entitlements, PII or admin surface is touched.
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  3650ms (3.6s)
+📊 Tokens — total: 20578, input: 20215, output: 363, reasoning: 288

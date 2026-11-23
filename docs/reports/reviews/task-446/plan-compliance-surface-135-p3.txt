@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:30.026Z file_sha256=595ab6a9adb9f0b915c306ab7b3128e17e72d6b9f483c85d813a163b37bb7db6 prompt_sha256=e4e97e554599ac3dd74c5f7b4b560e7cfc77f866438d5ecb5e13b6cb9ced5c84
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-surface-135-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card, deliverable "THIS TASK: one handbook line (Spec 136 section 2) for each of the three, added the way task-430 added its 13 lines" plus RR-0395 "Agreed. Plan approved" and the card's reading "Orchestrator reading, not a ruling: 'Agreed' covers the three rules as recommended" — plan §0 "Result: this task adds ONE row and ONE line, for R-22. - R-03 and R-04 are dropped as duplicates." — the approved scope is three lines per the ruling as recorded; the plan cuts it to one and leaves the cut to grounder Q4, with no launch gate that the operator's word on the reduced set is on record — add a commit 0 / pre-launch step that records the operator's explicit approval of the one-line scope (Q4 answered by him, RR-0385 item 4(ii)), or amend the card to R-22 only, before plan-lock.
+
+DEFER severity=MED — task card "The line texts restate the accepted Spec 128 rows and are brought to the operator with the grounded plan before launch (as RR-0384)." — plan §0 "fe.49 does not carry R-03's last sentence, 'What exists is a declared id-translation seam only.' (128:205)." — with R-03's new line dropped, that sentence is restated by no handbook line, so part of R-03 still reaches no front-end review, and Q2 recommends leaving it — carry the sentence in the new row's Ruling cell or in FE-49, or get the operator's word that the partial statement satisfies R-03.
+
+MET — FE-46 — plan §2 "No generator change", §3 register row only — no library, component kind or binding is added by this change.
+MET — FE-48 — plan §0 cites "REPORT-429, ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md:234" by path — scratch material is cited by path only, nothing is copied in beyond the register's existing cell form.
+MET — FE-50 — plan §6 file list — no auth or checkout code or descriptor is touched.
+MET — FE-51 — plan §6 file list — no route or navigation code is touched.
+MET — FE-52 — pasted FE-52 cell "(Spec 128 R-04, 128:206, ACCEPTED)" and plan §0 "R-04 (128:206) is already stated by FE-52 (135:74)" — FE-52 is not edited and R-04 remains stated.
+MET — FE-53 — plan §3 handbook line is one plain sentence — the pointer rule is kept, no page tables are copied into the page.
+MET — FE-55 — plan §6 file list — no admin page or admin descriptor changes, so no parallel data path is added.
+MET — FE-57 — plan §6 file list — no surface, golden or component changes, so no touch-target, label or dark-mode rule is affected.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 1
+Rules met: FE-46, FE-47, FE-48, FE-50, FE-51, FE-52, FE-53, FE-54, FE-55, FE-56, FE-57
+
+---
+⏱  123639ms (123.6s)
+📊 Tokens — total: 31430, input: 16062, output: 15368, reasoning: 14628

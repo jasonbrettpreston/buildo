@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T12:44:30.069Z file_sha256=1afd46246bd0163b7ab3babf81ce0d9061e48a99b31e7822c593d4b08050b465 prompt_sha256=4f9086c181f79a33123f86117674a261aa75709fa93e19ad2c043ac8440273a5
+🔍 Lens review of docs/reports/reviews/task-446/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card task-446 "THIS TASK: one handbook line (Spec 136 section 2) for each of the three, added the way task-430 added its 13 lines" — PLAN-446-v1 §0 "Result: this task adds ONE row and ONE line, for R-22. R-03 and R-04 are dropped as duplicates." — the card names three rules and three lines; the plan lands one and narrows the deliverable on an orchestrator reading, while its own Q4 ("Is dropping R-03 and R-04 as duplicates within 'Agreed', with the fact shown to the operator alongside the line text? Or does it need his word first (RR-0385 item 4(ii))?") leaves the authority for the narrowing unresolved at plan-lock — record the operator's confirmation of the one-line scope (or land the two missing lines) before launch and make it an acceptance gate, not a question for the grounder.
+
+BUG severity=HIGH — card task-446 "The line texts restate the accepted Spec 128 rows and are brought to the operator with the grounded plan before launch (as RR-0384)." — PLAN-446-v1 §0 "fe.49 does not carry R-03's last sentence, "What exists is a declared id-translation seam only." (128:205)." plus Q2 "Recommended no: fe.52 states the seam (126:1238)" — R-03 is the one rule the plan claims is already stated, yet its line omits part of R-03, and no acceptance in section 8 tests for that sentence (acceptance 4 only greps that the literal "128:205" occurs once) — add the missing sentence to the R-03 row in this task, or record the operator's explicit acceptance of the partial line, and add a grep acceptance for it.
+
+DEFER severity=MED — Spec 126 §0b item 6 "landed as a Spec 135 FE row with one lock ... or as a dated note with the prior text kept (M-246 ...)" — PLAN-446-v1 §3 "the line read "Next free id: FE-58" before this note; FE-58 is taken by the OWED R-22 row (task-446), so the first value on the line, the one the Spec 136 generator reads, is FE-59." against §5 "FE id: the value "Next free id" reads at the board head when the work commit is made" and "Whichever of task-388 and task-446 lands first takes FE-58." — the dated note's recorded prior text is hard-coded to FE-58 while the id is determined at landing, so if task-388 lands first the note records a prior text that never existed — write the note from the value observed at the work commit, not from today's head.
+
+DEFER severity=MED — Spec 126 §0b item 2 "red first, each lock proven in both directions (08_agents.md:461, §11.3; Spec 127:124, PH-7)" — PLAN-446-v1 §4 "Planted defect: readFeRows(reg([...GOOD, row('FE-04', ...'A (128:205).'), row('FE-05', ...'B (128:205).')])) gives length 2" is stated only for T1, while T2 has "This is the designed red today: 0." and no planted-defect case — the R-22 row's own lock (unique lock path, exact headline, 136 rendering) is proven only from the missing direction — add a T2 planted-defect case, for example two rows carrying R22_LOCK or a mutated headline, so the row assertion is proven both ways.
+
+DEFER severity=LOW — Spec 126 §0b item 9 "Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling" — PLAN-446-v1 §3 "Six: ... It is my judgement (Q3)." and Q5 "Which status word does the MF-96 line take in the work commit?" — two graded fields of the new row and its queue status are routed to the grounder as judgement, with no nearest rule cited — cite the nearest register or queue rule for the Six cell and the status word, or put both to the operator with the line text.
+
+DEFER severity=LOW — card task-446 "Files: src/tests/surfaces/handbook-rule-map.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, ... docs/specs/00-architecture/00_system_map.md" — PLAN-446-v1 §6 "Always allowed, as for task-430 (task-430 plan section 16): the task file, docs/reports/reviews/task-446/ and docs/reports/lanes/." — paths outside the card's Files list are taken on a precedent from another task, not on any pasted clause or ruling — name the rule that allows them or add them to the task's file list before launch.
+
+MET — card task-446 "NOT in this task: ... a new check or lock for these rules, a generator change" — PLAN-446-v1 §2 "No new check or lock: the R-22 lock is only reserved." and acceptance 9 empty diff on the generator, Spec 128 and rule-lists.json.
+
+MET — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — PLAN-446-v1 §7 "Commit 0 (records), alone and first." carries the MF-96 row.
+
+MET — Spec 126 §0b item 2 "pre-registration committed alone before the code" — PLAN-446-v1 §7 "The prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json" in commit 0, "so commit 0 must be the parent of commit 1".
+
+MET — Spec 126 §5.0 "nothing in that fan-out is hand-written, and nothing in it is a second declaration" — PLAN-446-v1 §7 "Run `node scripts/surfaces/generate-surface-handbook.mjs --write` (136 and surface-rule-map.json), then `--check`." and acceptance 1.
+
+MET — card task-446 "Lands before task-439." — PLAN-446-v1 §7 "task-439 (planned): this task lands first (card, RR-0395 :1994)."
+
+MET — RR-0392 "no other infrastructure beyond this" — PLAN-446-v1 preamble "It adds no infrastructure (RR-0392, MORNING-DECISIONS.md:1975-1976).", with no new script, schema or hook in Files.
+
+REJECT — Spec 126 §0b item 6 "landed as a Spec 135 FE row with one lock" — accused of landing a row whose lock file does not exist (acceptance 6 "test -e src/tests/surfaces/mobile-no-rsc.logic.test.ts; echo $?" expects 1) — the card forbids building a check or lock in this task, and the OWED form records the owed lock path, so the row lands with its lock named and its build deferred.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+Rules met: none
+
+---
+⏱  70502ms (70.5s)
+📊 Tokens — total: 47258, input: 33076, output: 14182, reasoning: 12563
