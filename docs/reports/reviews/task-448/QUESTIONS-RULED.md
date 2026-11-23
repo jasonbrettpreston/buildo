@@ -68,6 +68,7 @@ Stay append-only (the why is still true after the edit, so nothing is false): :9
 ## Operator (one-sentence questions, at most three; none blocks the fold)
 1. Should the stale comment at scripts/analysis/backlog-lane.mjs:12 ("a record-only task gets the queue lists") be corrected in task 448 as one more small fix (the matching text at rule-lists.mjs:257 cannot be, because that file stays closed)?
 2. Should the by-law pre-registration records (prereg-MB files under scripts/analysis/bylaw-validation/coa-expected/) also lose the queue, agent and doc-17 lists like every other row but the tooling row, or stay on the tooling row as RR-0421 item 4 a reads?
+Answered 2026-11-23 (RR-0426, decision-211, MORNING-DECISIONS.md:2186, verbatim "1 and 2 as recommended"): 1 yes, the comment at scripts/analysis/backlog-lane.mjs:12 is folded as section 3.3b (FOLD-448b.json); 2 no, the by-law pre-registration records stay on the tooling row as RR-0421 item 4 a reads.
 
 ## What the orchestrator does next (actions, not questions)
 1. Apply FOLD-448.json to the card: 63 pairs, each find unique in the whole task file and none overlapping, so the order does not matter. 59 pairs edit the Implementation Plan; the last four pairs of the file in order of their text (the ones whose find starts with the RR-0422 clause, the RR-0423 sentence, the NOT in this task clause and the Files line followed by the description end marker) edit the Description.

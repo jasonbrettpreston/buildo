@@ -110,4 +110,4 @@ rg#13 CONFIRMED docs/specs/00-architecture/137_mcqueue.md:134 "Dated note 2026-1
 
 Counts: 85 ids ruled (64 lens, 21 seat); 51 CONFIRMED (0 CRITICAL, 4 HIGH, 24 MED, 20 LOW, 3 NIT), 34 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded (28 ids); of the 23 LOW and NIT, 20 are folded in a few words and 3 are piled. Expected round line: Plan review round 1: 48 folded, 0 task, 0 ruling, 0 wontfix, 3 pile.
 
-Plan: task-448 sha256:efa8b49b9a6c
+Plan: task-448 sha256:61f0ac5563cb
