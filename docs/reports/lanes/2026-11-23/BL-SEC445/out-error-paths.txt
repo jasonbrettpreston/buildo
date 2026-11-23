@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T13:23:54.350Z file_sha256=fc45d13d6335b5108da389839ded04c9b879a87c42c8bc84a39dd7dd71b881cc prompt_sha256=5df2e795ab6d1bca86675729cd6ecf237e375ccc72d7c5e1de6e85fab2d25263
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-error-paths.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — the two halves read one input two ways: the six-word half tests the raw string, the api-lib half tests re-parsed entries, so a path present in the raw text but not a clean entry (a backtick or quote wrapped path, or a value past the first newline) gets no security lens, reopening the gap task-445 exists to close — add the same path test against the raw text, e.g. `|| /(?:^|[\s,])src\/(?:app\/api|lib)(?:\/|$)/.test(files)`, so the two parsers cannot disagree.
+
+REJECT — scripts/analysis/rule-lists.mjs:184 "export function lensSet({ type, files }) {" — the new clause parses a synthesized string and could throw or return null (undefined files becomes "Files: undefined") — `?? []` absorbs the null and the anchored `^src\/` means the phantom "undefined" entry cannot match; a throw would refuse the launch (fail closed), so no wrong lens set is emitted.
+
+REJECT — docs/specs/00-architecture/08_agents.md:263 "the launch brief, plan-prep and the close read that one function." — a lane launched before this commit and closed after now needs out-security.txt it was never briefed to produce — it fails closed (the close refuses and names out-security.txt), and a re-run of the launch on the same Files line yields the identical set, so a task never closes unsecured and the repeat is a no-op.
+
+REJECT — src/tests/backlog/check-lane-close.logic.test.ts:222 "it('C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes', () => {" — the added requirement looks like a double-count risk if the same out-security.txt is demanded twice — the close reads one `lensSet` result and one file presence check, so a repeat commit sees the same required set and the same file, no duplicate demand.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (filesEntries throw/null on synthesized string), empty (empty and undefined Files), retry/repeat (re-running launch and close), double-submit (close recompute), degrade (missing out-security.txt fails closed), idempotency (lensSet is pure, no write or count to key)   Unguarded: 0
+
+---
+⏱  77944ms (77.9s)
+📊 Tokens — total: 17991, input: 8541, output: 9450, reasoning: 8848

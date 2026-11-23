@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.344Z file_sha256=7671474427b5e6dd382d2fbe44f39e867099646ba6ac554e36fc1d02a287a607 prompt_sha256=3b18fe198341e1e817aee2cf0f9f8346044729abdd4374a1721aeb6e1c8be731
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-445 description "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — docs/specs/00-architecture/08_agents.md "when an entry of the task's `Files:` line is under `src/app/api/` or `src/lib/` (the api-lib row of `scripts/analysis/rule-lists.json`)" and src/tests/backlog/rule-lists.logic.test.ts "expect(r.plan, f).not.toContain('security');" for 'scripts/analysis/x.mjs' — only the api-lib row is wired; no path governed by the step-pipeline row gains the lens, and the S3 control pins one such path out, so the card's stated coverage is not met as written — either extend the predicate to the step-pipeline row's paths or record in the 08_agents note the ruling that drops it (RR-0394 "Security a" is pasted only as that label, so the narrowing is currently argued from the label alone).
+
+DEFER severity=MED — plan-protocol, dated note 2026-11-20 (M-246) "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7" — NONE — the pasted material carries tests, code and notes but no GROUNDER.md, grounder name or `Ruled:` line for this lane, and the close check refuses the BUILT/DONE commit without that form — owe the separate grounder's GROUNDER.md beside the lane outputs before close.
+
+DEFER severity=LOW — .claude/review-templates/README.md item 5 "a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task." — scripts/analysis/rule-lists.mjs "export function lensSet({ type, files }) {" — rule-lists.mjs is plausibly "the helper", so the commit moving task-445 to a finished status must not be the one carrying this file; the table's protected_paths is not in the pasted context so this cannot be confirmed — keep the status change in its own commit, or cite the table's protected_paths list showing rule-lists.mjs absent.
+
+MET — dated note 2026-11-20 (M-246) "`lensSet` in `scripts/analysis/rule-lists.mjs` decides it" — scripts/analysis/rule-lists.mjs:186 — the widening is made inside lensSet, the one function the note names, with no second copy of the word list in the launch script or the close check.
+
+MET — dated note 2026-11-20 (M-246) "the launch script and the close check enforce" — src/tests/backlog/backlog-lane.logic.test.ts:377 and src/tests/backlog/check-lane-close.logic.test.ts:219 — B1 pins the launch brief naming lens-security.md and C1(a)/(b) pin the close requiring out-security.txt through the same function.
+
+MET — RR-0394 "security lens option A: API routes and library code" — scripts/analysis/rule-lists.mjs:186 "|| (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e))" — API routes and src/lib library code now add security on plan and out.
+
+MET — 08_agents.md note "as well as on the six words it ran on before (entitlement, auth, stripe, metered, admin, pii)" — scripts/analysis/rule-lists.mjs:186 "/entitlement|auth|stripe|metered|admin|pii/i.test(files)" — the six-word test is unchanged and D11b is retained as its lock.
+
+MET — task-445 "keeping the six words as they are; tests first, both directions" — src/tests/backlog/rule-lists.logic.test.ts "S3 controls (green before and after; each proven by a planted defect)" — exclusions carry controls, the red log names planted defects P1 to P5.
+
+MET — task-445 "NOT in this task: a new lens, a new gate, a change to the lens template, front-end rows" — .claude/review-templates/README.md "or a Files entry is under src/app/api/ or src/lib/ (task-445)" — no template, gate or front-end row is added; src/components stays out per S3.
+
+MET — .claude/review-templates/README.md item 5 "out-security.txt on money/auth or an API or library path" — .claude/review-templates/README.md line 161 — the close requirement text is updated in the same diff as the function, so the prose and lensSet agree.
+
+MET — .claude/review-templates/README.md item 5 "a build, fix or check task needs an `@lane-*` assignee" — task card "assignee: @lane-BL-SEC445" — the closing task carries a lane assignee.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  80374ms (80.4s)
+📊 Tokens — total: 21620, input: 11270, output: 10350, reasoning: 9131

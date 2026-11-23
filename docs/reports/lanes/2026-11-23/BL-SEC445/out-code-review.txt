@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T13:23:54.346Z file_sha256=fc45d13d6335b5108da389839ded04c9b879a87c42c8bc84a39dd7dd71b881cc prompt_sha256=1535f3cb3c54ce03c239f2064a4e575cb5eebaa9222cb7eea1ba9a74813bdb00
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:187 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — the security answer now rides on re-parsing a synthesized `Files: ${files}` line through `filesEntries`, whose contract I cannot see: if it returns objects or resolved/absolute paths, `.test(e)` stringifies to "[object Object]" or misses `^src/`, and if it returns null for an unparseable line the `?? []` makes the lens silently not attach with nothing logged (fail-open, no error). — Make the decision independent of an unseen return shape, e.g. `Array.isArray(es) ? es.some(fn) : /(?:^|[,\s])(?:\.\/)?src\/(?:app\/api|lib)(?:\/|$)/.test(files)`, and have the null case be the raw-text test rather than an empty list.
+
+DEFER severity=LOW — docs/specs/00-architecture/08_agents.md:262 "the api-lib row of `scripts/analysis/rule-lists.json`" — the note says the data row decides, but the code hard-codes `/^src\/(?:app\/api|lib)(?:\/|$)/` and never reads that row, so editing the row's paths changes nothing and the document goes false without a failure. — Either derive the entries from the api-lib row or drop the row reference and name the two prefixes.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:742 "S3 controls (green before and after; each proven by a planted defect)" — the planted-defect record (P1 mobile/src/lib/analytics.ts, P2 src/library.ts, P3 scripts/analysis/x.mjs) covers three of the eight control paths; 'mobile/app/(app)/x.tsx', 'src/app/apiary/x.ts', 'docs/specs/03-mobile/x.md' and 'src/tests/x.test.ts' are asserted green both ways with no defect shown, so the comment overstates what is proven. — Narrow the claim to the three proven paths, or add the plantings for the rest.
+
+REJECT — scripts/analysis/rule-lists.mjs:187 "src\/(?:app\/api|lib)(?:\/|$)" — the pattern looks like it would also fire on a lookalike such as `src/app/apix/route.ts` or `src/library.ts` — the `(?:\/|$)` boundary rejects both, and S3 pins them as controls.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none at CRIT or HIGH
+
+---
+⏱  74844ms (74.8s)
+📊 Tokens — total: 23625, input: 8524, output: 15101, reasoning: 14464

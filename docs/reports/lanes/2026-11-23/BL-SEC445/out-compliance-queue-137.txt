@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.345Z file_sha256=fcf108a66268255a2bad45f3396ea1f3689f815009642dbefc9f0850aa46d580 prompt_sha256=0bb4edb7ee1a6dbbfc28bf5753bfd664b330929a0a8be96f039a08760ba5a33f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-445 card, THIS TASK: "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — scripts/analysis/rule-lists.mjs:186 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e)); // task-445 (RR-0391, 08_agents.md section 5.7): an API route or library path (the api-lib row)" — only the api-lib row's two prefixes are covered, the card names the step-pipeline row's paths as well and nothing in the diff or its tests shows them covered, while the S3 control pins "scripts/analysis/x.mjs" as no-security — extend the predicate (or derive it from the table rows) to the step-pipeline row's paths, or state in the 2026-11-22 note why they are out and pin that with a test
+DEFER severity=LOW — task-445 card: "the paths the rule table's api-lib and step-pipeline rows govern" — docs/specs/00-architecture/08_agents.md:261 "the api-lib row of `scripts/analysis/rule-lists.json`" — the note names the rule table as the source of the paths while lensSet hardcodes the two prefixes and never reads rule-lists.json, so an edit to that row leaves the lens set unchanged and the note stale — either derive the predicate from the api-lib row's paths or word the note as a fixed list of prefixes
+MET — task-445 card: "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — the original /entitlement|auth|stripe|metered|admin|pii/i test is kept intact and only OR-ed with the new condition
+MET — RR-0394: "security lens option A: API routes and library code" — scripts/analysis/rule-lists.mjs:186 — both prefixes are matched, src/app/api via the first alternative, src/lib via the second
+MET — task-445 card: "NOT in this task: a new lens, a new gate, a change to the lens template, front-end rows" — .claude/review-templates/README.md:106 — only the firing condition text changes; no template, hook or new gate is added and the control "src/components/report/ReportView.tsx" stays out
+MET — task-445 card: "tests first, both directions" — src/tests/backlog/rule-lists.logic.test.ts "for (const f of ['src/components/report/ReportView.tsx', 'mobile/src/lib/analytics.ts', 'mobile/app/(app)/x.tsx', 'src/library.ts', 'src/app/apiary/x.ts', 'scripts/analysis/x.mjs', ...])" — positive, near-miss and control cases are pinned, with the red and planted-defect evidence in the task's Implementation Notes
+MET — docs/specs/00-architecture/08_agents.md:261 "the launch brief, plan-prep and the close read that one function" — src/tests/backlog/backlog-lane.logic.test.ts "B1: a build on an API route or a src/lib path names lens-security.md" and "B2 (task-445): a fix task on a src/lib path also writes plan-security.txt" — the launch brief, plan-prep and close readers are all exercised against the widened set
+MET — task-445 card Files line (six paths) — the diff touches all six: rule-lists.mjs, the three test files, 08_agents.md and the review-templates README
+REJECT — docs/specs/00-architecture/08_agents.md "Fires ONLY on: money (Stripe), auth, PII, and admin surfaces — NOT every diff" — that the DeepSeek lens now fires on any src/lib path without that body text being edited — the added 2026-11-22 note states that this line "is unchanged for the Claude A12 panel seat and reads with this addition for the DeepSeek lens", which is the M-246 prior-text-kept form Spec 137 requires
+REJECT — RR-0392: "no other infrastructure beyond this" — adding infrastructure — no hook, gate, launchd job or table key is added, only the existing lensSet predicate and its docs
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  67518ms (67.5s)
+📊 Tokens — total: 33162, input: 19362, output: 13800, reasoning: 12763

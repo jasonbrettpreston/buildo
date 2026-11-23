@@ -3,11 +3,11 @@ id: TASK-445
 title: >-
   FINAL.8 Security lens: the security review runs on every back-end and API
   task, not only on paths that hold one of six words
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SEC445'
 created_date: '2026-11-23T01:50:00Z'
-updated_date: '2026-11-23T12:29:00Z'
+updated_date: '2026-11-23T13:32:00Z'
 labels:
   - McFix
   - McFix Final
@@ -30,6 +30,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-SEC445/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-SEC445/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-SEC445/TRIAGE.md
 type: build
 ordinal: 145012
 ---
@@ -226,4 +229,20 @@ rg#4 MED folded hdr takes the materi
 Dated note 2026-11-22 (M-246, prior text kept; RR-0391 · task-445 · Backlog; operator, verbatim: "add it. Then once these close move on to the Mcfix plan for the closed and built tasks with the new approach.")
 
 2026-11-23 taken on the board at lane launch (lane BL-SEC445, worktree /Users/brettpreston_macmini/Buildo-wt-sec445, branch wf1/inc1b-sec445), RR-0240
+
+2026-11-23 build (BL-SEC445): tests S1(a), S1(b), S3, S4 (rule-lists.logic.test.ts), B1, B2 (backlog-lane.logic.test.ts), C1(a), C1(b), C1(c) (check-lane-close.logic.test.ts) written first per the plan's TESTS section; red attempt follows (red.out).
+
+2026-11-23 red (BL-SEC445, lane red.out): commit attempt with only the three test files and the task file staged: 'Test Files 3 failed (3)', 'Tests 6 failed | 338 passed (344)', exit=1. Reds at the designed assertions: S1(a) toEqual (rule-lists.logic.test.ts:730), S1(b) toContain (:737), B1 toContain (backlog-lane.logic.test.ts:377), B2 toEqual (:747), C1(a) status toBe(1), C1(b) toMatch; S3, S4, C1(c) and D11b green. Planted defects (commit attempts, no trailer, all exit 1): P1 no anchor -> S3 red 'mobile/src/lib/analytics.ts: expected ... to not include security'; P2 no boundary -> S3 red 'src/library.ts'; P3 scripts/ -> S3 red 'scripts/analysis/x.mjs' (plus 4 existing tests); P4 drop code && -> S4 red "type 'record': expected [ 'plan-review-deepseek', 'security' ] to deeply equal [ 'plan-review-deepseek' ]"; P5 new term only -> D11b red 'src/app/admin/page.tsx: expected ... to include security'. Each run: 1 failed | 343 passed (344) except P3 (5 failed).
+
+2026-11-23 green + acceptance (BL-SEC445). Work commit 39ccaad3c through the real hooks: pre-commit related run 'Test Files 3 passed (3)', 'Tests 344 passed (344)', exit=0 (lane commit.out). Acceptance on real inputs at 4405f80d7: (1) 'rule-lists: ok 58 lists, 23 rows'; page --check 'rule-lists: docs/reports/generated/rule-lists-by-kind.md is current'. (2) in memory (lane measure.mjs): 'open resolving 106; build or fix 43'; old line 8 (task-267 task-317 task-357 task-376 task-378 task-387 task-388 task-411); 'new line plan: 13; out: 13; plan equals out for every task: true'; 'newly covered: task-372 task-379 task-380 task-383 task-396'; 'task-445 security: false'. The plan's 9 -> 14 is 8 -> 13 here because task-430 is now BUILT (status: BUILT); the five newly covered are the plan's five. (3) backlog-lane.mjs --dry-run on a real task: refused before the brief for every candidate (task-379: 'plan gate: task-379: no plan evidence folder docs/reports/reviews/task-379/ on the board'); no open build task with an API route or src/lib path has plan evidence, so the route brief is shown by B1 (fixture with planted evidence, green in 39ccaad3c), not on a real task. (4) S1, B1, B2, C1(a)(b) red first and green; S3, S4, C1(c) green both ways with planted defects P1-P5 red; the whole src/tests/backlog folder is UNVERIFIED in the lane (the full suite runs only at the push station).
+
+2026-11-23 output review round 1 (BL-SEC445): 11 DeepSeek lens outputs (8 compliance per list, engineering eng-all, code-review, error-paths) on context-r3.md, 24 findings listed untriaged in docs/reports/lanes/2026-11-23/BL-SEC445/FINDINGS.md (one BUG HIGH: out-compliance-queue-137#1, the step-pipeline half of the card). Task left RUNNING: grounder owed (RR-0359).
+
+2026-11-23 output round 1 ruled by the separate grounder Cairn-Ground-O445 (docs/reports/lanes/2026-11-23/BL-SEC445/GROUNDER.md): 24 findings, 4 CONFIRMED (all LOW, piled), 20 REJECTED; no CRITICAL, HIGH or MED stands; no round 2 (RR-0385). Piled LOW (TRIAGE.md): out-code-review#3 (S3 title wording: three of eight controls have a recorded planted defect); out-engineering-eng-all#1 (trigger written by hand in four places, no prose-to-lensSet test); out-engineering-eng-all#3 (test header does not cite 08_agents.md section 5.7); out-error-paths#1 (a backtick-wrapped Files path gets no security lens).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-23/BL-SEC445/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-SEC445/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

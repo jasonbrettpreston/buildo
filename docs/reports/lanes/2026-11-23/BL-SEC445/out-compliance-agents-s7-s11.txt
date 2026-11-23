@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T13:23:54.344Z file_sha256=5b520a48f322aaf67875bbf250857dbaa6df3645c46a0465485bb905fdadd675 prompt_sha256=0713c7734b2524947aecb3814ba0b428800c02e6d10254ec44c7d49f6b980c88
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-SEC445/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-445 Description "the smallest change so the security lens runs on every back-end and API task (the paths the rule table's api-lib and step-pipeline rows govern)" — scripts/analysis/rule-lists.mjs:186 "/^src\/(?:app\/api|lib)(?:\/|$)/" — the step-pipeline row's paths are not in the predicate and no pasted clause scopes them out, so a pipeline-step task whose Files hold none of the six words still gets no security lens at plan or output — extend the predicate to the step-pipeline row's paths, or record in the 08_agents.md note, citing RR-0394 "Security a" (:1987), that the step-pipeline row is out of scope by the operator's option A.
+DEFER severity=LOW — rule 7 rule 4 dated note 2026-11-19 "Table: `.claude/review-templates/README.md`." — .claude/review-templates/README.md:105 "or a Files entry is under src/app/api/ or src/lib/ (task-445)" — the table's trigger is stated without the build/fix type gate the code keeps and the 08_agents.md note names ("of a build or fix task", pinned by test S4), so a reader expects a security output on a record task that neither the close nor plan-prep will require — add "on a build or fix task" to the README row and the close bullet.
+MET — RR-0394 "Security a" (API routes and library code) — scripts/analysis/rule-lists.mjs:186 — "src\/(?:app\/api|lib)(?:\/|$)" adds exactly the API-route and library prefixes, no other path.
+MET — task-445 Description "keeping the six words as they are" — scripts/analysis/rule-lists.mjs:186 — "/entitlement|auth|stripe|metered|admin|pii/i" is unchanged and the D11b survive-the-fix lock stays green (planted defect P5).
+MET — task-445 Description "at plan and at output" — scripts/analysis/rule-lists.mjs:186 — the single lensSet feeds both arrays, pinned by S1(a) toEqual on plan and out, and by B1 (launch brief) and B2 (plan-prep writes plan-security.txt).
+MET — task-445 Files line "scripts/analysis/rule-lists.mjs, src/tests/backlog/rule-lists.logic.test.ts, ... .claude/review-templates/README.md" — diff header — the diff touches exactly those six paths and no seventh.
+MET — spec 11.3 "Every lock is proven in BOTH directions" — src/tests/backlog/rule-lists.logic.test.ts:721 "S1(a): a src/lib path adds security on both phases" and :737 "S3 controls (green before and after; each proven by a planted defect)" — exact-set locks plus named controls, reds reported at the designed assertions (:730 toEqual, :737 toContain, C1(a) status).
+MET — task-445 Description "NOT in this task: a new lens, a new gate, a change to the lens template" — diff file list — no change to lens-security.md, no new gate, only lensSet and its consumers' text.
+MET — spec 11.1 "a line citation is read, not remembered" — Implementation Notes red line "red at S1(a) toEqual (rule-lists.logic.test.ts:730), S1(b) toContain (:737), B1 toContain (backlog-lane.logic.test.ts:377)" — every executable claim of the change carries a run result, with planted-defect output for each control.
+MET — rule 7 rule 7 "Security fires only on money/auth/PII/admin" — docs/specs/00-architecture/08_agents.md new 2026-11-22 note — the note names rule 7 and the 2026-11-19 note under rule 4 among the limiting statements that "read with this addition for the DeepSeek lens", so the widening rests on RR-0391/RR-0394 rather than silently contradicting the pasted text.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+Rules met: none
+
+---
+⏱  68581ms (68.6s)
+📊 Tokens — total: 34843, input: 20528, output: 14315, reasoning: 13359
