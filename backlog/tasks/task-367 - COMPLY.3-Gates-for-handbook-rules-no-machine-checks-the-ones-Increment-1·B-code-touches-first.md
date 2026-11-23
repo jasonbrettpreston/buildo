@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-23T18:14:00Z'
+updated_date: '2026-11-23T18:26:00Z'
 labels:
   - McFix
   - McFix Final
@@ -87,8 +87,8 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
  - Rule 3 (135:13): "A ruled row whose lock is not built reads `OWED` with the lock path."
  - Rule 5 (135:15): an OWED lock path is a reserved `src/tests/surfaces/*.test.ts` that does not exist yet.
  - Spec 136 and the rule map are generated: `node scripts/surfaces/generate-surface-handbook.mjs --write|--check` (136:9, :26).
- - register-locks-resolve.infra.test.ts:43-75 fails an OWED row whose lock already exists, unless the id is on FLIP_PENDING (:26, today `['FE-39']`).
- - Flip precedent: a landed lock waits "until the operator approves the flip" (register-locks-resolve.infra.test.ts:20-25, MF-37 and FE-39).
+ - register-locks-resolve.infra.test.ts:45-79 (the check is :76) fails an OWED row whose lock already exists, unless the id is on FLIP_PENDING (:30, today `['FE-39']`).
+ - Flip precedent: a landed lock waits "until the operator approves the flip" (register-locks-resolve.infra.test.ts:21-29, MF-37 and FE-39).
 
 4. **A hidden lock this plan must edit:** src/tests/surfaces/handbook-rule-map.logic.test.ts.
  - :258 lists the 13 RR-0384 lock paths, including scope-fence, nav-tab-switch and failure-state-declared.
@@ -185,7 +185,7 @@ fe.58 (pending, unranked) is clean today: no `use server`, `use client` or `next
 ## 3. The tests
 
 **Common to all three:**
-- Path: the reserved lock path. The register reserves the exact name (135:15; OWED_LOCK_RE at register-locks-resolve.infra.test.ts:18).
+- Path: the reserved lock path. The register reserves the exact name (135:15; OWED_LOCK_RE at register-locks-resolve.infra.test.ts:19).
 - First line: `// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-nn (Spec 136 §fe.nn)` (CLAUDE.md directive 3; the form of register-locks-resolve.infra.test.ts:1).
 - No DB, no network.
 - Files are listed with `git ls-files`.
@@ -273,7 +273,7 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 - Protected (mcbylaws/protected-paths.json): Spec 135 (:68), the queue (:70), docs/reports/panels/** (:55), and coa-expected/** (:38).
 - McFrontend frontend paths: src/tests/surfaces/** (:23) and scripts/surfaces/** (:21).
 - **Yes, an MF queue row is needed:** "A task not listed here is not done" (.cursor/MCFRONTEND-QUEUE.md:5; Spec 137 table :41). The commit-msg arm C needs a `McFrontend-Task:` trailer and a prereg with rules (cite-arms.mjs:145-150).
-- Next free ids (not claimed): the ledger ends at MF-96 and round-201 (`ls ~/Buildo-scratch/ids`). 442 has planned MF-97 and round-202. So task-367 plans **MF-98** and **round-203**. The orchestrator claims the ids at launch, one past the highest claim in ~/Buildo-scratch/ids (its README: highest existing claim + 1 is next free; MCINC-8, 08_agents.md:526): if 367 launches first it takes MF-97 and round-202, and the orchestrator renames MF-98 to MF-97 in this plan and in the prereg file name on the Files line before launch (the Plan hash is then grounded again) while 442 takes MF-98 and round-203; if 442 claims first, MF-98 and round-203 stand. Arm Q refuses a heading at or above the Next free id (mcbylaws-queue-check.mjs:308), so commit 0 sets the line one past the id it takes.
+- Next free ids (not claimed): the ledger held MF-96 and round-201 at the plan read; BL-FEDB442 (task-442) has since claimed MF-97 and round-202 (`ls ~/Buildo-scratch/ids`), so MF-98 and round-203 stand. So task-367 plans **MF-98** and **round-203**. The orchestrator claims the ids at launch, one past the highest claim in ~/Buildo-scratch/ids (its README: highest existing claim + 1 is next free; MCINC-8, 08_agents.md:526): if 367 launches first it takes MF-97 and round-202, and the orchestrator renames MF-98 to MF-97 in this plan and in the prereg file name on the Files line before launch (the Plan hash is then grounded again) while 442 takes MF-98 and round-203; if 442 claims first, MF-98 and round-203 stand. Arm Q refuses a heading at or above the Next free id (mcbylaws-queue-check.mjs:308), so commit 0 sets the line one past the id it takes.
 
 ## 6. Commits (D), in order, following the six steps (08_agents.md:515-525)
 
@@ -288,15 +288,15 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 
 **Commit 1 (work):**
 - The three tests, with plant lines removed and T3's two entries in.
-- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note in the Spec 135 rule 3 form (the FE-09 and FE-37 flips, 135:31 and :59): Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both"; Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). Each note also says the lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. FE-51: the PROSE-ONLY words in the rule cell are prior text, the lock now checks the tab-push half. FE-49: the platform_shared standing exception is outside the lock (the fence is converted-surfaces.json programme_scopes; the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433), so it stays out of T2 with the FE-49 note as its record and a widening of T2 to platform_shared is a later batch row of this card. FE-54: the lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open). The notes must not hold the words Current reading: (the strict form of generate-surface-handbook.mjs:72). FE-51 flips only with Q-D yes.
+- Spec 135 cells FE-49, FE-51, FE-54 change to `RULED 2026-11-23 (RR-0413), lock lands with the MF-98 work commit. Lock: \`<path>\``, each with a dated note in the Spec 135 rule 3 form (the FE-09 and FE-37 flips, 135:31 and :59): Dated note 2026-11-23 (M-246, prior text kept; MF-98 · McFrontend queue · lane BL-HB367, task-367; RR-0413, operator, verbatim: "yes to both"; Spec 135 rule 3), the row reads RULED 2026-11-23; prior status OWED (the cell read as before; RR-0384 added the row on 2026-11-22). Each note also says the lock landed under task-367, into which task-434 was merged (RR-0385 item 6), so "the lock is task-434's" is prior text. FE-51: the PROSE-ONLY words in the rule cell are prior text, the lock now checks the tab-push half. FE-49: the platform_shared standing exception is outside the lock (the fence is converted-surfaces.json programme_scopes; the one mention is a notes string at scripts/surfaces/platform_shared/F16/contracts/contract_admin_pipeline_step_output.descriptor.json:410, not a table ref, scope key at :433), so it stays out of T2 with the FE-49 note as its record and a widening of T2 to platform_shared is a later batch row of this card. FE-54: the lock is declaration-only for contract readers in programme scope and the error state only; 8 contract-reading descriptors outside scope (6 estate_other, 2 platform_shared) are not judged; the live break mobile/src/lib/maxbldHelp.ts:19 (a failed Help open is only logged) is owned by the task-343 leftovers (item 1, a Help sheet that fails to open). The notes must not hold the words Current reading: (the strict form of generate-surface-handbook.mjs:72). FE-51 flips only with Q-D yes; then its dated note also quotes the operator's Q-D answer verbatim with its RR id, and the same commit sets the MF-98 row to `FE rows owned: FE-49, FE-51, FE-54.`
 - handbook-rule-map.logic.test.ts: a named list `BUILT_BY_367 = ['failure-state-declared','scope-fence','nav-tab-switch']`.
 - :273 and :274: rows on that list have their lock tracked and read RULED, or read OWED and are on FLIP_PENDING (FE-51 if Q-D is not yes).
 - :281: the floor becomes 21 minus the rows of that list that read RULED (18 when all three flip).
 - :283: RULED rows read `Status: RULED … · Enforced by: <path>`; an OWED row keeps its `Status: OWED · lock owed:` line.
 - Generators: `generate-surface-handbook.mjs --write`, then `--check`; `rule-lists.mjs page --write`, then `--check`.
-- The task file (plan and notes text only; its status moves in the close commit, Spec 137 rule 3 note of 2026-11-20) and the queue row status (137:84).
+- The task file (plan and notes text only; its status moves in the close commit, Spec 137 rule 3 note of 2026-11-20) and the queue row status (137:98, Rule 3).
 - No FE-nn id is written in the message. Use fe.49, fe.51, fe.54, which FE_ID_RE (cite-parse.mjs:31) does not match.
-- Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED`.
+- Subject: `test(135_mcfrontend_decisions_register): task-367 locks for fe.54, fe.49 and fe.51, each proven red; three rows read RULED` (if Q-D is not yes the tail reads `two rows read RULED, FE-51 waits`).
 - **If Q-D is not yes:** FE-51 stays OWED: commit 1 adds 'FE-51' to FLIP_PENDING (register-locks-resolve.infra.test.ts:30, the FE-39 form), its Spec 135 cell and Spec 136 line are untouched, and the MF-98 row keeps FE-51 out of its FE rows owned (mcbylaws-queue-check.mjs:178-215). Acceptance #3 then reads 20, not 19.
 
 **Output review:** DeepSeek runs, on the output, the lens set that rule-lists.mjs lensSet gives for this Files line (code-review, ux, error-paths, security), the compliance lens once per list (the 15 compliance lists: out-compliance-<list id>.txt) and the engineering lens (eng-all: out-engineering-eng-all.txt) (RR-0385 item 2); then a separate grounder runs BEFORE any fold. Two rounds at most (RR-0385 item 3). Fixes are new commits with the same trailers; after each fix commit every lens input is re-made with rule-lists.mjs lens-input and every output re-run under the same names (08_agents.md section 7, task-399 note of 2026-11-20).
@@ -333,7 +333,7 @@ Files: src/tests/surfaces/failure-state-declared.logic.test.ts, src/tests/surfac
 - The 442 and 388 conflicts are textual only.
 - Rollback: `git revert` commit 1, then commit 0. No runtime code changes.
 
-## 10. Questions for the plan grounder (H)
+## 10. Questions for the plan grounder (H), answered in docs/reports/reviews/task-367/QUESTIONS-RULED.md (G1 yes; G2 surface-rule-map.json changes, 00_system_map.md does not; G3 yes; G4 keep; G5 yes; G6 no other lock)
 
 - G1. Does `gate.mjs --staged` (pre-commit:19, holdForCommit) pass staged `src/tests/surfaces/*.ts` before the commit-msg trailers are read? 442 is the precedent, but it is UNVERIFIED.
 - G2. Does the flip leave surface-rule-map.json and docs/specs/00-architecture/00_system_map.md unchanged? The system map row for 135 already lists the three paths (00_system_map.md:100). If the map does change, it must be added to the Files line, which would add policy-124-s2-s5, a list the rule-lists page entry already attaches (16 lists, section 5).
