@@ -17,10 +17,13 @@ const lists = (files: string, type = 'build') => {
 const table = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { rows: Row[]; lists: Record<string, { file: string; sections?: string[] }> };
 
 describe('V2.LIST round 2: the table rows', () => {
-  it('a phone file and a surface path that is not a descriptor get the engineering standards (eng-all)', () => {
-    expect(lists('mobile/x.ts')).toContain('eng-all');
+  // task-431 (RR-0385 item 7): the phone row gets the front-end and shared sections; the surfaces row keeps the whole file
+  it('a phone file gets the engineering standards front-end and shared sections (eng-front, eng-shared); a surface path that is not a descriptor keeps eng-all', () => {
+    expect(lists('mobile/x.ts')).toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
+    expect(lists('mobile/x.ts')).not.toContain('eng-all');
     expect(lists('scripts/surfaces/_schema/static-page.json')).toContain('eng-all');
-    for (const id of ['mobile', 'surfaces']) expect(table().rows.find((r) => r.id === id)!.lists, id).toContain('eng-all');
+    expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
+    expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
   });
   it('a panel record (docs/reports/panels/**) gets Specs 128, 126, 08 sections 7 and 11, and 137', () => {
     expect(lists('docs/reports/panels/MF-94.json')).toEqual(expect.arrayContaining(['surface-128', 'surface-126', 'agents-s7-s11', 'queue-137']));
@@ -239,5 +242,85 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
     const bad = resolveIn(all.filter((r) => r.id !== 'review-followups'));
     expect(bad.status, bad.stderr).toBe(3);
     expect(bad.stderr).toContain('matched by no row');
+  });
+});
+
+// task-431 INPUTS.3 (RR-0385 item 7, decision-170; RR-0380 Q1 and Q2, decision-165): the engineering seat gets the sections of the engineering standards that fit the task.
+// Three section lists on the standards file: eng-front (section 1), eng-back (sections 3 and 9), eng-shared (the rest). The phone row gets front + shared; the step-pipeline and api-lib rows and
+// the API routes (ui-app no longer matches src/app/api/**) get back + shared; every other row that had eng-all keeps it; the bylaw row gains none (RR-0380 Q4).
+describe('task-431: the engineering standards sent by side', () => {
+  const ENG = 'docs/specs/00_engineering_standards.md';
+  const SIDES = ['eng-front', 'eng-back', 'eng-shared'];
+  type Row431 = Row & { not?: string[] };
+  const eng = (ids: string[]) => ids.filter((id) => table().lists[id]?.file === ENG);
+  const sectionsOf = (ids: string[]) => ids.flatMap((id) => table().lists[id]?.sections ?? []);
+  const withRow = (id: string, edit: (r: Row431) => Row431): Row431[] => table().rows.map((r) => (r.id === id ? edit({ ...r }) : r));
+  const onAll = (r: Row431): Row431 => ({ ...r, lists: [...r.lists.filter((l) => !SIDES.includes(l)), 'eng-all'] });
+  // the task-412 pattern: a temp tree with the McBylaws path map and a table copy with the given rows
+  const resolveIn = (rows: Row431[], files: string): string[] => {
+    const d = tmp('eng');
+    fs.mkdirSync(path.join(d, 'mcbylaws'));
+    fs.copyFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), path.join(d, 'mcbylaws/protected-paths.json'));
+    fs.writeFileSync(path.join(d, 'table.json'), JSON.stringify({ ...table(), rows }));
+    run('git', ['init', '-q', '.'], { cwd: d });
+    run('git', ['add', '-A'], { cwd: d });
+    run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
+    const r = script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', files, '--type', 'build', '--letter', 'S']);
+    expect(r.status, r.stderr).toBe(0);
+    return (JSON.parse(r.stdout) as Res).lists.map((l) => l.id);
+  };
+  it('S1: the phone row gets eng-front + eng-shared; a step file, src/lib and an API route get eng-back + eng-shared; the bylaw row is unchanged (planted: each row back on eng-all, ui-app without its not)', () => {
+    expect(eng(lists('mobile/x.ts')), 'mobile').toEqual(['eng-front', 'eng-shared']);
+    for (const f of ['scripts/steps/x.json', 'src/lib/x.ts', 'src/app/api/parcels/search/route.ts']) expect(eng(lists(f)), f).toEqual(['eng-back', 'eng-shared']);
+    expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);
+    expect(eng(resolveIn(withRow('mobile', onAll), 'mobile/x.ts')), 'planted: the mobile row on eng-all').toEqual(['eng-all']);
+    expect(eng(resolveIn(withRow('api-lib', onAll), 'src/lib/x.ts')), 'planted: the api-lib row on eng-all').toEqual(['eng-all']);
+    expect(eng(resolveIn(withRow('ui-app', ({ not: _not, ...r }) => r), 'src/app/api/parcels/search/route.ts')), 'planted: the ui-app row without its not').toEqual(['eng-all']);
+  });
+  it('K1 (survive-the-fix): the web UI, surfaces, hooks and tests rows keep exactly eng-all', () => {
+    for (const f of ['src/components/x.tsx', 'src/features/leads/lib/get-lead-feed.ts', 'src/app/(maxbld)/x/page.tsx', 'scripts/surfaces/x.mjs', 'scripts/hooks/x.mjs', 'src/tests/x.test.ts']) expect(eng(lists(f)), f).toEqual(['eng-all']);
+  });
+  it('K1 planted defect: ui-app on eng-front + eng-shared leaves get-lead-feed.ts (it imports pg) without section 3; the real table is the control', () => {
+    const real = eng(lists('src/features/leads/lib/get-lead-feed.ts'));
+    expect(real).toEqual(['eng-all']);
+    const planted = eng(resolveIn(withRow('ui-app', (r) => ({ ...r, lists: ['eng-front', 'eng-shared'] })), 'src/features/leads/lib/get-lead-feed.ts'));
+    expect(planted).not.toContain('eng-all');
+    expect(sectionsOf(planted)).not.toContain('3. Database Management & Scaling');
+  });
+  it('P1: every level-2 heading of the standards file is in exactly one of the three lists, and the three lists joined are the text of the sections (planted: an appended "## 15. New" is unassigned)', async () => {
+    const rl = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as {
+      headings: (t: string) => { level: number; title: string; offset: number }[];
+      listBlocks: (l: unknown, root: string, id: string) => { label: string; text: string }[];
+    };
+    const t = table();
+    const three = SIDES.map((id) => t.lists[id]);
+    expect(three.every((l) => l?.file === ENG && Array.isArray(l.sections)), 'the three lists exist on the standards file').toBe(true);
+    const sels = three.map((l) => l!.sections!);
+    const unassigned = (text: string) => rl.headings(text).filter((h) => h.level === 2 && sels.filter((s) => s.some((x) => h.title.startsWith(x))).length !== 1).map((h) => h.title);
+    const text = fs.readFileSync(path.join(ROOT, ENG), 'utf8');
+    expect(unassigned(text)).toEqual([]);
+    expect(unassigned(`${text}\n## 15. New\n\nnew rule\n`)).toEqual(['15. New']);
+    const squash = (s: string) => s.replace(/\s+/g, ' ').trim();
+    const blocks = SIDES.flatMap((id) => rl.listBlocks(t.lists[id], ROOT, id)).map((b) => b.text).sort((a, b) => text.indexOf(a.trimEnd()) - text.indexOf(b.trimEnd()));
+    const first = rl.headings(text).find((h) => h.level === 2)!;
+    expect(squash(blocks.join('\n'))).toBe(squash(text.slice(first.offset)));
+  });
+  it('X1: the lens input of eng-front holds 1.1 and not 9.1, eng-back the reverse (planted: a temp table whose eng-front selects section 9 fails the not half; the real table is the control)', () => {
+    const CTX = path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md');
+    const input = (list: string, tableFile?: string) => {
+      const r = script(CLI, ['lens-input', ...(tableFile ? ['--table', tableFile] : []), '--context', CTX, '--list', list, '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('x1'), 'in-x')]);
+      expect(r.status, r.stderr).toBe(0);
+      return r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+    };
+    const front = input('eng-front');
+    expect(front).toContain('1.1 Mobile-First UI Mandate');
+    expect(front).not.toContain('9.1 Transaction Boundaries');
+    const back = input('eng-back');
+    expect(back).toContain('9.1 Transaction Boundaries');
+    expect(back).not.toContain('1.1 Mobile-First UI Mandate');
+    const t = table();
+    const fake = path.join(tmp('x1t'), 'table.json');
+    fs.writeFileSync(fake, JSON.stringify({ ...t, lists: { ...t.lists, 'eng-front': { ...t.lists['eng-front'], sections: ['9. Pipeline & Script Safety'] } } }));
+    expect(input('eng-front', fake), 'planted: eng-front on section 9').toContain('9.1 Transaction Boundaries');
   });
 });

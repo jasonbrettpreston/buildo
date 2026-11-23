@@ -29,6 +29,9 @@
     "airtight-v2-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["6.6.1 Registry and ledger truth"], "generated_by": "hand-written" },
     "airtight-122a": { "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md", "sections": ["Appendix §A26", "Appendix §A27"], "generated_by": "hand-written" },
     "eng-all": { "file": "docs/specs/00_engineering_standards.md", "whole": true, "generated_by": "hand-written" },
+    "eng-front": { "file": "docs/specs/00_engineering_standards.md", "sections": ["1. Architecture & UI Standards"], "generated_by": "hand-written" },
+    "eng-back": { "file": "docs/specs/00_engineering_standards.md", "sections": ["3. Database Management & Scaling", "9. Pipeline & Script Safety"], "generated_by": "hand-written" },
+    "eng-shared": { "file": "docs/specs/00_engineering_standards.md", "sections": ["2. Error Handling & Stability", "4. Security & API Contracts", "5. Testing Standards", "6. Centralized Logging", "7. Dual Code Path Safety", "8. Next.js & TypeScript Constraints", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist", "12. Frontend Foundation Tooling", "13. Observability Standards", "14. The Prevention Loop"], "generated_by": "hand-written" },
     "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family", "3. Rows with an OWED marker"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
     "storage-doc16": { "file": "backlog/docs/doc-16 - McStorage-policy-v2.md", "whole": true, "generated_by": "hand-written", "status": "draft, operator to confirm it binds" },
     "surface-136": { "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md", "sections": ["2. Rules"], "generated_by": "scripts/surfaces/generate-surface-handbook.mjs" },
@@ -82,8 +85,8 @@
       "id": "step-pipeline",
       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
       "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-all"],
-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); the engineering standards are attached whole (eng-all)"
+      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-back", "eng-shared"],
+      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
     },
     {
       "id": "bylaw",
@@ -94,14 +97,15 @@
     {
       "id": "api-lib",
       "globs": ["src/app/api/**", "src/lib/**"],
-      "lists": ["eng-all"],
-      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
+      "lists": ["eng-back", "eng-shared"],
+      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row"
     },
     {
       "id": "ui-app",
       "globs": ["src/components/**", "src/app/**", "src/features/**"],
+      "not": ["src/app/api/**"],
       "lists": ["eng-all"],
-      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row. V2.LIST (task-406): also src/features (unmatched); the engineering standards are attached whole (eng-all)"
+      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row. V2.LIST (task-406): also src/features (unmatched); the engineering standards are attached whole (eng-all). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the API routes src/app/api/** are back end (the api-lib row, lists eng-back and eng-shared) and no longer match this row (not)"
     },
     {
       "id": "middleware-config",
@@ -144,8 +148,8 @@
     {
       "id": "mobile",
       "globs": ["mobile/**"],
-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"],
-      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none"
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-front", "eng-shared"],
+      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the front-end lists eng-front and eng-shared replace eng-all on this row"
     },
     {
       "id": "queue-records",

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-TBL431'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-23T00:59:00Z'
+updated_date: '2026-11-23T01:14:00Z'
 labels:
   - McFix
   - McFix V2
@@ -264,4 +264,12 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, ver
 2026-11-22 (orchestrator, from the task-438 plan ruling by Cairn-Ground-P438, docs/reports/reviews/task-438/QUESTIONS-RULED.md; word for word): Task-431 carries the de-dup line moved out of task-438 (438 plan ruling, RR-0380 and RR-0385 item 7): add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line; in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));` so a file's text goes once when its whole list and a sections list both resolve; rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent'), with one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed); change the line of PLAN-431-v3 that says it relies on 438's de-dup; re-prep it after 438 lands.
 
 2026-11-23 taken on the board at lane launch (lane BL-TBL431, worktree /Users/brettpreston_macmini/Buildo-wt-tbl431, branch wf1/inc1b-tbl431), RR-0240
+
+2026-11-23 lane BL-TBL431: tests written first (D1, D2, S1, K1, P1, X1 and the two changed tests); red attempt follows with only the tests and this file staged.
+
+2026-11-23 lane BL-TBL431: red seen (red.out): D1 at not.toContain('first'), S1 at the mobile assertion, the table test :22, backlog-lane :407 out-engineering-eng-front; P1 and X1 red by the missing list; K1 planted part red by the missing list; D2 and K1 green (survive-the-fix). Planted-defect attempt follows: the de-dup line removed.
+
+2026-11-23 lane BL-TBL431: planted defect, de-dup line removed (commit attempt refused, planted-dedup.out in the lane dir): D1 red at not.toContain('first') (rule-lists.logic.test.ts:136), D2 red (:47, three engineering lists), S1 planted ui-app part red (needs the line too); every other test green. Line restored; work commit follows.
+
+2026-11-23 lane BL-TBL431: the work commit was refused by rule-lists.logic.test.ts:152 (expected [whole, queue, inc-F] to include first), a test the plan listed neither as changed nor unchanged; ruled by Cairn-Ground-P431, Q-H (docs/reports/reviews/task-431/QUESTIONS-RULED-APPEND.md, board 79631b139): the line now expects 'whole'. Finding post-build#1 MED.
 <!-- SECTION:NOTES:END -->

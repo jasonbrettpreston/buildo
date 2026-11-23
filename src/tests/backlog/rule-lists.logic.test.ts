@@ -38,6 +38,14 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     const doc16 = res.lists.find((l) => l.id === 'storage-doc16');
     expect(doc16?.status).toMatch(/draft, operator to confirm it binds/);
   });
+  // task-431 D2 (survive-the-fix): the phone row sends eng-front + eng-shared and the tests row eng-all; the de-dup line keeps the whole list only (planted defect: the line removed gives eng-all, eng-front and eng-shared)
+  it('task-431 D2: a phone file plus a test file get exactly eng-all among the lists on the engineering standards file (whole wins)', () => {
+    const r = script(CLI, ['resolve', '--files', 'mobile/x.ts, src/tests/x.test.ts', '--type', 'build', '--letter', 'S']);
+    expect(r.status, r.stderr).toBe(0);
+    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { lists: Record<string, { file: string }> };
+    const engFile = t.lists['eng-all']!.file;
+    expect((JSON.parse(r.stdout) as Res).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all']);
+  });
   it('a src file that imports from scripts/lib/compute gets the step and Airtight lists (import row)', () => {
     const r = script(CLI, ['resolve', '--files', 'src/lib/parcels/report-compute.ts', '--type', 'build', '--letter', 'S']);
     const res = JSON.parse(r.stdout) as Res;
@@ -119,12 +127,14 @@ function fixture() {
 const res = (f: ReturnType<typeof fixture>, files: string, extra: string[] = []) => script(CLI, ['resolve', '--root', f.d, '--table', f.table, '--files', files, '--letter', 'F', ...extra]);
 
 describe('resolve on a fixture tree (AC #2)', () => {
-  it('src/two.ts gets only the src row; src/one.ts (imports compute) also gets the import row; the increment doc is always added', () => {
+  // task-431 D1 (RR-0385 item 7, RR-0380 Q1; the de-dup line in resolveTask): src/one.ts resolves `first` (sections of docs/a.md) and `whole` (docs/a.md whole); the whole list is kept and the sections list dropped
+  it('src/two.ts gets only the src row; src/one.ts (imports compute) also gets the import row, and its whole list of docs/a.md drops the sections list of the same file (task-431 de-dup); the increment doc is always added', () => {
     const f = fixture();
     const a = JSON.parse(res(f, 'src/two.ts', ['--type', 'build']).stdout) as Res;
     expect(ids(a).sort()).toEqual(['first', 'inc-F']);
     const b = JSON.parse(res(f, 'src/one.ts', ['--type', 'build']).stdout) as Res;
-    expect(ids(b).sort()).toEqual(['first', 'inc-F', 'whole']);
+    expect(ids(b)).not.toContain('first');
+    expect(ids(b).sort()).toEqual(['inc-F', 'whole']);
     expect(b.lists.find((l) => l.id === 'whole')!.rows).toEqual(['imp']);
   });
   it('a row may exclude paths (not): the review tool CLI is not a step shell', () => {
@@ -139,7 +149,8 @@ describe('resolve on a fixture tree (AC #2)', () => {
   it('a dir entry and a glob entry match through tracked files; a new file in a new dir matches by probe', () => {
     const f = fixture();
     expect(ids(JSON.parse(res(f, 'src/', ['--type', 'build']).stdout) as Res)).toContain('whole');
-    expect(ids(JSON.parse(res(f, 'src/*.ts', ['--type', 'build']).stdout) as Res)).toContain('first');
+    // task-431: the glob resolves src/one.ts, whose import row gives whole, and the de-dup drops first; whole also proves the glob was expanded through tracked files
+    expect(ids(JSON.parse(res(f, 'src/*.ts', ['--type', 'build']).stdout) as Res)).toContain('whole');
     expect(ids(JSON.parse(res(f, 'src/newdir/new-*.ts', ['--type', 'build']).stdout) as Res)).toContain('first');
   });
   it('globs_from reads the existing path map', () => {

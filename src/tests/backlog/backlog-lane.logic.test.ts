@@ -402,9 +402,24 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
       expect(extra).not.toContain('plan-compliance-' + l);
     }
     // task-438 T5 (RR-0385 item 2): the engineering standards list goes to the engineering seat, with its own template; never under the compliance name
-    expect(extra).toContain('out-engineering-eng-all');
-    expect(extra).not.toContain('out-compliance-eng-all');
+    // task-431 (RR-0385 item 7): the phone file resolves eng-front + eng-shared and the API route (back end: ui-app no longer matches src/app/api) eng-back + eng-shared, so the brief names three engineering outputs and no eng-all
+    for (const l of ['eng-front', 'eng-back', 'eng-shared']) {
+      expect(extra).toContain('out-engineering-' + l);
+      expect(extra).not.toContain('out-compliance-' + l);
+    }
+    expect(extra).not.toContain('out-engineering-eng-all');
     expect(extra).not.toContain('plan-engineering-eng-all');
+    // planted defect: the table with ui-app matching src/app/api again (its `not` removed) brings eng-all back (the de-dup keeps the whole list)
+    {
+      const f = fixture({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts' }); // no type: the launch plan gate (build/fix) would judge the evidence planted for the real table
+      const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { rows: { id: string; not?: string[] }[] };
+      for (const row of t.rows) if (row.id === 'ui-app') delete row.not;
+      const fake = path.join(f.base, 'ui-app-without-not.json');
+      fs.writeFileSync(fake, JSON.stringify(t));
+      const r = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
+      const planted = (JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null')?.extra ?? []).join('\n') as string;
+      expect(planted, r.stdout + r.stderr).toContain('out-engineering-eng-all');
+    }
     expect(extra).toContain('lens-engineering.md');
     expect(extra).toContain('ONCE PER RULE LIST');
     expect(extra).not.toContain('ONE JOINED RUN PER STAGE');
