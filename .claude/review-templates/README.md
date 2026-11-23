@@ -98,7 +98,7 @@ Each lens asks one question, names what it is not responsible for, rejects any f
 |---|---|---|---|---|
 | `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |
 | `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output |
-| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`) | plan and output |
+| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`, `eng-front`, `eng-back` and `eng-shared`) | plan and output |
 | `lens-code-review.md` | Correct, typed, errors handled and logged, no dead code? | A3 Code Reviewer | any task that writes code | output (plan: only if the plan names code) |
 | `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan and output |
 | `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan and output |

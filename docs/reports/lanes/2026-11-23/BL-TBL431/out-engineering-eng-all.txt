@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-23T01:20:08.638Z file_sha256=0a6339c1be60069d99a0e5329877289190134b414cdfeb931499b6c680ed26af prompt_sha256=e0340aa82cce1b0c5ab871a5d103be9c85215af2071a58fdbbb22fd869b08ea1
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists.logic.test.ts:46 "const engFile = t.lists['eng-all']!.file;" — the new tests add bare `!` on `find()`/index lookups with no justifying comment (same block: rule-lists-table.logic.test.ts "const sels = three.map((l) => l!.sections!);" and "const first = rl.headings(text).find((h) => h.level === 2)!;") — replace each with an explicit `expect(...).toBeDefined()` guard or add a one-line justification comment above every `!`.
+
+DEFER severity=LOW — 5.5 Test-Layer Map "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md:18 "| eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |" — the diff updates the generated report but adds no `*.logic.test.ts` assertion that regenerates it; currency rests only on the acceptance print "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current" — add the drift test or cite the existing test that regenerates and diffs the file.
+
+MET — 5.2 Test File Pattern — src/tests/backlog/rule-lists-table.logic.test.ts (new `describe('task-431: the engineering standards sent by side')`) — the new derivation (resolveTask de-dup, eng-front/back/shared selection) is pinned in `.logic.test.ts`, the mandated layer for pure logic.
+
+MET — 5.3 Red-Green Test Cycle — pasted note "red seen (red.out): D1 at not.toContain('first'), S1 at the mobile assertion" — failing tests were observed and recorded before the implementation.
+
+MET — 8.2 TypeScript Target Gotchas — src/tests/backlog/backlog-lane.logic.test.ts "const planted = (JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)..." — only the `m` flag is used, no ES2018 `s` flag.
+
+MET — 14 The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/08_agents.md:353 and .claude/review-templates/README.md:101 — the spec note, the lens table and the generated report are all updated in this one diff.
+
+REJECT — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — the change edits scripts/analysis/rule-lists.json and .mjs — not a real issue: this is the review-input tooling task (rule-list table), not a frontend WF, and no frontend feature file is touched.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  190566ms (190.6s)
+📊 Tokens — total: 50050, input: 28445, output: 21605, reasoning: 20868

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-23T01:20:08.637Z file_sha256=d6df6ecca2fe1db6d6c67ca5379757e3ef0d74797cbf08f0fa4a87bcf55038cc prompt_sha256=d2be17ea44c85f5f444dcba0645dc79c2c5bb5760f222af28cbec6fec3294930
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:282 "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the dropped sections entry takes its `rows` with it, so the row that pulled it disappears from the resolve output (src/tests/backlog/rule-lists.logic.test.ts:139 "expect(b.lists.find((l) => l.id === 'whole')!.rows).toEqual(['imp']);" shows the survivor keeps only `imp` while the `src` row's `first` is gone) — fold the dropped entry's rows into the surviving whole entry before filtering so provenance survives — rationale: rules are still sent, only the brief's row attribution and why text is lost; cannot see whether a sibling check counts matched rows.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:152 "expect(ids(JSON.parse(res(f, 'src/*.ts', ['--type', 'build']).stdout) as Res)).toContain('whole');" — the comment above claims "whole also proves the glob was expanded through tracked files", but `whole` comes from src/one.ts alone, so this passes even if the glob never resolves src/two.ts (whose only list, `first`, is now always dropped) — assert on a glob only src/two.ts matches (`src/t*.ts`, expecting `first`) so glob expansion stays covered.
+
+NIT — src/tests/backlog/backlog-lane.logic.test.ts:420 "const planted = (JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null')?.extra ?? []).join('\n') as string;" — `.join` always returns a string, the `as string` cast is dead — drop the assertion.
+
+NIT — src/tests/backlog/rule-lists.logic.test.ts:46 "const engFile = t.lists['eng-all']!.file;" — the `!` hides a missing key, so if eng-all ever leaves the table the test dies with a TypeError instead of a named failure — assert the entry exists first (or read the file from the eng-front entry).
+
+NIT — src/tests/backlog/rule-lists-table.logic.test.ts:277 "expect(eng(resolveIn(withRow('ui-app', ({ not: _not, ...r }) => r), 'src/app/api/parcels/search/route.ts')), 'planted: the ui-app row without its not').toEqual(['eng-all']);" — `_not` is a bound-but-never-read binding introduced by the diff — use a helper that omits the key without binding it (`const { not, ...rest }` in a function whose parameter is named, or `delete` on a copy) — cannot see whether the test tsconfig turns on noUnusedLocals.
+
+REJECT — scripts/analysis/rule-lists.json:105 "\"not\": [\"src/app/api/**\"]" — a glob in `not` looks unsupported because the neighbouring row uses exact paths (scripts/analysis/rule-lists.json:87 "\"not\": [\"scripts/deepseek-review.js\", \"scripts/gemini-review.js\", \"scripts/lib/review-template.js\"],") — the S1 test at src/tests/backlog/rule-lists-table.logic.test.ts:273 resolves `src/app/api/parcels/search/route.ts` to exactly eng-back and eng-shared, and eng-all would win the de-dup if the exclusion failed, so the glob is honoured.
+
+REJECT — scripts/analysis/rule-lists.mjs:282 "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — reading `whole` off a resolved list looks unsound if resolveTask copies only id, file and sections onto each entry — the planted run with the line removed goes red at src/tests/backlog/rule-lists.logic.test.ts:137 "expect(ids(b)).not.toContain('first');" (planted-dedup.out), so `whole` is carried on the resolved entries.
+
+REJECT — scripts/analysis/rule-lists.json:31 "\"eng-all\": { \"file\": \"docs/specs/00_engineering_standards.md\", \"whole\": true, \"generated_by\": \"hand-written\" }," — keeping eng-all after the split reads as a dead list — the surfaces, ui-app and tooling rows still resolve it (src/tests/backlog/rule-lists-table.logic.test.ts:25 "expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');"), so it is live.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none at CRIT or HIGH; the filter at rule-lists.mjs:282 is correct and covered by D1 and the planted run, the only gaps are provenance loss and the weakened glob assertion, both DEFER LOW.
+
+---
+⏱  149315ms (149.3s)
+📊 Tokens — total: 45816, input: 16104, output: 29712, reasoning: 28581

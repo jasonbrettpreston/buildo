@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.620Z file_sha256=8c69051e4b9c3c119abf16f802093a49df78b1855af8f068054d8e2ae22b1c72 prompt_sha256=7d5c113822e9216bd203964993ec51d4dc9663f423ac9630dbd1bf340f41e66f
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 Q1 "drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the de-dup keeps the whole engineering document and drops the section lists, the reverse of the ruling, and the pasted requirement that the plan "rule in its plan the direction against RR-0380 Q1" is met by no line in the material; the plan's own acceptance shows the consequence, "--files \"mobile/x.ts, src/tests/x.test.ts\" => eng-all" — invert the predicate so the same-file whole list is dropped when its parts resolve, or get the reversal ruled and quoted on the card
+BUG severity=HIGH — RR-0378 card "front-end kinds get surface-136 plus front-end and shared" — scripts/analysis/rule-lists.json "\"lists\": [\"eng-all\"]," (ui-app row) — the web front-end row (src/components, src/app, src/features) still resolves the whole engineering standards, so no web task ever gets eng-front or eng-shared and the K1 test locks it ("expect(eng(lists(f)), f).toEqual(['eng-all']);"), leaving the surface where the 534,000 characters were measured unsplit — put ui-app on eng-front plus eng-shared (adding section 3 to it if the pg import case needs it) and flip the K1 assertion
+REJECT — RR-0378 card "pipeline and by-law kinds get their handbook plus back-end and shared" — the change leaves the bylaw row on "\"lists\": [\"bylaw-133\"]" with no engineering lists — the later pasted ruling settles it, RR-0380 "by-law tasks gain no engineering rules ... 3 4 N", and the control test asserts ["bylaw-133"]
+MET — RR-0378 "the engineering standards entry split by section into front-end, back-end and shared lists" — scripts/analysis/rule-lists.json "\"eng-back\": { \"file\": \"docs/specs/00_engineering_standards.md\", \"sections\": [\"3. Database Management & Scaling\", \"9. Pipeline & Script Safety\"]" — three section lists exist and P1 shows every level-2 heading sits in exactly one of them
+MET — RR-0380 "engineering sent by parts now" — scripts/analysis/rule-lists.json "\"eng-front\", \"eng-shared\"" (mobile row) — the phone row and the pipeline and api-lib rows resolve parts, acceptance (b) confirms eng-front, eng-shared and eng-back, eng-shared
+MET — orchestrator note "one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed)" — src/tests/backlog/rule-lists.logic.test.ts "expect(ids(b)).not.toContain('first');" — the D1 fixture covers whole plus sections on one file and the planted attempt is recorded ("planted-dedup.out (line removed: D1, D2, S1 planted ui-app red)")
+MET — RR-0383 "tasks that edit the surface specs keep those specs attached" — src/tests/backlog/rule-lists-table.logic.test.ts "expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');" — no surface list is removed by this change
+MET — RR-0378 card "proof before the switch at plan review" — "rule-lists: ok 58 lists, 23 rows" — validate, the resolve table (b) and check-tasks (c) are in the plan record ahead of the switch
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+Rules met: none
+
+---
+⏱  173097ms (173.1s)
+📊 Tokens — total: 47834, input: 27467, output: 20367, reasoning: 19509

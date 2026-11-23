@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-23T01:20:08.662Z file_sha256=d6df6ecca2fe1db6d6c67ca5379757e3ef0d74797cbf08f0fa4a87bcf55038cc prompt_sha256=a7b8606cc38c87f2e724aee7776aa5fba13459bc3b66a5422a15bfd02fbc8f09
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-error-paths.txt (model: deepseek-reasoner)
+
+BUG severity=none applicable — see below.
+
+DEFER severity=MED — src/tests/backlog/rule-lists-table.logic.test.ts P1 "expect(squash(blocks.join('\n'))).toBe(squash(text.slice(first.offset)));" — the three new lists cover 3,214 + 5,377 + 37,472 = 46,063 of the 46,613-character standards file, and P1 asserts coverage only from the first level-2 heading, so the ~550 characters before section 1 (title and any preamble rule) are sent to no engineering seat while `eng-all` used to carry them, and no test can catch it — either assert coverage from offset 0 or add a `preamble` selection to `eng-shared`.
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md "a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched" — the only in-flight exception is for lanes launched before task-438; a lane launched after 438 holds `out-engineering-eng-all` in its brief, and the new note added here ("the whole list is kept and the sections list is dropped") gives it no close rule, so a re-resolve at close asks for `out-engineering-eng-back`/`-eng-shared` and the close refuses (fail-closed but a forced second engineering review) — name the 438-to-431 case in the same sentence as the pre-438 exception.
+
+DEFER severity=MED — src/tests/backlog/rule-lists-table.logic.test.ts P1 "const blocks = SIDES.flatMap((id) => rl.listBlocks(t.lists[id], ROOT, id))" with "sections: ['9. Pipeline & Script Safety']" in the planted X1 table — section selection is by heading title prefix, and I cannot see whether `listBlocks` throws or returns an empty block when a title matches no heading, so a heading rename or a table/doc from different commits sends the engineering seat nothing for that section with no error on the lane path; make a zero-match section a hard error in `listBlocks` rather than a test-only guard.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.json "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-back", "eng-shared"], — four rows now name six new list ids, and I cannot see any check that every id a row names exists in `lists`; a rename or a dropped entry resolves to a list with no file and the task silently loses those rules, so validate should refuse a row id absent from `lists`.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts D2 "script(CLI, ['resolve', '--files', 'mobile/x.ts, src/tests/x.test.ts', ...]).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all'])" — the required output set is derived from the resolved lists, so a test file added during the build flips the brief from `out-engineering-eng-front`/`-eng-shared` to `out-engineering-eng-all`; I cannot see whether the close reads the launch brief or re-resolves, and if it re-resolves the lane is refused on a retry that changed nothing relevant — state in the note that the close uses the launch-commit brief, or that a superset at close accepts either name.
+
+REJECT — scripts/analysis/rule-lists.mjs "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — any task touching a test file collapses back to the whole 46,613-character file, which looks like it defeats "drop the full engineering when arts can be sent" (RR-0380) — handled and safe: it is the direction ruled by the task-438 plan ruling quoted in the Implementation Notes, the whole file is a superset so no rule is lost, and the filter is idempotent (a second application removes nothing).
+
+VERDICT: PASS on error-path safety
+Paths walked: resolveTask whole/sections de-dup (repeat application), row `not` exclusion of src/app/api, section-list resolution for eng-front/eng-back/eng-shared, lens-input on the new lists, generated report totals, lane brief and close requirements across the split, planted `--rule-lists` override path, dangling/empty list id   Unguarded: 2
+
+---
+⏱  154132ms (154.1s)
+📊 Tokens — total: 31718, input: 16121, output: 15597, reasoning: 14578

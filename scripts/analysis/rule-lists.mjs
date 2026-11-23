@@ -278,6 +278,8 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
       for (const id of ms[letter]) add(id, 'milestone', 'every task also gets the objectives sections of its milestone (the milestone group letter)');
     }
   }
+  // task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): a whole list and a sections list of the same file both resolved: the whole list is kept, the sections list dropped (each rule sent once)
+  result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));
   return result;
 }
 

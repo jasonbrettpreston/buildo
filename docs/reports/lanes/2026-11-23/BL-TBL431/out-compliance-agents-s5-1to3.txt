@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.633Z file_sha256=eb507d985808c2c6139d4c76266a27bbead4df469e2be7b76e7d47103e201a42 prompt_sha256=7900743843a4c75a121e23a949b234072041b7c6829361c865e12041753452c5
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 08_agents.md §7 task-431 note and RR-0380 Q1 "drop the full engineering when arts can be sent" with card title "The review table sends product tasks their handbook plus the relevant engineering sections; infrastructure tasks unchanged" — scripts/analysis/rule-lists.json:107 ""lists": ["eng-all"]," (the ui-app row, globs src/components/**, src/app/**, src/features/**) — the web product row keeps the whole 46,613 character standards list, so a web UI build task still receives the full engineering document and never eng-front or eng-shared, and no pasted clause or ruling names that keep (only infrastructure rows were to stay unchanged) — add eng-front and eng-shared to the ui-app row, or record the operator or plan ruling that the web UI row keeps eng-all.
+
+DEFER severity=MED — card Implementation Notes "rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent')" — src/tests/backlog/rule-lists.logic.test.ts:47 "expect((JSON.parse(r.stdout) as Res).lists.filter((l) => l.file === engFile).map((l) => l.id)).toEqual(['eng-all']);" — whole-wins plus src/tests staying on eng-all means a phone task that also touches a test file receives eng-all alone (46,613 characters) and none of the three section lists, so the common mixed Files line still gets the full engineering document and no direction ruling against RR-0380 Q1 appears in the reviewed material — record that ruling (PLAN-431) with Q1 answered, or take eng-all off the src/tests row.
+
+DEFER severity=LOW — card Description "pipeline and by-law kinds get their handbook plus back-end and shared" — src/tests/backlog/rule-lists-table.logic.test.ts:250 "the bylaw row gains none (RR-0380 Q4)" — the description clause is not implemented; the delivered behaviour follows RR-0380 Q4 ("4 N") as the test records, but the description still reads the opposite, so a later reader or plan gate can re-raise it as an omission — amend the card description to record the RR-0380 Q4 supersession.
+
+MET — 08_agents.md §7 task-431 note, three section lists on the standards file — scripts/analysis/rule-lists.json:33 — eng-front (section 1), eng-back (3 and 9) and eng-shared (2, 4 to 8, 10 to 14) added with exactly the sections the note names.
+MET — RR-0380 Q2, sections 8, 10 and 12 to both sides — scripts/analysis/rule-lists.json:35 — 8, 10 and 12 sit in eng-shared, which the phone, pipeline-step and API rows all carry.
+MET — 08_agents.md §7 task-431 note, "ui-app no longer matches src/app/api" — scripts/analysis/rule-lists.json:106 — the ui-app row gains "not": ["src/app/api/**"], and S1 resolves an API route to eng-back plus eng-shared.
+MET — 08_agents.md §7 task-431 note, the phone row gets eng-front and eng-shared — scripts/analysis/rule-lists.json:151 — the mobile row lists eng-front and eng-shared in place of eng-all.
+MET — card Implementation Notes, "in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter(...)`" and "one resolveTask temp-table test (whole plus sections on one file)" — scripts/analysis/rule-lists.mjs:280 — the filter line is added verbatim before `return result`, and src/tests/backlog/rule-lists.logic.test.ts:136 asserts "expect(ids(b)).not.toContain('first');".
+MET — card Files line, the generated report must be current — docs/reports/generated/rule-lists-by-kind.md:19 — "| total | 11 lists | | 194,014 | 11 |" and the other totals (761,026, 566,443, 209,489, 163,214) recompute from the old totals minus 46,613 plus the new part sizes, with the 1,483 character agents-s7-s11 growth matching the added note.
+
+VERDICT: PASS
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  367678ms (367.7s)
+📊 Tokens — total: 63967, input: 20451, output: 43516, reasoning: 42536

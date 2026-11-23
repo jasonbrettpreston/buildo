@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-23T01:20:08.660Z file_sha256=56c8191a850dd2e5ef30800c79ea4b4bb32586b39ab0c1dae190ddbda54b609e prompt_sha256=d1733278d40d276a61255f64e842bb21733a25d0e9fbb9cd0880c79694fb688d
+🔍 Lens review of docs/reports/lanes/2026-11-23/BL-TBL431/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 137 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/00-architecture/08_agents.md added note "Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165; operator, verbatim, ..." — the note carries the date and the row id but neither the queue (Backlog) nor the lane BL-TBL431 that the Rule 4 M-246 form names — add "· Backlog · lane BL-TBL431" after the row id in that parenthetical.
+DEFER severity=LOW — RR-0380 Q1 "drop the full engineering when arts can be sent" — docs/specs/00-architecture/08_agents.md added note "When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped" — a front-end task that also touches a test or hook file still resolves eng-all and is sent the whole standards document, so the sections are sent only where no whole list resolves, and the plan's argument against Q1 is not in the pasted context (cannot see) — split the tests and hooks rows into the three section lists too, so whole-wins has no whole standards list to keep for a front-end task.
+REJECT — RR-0385 item 7 "front-end vs backend" — the change removes src/app/api from the ui-app row ("not": ["src/app/api/**"]), a path move the card description does not name — the api-lib row already covers src/app/api/** and the operator's words name the side split, so the exclusion only lets the de-dup keep eng-back plus eng-shared instead of eng-all for an API route.
+REJECT — task description "pipeline and by-law kinds get their handbook plus back-end and shared" — the diff leaves the bylaw row with no engineering list, "expect(table().rows.find((r) => r.id === 'bylaw')!.lists, 'bylaw (control)').toEqual(['bylaw-133']);" — RR-0380 item 4 was answered N, recorded as by-law tasks gain no engineering rules, so the later operator ruling governs the earlier plan line.
+REJECT — task-423 note "a list is never trimmed in either form" — splitting eng-all into eng-front, eng-back and eng-shared is accused of trimming the engineering list — eng-all stays whole in the table and the three new lists are section selections of the same file, nothing is cut to fit a call size.
+REJECT — RR-0380 Q1 "drop the full engineering when arts can be sent" — keeping eng-all on the ui-app row is accused of ignoring the ruling — the change's own planted-defect test pins the reason ("ui-app on eng-front + eng-shared leaves get-lead-feed.ts (it imports pg) without section 3"), so the sections cannot be sent for that row and the whole file is the only complete list.
+MET — Spec 137 Rule 4, M-246 dated note on the row — docs/specs/00-architecture/08_agents.md — the new task-431 note is appended beside the prior notes, prior text kept, operator quoted verbatim.
+MET — RR-0380 Q2, sections 8, 10, 12 to both sides — scripts/analysis/rule-lists.json:34 — eng-shared carries 8, 10 and 12, so both sides receive them.
+MET — RR-0380 Q1, full engineering dropped for the phone and pipeline rows — scripts/analysis/rule-lists.json:88 and :151 — the step-pipeline and mobile rows replace eng-all with the section lists.
+MET — orchestrator instruction on the de-dup line — scripts/analysis/rule-lists.mjs:281 — the prescribed filter is added character for character before return result.
+MET — Spec 137 §4 task-366 note, lists decided from the task's Files line — task Files line — all eight paths in the diff are on the Files line, so the launch resolves them from rule-lists.json.
+MET — corrected phrase "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`" — .claude/review-templates/README.md:101 — the lens-engineering row names the four ids.
+MET — RR-0385 item 7, front-end vs backend for the phone row — scripts/analysis/rule-lists.json:151 — the mobile row gets eng-front and eng-shared and keeps surface-136.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: Rule 1, Rule 2, Rule 3, Rule 4, Rule 5, Rule 10, Rule 12, Rule 13
+
+---
+⏱  224497ms (224.5s)
+📊 Tokens — total: 53262, input: 26966, output: 26296, reasoning: 25210

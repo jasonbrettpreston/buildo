@@ -3,11 +3,11 @@ id: TASK-431
 title: >-
   INPUTS.3 The review table sends product tasks their handbook plus the relevant
   engineering sections; infrastructure tasks unchanged
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-TBL431'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-23T00:59:00Z'
+updated_date: '2026-11-23T01:44:00Z'
 labels:
   - McFix
   - McFix V2
@@ -34,6 +34,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-23/BL-TBL431/REPORT.md
+  - docs/reports/lanes/2026-11-23/BL-TBL431/GROUNDER.md
+  - docs/reports/lanes/2026-11-23/BL-TBL431/TRIAGE.md
 type: build
 ordinal: 131012
 ---
@@ -264,4 +267,35 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0385 · Backlog; operator, ver
 2026-11-22 (orchestrator, from the task-438 plan ruling by Cairn-Ground-P438, docs/reports/reviews/task-438/QUESTIONS-RULED.md; word for word): Task-431 carries the de-dup line moved out of task-438 (438 plan ruling, RR-0380 and RR-0385 item 7): add scripts/analysis/rule-lists.mjs and src/tests/backlog/rule-lists.logic.test.ts to its Files line; in resolveTask, before `return result` (:278), add `result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));` so a file's text goes once when its whole list and a sections list both resolve; rule in its plan the direction against RR-0380 Q1 ('the whole engineering document is dropped when its parts can be sent'), with one resolveTask temp-table test (whole plus sections on one file, planted defect: the line removed); change the line of PLAN-431-v3 that says it relies on 438's de-dup; re-prep it after 438 lands.
 
 2026-11-23 taken on the board at lane launch (lane BL-TBL431, worktree /Users/brettpreston_macmini/Buildo-wt-tbl431, branch wf1/inc1b-tbl431), RR-0240
+
+2026-11-23 lane BL-TBL431: tests written first (D1, D2, S1, K1, P1, X1 and the two changed tests); red attempt follows with only the tests and this file staged.
+
+2026-11-23 lane BL-TBL431: red seen (red.out): D1 at not.toContain('first'), S1 at the mobile assertion, the table test :22, backlog-lane :407 out-engineering-eng-front; P1 and X1 red by the missing list; K1 planted part red by the missing list; D2 and K1 green (survive-the-fix). Planted-defect attempt follows: the de-dup line removed.
+
+2026-11-23 lane BL-TBL431: planted defect, de-dup line removed (commit attempt refused, planted-dedup.out in the lane dir): D1 red at not.toContain('first') (rule-lists.logic.test.ts:136), D2 red (:47, three engineering lists), S1 planted ui-app part red (needs the line too); every other test green. Line restored; work commit follows.
+
+2026-11-23 lane BL-TBL431: the work commit was refused by rule-lists.logic.test.ts:152 (expected [whole, queue, inc-F] to include first), a test the plan listed neither as changed nor unchanged; ruled by Cairn-Ground-P431, Q-H (docs/reports/reviews/task-431/QUESTIONS-RULED-APPEND.md, board 79631b139): the line now expects 'whole'. Finding post-build#1 MED.
+
+2026-11-23 lane BL-TBL431 ACCEPTANCE (real inputs, at the work commit a870bdf41; hook tail: 'Tests  361 passed (361)', commit.out):
+(a) validate and page:
+rule-lists: ok 58 lists, 23 rows
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+(b) resolve --type build --letter S, the lists on docs/specs/00_engineering_standards.md:
+  --files "mobile/src/app/x.tsx" => eng-front, eng-shared
+  --files "src/lib/parcels/report-compute.ts" => eng-back, eng-shared
+  --files "scripts/steps/x.json" => eng-back, eng-shared
+  --files "src/app/api/parcels/search/route.ts" => eng-back, eng-shared
+  --files "mobile/x.ts, src/tests/x.test.ts" => eng-all
+(c) check-tasks: exit 0; check-tasks: open 309: resolve 106, not yet resolvable 203
+  add lines (counted from its output): resolving tasks with add lines: 104 | eng-all only: 39 | parts: task-372:eng-back+eng-shared task-380:eng-back+eng-shared task-381:eng-front+eng-shared task-383:eng-back+eng-shared | both eng-all and a sections list: none
+(d) tests: red.out (7 failed at the designed assertions or the missing-list branch, as the plan says), planted-dedup.out (line removed: D1, D2, S1 planted ui-app red), commit.out (361 passed): D1, D2, S1, K1, P1, X1 and the changed tests green.
+
+2026-11-23 lane BL-TBL431: output review round 1 run (13 DeepSeek outputs, fresh context context-r4.md) in docs/reports/lanes/2026-11-23/BL-TBL431/, findings listed untriaged in FINDINGS.md there (post-build#1 MED, ruled Q-H, fixed in a870bdf41). RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in a870bdf41: the engineering seat gets the sections of the engineering standards that fit the task. Three section lists (eng-front section 1; eng-back sections 3 and 9; eng-shared the rest); the phone row gets front + shared; step-pipeline, api-lib and the API routes (ui-app not src/app/api/**) get back + shared; every other eng-all row keeps it; resolveTask keeps a whole list over a sections list of the same file; Spec 08 dated note, README line and regenerated page. Hooks green at the work commit (361 related tests). post-build#1 MED was ruled Q-H by the plan grounder and fixed in a870bdf41; the full suite is unverified until the push station.
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/lanes/2026-11-23/BL-TBL431/GROUNDER.md; triage docs/reports/lanes/2026-11-23/BL-TBL431/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
