@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-23T03:45:00Z'
+updated_date: '2026-11-23T15:51:00Z'
 labels:
   - McFix
   - McFix Final
@@ -192,3 +192,9 @@ rc#1 MED folded the reviewer gets th
 ig#1 MED folded If this card must la
 rg#1 MED folded (guards the hand edi
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-23 (orchestrator, at launch, a note not a plan edit): task-446 is folded on the board at 2fe7fa150, so the handbook now holds one more line than the plan counted (fe.58 for R-22): where the plan's figures read 57 handbook rules or 21 OWED rows, the tree reads 58 and 22. The lane measures at its own head and reports the figure it finds; if a planned test pins the old figure, stop and report.
+<!-- SECTION:NOTES:END -->
