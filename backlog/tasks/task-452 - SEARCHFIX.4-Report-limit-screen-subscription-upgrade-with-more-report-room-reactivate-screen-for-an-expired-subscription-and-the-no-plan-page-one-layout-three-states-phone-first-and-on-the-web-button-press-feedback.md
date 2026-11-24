@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T20:23:00Z'
+updated_date: '2026-11-24T20:27:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -387,4 +387,6 @@ rg#4 MED folded owed now (not at lan
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX4, worktree /Users/brettpreston_macmini/Buildo-wt-sfx4, branch wf2/inc1b-sfx4), RR-0240
+
+Lane BL-SFX4 commit 1 (plan step 11, first commit): the three useParcelEntitlement cites in census/contracts.json move from useParcelLookup.ts:162 to :168; the emit run rewrote the F02 entitlement descriptor and 127-surface-registry.md. Red: fix-tune D15 condition read in memory before the edit (hook line 168, descriptor :162). Green: the same read after the emit; registry --check clean, consumer-registry --check fresh.
 <!-- SECTION:NOTES:END -->

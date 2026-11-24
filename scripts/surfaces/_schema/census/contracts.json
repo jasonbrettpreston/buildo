@@ -23200,11 +23200,11 @@
       "answer": "sole",
       "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
       "evidence": [
-        "mobile/src/hooks/useParcelLookup.ts:162",
+        "mobile/src/hooks/useParcelLookup.ts:168",
         ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
       ],
       "surfaces": [
-        "mobile/src/hooks/useParcelLookup.ts:162"
+        "mobile/src/hooks/useParcelLookup.ts:168"
       ]
     },
     "a11y": {
@@ -23240,7 +23240,7 @@
       ],
       "writes_audit_row": false,
       "consumers_verified": [
-        "mobile/src/hooks/useParcelLookup.ts:162"
+        "mobile/src/hooks/useParcelLookup.ts:168"
       ],
       "auth_class_executed": "authenticated",
       "locking_tests": [

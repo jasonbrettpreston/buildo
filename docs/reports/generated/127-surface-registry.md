@@ -1131,7 +1131,7 @@ MATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this cont
 | 14 | `offers` | `none` | It renders no sponsored placement and reads no placement inventory. — `src/app/api/parcels/entitlement/route.ts — read in full` |
 | 15 | `metering` | `none` | A read of the plan and the counts is not a report and is never counted; the lookup meters reports (contract_parcels_lookup). — `src/app/api/parcels/entitlement/route.ts — read in full; no usage_events INSERT` |
 | 16 | `config` | `logic_variables` | The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed). — `src/lib/entitlements/index.ts:408-411`, `scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial` |
-| 17 | `sharing` | `sole` | Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build. — `mobile/src/hooks/useParcelLookup.ts:162`, `.cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)` |
+| 17 | `sharing` | `sole` | Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build. — `mobile/src/hooks/useParcelLookup.ts:168`, `.cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
