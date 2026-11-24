@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX1'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:52:00Z'
+updated_date: '2026-11-24T16:06:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -29,6 +29,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX1/REPORT.md
 type: fix
 ordinal: 150010
 ---
@@ -302,4 +303,6 @@ rg#2 MED folded names what it amends
 2026-11-24 lane BL-SFX1: tests written first (search-parser-guard SEARCHFIX.1 T1-T5, parcel-lookup-resolution one-row partial, consumer-parcel-lookup.infra T6-T8); red proven by the refused commit attempt (red.out in the lane dir).
 
 2026-11-24 build (lane BL-SFX1): plan PLAN-449-v1 built as written. Deviations, recorded not re-planned: (1) the letter and dash fallback dedupes rows by parcel_id and caps the list at 10 (the ≤10 candidates shape of Spec 89:38); (2) the exact statement is read through one helper readExact (same SQL text) so the fallback reuses it; (3) the :226 `!` moved into typedBase as `?? ''` (no `!`), so parcel-lookup.ts holds 10 `!`, each with a why-comment; (4) the fallback and the matcher do not run on the raw-first (keepPeriods) run, per plan 3.B.1 (exact, typeahead and unlinked reads only); (5) T6 is green today too (two `unique` returns already), it is a lock with a red plant; (6) case 15's fixture holds the 4 recorded rows plus 6 placeholders, case 21's pin is a placeholder (UNVERIFIED). Generated files moved: docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md (exempt); src/lib/surfaces/generated/ did not move. Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes).
+
+2026-11-24 output review round 1 run (context-r3.md; 24 lens outputs and FINDINGS.md under docs/reports/lanes/2026-11-24/BL-SFX1/; 91 finding ids: 7 HIGH, 8 BUG MED, 28 DEFER MED, 44 LOW, 2 NIT). Grounder owed: the lane does not rule its own findings. Work commits 079f76c30 (code, hooks green: 332 passed) and a997f8fb7 (generated files, doc-2 and task-69 notes).
 <!-- SECTION:NOTES:END -->

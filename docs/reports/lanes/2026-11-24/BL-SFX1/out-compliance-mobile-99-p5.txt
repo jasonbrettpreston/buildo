@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.613Z file_sha256=097bfabb537d2b35a79296fb26c1257c045f420c125c9a1774f3ffae886ad1a1 prompt_sha256=c455a3d43f3164b4310b8b3a80a916d192f793f78d2f4eef9b8b91f2030cd1d2
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts (@@ -225,3 +229,140 @@) "// placeholders: the seat recorded the first four of the ten rows only" and "row('X5', '12 Elm X5 St')" — case 15 ("12 Elm") is green on 4 recorded rows plus 6 invented ones, so that seat case passes without its recorded data and AC #6 holds for the data of 28 cases only — record the seat's remaining six "12 Elm" rows and re-run case 15 against the local stack.
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts (@@ -225,3 +229,140 @@) "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live)" — the unlinked case asserts a pin and a lotMap no run produced, so the landMap equality in AC #4's unlinked arm is pinned to an invented coordinate — read the real pin on the local stack, or assert only the observed `kind: 'unlinked'`.
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json (@@ -496,31 +496,13 @@) "it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84)" — the diff drops the user_profiles write row from outputs.tables and raises the read count to 7 (adding logic_variables) on a dev-mode-only claim no pasted ruling names; inputs.tables itself is not visible in any hunk (cannot see), so the T7 count check cannot catch a mismatch there — split the lineage correction into its own task, or cite the ruling that rules the user_profiles write out.
+
+DEFER severity=LOW — Card "Files: ... scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json ..." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json (@@ -78,7 +78,7 @@) "src/lib/admin/parcel-lookup.ts:194-205" — the same diff re-bases the states citations to "src/lib/admin/parcel-lookup.ts:340" and "src/lib/admin/parcel-lookup.ts:362-369" but leaves this inputs.evidence citation at the pre-change line numbers, and the file grew by roughly 95 lines — re-base it with the same rule used for the states rows.
+
+DEFER severity=LOW — Card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — src/tests/consumer-parcel-lookup.infra.test.ts (@@ -114,6 +114,61 @@) "const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';" — the diff carries only proof of the Spec 100 and Spec 89 notes; the doc-2 G.1/A.3 objectives and the task-69 note are backlog-DB writes and appear in no hunk (cannot see) — paste the backlog CLI output for G.1, A.3 and task-69 into the lane record.
+
+REJECT — "Must not: add a new resolution value, or touch the report meter in the lookup route" — the descriptor and census metering and emits blocks are rewritten (metered why, emits none to ledger, ledger_events property_view) — src/app/api/parcels/lookup/route.ts is absent from the diff, so the meter code is untouched, and the rewritten text restates RR-0278 "I should only be charged a report if I find the address and lot I'm looking for and a report is produced".
+
+MET — AC #1 — src/lib/admin/parcel-lookup.ts (@@ -296,13 +386,20 @@) "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row typeahead opens only when the printed number and street name equal the typed ones and no type conflicts; a prefix, a number-less street and a narrowed leftover list.
+MET — AC #2 — src/lib/admin/parcel-lookup.ts (@@ -296,13 +386,20 @@) "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is never narrowed, so "Gerrard St W" is the list.
+MET — AC #3 — src/lib/admin/parcel-lookup.ts (@@ -296,13 +386,20 @@) "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — "32 Fulham Dr" opens the Dr lot, the narrowing never empties the set and stops when any row prints no type.
+MET — AC #5 — src/lib/admin/parcel-lookup.ts (@@ -296,13 +386,20 @@) "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — both prefix reads (typeahead and unlinked) escape a typed % and _.
+MET — RR-0166 "ONE-12 a" — src/lib/admin/parcel-lookup.ts (@@ -173,16 +173,32 @@) "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" — a leading unit is dropped, the trailing unit strip is unchanged, and "Suite 12 Elm St" and "#12 Elm St" stay untouched.
+MET — "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts (@@ -173,16 +173,32 @@) "return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };" — every new branch reuses text_candidates, no resolution value is added.
+MET — Card "Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, ... docs/specs/02-web-admin/89_parcel_cost_model_tool.md" — the diff touches exactly the eight files the card names, no ninth file.
+MET — §10 Out-of-Scope Files "All `mobile/src/store/*.ts` ... `mobile/src/lib/debug/stateDebug.ts`" — no mobile store, layout, onboarding, useUserProfile or stateDebug file appears anywhere in the diff — nothing this part of the spec's boundary forbids is touched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 27   Unmet: 0
+Rules met: none
+
+---
+⏱  133062ms (133.1s)
+📊 Tokens — total: 61793, input: 33925, output: 27868, reasoning: 26203

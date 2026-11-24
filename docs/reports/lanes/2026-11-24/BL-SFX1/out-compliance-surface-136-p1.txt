@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.597Z file_sha256=2dcbd9517a3e714a7a9ce5ca8e352d2b57582d4ab5249d7d8f315228677a5004 prompt_sha256=6d8ca13f4cfb97db540d676341afab3e29a25a7a0dfa83fecc5abfc81b8eb5c2
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 and RR-0442 "a one-row typeahead is `unique` only when it is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts)" — src/lib/admin/parcel-lookup.ts (isTypedAddressInFull, added hunk @@ -191,6 +207,54 @@) "!guardByType([{ address: printed }], typedType).conflict" — typedStreetType is '' when the user types no street type, so guardByType is vacuous and a printed "14 Norwood Ter" counts as "the typed address in full" for a typed "14 Norwood", which the docstring on the same function says it is not ("\"14 Norwood\" (NORWOOD TER) ... are not"); either the predicate opens a partial address or the comment is false, and no test in this chunk covers a printed type the user did not type — require the printed type to be typed and equal when the printed row carries one (or correct the docstring), and add the missing case beside the new "7 Oak" test.
+
+DEFER severity=LOW — card, "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — NONE — the Spec 100 and Spec 89 notes are in the diff but the doc-2 G.1/A.3 and task-69 notes rest only on the implementation-note sentence "Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)", which is a comment, so that part of the clause is unverified here (cannot see) — attach the backlog entry ids or the note text in the material so the owed notes are evidenced, not asserted.
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — NONE — src/tests/search-parser-guard.logic.test.ts is not in this chunk's paths and the implementation note's "search-parser-guard SEARCHFIX.1 T1-T5" cannot be seen, so AC #6 is unverified in this run (the only new resolution test pasted is the "7 Oak" prefix case) — confirm the 29 cases in the other chunk's run.
+
+MET — AC #2, Spec 100 dated note 2026-11-24 "A 10-row typeahead window is not narrowed by direction" — src/lib/admin/parcel-lookup.ts "guardByDirection(typeahead, typeahead.length >= 10 ? null : typed)" — a full window is returned as the list so "Gerrard St W" is not narrowed to the one W row.
+
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\\\%_]/g, '\\\\$&') + '%'; }" applied as "[likePrefix(streetName), num || null]" and "[likePrefix(streetName), num]" — both prefix reads carry the escaped pattern.
+
+MET — card, "Must not: add a new resolution value, or touch the report meter in the lookup route" — src/lib/admin/parcel-lookup.ts "conflictList" returns "resolution: 'text_candidates'" and src/app/api/parcels/lookup/route.ts is not in the diff — no resolution value is added and the route is untouched.
+
+MET — fe.03 "declarations checked against live contracts and the catalogue" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "ambiguous: src/lib/admin/parcel-lookup.ts:362-369" and "miss: src/lib/admin/parcel-lookup.ts:340" — the moved evidence lines match the new file (the no-street-name return sits at 340 after the +97 offset) in both the descriptor and the census copy.
+
+REJECT — fe.52 — the change declares a ledger write (emits "ledger", "property_view") and could be accused of blending parcel_ref with parcel_pk — not a real issue, the metering text keeps "parcel_ref = the matched parcels.parcel_id" and no id name is renamed or re-bound.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: fe.03, fe.32, fe.52
+
+---
+⏱  398286ms (398.3s)
+📊 Tokens — total: 79494, input: 32687, output: 46807, reasoning: 45789

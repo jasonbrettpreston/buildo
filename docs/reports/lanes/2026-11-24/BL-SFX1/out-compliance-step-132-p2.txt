@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.599Z file_sha256=70c21f3658d47938ae14deed36643f56d1a46c307f4664aabc06dcffd6c123eb prompt_sha256=498065ec273924193b1ecbfc57c386a2a3f0a2777ac436cc8abdfe1f2c8b79fc
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-step-132-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-449 AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// placeholders: the seat recorded the first four of the ten rows only" and "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live)" — case 15 runs on six fabricated rows and case 21 on an unverified pin, so two of the 29 named cases do not exercise the seat's recorded data — replace the six placeholders with the remaining recorded rows and run case 21 live, or record the case as excluded from AC #6
+DEFER severity=LOW — task-449 folded finding G3 R1 "Findings folded: ST1, 2a (server side), G2 D1, G2 D6, G3 R1" (counts restate their own arrays) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "It reads 7 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses)" — the count 4 does not match the three named steps and T7 checks only the reads count, not this one — reconcile to 3 or name the fourth table/step
+DEFER severity=MED — x-rulings.4 "every approved decision becomes a register row ... that cites <log stem>#<decision id>" and x-rulings.1 "Cited ids must resolve" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276" — the material shows no docs/reports/decisions/ log or register row for the 2026-11-24 rulings RR-0442, RR-0443 c, RR-0444 that these notes cite, so --check coverage cannot be seen — confirm the decisions log and Spec 124/131 register rows exist and decision-log --check passes
+DEFER severity=LOW — task-449 "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — NONE — the doc-2 G.1 and A.3 notes and the task-69 append-note are external backlog writes not present in this repo diff, so those owed notes are unverified — confirm the backlog doc-2 update and task-69 append-notes landed
+REJECT — task-449 "Must not: add a new resolution value, or touch the report meter in the lookup route" — the change is accused of touching the meter because the descriptor metering and emits blocks are rewritten — not a real issue: the route source src/app/api/parcels/lookup/route.ts is not in the diff, only descriptor and census prose changed
+REJECT — task-449 AC #1 "which opens as an exact match" — the change is accused of not opening as an exact match because an in-full typeahead row returns matchType 'typeahead' — not a real issue: the diff's own Spec 100 note rules "`typeahead` stays in the `matchType` enum (additive_only)" and consumers open the lot on resolution 'unique'
+MET — task-449 AC #1 — src/lib/admin/parcel-lookup.ts — "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" opens only a one-row typeahead that is the typed address in full
+MET — task-449 AC #2 — src/lib/admin/parcel-lookup.ts — "guardByDirection(typeahead, typeahead.length >= 10 ? null : typed)" leaves a full 10-row window unnarrowed
+MET — task-449 AC #3 — src/lib/admin/parcel-lookup.ts — "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" opens the typed-type lot when the number is shared
+MET — task-449 AC #5 — src/lib/admin/parcel-lookup.ts — "return s.replace(/[\\%_]/g, '\\$&') + '%';" escapes a typed % or _ in the prefix reads
+MET — task-449 must-not-add-resolution — src/lib/admin/parcel-lookup.ts — "resolution: 'text_candidates', lotMap: null" reuses the existing resolution values
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  118069ms (118.1s)
+📊 Tokens — total: 58734, input: 33978, output: 24756, reasoning: 23711

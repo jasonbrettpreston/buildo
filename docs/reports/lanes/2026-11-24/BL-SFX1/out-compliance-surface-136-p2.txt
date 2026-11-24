@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.634Z file_sha256=9368c2b0530d8f247d6a2a6d74683f887cddb622251baf7675b9f38daf487db7 prompt_sha256=9f4d4acc28f2ca0c9c304939d49ed55755a30d74b8f2992d607fd6387be7f3a3
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "The 29 typed-address cases of the seat record pass as tests" plus Description "whose 29 typed-address cases with real addresses are this card's tests" — "row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St')" and count 10 — case 15 passes only because six fabricated rows pad the four recorded rows to ten, so the test verifies invented data, not the seat record; clause met only by the "placeholders: the seat recorded the first four" comment — record the six remaining 12 Elm rows from the seat, or assert on the four recorded rows and drop the fabricated ids from the acceptance data.
+
+BUG severity=HIGH — AC #6 "The 29 typed-address cases of the seat record pass as tests" — "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given" with "expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } })" — the unlinked case asserts the very 43.6/-79.5 pin the mock injected, a tautology over unverified data; the clause is met only by a comment — run case 21 on the local test stack, record the real coordinates and assert those, or mark the case deferred rather than green.
+
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — 26 of the seat's labels (1-23, 25-28) are here, and 24 and 29 exist only by citation to a file not in the material — cannot see mobile/__tests__/parcelSearchMatch, so cite the exact test titles there or add cases 24 and 29 to this file.
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" and "importing that module registers its suites here too" — this file now depends on a test module that is not in the card's Files list (src/tests/non-null-assertion-comment.logic.test.ts) — cannot see whether that module pre-exists; confirm it does, and if this task creates it, add it to the card's Files.
+
+MET — AC #1 — "it('T1 boundary: the same window cut to 9 rows narrows to the W row, shown as a list of one (no number typed, so it never opens)'" and "['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }]" — a one-row leftover is a list unless the row is the typed address in full, which opens.
+
+MET — AC #2 — "it('T1 (ST1): "Gerrard St W" with a full 10-row window is the list of 10, not the one W row'" — asserts text_candidates with 10 candidates and null match.
+
+MET — AC #3 — "['10 32 Fulham Dr', { q: '32 Fulham Dr', exact: { '32|FULHAM': [row('5067128', '32 Fulham St'), row('5514141', '32 Fulham Dr')] }, resolution: 'unique', match: '5514141' }]" — the street-typed address opens when the number is shared by another street type.
+
+MET — AC #4 — "['27a Unit 4, 123 Yonge St', ... resolution: 'unique' ...]" and "['27b 2760-4 Yonge St', ... resolution: 'text_candidates' ...]" and "['extra 2750 St. Clair Ave W', ... resolution: 'text_candidates' ...]" — unit-first, dash-unit, letter-suffix and period forms reach a lot or a list, never no_match.
+
+MET — AC #5 — "it('T3 (D1): a typed _ is escaped in the typeahead prefix'" with "expect(typeaheadPrefix()).toBe('MA\\_N%')" — typed % and _ are escaped.
+
+MET — "Must not: add a new resolution value" — "resolution: string;" with expectations only 'unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match' — no new resolution value is introduced.
+
+REJECT — fe.40 — that the inline cases array names its cases instead of using tests/e2e/scenarios.json — fe.40 governs the real-app layers run against the separate local test stack, not this mocked logic test.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: none
+
+---
+⏱  65666ms (65.7s)
+📊 Tokens — total: 30086, input: 15896, output: 14190, reasoning: 13004

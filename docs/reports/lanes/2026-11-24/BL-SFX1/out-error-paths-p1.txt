@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T15:59:39.668Z file_sha256=4691302247bbc1b60fe3c3867cdb084b6a5a6045bffee5707fab82395b1b9852 prompt_sha256=44dc2679e88a6a63772133705c7856b10397192f7b87bca8e7aaffb8b191e395
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+MED severity=MED — src/lib/admin/parcel-lookup.ts:334-336 "const raw = await resolveAddress(q, { ...opts, matchMistyped: false }, true); if (raw.resolution !== 'no_match') return raw;" — the new period-kept pass is awaited with no try/catch, so any failure inside it (statement timeout on the period-kept prefix reads, pool exhaustion) aborts the whole lookup with a 500 even though the stripped key would have answered; the failover is one-way (only on no_match), never on error — wrap the raw pass in try/catch, logWarn the failure, and fall through to the stripped run so an error degrades to today's single pass.
+
+MED severity=MED — src/lib/admin/parcel-lookup.ts (raw-first doc comment) "first run that way (exact, typeahead and unlinked reads only: no matcher, no fallback), and that result is returned unless it is no_match; only then does the stripped key run every step" — every query containing a '.' now issues up to two full resolver passes (raw exact + typeahead + unlinked, then stripped exact + typeahead + unlinked, and on a miss the fuzzy matcher too), so the slowest path roughly doubles against the route's SLOW_QUERY_MS=500 slow_query probe and doubles pool pressure — run only the exact read on the raw pass (the stored-period key case is an exact read; the typeahead and unlinked passes on a period-kept prefix are the expensive ones), or skip the raw pass entirely when the exact read returns zero rows.
+
+LOW severity=LOW — src/tests/search-parser-guard.logic.test.ts "row('5400679', '1012 Gerrard St E'), row('5400679', '1014 Gerrard St E')" — the typeahead window can carry one parcel_id on two rows (the recorded fixture repeats 5400679 and 10640216) and conflictList maps rows straight to candidates, so the newly reachable list paths can show the same lot twice (T1 asserts toHaveLength(10) over only 8 distinct ids) — dedupe by parcel_id before returning, the way the letter/dash fallback already does with its `seen` set.
+
+LOW severity=LOW — src/lib/admin/parcel-lookup.ts (letter/dash fallback) "for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }" — the two bare-number reads run unguarded in sequence, so a rejection on the dash form's second read discards the rows the first read already found and 500s instead of listing them — catch per read, logWarn, and return the rows collected so far.
+
+REJECT — src/lib/admin/parcel-lookup.ts "if (opts.classifyUnlinked && num && !/[%_]/.test(streetName))" — a typed wildcard looks like it could widen the prefix reads — it is handled: the unlinked read is skipped outright on % or _, and the typeahead and this read now pass through likePrefix, so no pattern widening.
+
+REJECT — src/lib/admin/parcel-lookup.ts:334 "if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName)" — the self-call looks like it could recurse without bound — it cannot: the recursive call passes keepPeriods=true, which fails this first condition, so the passes are capped at two.
+
+REJECT — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "a re-open in the month is free" and "A hit with no `page` (candidates, a miss, a map, a dangling id, ...) counts nothing" — a double-submitted lookup or a tap on a duplicated candidate card looks like it could charge twice — it cannot: every new list path returns text_candidates with no page, and the meter keys on the (user, parcel_tool) row lock plus parcel_ref inside the billing month, so a repeat open of the same lot writes nothing.
+
+VERDICT: PASS on error-path safety
+Paths walked: raw-first period pass (error and no_match fallthrough), exact read, typeahead read, unlinked read, fuzzy miss, one-row typeahead open, direction guard, street-type guard, letter/dash fallback, wildcard escaping, candidate dedupe, meter and double-submit
+Unguarded: 2
+
+---
+⏱  88653ms (88.7s)
+📊 Tokens — total: 46159, input: 28771, output: 17388, reasoning: 16377

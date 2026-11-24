@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.471Z file_sha256=649e898cfff820f28de6d296090a1cea5d05bedde8f2e885af826fa5bcd69292 prompt_sha256=e9b0f8626b5ac80368469750fdf564ff4d282987482c86a49406b126a3262091
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-449, "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — NONE (doc-2 and the task-69 record are in none of the 8 changed paths; only the prose "Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)." asserts it) — two of the four owed dated notes are absent from the material and are satisfied only by a comment — add the doc-2 G.1 and A.3 dated notes through the backlog CLI and the task-69 note, and surface the resulting doc-2 text in the change.
+
+DEFER severity=MED — task-449, "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "emits.answer: ledger" and "This route IS the mutation contract: it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user" — the emits flip from none to ledger, the deletion of the user_profiles outputs.tables row, the meter evidence renumbering and the metering.why rewrite are meter/documentation changes that no SEARCHFIX.1 criterion, folded finding (ST1, 2a, G2 D1, G2 D6, G3 R1) or ruling names, and the card also says "Must not: ... touch the report meter in the lookup route" — restrict this card's descriptor edit to the exact-match dated note plus the count parity G3 R1 asks for, and move the emits/tables/metering rewrite to the task that owns the produced-report meter.
+
+DEFER severity=LOW — task-449 AC "The 29 typed-address cases of the seat record pass as tests" "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — cases 24 and 29 of the 29 are only cited, not present in the material, so the count of 29 passing cases cannot be verified here — add the two cases (or an assertion that reads the cited phone test) so all 29 are evidenced in one place.
+
+DEFER severity=LOW — task-449, "whose 29 typed-address cases with real addresses are this card's tests" "whose 29 typed-address cases with real addresses are this card's tests" — src/tests/search-parser-guard.logic.test.ts "// placeholders: the seat recorded the first four of the ten rows only" — case 15 holds six invented rows (X5 to X10) and case 21's pin is a declared placeholder ("// case 21's latitude and longitude are placeholders (UNVERIFIED"), so those two cases do not test real seat addresses — record the remaining real rows for case 15 or assert only the recorded four, and mark case 21 as owed until the seat can run it live.
+
+MET — AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts:393 — a 10-row typeahead window passes null to guardByDirection and is not narrowed.
+
+MET — AC #1 "returns a list (text_candidates), never unique, unless that row is the typed address in full" — src/lib/admin/parcel-lookup.ts:399 — the single typeahead row opens only when isTypedAddressInFull (number, street name, no type conflict) holds, else conflictList.
+
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts:337 — guardByType narrows the exact rows by the typed street type, never to an empty set, and lifts on a truncated read.
+
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts:389 — likePrefix escapes backslash, % and _ and is used by the typeahead and the unlinked prefix reads.
+
+MET — Spec 89/100 dated note 2026-11-24, "A period (St.) is read as a space, after the text is first tried with its periods kept" — src/lib/admin/parcel-lookup.ts:322 — the keepPeriods raw run runs first and only a no_match falls through to the stripped key; the admin route does not pass keepPeriods.
+
+MET — task-449 "Must not: add a new resolution value, or touch the report meter in the lookup route" — src/app/api/parcels/lookup/route.ts — the route file is not in the change and the resolver still emits only unique, typeahead, text_candidates, multi_parcel, unlinked and no_match.
+
+MET — Spec 100 dated note "Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449 · MF-35 routing" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:145 — the routing note is present and restates unique as exact match only, pointing at the §3.2 note.
+
+MET — Spec 89 dated note "(SEARCHFIX.1 · task-449 · Increment 1·B; operator, verbatim: "It should open on an exact match" " — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 — the note is inserted inside the Resolution item 1 note stack, after :34, and keeps the admin call and the JOIN key unchanged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: F-LOOKUP-RESOLVER, F-ADMIN-LOOKUP
+
+---
+⏱  109776ms (109.8s)
+📊 Tokens — total: 57977, input: 35108, output: 22869, reasoning: 21362

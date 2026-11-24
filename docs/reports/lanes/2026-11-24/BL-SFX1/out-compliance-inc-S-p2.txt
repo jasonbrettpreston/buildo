@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.486Z file_sha256=70c981a8a23afadc19baa43bce2627a65ff9f711a54bd779c224e86a38943241 prompt_sha256=2829f07173a62723364ab35e0574596ba66771f0115866bc6b69ad0f6e4403ec
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests." — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — 2 of the 29 seat cases are satisfied only by a test name in a comment, so AC #6 is unmet for them — port cases 24 and 29 into this test file, or paste the passing mobile test ids as evidence.
+DEFER severity=MED — card "Nothing is added that the plan or a ruling does not name (RR-0392" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "\"answer\": \"ledger\"" and "\"ledger_events\": [ \"property_view\" ]" — the contract's emits classification is reclassified from none to ledger and no pasted AC or ruling names that change — cite the ruling that authorizes the reclassification or split it into its own card.
+DEFER severity=LOW — G3 R1 "the lookup contract text says so, and its counts restate their own arrays" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "It reads 7 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses)" — the sentence states 4 and names 3, and the new T7 count lock only checks the leading number — name the fourth step or change 4 to 3 so the count restates its own array.
+DEFER severity=LOW — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the owed task-69 append-note appears nowhere in the material; only the Implementation Notes line "task-69 (append-notes)" asserts it — paste the task-69 note text or its id as evidence.
+MET — G.1 — src/lib/admin/parcel-lookup.ts — "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" makes a one-row typeahead open only when it is the typed address in full, with the exact read as the other `unique` return.
+MET — A.3 — src/lib/admin/parcel-lookup.ts — "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" keeps a full 10-row window unnarrowed by direction, so "Gerrard St W" is the list.
+MET — A.3 — src/lib/admin/parcel-lookup.ts — "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" applied as "[likePrefix(streetName), num || null]" escapes a typed % or _ in the prefix reads.
+MET — AC #3 — src/lib/admin/parcel-lookup.ts — "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" opens "32 Fulham Dr" beside "32 Fulham St" and never empties a non-empty set.
+MET — AC #4 — src/lib/admin/parcel-lookup.ts — "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" with the "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" fallback and the period raw-first run reach the lot or the list, never a dead end.
+MET — card "Must not: add a new resolution value, or touch the report meter in the lookup route." — src/lib/admin/parcel-lookup.ts — every new return uses the existing 'text_candidates' / 'unique' values and src/app/api/parcels/lookup/route.ts is absent from the diff.
+MET — card "Dated notes owed: Spec 100 (:103, :144); ... Spec 89 (after :34)" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/02-web-admin/89_parcel_cost_model_tool.md — "Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449" lands twice in Spec 100 and once in Spec 89.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: G.1, A.3
+
+---
+⏱  147734ms (147.7s)
+📊 Tokens — total: 58713, input: 29427, output: 29286, reasoning: 28164

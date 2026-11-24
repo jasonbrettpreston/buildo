@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T15:59:39.656Z file_sha256=df1a55e7a4e123c89d1b2b9dccd01304db3ed823edc6d94e628351875aa1162f prompt_sha256=4603a8e882ec73969cd76d54097953fbc4891fe093bac20baf315f72103576bb
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=<none> — none
+
+DEFER severity=MED — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/search-parser-guard.logic.test.ts:238 "const row = (parcel_id: string, address: string) => ({ parcel_id, address });" — the ~40 new DB-row/pin fixtures (GERRARD, Q679, ELM12, the unlinked literal) are hand-built inline rather than imported from src/tests/factories.ts — add/extend a typed parcel-row factory in src/tests/factories.ts and build these fixtures from it
+
+DEFER severity=MED — 2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures." — src/tests/consumer-parcel-lookup.infra.test.ts:125 "it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {" — the three added infra blocks are source-text and JSON scans; none forces the new reads (the raw-first rerun, the escaped prefix read, the up-to-two-read letter/dash fallback) to throw and prove safe degradation — add one unhappy-path case (a readExact/typeahead rejection) asserting the route still returns a safe envelope without leaking the raw message
+
+DEFER severity=NIT — 5.2 "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire" — src/tests/consumer-parcel-lookup.infra.test.ts:126 "expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);" — the "only two places open a lot" fence is a source-text pin, which the pattern table assigns to the regression layer, not the infra layer — either move it to a `*.regression.test.ts` or state in the test header why the infra layer carries it
+
+MET — 2.3 — src/lib/admin/parcel-lookup.ts "const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists" — every added `!` (tokens[0], m[1], m[2], exact[0], typeahead[0], unlinked[0], split(',')[0]) carries an inline why-comment, and T4 locks it with findUndocumentedBangs
+
+MET — 4.2 — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — the SQL text is unchanged and still bound as $1; the wildcard suffix/escaping happens in the parameter value
+
+MET — 4.3 — src/lib/admin/parcel-lookup.ts "SELECT parcel_id, ${displayAddress} AS address" — explicit projection on every read, no SELECT *
+
+MET — 3.3 — src/lib/admin/parcel-lookup.ts "ORDER BY address LIMIT 10" / "ORDER BY parcel_id LIMIT 11" — every read path (exact, typeahead, unlinked, the fallback's readExact) is bounded
+
+MET — 8.2 — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" — new regexes use `\s`, no `s` flag, so the ES2017 target is respected
+
+MET — 5.5 — src/tests/consumer-parcel-lookup.infra.test.ts "expect(census).toEqual(d);" — the generated census row is drift-locked to the emitted descriptor after both were edited
+
+REJECT — 4.2 — that the change concatenates the search term into the SQL (likePrefix) — the concatenation happens on the bound parameter value with `\`, `%` and `_` escaped, so the statement text stays parameterized
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  63787ms (63.8s)
+📊 Tokens — total: 47492, input: 34149, output: 13343, reasoning: 12394

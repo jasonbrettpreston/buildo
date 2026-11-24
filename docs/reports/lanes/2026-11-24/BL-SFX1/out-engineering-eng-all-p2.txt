@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T15:59:39.641Z file_sha256=d7046320a4e989409a367cba88e16ce0070cec15347626ff53db10048bb2cf3e prompt_sha256=8aa3173d7471d5280a6753b9b8dab61760921953b1c1c7d7ae0bc4680f7625de
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — src/lib/admin/parcel-lookup.ts:393 "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — the new gap probe encodes the 10-row typeahead cap as a fresh TS literal that must track the SQL `ORDER BY address LIMIT 10` and the spec's 10-candidate cap (the letter/dash fallback adds a second, `rows.slice(0, 10)`), and no row is added to `src/tests/contracts.infra.test.ts` (that file is not in the diff) — source the cap from the contracts key or one shared constant and add the `contracts.infra.test.ts` row naming parcel-lookup.ts as its consumer so a cap change fails CI.
+DEFER severity=LOW — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/_schema/census/contracts.json "diff --git a/scripts/surfaces/_schema/census/contracts.json b/scripts/surfaces/_schema/census/contracts.json" — the WF edits two files under `scripts/` (this census row and the F02 contract descriptor) and the Implementation Notes record no exemption, although they do record one for the generated docs — record the surface-governance exemption for these two descriptor/census files in the lane notes (or land them from the surface-standard lane) so the §10.2 boundary is not silently crossed.
+DEFER severity=LOW — §12.12 "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test asserting the invariant." — src/lib/admin/parcel-lookup.ts:207-260 "return s.replace(/[\\%_]/g, '\\$&') + '%';" — `likePrefix` is a new pure prefix normalizer feeding a SQL LIKE key and is covered only by the two example cases T3 (`%`, `_`), no property test — add `src/tests/property/like-prefix.property.test.ts` asserting that for any input the escaped prefix contains no unescaped `%` or `_`.
+
+MET — §10.3 "Business logic belongs in `src/lib/`, not in route handlers." — src/lib/admin/parcel-lookup.ts:308-470 — the new resolution logic (guards, full-address check, wildcard escape, letter/dash fallback) all lands in the lib; no route handler is touched.
+MET — §10.3 "Avoid returning database column names directly. Map to a stable API field name" — src/lib/admin/parcel-lookup.ts:305-307 "candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address }))" — candidates stay `parcelId`/`address`, no raw column leaks.
+MET — §10.2 "Database schema is frozen during frontend work unless a feature genuinely requires a new column." — paths list of the change — no `migrations/` file is in the change.
+MET — §11 "No raw SQL string concatenation, parameterized only (§4.2)" — src/lib/admin/parcel-lookup.ts:312-318 "WHERE addr_num_normalized = $1 AND street_name_normalized = $2" — the new helper reuses the parameterized statement; the escaped prefix is passed as `$1`.
+MET — §11 If Shared Logic Touched "All dual-code-path consumers identified" — docs/specs/02-web-admin/89_parcel_cost_model_tool.md and docs/specs/03-mobile/100_mobile_parcel_cost_tool.md dated notes 2026-11-24 — both consumers of `resolveAddress` (admin tool, consumer route) carry the amendment, with lock tests in both areas.
+MET — §10.1 "The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`" — src/lib/admin/parcel-lookup.ts read-only reads (`SELECT`, `readExact`) — the change adds reads only; no pipeline table is written and no pipeline script is modified.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 24   Unmet: 1 (deferred, MED)
+
+---
+⏱  75088ms (75.1s)
+📊 Tokens — total: 43889, input: 34093, output: 9796, reasoning: 8789

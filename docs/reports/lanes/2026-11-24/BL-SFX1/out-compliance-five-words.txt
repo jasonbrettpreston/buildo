@@ -1,0 +1,9 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.478Z file_sha256=1dbf84a48670534c830399365cf8dd0fd22457190b72ecb4d14a3745a12f194d prompt_sha256=d8dea5cbd6ea9ec44d37b664f2b706dd8971fe8423687d23e830a214f6ab5432
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+
+
+---
+⏱  308707ms (308.7s)
+📊 Tokens — total: 95975, input: 30439, output: 65536, reasoning: 65536

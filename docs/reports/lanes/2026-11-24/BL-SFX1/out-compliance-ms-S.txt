@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.543Z file_sha256=cc5b8539475bfb75013e90068b875c89746aa89a987143b16ab48631448e9bee prompt_sha256=1f6bd73d25444fb01c5b2f34b96cbb313e29f1b902eed98d557192c14467a1e2
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0166 "ONE-12 a" (Spec 100 dated note 2026-11-19, pasted) "a one-lot hit whose printed street direction differs from the direction the user typed (`100 Queen St W` against one lot printed `100 Queen St E`) is `text_candidates` (the lot in the list), no longer `unique`" and RR-0442 "It should open on an exact match" — src/lib/admin/parcel-lookup.ts (hunk @@ -243,26 +308,51 @@) "const typeG = guardByType(exact, exactTruncated ? '' : typedType); if (typeG.conflict) return conflictList(typeG.rows); exact = typeG.rows; if (exact.length === 1) {" — the direction guard runs on the full exact set and keeps it unchanged when no row matches the typed direction, so typed "32 Fulham Dr E" against rows "32 Fulham St W" and "32 Fulham Dr W" passes unchanged, the type guard then narrows to the one W row, and that direction-conflicting row opens as `unique` — re-run guardByDirection on typeG.rows before the `exact.length === 1` open and add that case to the T5 table.
+
+BUG severity=MED — task-449 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" and the project objective "keep it simple; no scope creep" (PLAN-PROTOCOL.md:3) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "+      "why": "This route IS the mutation contract: it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84)" with the user_profiles entry deleted from `outputs.tables` — no acceptance criterion or folded finding pasted for this card (ST1, 2a, D1, D6, R1) names a correction to the route's declared write set, so an unnamed contract change rides in on SEARCHFIX.1 — move the outputs.tables and outputs.why rewrite, in both descriptor and census, to its own card and keep only the SEARCHFIX.1 data_story dated note here.
+
+BUG severity=MED — acceptance criterion #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — two of the 29 required cases are satisfied only by a comment citation with no file:line or test name showing them pass, so the criterion rests on a comment — add cases 24 and 29 to the `cases` table or cite the named passing tests for them.
+
+DEFER severity=MED — acceptance criterion #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// placeholders: the seat recorded the first four of the ten rows only" and "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live)" — cases 15 and 21 assert against fabricated rows and an invented pin, so passing on the seat record is not demonstrated — re-read those rows on the local stack or record in the card that cases 15 and 21 are only partially covered.
+
+DEFER severity=LOW — task-449 "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — the material carries no doc-2 G.1/A.3 note and no task-69 note (cannot see them, the only trace is the lane's own line "doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)") — two owed notes are unproven in this review — attach the backlog CLI output for the doc-2 and task-69 note writes to the card.
+
+MET — acceptance criterion #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — the full window is not narrowed and returns the 10-row list.
+
+MET — acceptance criterion #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts "const same = rows.filter((_, i) => types[i] === typed); if (same.length > 0) return { rows: same, conflict: false };" — "32 Fulham Dr" beats the Fulham St row and never empties the set.
+
+MET — acceptance criterion #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — both the typeahead and the unlinked prefixes take the escaped prefix.
+
+MET — acceptance criterion #1 "A typeahead that leaves exactly one row returns a list (text_candidates), never unique, unless that row is the typed address in full" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a prefix, a street with no number and a narrowed leftover list.
+
+MET — task-449 "Must not: add a new resolution value, or touch the report meter in the lookup route." — src/lib/admin/parcel-lookup.ts (diff) adds no `resolution` value beyond the five, and src/app/api/parcels/lookup/route.ts is absent from the diff.
+
+MET — task-449 "Locks: `src/tests/search-parser-guard.logic.test.ts` (SEARCHFIX.1), `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` (T6-T8)." — all three lock files carry SEARCHFIX.1 tests in the diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: none
+
+---
+⏱  119557ms (119.6s)
+📊 Tokens — total: 54319, input: 29649, output: 24670, reasoning: 23175

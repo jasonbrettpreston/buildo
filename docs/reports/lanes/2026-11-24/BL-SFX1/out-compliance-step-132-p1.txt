@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.549Z file_sha256=af1ce96bc2b14ff953e9191997ac68b2881f5f557e2721e0b02f5595bc62aba1 prompt_sha256=ef376da6068ca564c9bb4b082197d811be5b42dc1432dddd0ff5e73268053363
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-step-132-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — AC #4 "Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts:184 "The separator after the unit is required, so "Suite 12 Elm St" and "#12 Elm St" are untouched (a separator-free tail would backtrack inside the digits and read house number 2)" — a unit-word-first address with no comma is left whole, so the first token is "Suite", no house number parses and the run ends no_match; the unit-first form AC #4 names can still dead-end — strip a leading unit word when the token after it is a number and a street token remains, routing that shape to text_candidates rather than an open, or record the operator's line that the comma form is the only ruled one.
+
+BUG severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given" and "placeholders: the seat recorded the first four of the ten rows only" — cases 21 and 15 assert values the test itself supplied, so the seat's recorded outcome is not proven for two of the 29 — re-record cases 15 and 21 on the local stack and paste the real rows and coordinates, or state in the card that they are outside the 29.
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — two of the 29 are satisfied only by naming another test file, which is a citation, not a case in this table — add 24 and 29 to the it.each table with the seat's recorded outcomes.
+
+BUG severity=MED — core.14 "Declared equals witnessed. Acquisition reads go in `inputs.reads`" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter)" — the same descriptor's metering evidence says openReport runs "the window count", which reads usage_events, yet that read sits outside inputs.tables and outside the "reads 7 tables" count that T7 asserts equals inputs.tables.length — add usage_events to inputs.tables and raise both stated read counts to 8, or drop the meter read from the data_story if the window count is not an input.
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/lib/admin/parcel-lookup.ts:394 "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" and :472 "return conflictList(rows.slice(0, 10));" — the candidate window 10 is hardcoded again beside the existing SQL "ORDER BY address LIMIT 10" with no registered variable, and the >= 10 guard silently stops guarding truncation if the LIMIT ever moves — name one constant or logic variable for the window and use it in the SQL, the guard and the fallback cap.
+
+DEFER severity=LOW — Spec 89 dated note 2026-11-19 "This tool's call and the fields it reads (`match`, `candidates`, `truncated`) are unchanged." — src/lib/admin/parcel-lookup.ts:472 "if (rows.length > 0) return conflictList(rows.slice(0, 10));" — the fallback reads up to 11 rows per bare number through readExact's LIMIT 11 and cuts the list at 10 with no truncation signal, unlike the exact path at :345 "const exactTruncated = exact.length > 10", so the tool cannot tell a cut list from a complete one — carry the truncation flag into the fallback's result or cap that read at 10.
+
+DEFER severity=LOW — "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the doc-2 G.1 and A.3 notes and the task-69 note travel through the backlog CLI and are not in this diff; cannot see them — confirm those backlog rows carry the 2026-11-24 note before the card is closed.
+
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts:389 "[likePrefix(streetName), num || null]," — both prefix reads bind the escaped prefix and the unlinked read keeps its !/[%_]/ guard, and T3 asserts the bound parameter '\\%%' and 'MA\\_N%'.
+
+MET — AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts:394 "typeahead.length >= 10 ? null : typed" — a full window disables the direction guard and T1 asserts ten candidates.
+
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts:347 "if (same.length > 0) return { rows: same, conflict: false };" — the typed type narrows the exact rows and never empties the set, proven by case 10 (32 Fulham Dr) and case 11 (123 Yonge St).
+
+MET — core.16 "its registry, description, table-map and telemetry entries are derived from the descriptor" — scripts/surfaces/_schema/census/contracts.json:223 carries the identical new data_story as the descriptor and T7 asserts the census row equals the emitted descriptor — the admin-facing description and the ledger telemetry follow the descriptor, not a hand-kept copy.
+
+REJECT — "Must not: add a new resolution value, or touch the report meter in the lookup route." — that the metering/emits edits change the meter or add a resolution — src/app/api/parcels/lookup/route.ts is absent from the diff and the resolver still emits only unique and text_candidates, with "`typeahead` stays in the `matchType` enum (additive_only)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: core.16
+
+---
+⏱  121901ms (121.9s)
+📊 Tokens — total: 60409, input: 34535, output: 25874, reasoning: 24330

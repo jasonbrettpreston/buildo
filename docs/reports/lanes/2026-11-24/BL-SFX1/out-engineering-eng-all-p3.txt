@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T15:59:39.642Z file_sha256=77da3b8605e86844f690cfc847c16ef491778b9520053c4b85b0219848176f21 prompt_sha256=9e5b4adf30e11fcfdf8750dbf6a38d09ed74a41cf864682c16dea61639182bec
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:108 "The doc-2 G.1 and A.3 notes keep \"unique goes straight to the report\" true for an exact match only." — the new note itself names doc-2 G.1/A.3 as amended, and the material's eight paths carry no doc-2 and no task-69 note, so the same-commit half of the rule is unmet as pasted — land the doc-2 G.1/A.3 and task-69 note edits in this commit, or cite the file:line where they already landed.
+
+DEFER severity=MED — 14. The Prevention Loop "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 "the admin tool calls the same `resolveAddress`, so the same amendment holds here (Standard §14) ... This amends clause (1) of the Spec 100 §3.2 dated note 2026-11-11" — the new Spec 89 to Spec 100 §3.2 coupling is recorded one way only (the Spec 100 note points at "Spec 89 line 33 dated note 2026-11-19", not this new note) and neither spec diff shows a Cross-Spec Dependencies row — add the reverse reference in the Spec 100 §3.2 note and the both-directions Cross-Spec Dependencies entries.
+
+DEFER severity=MED — 13.5 Feature Flags (PostHog Flags) "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — src/lib/admin/parcel-lookup.ts:400 "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — this reroutes every paying subscriber's search from opening a lot to a list at 100% with no route-level flag and no 0/10/25/50/100 gate — put the new resolution behind a flag at the lookup route or record the operator ruling that this fix ships unflagged.
+
+DEFER severity=LOW — 14. The Prevention Loop "Every source/test file's SPEC LINK points at the spec AND the section (§N)" — src/tests/parcel-lookup-resolution.logic.test.ts:72 "SEARCHFIX.1 (task-449; RR-0442 \"It should open on an exact match\", RR-0443 c \"they need to select from the available addresses that are close\")" — the new locks cite rulings only, no spec and no section for the behaviour they pin — add "Spec 100 §3.2 / Spec 89 dated note 2026-11-24" to the new blocks' headers.
+
+MET — 13.3 Backend Structured Logging "All catch blocks use logError(tag, err, context). NEVER bare console.error." — src/lib/admin/parcel-lookup.ts (new typedText / typedStreetType / likePrefix / letter and dash fallback) — the change adds no try/catch and no console call, so the logging rule is not engaged.
+MET — 13.1 Product Telemetry "All event capture goes through `src/lib/observability/capture.ts`" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "analytics": [] — no captureEvent call is added and the descriptor keeps analytics empty, and the added addresses live in test fixtures, not event properties.
+MET — 14. The Prevention Loop "every `SELECT` feeding a typed client includes every field the client type declares" — src/lib/admin/parcel-lookup.ts "SELECT parcel_id, ${displayAddress} AS address" typed `{ parcel_id: string; address: string }` — the projection carries every field the declared type holds.
+
+REJECT — 13.4 Performance Monitoring (Lighthouse CI) — the raw-first re-run and the up-to-two fallback exact reads could push the page past the LCP/TBT budgets — the budgets are measured by Lighthouse CI on the web pages and this diff touches no page route.
+REJECT — 13.2 Error Tracking (Sentry) — no error boundary reports the new resolution paths — the diff touches no app/[...]/error.tsx file, so the captureException wiring rule is not engaged.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  140601ms (140.6s)
+📊 Tokens — total: 47021, input: 30267, output: 16754, reasoning: 15740

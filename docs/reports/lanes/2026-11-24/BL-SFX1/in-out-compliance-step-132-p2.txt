@@ -1,0 +1,904 @@
+LIST step-132 sha256:afb955a72e76268120ff7d24fd0ec2e372a5aa8e0d4fb0c4ea09227cec4141c2 material sha256:fca1e1fa62bcd3c1dad6b994eb6f31d5a40a92113dac0de1bb6fecd2a100a581 part 2 of 3 chunk 1 of 1
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 2 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
+
+## 4. Cross-cutting
+
+### Lifecycle stages
+
+How a step moves from legacy script to converted.
+
+- **x-stages.1** A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.
+  *Why:* Progress is visible and a half-built step is graded for what it is.
+  Rules: `R-K` `R-K.1` `R-DU` `R-EF` `R-K.2` · history: `M5` (SPEC121-M5)
+
+- **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
+  *Why:* A downstream step never runs on a converted shell before its producer.
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
+
+- **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
+  *Why:* There is nothing older to compare against.
+  Rules: `R-DK` · history: `R-CS`
+
+- **x-stages.4** A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.
+  *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
+  Rules: `R-AF` `R-AN` `R-BB` `R-BE`
+
+### Captures, goldens and proof
+
+How a conversion proves it changed nothing it did not mean to.
+
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+  *Why:* A capture nobody can retake proves nothing.
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
+
+- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
+  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
+
+- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
+  *Why:* A commit message saying "diff is fine" is not evidence.
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
+
+- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
+  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
+  Rules: `R-EL`
+
+- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
+  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
+  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
+
+### Cross-step order
+
+How steps that share tables are ordered and checked.
+
+- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
+  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
+  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
+
+### step-validate and the scorecard
+
+The one command that grades a step.
+
+- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
+  *Why:* One integrated answer, the same at the desk and in the hook.
+  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
+
+- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
+  *Why:* The assessment is graded by machine, the same for every step.
+  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
+
+### The V3 label
+
+What `standard=V3` means and how it is enforced.
+
+- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
+  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
+  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
+
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
+
+### Rulings protocol and the resolution ladder
+
+What to do when the standard does not answer your question.
+
+- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
+  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
+  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
+
+- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
+  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
+  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
+
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
+
+### Verification before integration and acceptance
+
+What must be independently checked before work lands.
+
+- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
+  *Why:* Self-reported results are not evidence; an independent re-check is.
+  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
+
+- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
+  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
+  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
+
+### Tooling, hooks and commit form
+
+How the repo machinery runs.
+
+- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
+  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
+
+- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
+  *Why:* Ceremony is spent where an archetype is still new.
+  Rules: `R-PACE-1` `R-AH`
+
+- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
+  *Why:* Promises that live only in prose get forgotten.
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
+
+- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
+  *Why:* Spec 120's test, kept from Spec 121 M2.
+  Rules: history: `M2` (SPEC121-M2)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md b/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+index dca78e306db7963600cabde310d720474c08fd7f..d94b49b027251271fade942bd64c792f0e29e68f 100644
+--- a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
++++ b/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+@@ -32,6 +32,7 @@ Exactly one of `q` / `parcelId` (400 otherwise). `verifyAdminAuth` first line; `
+ **Resolution (`q` path):**
+ 1. Parse with `@/lib/parcels/address` (`normalizeAddressNumber` + `parseLinearName` — the EXISTING TS mirror of `scripts/lib/address-normalizers.js`; the two files carry cross-reference comments and a parity test pins them. Two deliberate rules are preserved, not fixed: *first-street-type-token-wins* and *trailing-directional-strip* — established JOIN-key behaviors).
+    > Dated note 2026-11-19 (M-246, prior text kept; task-69 · 1.4 Search parser · Increment 1·B, elements A.4 and A.5; operator, verbatim: "ONE-12 a" (RR-0166, 2026-11-18, MORNING-DECISIONS.md:738)): the two deliberate rules above are still preserved and the JOIN key is unchanged (`normalizeAddressNumber`, `parseLinearName` and the parity test are not edited). `resolveAddress` adds two steps outside the key. (A.5) A trailing unit token (`Unit n`, `Unit #n`, `Apt n`, `Apartment n`, `Suite n`, `Ste n`, `#n`) is stripped before the parse, only while a house number and a street remain. (A.4) The street direction the user typed (E, W, N, S, East ...) is a guard AFTER the match: on the rows the existing exact and typeahead reads already return (no new query), when every row prints a direction and some match the typed one, only those rows are kept. Label 1: a one-lot hit that prints a different direction is answered as the address list (`text_candidates`, the lot still listed) instead of `unique`; the five `resolution` values are unchanged. Label 2: the unit text the consumer route shows ("add a unit number") is ruled and stays; the strip makes the resolver ignore the unit, which is not used to narrow. No direction typed: today's result exactly. This tool's call and the fields it reads (`match`, `candidates`, `truncated`) are unchanged.
++   > Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449 · Increment 1·B; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276`) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, `:2284`); fold RR-0444 (2a), `:2290`): the admin tool calls the same `resolveAddress`, so the same amendment holds here (Standard §14): a lot opens (`unique`) only on an exact match. This amends clause (1) of the Spec 100 §3.2 dated note 2026-11-11 ("one row is `unique`") and the 2026-09-16 rule that note quotes: a one-row typeahead is `unique` only when it is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts); `typeahead` stays in the `matchType` enum (additive_only) and is still emitted for that case. Now `text_candidates` (the lots listed, none opened): a partial address ("2760 Yon"), a street with no number, a one-row leftover that is not the typed address in full, a street type or direction that differs from the one typed (one exact row printed `383 Elm Rd` for a typed `383 Elm St`), and the dash and letter forms. A full correct address whose number is shared by another street type ("32 Fulham Dr" beside "32 Fulham St") opens: the exact rows are narrowed by the typed street type the way they are by the direction, never to an empty set, and not when any row prints no type. A 10-row typeahead window is not narrowed by direction (it may be cut short), so "Gerrard St W" is the list. The unit rule, once: a unit marked by a word or `#` (trailing, or leading as in "Unit 4, 123 Yonge St") is dropped and the address opens when it is exact (RR-0166, "ONE-12 a"); a bare dash form ("2760-4", "4-2760") carries no unit word, so on a miss it lists the lots at both numbers, and that list mixes both, so picking is expected and the printed address is the guide; a letter suffix with no lot ("2760A") lists the lots at the bare number. A period ("St.") is read as a space, after the text is first tried with its periods kept (a stored street key holds one). A typed `%` or `_` is escaped in the prefix reads. No `resolution` value is added and the report meter is untouched. The doc-2 G.1 and A.3 notes keep "unique goes straight to the report" true for an exact match only. Locks: `src/tests/search-parser-guard.logic.test.ts` (SEARCHFIX.1), `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` (T6-T8). The JOIN key, `normalizeAddressNumber`, `parseLinearName` and the parity test are unchanged (address.ts is not edited); `resolveAddress` gains an optional third argument `keepPeriods`, which the admin route does not pass.
+ 2. Exact match: `parcels(addr_num_normalized, street_name_normalized)` via `idx_parcels_address`.
+ 3. Miss/multi → typeahead on `address_points` **normalized columns** (prefix match on `addr_num_normalized` + `linear_name_normalized` — both btree-indexed; `address_full` is NOT indexed and MUST NOT be the filter) with the **production-correct status filter**:
+    `(address_status IS NULL OR UPPER(address_status) IN ('CURRENT','NONE')) AND UPPER(maint_stage) = 'REGULAR'`
+diff --git a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+index 2679ba34fc0b6fbd0852f75aa19319b8550cffc4..233f97202a9d23f72160cdb84af1f52a6469e06e 100644
+--- a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
++++ b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+@@ -105,6 +105,7 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+ > Dated note 2026-11-12 (M-246, prior text kept; MB-94 part (a) · McBylaws queue · engine-inputs lane; Spec 135 FE-38 (EI-D1); 69a M-367 dated note 2026-11-12 (R-1); operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §3.3, §4e, §8 R-1): **the legacy cost and legacy size values are no longer sent.** They are priced on the legacy Phase 1 sizes, which are wrong in both directions: −47 % to +75 % in area and −$896,440 to +$806,779 in cost on the golden 25 (plan §3.1). The server goes first, so apps already installed stop receiving them. Until MF-48 Stage B, this note **suspends**: §2 item 2's Tier 1 (the 13-line cost menu, the 12 cost scalars and the envelope / optimal-config headlines); §2 item 4 (the "maximum envelope" label); §4 sections 1 and 2 (the envelope headlines and the cost-menu cards); and these §3.2 entries:
+ > Dated note 2026-11-19 (M-246, prior text kept; task-333 SRCH.FUZZY · Increment 1·B; operator, verbatim: "we have resolved this issue of fuzzy matching with the permit pipeline - address spec - emply the same approach here - its for the exact same function", RR-0277, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1082`): on the consumer lookup miss only (exact, typeahead and unlinked returned nothing) with a house number typed, `resolveAddress` reads the permit pipeline address matcher (`normalize_address()` plus `levenshtein()` within the logic variable `enrich_heritage_address_levenshtein_threshold`, Spec 61 L13, the Part IV tiebreak predicate of the heritage enrichment step) on the same house number and returns up to 10 lots as `text_candidates` (the candidates page, B.1); no match stays `no_match`. No new response field, no copy change; the admin tool does not call it (option `matchMistyped`).
+ > Dated note 2026-11-19 (M-246, prior text kept; task-69 · 1.4 Search parser · Increment 1·B; operator, verbatim: "ONE-12 a" (RR-0166, 2026-11-18)): on the match-type rule of 2026-09-16 (five `resolution` values unchanged): a one-lot hit whose printed street direction differs from the direction the user typed (`100 Queen St W` against one lot printed `100 Queen St E`) is `text_candidates` (the lot in the list), no longer `unique`; with no direction typed, or a row that prints none, the outcome is today's. A trailing unit token typed after the address is stripped before the parse and is not used to narrow; the ruled "add a unit number" text is unchanged (see Spec 89 line 33 dated note 2026-11-19).
++> Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449 · Increment 1·B; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276`) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, `:2284`); fold RR-0444 (2a), `:2290`): a lot opens (`unique`) only on an exact match. This amends clause (1) of the 2026-11-11 note above ("one row is `unique`") and the 2026-09-16 rule it quotes: a one-row typeahead is `unique` only when it is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts); `typeahead` stays in the `matchType` enum (additive_only) and is still emitted for that case. Now `text_candidates` (the lots listed, none opened): a partial address ("2760 Yon"), a street with no number, a one-row leftover that is not the typed address in full, a street type or direction that differs from the one typed (one exact row printed `383 Elm Rd` for a typed `383 Elm St`), and the dash and letter forms. A full correct address whose number is shared by another street type ("32 Fulham Dr" beside "32 Fulham St") opens: the exact rows are narrowed by the typed street type the way they are by the direction, never to an empty set, and not when any row prints no type. A 10-row typeahead window is not narrowed by direction (it may be cut short), so "Gerrard St W" is the list. The unit rule, once: a unit marked by a word or `#` (trailing, or leading as in "Unit 4, 123 Yonge St") is dropped and the address opens when it is exact (RR-0166, "ONE-12 a"); a bare dash form ("2760-4", "4-2760") carries no unit word, so on a miss it lists the lots at both numbers, and that list mixes both, so picking is expected and the printed address is the guide; a letter suffix with no lot ("2760A") lists the lots at the bare number. A period ("St.") is read as a space, after the text is first tried with its periods kept (a stored street key holds one). A typed `%` or `_` is escaped in the prefix reads. No `resolution` value is added and the report meter is untouched. The doc-2 G.1 and A.3 notes keep "unique goes straight to the report" true for an exact match only. Locks: `src/tests/search-parser-guard.logic.test.ts` (SEARCHFIX.1), `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` (T6-T8).
+ > - `costMenu.menu` and `costMenu.scalars`: always `null` (the key shape is kept, so every installed app still parses and renders its existing null branch).
+ > - `areas`: `opt_aor_gfa_sqm`, `opt_aor_storeys`, `opt_coa_gfa_sqm`, `opt_coa_storeys`, `max_buildable_gfa_sqm`, `max_build_stories`, `max_build_fsi`, `coa_fsi` and `max_newbuild_coa_gfa_sqm` are sent as null: they are listed once in `CONSUMER_WITHHELD_LEGACY_COLS` (`src/lib/parcels/consumer-lookup.ts`). The keys stay in `CONSUMER_HEADLINE_COLS`, so installed apps and the report v2 declaration (`report-schema.mjs` RS-2) still parse, and an installed app shows "—". (Corrected in the EI-D1 code commit: the docs commit first said these keys leave the whitelist.)
+ >
+@@ -142,6 +143,7 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+ > Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74 · McFrontend queue · lane E; operator, verbatim: "Ball y" (2026-11-12, B-1..B-7) and "S1 a" (2026-11-12); earlier "you can get rid of the old report it serves no purpose" and "Q1 a Q2 i" (2026-11-11); record `~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md` ("Ball y" B-1..B-7; "S1 a"); plan `~/Buildo-scratch/mcfrontend/MF-48/plan-stageB.md`; stop record `~/Buildo-scratch/mcfrontend/MF-48/stageB-build-stop.md`): **`ParcelDetailScreen` is retired.** The route `parcel-tool/[parcelId].tsx` is the mount of the declared REPORT surface: `useParcelLookup(parcelId)` (same query key), then `ReportPageHost` (MF-48 Stage A) over the served `page`. States: a page shows the v21 page; a settled lookup with no page (every lot until MB-44, a miss, a dangling id) shows the approved miss text; pending with nothing cached shows loading; an error with nothing cached shows the error text and Retry ("Try again"); offline, the persisted query cache still shows a fetched page. Back goes back with history, else to the Lookup route (the MF-53 rule; navigation lock #3 closed). Items 1-5 above (the headlines, the cost cards, the neighbours summary, the examples and the reserved `SponsorSlot`) leave the screen; `SponsorSlot.tsx` is deleted (B-6) and the report's ad slots are the v21 page ad sections (MF-20). `parcelCostFormat.ts` stays: the report generators cite it. The S-001 report-field inventory rows are retired (Spec 69a M-69 dated note of this date).
+ 
+ > Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): `ParcelSearchScreen` is converted by MF-35 to the operator's search layout (Spec 117 §6.1 dated note 2026-11-10) on React Native Reusables, through the mobile surface binding. Kept: the 400 ms debounce; the Toronto check before the network; the routing by match type (`unique` opens the lot; `text_candidates` shows the address list on this screen; `multi_parcel`, `unlinked` and `intersection` open `disambiguate`, which MF-53 replaces); a visible state per failure class; the 10-candidate cap and its refine line. Changed, as ruled: the chips are the user's recent searches, kept on the phone (Spec 99 §3.4c) and saved only when a search opens a page; a candidate tap selects a radio card and SELECT opens that lot by the same route; no area line under the addresses (P35-D15 b); the "Report incorrect address match" link is added by MF-46 with its Help & Support page (P35-D18 a). The response contract and its whitelist (§3.2) do not change.
++> Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449 · MF-35 routing; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276`) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, `:2284`); fold RR-0444 (2a), `:2290`): "`unique` opens the lot" above stays true, and `unique` now means an exact match only: a partial address, a one-row leftover that is not the typed address in full, a street type or direction that differs, and the dash and letter forms come back as `text_candidates`, so the search page shows the address list. See the §3.2 dated note 2026-11-24.
+ 
+ > Dated note 2026-11-10 (M-246, prior text kept; MF-35 OUTPUT panel fold, APPROVE WITH FOLDS, `~/Buildo-scratch/mcfrontend/MF-35/panel-out/output-panel.md`; operator, verbatim: "MF-35 a"; pre-approved D-27, `~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`): correction to the note above: the API response and the whitelist of §3.2 do not change (a candidate already carries `parcelId` and `address`, :86). What changed is the CONTRACT descriptor that binds to them (`contract_parcels_lookup`, the binding standard of Spec 126 §11b.2 dated note 2026-11-10): its `field_whitelist` names `parcelId`, and its 429 class lists `fields: ["retryAfterSeconds"]` (the `Retry-After` header in seconds, read by the client).
+ 
+diff --git a/scripts/surfaces/_schema/census/contracts.json b/scripts/surfaces/_schema/census/contracts.json
+index 02f434ef2d66606728ed8f69913c7586bc0c7a7c..40cb97e86de697e45681792db815c4e41561dc5f 100644
+--- a/scripts/surfaces/_schema/census/contracts.json
++++ b/scripts/surfaces/_schema/census/contracts.json
+@@ -22000,7 +22000,7 @@
+     "status": "exists",
+     "docs": {
+       "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+-      "data_story": "It reads 9 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements`, `usage_events`, and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss.",
++      "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 80 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged.",
+       "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+     },
+     "evidence": {
+@@ -22034,8 +22034,8 @@
+       ],
+       "states": [
+         "hit: src/app/api/parcels/lookup/route.ts:101-106 (match + parcel payload); outcome label route.ts:112",
+-        "ambiguous: src/lib/admin/parcel-lookup.ts:180-186 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
+-        "miss: src/lib/admin/parcel-lookup.ts:163 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
++        "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
++        "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
+         "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
+         "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
+         "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
+@@ -22075,7 +22075,7 @@
+     },
+     "inputs": {
+       "answer": "app_outputs",
+-      "why": "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
++      "why": "It reads 7 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+       "evidence": [
+         "src/lib/admin/parcel-lookup.ts:194-205",
+         "scripts/load-address-points.js",
+@@ -22493,31 +22493,13 @@
+     },
+     "outputs": {
+       "answer": "contract_only",
+-      "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
++      "why": "This route IS the mutation contract: it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84) inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+       "evidence": [
+-        "src/lib/auth/get-user-context.ts:83-89",
+-        "docs/specs/00-architecture/00_system_map.md:80",
+-        "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+-        "src/lib/entitlements/index.ts:508-512"
++        "src/app/api/parcels/lookup/route.ts:102-114",
++        "src/lib/entitlements/index.ts:590-609"
+       ],
+       "contract_ref": [],
+       "tables": [
+-        {
+-          "table": "user_profiles",
+-          "columns": [
+-            "user_id",
+-            "trade_slug",
+-            "display_name"
+-          ],
+-          "producing_steps": "none",
+-          "chain_position": "n/a",
+-          "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+-          "evidence": [
+-            "src/lib/auth/get-user-context.ts:83-89",
+-            "docs/specs/00-architecture/00_system_map.md:80",
+-            "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+-          ]
+-        },
+         {
+           "table": "usage_events",
+           "columns": [
+@@ -22533,7 +22515,7 @@
+           "chain_position": "n/a",
+           "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+           "evidence": [
+-            "src/lib/entitlements/index.ts:508-512",
++            "src/lib/entitlements/index.ts:590-609",
+             "migrations/303_parcel_tool_entitlement_usage.sql"
+           ]
+         }
+@@ -22636,7 +22618,7 @@
+         "severity": "FAIL",
+         "blocking": false,
+         "when": "post",
+-        "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
++        "why": "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+       },
+       {
+         "id": "contract_parcels_lookup__schema_declared",
+@@ -22737,13 +22719,16 @@
+       ]
+     },
+     "emits": {
+-      "answer": "none",
+-      "why": "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
++      "answer": "ledger",
++      "why": "A parcel_tool hit whose report is produced writes one usage_events ledger row (event property_view) through openReport; nothing else is countable (no Sentry breadcrumb, no analytics capture).",
+       "evidence": [
+-        "src/app/api/parcels/lookup/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
++        "src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)",
++        "src/lib/entitlements/index.ts:590-609 (openReport: the row lock, the window count, the INSERT)"
+       ],
+       "analytics": [],
+-      "ledger_events": [],
++      "ledger_events": [
++        "property_view"
++      ],
+       "breadcrumbs": []
+     },
+     "offers": {
+@@ -22756,11 +22741,10 @@
+     },
+     "metering": {
+       "answer": "metered",
+-      "why": "Each new lot a parcel_tool holder opens in the billing month writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45, D-2..D-6 a). The transitional lead_gen arm is unmetered (deviation below).",
++      "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below).",
+       "evidence": [
+-        "src/app/api/parcels/lookup/route.ts:124 (the .strict() parse runs before the meter)",
+-        "src/app/api/parcels/lookup/route.ts:132-137 (openReport in withTransaction; limit_reached and not_entitled refusals)",
+-        "src/lib/entitlements/index.ts:494-514 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
++        "src/app/api/parcels/lookup/route.ts:102-114 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)",
++        "src/lib/entitlements/index.ts:590-609 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+         "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
+         "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
+       ],
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index dfdc7a4bed4e9256d59b71afaa3f73f420d8caf4..da5e8c91aef1b5cf8b8d6a81f8a61bff5992fffa 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -3,7 +3,7 @@
+   "status": "exists",
+   "docs": {
+     "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+-    "data_story": "It reads 9 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements`, `usage_events`, and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss.",
++    "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 80 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged.",
+     "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+   },
+   "evidence": {
+@@ -37,8 +37,8 @@
+     ],
+     "states": [
+       "hit: src/app/api/parcels/lookup/route.ts:101-106 (match + parcel payload); outcome label route.ts:112",
+-      "ambiguous: src/lib/admin/parcel-lookup.ts:180-186 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
+-      "miss: src/lib/admin/parcel-lookup.ts:163 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
++      "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
++      "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
+       "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
+       "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
+       "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
+@@ -78,7 +78,7 @@
+   },
+   "inputs": {
+     "answer": "app_outputs",
+-    "why": "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
++    "why": "It reads 7 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+     "evidence": [
+       "src/lib/admin/parcel-lookup.ts:194-205",
+       "scripts/load-address-points.js",
+@@ -496,31 +496,13 @@
+   },
+   "outputs": {
+     "answer": "contract_only",
+-    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
++    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84) inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+     "evidence": [
+-      "src/lib/auth/get-user-context.ts:83-89",
+-      "docs/specs/00-architecture/00_system_map.md:80",
+-      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+-      "src/lib/entitlements/index.ts:508-512"
++      "src/app/api/parcels/lookup/route.ts:102-114",
++      "src/lib/entitlements/index.ts:590-609"
+     ],
+     "contract_ref": [],
+     "tables": [
+-      {
+-        "table": "user_profiles",
+-        "columns": [
+-          "user_id",
+-          "trade_slug",
+-          "display_name"
+-        ],
+-        "producing_steps": "none",
+-        "chain_position": "n/a",
+-        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+-        "evidence": [
+-          "src/lib/auth/get-user-context.ts:83-89",
+-          "docs/specs/00-architecture/00_system_map.md:80",
+-          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+-        ]
+-      },
+       {
+         "table": "usage_events",
+         "columns": [
+@@ -536,7 +518,7 @@
+         "chain_position": "n/a",
+         "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+         "evidence": [
+-          "src/lib/entitlements/index.ts:508-512",
++          "src/lib/entitlements/index.ts:590-609",
+           "migrations/303_parcel_tool_entitlement_usage.sql"
+         ]
+       }
+@@ -639,7 +621,7 @@
+       "severity": "FAIL",
+       "blocking": false,
+       "when": "post",
+-      "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
++      "why": "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+     },
+     {
+       "id": "contract_parcels_lookup__schema_declared",
+@@ -740,13 +722,16 @@
+     ]
+   },
+   "emits": {
+-    "answer": "none",
+-    "why": "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
++    "answer": "ledger",
++    "why": "A parcel_tool hit whose report is produced writes one usage_events ledger row (event property_view) through openReport; nothing else is countable (no Sentry breadcrumb, no analytics capture).",
+     "evidence": [
+-      "src/app/api/parcels/lookup/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
++      "src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)",
++      "src/lib/entitlements/index.ts:590-609 (openReport: the row lock, the window count, the INSERT)"
+     ],
+     "analytics": [],
+-    "ledger_events": [],
++    "ledger_events": [
++      "property_view"
++    ],
+     "breadcrumbs": []
+   },
+   "offers": {
+@@ -759,11 +744,10 @@
+   },
+   "metering": {
+     "answer": "metered",
+-    "why": "Each new lot a parcel_tool holder opens in the billing month writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45, D-2..D-6 a). The transitional lead_gen arm is unmetered (deviation below).",
++    "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below).",
+     "evidence": [
+-      "src/app/api/parcels/lookup/route.ts:124 (the .strict() parse runs before the meter)",
+-      "src/app/api/parcels/lookup/route.ts:132-137 (openReport in withTransaction; limit_reached and not_entitled refusals)",
+-      "src/lib/entitlements/index.ts:494-514 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
++      "src/app/api/parcels/lookup/route.ts:102-114 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)",
++      "src/lib/entitlements/index.ts:590-609 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+       "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
+       "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
+     ],
+diff --git a/src/lib/admin/parcel-lookup.ts b/src/lib/admin/parcel-lookup.ts
+index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8bc9d86c2 100644
+--- a/src/lib/admin/parcel-lookup.ts
++++ b/src/lib/admin/parcel-lookup.ts
+@@ -173,16 +173,32 @@ function stripTrailingUnit(s: string): string {
+   const stripped = s.replace(UNIT_TAIL, '').trim();
+   if (stripped === s) return s;
+   const tokens = stripped.split(/\s+/);
+-  return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s;
++  return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s; // tokens.length >= 2 is tested first, so tokens[0] exists
++}
++
++/**
++ * SEARCHFIX.1 (task-449; fold plan A1; RR-0166 "ONE-12 a" for the unit rule): the typed text before the city cut. A period becomes a space ("St." reads
++ * as "St"), unless keepPeriods (the raw-first run of resolveAddress, for a stored key that holds a period). One LEADING closed-form unit ("Unit 4, 123
++ * Yonge St", "Apt 4B, 12 Elm St", "#4 2760 Yonge St") is dropped. The separator after the unit is required, so "Suite 12 Elm St" and "#12 Elm St" are
++ * untouched (a separator-free tail would backtrack inside the digits and read house number 2). Anchored, no nested quantifiers.
++ */
++const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;
++function typedText(q: string, keepPeriods: boolean): string {
++  return (keepPeriods ? q : q.replace(/\./g, ' ')).replace(UNIT_HEAD, '');
++}
++
++/** The cleaned typed address: typedText, the WF3 city cut (below) and the trailing-unit strip, in that order. */
++function typedBase(q: string, keepPeriods: boolean): string {
++  return stripTrailingUnit((typedText(q, keepPeriods).split(',')[0] ?? '').trim());
+ }
+ 
+ export type Compass = 'N' | 'S' | 'E' | 'W';
+ 
+ /** The trailing street direction of an address text as N/S/E/W (one mapper for the typed query and the returned rows), or null. */
+ function trailingCompass(text: string): Compass | null {
+-  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase();
++  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase(); // split always returns at least one element, so [0] exists
+   const m = base.match(/^(.*\S)\s+(NORTH|SOUTH|EAST|WEST|[NSEW])$/);
+-  return m ? (m[2]![0] as Compass) : null;
++  return m ? (m[2]![0] as Compass) : null; // group 2 is not optional, so a match always holds it
+ }
+ 
+ /**
+@@ -191,10 +207,54 @@ function trailingCompass(text: string): Compass | null {
+  * Null when no street name remains once the direction is removed ("100 W").
+  */
+ export function typedDirection(q: string): Compass | null {
+-  const d = trailingCompass(q);
++  const d = trailingCompass(typedText(q, false));
+   return d && parseFreeTextAddress(q).streetName ? d : null;
+ }
+ 
++/**
++ * SEARCHFIX.1 (task-449, A1): the street type the user typed (ST, AVE, DR ...), or '' when none is typed. Read by parseLinearName from the street
++ * part of the same cleaned base as parseFreeTextAddress, so a period, a unit or a city suffix never changes it. A guard AFTER the match, never part
++ * of the join key (address.ts is not edited).
++ */
++export function typedStreetType(q: string): string {
++  const base = typedBase(q, false);
++  const m = base.match(/^(\S+)\s+(.+)$/);
++  return parseLinearName(m && /\d/.test(m[1] ?? '') ? (m[2] ?? '') : base).street_type;
++}
++
++/**
++ * SEARCHFIX.1 (task-449, A1, AC #3): the street-type guard on rows the exact read already returned (no new query), the same shape as
++ * guardByDirection. The row type is read by parseLinearName from the whole printed address (a house number never matches the type list). Acts only
++ * when a type was typed AND every row prints one (a row that prints none proves nothing: unchanged, so a second parcel on the number is never
++ * hidden). Rows of the typed type only when any match; a ONE-row hit of another type is a proven conflict (the list, the lot still shown;
++ * RR-0442, RR-0443 c); otherwise unchanged. Never empties a non-empty set.
++ */
++function guardByType<T extends { address: string }>(rows: T[], typed: string): { rows: T[]; conflict: boolean } {
++  if (!typed || rows.length === 0) return { rows, conflict: false };
++  const types = rows.map((r) => parseLinearName(r.address).street_type);
++  if (types.some((t) => t === '')) return { rows, conflict: false };
++  const same = rows.filter((_, i) => types[i] === typed);
++  if (same.length > 0) return { rows: same, conflict: false };
++  return { rows, conflict: rows.length === 1 };
++}
++
++/**
++ * SEARCHFIX.1 (task-449; RR-0442 "It should open on an exact match"; RR-0443 c "they need to select from the available addresses that are close"):
++ * a printed address is the typed address in full when its first word, normalized, is the typed number, the street name parseLinearName reads from
++ * the rest equals the typed one, and its street type does not conflict. "2760 Yon" (YONGE), "14 Norwood" (NORWOOD TER) and a street with no number
++ * are not; "21 Langden Ave" printed "21 Langden Ave" is.
++ */
++function isTypedAddressInFull(printed: string, num: string, streetName: string, typedType: string): boolean {
++  const m = printed.trim().match(/^(\S+)\s+(.+)$/);
++  if (!num || !m) return false;
++  return normalizeAddressNumber(m[1]) === num && parseLinearName(m[2] ?? '').street_name === streetName && !guardByType([{ address: printed }], typedType).conflict;
++}
++
++/** SEARCHFIX.1 (task-449, G2 D1): a LIKE prefix with the typed wildcards escaped (Postgres's default LIKE escape is backslash; the SQL text is unchanged). */
++function likePrefix(s: string): string {
++  return s.replace(/[\\%_]/g, '\\$&') + '%';
++}
++
+ /**
+  * The direction guard on rows the existing match already returned (no new query). Acts only when a direction was typed AND every row carries an
+  * explicit direction (a row without one proves nothing: unchanged). Rows on the typed side only when any match; a ONE-row hit on another side is a
+@@ -222,16 +282,21 @@ function guardByDirection<T extends { address: string }>(rows: T[], typed: Compa
+  * legitimately contain a comma (Toronto's LINEAR_NAME_FULL / addr-point
+  * feeds are comma-free), so truncating at the first comma is safe.
+  */
+-export function parseFreeTextAddress(q: string): { num: string; streetName: string } {
+-  const withoutCitySuffix = stripTrailingUnit(q.split(',')[0]!.trim());
++export function parseFreeTextAddress(q: string, keepPeriods = false): { num: string; streetName: string } {
++  // SEARCHFIX.1 (task-449): typedText runs first (period, leading unit); the city cut and the trailing-unit strip then run on its result, as before.
++  const withoutCitySuffix = typedBase(q, keepPeriods);
+   const m = withoutCitySuffix.match(/^(\S+)\s+(.+)$/);
++  // groups 1 and 2 are not optional, so a match that succeeded holds both (the `!` on the next two lines)
+   if (m && /\d/.test(m[1]!)) {
+-    return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name };
++    return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name }; // see the comment above: group 2 exists
+   }
+   return { num: '', streetName: parseLinearName(withoutCitySuffix).street_name };
+ }
+ 
+-/** Label 1 (ONE-12 a): a one-lot hit whose printed direction differs from the typed one is answered as the address list (the lot still shown). */
++/**
++ * Label 1 (ONE-12 a): a one-lot hit whose printed direction differs from the typed one is answered as the address list (the lot still shown).
++ * SEARCHFIX.1 (task-449) reuses it for a street-type conflict, a one-row typeahead that is not the typed address in full, and the letter and dash list.
++ */
+ function conflictList(rows: { parcel_id: string; address: string }[]): Resolution {
+   return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
+ }
+@@ -243,26 +308,51 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
+  * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
+  * `opts.matchMistyped` (task-333 SRCH.FUZZY, the consumer route only): on that final miss, read the permit pipeline's address matcher (below).
+  */
+-export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {}): Promise<Resolution> {
+-  const { num, streetName } = parseFreeTextAddress(q);
++/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */
++function readExact(num: string, streetName: string): Promise<{ parcel_id: string; address: string }[]> {
++  return query<{ parcel_id: string; address: string }>(
++    `SELECT parcel_id, ${displayAddress} AS address
++       FROM parcels
++       WHERE addr_num_normalized = $1 AND street_name_normalized = $2
++       ORDER BY parcel_id LIMIT 11`,
++    [num, streetName],
++  );
++}
++
++/**
++ * SEARCHFIX.1 (task-449): `keepPeriods` (an argument, not an option) runs the reads on the street key with its periods kept. A query holding a period
++ * whose raw key differs from the stripped one is first run that way (exact, typeahead and unlinked reads only: no matcher, no fallback), and that
++ * result is returned unless it is no_match; only then does the stripped key run every step. Raw first, so a stored key with a period (". GASPAR CRT")
++ * opens as before, and the strip only adds hits ("St. Clair Ave W", stored without a period).
++ */
++export async function resolveAddress(
++  q: string,
++  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {},
++  keepPeriods = false,
++): Promise<Resolution> {
++  if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName) {
++    const raw = await resolveAddress(q, { ...opts, matchMistyped: false }, true);
++    if (raw.resolution !== 'no_match') return raw;
++  }
++  const { num, streetName } = parseFreeTextAddress(q, keepPeriods);
+   const typed = typedDirection(q);
++  const typedType = typedStreetType(q);
+   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
+ 
+   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
+   if (num) {
+-    let exact = await query<{ parcel_id: string; address: string }>(
+-      `SELECT parcel_id, ${displayAddress} AS address
+-       FROM parcels
+-       WHERE addr_num_normalized = $1 AND street_name_normalized = $2
+-       ORDER BY parcel_id LIMIT 11`,
+-      [num, streetName],
+-    );
++    let exact = await readExact(num, streetName);
+     const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
+     const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
+     if (exactG.conflict) return conflictList(exactG.rows);
+     exact = exactG.rows;
++    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; the same truncation rule as the direction guard.
++    const typeG = guardByType(exact, exactTruncated ? '' : typedType);
++    if (typeG.conflict) return conflictList(typeG.rows);
++    exact = typeG.rows;
+     if (exact.length === 1) {
+       return {
++        // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)
+         match: { parcelId: exact[0]!.parcel_id, matchType: 'exact', address: exact[0]!.address },
+         candidates: [],
+         resolution: 'unique',
+@@ -296,13 +386,20 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
+        AND UPPER(ap.maint_stage) = 'REGULAR'
+        AND ap.retired_at IS NULL
+      ORDER BY address LIMIT 10`,
+-    [streetName + '%', num || null],
++    [likePrefix(streetName), num || null],
+   );
+-  const typeaheadG = guardByDirection(typeahead, typed);
++  // SEARCHFIX.1 (ST1, AC #2): a window of 10 may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the typed
++  // side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's LIMIT 10.
++  const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);
+   if (typeaheadG.conflict) return conflictList(typeaheadG.rows);
+   typeahead = typeaheadG.rows;
+   if (typeahead.length === 1) {
++    // SEARCHFIX.1 (2a, AC #1; RR-0442 "It should open on an exact match"; RR-0443 c "they need to select from the available addresses that are
++    // close"): one leftover row opens only when it is the typed address in full (about 45,000 plain-number addresses are reached only this way);
++    // a prefix ("2760 Yon"), a street with no number and a narrowed leftover are the list. matchType stays 'typeahead' (additive_only enum).
++    if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);
+     return {
++      // typeahead.length === 1 was tested above, so typeahead[0] exists (both `!` on the next line)
+       match: { parcelId: typeahead[0]!.parcel_id, matchType: 'typeahead', address: typeahead[0]!.address },
+       candidates: [],
+       resolution: 'unique',
+@@ -314,7 +411,7 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
+   if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };
+ 
+   // 3) MF-53 unlinked (consumer only): live points with this number and NO lot link. Skipped for a street carrying a LIKE wildcard, so the
+-  //    new read never widens on % or _ (security L-1; the typeahead's own escape is a follow-up card).
++  //    new read never widens on % or _ (security L-1); the typeahead and this read also escape them (likePrefix, SEARCHFIX.1 D1, done).
+   if (opts.classifyUnlinked && num && !/[%_]/.test(streetName)) {
+     const unlinked = await query<{ address_point_id: number; address: string; latitude: unknown; longitude: unknown }>(
+       `SELECT ap.address_point_id, COALESCE(ap.address_full, TRIM(COALESCE(ap.address_number, '') || ' ' || COALESCE(ap.linear_name_full, ''))) AS address,
+@@ -327,10 +424,10 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
+          AND ap.retired_at IS NULL
+          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id)
+        ORDER BY address, ap.address_point_id LIMIT 11`,
+-      [streetName + '%', num],
++      [likePrefix(streetName), num],
+     );
+     if (unlinked.length > 0) {
+-      const first = unlinked[0]!;
++      const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists
+       const one = new Set(unlinked.map((u) => u.address)).size === 1;
+       const lat = first.latitude == null ? NaN : Number(first.latitude);
+       const lng = first.longitude == null ? NaN : Number(first.longitude);
+@@ -363,6 +460,17 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
+       return { match: null, candidates: near.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
+     }
+   }
++  // 5) SEARCHFIX.1 (A1, AC #4; RR-0443 c "select from the available addresses that are close"): a letter suffix with no lot ("2760A") or a dash
++  //    form ("2760-4", "4-2760": no unit word, so which side is the unit is unknown) reads the exact statement for each bare number (at most 2
++  //    reads) and lists what it finds; it never opens. On the full miss only, so every hit above is unchanged; not on the raw-first run.
++  const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));
++  if (bare) {
++    const nums = [...new Set(bare.slice(1).filter((n): n is string => Boolean(n)).map((n) => normalizeAddressNumber(n)))];
++    const seen = new Set<string>();
++    const rows: { parcel_id: string; address: string }[] = [];
++    for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
++    if (rows.length > 0) return conflictList(rows.slice(0, 10));
++  }
+   return { match: null, candidates, resolution: 'no_match', lotMap: null };
+ }
+ 
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..c766d3f2031b757ad23e04c83b7496b7d1dca82c 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+diff --git a/src/tests/parcel-lookup-resolution.logic.test.ts b/src/tests/parcel-lookup-resolution.logic.test.ts
+index 8b06c265f92f1ed4efb396a96d8f3e7674b45e8c..3a0f2829870e51e69611625f6eea4494eb61e9e5 100644
+--- a/src/tests/parcel-lookup-resolution.logic.test.ts
++++ b/src/tests/parcel-lookup-resolution.logic.test.ts
+@@ -68,6 +68,16 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+     expect(out.match?.matchType).toBe('typeahead');
+   });
+ 
++  // SEARCHFIX.1 (task-449; RR-0442 "It should open on an exact match", RR-0443 c "they need to select from the available addresses that are
++  // close"): the one row above opens because it is the typed address in full; a row the typed text is only a prefix of is the list.
++  it('typeahead, 1 row that is NOT the typed address in full -> text_candidates, never unique', async () => {
++    rows([], [r('P9', '7 Oakwood Ave')]);
++    const out = await resolveAddress('7 Oak');
++    expect(out.resolution).toBe('text_candidates');
++    expect(out.match).toBeNull();
++    expect(out.candidates).toEqual([{ parcelId: 'P9', address: '7 Oakwood Ave' }]);
++  });
++
+   it('typeahead, 2+ rows printing one address with a house number -> multi_parcel', async () => {
+     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
+     const out = await resolveAddress('7 Oak');
+diff --git a/src/tests/search-parser-guard.logic.test.ts b/src/tests/search-parser-guard.logic.test.ts
+index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d21c7e8cb 100644
+--- a/src/tests/search-parser-guard.logic.test.ts
++++ b/src/tests/search-parser-guard.logic.test.ts
+@@ -32,6 +32,10 @@ vi.mock('@/lib/db/client', () => ({
+ vi.mock('@/lib/logger', () => ({ logInfo: vi.fn(), logWarn: vi.fn(), logError: vi.fn() }));
+ 
+ import { resolveAddress, parseFreeTextAddress, typedDirection } from '@/lib/admin/parcel-lookup';
++// D6 proof (task-449 plan open choice 4 a): the pure checker of the engineering standards §2.3 test; importing that module registers its suites here too.
++import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
+ 
+ const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
+ const E = { parcel_id: 'E1', address: '100 Queen St E' };
+@@ -225,3 +229,140 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+     expect(out.candidates).toEqual([]);
+   });
+ });
++
++// SEARCHFIX.1 (task-449; fold plan docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md task 1 with amendment A1). The rule, operator verbatim:
++//   RR-0442 (MORNING-DECISIONS.md:2276): "It should open on an exact match and we have a different process for address mistakes"
++//   RR-0443 c (:2284): "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close"
++// A lot opens (`unique`) only on an exact match: the exact read, or a one-row typeahead that is the typed address in full. Every other
++// one-row leftover is the list. The fixtures are the rows the typed-address seat recorded on the local test stack
++// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); where the seat recorded fewer rows than the window holds, the
++// extra rows are placeholders and say so.
++describe('SEARCHFIX.1 exact opens, the rest lists', () => {
++  const row = (parcel_id: string, address: string) => ({ parcel_id, address });
++  /** The first 10 typeahead rows for "Gerrard St" (no number), sorted by printed address, read on the local test stack (the window repeats two ids). */
++  const GERRARD = [
++    row('5440777', '1 Gerrard St W'), row('10640216', '1000 Gerrard St E'), row('5402856', '1001 Gerrard St E'), row('5402735', '1005 Gerrard St E'),
++    row('5402655', '1007 Gerrard St E'), row('5436541', '101 Gerrard St E'), row('10640216', '1010 Gerrard St E'), row('5402535', '1011 Gerrard St E'),
++    row('5400679', '1012 Gerrard St E'), row('5400679', '1014 Gerrard St E'),
++  ];
++
++  it('T1 (ST1): "Gerrard St W" with a full 10-row window is the list of 10, not the one W row', async () => {
++    state.typeahead = GERRARD;
++    const out = await resolveAddress('Gerrard St W', opts);
++    expect(out.resolution).toBe('text_candidates');
++    expect(out.match).toBeNull();
++    expect(out.candidates).toHaveLength(10);
++  });
++
++  it('T1 boundary: the same window cut to 9 rows narrows to the W row, shown as a list of one (no number typed, so it never opens)', async () => {
++    state.typeahead = GERRARD.slice(0, 9);
++    const out = await resolveAddress('Gerrard St W', opts);
++    expect(out.resolution).toBe('text_candidates');
++    expect(out.match).toBeNull();
++    expect(out.candidates).toEqual([{ parcelId: '5440777', address: '1 Gerrard St W' }]);
++  });
++
++  it('T2 (2a): a partial address that leaves one typeahead row is the list, never unique ("100 Que")', async () => {
++    state.typeahead = [W];
++    const out = await resolveAddress('100 Que', opts);
++    expect(out.resolution).toBe('text_candidates');
++    expect(out.match).toBeNull();
++    expect(out.candidates).toEqual([{ parcelId: 'W1', address: '100 Queen St W' }]);
++  });
++
++  const typeaheadPrefix = (): unknown => dbQuery.mock.calls.find((c) => /FROM address_points ap\s+JOIN parcel_address_points/.test(String(c[0])))?.[1]?.[0];
++  it('T3 (D1): a typed % is escaped in the typeahead prefix', async () => {
++    await resolveAddress('100 %', opts);
++    expect(typeaheadPrefix()).toBe('\\%%');
++  });
++  it('T3 (D1): a typed _ is escaped in the typeahead prefix', async () => {
++    await resolveAddress('12 Ma_n St', opts);
++    expect(typeaheadPrefix()).toBe('MA\\_N%');
++  });
++
++  it('T4 (D6): every non-null assertion in parcel-lookup.ts carries a why-comment on its line or the line above', () => {
++    const rel = 'src/lib/admin/parcel-lookup.ts';
++    expect(findUndocumentedBangs(rel, readFileSync(join(process.cwd(), rel), 'utf8'))).toEqual([]);
++  });
++
++  type Case = {
++    q: string;
++    exact?: Record<string, Row[]>;
++    typeahead?: Row[];
++    fuzzy?: Row[];
++    unlinked?: Row[];
++    resolution: string;
++    match?: string | null; // the opened parcel id, or null
++    candidates?: string[]; // the listed parcel ids, in order
++    count?: number; // the number of listed rows, when the ids are not all recorded
++  };
++  const Q679 = { '679|QUEEN': [row('5476455', '679 Queen St W')] };
++  const Q100 = { '100|QUEEN': [row('5456212', '100 Queen St W')] };
++  const GLEN = { '6|GLENADEN': [row('5484745', '6 Glenaden Ave E'), row('5485663', '6 Glenaden Ave W')] };
++  const Y123 = [row('5179889', '123 Yonge Blvd'), row('5464983', '123 Yonge St')];
++  const Y2760 = [row('5229356', '2760 Yonge St')];
++  const CLAIR = { '2750|CLAIR AVE': [row('5260587', '2750 St Clair Ave E')] };
++  const ELM12 = [
++    row('5492668', '12 Elm Grove Ave'), row('5264433', '12 Elm Ridge Dr'), row('5510910', '12 Elma St'), row('5017163', '12 Elmartin Dr'),
++    // placeholders: the seat recorded the first four of the ten rows only
++    row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St'),
++  ];
++  const cases: [string, Case][] = [
++    ['1 679 Queen St W', { q: '679 Queen St W', exact: Q679, resolution: 'unique', match: '5476455' }],
++    ['2 679 queen street west', { q: '679 queen street west', exact: Q679, resolution: 'unique', match: '5476455' }],
++    ['3 679  QUEEN  ST  W', { q: '679  QUEEN  ST  W', exact: Q679, resolution: 'unique', match: '5476455' }],
++    ['4 679 Queen', { q: '679 Queen', exact: Q679, resolution: 'unique', match: '5476455' }],
++    ['5 679 Queen St E', { q: '679 Queen St E', exact: Q679, resolution: 'text_candidates', match: null, candidates: ['5476455'] }],
++    ['6 100 Queen St E', { q: '100 Queen St E', exact: Q100, resolution: 'text_candidates', match: null, candidates: ['5456212'] }],
++    ['7 100 Queen St W', { q: '100 Queen St W', exact: Q100, resolution: 'unique', match: '5456212' }],
++    ['8 6 Glenaden Ave', { q: '6 Glenaden Ave', exact: GLEN, resolution: 'text_candidates', match: null, candidates: ['5484745', '5485663'] }],
++    ['9 6 Glenaden Ave E', { q: '6 Glenaden Ave E', exact: GLEN, resolution: 'unique', match: '5484745' }],
++    ['10 32 Fulham Dr', { q: '32 Fulham Dr', exact: { '32|FULHAM': [row('5067128', '32 Fulham St'), row('5514141', '32 Fulham Dr')] }, resolution: 'unique', match: '5514141' }],
++    ['11 123 Yonge St', { q: '123 Yonge St', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
++    ['12 2760 Yon', { q: '2760 Yon', typeahead: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
++    ['13 14 Norwood', { q: '14 Norwood', typeahead: [row('5334051', '14 Norwood Ter')], resolution: 'text_candidates', match: null, candidates: ['5334051'] }],
++    ['14 383 El', { q: '383 El', typeahead: [row('5106944', '383 Ellerslie Ave'), row('5461541', '383 Ellis Park Rd'), row('5191692', '383 Elm Rd')], resolution: 'text_candidates', match: null, candidates: ['5106944', '5461541', '5191692'] }],
++    ['15 12 Elm', { q: '12 Elm', typeahead: ELM12, resolution: 'text_candidates', match: null, count: 10 }],
++    ['16 Gerrard St W', { q: 'Gerrard St W', typeahead: GERRARD, resolution: 'text_candidates', match: null, count: 10 }],
++    ['17 Gerrard St', { q: 'Gerrard St', typeahead: GERRARD, resolution: 'text_candidates', match: null, count: 10 }],
++    ['18 123 Yongee St', { q: '123 Yongee St', fuzzy: Y123, resolution: 'text_candidates', match: null, candidates: ['5179889', '5464983'] }],
++    ['19 2760 Yongee St', { q: '2760 Yongee St', fuzzy: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
++    ['20 78 Robert St', { q: '78 Robert St', exact: { '78|ROBERT': [row('5259138', '78 Robert St'), row('5438421', '78 Robert St')] }, resolution: 'multi_parcel', match: null, candidates: ['5259138', '5438421'] }],
++    // case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given
++    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 1, address: '2 Lake Cres', latitude: '43.6', longitude: '-79.5' }], resolution: 'unlinked', match: null }],
++    ['22 2750 St Clair Ave W', { q: '2750 St Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
++    ['23 King and Bay', { q: 'King and Bay', resolution: 'no_match', match: null, candidates: [] }],
++    ['25 123 Main St Mississauga', { q: '123 Main St Mississauga', resolution: 'no_match', match: null, candidates: [] }],
++    ['26 2760 Yonge St Unit 4', { q: '2760 Yonge St Unit 4', exact: { '2760|YONGE': Y2760 }, resolution: 'unique', match: '5229356' }],
++    ['27a Unit 4, 123 Yonge St', { q: 'Unit 4, 123 Yonge St', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
++    ['27b 2760-4 Yonge St', { q: '2760-4 Yonge St', exact: { '2760|YONGE': Y2760 }, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
++    ['27c 2760A Yonge St', { q: '2760A Yonge St', exact: { '2760|YONGE': Y2760 }, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
++    ['28 14 Norwood Ter', { q: '14 Norwood Ter', exact: { '14|NORWOOD TER': [row('5334051', '14 Norwood Ter')] }, resolution: 'unique', match: '5334051' }],
++    ['extra 2e 679 Queen St. W', { q: '679 Queen St. W', exact: Q679, resolution: 'unique', match: '5476455' }],
++    ['extra 2750 St. Clair Ave W', { q: '2750 St. Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
++    ['extra 383 Elm St, one exact row printed Elm Rd', { q: '383 Elm St', exact: { '383|ELM': [row('5191692', '383 Elm Rd')] }, resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
++    ['extra 5 Elm St, a row with no printed type stops the narrowing', { q: '5 Elm St', exact: { '5|ELM': [row('P1', '5 Elm St'), row('P2', '')] }, resolution: 'text_candidates', match: null, candidates: ['P1', 'P2'] }],
++    ['extra 123 Yonge St, Toronto ON', { q: '123 Yonge St, Toronto ON', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
++    ['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }],
++    ['extra 7 Oak, one typeahead row printed 7 Oakwood Ave', { q: '7 Oak', typeahead: [row('O1', '7 Oakwood Ave')], resolution: 'text_candidates', match: null, candidates: ['O1'] }],
++    ['extra 383 Elm St, one typeahead row printed 383 Elm Rd', { q: '383 Elm St', typeahead: [row('5191692', '383 Elm Rd')], resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
++    ['extra 21 St. Gaspar Crt, a stored key with a period', { q: '21 St. Gaspar Crt', exact: { '21|. GASPAR CRT': [row('G1', '21 St. Gaspar Crt')] }, resolution: 'unique', match: 'G1' }],
++  ];
++  it.each(cases)('T5 (AC #6) case %s', async (_n, c) => {
++    state.exact = c.exact ?? {};
++    state.typeahead = c.typeahead ?? [];
++    state.fuzzy = c.fuzzy ?? [];
++    state.unlinked = c.unlinked ?? [];
++    const out = await resolveAddress(c.q, opts);
++    expect(out.resolution).toBe(c.resolution);
++    if (c.match !== undefined) expect(out.match?.parcelId ?? null).toBe(c.match);
++    if (c.candidates) expect(out.candidates.map((x) => x.parcelId)).toEqual(c.candidates);
++    if (c.count !== undefined) expect(out.candidates).toHaveLength(c.count);
++    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } });
++  });
++
++  it.each([['Suite 12 Elm St'], ['#12 Elm St']])('T5 extra: %s never parses to house number 2 (the leading-unit strip needs a separator)', (q) => {
++    expect(parseFreeTextAddress(q).num).not.toBe('2');
++  });
++  // Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written.
++});
+

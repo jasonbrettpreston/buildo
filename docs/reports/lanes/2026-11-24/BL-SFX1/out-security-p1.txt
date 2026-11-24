@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T15:59:39.649Z file_sha256=4691302247bbc1b60fe3c3867cdb084b6a5a6045bffee5707fab82395b1b9852 prompt_sha256=f82c9f6656a280dcca8a702946908dfcf249eb8fa031aa749dbc2de6c606e8a1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-security-p1.txt (model: deepseek-reasoner)
+
+Touches: admin (the admin parcel-lookup tool), entitlements and money (the report meter / usage_events docs), PII (property address strings returned to clients).
+
+REJECT — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "an explicit pick-by-name projection of the 80 names in inputs.field_whitelist" — looks like the response jumps from 24 to 80 fields, so a new PII column could be entering the client projection — this diff edits only the prose counts; the field_whitelist array and the projection code (route.ts:85-90, route.ts:101-106, consumer-lookup.ts:139-157 cited as unchanged) are not touched, and T7 set-equals the stated count to `d.inputs.field_whitelist.length`, so no field ships that was not already shipping.
+
+REJECT — contract_parcels_lookup.descriptor.json metering "why" "A parcel_tool hit counts one report only when its `page` is produced" — looks like a route to read the paid report unmetered (get the lot listed, then open it) — a `text_candidates` result carries no `page` (catalogued as `not_produced`, no charge), and the follow-up open by parcelId still runs `openReport` at route.ts:102-114, which this diff does not modify.
+
+REJECT — src/lib/admin/parcel-lookup.ts:461 "return s.replace(/[\\%_]/g, '\\$&') + '%';" — looks like a typed `%` or `_` still reaches a LIKE and widens the read to unrelated lots — the pattern is a bind parameter (`[likePrefix(streetName), num]`), Postgres LIKE's default escape is backslash so `\%` and `\_` match literally, and this change is what closes the previously unescaped typeahead prefix.
+
+REJECT — src/lib/admin/parcel-lookup.ts:302 "return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };" — looks like IDOR/enumeration: a caller can harvest parcel ids and addresses by walking prefixes — the rows are Toronto address points and parcel ids (public record), the list is capped at 10 per read, and both mounts sit behind `verifyAdminAuth` (admin) and the 401/403 subscription checks at route.ts:54, route.ts:59, unchanged here.
+
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts:333 "if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName) {" — every period-bearing query whose parsed street name changes runs a second full pass (exact, typeahead, unlinked), so an authenticated caller doubles that search's DB reads — bounded at 2x per request (the raw run passes keepPeriods=true so there is no recursion loop) and the route's rate bucket is unchanged, so only extra load on the search path.
+
+VERDICT: PASS on exploitability
+Surfaces touched: admin, entitlements, money, PII
+
+---
+⏱  44508ms (44.5s)
+📊 Tokens — total: 37459, input: 28761, output: 8698, reasoning: 7990

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.572Z file_sha256=d4ea8409bd4df3bd967205a2fead787df6643f550afb68d0fc520baf6b4f7e5c prompt_sha256=7f0fd82589e297fe213bb8126da998389dd4a1f9ff005c3404002cf46e487c31
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 89 note 2026-11-19 (A.4) "on the rows the existing exact and typeahead reads already return (no new query), when every row prints a direction and some match the typed one, only those rows are kept" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — the typeahead direction guard is now skipped on a full window, and the 2026-11-24 note states that new rule without naming the A.4 sentence (nor the ONE-12 a sentence "with no direction typed, or a row that prints none, the outcome is today's") as amended, so the spec carries two live rules — add an explicit amendment clause for the A.4 window rule and the ONE-12 a "today's" sentence to the 2026-11-24 note.
+
+DEFER severity=LOW — Spec 89 note 2026-11-24 "a bare dash form ("2760-4", "4-2760") carries no unit word, so on a miss it lists the lots at both numbers, and that list mixes both, so picking is expected" — src/lib/admin/parcel-lookup.ts "if (rows.length > 0) return conflictList(rows.slice(0, 10));" — the fallback dedupes by parcel_id and caps the list at 10 rows, neither of which the note names, so a number with more than 10 lots loses rows the note says are listed — state the cap and the dedupe in the dated note, or drop the slice.
+
+DEFER severity=LOW — Card AC "#6 The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// placeholders: the seat recorded the first four of the ten rows only" — six of case 15's ten rows and case 21's pin are fabricated, so AC #6 is met in shape only for those two cases — re-read the seat record on the test stack and paste the missing rows, or mark cases 15 and 21 unverified in the seat record.
+
+DEFER severity=LOW — Card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — Implementation Notes "Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)." — the doc-2 G.1/A.3 rows and the task-69 note are satisfied only by that prose, no doc-2 file or task-69 note appears anywhere in the material — paste the doc-2 objective rows and the task-69 note (or their CLI output) so they can be checked.
+
+MET — RR-0442 "It should open on an exact match" — src/lib/admin/parcel-lookup.ts "if (exact.length === 1) {" — the exact read opens unconditionally and the typeahead row opens only when isTypedAddressInFull passes.
+MET — RR-0443 c "Similar to an address mistake they need to select from the available addresses that are close" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a partial or leftover one-row typeahead now returns the address list.
+MET — Spec 100 note 2026-11-24 "A typed `%` or `_` is escaped in the prefix reads." — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — both prefix reads go through likePrefix.
+MET — Card "Must not: add a new resolution value, or touch the report meter in the lookup route." — src/lib/admin/parcel-lookup.ts "function conflictList(rows: { parcel_id: string; address: string }[]): Resolution {" — every new list outcome reuses text_candidates and the lookup route is outside the diff.
+MET — Spec 99 §3.4c "add(query) from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page)" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "\"`unique` opens the lot\" above stays true, and `unique` now means an exact match only" — routing keeps unique-opens-lot and the recent-search row, its cap, its readers and its B5 reset are untouched.
+
+REJECT — RR-0442 "if its a semi potentially - you need to state that?" — that this change does not state the semi question — the pasted descriptor text assigns the held page and the semi key to task-360 and task-319, so no pasted clause assigns that statement to task-449.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+Rules met: none
+
+---
+⏱  132937ms (132.9s)
+📊 Tokens — total: 60299, input: 32646, output: 27653, reasoning: 26503
