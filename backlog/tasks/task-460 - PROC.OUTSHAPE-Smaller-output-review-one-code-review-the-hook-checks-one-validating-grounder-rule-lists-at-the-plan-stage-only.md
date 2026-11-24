@@ -3,7 +3,7 @@ id: TASK-460
 title: >-
   PROC.OUTSHAPE Smaller output review: one code review, the hook checks, one
   validating grounder; rule lists at the plan stage only
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
@@ -47,12 +47,12 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused
-- [ ] #2 The output lens set of a build or fix task is the code review alone for every Files line (unless the operator keeps the security lens at output, plan Q7: then security joins it where the Files line triggers it); the plan lens set is unchanged
-- [ ] #3 A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files (and no security file unless Q7 keeps it); emptying output_off puts every list back
-- [ ] #4 A check or doc task still gets every list at either stage
-- [ ] #5 The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output
-- [ ] #6 The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green
+- [x] #1 The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused
+- [x] #2 The output lens set of a build or fix task is the code review alone for every Files line (unless the operator keeps the security lens at output, plan Q7: then security joins it where the Files line triggers it); the plan lens set is unchanged
+- [x] #3 A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files (and no security file unless Q7 keeps it); emptying output_off puts every list back
+- [x] #4 A check or doc task still gets every list at either stage
+- [x] #5 The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output
+- [x] #6 The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green
 <!-- AC:END -->
 
 ## Definition of Done
@@ -267,4 +267,6 @@ out-compliance-agents-s5-1to3#1 MED fixed 7de2c97
 out-compliance-agents-s7-s11-p1#1 MED fixed 7de2c97
 out-compliance-inc-S-p1#1 MED fixed 7de2c97
 out-compliance-ms-S#3 MED fixed 7de2c97
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-24/BL-PROC460/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-PROC460/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->
