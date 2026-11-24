@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:13.333Z file_sha256=61612a29b041669c1d30b46de73a9587c4e5b138d6384ba466a9c01f124bf58f prompt_sha256=e1c88d24f1ce47c86848e2746df3e12c3779f8bb7d2418ce4217023e69f578e8
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 "A query with no house number shows the refine line" — mobile/src/lib/parcelSearchMatch.ts "return /\d/.test(query.split(',')[0] ?? '');" — the function's own note says "Highway 27", a bare "Unit 4" and "King St W Apt 4" "count as numbered", so those no-house-number queries never get the refine line and AC #1 is unmet as written — use the server's first-word digit test (src/lib/admin/parcel-lookup.ts) or narrow AC #1 with a ruling.
+DEFER severity=MED — AC #1 "and keeps the candidate list" — mobile/src/lib/parcelSearchMatch.ts "overCap: noNumber || isOverCandidateCap(candidates, args.cap)," — overCap is now true for a short list, so the phone binding must not gate candidate rendering on overCap; that file is not in this chunk (cannot see), and the old copy "past ten it asks for a house number instead" implies it once did — confirm mobile/src/components/surfaces/SearchBinding.tsx still renders the list when overCap and add the arm if not.
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ...MORNING-DECISIONS.md:1975)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json "-  \"answer.yes\": \"Yes, it's one half of a semi\"," changed to "+  \"answer.yes\": \"Yes, it’s one half of a semi\"," — a curly-apostrophe copy edit that none of the folded findings (2a, V4, V5, L1, L3, L5, N4, R2, R4, R5, B.7, Q4, Q8, Q19) names — revert it or cite the ruling that orders it.
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — scripts/surfaces/_schema/census/mobile-product.json "\"flag\": \"MAXBLD_WEB_LIVE (web target only)\"," (was "none"), mirrored in the F01 descriptor — every other descriptor edit here carries a "Dated 2026-11-24 (task-450 ...)" note, this one carries none and no pasted clause names the flag — add the dated note naming its finding or drop the edit.
+MET — AC #2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts "showMiss: outcome === 'no_match' && error == null," — isFetching is no longer a render gate.
+MET — AC #3 "A lot form with one extra field parses; the closed enum lists stay" — mobile/src/lib/schemas.ts "export const ParcelLotFormSchema = z.object({" — .strict() removed, the two z.enum lists kept.
+MET — AC #4 "The minimum-length copy is filled from the setting, not a typed 3" — src/components/surfaces/web/SearchBinding.tsx "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" with derived min_query_len filling {min} in the prompt and input hint.
+MET — AC #5 "The semi page opened cold and offline does not redirect before the lookup settles" — mobile/src/lib/semiQuestion.ts "if (parcelId) state = 'loading';" — redirect now only for an empty parcel id.
+MET — AC #6 "The help page has the topic wrong-lot" — scripts/surfaces/_schema/static-page.json "\"topic\": \"wrong-lot\"," plus the schema enum entry and "help.mailto.wrong_lot": "Wrong address or lot"; the web link now sends topic 'wrong-lot'.
+MET — L3 "a retry-after of zero shows one message" — mobile/src/lib/parcelSearchMatch.ts "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — RateLimitError(0) is only rateLimited.
+MET — Q19 "Q19 (the shim)" — mobile/src/lib/parcelSearchMatch.ts "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — the count-derived derivation body is deleted as the TODO(contract) ordered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 1
+Rules met: none
+
+---
+⏱  70417ms (70.4s)
+📊 Tokens — total: 47561, input: 33113, output: 14448, reasoning: 13449

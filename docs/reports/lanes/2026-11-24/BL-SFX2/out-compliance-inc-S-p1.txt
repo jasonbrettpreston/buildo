@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:13.334Z file_sha256=4f4fce160836ed33a7cd08132bce86eeeeaf7508a282bb7e832833e3adce704e prompt_sha256=81d6df69564d74c3a5a316f73190e6dd479053f102af180796d06ea11bdde52f
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts "expect(at('Highway 27', tc(rows(['P1', '1 Highway 27']))).overCap).toBe(false);" — NONE — a query with no house number whose street name carries a digit (Highway 27, 401, Unit 4 followed by a street) is classed as numbered and never gets the refine line, which the change pins as a "known state" rather than satisfying the clause — treat a leading house-number token as numbered (digits before the street name, and a unit prefix after a comma does not count) so every no-house-number query shows the line.
+
+DEFER severity=MED — AC2 "A settled miss fetched again keeps the no-match line" — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);" — NONE — the isFetching guard is dropped entirely rather than narrowed to "same debounced query as the settled miss", and no test covers a NEW debounced string over the previous query's miss payload, so the clause's stated condition ("a settled miss fetched again") is wider than what is pinned — add one case: changed debounced query over the old miss payload must show no miss line until that query settles.
+
+DEFER severity=LOW — AC1 "and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts "// typed-address seat's real data (seat-reality-check-1.md); \"Elm\" with one row is synthetic until task-449 (today the server answers unique for it)." — NONE — the one-row street case is exercised only against a payload the live server does not send, so the clause's coverage for a single-match street rests on fabricated data while the implementation is in another chunk of this change — either drop that row from the case table or record it as covered by task-449.
+
+REJECT — Spec 99 "Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out." — the dated note adds an unenumerated carve-out for the redirect-once pattern — the note itself states "No carve-out is added to the enumeration above" and the pattern it records (useSettledRedirect, states from stable signals) is not the profile loading gate the enumerated carve-out permits, so no extension is owed.
+
+MET — AC4 — mobile/__tests__/parcelSearchMatch.test.ts "expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');" — the minimum-length copy is a template and the goldens carry "vars": {"min": {"derived": "min_query_len"}}, not a typed 3.
+MET — AC L3 (retry-after of zero, one message) — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: false, schemaDrift: false });" — zero is no longer also classified unexpected.
+MET — B.7 "Link: Get help with an address (to /help?topic=wrong-lot)" — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json "\"topic\": \"wrong-lot\"" — the search-page help action now carries the ruled topic.
+MET — B.4 "Needs-more-info notice: That looks like an intersection. Type a house number to see the lots." — mobile/__tests__/parcelSearchMatch.test.ts "expect(inter.overCap).toBe(false);" — the intersection keeps its own notice and no refine line.
+MET — B.9 "No-match state: No parcel found for that address." — mobile/__tests__/parcelSearchMatch.test.ts "expect(miss.showMiss).toBe(true);" — the miss line still renders for a settled miss.
+MET — A.9 "Outside Toronto state: Lots are only available in Toronto." — mobile/__tests__/parcelSearchMatch.test.ts "expect(at('123 Main St, Mississauga', undefined).outcome).toBe('outside_toronto');" — the refusal is decided with no data, before any request.
+MET — AC1 "worded true at any row count" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');" — the refine line names no count.
+MET — R5 (golden header) — mobile/__tests__/daylightSearchPages.golden.test.ts "the rule reads PARCEL_SEARCH_LAYOUT and LOT_MAP_LAYOUT" — the header now matches the two tables the body iterates.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: none
+
+---
+⏱  104069ms (104.1s)
+📊 Tokens — total: 54688, input: 32899, output: 21789, reasoning: 20650

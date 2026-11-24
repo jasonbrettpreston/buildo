@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:02:04.979Z file_sha256=190423d4900623b8eb273f7b8c13f88c1c089e4f852da55274290598beed0fdf prompt_sha256=6ae6340b67c5c340112057e3c973741f6d895b1f26d035b5d83a82a7bf225026
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-99-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-450 AC2 / §6.5 dated note 2026-11-24 "the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`)" and AC2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts "showMiss: outcome === 'no_match' && error == null," — the guard is now unconditional: with `data` still undefined the added fallthrough "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" yields `no_match`, so the "No parcel found" line renders during the first in-flight lookup (and under a below-minimum query) instead of only on a settled miss, which is the same flicker class AC2 removes — key the gate on the stable signal (data present), e.g. `showMiss: outcome === 'no_match' && error == null && (data != null || !isFetching)`, and add a test for `data: undefined, isFetching: true`.
+
+DEFER severity=LOW — §6.5 dated note 2026-11-24 "(1) A page replaces itself through `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25) ... its effect dependencies name the route string (`target`), not an object" — NONE — the redirect-once hook is not among this chunk's paths, so part (1) is judged in the chunk that owns it; the semi page's `navigate` stays a route string, which is what that dependency needs — rationale: chunk cut at file boundaries, cannot see the hook here.
+
+REJECT — AC1 / the card's ruled paragraph — the change is accused of showing the refine line far below the cap (`overCap: noNumber || isOverCandidateCap(...)`) — the card rules it: "with no house number the phone shows the refine line and keeps the candidate list as today", and "The refine line is reworded so it is true at any row count", so it is named behaviour, not drift.
+
+REJECT — AC5 — the semi page with a parcel id and no data never redirects, so a lookup that never settles stays on "Searching" — the dated note rules exactly that: "the semi question page reads no data with a parcel id as loading, never as a redirect ... only an empty parcel id goes to the Lookup route".
+
+MET — §6.5 dated note (semi side) — mobile/src/lib/semiQuestion.ts "if (parcelId) state = 'loading';" — no data with an id is loading, only an empty id routes to Lookup.
+
+MET — §8.3 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "mockHook = { ...mockHook, isFetching: true }; view.rerender(<Question />); expect(mockReplace).not.toHaveBeenCalled();" — toggling isFetching does not flip the gate.
+
+MET — §8.1/§8.3 gate re-fetch case — mobile/__tests__/parcelSearchMatch.test.ts "const refetching = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }); expect(refetching.showMiss).toBe(true);" — a settled miss keeps its line while a re-fetch runs.
+
+MET — AC1 — mobile/src/lib/parcelSearchMatch.ts "overCap: noNumber || isOverCandidateCap(candidates, args.cap)" and mobile/src/generated/surfaces/mobile_parcel_search.json "Add a house number to narrow it down." — refine line shows for a no-house-number query, rows kept, wording true at any count.
+
+MET — AC3 — mobile/src/lib/schemas.ts "export const ParcelLotFormSchema = z.object({" — `.strict()` dropped, enum lists unchanged, extra-field parse covered in schemas.test.ts.
+
+MET — AC4 — mobile/src/components/surfaces/SearchBinding.tsx "min_query_len: SEARCH_MIN_QUERY_LEN," with "{min}" templates — the minimum-length copy is filled from the setting, not a typed 3.
+
+MET — AC6 (mobile link) — mobile/src/components/surfaces/SearchBinding.tsx "onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }," — the phone search link opens the wrong-lot topic (help-page content and the web link are outside this chunk's paths).
+
+MET — §6.1 / §9.15 — mobile/src/components/surfaces/SearchBinding.tsx "min_query_len: SEARCH_MIN_QUERY_LEN, // task-450 L5" — the touched component adds no zero-arg store read, so the atomic-selector mandate and its lint extension are not breached.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  120527ms (120.5s)
+📊 Tokens — total: 54941, input: 32408, output: 22533, reasoning: 21425

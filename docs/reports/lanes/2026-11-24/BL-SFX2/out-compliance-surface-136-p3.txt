@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:05:20.158Z file_sha256=5b87566cffab1ecfd12abd11abcd5c40080142cf913354ad4c778f891a323a22 prompt_sha256=310cb9b231a4608c29143e74f27da11f888b78bf01076e54aee19dbbd7bff679
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card ruling "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:231 ""flag": "MAXBLD_WEB_LIVE (web target only)"" and scripts/surfaces/_schema/census/mobile-product.json:7769 ""flag": "MAXBLD_WEB_LIVE (web target only)"" — no acceptance criterion (#1 to #6) or pasted operator ruling names a live gate on the search surface, and the field now carries prose beside the switch name, so the descriptor declares a gate nobody asked for and likely no longer parses as one switch — revert the field to "none" or cite the ruling that names the gate and carry only the bare switch name.
+
+DEFER severity=MED — fe.18 "every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:512 "Dated 2026-11-24 (task-450 SEARCHFIX.2, L5; prior text kept): + min_query_len, the setting config.min_query_len read through sliceNumber" beside descriptor.json:513 ""adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13"" — the adjudicated closed list of derived names (input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text) gains a sixth name by a task card's dated note, while its adjudicator still names only the 2026-11-09 batch — get an operator adjudication naming min_query_len, or record it as a declared config value rather than a new derived name.
+
+DEFER severity=LOW — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:4 ""answer.yes": "Yes, it’s one half of a semi"" versus descriptor.json:5 "with three answers: "Yes, it's one half of a semi"" — the declaration now quotes a string the content file no longer holds, and the sibling answer.no keeps the straight apostrophe — update the quoted text in purpose or revert the punctuation.
+
+MET — fe.47 — src/components/surfaces/web/SearchBinding.tsx:32 "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" — the typed 3 leaves the copy and the threshold is read from the declared tunable with its bounds, so no threshold sits in src/.
+MET — fe.31 — scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json:12 ""help.mailto.wrong_lot": "Wrong address or lot"" — the new label is a content field referenced by content key, not a string in code.
+MET — fe.37 — scripts/surfaces/_schema/static-page.json:31 ""content": "help.mailto.wrong_lot"," — the new help part is a content-bound part in the page table with a declared value source, no new read and no invented value.
+
+REJECT — fe.31 — the change adds "wrong-lot" to the closed topic enum in scripts/surfaces/_schema/static-page.schema.json:184 — acceptance criterion #6 names the topic wrong-lot and both search links to it, so the enum member is the named change, not an invented value.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 2
+Rules met: fe.02, fe.05, fe.06, fe.07, fe.24, fe.31, fe.33, fe.36, fe.37, fe.38, fe.46, fe.47, fe.54
+
+---
+⏱  81727ms (81.7s)
+📊 Tokens — total: 47725, input: 32400, output: 15325, reasoning: 14438

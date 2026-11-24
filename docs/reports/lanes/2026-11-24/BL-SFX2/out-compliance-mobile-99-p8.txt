@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:02:50.155Z file_sha256=7a2952fb22036ed613b2f7131c12a549f9260a0cc4378bc69b2f04826522d88c prompt_sha256=7e3fcb1d565ce41c999b1010d6173646904867fc8baa360661d48294078501f7
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-99-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — src/components/surfaces/web/SearchBinding.tsx:250 "...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : [])," — the web refine line is still keyed solely on s.overCap and this chunk shows no place where a no-number street sets that flag — confirm the parcelSearchMatch.ts chunk makes a no-number street raise the refine flag, otherwise extend WebSituation here in the same commit
+DEFER severity=LOW — AC #6 "The help page has the topic wrong-lot and both search links go to it" — scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json:12 "+  \"help.mailto.wrong_lot\": \"Wrong address or lot\"," — this chunk adds only the label; the topic's registration in scripts/surfaces/_schema/static-page.json is not in this chunk (cannot see) and is reached only through the new ui test "task-450 AC6: the search link topic is a mailto topic of web_help in static-page.json" — confirm the mailto part carrying topic wrong-lot is present in the static-page.json chunk
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/components/surfaces/web/SearchBinding.tsx:27 "+import { sliceNumber } from '../../../../mobile/src/lib/sliceConfig';" — a new web to mobile lib dependency on sliceConfig.ts, which the card's Files line does not name — confirm the plan names mobile/src/lib/sliceConfig.ts, or add it to the card's Files line
+MET — 6.5 — src/components/surfaces/web/SearchBinding.tsx:250 — the no-match line stays on s.showMiss with no isFetching term in the web tail, so a refetch cannot drop it
+MET — 6.5 (2026-11-24 note) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:7 — the descriptor edit is doc text about the busy flag and the empty-id route; it adds no §6.5 carve-out to the enumeration
+MET — AC #4 — src/components/surfaces/web/SearchBinding.tsx:280 "min_query_len: SEARCH_MIN_QUERY_LEN," — the hint and the prompt are filled from the generated slice setting; the typed 3 is removed from the oracle CONFIG
+MET — AC #1 wording — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:31 "'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.': 'the refine line becomes \"Add a house number to narrow it down.\" at every row count" — the ruled reword is recorded with the RR-0443 c and Q8.2 cite, no row count in the new copy
+MET — 8 / counts — src/tests/surfaces/surface-validate.logic.test.ts:91 "S-sbind ok (17 surfaces, 427 strings)" and src/tests/surfaces/surface-conformance.logic.test.ts:261 "S-sbind ok (17 surfaces, 427 strings)" — both locks move 426 to 427 for the single web_help.content.json addition and agree with each other
+
+VERDICT: PASS
+Clauses checked: 12   Unmet: 0
+Rules met: 6.5
+
+---
+⏱  76912ms (76.9s)
+📊 Tokens — total: 36626, input: 21973, output: 14653, reasoning: 13814

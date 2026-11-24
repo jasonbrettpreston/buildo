@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:13.333Z file_sha256=9189472344471c924f877d8b124bb52fdb350342e73bcefc4157ef9532b5e57e prompt_sha256=605db378e391b7fec84f996bafb52cd42ed0472703e0be05d6277a29910ff778
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-450 AC2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts "showMiss: outcome === 'no_match' && error == null" — the isFetching gate is deleted while Q19's deleted shim makes a data-less payload fall through to "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';", so on every first fetch of a new query (data undefined, spinner up) the miss copy "No parcel found for that address." renders before anything settles, which is the flicker the card closes; AC2 names a settled miss only — keep the line while a settled payload is re-fetched and hide it when no payload exists, for example showMiss: outcome === 'no_match' && data != null && error == null.
+
+BUG severity=MED — task-450 AC1 / ruled B "with no house number the phone shows the refine line and keeps the candidate list" — mobile/src/lib/parcelSearchMatch.ts comment "a bare \"Unit 4\" and a trailing unit (\"King St W Apt 4\") count as numbered" — those inputs carry no house number yet hasHouseNumber returns true, so the refine line does not show, and the client any-digit rule also disagrees with the server's first-word digit test, so one query gets the line on one side and not the other — use the server's rule (src/lib/admin/parcel-lookup.ts) so "no house number" means the same thing on both sides, or narrow the divergence with a test.
+
+DEFER severity=LOW — task-450 AC4 "The minimum-length copy is filled from the setting, not a typed 3" — scripts/surfaces/_schema/census/mobile-product.json "min_query_len, the setting config.min_query_len read through sliceNumber" vs mobile/src/components/surfaces/SearchBinding.tsx "min_query_len: SEARCH_MIN_QUERY_LEN" — the pasted chunk binds a TS constant and shows no read of the descriptor's config.min_query_len, so the note's mechanism cannot be confirmed here and a config edit would leave the copy behind — bind sliceNumber(config.min_query_len) or correct the census note to say the constant mirrors the setting (the constants module is not in this chunk).
+
+MET — AC3 — mobile/src/lib/schemas.ts "export const ParcelLotFormSchema = z.object({" — .strict() removed, both enum lists intact, one extra field parses and an unknown detected value still throws.
+MET — AC5 — mobile/src/lib/semiQuestion.ts "if (parcelId) state = 'loading';" — no data with a parcel id is loading, only an empty parcel id goes to the Lookup route, isFetching no longer gates the render.
+MET — AC6 (phone link and topic) — mobile/src/components/surfaces/SearchBinding.tsx "onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }" — the search link opens wrong-lot and scripts/surfaces/_schema/static-page.schema.json adds "wrong-lot" to the topic enum.
+MET — AC1 (positive path) — mobile/src/lib/parcelSearchMatch.ts "const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);" — a street with no number keeps its rows and gains the line, reworded "Add a house number to narrow it down." in both content files.
+MET — L3 (MF35-DF1 closed) — mobile/src/lib/parcelSearchMatch.ts "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — a retry-after of 0 is one ratelimit message, no error notice and no Retry.
+MET — Q19 — mobile/src/lib/parcelSearchMatch.ts "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — the count-derived client derivation is deleted as ruled and the tests now carry the server resolution.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: A.3, A.8, B.1, B.7, D.4, D.7
+
+---
+⏱  119928ms (119.9s)
+📊 Tokens — total: 51774, input: 28180, output: 23594, reasoning: 22672

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:01:13.322Z file_sha256=29b91d4953f0d7d4bfa3dec73bc555b788aaf231587a5d5ebaf7641b27e86cae prompt_sha256=ca912ca9a6d469452aa627cf5b9e63f6e1cc16d9a1a49a96a0dd99deab8b0449
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99 §3.4c owner-layer row "`recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob)" — docs/reports/generated/127-surface-registry.md S-002 "it no longer holds ANY Layer-3 state" beside "the page also keeps the recent searches on the phone, in the Layer 4a store mobile/src/store/recentSearchesStore.ts" — the RE-PROJECT paragraph still asserts the surface holds no Layer-3 state and calls the store a Layer 4a store, while §3.4c places that store in Layer 3 with Layer 4a only as its persistence, and only the "It holds no client store at all" sentence was corrected — reword both sentences to say the page holds no filter-store state and that recentSearchesStore is the Layer-3 store persisted to Layer 4a.
+
+DEFER severity=LOW — Spec 99 §3.4c sign-out reset "clearLocalSessionState calls useRecentSearchesStore.getState().reset()" — docs/specs/03-mobile/99_mobile_state_architecture.md §B5 block "useUserProfileStore.getState().reset();" with no recentSearchesStore or flightBoardSeenStore line, and the store file is not in this chunk — cannot see the reset call the clause requires, and the pasted B5 enumeration does not list the store the change documents — confirm the reset call exists and add the store to the B5 enumeration in the same commit if not.
+
+DEFER severity=MED — task card "a retry-after of zero shows one message" — mobile/__tests__/fixtures/parcelSearch.situations.json "\"retryAfterSeconds\": 0," with "\"unexpected\": false," — the only in-chunk evidence for the one-message rule is a fixture flag flipped from true to false, and the classifier cited at mobile/src/lib/parcelSearchMatch.ts:298 is not pasted — confirm the fixture value is captured from classifyParcelSearchError after the fix, not hand-set to green.
+
+DEFER severity=NIT — registry S-002 header "**❓ Product question(s) (2).**" and the review-queue "❓" bullets — both lines now carry "closed by MF-45 D-4 (a)." and "closed by MF-53 (the server names the outcome in `resolution`)." — the count and the markers still read as two open questions — update the header count and markers to show zero open.
+
+MET — task AC "The minimum-length copy is filled from the setting, not a typed 3" — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json "vars": {"min": {"derived": "min_query_len"}} — the hint and the prompt now take min from min_query_len in every golden.
+
+MET — task AC "The help page has the topic wrong-lot and both search links go to it", phone side — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json "topic": "wrong-lot" — the open_help link no longer sends address_match.
+
+MET — plan "Dated notes owed: Spec 99 (the redirect-once pattern)" — docs/specs/03-mobile/99_mobile_state_architecture.md:554 "the first time the fetch is not running and a target route exists, and never again" — the dated note records the redirect-once pattern and the stable-signal states and ends "No carve-out is added to the enumeration above."
+
+MET — plan "R5 (golden header)" — mobile/__tests__/daylightSearchPages.golden.test.ts "Scope of the legacy-class rule: the two layout tables and the render trees" — the header now matches the PARCEL_SEARCH_LAYOUT and LOT_MAP_LAYOUT iteration in the same file.
+
+MET — plan "rule-lists-by-kind.md from the Spec 99 edit" — docs/reports/generated/rule-lists-by-kind.md "| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |" and total 217,467 — the 1,051 character delta matches the added note.
+
+REJECT — RR-0392 "Nothing is added that the plan or a ruling does not name" — accused of closing product questions Q2 and Q3 that the folded-findings list does not name — both closures record prior rulings (MF-45 D-4 (a), MF-53) and are tagged R2, which the plan names.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: none
+
+---
+⏱  180707ms (180.7s)
+📊 Tokens — total: 64905, input: 30443, output: 34462, reasoning: 33421

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T15:59:13.333Z file_sha256=7e9eab77ac791fbd772d4b76a03280a883bdff3afe3f45e4fb3ab5afdd6c87b8 prompt_sha256=632200f924d86860487525eeff1956fcf12f5f38fb04a45e608118d9f869c43b
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchMatch.test.ts "['383 El', rows(['5106944', '383 Elm Ave']), 3]," — the third tuple element (3, 2, 2, 1) is never read by the callback "(q, cands) =>", so it is dead data and the candidate-count assertion it implies is missing — assert s.candidates.length equals that number or delete the extra element.
+
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts "expect(order).toEqual(['parcel-search-ratelimit']); // task-450 L3: one message for a retry-after of 0" — the test titled "the block order is notices, list, refine, miss, prompt" now expects a single block, so the ordering of the five blocks is no longer exercised — assert order on a situation that still renders notices plus list so the ordering claim is checked.
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchMatch.test.ts "return { ...response(), resolution, map: null, ...extra } as ConsumerParcelLookupResult;" — the "as" cast plus injecting "map: null" bypasses the type, so if "map" is not a declared field of ConsumerParcelLookupResult the cast hides it — drop the map field if unused, or type the return without the cast.
+
+DEFER severity=LOW — mobile/__tests__/schemas.test.ts "expect(() => ParcelLotFormSchema.parse({ ...lotForm, detected: 'triplex' })).toThrow(ZodError);" — "ZodError" is referenced in the added block but no import is visible in the diff (cannot see the file head); if it is not imported this throws ReferenceError rather than asserting — confirm ZodError is imported at the top of the file.
+
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');" — the removed line was the only visible use of SEARCH_CANDIDATE_LIMIT, so if it remains in this file's import list it is now an unused import (cannot see the imports) — confirm and remove the import if unused.
+
+REJECT — mobile/src/components/surfaces/SearchBinding.tsx "accessibilityHint: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5: the setting fills {min}" — looks like a non-string prop that could render unresolved — it is correct, the identical "{text, vars}" template on the prompt is proven to resolve by the AC4 behaviour test, and min_query_len is added to both DERIVED_NAMES and searchData.derived.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none (PASS)
+
+---
+⏱  116773ms (116.8s)
+📊 Tokens — total: 58962, input: 32487, output: 26475, reasoning: 25836

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:03:12.257Z file_sha256=0a2f1a76db50ddfba0d85767583fcf92cd3502d3d64a06ca90f69a01729d228f prompt_sha256=88a085f302a25baaa635dc1fa47e9b6b0639daf6f6a17789017541c83592fd1f
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:17 ""answer.yes": "Yes, it’s one half of a semi"" or NONE — a customer-visible designed string on element D (semi question page) is altered with no acceptance criterion and no ruling text pasted, the only trace being "task-450 Q8: the curly apostrophe" inside a test, so the change rests on a bare id, and its sibling ""answer.no": "No, it's detached"" keeps the straight apostrophe — either state Q8's wording in the card or apply the same apostrophe to answer.no so the two answers match.
+
+DEFER severity=LOW — card "Dated notes owed: Spec 99 (the redirect-once pattern); task-319." — docs/specs/03-mobile/99_mobile_state_architecture.md:555 "the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`)" or NONE — the owed note is the redirect-once pattern, and the edit also records V4's showMiss behaviour, which the card owes nowhere — name V4 to Spec 99 in the card, or drop that clause from the note and keep the owed redirect-once sentence.
+
+DEFER severity=LOW — card "- #6 The help page has the topic wrong-lot and both search links go to it" — mobile/src/components/surfaces/SearchBinding.tsx:209 "onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }" — the phone link and its golden agree with the mocked call, but the help page's own topic key is not in this chunk, so the slug agreement AC #6 rests on is unverified here — confirm the section key in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json is exactly wrong-lot in the other chunk.
+
+MET — AC #1 — mobile/src/generated/surfaces/mobile_parcel_search.json:45 — list.refine is now "Add a house number to narrow it down.", true at any row count, and the behaviour test keeps both candidate rows beside it.
+MET — AC #2 — mobile/__tests__/parcelSearchMatch.test.ts:420 — a settled miss fetched again keeps showMiss true, and the no-error case is asserted separately.
+MET — AC #3 — mobile/__tests__/schemas.test.ts:330 — one extra lot-form field parses while an unknown detected value still throws.
+MET — AC #4 — mobile/src/components/surfaces/SearchBinding.tsx:257 — min_query_len is derived from SEARCH_MIN_QUERY_LEN (the setting via sliceNumber) and fills {min} in the hint and the prompt, not a typed 3.
+MET — AC #5 — docs/specs/03-mobile/99_mobile_state_architecture.md:555 — no data with a parcel id is loading, never a redirect, and the semi golden test asserts state loading beside a Lookup route only for an empty parcel id.
+MET — AC #6 (phone half) — mobile/src/components/surfaces/SearchBinding.tsx:209 — topic wrong-lot is carried by the binding, the regenerated golden and the behaviour test.
+
+REJECT — card "on the phone and web search pages, a street typed with no house number shows the existing add a house number line" — accused: the web refine copy and the web search link are untouched in this material — not a real issue in this run, the material is chunk 1 of 2 cut at file boundaries and src/components/surfaces/web/SearchBinding.tsx plus src/tests/surfaces/search-web-binding.ui.test.tsx fall in chunk 2, reviewed in its own run.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+Rules met: none
+
+---
+⏱  127808ms (127.8s)
+📊 Tokens — total: 58227, input: 33382, output: 24845, reasoning: 23938

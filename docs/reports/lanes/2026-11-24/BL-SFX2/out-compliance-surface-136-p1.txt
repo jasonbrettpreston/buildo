@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:04:59.639Z file_sha256=22cc510e7d5839a84caa46fbc4facaa623211aeabcde90638833255fbfa4eaf3 prompt_sha256=4dd4a0675690a3553049672292d93dcf199fdffcfbfe2dabb2b50580ce40bf65
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.03 "declarations checked against live contracts and the catalogue; golden states; both-directions locks" — docs/reports/generated/127-surface-registry.md "mobile/app/(app)/parcel-tool/index.tsx:127-134" — the same diff says that file "has 128 lines" and re-points the errors row to SearchBinding.tsx and parcelSearchMatch.ts:298, yet the states row still cites lines 127-134 of a 128-line file for classifications that moved — re-point the states row the way the errors row was re-pointed.
+DEFER severity=MED — task-450 acceptance criterion 6 "The help page has the topic wrong-lot and both search links go to it" — docs/reports/generated/127-surface-registry.md "the \"Report incorrect address match\" link waits for MF-46, P35-D18 a" against mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json "\"topic\": \"wrong-lot\"" — the kept MF-35 sentence says that link is not built while the regenerated golden emits that same link with the new topic, so the criterion is either met and the sentence stale, or unmet and the golden misleading — correct the MF-35 dated note or show the render where the link is gated.
+DEFER severity=MED — fe.31 "descriptor valid with no UNRESEARCHED and no golden: \"none\"" — docs/reports/generated/127-surface-registry.md "21 category answers — 21 answered, 0 unresearched" beside "| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |" and "| 18 | `a11y` | `UNRESEARCHED` |" — the regenerated converted entry claims zero unresearched one table above two UNRESEARCHED rows, and this diff rewrites rows 12 and 13 of that same table without resolving the claim — research rows 11 and 18 or mark the surface not fully researched.
+DEFER severity=MED — task-450 "The plan's section 2 lines are this card's acceptance tests, each red first" — "The mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station)" together with mobile/__tests__/fixtures/parcelSearch.situations.json "\"unexpected\": false" — the one-message case (L3) has its situation input moved to the post-fix value in this chunk, so no pasted artifact shows the new assertion red against the double message — record the pre-fix red run at the push station before merge, with the 429 notice and the error block both present as the failing input.
+MET — fe.18 — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json "\"text\": { \"content\": \"search.input.hint\" }" — the displayed hint stays a content field; the var carries only the setting, no new binding source.
+MET — fe.47 — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');" — the minimum length is filled from the registered min_query_len setting, not a typed 3.
+MET — fe.33 — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');" — the new refine copy lives in content, no string literal in the binding.
+MET — fe.05 — mobile/__tests__/parcelScreens.golden.test.ts "the refine line names no count" — the candidate cap is removed from the displayed string, so the UI neither holds nor derives the number.
+MET — fe.08 — docs/specs/03-mobile/99_mobile_state_architecture.md "**Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2" — the owed dated note lands in its own mobile spec; no spec added to or moved out of docs/specs/02-web-admin.
+MET — fe.54 — mobile/__tests__/parcelScreens.golden.test.ts "expect(ids(t)).toContain('parcel-search-ratelimit');" — a retry-after of 0 still shows one declared visible failure message, not a blank screen.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 4
+Rules met: fe.05, fe.08, fe.18, fe.33, fe.47, fe.54
+
+---
+⏱  125119ms (125.1s)
+📊 Tokens — total: 53292, input: 29538, output: 23754, reasoning: 22704

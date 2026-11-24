@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:54:00Z'
+updated_date: '2026-11-24T16:09:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -29,6 +29,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/REPORT.md
 type: fix
 ordinal: 150020
 ---
@@ -301,4 +302,6 @@ rg#6 MED folded placed in §6.5 after
 2026-11-24 Files line gains scripts/surfaces/_schema/census/mobile-product.json: the first green commit attempt was refused by the pre-commit generate-surface-registry --check (DESCRIPTOR DRIFT: the two descriptors disagree with the census). The census row is the source of each descriptor (generate-surface-registry.mjs --emit-descriptors); the plan's reading 'census files (no reader)' (QUESTIONS-RULED.md, NOT needed list) did not hold. The census rows now equal the edited descriptors (emit-descriptors rewrote them byte for byte unchanged), and the generator's own outputs docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md were regenerated (docs/reports, exempt).
 
 2026-11-24 Files line also gains the three generated pages the pre-commit checks regenerate from this change (docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md from the census, rule-lists-by-kind.md from the Spec 99 edit); check-task-files requires them declared. The task-319 dated note lands in its own commit (no code file staged).
+
+2026-11-24 output review round 1 (context-r3.md): 40 lens outputs, 171 findings (CRITICAL 0, HIGH 25, MED 57, LOW 82, NIT 7) in docs/reports/lanes/2026-11-24/BL-SFX2/ with FINDINGS.md. Work commit ee3634771, task-319 note 3f4f616fe. Grounder owed (a seat that is not the lane); task stays RUNNING.
 <!-- SECTION:NOTES:END -->

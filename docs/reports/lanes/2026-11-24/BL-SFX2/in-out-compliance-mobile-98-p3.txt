@@ -1,0 +1,254 @@
+LIST mobile-98 sha256:0e487889e7048c130b95af155cb1835627709a1b162ded29c1bc1cdee0d1feda material sha256:68342b04e97a20da31b2ef50dcb289f2d33c99e199eec104db9d60806bee9cec part 1 of 1 chunk 3 of 3
+RULE LIST mobile-98 (docs/specs/03-mobile/98_mobile_testing_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/search-web-binding.ui.test.tsx","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+# Spec 98 — Mobile Testing Protocol & Local Environment
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 94 (Onboarding), Spec 96 (Subscription)
+
+## 1. Goal & Scope
+**Goal:** Establish a bulletproof, reproducible testing environment for the Buildo mobile app, focusing on End-to-End (E2E) testing via Maestro, unit testing via Jest, and safe data-seeding practices.
+**Scope:** This spec defines the Windows/Android local development startup routine, the organization of Maestro E2E test flows, database cloning for realistic test data, and the unit testing boundaries for Zustand stores and routing guards.
+
+## 2. Local Environment Setup (Windows / Android)
+This is the canonical startup routine for developing and testing the Buildo native app locally on a Windows machine.
+
+### 2.1 Prerequisites
+- **Android Studio:** Installed with a configured Virtual Device (Emulator). Target: Pixel 8 (API 34+).
+- **Maestro CLI:** Installed via WSL or Windows command line.
+- **Postgres CLI Tools:** `pg_dump` and `pg_restore` installed and added to the Windows System PATH.
+- **Expo CLI:** `npm install -g eas-cli`
+
+### 2.2 Boot Sequence
+**Step 1: Boot the Physical Environment (Emulator)**
+Always start the emulator via Android Studio before running any Expo commands to ensure background ADB daemons initialize correctly.
+1. Open Android Studio.
+2. Open Device Manager.
+3. Click Play on the Pixel 8 emulator. Wait for the home screen.
+
+**Step 2: Boot the App (Metro Bundler)**
+Open a PowerShell terminal at the project root:
+```powershell
+cd mobile
+npx expo run:android
+```
+*Note: `run:android` compiles the native C++/Java shell (Firebase, Reanimated) and boots the Metro bundler. Leave this terminal open. To recover from a red-screen crash, press `r` in this terminal to reload the JS bundle.*
+
+**Step 3: Seed Local Database (Production Clone)**
+To test real-world scrolling, ranking, and UI rendering, tests must run against production-volume data. Do NOT point the local app at the live production database. Open a second PowerShell terminal:
+```powershell
+# 1. Download a snapshot of production
+pg_dump "postgresql://<PROD_USER>:<PASSWORD>@<HOST>:5432/<DB_NAME>" -F c -f buildo_prod.dump
+
+# 2. Restore to local Postgres instance
+pg_restore --clean --if-exists --no-owner --host=localhost --port=5432 --username=postgres --dbname=buildo buildo_prod.dump
+```
+
+## 3. End-to-End (E2E) Testing Strategy
+**Tool:** Maestro
+**Location:** `mobile/maestro/`
+
+Maestro is used to validate critical user journeys from the perspective of a black-box user. Tests interact with the rendered UI accessibility layer, not internal state.
+
+### 3.1 State Management in Tests
+Every Maestro YAML file must explicitly define its state expectations using `clearState`:
+- **`clearState: true` (Clean Slate):** Used for Auth and Onboarding flows. Wipes MMKV cache and Firebase Auth session before the test runs, simulating a fresh App Store install.
+- **`clearState: false` (Persistent State):** Used for Feed, Settings, and Flight Board flows. Assumes the user has already completed onboarding. Requires manual setup (or a setup script) to populate the local MMKV state before running.
+
+### 3.2 Required Test Suites (Launch Blockers)
+The following YAML flows must pass cleanly before any production release:
+- **`auth.yaml`**: `clearState: true`. Validates sign-in (email/password), sign-out reset behavior, and account linking UI.
+- **`onboarding-leads.yaml`**: `clearState: true`. Validates trade selection lock, address geocoding bounds validation, and routing to the Lead Feed.
+- **`onboarding-tracking.yaml`**: `clearState: true`. Validates bypassing address input, supplier selection, and routing to the Flight Board.
+- **`scroll-feed.yaml`**: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions.
+- **`subscription-paywall.yaml`**: Validates the 14-day expiry lock, the lead-count display on the paywall, and the "Maybe later" inline-blur feed state.
+
+### 3.3 Maestro Execution Commands
+Run from the mobile directory in PowerShell:
+```powershell
+# Run a specific flow
+maestro test maestro/auth.yaml
+
+# Open Maestro Studio to inspect UI elements and auto-generate YAML commands
+maestro studio
+```
+
+## 4. Unit & Integration Testing Strategy
+**Tool:** Jest + jest-expo
+**Location:** `mobile/__tests__/`
+
+Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded (Maestro handles UI validation).
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; H9, P35-D6 as recommended; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots. React Native Testing Library is the tool Spec 90 names for logic hooks (90:88); MF-35 extends its use to the mobile binding and the parcel search screen, and adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0). No Maestro flow covers parcel-tool today.
+
+### 4.1 Required Test Boundaries
+
+This section is **non-exhaustive**. The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:
+- **§8.1** — idempotency tests for every bridge (B1 server→TanStack, B2 TanStack→Zustand, B3 mutation rollback, B4 auth invalidation, B5 sign-out reset, B6 mid-session 401 refresh).
+- **§8.2** — router branch coverage (AuthGate's 9 routing arms per §5.3).
+- **§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5).
+- **§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`) — every `create<*Store>(` in `mobile/src/store/*.ts` has a `.getState().reset()` call in `clearLocalSessionState`.
+
+The boundaries below are illustrative examples within those mandates.
+
+**AuthGate & Routing (`subscriptionGate.test.ts`)** — Spec 99 §8.2 + §8.3
+- Validates that unauthenticated users are forced to `/(auth)`.
+- Validates that incomplete profiles are forced to `/(onboarding)`.
+- Validates that `subscription_status = 'expired'` forces `<PaywallScreen>`.
+- Validates that `account_deleted_at = NOT NULL` forces sign-out.
+
+**Zustand Stores (`store.test.ts`)** — Spec 99 §8.1 (idempotency) + §8.5 (store-enumeration)
+- `authStore`: `signOut()` must trigger the §B5 fan-out (`filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` + `queryClient.clear()` + `mmkvPersister.removeClient()`).
+- `paywallStore`: Must default to `visible: false, dismissed: false` on cold boot. Method renamed `clear()` → `reset()` on 2026-05-03 per Spec 99 §3.4 + §9.19.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c). `mobile/__tests__/recentSearchesStore.test.ts` pins the store's own reset, and `storeReset.coverage.test.ts` finds it with no count change.
+
+**Data Transformations (`utils.test.ts`)**
+- `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.
+- `formatCurrency.ts`: Verify CAD formatting for permit valuations.
+
+**Parcel Cost Tool (Spec 100)** — Spec 90 §13 (Zod boundary) + Spec 100 §6
+- `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`; the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema); `shouldRetryParcelLookup` skips 400/403/429/drift.
+- `parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off.
+
+## 5. Continuous Integration (CI)
+**Tool:** GitHub Actions + EAS (Expo Application Services)
+
+**Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
+- `npm run typecheck` (TypeScript compiler)
+- `npm run lint` (ESLint)
+- `npm run test` (Jest unit tests)
+
+**Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
+
+**E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+
+## 6. Historical Context & Past Issues
+To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+
+### 6.1 The "Pointing" Issues (Path Configuration)
+There were persistent issues related to Windows environment variables failing to point correctly to the ADB (Android Debug Bridge) and Android SDK paths. The system would lose track of where the necessary Android build tools were located. This caused frustrating moments where the emulator was running perfectly in Android Studio, but Expo or Maestro couldn't connect to it because they couldn't find the `adb` executable. *Fix: Ensure ANDROID_HOME and platform-tools are permanently added to the Windows System PATH.*
+
+### 6.2 The Great Migration: Expo Go vs. Development Builds
+**The Errors:** The project hit massive dependency mismatches between React Native, Expo Go, and the Reanimated library, resulting in fatal TurboModule and worklet compatibility errors.
+**The Solution:** Expo Go is a sandboxed testing app and cannot run custom native code. Because the Buildo app requires heavy native modules (like Firebase Auth, Apple Sign-In, and Sentry), the transition to a standalone "Development Build" was mandatory. That is why the boot sequence now explicitly uses `npx expo run:android` to physically compile a custom version of the app directly onto the emulator, rather than relying on Expo Go.
+
+### 6.3 Navigation and Missing Plugins
+After moving to the native development build, two significant configuration bugs emerged:
+- **Expo Router Timing Crash:** There were navigation-related crashes where the Expo Router tried to aggressively redirect users (e.g., sending an unauthenticated user to the onboarding flow) before the root app layout had finished mounting.
+- **Plugin Resolution Failures:** There were native build failures related to missing or improperly configured Expo plugins in `app.json`, specifically `@sentry/react-native/app-plugin`, which aborted the native compile step.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/search-web-binding.ui.test.tsx b/src/tests/surfaces/search-web-binding.ui.test.tsx
+index 26db04fd5623c0feb9934137a364c75b5800b592..6e2f90fb0c0374ff9a77c5e9449bc9a7d493d5e3 100644
+--- a/src/tests/surfaces/search-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/search-web-binding.ui.test.tsx
+@@ -27,6 +27,11 @@ const GOLDENS = fs.readdirSync(DIR).filter((f) => f.endsWith('.web.json')).sort(
+ const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
+ const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+ const bind = (s: WebSituation, extra: Json = {}): ReactElement => h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), ...extra });
++// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the prompt and the input
++// description are templates filled with it.
++const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);
++const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);
++const HINT = (C['search.input.hint'] as string).replace('{min}', MIN);
+ 
+ // Console errors a library prints during a server render that are not defects of the binding. Empty today: any entry needs a comment naming why.
+ const CONSOLE_ALLOW: RegExp[] = [];
+@@ -72,13 +77,19 @@ describe('(a) every web golden renders with its situation', () => {
+     expect(decode(renderToStaticMarkup(provided(bind(amb))))).toContain((C['list.badge'] as string).replace('{count}', String(amb.candidates.length)));
+     const st = SITUATIONS.static as WebSituation;
+     expect(decode(renderToStaticMarkup(provided(bind(st))))).toContain(`aria-label="${(C['search.chip.label'] as string).replace('{query}', st.recent[0] as string)}"`);
++    // task-450 AC4 (L5): the prompt and the input description carry the setting's value, no "{min}" left and no typed 3 in the content.
++    expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
++    const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
++    expect(idle).toContain(PROMPT);
++    expect(idle).toContain(`aria-description="${HINT}"`);
++    expect(idle).not.toContain('{min}');
+     expect(errors).toEqual([]);
+   });
+   it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)', () => {
+     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
+-    expect([idle.includes(C['search.prompt'] as string), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
++    expect([idle.includes(PROMPT), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
+     const no = decode(renderToStaticMarkup(provided(bind(WEB_UNAUTHORIZED_SITUATION))));
+-    expect([no.includes(C['search.entitlement'] as string), no.includes(C['search.prompt'] as string)]).toEqual([true, false]);
++    expect([no.includes(C['search.entitlement'] as string), no.includes(PROMPT)]).toEqual([true, false]);
+     const err = decode(renderToStaticMarkup(provided(bind(WEB_ERROR_SITUATION))));
+     expect([err.includes(C['search.error'] as string), err.includes(C['search.retry.text'] as string)]).toEqual([true, true]);
+     expect({ ...WEB_STATIC_SITUATION, recent: [] }).toEqual({ ...(SITUATIONS.static as WebSituation), recent: [] });
+@@ -118,11 +129,21 @@ describe('(c) actions reach the mount', () => {
+     fireEvent.click(screen.getByTestId('parcel-search-select'));
+     expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
+   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
+-  it('the report link opens /help with topic address_match and the encoded input in the fragment', () => {
++  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...with topic address_match..."): the topic is wrong-lot ("Wrong address or lot").
++  it('the report link opens /help with topic wrong-lot and the encoded input in the fragment', () => {
+     const amb = { ...(SITUATIONS.ambiguous as WebSituation), input: 'Queen & Spadina #2' };
+     render(provided(bind(amb)));
+     const a = screen.getByTestId('parcel-search-report') as HTMLAnchorElement;
+-    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=address_match&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
++    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=wrong-lot&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
++  });
++  it('task-450 AC6: the search link topic is a mailto topic of web_help in static-page.json', () => {
++    const table = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/static-page.json'), 'utf8')) as Json;
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((sec) => (sec.parts ?? []) as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic);
++    render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
++    const href = (screen.getByTestId('parcel-search-report') as HTMLAnchorElement).getAttribute('href') as string;
++    const topic = /#topic=([^&]+)/.exec(href)?.[1];
++    expect(topics).toContain(topic);
++    expect(topic).toBe('wrong-lot');
+   });
+ });
+ 
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c01ebce937b1dc92ca8ab7ffe1155674109731cd..c46c926fd9bb128d302ff52d8b162e7bcfe64ad7 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -226,12 +226,13 @@ describe('T7 the support inbox read (MF-46 follow-up, dated 2026-11-12)', () =>
+ 
+ describe('T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12)', () => {
+   const urlOf = (src: string): string | undefined => /export const MAXBLD_HELP_URL = '([^']+)';/.exec(src)?.[1];
+-  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query', () => {
++  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...opens it with topic address_match and the query"): the topic is wrong-lot.
++  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic wrong-lot and the query', () => {
+     expect(urlOf(fs.readFileSync(path.join(ROOT, 'mobile/src/lib/maxbldHelp.ts'), 'utf8'))).toBe(`${MAXBLD_ORIGIN}/help`);
+     expect(matchMaxbldRoute('/help')?.routeClass).toBe('public');
+     const find = (n: Json): Json | undefined => (n?.props?.testID === 'parcel-search-report' ? n : (n?.children ?? []).map(find).find(Boolean));
+     const report = find(rj('src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json').props);
+-    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'address_match', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
++    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'wrong-lot', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
+     expect(SEARCH['list.report']).toBe('Report incorrect address match');
+   });
+   it('RED: a second typed host is caught', () => {
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index dcc9764edc392e19e2d93eca73fa3e25f8ca5ed3..8f5965f7382c7fa997eaf1e23e2d8062b18c8f46 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -258,7 +258,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 "it appears we will need it so we should build it"): 424 -> 425 strings (+1: search.reports_left in mobile_parcel_search.content.json) and 98 -> 100 goldens (+2: the state hit, golden reports_left, mobile and web); measured with surface-validate --check before (424, 98) and after (425, 100).
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 426 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 4b23ca62aa4d8433e0714d139af26949d2854b46..348152fd8d4312ead5bad40b23002a09b633dfb4 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -88,7 +88,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 "it appears we will need it so we should build it"): 424 -> 425 strings (+1: search.reports_left in mobile_parcel_search.content.json) and 98 -> 100 goldens (+2: the state hit, golden reports_left, mobile and web); measured with surface-validate --check before (424, 98) and after (425, 100).
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

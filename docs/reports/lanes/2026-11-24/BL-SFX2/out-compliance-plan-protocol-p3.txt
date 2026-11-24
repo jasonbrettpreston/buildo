@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:04:07.130Z file_sha256=7258529c2241350e0253c6900923240a43816d0d248403bb523df5400638fa62 prompt_sha256=5696a41dc18ed2e331697ebdaf49b41e155cf3b53c4d01463af3678bdc5bda89
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-plan-protocol-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — acceptance criterion #6 "The help page has the topic wrong-lot and both search links go to it" — src/tests/surfaces/surface-validate.logic.test.ts:91 "// SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic \"Wrong address or lot\")" — the cited key reads as a mailto entry, not a topic heading, and web_help.content.json is not in this chunk (cannot see) — confirm the added key is the B.7 topic anchor and not an unruled mailto string before merge.
+DEFER severity=LOW — acceptance criterion #6 "The help page has the topic wrong-lot and both search links go to it" — NONE, no SearchBinding line appears in this chunk — cannot see, the "both search links" half has no evidence in the two files reviewed here — verify it in the chunk holding src/components/surfaces/web/SearchBinding.tsx and mobile/src/components/surfaces/SearchBinding.tsx.
+MET — task-450 Files declaration (check-task-files) — "Files: ... src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts" — both files touched by the diff are declared on the card.
+MET — section 0 "Every new task carries its SOURCE" / RR-0444 — "// SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49)" — the count change carries its task id, date, ruling file:line and design line.
+MET — RR-0392 "Nothing is added that the plan or a ruling does not name" — "expect(...).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }])" — the only change is the string expectation and a comment, no unnamed behaviour.
+MET — measured before/after in the implementation notes "surface-validate --check measured 426 strings before and 427 after" — surface-validate.logic.test.ts:91 "measured with surface-validate --check before (426) and after (427)" — the diff's number matches the recorded measurement.
+MET — RR-0448 / criterion #6 topic addition — "help.mailto.wrong_lot" with "goldens unchanged (100)" — the +1 string is the one naming the wrong-lot help topic, and the golden count is left at 100 as the notes state.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  29395ms (29.4s)
+📊 Tokens — total: 14008, input: 8451, output: 5557, reasoning: 4884

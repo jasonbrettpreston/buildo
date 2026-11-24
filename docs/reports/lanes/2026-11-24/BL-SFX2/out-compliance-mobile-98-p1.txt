@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:01:03.671Z file_sha256=6d3cc5ae7ab5b0a7d21d22616b4e4a1441e81111cd3949de66e02f3a6fd69e33 prompt_sha256=611d7694df818950683d9fab9fa15a394e7096ff97dadef425d42af44a3d4f04
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-98-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-450 AC #1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts "it('known state: \"Highway 27\" holds a digit, so it counts as numbered and shows no refine line (as today)'" — a street typed with no house number whose name carries a numeral shows no refine line, and no pasted ruling names that exception, so the AC and the pinned behaviour disagree — record the exception as an operator ruling in the task record, or narrow hasHouseNumber to ignore a numeral that is part of the street name and flip the test
+DEFER severity=MED — task-450 "The plan's section 2 lines are this card's acceptance tests, each red first." — Implementation Notes "The mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station)" — AC #1, #2, #4 and #5 are pinned only by mobile jest tests whose red state was never demonstrated — attach the mobile red run (lane red.out or the push-station log) to the task before merge
+DEFER severity=LOW — ruling "the line \"Add a house number to narrow it down.\" shows below it at the cap and for a street typed with no house number." — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);" — the only overCap-true case is also a no-house-number query, so the at-the-cap trigger is never isolated and a regression to house-number-only passes — add a numbered query at the cap (for example '100 Bathurst St' with the full candidate list) asserting overCap true
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe" — a user-visible copy change from a straight to a curly apostrophe that no pasted AC or ruling text names, Q8.1 B and Q8.2 in the registry note being the refine-line ruling — cite the ruling sentence that requires the curly apostrophe in the task record, or drop the change
+MET — task-450 AC #1 (wording) — mobile/__tests__/parcelScreens.golden.test.ts — "expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');" matches the ruling's line verbatim
+MET — task-450 AC #2 — mobile/__tests__/parcelSearchMatch.test.ts — "expect(refetching.showMiss).toBe(true);" pins the settled miss through a re-fetch, with the error suppressed case beside it
+MET — task-450 AC #3 — mobile/__tests__/schemas.test.ts — "a lot form with one extra field parses" plus "the closed enums stay: an unknown detected value still throws"
+MET — task-450 AC #4 — mobile/__tests__/parcelScreens.golden.test.ts — "expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');"
+MET — task-450 AC #5 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx — "expect(mockReplace).not.toHaveBeenCalled();" with data undefined, isFetching false and no error
+MET — task-450 AC #6 (mobile link) — mobile/__tests__/surfaceRenderer.smoke.test.tsx — "expect(a.open_help).toHaveBeenCalledWith('wrong-lot', (S.ambiguous as SearchSituation).input);"
+MET — card "Dated notes owed: Spec 99 (the redirect-once pattern)" — docs/specs/03-mobile/99_mobile_state_architecture.md — "**Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2 ...)** the redirect-once pattern of the MaxBLD parcel-tool pages" placed under the §6.5 carve-out block, ending "No carve-out is added to the enumeration above."
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — that the new render smoke and screen-behaviour tests are excluded snapshots — the pasted dated note says "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots", and all new tests sit in mobile/__tests__ as behaviour or smoke
+REJECT — Spec 98 §4.1 "reviewers MUST reject any unenumerated carve-out" — that the parcel-tool note sneaks in a carve-out — the note states "No carve-out is added to the enumeration above", and both described behaviours take isFetching out of the gate rather than permit one
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: mobile-98
+
+---
+⏱  83872ms (83.9s)
+📊 Tokens — total: 49391, input: 33331, output: 16060, reasoning: 14880

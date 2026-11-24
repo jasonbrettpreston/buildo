@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:01:10.157Z file_sha256=3b09243a8f7eebb9416b897020268b410e4d8f973531518f5f6eff0160ca5323 prompt_sha256=d16d693d9e4ed1b6a96f7455e575c7b5a93c8fd0ee6c47b10f115291e96dead7
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-98-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-450 "Dated notes owed: Spec 99 (the redirect-once pattern); task-319" — NONE (the Spec 99 dated note is not visible in this chunk; the Note only says "The task-319 dated note lands in its own commit (no code file staged)") — the owed Spec 99 redirect-once dated note is asserted only by an implementation note in this material — confirm the Spec 99 dated note in docs/specs/03-mobile/99_mobile_state_architecture.md in its own chunk before merge, cannot see it here
+
+DEFER severity=LOW — task-450 AC#4 "The minimum-length copy is filled from the setting, not a typed 3" — src/tests/surfaces/search-web-binding.ui.test.tsx:34 "const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);" — a string-pattern replace fills only the first {min}, so a prompt carrying the token twice is compared as a half-built string the AC does not describe, and the run fails for a reason no ruling names — use a global substitution (split/join or /\{min\}/g) for both PROMPT and HINT
+
+DEFER severity=LOW — task-450 "Nothing is added that the plan or a ruling does not name (RR-0392, MORNING-DECISIONS.md:1975)" — src/tests/surfaces/search-web-binding.ui.test.tsx:81 "expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);" — bans the digit 3 anywhere in either copy string, a constraint no pasted clause names and one that trips on unrelated copy (a count, a lot number) — assert the template shape only at the {min} token, or compare the rendered value against MIN
+
+MET — task-450 AC#4 — src/tests/surfaces/search-web-binding.ui.test.tsx:33 — MIN is read from the generated slice's config.min_query_len, and the prompt and hint are asserted present in the rendered idle markup with no "{min}" left
+
+MET — task-450 AC#6 — src/tests/surfaces/search-web-binding.ui.test.tsx:136 — the web search link resolves to /help#topic=wrong-lot with the encoded input in the fragment
+
+MET — task-450 AC#6 — src/tests/surfaces/static-page.logic.test.ts:235 — the mobile ambiguous golden's report link onPress carries topic 'wrong-lot'
+
+MET — task-450 AC#6 — src/tests/surfaces/search-web-binding.ui.test.tsx:144 — the link topic is proven to be one of web_help's mailto topics in scripts/surfaces/_schema/static-page.json, so the page has the topic
+
+MET — task-450 "Nothing is added that the plan or a ruling does not name (RR-0392, MORNING-DECISIONS.md:1975)" — every added or edited assertion cites task-450 AC4 or AC6 in its comment or title, no unruled behaviour is pinned
+
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — the new renderToStaticMarkup substring assertions in search-web-binding.ui.test.tsx — the Spec 98 dated note M-246/MF-35 says "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots", and these assert host markup substrings, not a stored snapshot
+
+REJECT — Spec 98 §4 "Location: `mobile/__tests__/`" — the four changed files sit under src/tests/surfaces/ — Spec 98 §4 binds the mobile app's Jest suite, this change adds no test there and only grooms the existing web/surface harness named in the card's Files line
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  66735ms (66.7s)
+📊 Tokens — total: 24280, input: 11447, output: 12833, reasoning: 11933

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T16:06:56.521Z file_sha256=4a44894dd7b46c0188210a10dda5fc82f75ad7b5c70340c48ac436678f84e4a0 prompt_sha256=2cd6da85da06ac366fdec87c527639836f6bbef17e26bcacc3bfaf2b182c507a
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/lib/parcelSearchMatch.ts:359 "showMiss: outcome === 'no_match' && error == null," — dropping the `!isFetching` guard also drops the "settled" part: with no data yet (first fetch of every search) `deriveMatchType(debounced, undefined)` returns `no_match`, so `parcel-search-empty` ("No parcel found for that address.") renders next to the spinner while the first fetch is in flight, and the web `tail` renders it unconditionally from `s.showMiss` — a false miss on the loading path, which is the flicker this card is meant to fix — gate on a settled result, e.g. `showMiss: outcome === 'no_match' && error == null && (data != null || !isFetching)` (a settled miss still has its payload, so the line survives a re-fetch).
+
+BUG severity=HIGH — mobile/src/lib/parcelSearchMatch.ts:199 "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — deleting the declared/`match` shim makes a version-skew payload read as a miss: schemas.ts:370 keeps `resolution` optional precisely so "a payload from an older server still parses", so an installed build talking to a pre-MF-53 server that returns `match` (a real unique lot) now shows "No parcel found for that address." and never navigates — keep one line, `if (data.match) return 'unique';`, as the skew fallback, or gate the deletion on the mobile minimum server version.
+
+DEFER severity=MED — mobile/src/lib/semiQuestion.ts:78 "if (parcelId) state = 'loading';" — a lookup that never settles now spins forever with no bound: a React Query fetch paused offline stays `fetchStatus: 'paused'` (isFetching false, error null) for as long as the device is offline, and a disabled query is the same shape, so the page shows loading with no Retry and no error copy — bound it (elapsed-time check or a Retry once the query is idle/paused for N seconds) or expose the error state after a timeout.
+
+DEFER severity=MED — src/components/surfaces/web/SearchBinding.tsx:31 "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" — this runs at module load, so if the generated slice is missing the key or out of bounds the binding module throws at import and the whole web search page fails to render (previously a literal 3 could not fail); cannot see whether sliceNumber throws or clamps, grounder to confirm — fall back to the previous constant when the setting is unavailable instead of failing module init.
+
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts:301 "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — MF35-DF1 is closed for retry-after 0, but a 429 whose `RateLimitError.retryAfterSeconds` is itself null (no Retry-After header; cannot see that field's nullability) now yields `rateLimited: false, unexpected: true`, so it renders the connectivity copy and the user retries straight into the same 429 — classify on `error instanceof RateLimitError`, and carry `retryAfterSeconds` only for the copy.
+
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts:360 "showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null," — with a below-minimum query (e.g. "Ki") no fetch runs, data is undefined, so outcome is `no_match` and showMiss is true at the same time: both testID lines render together, contradicting the descriptors' "mutually exclusive" claim — require `debounced.trim().length >= args.minQueryLen` (or a settled fetch) for showMiss.
+
+REJECT — src/tests/surfaces/search-web-binding.ui.test.tsx "expect(topics).toContain(topic);" — the report link now sends `#topic=wrong-lot` while the help page resolves topics from static-page.json, which looks like a dangling deep link — handled: the new test pins the emitted topic to web_help's mailto topics with `expect(topic).toBe('wrong-lot')`, and the topic was added to static-page.schema.json's enum in the same change.
+
+VERDICT: FAIL on error-path safety
+Paths walked: first fetch in flight (miss/render), settled miss re-fetch, below-minimum empty query, absent `resolution` (old-server payload), 429 with retry-after 0 and null, semi page no-data loading/redirect/error, web binding module init and `{min}` template fill, wrong-lot help link   Unguarded: 2
+
+---
+⏱  53878ms (53.9s)
+📊 Tokens — total: 40102, input: 30390, output: 9712, reasoning: 8656

@@ -1,0 +1,742 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:47d8f159245fc82d659b71c4e67a0d7beb76716290b0416f7c8b011915c6f8d2 part 1 of 1 chunk 2 of 2
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/src/lib/parcelSearchMatch.ts","mobile/src/lib/schemas.ts","mobile/src/lib/semiQuestion.ts","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/_schema/static-page.json","scripts/surfaces/_schema/static-page.schema.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json","scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json","src/components/surfaces/web/SearchBinding.tsx","src/tests/surfaces/parcel-legacy-oracle.logic.test.ts","src/tests/surfaces/search-web-binding.ui.test.tsx","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/src/lib/parcelSearchMatch.ts b/mobile/src/lib/parcelSearchMatch.ts
+index 38d2fd989ab6c05e839a4e1f119ae54c7f908d8c..9e7e045a7bef87f523d143d90c60233480fee639 100644
+--- a/mobile/src/lib/parcelSearchMatch.ts
++++ b/mobile/src/lib/parcelSearchMatch.ts
+@@ -22,6 +22,8 @@
+ // `deriveMatchType` obeys it; `no_match` still falls through to the intersection query shape (the server has no intersection parsing), and a
+ // server `text_candidates` now beats the intersection shape. The text below describes the payload BEFORE MF-53 and the client derivation,
+ // which still runs when `resolution` is absent (a payload from an older server). Prior text kept.
++// Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19; GROUNDER-QUESTIONS.md:73; prior text kept): the client derivation is deleted, as its TODO(contract)
++// ordered; a payload without `resolution` reads as the server's no_match (or the intersection shape). The server always sends it (lookup-flow.ts).
+ //
+ // WHAT THE SERVER ACTUALLY SENDS TODAY, measured.
+ // `GET /api/parcels/lookup?q=` returns `{ match, candidates, warnings, parcel }`. `match.matchType`
+@@ -168,6 +170,8 @@ export function isIntersectionQuery(query: string): boolean {
+  *
+  * SERVER VALUE WINS. If the response already names one of the five ruled types, that is the
+  * answer and nothing below runs. Everything after that line is the TODO(contract) shim.
++ * Dated 2026-11-24 (task-450 Q19; prior text kept): the shim is deleted; without a usable `resolution` the outcome is no_match, or intersection
++ * for an intersection-shaped query (the server has no intersection parsing).
+  */
+ export function deriveMatchType(
+   query: string,
+@@ -190,22 +194,19 @@ export function deriveMatchType(
+     return data.resolution;
+   }
+ 
+-  // 1. Forward-compatible path: the contract declares the type, we obey it.
+-  //    `matchType` is currently typed as the narrow 'exact' | 'typeahead' | 'direct' enum, so this
+-  //    never fires today — it fires the day the contract and mobile/src/lib/schemas.ts widen.
+-  const declared: unknown = data.match?.matchType;
+-  if (isParcelMatchType(declared)) return declared;
+-
+-  // 2. TODO(contract): derive the type from the shape of a response that does not declare one.
+-  //    This is the ONLY place a count is read anywhere in the SEARCH surface. Delete this block
+-  //    when `/api/parcels/lookup` returns a resolution type.
+-  if (data.match) return 'unique';
+-  if (isIntersectionQuery(trimmed)) return 'intersection';
+-  if (data.candidates.length > 0) return 'text_candidates';
+-  // NOTE: a zero-candidate response is reported as `no_match`, never as `unlinked`. `unlinked`
+-  // means "the address resolved but no parcel is linked to it", which this payload cannot express.
+-  // Guessing would be exactly the silent fallback the ruling forbids.
+-  return 'no_match';
++  // task-450 Q19: no usable resolution is the server's no_match. Never `unlinked` or a count-derived guess: that would be the silent fallback
++  // the ruling forbids.
++  return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';
++}
++
++/**
++ * task-450 SEARCHFIX.2 (2a, phone side; RR-0443 c): does the typed text carry a house number? True when the text before the first comma holds a
++ * digit. It copies the server's comma cut (src/lib/admin/parcel-lookup.ts) but not its first-word digit test: any digit counts, so
++ * "Unit 4, 123 Yonge St" is numbered. Known differences fail open to the behaviour before task-450 (no refine line, never a hidden list):
++ * "Highway 27", a bare "Unit 4" and a trailing unit ("King St W Apt 4") count as numbered.
++ */
++export function hasHouseNumber(query: string): boolean {
++  return /\d/.test(query.split(',')[0] ?? '');
+ }
+ 
+ /** True when the candidate list hit the contract cap and the user should be asked to narrow. */
+@@ -273,6 +274,8 @@ export { diffCandidateAddress, type AddressSegment } from './parcelSearchCore';
+ // mobile/app/(app)/parcel-tool/index.tsx verbatim (the must-survive list of ~/Buildo-scratch/mcfrontend/MF-35/plan.v2.md §4, rows 11-17):
+ // the Toronto check before the network, the error classes, `deriveMatchType(debounced, error ? undefined : data)`, the 10-cap after the
+ // slice with the refine line at >= the cap, the miss only when not fetching and no error, the prompt only below the minimum and with no error.
++// Dated 2026-11-24 (task-450 SEARCHFIX.2; prior text kept): the miss shows with no error whether or not a re-fetch runs (V4), the refine line also
++// shows for a candidate list typed with no house number (2a, ruled B), and a retry-after of 0 is one message (L3, MF35-DF1 closed).
+ 
+ /** Row 11: the hook gets '' for an out-of-Toronto query, so a refusal costs nothing against the 60/min bucket. */
+ export function searchQueryArg(debounced: string): string {
+@@ -285,7 +288,7 @@ export type ParcelSearchErrorClass = {
+   retryAfterSeconds: number | null;
+   /** 403: the entitlement refusal, never the miss copy. */
+   entitlement: boolean;
+-  /** Everything else, and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed). */
++  /** Everything else. MF35-DF1 closed (task-450 L3; prior text kept: "and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed)"). */
+   unexpected: boolean;
+   /** The parse failure: its own text, no Retry. */
+   schemaDrift: boolean;
+@@ -295,7 +298,7 @@ export type ParcelSearchErrorClass = {
+ export function classifyParcelSearchError(error: unknown, schemaDrift: boolean): ParcelSearchErrorClass {
+   const retryAfterSeconds = error instanceof RateLimitError ? error.retryAfterSeconds : null;
+   const entitlement = error instanceof ApiError && error.status === 403;
+-  const unexpected = error != null && !retryAfterSeconds && !entitlement;
++  const unexpected = error != null && retryAfterSeconds == null && !entitlement;
+   return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
+ }
+ 
+@@ -308,6 +311,7 @@ export type SearchSituation = {
+   errors: ParcelSearchErrorClass;
+   /** Capped at the limit, after the slice. */
+   candidates: ParcelCandidate[];
++  /** Show the refine line: the list hit the cap, or (task-450, ruled B) a candidate list for a query with no house number; the list stays. */
+   overCap: boolean;
+   showMiss: boolean;
+   showPrompt: boolean;
+@@ -339,6 +343,8 @@ export function buildSearchSituation(args: {
+   const { debounced, data, error, isFetching } = args;
+   const outcome = deriveMatchType(debounced, error ? undefined : data);
+   const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
++  // task-450 (2a, RR-0443 c; QUESTIONS-RULED.md Q8.1 B): a candidate list for a query with no house number also asks for one; the rows are kept.
++  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);
+   const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
+   return {
+     input: args.input,
+@@ -347,8 +353,9 @@ export function buildSearchSituation(args: {
+     isFetching,
+     errors: classifyParcelSearchError(error, args.schemaDrift),
+     candidates,
+-    overCap: isOverCandidateCap(candidates, args.cap),
+-    showMiss: outcome === 'no_match' && !isFetching && error == null,
++    overCap: noNumber || isOverCandidateCap(candidates, args.cap),
++    // task-450 V4 (Spec 99 §6.5 :527-530): a settled miss keeps its line on a re-fetch; isFetching is not a render gate here.
++    showMiss: outcome === 'no_match' && error == null,
+     showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
+     recent: [...args.recent],
+     selectedParcelId: selected,
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index 670b101a0bc1ed2c85e92f396117c24cabbdb107..45670d6cfe089fa069493409faae6dc686e2dbfe 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -368,7 +368,8 @@ export const ParcelCandidateSchema = z.object({
+ 
+ // MF-53 (Spec 100 §3.2 dated note 2026-11-11): the outcome name and the map block. Both OPTIONAL, and the map objects are plain (not
+ // .strict()), so a payload from an older server still parses and a server-added field never raises ParcelLookupSchemaError on an installed
+-// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent.
++// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent. Dated 2026-11-24
++// (task-450 SEARCHFIX.2, Q19; prior text kept): that derivation is deleted; a payload without `resolution` reads as the server's no_match.
+ const LatLngSchema = z.object({ lat: z.number(), lng: z.number() });
+ const RingSchema = z.array(z.tuple([z.number(), z.number()]));
+ export const LotOutlineSchema = z.union([
+@@ -419,13 +420,13 @@ export const ReportPageViewSchema = z.object({
+ 
+ // SEMI-B (Spec 78 O-4 + the doubt rule; operator "semi all y" / "semi ask a", 2026-11-13): mirrors src/app/api/parcels/lookup/types.ts
+ // ConsumerLotFormSchema. Optional and nullable: an older server omits it and the app then never asks.
+-export const ParcelLotFormSchema = z
+-  .object({
+-    detected: z.enum(['semi_half', 'detached']),
+-    basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
+-    unsure: z.boolean(),
+-  })
+-  .strict();
++// Dated 2026-11-24 (task-450 SEARCHFIX.2, L1; GROUNDER-B D1; prior text kept: the object ended in .strict()): plain, the MF-53 form above, so a
++// server-added field never raises ParcelLookupSchemaError on an installed build. The closed enum lists stay.
++export const ParcelLotFormSchema = z.object({
++  detected: z.enum(['semi_half', 'detached']),
++  basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
++  unsure: z.boolean(),
++});
+ export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
+ 
+ export const ConsumerParcelLookupResultSchema = z.object({
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 1eba6b691ffd560e151844aa6ce2be6c402f8b9b..3d0bb19b5e44cc2ba3f32e10a54dd1d6d2000c80 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -50,7 +50,7 @@ export type SemiQuestionSituation = {
+   route: string | null;
+   /** Continue's answered lookup is running (SRCH.SEMI-3): true only in the ask state. */
+   busy: boolean;
+-  /** The redirect state's target (the report; the Lookup route with no data), else null. */
++  /** The redirect state's target (the report; the Lookup route for an empty parcel id), else null. task-450 V5: no data with an id is loading. */
+   navigate: string | null;
+ };
+ 
+@@ -58,19 +58,22 @@ export function buildSemiQuestionSituation(args: {
+   parcelId: string;
+   data: ConsumerParcelLookupResult | undefined;
+   error: unknown;
++  /** Kept in the type so callers do not change; not read since task-450 V5 (Spec 99 §6.5: isFetching is not a render gate). */
+   isFetching: boolean;
+   schemaDrift: boolean;
+   selected: SemiAnswer | null;
+   /** Continue's answered lookup is running; optional, false when omitted. */
+   submitting?: boolean;
+ }): SemiQuestionSituation {
+-  const { parcelId, data, error, isFetching } = args;
++  const { parcelId, data, error } = args;
+   const errors = classifyParcelSearchError(error, args.schemaDrift);
+   let state: SemiQuestionState;
+   let navigate: string | null = null;
+   if (error != null) state = 'error';
+   else if (!data) {
+-    if (isFetching) state = 'loading';
++    // task-450 V5 (Spec 99 §6.5 :527-530; QUESTIONS-RULED.md Q8.4 a): a paused offline first fetch reports isFetching false with no data, so no data
++    // with a parcel id is loading until the lookup settles; only an empty parcel id has nothing to wait for and goes to Lookup.
++    if (parcelId) state = 'loading';
+     else { state = 'redirect'; navigate = PARCEL_TAB_ROUTE.lookup; }
+   } else if (data.lotForm?.unsure === true) state = 'ask';
+   else { state = 'redirect'; navigate = parcelSearchRoute('unique', { parcelId, query: '' }); }
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index fa9c133cdca91c0b304fead52373ed113d9dca9d..4a4c42bc359dc4fd00a3fced4c11e029f78fd349 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -7122,7 +7122,7 @@
+     "docs": {
+       "purpose": "The one-question page before the report (SEMI-B; operator \"semi ask a\", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: \"Is this house one half of a semi-detached pair?\" with three answers: \"Yes, it's one half of a semi\" (semi view, renovations only), \"No, it's detached\" (the full report), \"Not sure\" (the semi view, with \"This isn't a semi\" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.",
+       "data_story": "It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.",
+-      "under_126": "**CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component."
++      "under_126": "**CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component. Dated 2026-11-24 (task-450 SEARCHFIX.2, R4; GROUNDER-H D6; prior text kept): render.projection stays none beside a populated render.list because the repo schema requires render.list.columns for a generated LIST with projection list (surface.schema.json, \"/render/list must have required property 'columns'\") and three answer cards have no columns; the busy overlay is the busy flag of the ask state (SemiQuestionBinding.tsx SEMI_QUESTION_FLAG_NAMES), not a state name: the closed state list has no busy state."
+     },
+     "evidence": {
+       "files": [
+@@ -7540,9 +7540,9 @@
+     "kind": "SURFACE",
+     "status": "generated",
+     "docs": {
+-      "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.",
+-      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.",
+-      "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module."
++      "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): \"past ten it asks for a house number instead\" no longer says what the page does: the list stays, and the line \"Add a house number to narrow it down.\" shows below it at the cap and for a street typed with no house number.",
++      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): \"It holds no client store at all\" is no longer true: the recent searches are kept on the phone in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).",
++      "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page also keeps the recent searches on the phone, in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a)."
+     },
+     "evidence": {
+       "files": [
+@@ -7570,7 +7570,7 @@
+         "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType"
+       ],
+       "emits": [
+-        "mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file",
++        "mobile/app/(app)/parcel-tool/index.tsx:1-128 — no track() call in the file (task-450 R2: the file has 128 lines; prior cite :1-312)",
+         "src/app/api/parcels/lookup/route.ts:113-119"
+       ]
+     },
+@@ -7766,7 +7766,7 @@
+         ],
+         "on_missing": "403"
+       },
+-      "flag": "none",
++      "flag": "MAXBLD_WEB_LIVE (web target only)",
+       "permission": "none",
+       "rate_bucket": "parcels-search:{uid} — 60/min, 60s window (deliberately separate from the detail bucket)"
+     },
+@@ -7801,7 +7801,7 @@
+         "severity": "FAIL",
+         "blocking": false,
+         "when": "post",
+-        "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304."
++        "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/src/components/surfaces/SearchBinding.tsx:219, :222, :215 (task-450 R2: re-pointed; prior cite mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304). Dated 2026-11-24 (task-450 SEARCHFIX.2, ruled B, QUESTIONS-RULED.md Q8.1): the refine line also shows for a candidate list typed with no house number, next to the list."
+       },
+       {
+         "id": "parcelsearch_log_hygiene",
+@@ -7817,7 +7817,7 @@
+         "severity": "FAIL",
+         "blocking": false,
+         "when": "post",
+-        "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
++        "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/src/components/surfaces/SearchBinding.tsx:131; task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
+       },
+       {
+         "id": "parcelsearch_a11y",
+@@ -7904,11 +7904,11 @@
+       "answer": "inline",
+       "why": "Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as \"No parcel found for that address.\" — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value.",
+       "evidence": [
+-        "mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications",
+-        "mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto",
+-        "mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit",
+-        "mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement",
+-        "mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error"
++        "mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)",
++        "mobile/src/components/surfaces/SearchBinding.tsx:128 — testID parcel-search-outside-toronto (task-450 R2: prior cite index.tsx:201)",
++        "mobile/src/components/surfaces/SearchBinding.tsx:131 — testID parcel-search-ratelimit (task-450 R2: prior cite index.tsx:214)",
++        "mobile/src/components/surfaces/SearchBinding.tsx:135 — testID parcel-search-entitlement (task-450 R2: prior cite index.tsx:222)",
++        "mobile/src/components/surfaces/SearchBinding.tsx:138 — testID parcel-search-error (task-450 R2: prior cite index.tsx:234)"
+       ],
+       "classes": [
+         {
+@@ -7940,7 +7940,7 @@
+       "answer": "none",
+       "why": "The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text.",
+       "evidence": [
+-        "mobile/app/(app)/parcel-tool/index.tsx:1-115",
++        "mobile/app/(app)/parcel-tool/index.tsx:1-128 (task-450 R2: the whole file; prior cite :1-115)",
+         "src/app/api/parcels/lookup/route.ts:113-119"
+       ],
+       "analytics": [],
+@@ -7956,7 +7956,7 @@
+     },
+     "metering": {
+       "answer": "none",
+-      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
++      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page counts nothing; the lookup it calls counts a produced report (F02).",
+       "evidence": [
+         "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+         "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+@@ -8047,7 +8047,7 @@
+       },
+       {
+         "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-derived display values",
+-        "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other). The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value.",
++        "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other). Dated 2026-11-24 (task-450 SEARCHFIX.2, L5; prior text kept): + min_query_len, the setting config.min_query_len read through sliceNumber, which fills {min} in the prompt and the input hint (no typed 3). The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value.",
+         "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"): \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\"",
+         "date": "2026-11-10"
+       },
+@@ -8071,7 +8071,7 @@
+       }
+     ],
+     "interpretation": "none",
+-    "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.\n\nMF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the \"Report incorrect address match\" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\").",
++    "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.\n\nMF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the \"Report incorrect address match\" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\"). Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the two product_questions below are closed: the entitlement product by MF-45 D-4 (a) (the parcel_tool product, the deviation entry above; removed by MF-50), and the two unreachable branches by MF-53 (the server names multi_parcel and unlinked in `resolution`).",
+     "x-draft": {
+       "shard": "mobile-product",
+       "files": [
+@@ -8111,7 +8111,7 @@
+       "leakage": "none",
+       "product_questions": [
+         {
+-          "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?",
++          "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a).",
+           "measured": "src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.",
+           "evidence": [
+             "src/app/api/parcels/lookup/route.ts:47-60",
+@@ -8121,7 +8121,7 @@
+           "spec_says": "Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app."
+         },
+         {
+-          "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?",
++          "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`).",
+           "measured": "unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.",
+           "evidence": [
+             "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType",
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index ba5c155b4a858e0da5717e003aaf778d60941299..d49e207b7bf753c31ecacf192162a632dab5a80f 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -28,6 +28,12 @@
+         "topic": "address_match",
+         "value": "support_inbox"
+        },
++       {
++        "role": "mailto",
++        "content": "help.mailto.wrong_lot",
++        "topic": "wrong-lot",
++        "value": "support_inbox"
++       },
+        {
+         "role": "mailto",
+         "content": "help.mailto.lot_match",
+diff --git a/scripts/surfaces/_schema/static-page.schema.json b/scripts/surfaces/_schema/static-page.schema.json
+index cf1aac2fb45bfcaded4dc36e7de06693fa66bae5..bd000c95b216c2063483c1bb3bcb2fef2f2aeb03 100644
+--- a/scripts/surfaces/_schema/static-page.schema.json
++++ b/scripts/surfaces/_schema/static-page.schema.json
+@@ -181,6 +181,7 @@
+             "general",
+             "address_match",
+             "lot_match",
++            "wrong-lot",
+             "billing",
+             "enterprise"
+           ]
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
+index 1e64e85798b1dd0aa0d2ba2e34640896c4464cd0..76ce5c65f6d3217419325abfaa77e5c9b28ad8ea 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
+@@ -5,20 +5,20 @@
+   "footer.terms": "Terms of Service",
+   "list.badge": "{count} candidates",
+   "list.rail": "Ambiguous address query",
+-  "list.refine": "More than 10 lots match. Add a house number to narrow it down.",
++  "list.refine": "Add a house number to narrow it down.",
+   "list.report": "Report incorrect address match",
+   "list.select": "Select",
+   "list.select.label": "Open the selected lot",
+   "search.chip.label": "Search {query}",
+   "search.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+   "search.error": "Couldn’t reach the lot service. Check your connection and try again.",
+-  "search.input.hint": "Enter at least 3 characters to search for a lot",
++  "search.input.hint": "Enter at least {min} characters to search for a lot",
+   "search.input.label": "Search a Toronto address",
+   "search.input.placeholder": "Enter a Toronto address",
+   "search.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "search.miss": "No parcel found for that address.",
+   "search.outside_toronto": "Lots are only available in Toronto.",
+-  "search.prompt": "Type at least 3 characters to search.",
++  "search.prompt": "Type at least {min} characters to search.",
+   "search.ratelimit": "Too many searches. Try again in {seconds}s.",
+   "search.reports_left": "{left} of {allowance} reports left until {reset}",
+   "search.retry.label": "Retry the search",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+index b35b0025221dc61f1b5f43816b8ef6faaff99c6b..032e8ef469c2fcce568af20519797a7f1921a1ec 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+@@ -2,9 +2,9 @@
+   "kind": "SURFACE",
+   "status": "generated",
+   "docs": {
+-    "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.",
+-    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.",
+-    "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module."
++    "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): \"past ten it asks for a house number instead\" no longer says what the page does: the list stays, and the line \"Add a house number to narrow it down.\" shows below it at the cap and for a street typed with no house number.",
++    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): \"It holds no client store at all\" is no longer true: the recent searches are kept on the phone in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).",
++    "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page also keeps the recent searches on the phone, in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a)."
+   },
+   "evidence": {
+     "files": [
+@@ -32,7 +32,7 @@
+       "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType"
+     ],
+     "emits": [
+-      "mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file",
++      "mobile/app/(app)/parcel-tool/index.tsx:1-128 — no track() call in the file (task-450 R2: the file has 128 lines; prior cite :1-312)",
+       "src/app/api/parcels/lookup/route.ts:113-119"
+     ]
+   },
+@@ -228,7 +228,7 @@
+       ],
+       "on_missing": "403"
+     },
+-    "flag": "none",
++    "flag": "MAXBLD_WEB_LIVE (web target only)",
+     "permission": "none",
+     "rate_bucket": "parcels-search:{uid} — 60/min, 60s window (deliberately separate from the detail bucket)"
+   },
+@@ -263,7 +263,7 @@
+       "severity": "FAIL",
+       "blocking": false,
+       "when": "post",
+-      "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304."
++      "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/src/components/surfaces/SearchBinding.tsx:219, :222, :215 (task-450 R2: re-pointed; prior cite mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304). Dated 2026-11-24 (task-450 SEARCHFIX.2, ruled B, QUESTIONS-RULED.md Q8.1): the refine line also shows for a candidate list typed with no house number, next to the list."
+     },
+     {
+       "id": "parcelsearch_log_hygiene",
+@@ -279,7 +279,7 @@
+       "severity": "FAIL",
+       "blocking": false,
+       "when": "post",
+-      "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
++      "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/src/components/surfaces/SearchBinding.tsx:131; task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
+     },
+     {
+       "id": "parcelsearch_a11y",
+@@ -366,11 +366,11 @@
+     "answer": "inline",
+     "why": "Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as \"No parcel found for that address.\" — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value.",
+     "evidence": [
+-      "mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications",
+-      "mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto",
+-      "mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit",
+-      "mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement",
+-      "mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error"
++      "mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)",
++      "mobile/src/components/surfaces/SearchBinding.tsx:128 — testID parcel-search-outside-toronto (task-450 R2: prior cite index.tsx:201)",
++      "mobile/src/components/surfaces/SearchBinding.tsx:131 — testID parcel-search-ratelimit (task-450 R2: prior cite index.tsx:214)",
++      "mobile/src/components/surfaces/SearchBinding.tsx:135 — testID parcel-search-entitlement (task-450 R2: prior cite index.tsx:222)",
++      "mobile/src/components/surfaces/SearchBinding.tsx:138 — testID parcel-search-error (task-450 R2: prior cite index.tsx:234)"
+     ],
+     "classes": [
+       {
+@@ -402,7 +402,7 @@
+     "answer": "none",
+     "why": "The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text.",
+     "evidence": [
+-      "mobile/app/(app)/parcel-tool/index.tsx:1-115",
++      "mobile/app/(app)/parcel-tool/index.tsx:1-128 (task-450 R2: the whole file; prior cite :1-115)",
+       "src/app/api/parcels/lookup/route.ts:113-119"
+     ],
+     "analytics": [],
+@@ -418,7 +418,7 @@
+   },
+   "metering": {
+     "answer": "none",
+-    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
++    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page counts nothing; the lookup it calls counts a produced report (F02).",
+     "evidence": [
+       "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+       "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+@@ -509,7 +509,7 @@
+     },
+     {
+       "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-derived display values",
+-      "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other). The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value.",
++      "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other). Dated 2026-11-24 (task-450 SEARCHFIX.2, L5; prior text kept): + min_query_len, the setting config.min_query_len read through sliceNumber, which fills {min} in the prompt and the input hint (no typed 3). The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value.",
+       "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"): \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\"",
+       "date": "2026-11-10"
+     },
+@@ -533,7 +533,7 @@
+     }
+   ],
+   "interpretation": "none",
+-  "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.\n\nMF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the \"Report incorrect address match\" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\").",
++  "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.\n\nMF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the \"Report incorrect address match\" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\"). Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the two product_questions below are closed: the entitlement product by MF-45 D-4 (a) (the parcel_tool product, the deviation entry above; removed by MF-50), and the two unreachable branches by MF-53 (the server names multi_parcel and unlinked in `resolution`).",
+   "x-draft": {
+     "shard": "mobile-product",
+     "files": [
+@@ -573,7 +573,7 @@
+     "leakage": "none",
+     "product_questions": [
+       {
+-        "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?",
++        "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a).",
+         "measured": "src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.",
+         "evidence": [
+           "src/app/api/parcels/lookup/route.ts:47-60",
+@@ -583,7 +583,7 @@
+         "spec_says": "Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app."
+       },
+       {
+-        "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?",
++        "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`).",
+         "measured": "unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.",
+         "evidence": [
+           "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json
+index 961ef0e88daf7da774e39e42d34086f2705c5a24..6156ff0e107e24418ad9a981228b6d81debc1780 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json
+@@ -1,7 +1,7 @@
+ {
+   "back.label": "Back to search",
+   "question.title": "Is this house one half of a semi-detached pair?",
+-  "answer.yes": "Yes, it's one half of a semi",
++  "answer.yes": "Yes, it’s one half of a semi",
+   "answer.no": "No, it's detached",
+   "answer.not_sure": "Not sure",
+   "select.none": "Choose an answer",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+index a8b56144cd440956f33ebbb136f087082de82714..92d0cb72b8960d602483546e4bb127c4e8dd7755 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+@@ -4,7 +4,7 @@
+   "docs": {
+     "purpose": "The one-question page before the report (SEMI-B; operator \"semi ask a\", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: \"Is this house one half of a semi-detached pair?\" with three answers: \"Yes, it's one half of a semi\" (semi view, renovations only), \"No, it's detached\" (the full report), \"Not sure\" (the semi view, with \"This isn't a semi\" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.",
+     "data_story": "It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.",
+-    "under_126": "**CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component."
++    "under_126": "**CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component. Dated 2026-11-24 (task-450 SEARCHFIX.2, R4; GROUNDER-H D6; prior text kept): render.projection stays none beside a populated render.list because the repo schema requires render.list.columns for a generated LIST with projection list (surface.schema.json, \"/render/list must have required property 'columns'\") and three answer cards have no columns; the busy overlay is the busy flag of the ask state (SemiQuestionBinding.tsx SEMI_QUESTION_FLAG_NAMES), not a state name: the closed state list has no busy state."
+   },
+   "evidence": {
+     "files": [
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+index 79c7991d84e882aed181842c96939b5e61e04f9d..add8f5192306c4d96a1c1adbbf0a25989a6b46fa 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+@@ -9,5 +9,6 @@
+   "help.mailto.enterprise": "Ask about the Enterprise plan",
+   "help.mailto.general": "Email support",
+   "help.mailto.lot_match": "Report incorrect lot match",
++  "help.mailto.wrong_lot": "Wrong address or lot",
+   "help.title": "Help & Support"
+ }
+diff --git a/src/components/surfaces/web/SearchBinding.tsx b/src/components/surfaces/web/SearchBinding.tsx
+index 123cd91437e470d82c2481b13f12788908d0030e..e77138e3c96a43d839a5c3db07fd36fda0a4ac46 100644
+--- a/src/components/surfaces/web/SearchBinding.tsx
++++ b/src/components/surfaces/web/SearchBinding.tsx
+@@ -24,6 +24,11 @@ import Link from 'next/link';
+ import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
+ import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
+ import { diffCandidateAddress, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
++// task-450 L5: the minimum length is the setting the phone reads (the generated slice's config.min_query_len, held to its bounds by sliceNumber).
++import { sliceNumber } from '../../../../mobile/src/lib/sliceConfig';
++import searchSlice from '../../../../mobile/src/generated/surfaces/mobile_parcel_search.json';
++
++const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');
+ 
+ export type Ref = { content: string } | { contract: string } | { derived: string };
+ export type Template = { text: Ref; vars: Record<string, Ref> };
+@@ -122,7 +127,7 @@ const pill = (s: WebSituation): WebNode =>
+       onChange: { action: 'change_input' },
+       placeholder: content('search.input.placeholder'),
+       ariaLabel: content('search.input.label'),
+-      ariaDescription: content('search.input.hint'),
++      ariaDescription: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5
+       autoComplete: 'off',
+     }),
+     ...(s.isFetching ? [node('Loader', { key: 'spinner', testID: 'parcel-search-spinner', size: 'sm', color: 'yellow', ariaLabel: content('search.searching') })] : []),
+@@ -234,7 +239,7 @@ const addressList = (s: WebSituation): WebNode[] => {
+       variant: 'subtle',
+       color: 'gray',
+       className: L.report,
+-      onClick: { action: 'open_help', topic: 'address_match', q: derived('input') },
++      onClick: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }, // task-450 AC6 (B.7 doc-2:49; prior topic address_match)
+     }, [content('list.report')]),
+   ];
+ };
+@@ -242,7 +247,7 @@ const addressList = (s: WebSituation): WebNode[] => {
+ const tail = (s: WebSituation): WebNode[] => [
+   ...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : []),
+   ...(s.showMiss ? [node('Text', { key: 'miss', testID: 'parcel-search-empty', className: L.miss }, [content('search.miss')])] : []),
+-  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
++  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [{ text: content('search.prompt'), vars: { min: derived('min_query_len') } }])] : []),
+ ];
+ 
+ /** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17) without the legal line, which is in the footer (last child, MF-91). */
+@@ -272,6 +277,7 @@ export function searchWebData(s: WebSituation): WebBindingData {
+     },
+     derived: {
+       input: s.input,
++      min_query_len: SEARCH_MIN_QUERY_LEN,
+       candidate_count: s.candidates.length,
+       recent: s.recent,
+       label: s.candidates.map((c) => c.address || c.parcelId),
+diff --git a/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts b/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
+index fd6e83a3a9a581993c3cf080439e5a5fa0e1c1dc..32d2e803a51e333f09f299e19a5e4b13eb5554ce 100644
+--- a/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
++++ b/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
+@@ -17,7 +17,9 @@ const legacy = rj('docs/reports/red-evidence/MF-35/legacy-props.json');
+ const content: Record<string, string> = rj('scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json');
+ const GDIR = 'src/tests/fixtures/surfaces/mobile_parcel_search';
+ const goldens = fs.readdirSync(path.join(ROOT, GDIR)).filter((f) => f.endsWith('.mobile.json')).map((f) => rj(`${GDIR}/${f}`));
+-const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDIDATE_LIMIT: '10' };
++// Dated 2026-11-24 (task-450 L5; prior text kept: CONFIG held SEARCH_MIN_QUERY_LEN: '3'): the minimum length is a {min} template filled from the setting,
++// so the legacy hint and prompt match as {} forms; the typed 3 is no longer copied here.
++const CONFIG: Record<string, string> = { SEARCH_CANDIDATE_LIMIT: '10' };
+ 
+ /** Ruled changes (CONTRACT, S6 vocabulary), each with its cite: plan v3 §4 rows 6, 9, 18 and the operator rulings quoted in plan v3 §0.2. */
+ export const INTENTIONALLY_CHANGED: Record<string, string> = {
+@@ -26,6 +28,7 @@ export const INTENTIONALLY_CHANGED: Record<string, string> = {
+   'accessibilityLabel=Search ${s.label}': 'the chips are the recent searches; the label is "Search <query>" (ruling 2026-11-09 item 2, P35-D16 a)',
+   'accessibilityLabel=Open lot at ${c.address || c.parcelId}': 'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)',
+   'Parcel {c.parcelId}': 'the radio cards carry the address only, as the layout (accepted 2026-11-09 item 1; plan v3 §2.2)',
++  'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.': 'the refine line becomes "Add a house number to narrow it down." at every row count, because it now also shows for a street with no house number next to a shorter list (RR-0443 c, MORNING-DECISIONS.md:2284 "they need to select from the available addresses that are close"; task-450 QUESTIONS-RULED.md Q8.2)',
+ };
+ 
+ const fill = (s: string): string => s.replace(/\$?\{([A-Z_]+)\}/g, (m, k: string) => CONFIG[k] ?? m).replace(/\$?\{[^}]+\}/g, '{}');
+diff --git a/src/tests/surfaces/search-web-binding.ui.test.tsx b/src/tests/surfaces/search-web-binding.ui.test.tsx
+index 26db04fd5623c0feb9934137a364c75b5800b592..6e2f90fb0c0374ff9a77c5e9449bc9a7d493d5e3 100644
+--- a/src/tests/surfaces/search-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/search-web-binding.ui.test.tsx
+@@ -27,6 +27,11 @@ const GOLDENS = fs.readdirSync(DIR).filter((f) => f.endsWith('.web.json')).sort(
+ const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
+ const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+ const bind = (s: WebSituation, extra: Json = {}): ReactElement => h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), ...extra });
++// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the prompt and the input
++// description are templates filled with it.
++const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);
++const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);
++const HINT = (C['search.input.hint'] as string).replace('{min}', MIN);
+ 
+ // Console errors a library prints during a server render that are not defects of the binding. Empty today: any entry needs a comment naming why.
+ const CONSOLE_ALLOW: RegExp[] = [];
+@@ -72,13 +77,19 @@ describe('(a) every web golden renders with its situation', () => {
+     expect(decode(renderToStaticMarkup(provided(bind(amb))))).toContain((C['list.badge'] as string).replace('{count}', String(amb.candidates.length)));
+     const st = SITUATIONS.static as WebSituation;
+     expect(decode(renderToStaticMarkup(provided(bind(st))))).toContain(`aria-label="${(C['search.chip.label'] as string).replace('{query}', st.recent[0] as string)}"`);
++    // task-450 AC4 (L5): the prompt and the input description carry the setting's value, no "{min}" left and no typed 3 in the content.
++    expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
++    const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
++    expect(idle).toContain(PROMPT);
++    expect(idle).toContain(`aria-description="${HINT}"`);
++    expect(idle).not.toContain('{min}');
+     expect(errors).toEqual([]);
+   });
+   it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)', () => {
+     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
+-    expect([idle.includes(C['search.prompt'] as string), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
++    expect([idle.includes(PROMPT), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
+     const no = decode(renderToStaticMarkup(provided(bind(WEB_UNAUTHORIZED_SITUATION))));
+-    expect([no.includes(C['search.entitlement'] as string), no.includes(C['search.prompt'] as string)]).toEqual([true, false]);
++    expect([no.includes(C['search.entitlement'] as string), no.includes(PROMPT)]).toEqual([true, false]);
+     const err = decode(renderToStaticMarkup(provided(bind(WEB_ERROR_SITUATION))));
+     expect([err.includes(C['search.error'] as string), err.includes(C['search.retry.text'] as string)]).toEqual([true, true]);
+     expect({ ...WEB_STATIC_SITUATION, recent: [] }).toEqual({ ...(SITUATIONS.static as WebSituation), recent: [] });
+@@ -118,11 +129,21 @@ describe('(c) actions reach the mount', () => {
+     fireEvent.click(screen.getByTestId('parcel-search-select'));
+     expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
+   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
+-  it('the report link opens /help with topic address_match and the encoded input in the fragment', () => {
++  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...with topic address_match..."): the topic is wrong-lot ("Wrong address or lot").
++  it('the report link opens /help with topic wrong-lot and the encoded input in the fragment', () => {
+     const amb = { ...(SITUATIONS.ambiguous as WebSituation), input: 'Queen & Spadina #2' };
+     render(provided(bind(amb)));
+     const a = screen.getByTestId('parcel-search-report') as HTMLAnchorElement;
+-    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=address_match&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
++    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=wrong-lot&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
++  });
++  it('task-450 AC6: the search link topic is a mailto topic of web_help in static-page.json', () => {
++    const table = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/static-page.json'), 'utf8')) as Json;
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((sec) => (sec.parts ?? []) as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic);
++    render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
++    const href = (screen.getByTestId('parcel-search-report') as HTMLAnchorElement).getAttribute('href') as string;
++    const topic = /#topic=([^&]+)/.exec(href)?.[1];
++    expect(topics).toContain(topic);
++    expect(topic).toBe('wrong-lot');
+   });
+ });
+ 
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c01ebce937b1dc92ca8ab7ffe1155674109731cd..c46c926fd9bb128d302ff52d8b162e7bcfe64ad7 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -226,12 +226,13 @@ describe('T7 the support inbox read (MF-46 follow-up, dated 2026-11-12)', () =>
+ 
+ describe('T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12)', () => {
+   const urlOf = (src: string): string | undefined => /export const MAXBLD_HELP_URL = '([^']+)';/.exec(src)?.[1];
+-  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query', () => {
++  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...opens it with topic address_match and the query"): the topic is wrong-lot.
++  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic wrong-lot and the query', () => {
+     expect(urlOf(fs.readFileSync(path.join(ROOT, 'mobile/src/lib/maxbldHelp.ts'), 'utf8'))).toBe(`${MAXBLD_ORIGIN}/help`);
+     expect(matchMaxbldRoute('/help')?.routeClass).toBe('public');
+     const find = (n: Json): Json | undefined => (n?.props?.testID === 'parcel-search-report' ? n : (n?.children ?? []).map(find).find(Boolean));
+     const report = find(rj('src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json').props);
+-    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'address_match', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
++    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'wrong-lot', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
+     expect(SEARCH['list.report']).toBe('Report incorrect address match');
+   });
+   it('RED: a second typed host is caught', () => {
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index dcc9764edc392e19e2d93eca73fa3e25f8ca5ed3..8f5965f7382c7fa997eaf1e23e2d8062b18c8f46 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -258,7 +258,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 "it appears we will need it so we should build it"): 424 -> 425 strings (+1: search.reports_left in mobile_parcel_search.content.json) and 98 -> 100 goldens (+2: the state hit, golden reports_left, mobile and web); measured with surface-validate --check before (424, 98) and after (425, 100).
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 426 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 4b23ca62aa4d8433e0714d139af26949d2854b46..348152fd8d4312ead5bad40b23002a09b633dfb4 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -88,7 +88,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 "it appears we will need it so we should build it"): 424 -> 425 strings (+1: search.reports_left in mobile_parcel_search.content.json) and 98 -> 100 goldens (+2: the state hit, golden reports_left, mobile and web); measured with surface-validate --check before (424, 98) and after (425, 100).
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+
