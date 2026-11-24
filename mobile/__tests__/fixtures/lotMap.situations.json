@@ -284,7 +284,7 @@
             },
             {
               "parcelId": "PCL-C3",
-              "area": "3,052 sq ft · 284 m²",
+              "area": null,
               "frontage": "7.6 m",
               "zoning": "RD (f12.0; a370)",
               "centroid": {
@@ -743,7 +743,7 @@
             },
             {
               "parcelId": "PCL-C3",
-              "area": "3,052 sq ft · 284 m²",
+              "area": null,
               "frontage": "7.6 m",
               "zoning": "RD (f12.0; a370)",
               "centroid": {

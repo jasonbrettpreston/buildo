@@ -22,6 +22,61 @@
         },
         "children": [
           {
+            "component": "Group",
+            "props": {
+              "key": "top",
+              "testID": "static-top",
+              "id": "top",
+              "component": "header",
+              "className": "justify-between gap-2"
+            },
+            "children": [
+              {
+                "component": "Button",
+                "props": {
+                  "key": "top-0",
+                  "testID": "static-link-/",
+                  "href": "/",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-lg font-extrabold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "nav.home"
+                  }
+                ]
+              },
+              {
+                "component": "Group",
+                "props": {
+                  "key": "top-links",
+                  "className": "gap-1"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "top-1",
+                      "testID": "static-link-/login",
+                      "href": "/login",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "nav.sign_in"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "component": "Stack",
             "props": {
               "key": "privacy",
@@ -689,7 +744,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json": "017acce37a4284c7",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json": "a43255981b091926",
       "scripts/surfaces/parcel_product/F06/surfaces/web_privacy.descriptor.json": "d1cc839064aa9de8"
     }
   }

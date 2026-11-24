@@ -14,6 +14,9 @@
 //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
 //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
 //       topic on a paragraph throw.
+//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
+//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
+//       narrow column; RED: a title-less hero with any other part still throws.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
 });
 
 describe('(c) RED: planted defects throw', () => {
+  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
   it('an unknown component and an unknown action throw at render', () => {
     const { page, content } = base();
@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
     (bad.children[0] as StaticNode).component = 'Card';
     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
+    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
+    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
   });
@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
   });
   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
+    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
+    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
+    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
   });
 });
@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
     const { page, content } = staticPage('web_help', 'static');
     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
+    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
+  });
+});
+
+describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
+  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
+  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
+    const { page, content } = staticPage(id, state);
+    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
+    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
+    expect(header).not.toBeNull();
+    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
+    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
+    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
+    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
+    expect(html).toContain('max-w-2xl');
+    expect(html).not.toContain('max-w-6xl');
+    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
+    expect(errors).toEqual([]);
+  });
+  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
+    const { page } = clone(staticPage('web_help', 'static'));
+    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
+    expect(() => staticWebTree(page)).toThrow('a hero has a title');
   });
 });

@@ -8,6 +8,8 @@
 //         intersection, no lot linked, many lots.
 // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
 // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
+// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
+// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
 const HELP = 'parcel-lotmap-help';
 // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
 // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
+// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
 const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
+const TOPIC = 'wrong-lot';
 
 describe('SRCH.C12: the two v8 strings', () => {
   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get 
   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
   });
-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
+  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
     const col = column(golden(name));
     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
     expect(at).toBeGreaterThan(-1);
@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get 
     expect(link!.component).toBe('Button');
     expect(link!.props.testID).toBe(HELP);
     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
+    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
   });
@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
     expect(link.component).toBe('Button');
     expect(link.props.testID).toBe(HELP);
     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
-    expect(link.props.onPress).toEqual(openHelp('address_match'));
+    expect(link.props.onPress).toEqual(openHelp(TOPIC));
     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
@@ -109,6 +113,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
   it('every committed golden is classified above (a new state must be placed here)', () => {
     const files = fs.readdirSync(path.join(ROOT, GOLD)).filter((f) => f.endsWith('.mobile.json')).map((f) => f.replace('.mobile.json', '')).sort();
     expect(files).toEqual([...WITH_ROW, ...Object.keys(WITH_LINK), ...NONE].sort());
+  });
+});
+
+describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
+  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
+    const table = rj('scripts/surfaces/_schema/static-page.json');
+    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
+    expect(topics).toContain(TOPIC);
   });
 });
 

@@ -323,3 +323,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel 
     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
   });
 });
+
+// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
+// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
+// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
+describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
+  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
+    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
+  it('a placeholder size, one under the window and one over it give null', () => {
+    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
+  });
+  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
+    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
+    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
+    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
+  });
+  it('the lib reads the window from the one home and types no bound', () => {
+    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
+    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
+  });
+});
+
+// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
+describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
+  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
+    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
+      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
+    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
+    const s = payload.neighbourhood.compStats;
+    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
+    const cb = payload.neighbourhood.comparableBuilds![0]!;
+    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
+  });
+  it('a real zero is still 0 (only the empty string changes)', () => {
+    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
+    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
+  });
+});

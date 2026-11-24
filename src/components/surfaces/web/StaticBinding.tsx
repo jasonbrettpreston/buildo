@@ -216,6 +216,11 @@ const heroNode = (s: StaticSection): StaticNode => {
       media.push(textNode(p, { key, testID: 'landing-caption', className: L.caption }));
     }
   });
+  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77): a hero of only the wordmark and nav links is a plain page's header:
+  // the nav alone, as the <header>. Any other title-less hero still throws.
+  if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav')) {
+    return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);
+  }
   if (title === null) fail(`${s.id}: a hero has a title`);
   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.hero }, [
     node('Group', { key: `${s.id}-nav`, component: 'nav', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]),
@@ -325,7 +330,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
     if (!Array.isArray(s.parts) || s.parts.length === 0) fail(`${at}: no parts`);
     return { kind: s.kind, id: s.id, parts: (s.parts as unknown[]).map((p, j) => checkPart(p, s.kind as string, `${at} part ${j}`)) };
   });
-  const landing = sections.some((s) => s.kind === 'hero');
+  // SEARCHFIX.3 (task-451): the landing is a page with a titled hero; a plain page's header hero keeps the narrow column.
+  const landing = sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'));
   return node('Stack', { key: 'page', testID: 'static-page', component: 'main', className: L.screen }, [
     node('Stack', { key: 'column', className: landing ? L.wide : L.column }, sections.map((s) => (KIND_NODES[s.kind] as (x: StaticSection) => StaticNode)(s))),
   ]);

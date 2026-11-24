@@ -140,6 +140,38 @@
                             "contract": "contract_parcels_lookup.map.address"
                           }
                         }
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "unlinked-report",
+                          "testID": "parcel-lotmap-report",
+                          "className": "text-xs font-semibold text-report-ink underline",
+                          "accessibilityRole": "link",
+                          "onPress": {
+                            "action": "open_help",
+                            "topic": "wrong-lot",
+                            "q": {
+                              "derived": "query"
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "unlinked.report"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "unlinked-stop"
+                        },
+                        "children": [
+                          {
+                            "content": "unlinked.stop"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -155,7 +187,7 @@
                   "accessibilityRole": "link",
                   "onPress": {
                     "action": "open_help",
-                    "topic": "address_match",
+                    "topic": "wrong-lot",
                     "q": {
                       "derived": "query"
                     }
@@ -229,8 +261,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
     }
   }
 }
