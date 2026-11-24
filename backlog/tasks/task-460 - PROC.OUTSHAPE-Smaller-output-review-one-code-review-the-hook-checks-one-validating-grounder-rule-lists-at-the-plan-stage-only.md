@@ -3,10 +3,11 @@ id: TASK-460
 title: >-
   PROC.OUTSHAPE Smaller output review: one code review, the hook checks, one
   validating grounder; rule lists at the plan stage only
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
-updated_date: '2026-11-24T18:36:00Z'
+updated_date: '2026-11-24T18:37:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -17,6 +18,12 @@ references:
   - docs/reports/reviews/task-460/seat-integration-1.md
   - docs/reports/reviews/task-460/seat-reality-check-1.md
   - docs/reports/reviews/task-460/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 154210
 ---
@@ -230,3 +237,9 @@ rg#1 HIGH folded security is NOT sett
 rg#2 MED folded Ruled, not asked (Q1
 rg#3 MED folded are lists of docs/sp
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24 taken on the board at lane launch (lane BL-PROC460, worktree /Users/brettpreston_macmini/Buildo-wt-proc460, branch wf2/inc1b-proc460), RR-0240
+<!-- SECTION:NOTES:END -->
