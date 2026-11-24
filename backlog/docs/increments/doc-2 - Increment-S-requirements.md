@@ -3,7 +3,7 @@ id: doc-2
 title: Increment S requirements
 type: specification
 created_date: '2026-11-19T04:56:00Z'
-updated_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-24T16:58:00Z'
 ---
 # Increment S requirements
 
@@ -161,3 +161,12 @@ Search first: the current search pages = latest rendering small-pages-v8 ("MaxBL
 | G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
 | G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
 | G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+## Dated notes
+
+Dated notes 2026-11-24 (M-246, prior text kept; task-451 SEARCHFIX.3, lane BL-SFX3; the table rows above are unchanged):
+- C.3: the map draws no neighbour lots. Operator RR-0446, verbatim: "04  leave it as it is" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302); ruled at MORNING-DECISIONS.md:2303: "the several-lots map stays as built (no neighbour lots); objective C.3's text is corrected". The C.3 words "neighbours in zinc" no longer describe the page.
+- C.7: the status NOT BUILT is wrong. The card lead was built by task-336 (SRCH.LOTCARD); task-451 adds "at the back" for a lot with no fronting street (FOLD-PLAN.md:57), so the card reads "Lot A · has the house · faces Dunmore Lane" and "Lot B · no building · at the back" as the row says. Status: BUILT.
+- C.12: the status NOT BUILT is wrong. The link "Not sure which lot? Get help with an address" was built by task-321 (SRCH.C12; mobile/src/components/surfaces/LotMapBinding.tsx, the help row under the cards). Status: BUILT; task-451 points it at the topic wrong-lot.
+- B.6 and B.7: the no-lot message now ends "Try a nearby address or report it.", with "report it" an inline link to Help & Support, topic wrong-lot; every "Get help with an address" link takes the topic wrong-lot (the Help page has it since task-450).
+- C.9: the card's screen-reader label no longer reads the facts. Frontage and zoning are still sent by the lookup (the map field whitelist) but are no longer shown or spoken; the label is the card's visible text (lead line and area). An implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available" (RR-0444, MORNING-DECISIONS.md:2290-2291).

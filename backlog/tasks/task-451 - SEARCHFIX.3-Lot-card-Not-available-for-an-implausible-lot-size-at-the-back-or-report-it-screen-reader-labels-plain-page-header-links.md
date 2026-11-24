@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T17:01:00Z'
+updated_date: '2026-11-24T17:04:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -287,4 +287,6 @@ rg#6 MED folded this card's, uncondi
 2026-11-24 build (lane BL-SFX3), plan PLAN-451-v1 sections 3 and 4 followed. Red: the commit attempt with only the test and task files staged was refused, Test Files 7 failed, Tests 22 failed | 199 passed (lane red.out). Changes: consumer-lookup.ts num('') null (L2) and the map area null outside LOT_SIZE_PLAUSIBLE_M2 (ST3); map content lot.null Not available, the two no-street leads end at the back (V1, ruling 8.2 a), lot.label {lead}, {area}, select.label retired, unlinked.body ends 'or ' with unlinked.report and unlinked.stop (V2, ruling 8.1 b); LotMapBinding: inline report-it link (it reuses the existing link text class L.helpLinkText so it reads as a link), every help link topic wrong-lot (B.7), card label = lead + area, Continue label = its visible text, unreachable select.label branch deleted (V3); static-page.json header hero on web_help, web_terms, web_privacy and both web_maxbld_error states (H Q2, H Q4, ruling 8.5) and the R5 dated sentence; StaticBinding draws a wordmark-and-nav-only hero as the header and keeps the narrow column; nav.home MaxBLD and nav.sign_in Log in in the four content files (ruling 8.3); lot-map-data-check parseArgs error (L7); census entry and descriptor dated text and chain positions sources[4], [8], [15] (R3); doc-2 dated notes C.3 (AC6), C.7, C.12, B.6/B.7, C.9; MF-53 queue dated note. surface-validate --check 427 strings before, 436 after. Generators: emit-mobile-surfaces --write, lotmap-golden-capture --write (11), emit again, buildGoldens one-off (70 goldens, 5 rewritten), generate-surface-registry then --check clean. Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station; an in-memory tsx probe of the binding gave the expected card text, labels, the unlinked line, the four error notices and the single help topic wrong-lot (lane probe.out).
 
 2026-11-24 deviation (lane BL-SFX3): static-web-binding.ui.test.tsx (c) also indexes the web_maxbld_error error page's prose (children[0] -> [1]); the plan's index-shift list named web_help only. Found by the green commit's related run (1 failed), fixed in the same work commit.
+
+2026-11-24 work commit 04c181564 (hooks: GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); lane green.out). The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit: check-task-files refuses a path outside the Files line beside code, and neither path is code.
 <!-- SECTION:NOTES:END -->
