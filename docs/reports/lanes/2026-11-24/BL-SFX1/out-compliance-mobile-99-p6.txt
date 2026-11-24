@@ -1,26 +1,33 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.165Z file_sha256=94b094c0722c4ccd5c5a9d3b5b9c79da49b5f3b9bc972a3a893309dd2118e52f prompt_sha256=a5c062c98120b23d230be388f580578a7e588c89c43fdeefb457bf6ecc5fa880
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:00:40.551Z file_sha256=94b094c0722c4ccd5c5a9d3b5b9c79da49b5f3b9bc972a3a893309dd2118e52f prompt_sha256=a5c062c98120b23d230be388f580578a7e588c89c43fdeefb457bf6ecc5fa880
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p6.txt (model: deepseek-reasoner)
 
-PASS. The governing RULE LIST is spec 99 part 6 (§7.1 to §7.7, §8.1 to §8.6): all mobile state-debug, telemetry, and mobile test mandates. None of those clauses touches this diff, which is a server-side address resolver (`src/lib/admin/parcel-lookup.ts`), its tests, and contract/doc notes for the parcels lookup. The binding material here is the card's acceptance criteria and the operator rulings pasted in the task block; those are satisfied. No clause of the pasted spec part is violated and no operator ruling is unmet.
+MET — AC #1 / spec 100 note 2026-11-24 ("a one-row typeahead is `unique` only when it is the typed address in full") — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row leftover not in full is returned as text_candidates, so `unique` needs the full typed match.
 
-MET — RR-0442 "It should open on an exact match ... if the lot is shared by two parcels - you need to pick one" — src/lib/admin/parcel-lookup.ts:378 "if (exact.length === 1) { ... resolution: 'unique' ..." — a lot opens on the exact read only; a shared number returns multi_parcel (test case 20), so the exact-open plus pick-one rule holds.
-MET — RR-0443 c "Similar to an address mistake they need to select from the available addresses that are close" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a partial or one-row leftover returns the close-address list.
-MET — RR-0166 "ONE-12 a" (unit rule) — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?..." plus stripTrailingUnit — a leading or trailing unit is dropped and the address opens when exact (cases 26, 27a).
-MET — AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — the full window is never narrowed, so it lists.
-MET — AC #3 "A full correct address ... opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType); ... if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);" — typed street type narrows exact rows and opens on match (case 10).
-MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — both wildcards escaped in the prefix reads.
-MET — card "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts — only the pre-existing values `unique`, `text_candidates`, `no_match`, `multi_parcel`, `unlinked` are emitted, none added.
-MET — card "Must not: ... touch the report meter in the lookup route" — src/app/api/parcels/lookup/route.ts not in the changed file set — the openReport meter code is unchanged.
+MET — AC #2 ("Gerrard St W" with a full 10-row window returns a list, not the one W row) — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full window is never narrowed to a single W row; test T1 pins the 10-row and 9-row boundary.
 
-REJECT — spec 99 §7.5 "Sentry.setUser({ id: firebaseUser.uid }) MUST be called in the auth listener's signed-in branch" — accused of omitting Sentry user attribution — this diff is the server-side resolver and contract docs, not the mobile auth listener, so the clause does not bind.
-REJECT — spec 99 §8.6 "A pre-commit script ... check-spec99-matrix.mjs MUST parse the Zod object keys from userProfile.schema.ts" — accused of missing the schema-vs-matrix drift check — the change does not edit `mobile/src/lib/userProfile.schema.ts` or the §3.1 table.
-REJECT — RR-0392 "Nothing is added that the plan or a ruling does not name" — accused of scope creep in the descriptor (emits none to ledger, table and field counts) — these are named by the folded finding G3 R1 ("the lookup contract says exact opens and its counts restate their own arrays") and locked by the new T7 test in src/tests/consumer-parcel-lookup.infra.test.ts.
+MET — AC #3 ("A full correct address with its street type opens the lot when the number is shared by another street type") — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" and "if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);" — exact rows are narrowed by typed type, never to empty, with the direction re-checked after narrowing.
+
+MET — AC #4 (unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list) — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?..." and "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" and "if (!keepPeriods && q.includes('.') && ...)" — all four forms route to a hit or the close-address list, never no_match.
+
+MET — AC #5 (a typed % or _ is escaped and returns no unrelated lots) — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — the LIKE prefix escapes wildcards; test T3 asserts '\\%%' and 'MA\\_N%'.
+
+MET — AC #6 (the 29 typed-address cases of the seat record pass as tests) — src/tests/search-parser-guard.logic.test.ts "it.each(cases)('T5 (AC #6) case %s', async (_n, c) => {" — the seat record cases are encoded as T5 it.each rows with real rows from the local test stack.
+
+MET — "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts "function conflictList(rows: { parcel_id: string; address: string }[]): Resolution { return { match: null, candidates: ..., resolution: 'text_candidates', lotMap: null }; }" — every new list path reuses 'text_candidates'; no resolution value is added.
+
+MET — "Must not: ... touch the report meter in the lookup route" — changed paths exclude src/app/api/parcels/lookup/route.ts, data_story states "No `resolution` value is added and the meter is unchanged." — the meter code in the route is untouched.
+
+REJECT — spec 99 §7.6 (product funnel events) — accused of missing the canonical `track()` events — this diff is the server resolver plus tests and docs, no mobile screen file is in scope, so the funnel-site greps cannot be affected.
+REJECT — spec 99 §8.5 / §8.6 (store-enumeration and schema-vs-matrix drift checks) — accused of not adding those tests — no Zustand store and no mobile/src/lib/userProfile.schema.ts is touched by this change.
+REJECT — spec 99 §7.5 (Sentry.setUser attribution) — accused of missing setUser/null on the auth fan-out — no auth listener and no clearLocalSessionState is touched.
+REJECT — "Must not: ... touch the report meter in the lookup route" (descriptor reading) — accused of changing metering via the descriptor from "answer": "none" to "answer": "ledger" — the descriptor JSON is not the lookup route (route.ts unchanged) and the ledger row it now names (property_view) already exists per RR-0278, so this is a doc correction not a meter change.
+REJECT — RR-0442 full text ("if its a semi potentially - you need to state that?") — accused of omitting the semi attestation — the semi question is designed by task-360/task-319 (descriptor: "an unsure lot held before its semi question"), outside this card's AC #1-#6, so it is not owed here.
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 13   Unmet: 0
 Rules met: none
 
 ---
-⏱  56858ms (56.9s)
-📊 Tokens — total: 47212, input: 34530, output: 12682, reasoning: 11653
+⏱  103945ms (103.9s)
+📊 Tokens — total: 55092, input: 34530, output: 20562, reasoning: 19431

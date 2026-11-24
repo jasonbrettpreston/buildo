@@ -1,22 +1,25 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.161Z file_sha256=4aa4c74b0366fac7a05d082989bd022302d361b71914875b38123fd9e2bdffda prompt_sha256=9432a4d2f8f7e0d02173b2d7fd933c097db73ec9596b78dc2156e8c942a19d8b
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:00:40.559Z file_sha256=4aa4c74b0366fac7a05d082989bd022302d361b71914875b38123fd9e2bdffda prompt_sha256=9432a4d2f8f7e0d02173b2d7fd933c097db73ec9596b78dc2156e8c942a19d8b
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p7.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — task-449 AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — seat cases 24 and 29 are delegated to external phone tests not present in the reviewed material, cannot see them pass — bounded, they are cited existing tests; assert them here or link the green run.
-DEFER severity=LOW — task-449 "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — NONE — no doc-2 G.1/A.3 or task-69 note appears in this chunk, only Spec 100 and Spec 89 notes are present — cannot see the backlog-CLI artifacts; they likely live outside the repo diff, confirm landed.
-MET — AC #1 — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row typeahead opens only when it is the typed address in full, else it lists.
-MET — AC #2 — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is not narrowed to the one typed-direction row.
-MET — AC #3 — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" plus "if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);" — a shared house number opening the typed street type.
-MET — AC #4 — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" and "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" — unit-first, period, letter and dash forms reach the lot or the close-address list.
-MET — AC #5 — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — typed % and _ are escaped in the prefix reads.
-MET — task-449 "Must not: add a new resolution value, or touch the report meter in the lookup route" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "No `resolution` value is added and the report meter is untouched." and src/app/api/parcels/lookup/route.ts is absent from the change paths — no new resolution, the meter code is untouched.
-REJECT — RR-0442 "if its a semi potentially - you need to state that?" — accused of not implementing the semi statement — the descriptor dates the semi held-page and semi=answered as task-360/task-319 design, a separate card, and this card's AC scope exact-match only.
-REJECT — mobile-99 §9 (e.g. 9.4a "Strip `isFetching` from AppLayout loading gate") — accused of not addressing the §9 migration items — the material touches no mobile state file (no mobile/app/(app)/_layout.tsx, no store), so no §9 clause is exercised or broken by it.
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — the lock proves 27 of the seat's 29 address cases in this diff and defers two to tests outside the material (cannot see them) — add cases 24 and 29 here, or paste the cited phone-test lines into the review material.
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "answer": "ledger" — the emits classification flips none to ledger and cites an unpasted surface.schema.json rule-9 that no card finding (ST1, 2a, G2 D1, G2 D6, G3 R1) names — name the finding that requires the flip, or leave emits as it was.
+DEFER severity=LOW — RR-0444 folded G3 R1, contract counts restate their own arrays — src/tests/consumer-parcel-lookup.infra.test.ts "expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);" — the count is locked to an array whose user_profiles entry was deleted in the same diff, so the lock cannot catch an understated production write (cannot see src/lib/auth/get-user-context.ts:84) — verify the dev-only claim against that file, or restore the user_profiles entry.
+DEFER severity=NIT — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/tests/search-parser-guard.logic.test.ts "expect(typeaheadPrefix()).toBe('\\%%');" — only the SQL parameter string is asserted, the "returns no unrelated lots" half has no result-set assertion — add a rows assertion or note the DB harness that covers it.
+REJECT — AC #1 "which opens as an exact match" — accused that a one-row in-full typeahead must carry matchType 'exact' — not a real issue: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md says "`typeahead` stays in the `matchType` enum (additive_only) and is still emitted for that case" — resolution unique with typeahead is the ruled shape.
+MET — AC #1 — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row leftover lists unless it is the typed address in full.
+MET — AC #2 — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is not narrowed by direction.
+MET — AC #3 — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — the exact rows narrow by typed street type, never to empty, and not when a row prints no type.
+MET — card "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts "resolution: 'text_candidates'" in conflictList — only existing resolution values are returned.
+MET — card "Must not ... touch the report meter in the lookup route" — NONE, the diff has no hunk for src/app/api/parcels/lookup/route.ts — the meter path is untouched.
+MET — Spec 100 dated note 2026-11-24 "A typed `%` or `_` is escaped in the prefix reads" — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — both prefix reads use the escaped form.
+MET — Spec 100 dated note 2026-11-24 "A period ... is read as a space, after the text is first tried with its periods kept" — src/lib/admin/parcel-lookup.ts "if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName)" — raw-first, then stripped.
+MET — RR-0166 / Spec 100 dated note "a unit marked by a word or `#` ... is dropped" — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" — leading unit dropped and the trailing unit still goes through stripTrailingUnit.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
+Clauses checked: 16   Unmet: 0
 Rules met: none
 
 ---
-⏱  115939ms (115.9s)
-📊 Tokens — total: 59971, input: 35208, output: 24763, reasoning: 23857
+⏱  152267ms (152.3s)
+📊 Tokens — total: 64696, input: 35208, output: 29488, reasoning: 28339
