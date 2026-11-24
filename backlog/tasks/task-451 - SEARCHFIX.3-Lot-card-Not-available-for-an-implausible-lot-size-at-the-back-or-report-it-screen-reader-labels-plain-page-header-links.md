@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T17:04:00Z'
+updated_date: '2026-11-24T17:30:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -35,6 +35,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/REPORT.md
 type: fix
 ordinal: 150040
 ---
@@ -289,4 +290,6 @@ rg#6 MED folded this card's, uncondi
 2026-11-24 deviation (lane BL-SFX3): static-web-binding.ui.test.tsx (c) also indexes the web_maxbld_error error page's prose (children[0] -> [1]); the plan's index-shift list named web_help only. Found by the green commit's related run (1 failed), fixed in the same work commit.
 
 2026-11-24 work commit 04c181564 (hooks: GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); lane green.out). The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit: check-task-files refuses a path outside the Files line beside code, and neither path is code.
+
+2026-11-24 merge 182a28053 of wf2/board (fe88ecf71), ordered by the orchestrator; doc-2 conflict kept both sides, rule-lists page regenerated. Output review round 1 on the merged head: context-r3.md, 52 DeepSeek lens outputs (lens set per the board table: plan-protocol output_off; 9 compliance lists), 184 findings (HIGH 24, MED 72, LOW 82, NIT 4) in docs/reports/lanes/2026-11-24/BL-SFX3/FINDINGS.md. Grounder owed.
 <!-- SECTION:NOTES:END -->

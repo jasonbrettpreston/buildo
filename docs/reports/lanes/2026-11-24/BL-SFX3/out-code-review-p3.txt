@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T17:21:37.068Z file_sha256=46b0bf2ea512ea32f469363134f7466cd751e978e51d7e0e83a8a36a446bb93c prompt_sha256=14a4f3cd0955b439d3a93f54a270fb5845d75d32dca4f0f92d9bcdc95e244fe4
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+REJECT — src/tests/surfaces/surface-validate.logic.test.ts:93 "S-sbind ok (17 surfaces, 436 strings)" — a bare lock bump from 427 to 436 with no visible derivation looks like a guessed number — it is correct: 427 + 8 nav strings (2 each in web_help, web_terms, web_privacy, web_maxbld_error) + 1 net in mobile_parcel_disambiguation_map (unlinked.report and unlinked.stop added, select.label retired is a +1 net) = 436, and the dated note above it states exactly that derivation.
+REJECT — src/tests/surfaces/surface-conformance.logic.test.ts:263 "note: 'S-sbind ok (17 surfaces, 436 strings)'" — the second, independent copy of the count could disagree with the gate test — it does not: both files carry the identical 427 -> 436 note and the same +8/+1 arithmetic, and the untouched screen side still reads "S-screen ok (17 surfaces, 100 goldens)" in both, matching the "goldens unchanged (100)" claim.
+REJECT — src/tests/surfaces/surface-validate.logic.test.ts:92 "427 -> 436 strings: +8 nav strings ... and +1 net in mobile_parcel_disambiguation_map.content.json" — the note names retired and added keys without a code path that would surface drift — the surrounding tests are pure string-lock assertions with no branches, catches, casts or unused symbols added, so this chunk introduces no correctness, typing, error-handling or dead-code surface (the JSON keys themselves are outside this chunk, cannot see).
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL): n/a (PASS)
+
+---
+⏱  19066ms (19.1s)
+📊 Tokens — total: 9829, input: 6431, output: 3398, reasoning: 3018

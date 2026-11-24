@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.062Z file_sha256=a9d1ab8a2d27acef29751b19797c95475a3c11a26ee9578a3fa19648c478cb9e prompt_sha256=c840ea2995a5fb03a748d0becc727053a3d1d36c4ad0bd0e81907bd6d5aa9bc1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found — NONE — no pasted clause is unmet by the diff lines shown — none required
+DEFER severity=LOW — doc-2 B.6 "Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "@@ -2,19" "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or " — the pinned body keeps pre-existing wording for the first half that is not B.6 verbatim ("the City's data doesn't" vs "the City data does not") while the test is titled "the ruled message texts are verbatim" — either align the front half to B.6 or extend the 2026-11-24 B.6/B.7 dated note to cover it — pre-existing wording, the date note rules only the ending, so bounded and safe to defer
+DEFER severity=LOW — doc-2 B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice" — mobile/__tests__/lotMapPage.behaviour.test.tsx "@@ -181,11 +216,12" "expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);" — the topic is right but the target is /help#topic=... , not the /help?topic=... form the clause names — record a dated note that the in-app sheet uses the hash form, or emit the query form — the hash form is the task-362 convention and the topic (the ruled part) is correct
+REJECT — RR-0446 "04  leave it as it is" — the change rewrites the lot card leads, which could be read as disturbing the several-lots page — RR-0446 rules on neighbour lots (the map), and the card lead text is ruled by the C.7 dated note, so the two rulings do not collide
+MET — C.7 (doc-2 dated note 2026-11-24) — mobile/src/components/surfaces/LotMapBinding.tsx "@@ -168,17 +183,16" "house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')" — a lot with no fronting street reads "at the back", one that faces a street keeps "faces {street}", as C.7's note rules
+MET — C.9 (doc-2 dated note 2026-11-24) — mobile_parcel_disambiguation_map.content.json "lot.label": "{lead}, {area}" — the screen-reader label is the lead line and the area; frontage and zoning are neither shown nor spoken
+MET — C.12 and B.7 (doc-2 dated notes) — LotMapBinding.tsx "const HELP_TOPIC = 'wrong-lot';" and "helpLink()" in helpRow — the "Not sure which lot? Get help" row and every notice link now carry topic wrong-lot
+MET — B.6 (doc-2 dated note 2026-11-24) — mobile_parcel_disambiguation_map.content.json "unlinked.report": "report it", "unlinked.stop": "." — the no-lot line ends "or report it." with "report it" an inline link (golden test "unlinked-report", topic wrong-lot)
+MET — C.3 (doc-2 dated note, AC6) — scripts/surfaces/_schema/census/mobile-product.json "neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446)" and no diff line adds a neighbour polygon
+MET — task-451 AC1 — mobile_parcel_disambiguation_map.content.json "lot.null": "Not available" plus lotMapScreens.golden.test.ts "the null area reads \"Not available\" on the card and in its label" — a null area reads "Not available" on the card and in its label
+MET — static-page.json dated note (H Q2, H Q4, plan ruling 8.5) — scripts/surfaces/_schema/static-page.json "kind": "hero", "id": "top", "content": "nav.home", "href": "/", "content": "nav.sign_in", "href": "/login" — web_help, web_terms, web_privacy and both web_maxbld_error states open with the wordmark and one Log in link
+MET — task-451 AC4 — LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" and "accessibilityLabel: label" on Continue — the card and Continue labels are their visible text
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: C.3, C.7, C.9, C.12, B.6, B.7
+
+---
+⏱  114443ms (114.4s)
+📊 Tokens — total: 58216, input: 34139, output: 24077, reasoning: 22944

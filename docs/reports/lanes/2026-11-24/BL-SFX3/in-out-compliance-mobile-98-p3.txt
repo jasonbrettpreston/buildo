@@ -1,0 +1,591 @@
+LIST mobile-98 sha256:0e487889e7048c130b95af155cb1835627709a1b162ded29c1bc1cdee0d1feda material sha256:d5dfd8a3ec3f6b999d6b64dbe907c52d92e0450390933eea8c1edca7458bcbdd part 1 of 1 chunk 3 of 3
+RULE LIST mobile-98 (docs/specs/03-mobile/98_mobile_testing_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+# Spec 98 — Mobile Testing Protocol & Local Environment
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 94 (Onboarding), Spec 96 (Subscription)
+
+## 1. Goal & Scope
+**Goal:** Establish a bulletproof, reproducible testing environment for the Buildo mobile app, focusing on End-to-End (E2E) testing via Maestro, unit testing via Jest, and safe data-seeding practices.
+**Scope:** This spec defines the Windows/Android local development startup routine, the organization of Maestro E2E test flows, database cloning for realistic test data, and the unit testing boundaries for Zustand stores and routing guards.
+
+## 2. Local Environment Setup (Windows / Android)
+This is the canonical startup routine for developing and testing the Buildo native app locally on a Windows machine.
+
+### 2.1 Prerequisites
+- **Android Studio:** Installed with a configured Virtual Device (Emulator). Target: Pixel 8 (API 34+).
+- **Maestro CLI:** Installed via WSL or Windows command line.
+- **Postgres CLI Tools:** `pg_dump` and `pg_restore` installed and added to the Windows System PATH.
+- **Expo CLI:** `npm install -g eas-cli`
+
+### 2.2 Boot Sequence
+**Step 1: Boot the Physical Environment (Emulator)**
+Always start the emulator via Android Studio before running any Expo commands to ensure background ADB daemons initialize correctly.
+1. Open Android Studio.
+2. Open Device Manager.
+3. Click Play on the Pixel 8 emulator. Wait for the home screen.
+
+**Step 2: Boot the App (Metro Bundler)**
+Open a PowerShell terminal at the project root:
+```powershell
+cd mobile
+npx expo run:android
+```
+*Note: `run:android` compiles the native C++/Java shell (Firebase, Reanimated) and boots the Metro bundler. Leave this terminal open. To recover from a red-screen crash, press `r` in this terminal to reload the JS bundle.*
+
+**Step 3: Seed Local Database (Production Clone)**
+To test real-world scrolling, ranking, and UI rendering, tests must run against production-volume data. Do NOT point the local app at the live production database. Open a second PowerShell terminal:
+```powershell
+# 1. Download a snapshot of production
+pg_dump "postgresql://<PROD_USER>:<PASSWORD>@<HOST>:5432/<DB_NAME>" -F c -f buildo_prod.dump
+
+# 2. Restore to local Postgres instance
+pg_restore --clean --if-exists --no-owner --host=localhost --port=5432 --username=postgres --dbname=buildo buildo_prod.dump
+```
+
+## 3. End-to-End (E2E) Testing Strategy
+**Tool:** Maestro
+**Location:** `mobile/maestro/`
+
+Maestro is used to validate critical user journeys from the perspective of a black-box user. Tests interact with the rendered UI accessibility layer, not internal state.
+
+### 3.1 State Management in Tests
+Every Maestro YAML file must explicitly define its state expectations using `clearState`:
+- **`clearState: true` (Clean Slate):** Used for Auth and Onboarding flows. Wipes MMKV cache and Firebase Auth session before the test runs, simulating a fresh App Store install.
+- **`clearState: false` (Persistent State):** Used for Feed, Settings, and Flight Board flows. Assumes the user has already completed onboarding. Requires manual setup (or a setup script) to populate the local MMKV state before running.
+
+### 3.2 Required Test Suites (Launch Blockers)
+The following YAML flows must pass cleanly before any production release:
+- **`auth.yaml`**: `clearState: true`. Validates sign-in (email/password), sign-out reset behavior, and account linking UI.
+- **`onboarding-leads.yaml`**: `clearState: true`. Validates trade selection lock, address geocoding bounds validation, and routing to the Lead Feed.
+- **`onboarding-tracking.yaml`**: `clearState: true`. Validates bypassing address input, supplier selection, and routing to the Flight Board.
+- **`scroll-feed.yaml`**: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions.
+- **`subscription-paywall.yaml`**: Validates the 14-day expiry lock, the lead-count display on the paywall, and the "Maybe later" inline-blur feed state.
+
+### 3.3 Maestro Execution Commands
+Run from the mobile directory in PowerShell:
+```powershell
+# Run a specific flow
+maestro test maestro/auth.yaml
+
+# Open Maestro Studio to inspect UI elements and auto-generate YAML commands
+maestro studio
+```
+
+## 4. Unit & Integration Testing Strategy
+**Tool:** Jest + jest-expo
+**Location:** `mobile/__tests__/`
+
+Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded (Maestro handles UI validation).
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; H9, P35-D6 as recommended; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots. React Native Testing Library is the tool Spec 90 names for logic hooks (90:88); MF-35 extends its use to the mobile binding and the parcel search screen, and adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0). No Maestro flow covers parcel-tool today.
+
+### 4.1 Required Test Boundaries
+
+This section is **non-exhaustive**. The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:
+- **§8.1** — idempotency tests for every bridge (B1 server→TanStack, B2 TanStack→Zustand, B3 mutation rollback, B4 auth invalidation, B5 sign-out reset, B6 mid-session 401 refresh).
+- **§8.2** — router branch coverage (AuthGate's 9 routing arms per §5.3).
+- **§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5).
+- **§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`) — every `create<*Store>(` in `mobile/src/store/*.ts` has a `.getState().reset()` call in `clearLocalSessionState`.
+
+The boundaries below are illustrative examples within those mandates.
+
+**AuthGate & Routing (`subscriptionGate.test.ts`)** — Spec 99 §8.2 + §8.3
+- Validates that unauthenticated users are forced to `/(auth)`.
+- Validates that incomplete profiles are forced to `/(onboarding)`.
+- Validates that `subscription_status = 'expired'` forces `<PaywallScreen>`.
+- Validates that `account_deleted_at = NOT NULL` forces sign-out.
+
+**Zustand Stores (`store.test.ts`)** — Spec 99 §8.1 (idempotency) + §8.5 (store-enumeration)
+- `authStore`: `signOut()` must trigger the §B5 fan-out (`filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` + `queryClient.clear()` + `mmkvPersister.removeClient()`).
+- `paywallStore`: Must default to `visible: false, dismissed: false` on cold boot. Method renamed `clear()` → `reset()` on 2026-05-03 per Spec 99 §3.4 + §9.19.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c). `mobile/__tests__/recentSearchesStore.test.ts` pins the store's own reset, and `storeReset.coverage.test.ts` finds it with no count change.
+
+**Data Transformations (`utils.test.ts`)**
+- `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.
+- `formatCurrency.ts`: Verify CAD formatting for permit valuations.
+
+**Parcel Cost Tool (Spec 100)** — Spec 90 §13 (Zod boundary) + Spec 100 §6
+- `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`; the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema); `shouldRetryParcelLookup` skips 400/403/429/drift.
+- `parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off.
+
+## 5. Continuous Integration (CI)
+**Tool:** GitHub Actions + EAS (Expo Application Services)
+
+**Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
+- `npm run typecheck` (TypeScript compiler)
+- `npm run lint` (ESLint)
+- `npm run test` (Jest unit tests)
+
+**Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
+
+**E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+
+## 6. Historical Context & Past Issues
+To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+
+### 6.1 The "Pointing" Issues (Path Configuration)
+There were persistent issues related to Windows environment variables failing to point correctly to the ADB (Android Debug Bridge) and Android SDK paths. The system would lose track of where the necessary Android build tools were located. This caused frustrating moments where the emulator was running perfectly in Android Studio, but Expo or Maestro couldn't connect to it because they couldn't find the `adb` executable. *Fix: Ensure ANDROID_HOME and platform-tools are permanently added to the Windows System PATH.*
+
+### 6.2 The Great Migration: Expo Go vs. Development Builds
+**The Errors:** The project hit massive dependency mismatches between React Native, Expo Go, and the Reanimated library, resulting in fatal TurboModule and worklet compatibility errors.
+**The Solution:** Expo Go is a sandboxed testing app and cannot run custom native code. Because the Buildo app requires heavy native modules (like Firebase Auth, Apple Sign-In, and Sentry), the transition to a standalone "Development Build" was mandatory. That is why the boot sequence now explicitly uses `npx expo run:android` to physically compile a custom version of the app directly onto the emulator, rather than relying on Expo Go.
+
+### 6.3 Navigation and Missing Plugins
+After moving to the native development build, two significant configuration bugs emerged:
+- **Expo Router Timing Crash:** There were navigation-related crashes where the Expo Router tried to aggressively redirect users (e.g., sending an unauthenticated user to the onboarding flow) before the root app layout had finished mounting.
+- **Plugin Resolution Failures:** There were native build failures related to missing or improperly configured Expo plugins in `app.json`, specifically `@sentry/react-native/app-plugin`, which aborted the native compile step.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

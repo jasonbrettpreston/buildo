@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:31.572Z file_sha256=d07fcf42e239058cf1bad1a66d499c1333ee33787860e10c446f6e3c83d3bb44 prompt_sha256=a2c51aa62bf912022dda0c95155e7a4a3ea40137a0639f50ec812285eaf039cb
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-98-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE, cannot see (no doc-2 path appears in this chunk's paths list) — the C.3/C.7/C.12 dated notes are absent from the material under review, and the card's implementation notes say they "land in their own commit" — verify that commit before merge; this chunk alone cannot show AC6 met.
+DEFER severity=LOW — Spec 98 §5 "On every PR targeting `main`, GitHub Actions runs: ... `npm run test` (Jest unit tests)" — task card "Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station" — the two mobile test files this chunk rewrites carry no executed evidence in the reviewed material — confirm the PR run of `npm run test` is green on the push station before merge.
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — accused of adding snapshot-style assertions in lotMapScreens.golden.test.ts — the dated note 2026-11-10 states "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots", and the added assertions read test ids, accessibility labels and host props, not rendered output.
+MET — acceptance #1 (RR-0444 2c) — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null" with content "lot.null": "Not available" — out-of-window area nulls, card and label both read the null value.
+MET — acceptance #2 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "lot.lead.house": "Lot {letter} · has the house · at the back" — no-street leads read "at the back".
+MET — acceptance #3 — content "unlinked.body": "... Try a nearby address or ", "unlinked.report": "report it" and LotMapBinding "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" — line ends "or report it" and links to wrong-lot.
+MET — acceptance #4 — LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" with "lot.label": "{lead}, {area}" — label is the card's own title and area refs.
+MET — acceptance #5 — mobile/__tests__/lotMapPage.behaviour.test.tsx "const errorOf = (kind: string | undefined, name: string): unknown" and "expect([k, s.state]).toEqual([k, 'error'])" — the four error inputs render as errors.
+MET — ruling 8.5 / H Q2 and H Q4 — scripts/surfaces/_schema/static-page.json hero "role": "wordmark", "content": "nav.home" plus "role": "nav", "content": "nav.sign_in" on all five plain-page states, and StaticBinding "if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav'))" — header section with wordmark and one nav link, narrow column kept.
+MET — B.7 "to /help?topic=wrong-lot" — LotMapBinding "const HELP_TOPIC = 'wrong-lot';" used by every helpLink() and the golden test "expect([...new Set(topics)]).toEqual(['wrong-lot'])" — every help link on the page opens the wrong-lot topic.
+MET — task card "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2" — consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the existing window is reused, no new setting added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: none
+
+---
+⏱  41903ms (41.9s)
+📊 Tokens — total: 40628, input: 32183, output: 8445, reasoning: 7493

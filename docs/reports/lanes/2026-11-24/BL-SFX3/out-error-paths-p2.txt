@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T17:27:05.584Z file_sha256=08ebeab3bf1b024a5abe5bc32e01b609614eae26dd4f9cb053340f9c54f7d64a prompt_sha256=9b7530e756d97fd8800c3a0ad6f56997f87cd9abba842b3a29191bbd84c00333
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:221 ": { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };" — the non-null route branch no longer guards, so if the host holds a selectedParcelId that a refetched payload no longer lists, findIndex returns -1 and the button either labels itself "Continue with Lot undefined" (or the derived name letter.-1 is refused at render) while still enabled — keep a fallback when the index is below 0, or assert at route build that selectedParcelId is in s.lots.
+DEFER severity=MED — scripts/surfaces/_schema/static-page.json:2 "a link is left out only while the setting is unset" — the new dated sentence promises a degrade for an unset support_inbox, but the only visible path fails closed: src/tests/surfaces/static-web-binding.ui.test.tsx asserts the render throws when the mailto parts are present and values is empty; if the server page builder (maxbld-support.ts, cannot see) does not omit the parts, an unset setting 500s the whole help page — show the server-side omission or have the binding drop the link instead of throwing.
+DEFER severity=MED — scripts/analysis/lot-map-data-check.mjs:39 "const u = argv.indexOf('--url');" — L7 closes only the spaced form: `--url=...` and `--parcels=1,2` match no indexOf, set no error, and the check silently runs the four sample parcels and prints its green — also split an `=` form, or refuse any `--` token that is not a known flag.
+DEFER severity=LOW — src/lib/parcels/consumer-lookup.ts:82 "if (v == null || v === '') return null;" — a whitespace-only string still reaches Number(' ') = 0, the same empty-reads-zero trap L2 closes — treat a trimmed empty string as null.
+DEFER severity=LOW — src/tests/consumer-parcel-lookup.infra.test.ts:421 "expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);" — L2 pins an identifier read through num, so '007' reads 7 and a non-numeric id reads null, the id lost silently — read ids with a string guard and keep num for measures.
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx:102 "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }," — two rapid taps on the new inline report link can open the browser sheet twice — handled: open_help writes nothing and counts no event, both sheets carry the same URL and the top one is dismissed.
+REJECT — scripts/analysis/lot-map-data-check.mjs:47 "o.parcels = [...new Set(o.parcels)];" — a repeated --parcels or a duplicated parcel id could double the read and the printed parameters — handled: the Set dedups by id before the SQL parameters are built, so a repeat is a no-op.
+
+VERDICT: PASS on error-path safety
+Paths walked: lot map error/rate_limited/entitlement/schema_drift states, empty and implausible lot area, unlinked report link open and double tap, plain-page render with support_inbox unset, header hero render, lot-map-data-check argv parse and repeat, parcels dedup
+Unguarded: 3
+
+---
+⏱  63899ms (63.9s)
+📊 Tokens — total: 48314, input: 35980, output: 12334, reasoning: 11536

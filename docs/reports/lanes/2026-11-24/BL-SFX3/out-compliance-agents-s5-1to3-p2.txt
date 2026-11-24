@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.048Z file_sha256=2d5a304042502897d5ddb5fdb82ce551835e5019d2a528d42250e78775f406dd prompt_sha256=505760d2cf29134e7bf9f2c0aaf54da308008969388b272edd058a6ae3e04f24
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" and the task's Files clause "Files: src/lib/parcels/consumer-lookup.ts, ... .cursor/MCFRONTEND-QUEUE.md" — plan note "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit: check-task-files refuses a path outside the Files line beside code, and neither path is code." — the pasted Files line names neither the doc-2 path nor rule-lists-by-kind.md, and no AC6 artifact appears in this material, so an acceptance criterion is committed outside the scope clause and outside the close check's sight — add both paths to the Files line by the same deviation route used for mobile/__tests__/fixtures/lotMap.situations.json, or carry AC6 in a task whose Files line names doc-2.
+
+DEFER severity=MED — AC2 "A lot with no fronting street reads \"at the back\"" — mobile/src/components/surfaces/LotMapBinding.tsx "@@ -168,17 +183,16 @@: const leadKey = !known ? 'lot.letter'" with the golden "{{ \"content\": \"lot.letter\" }}" for multi_parcel_3plus lot 2 — AC2 is unqualified, but the street phrase is dropped whenever hasFootprint is undefined, so a lot with no fronting street and no footprint field reads "Lot C", not "at the back" — qualify AC2 in the card, or build the faces/at-the-back phrase independently of `known`.
+
+DEFER severity=LOW — B.7 as quoted in the change "doc-2 B.7 \"to /help?topic=wrong-lot\"" — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);" — the code keeps the fragment form while the design text it cites names a query parameter, so AC3's "links to the wrong-lot help topic" holds only if the Help page reads the fragment — confirm the Help reader, or emit /help?topic=wrong-lot&q=.
+
+MET — AC1 — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null" with F01 content "\"lot.null\": \"Not available\"" — an out-of-window size becomes null and both card and label read the null value.
+
+MET — AC4 — mobile/src/components/surfaces/LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" reuses the same `lead` child and `area` ref the card's card-title and card-area nodes draw.
+
+MET — AC5 — mobile/__tests__/lotMapPage.behaviour.test.tsx "const errorOf = (kind: string | undefined, name: string): unknown =>" and "expect([k, s.state]).toEqual([k, 'error']);" — the four error inputs are rendered as errors.
+
+MET — Must not "add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the existing constant is reused, no new setting.
+
+MET — "Nothing is added that the plan or a ruling does not name (RR-0392 ...)" — every hunk traces to a folded id: L2 "num('')", L7 "valueAfter", R3 "chain_position", V1 leads, V2 unlinked.report/stop, V3 label, X1 errorOf, H Q2/Q4 hero, R5 dated sentence, B.7 topic.
+
+MET — H Q2/Q4 "every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login)" — scripts/surfaces/_schema/static-page.json adds that hero first in all five section lists, and StaticBinding.tsx "if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav'))" draws it as the header.
+
+MET — V3 with C.9 "the label is the card's lead line and its area, nothing the card does not show" — the frontage/zoning refs and "select.label" are gone ("expect('select.label' in LOT_MAP_SLICE.content).toBe(false);") and the Continue label is "\"accessibilityLabel: label\"".
+
+REJECT — RR-0446 "04  leave it as it is 02 Agrred add to the plan." — accused of touching the several-lots map — the diff changes no mapView, polygon, marker or neighbour node; only dated text and the card, continue and unlinked nodes change.
+
+REJECT — H Q4 "keeps the narrow column" — accused of un-widening web_landing through the new predicate "sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'))" — every hero that is not wordmark-and-nav only still hits "\"a hero has a title\"", so any hero reaching the wide column carries a title part.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 3
+Rules met: none
+
+---
+⏱  125706ms (125.7s)
+📊 Tokens — total: 57377, input: 33115, output: 24262, reasoning: 22948

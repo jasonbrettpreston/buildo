@@ -1,0 +1,1091 @@
+LIST mobile-99 sha256:73a0158536c3811d668482c23b9737e8309a5b5a396559f2fdda0fe2f7c0f54a material sha256:3a0daf6ad0264eac0a2456532190ba1ed861b4ce602bdd757ad9fb086b3407d1 part 1 of 2 chunk 2 of 4
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-review-queue.md","mobile/__tests__/fixtures/lotMap.situations.json","mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json","mobile/__tests__/lotMapPage.behaviour.test.tsx","mobile/__tests__/lotMapScreens.golden.test.ts"]
+
+# Spec 99 — Mobile State Architecture & Ownership Protocol
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app (a separate Expo project, Spec 116 §3 dated note 2026-11-09; MF-49) owns its own state and routing: its own root layout and a `parcel_tool` gate, not `decideAuthGateRoute`. The §5 routing arms govern the Buildo app.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
+**As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
+
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — max-server-side impact. Additive: no rule below is rewritten, and §3 stays normative.**
+>
+> Spec 126 makes Spec 90 §3's "Dumb Glass" prime directive *enforceable* rather than merely stated: under max-server-side the client renders a **fetched projection** — the server owns section order, labels, formatting decisions and which lines render — and the archetype component set draws it. That moves the Layer-2 / Layer-3 boundary in §2, and it does so in a direction this spec already anticipates.
+>
+> **Sections affected, and how:**
+>
+> | §  | Effect |
+> |---|---|
+> | **§2** (the five layers) | Layer 1 **grows** — canonical for the *projection*, not only the data. Layer 2's role is unchanged, but the cached object becomes a projected screen rather than a raw payload. Layer 3 **shrinks to device + ephemeral state only**. Layers 4a/4b and 5 are untouched, and §2.1's hard rules all still hold. |
+> | **§3** (the field ownership matrix) | Stays **normative**, and becomes **descriptor data**: the `Field / Server Type / Local Mirror / Owner Layer / Canonical Writer / Authorized Readers / Bridge` row is the SURFACE descriptor's `state` category verbatim (Spec 126 §4.1). Rows for fields that are Layer-3 *mirrors* of Layer-1 data retire as those mirrors collapse. Measured: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns, `userProfileStore` (156L) mirrors 5 notification-preference columns. |
+> | **§4** (the six bridge patterns) | **B2** (TanStack→Zustand) and **B3** (Zustand→Server) retire *for the mirrored fields only*. B1 is unchanged and its query-key hygiene rule becomes a schema constraint: `inputs.query_key` is single-param on the DETAIL archetype. The six patterns are not reduced to four — they are unused for fields that no longer have a Layer-3 home. |
+> | **§7.7** (funnel ratio invariants) | Unchanged in substance; the per-method attempted/succeeded/failed contract becomes `emits.counters` with the ratio stated as a declared invariant, so the drift it warns about is checked rather than greppped. |
+> | **§8.6** (the schema-vs-matrix drift check) | **The gap is confirmed, not closed, by this amendment.** `mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** — re-verified 2026-09-15: no match in `.husky/`, `.github/`, `mobile/package.json` or `package.json`; `mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**. |
+>
+> **What deliberately stays client-side** — these five are the boundary, and each is declared per surface rather than assumed: device state (GPS, push token, permission status) · optimistic UI (Spec 90 §3 encourages it by name) · the 24 h MMKV offline cache · animation/gesture (Layer 5, §2.1's hard rule) · navigation position (`expo-router` owns it). Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row.
+>
+> **The three auth screens are out of scope entirely** (1,302 lines): they talk to the Supabase Auth SDK, not to our contracts.
+
+
+## 1. Goal & Anti-Patterns This Prevents
+
+**Goal:** A single normative document that, for every piece of mobile state, answers four questions:
+1. **Who owns it?** (single layer)
+2. **Who can write it?** (single function)
+3. **Who can read it?** (typed contract)
+4. **What bridges are allowed?** (enumerated patterns)
+
+**This spec is the gate-keeper.** Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec.
+
+### 1.1 Three documented incidents this protocol prevents
+
+| Incident | Date | Pattern | Spec rule that would have prevented it |
+|----------|------|---------|----------------------------------------|
+| `currentStep` selector subscription loop | 2026-05-02 (commit `3727ceb` → fixed `6c5d085`) | Routing `useEffect` subscribed to a Zustand field it ALSO mutated via `router.replace`-induced cascade | §6.4 (lazy `getState()` for state read in router effects) |
+| Dual-router (AuthGate ↔ OnboardingLayout) loop | 2026-05-02 (fixed same day, WF3) | Two layout-level `router.replace` effects reading DIFFERENT sources of truth (server profile vs local store) for the same routing decision | §5.1 (one router per gate boundary) + §5.2 (read canonical source) |
+| `isFetching` / Tabs flicker loop | 2026-05-02 (current — fix scheduled as §9.4a P0 BLOCKING) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); flips AppLayout between `<SubscriptionLoadingGuard/>` and `<Tabs>` ~80×/sec, mounting/unmounting LeadFeedScreen continuously | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
+
+### 1.2 The six user-stated quality goals (verbatim)
+
+1. **Observability (maximum)** — every state mutation, every gate decision, every cache invalidation must leave a trace. Codified in §7.
+2. **Clear ownership** — for every field, exactly ONE store owns the canonical value. Codified in §3.
+3. **Where bridges are allowed** — only the patterns in §4. Anything else is a spec amendment.
+4. **Canonical write path** — for every field, exactly one function writes it. Codified in §3 column "Canonical Writer".
+5. **Clear structure / clear logic / similar approach / one approach** — codified in §2 (layer hierarchy), §6 (selector hygiene), §8 (test mandates).
+
+---
+
+
+## 2. Layer Hierarchy
+
+State flows top-down. A lower layer NEVER initiates a write to an upper layer except via the bridges in §4.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — SERVER (Postgres user_profiles, Firebase Auth)   │  ← canonical for ALL account-scoped data
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B1: useQuery)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2 — TanStack Query cache (in-memory + MMKV persist)  │  ← canonical for CACHED server state
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B2: hydrate effect)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3 — Zustand stores (typed, scoped, never reactive    │  ← canonical for LOCAL UX state
+│           to themselves)                                     │
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Zustand `persist` middleware)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4a — MMKV (UNENCRYPTED, plaintext on disk)           │  ← persistence for non-sensitive UX state
+│           Persists Zustand stores + TanStack Query cache.   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4b — Expo SecureStore / iOS Keychain / Android       │  ← persistence for sensitive credentials
+│            Keystore (ENCRYPTED, hardware-backed where avail)│
+│            Currently used only by RNFirebase native module  │
+│            for the Firebase auth session — no app code      │
+│            touches it directly today.                        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 5 — Reanimated SharedValues (UI-only, never gated    │  ← orthogonal to layers 1-4
+│           on for routing or business logic)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Hard rules
+
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.) The Zustand `persist` middleware's own rehydration read (via the configured `storage.getString`) is the sole exempt pathway — it is the canonical mechanism by which persisted Zustand state hydrates on cold boot. The TanStack `Persister`'s rehydration read is similarly exempt for the same reason.
+- **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
+- **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
+- **The `['user-profile']` TanStack query is excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`). The query payload carries 5 PII identity fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`); persisting it to Layer 4a would violate this section. The query stays in-memory normally; cold-boot mobile re-fetches from server (the canonical source) — adds ~50–200 ms to the first profile-dependent render but eliminates the on-disk PII surface. Other queries (`['lead-feed']`, `['flight-board']`, `['notification-prefs']`) carry only public permit data or non-PII toggles and continue to persist normally. The full encryption-at-rest path (passing `encryptionKey` to `createMMKV` in `mmkvPersister.ts`) is a future hardening that would let other PII-adjacent queries persist safely; the dehydrate filter is the immediate fix.
+- **Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer.**
+- **Layer 5 (Reanimated SharedValues) NEVER drives routing, gating, or business logic.** SharedValues exist on the UI thread; reading them on the JS thread is racy.
+
+---
+
+
+## 3. Field Ownership Matrix
+
+This table is **normative**. Adding a field to the mobile app requires adding a row here. Modifying ownership requires a spec amendment.
+
+### 3.1 Server-Authoritative Profile Fields (Spec 95 §6)
+
+| Field | Server Type | Local Mirror | Owner Layer | Canonical Writer | Authorized Readers | Bridge |
+|-------|-------------|--------------|-------------|------------------|---------------------|--------|
+| `user_id` | text PK | — (no mirror; equal to `authStore.user.uid`) | Server | Server insert on first PATCH | apiClient (Bearer routing), AuthGate | — |
+| `trade_slug` | text (immutable post-set) | `filterStore.tradeSlug` | Server | Server PATCH `/api/user-profile` from `profession.tsx` | filterStore consumers (LeadFeedScreen, LeadFilterSheet, settings) | B2 |
+| `default_tab` | enum | `filterStore.defaultTab` | Server | Server PATCH from settings | AppLayout default-route, settings | B2 |
+| `location_mode` | enum | `filterStore.locationMode` | Server | Server PATCH from `address.tsx` or settings | useLocation, LeadFeedScreen | B2 |
+| `home_base_lat` / `home_base_lng` | numeric | `filterStore.homeBaseLocation{lat,lng}` | Server | Server PATCH from `address.tsx` or settings | useLocation (fallback when GPS denied) | B2 |
+| `radius_km` | int | `filterStore.radiusKm` | Server | `usePatchProfile()` mutation hook (Spec 99 §9.16, B3 with rollback) — called from LeadFilterSheet preset buttons, settings slider, `(app)/index.tsx` widen-radius shortcuts | useLeadFeed params, LeadFilterSheet UI | B2 read + B3 write |
+| `supplier_selection` | text | `filterStore.supplierSelection` | Server | Server PATCH from `supplier.tsx` or settings | settings, future supplier-tagged feed | B2 |
+| `full_name` / `company_name` / `phone_number` / `backup_email` | text | `userProfileStore.{fullName,companyName,phoneNumber,backupEmail}` | Server | Server PATCH from settings | settings forms, NotificationToast (display only) | B2 |
+| `new_lead_min_cost_tier` | enum (`low`/`medium`/`high`) | `userProfileStore.newLeadMinCostTier` | Server | Server PATCH from settings notifications | settings cost-tier slider, push-notification dispatch (lifecycle classifier) | B2 |
+| `phase_changed` | bool | `userProfileStore.phaseChanged` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `lifecycle_stalled_pref` | bool | `userProfileStore.lifecycleStalled` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch (suffix `_pref` on server side avoids collision with `permits.lifecycle_stalled`) | B2 |
+| `start_date_urgent` | bool | `userProfileStore.startDateUrgent` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `notification_schedule` | enum (`morning`/`anytime`/`evening`) | `userProfileStore.notificationSchedule` | Server | Server PATCH from settings notifications | settings segmented control, push-notification dispatch | B2 |
+| `onboarding_complete` | bool | **NONE** (was `onboardingStore.isComplete` until 2026-05-02; see §3.5 deprecation) | Server | Server PATCH in `complete.tsx` | AuthGate (Branch 5), `IncompleteBanner` (read server profile directly per §9.2) | B2 |
+| `tos_accepted_at` | timestamptz | — | Server | Server PATCH from `terms.tsx` | AuthGate fallback, audit | — |
+| `account_preset` | enum | — | Server (admin-set) | Admin tool | AuthGate manufacturer branch (Branch 4.5) | — |
+| `account_deleted_at` | timestamptz | — | Server | DELETE intent endpoint | apiClient → AccountDeletedError → AuthGate reactivation modal | — |
+| `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
+| `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
+| `trial_started_at` | timestamptz | — | Server | server / admin | settings, internal logic | — |
+<!-- WF3 2026-05-04 hardening (review_followups.md mobile-PII bundle + Phase 7 amendment): `stripe_customer_id`, `trade_slugs_override`, and `radius_cap_km` removed from this matrix and from `mobile/src/lib/userProfile.schema.ts`. All three are server-only / admin-internal — `stripe_customer_id` is PII (Spec 99 §2.1 violation if persisted to MMKV), the other two are admin-managed fields with no mobile consumer (verified by grep). The corresponding API route's `CLIENT_SAFE_COLUMNS` whitelist (Phase 2, commit 08ff823) excludes all three from GET / PATCH responses to mobile clients. The Phase 7 amendment caught a CRITICAL bug where the mobile schema still declared `trade_slugs_override` and `radius_cap_km` as required-but-nullable — Zod v4's `.nullable()` permits `null` but NOT a missing key, so every API response would have failed schema parse and broken every profile-dependent screen. -->
+
+| `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
+| `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
+| `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |
+
+### 3.2 Auth / Identity (Firebase + apiClient)
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers | Persistence |
+|-------|-------------|------------------|---------------------|-------------|
+| `user.uid` | `authStore` (Layer 3) | `authStore.setAuth()` — invoked ONLY from `initFirebaseAuthListener` | AuthGate (gate Branch 1), apiClient (Bearer Authorization), useUserProfile (`enabled` gate), settings/account screens (display) | MMKV `auth-store` (uid only — Spec 93 §3.4 partialize strips PII) |
+| `user.email` | `authStore` | `authStore.setAuth()` | reactivation modal copy, settings | NOT persisted |
+| `user.displayName` | `authStore` | `authStore.setAuth()` | settings | NOT persisted |
+| `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only | NOT persisted (short-lived) |
+| `isLoading` | `authStore` | `authStore.setAuth()` / `clearAuth()` / `setLoading()` (init defaults to `true`; cleared to `false` on first auth resolve) | AuthGate (initial-load gate before hydrate completes) | NOT persisted (process-local) |
+| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback (sole production writer); `setHasHydrated(true)` permitted ONLY in tests to bypass MMKV | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
+
+### 3.3 Onboarding-Local State (no server mirror)
+
+After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-local fields. `selectedTradeName` (display-only mirror) was removed — display sites derive the trade label from the canonical `filterStore.tradeSlug` via `getTradeLabel(slug)` in `mobile/src/lib/onboarding/tradeData.ts`.
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers |
+|-------|-------------|------------------|---------------------|
+| `currentStep` | `onboardingStore` | each onboarding screen calls `setStep('next')` AFTER its PATCH succeeds (Spec 94 §10 Step 11) | AuthGate `getResumePath()` — **MUST be read via `useOnboardingStore.getState().currentStep` inside the effect closure (NEVER subscribed via `useStore((s) => s.currentStep)` per §6.4)** |
+| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch), `terms.tsx` (Path L vs Path T branch), `complete.tsx` (display) |
+
+### 3.4 Engagement (Zustand, in-memory)
+
+| Field | Owner Layer | Writer | Readers |
+|-------|-------------|--------|---------|
+| `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
+
+### 3.4c Engagement (Zustand, MMKV-persisted)
+<!-- Subsection number is `3.4c`, not `3.4b`, because §3.4a (UI-Only SharedValues, below) was already taken by an existing subsection. Document order in this section: §3.4 → §3.4a (existing) → §3.4c (this section). -->
+
+These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2 prescribes the persistence — same-user re-sign-in re-seeds via the gate (no server source of truth to re-hydrate from, so first-sight semantics protect post-reset UX).
+
+| Field | Owner Layer | Writer | Readers | Persistence | Sign-out reset |
+|-------|-------------|--------|---------|-------------|----------------|
+| `seenMap` (`Record<permitId, ISO8601>`) | `flightBoardSeenStore` (Zustand + persist→MMKV `flight-board-last-seen` blob) | `markSeen(permitId, updatedAt)` from `[flight-job].tsx` on detail-open | `flight-board.tsx` `renderItem` to compute `hasUpdate = updated_at !== seenMap[permitId]` per Spec 77 §3.2 | Layer 4a (MMKV plaintext — non-PII; just permit IDs + ISO timestamps) | Required (§B5) — `clearLocalSessionState` calls `useFlightBoardSeenStore.getState().reset()` |
+| `recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3) | `recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob) | `add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page) | `parcel-tool/index.tsx` recent-search chips | Layer 4a (MMKV plaintext — a searched street address; not in the Layer 4b list above) | Required (§B5) — `clearLocalSessionState` calls `useRecentSearchesStore.getState().reset()` |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
+
+### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
+
+These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.
+
+| Field | File | Writer | Readers | Sign-out reset |
+|-------|------|--------|---------|----------------|
+| `tabBarScrollY` | `tabBarStore.ts` | `onScroll` worklets in `(app)/index.tsx`, `flight-board.tsx`, `map.tsx` | `AnimatedTabBar` `useDerivedValue` | NOT required (process-local, not user-scoped) |
+| `tabBarVisible` | `tabBarStore.ts` | derived from `tabBarScrollY` direction | `AnimatedTabBar` `translateY` | NOT required |
+
+### 3.5 Deprecated mirrors (migration targets per §9)
+
+| Mirror | Replacement | Migration WF |
+|--------|-------------|--------------|
+| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2a-c |
+| `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
+| `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
+| `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
+| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
+| `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
+| `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
+| ~~`paywallStore.show()` action with no caller~~ | RESOLVED — §9.9 audit (2026-05-03) confirmed `InlineBlurBanner.tsx:12` calls it. The original audit grep missed the selector form. | WF3 §9.9 ✅ |
+
+---
+
+
+## 4. The Six Bridge Patterns
+
+These are the **only** allowed cross-layer flows. A seventh pattern requires a spec amendment.
+
+### B1 — Server → TanStack Query
+
+**Pattern:**
+```ts
+const query = useQuery({
+  queryKey: ['user-profile'],
+  queryFn: fetchProfile,
+  staleTime: 300_000,
+  enabled: !!user,
+});
+```
+
+**Rules:**
+- Every server fetch MUST go through TanStack Query — never raw `fetch()` in components.
+- `queryKey` MUST be a stable, parameterized array. Object literals with closure refs are BANNED (cache fragmentation).
+- `enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously.
+- **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
+- Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
+
+**Query-key registry (the stable, parameterized keys in use).** Adding a new server query requires a row here:
+
+| Query key | Owner hook | Notes |
+|-----------|-----------|-------|
+| `['user-profile']` | `useUserProfile` | PII — excluded from MMKV persistence (§2.1) |
+| `['lead-feed', params]` | `useLeadFeed` | public permit data; persists normally |
+| `['flight-board']` | `useFlightBoard` | saved-board rows |
+| `['lead-detail', id]` | `useLeadDetail` | single lead |
+| `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+
+### B2 — TanStack → Zustand (server-to-local hydration)
+
+**Pattern:**
+```ts
+useEffect(() => {
+  if (query.data) {
+    hydrateFilter(query.data);
+    hydrateUserProfile(query.data);
+  }
+}, [query.data, hydrateFilter, hydrateUserProfile]);
+```
+
+**Rules:**
+- The hydrate effect MUST live in exactly ONE hook (`useUserProfile` for the profile bridge). Multiple components calling that hook share the same TanStack cache, but each runs the effect once on mount — that's fine; the hydrate functions are idempotent.
+- Hydrate functions MUST be **idempotent** — calling twice with identical data MUST result in zero observable state change. Specifically: object-valued fields MUST use deep-equal-before-set per §6.6.
+- Hydrate MUST NOT call `router.replace` or trigger any navigation. Routing happens in §5 routers, not in hydrate effects.
+- The `markComplete()` bridge call (currently in `useUserProfile.ts:101-103`) is DEPRECATED — see §9.2.
+
+### B3 — Zustand → Server (mutation with optimistic update)
+
+**Pattern:**
+```ts
+const mutation = useMutation({
+  mutationFn: (patch) => fetchWithAuth('/api/user-profile', { method: 'PATCH', body: JSON.stringify(patch) }),
+  onMutate: async (patch) => {
+    // Optimistic update: write to filterStore immediately
+    useFilterStore.getState().setRadiusKm(patch.radius_km);
+    return { previous: prevValue };
+  },
+  onError: (_err, _patch, ctx) => {
+    // Rollback
+    useFilterStore.getState().setRadiusKm(ctx.previous);
+  },
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+});
+```
+
+**Rules:**
+- Optimistic local writes MUST go through the field's canonical writer per §3.
+- Rollback MUST be paired with every optimistic write.
+- `onSettled` MUST invalidate the relevant query so the next render reads server truth.
+
+> **Rollback race acknowledgement 2026-05-05 (originally amended to mandate re-read; revised same day to match `usePatchProfile.ts` §9.16 implementation):** the naive rollback pattern above CAN overwrite legitimate concurrent writes when the same field is mutated more than once in flight. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10`, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` reads `useFilterStore.getState().radiusKm` = 20 — A's optimistic value — applies optimistic = 30). Mutation A errors. A's `onError` restores 10. The user's screen flips 30 → 10; B's eventual `onSettled` invalidate refetches and restores 30 from the server (B's PATCH succeeded), so the FINAL state is correct — but the user sees a one-frame flicker during the rollback.
+>
+> **Canonical pattern: naive rollback** (what `usePatchProfile.ts:onError` currently does — restore `previous` unconditionally on error). Acceptable for low-contention fields where the user is unlikely to fire a second mutation before the first resolves.
+>
+> **Recommended for high-contention fields: re-read-before-rollback.** When a field is prone to rapid concurrent user input (slider drags, type-ahead, multi-step forms), augment `onError` to read the current Zustand value first; only restore `previous` if it equals the optimistic value the mutation set:
+> ```ts
+> onError: (_err, patch, ctx) => {
+>   const current = useFilterStore.getState().radiusKm;
+>   if (current === patch.radius_km) {
+>     useFilterStore.getState().setRadiusKm(ctx.previous);
+>   }
+>   // else: a newer write landed — do not clobber (last-write-wins).
+> },
+> ```
+>
+> **Alternative for stricter correctness: per-field version counter.** Each `onMutate` increments a counter; `onError` only restores if the counter at error-time matches. Handles the edge case where a concurrent write happens to set the same value as the optimistic (which the equality check above misses). More elaborate; only justified if the equality-miss case is observed in production.
+>
+> **For deep-equal fields** (e.g., `homeBaseLocation`), the equality check uses `fast-deep-equal/es6` per §6.6.
+>
+> **Per-field decision matrix:** review each existing `useMutation` site for contention. `usePatchProfile.ts` currently mutates `radius_km` only; user-facing surfaces are slider + preset buttons + settings page. Slider drag is a high-contention shape (multiple mutations in flight while the user holds + drags). Decision recorded here: **re-read-before-rollback IS recommended for `radius_km` if the slider's mutation cadence is observed to fire concurrent mutations in production.** Until that observation, the naive pattern is the canonical default — promoting re-read prematurely creates spec-vs-code drift the M1+M2+M3 batch was designed to close.
+
+### B4 — Auth Listener → Cache Invalidation
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts`)
+```ts
+auth().onAuthStateChanged((firebaseUser) => {
+  if (firebaseUser) {
+    const expectedUid = firebaseUser.uid;
+    const isUidChange = lastKnownUid !== expectedUid;
+    if (isUidChange) {
+      lastKnownUid = expectedUid;
+    }
+    void firebaseUser.getIdToken().then((idToken) => {
+      if (lastKnownUid !== expectedUid) return; // stale
+      useAuthStore.getState().setAuth({...}, idToken);
+      // Invalidate AFTER setAuth so the refetch uses the NEW bearer token.
+      // Pre-§9.1-amend, invalidate fired synchronously and raced setAuth
+      // (Gemini WF3-§9.1 review F7).
+      if (isUidChange) {
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    });
+  }
+});
+```
+
+**Rules:**
+- Triggers: cold-boot first-fire (`lastKnownUid === null`) AND genuine UID change.
+- `lastKnownUid` is NOT reset on sign-out (Spec 93 §3.4 fast-path preservation).
+- Stale-resolution guard: `getIdToken().then()` MUST verify `lastKnownUid === expectedUid` before calling `setAuth` (race-prevention per WF3 review).
+- Telemetry: emit `Sentry.addBreadcrumb({category:'auth', message:'uid_change_cache_invalidated'})` only on genuine UID change (not first-fire) per §7.
+- **HMR caveat (DEV only):** `lastKnownUid` is module-scoped `let`, so Metro Fast Refresh resets it on hot reload of `authStore.ts` while in-flight `getIdToken().then()` closures from the OLD module retain the stale binding. The stale-resolution guard above mitigates the late-write race. The cache-invalidation re-fire is acceptable (extra refetch, not data loss). DO NOT move `lastKnownUid` into Zustand state to "fix" HMR — that would defeat the cold-boot first-fire detection (Zustand persist would rehydrate it from MMKV).
+
+### B5 — Sign-out Reset (the global fan-out)
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts:signOut` after the §9.19 unification)
+```ts
+// Module-scope helper — shared between explicit signOut() and the
+// onAuthStateChanged(null) listener branch (forced sign-outs). Both
+// paths invoke this AFTER auth().signOut() resolves (or fails — see
+// the try/finally in signOut below).
+function clearLocalSessionState(): void {
+  usePaywallStore.getState().reset();      // Spec 96 §9 — fast shared-device handoff
+  queryClient.clear();                     // §9.10 — purge ALL TanStack queries
+  mmkvPersister.removeClient();            // §9.18 — purge persister disk blob
+  useFilterStore.getState().reset();
+  useNotificationStore.getState().reset();
+  useOnboardingStore.getState().reset();
+  useUserProfileStore.getState().reset();
+  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  resetIdentity();
+}
+
+signOut: async () => {
+  track('signout_initiated');
+  // §9.19 (also DeepSeek WF2 P2 review #11): try/finally guarantees the
+  // PIPEDA-critical local cleanup runs even if Firebase signOut throws
+  // (network blip, expired refresh token, Firebase unreachable). Pre-fix
+  // a thrown signOut() left the user logged in locally with stale
+  // Zustand + TanStack caches.
+  try {
+    await auth().signOut();
+  } catch (err) {
+    Sentry.captureException(err, {
+      extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+    });
+  } finally {
+    clearLocalSessionState();
+  }
+}
+```
+
+**Rules:**
+- Order WAS normative (paywall reset BEFORE firebase signOut) but the §9.19 unification moved the entire fan-out into `clearLocalSessionState()` which runs in `finally` (i.e., AFTER `auth().signOut()` resolves or throws). This is intentional: the try/finally guarantees cleanup on Firebase failure (the PIPEDA-critical case), and the paywall reset still runs before any subsequent code observes the cleared session because both branches reach `finally` synchronously. The "BEFORE firebase signOut" rule for paywall reset (Spec 96 §9 anti-flicker) is preserved by Spec 96 §9's separate guard, not by the order in `signOut()`.
+- All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`. Adding a new store with user-scoped state requires adding a `.reset()` call there. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `clearLocalSessionState()` (or in `signOut()` directly for stores explicitly excluded from the helper — currently none).
+- **`queryClient.clear()` MUST fire** as part of `clearLocalSessionState()`. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `clear()` call is the primary fix. **§9.10 ✅ DONE** — implementation chose `queryClient.clear()` (broader purge) over the originally-specified scoped `removeQueries({queryKey: ['user-profile']})`; broader purge is defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`) and is stricter than the §B5 PIPEDA letter requires. Spec amended 2026-05-05 to match implementation. The MMKV blob is purged separately via `mmkvPersister.removeClient()` (added §9.18, consolidated into `clearLocalSessionState()` by §9.19) — orthogonal mechanism, both required.
+
+### B6 — API Client → Auth Listener (mid-session token refresh on 401)
+
+Spec 99 amendment 2026-05-05 (resolves WF2 M1+M2+M3 #6, DeepSeek): Firebase ID tokens expire after ~1 hour. `onAuthStateChanged` does NOT fire on token expiry — Firebase only fires it on USER state changes (sign-in / sign-out / forced revocation). Pre-amend, B4 covered cold-boot/UID-change invalidation but the spec said nothing about mid-session refresh; the apiClient's existing 401 interceptor was implicit. A future contributor removing the interceptor "because it's not in the spec" would silently break the app at the 1-hour mark. B6 documents the interceptor as a normative bridge.
+
+**Pattern:** (current implementation in `mobile/src/lib/apiClient.ts:65-84`)
+```ts
+async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise<T> {
+  const { idToken } = useAuthStore.getState();
+  const headers = { Authorization: `Bearer ${idToken}`, ... };
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  // 401 intercept: force-refresh idToken and retry once.
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth().currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, /* isRetry */ true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, refresh token revoked) —
+      // fall through to throw ApiError(401).
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+  // ...
+}
+```
+
+**Rules:**
+- 401 from server MUST trigger `auth().currentUser?.getIdToken(true)` (force-refresh) exactly once. The `isRetry` boolean parameter is the cycle guard — recursive call sets `isRetry: true`, the second 401 propagates `ApiError(401)` instead of looping.
+- Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
+- Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
+- This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
+- This section is the canonical (and sole) normative source for the 401 interceptor contract; `mobile/src/lib/apiClient.ts:65-84` is the implementation site. Removing the interceptor without a corresponding B6 spec amendment is forbidden.
+- **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
+
+---
+
+
+## 5. Routing Authority Rules
+
+### 5.1 One router per gate boundary
+
+The mobile app has exactly TWO routing boundaries:
+
+| Boundary | Sole Authority | File | Spec |
+|----------|----------------|------|------|
+| `(auth)` ↔ `(onboarding)` ↔ `(app)` | **AuthGate** | `mobile/app/_layout.tsx` AuthGate component | Spec 93 §5 Step 6 + Spec 94 §10 |
+| `(app)` trial / expired / paywall | **AppLayout** | `mobile/app/(app)/_layout.tsx` | Spec 96 §10 Step 2 |
+
+**Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s.** They render their `<Stack/>` and let AuthGate / AppLayout govern transitions.
+
+### 5.2 Routers MUST read from the canonical source
+
+For each routing decision, the router MUST read from the field's owner per §3:
+
+| Decision | Read from |
+|----------|-----------|
+| Is user authenticated? | `authStore.user` (canonical) |
+| Has onboarding completed? | `useUserProfile().data.onboarding_complete` (canonical = server profile) — NEVER `useOnboardingStore.isComplete` |
+| Which onboarding step to resume? | `useOnboardingStore.getState().currentStep` (lazy read per §6.4) |
+| Account in deletion window? | `profileError instanceof AccountDeletedError` |
+| Subscription status? | `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally |
+
+**Stale-profile guard (CRITICAL):** Routers MUST NOT make a routing decision against a `profile` whose `user_id !== authStore.user?.uid`. When the UID changes (B4 cache invalidation in flight), TanStack returns the previous user's `query.data` until the new fetch resolves; using it would route the new user based on the old user's `onboarding_complete` / `subscription_status`. AuthGate's existing `profileLoading && !profile` guard only defends the cold-boot case — it does NOT defend the UID-change-mid-fetch case. Implementation: `if (profile && (!profile.user_id || profile.user_id !== user?.uid)) return;` placed after the `profileLoading` guard.
+
+**Hardening beyond spec letter (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus, landed in `mobile/src/lib/auth/decideAuthGateRoute.ts`):** the falsy-uid pre-check (`!profile.user_id`) is stricter than the §5.2 `!==` letter required and rejects a corrupted/poisoned cache where `user_id` is `null` / `''` / `undefined` while attesting to `onboarding_complete: true`. Without the falsy guard, `null !== 'real-uid'` evaluates `true` so the inequality check ALSO returns `wait` for this case — *but only by accident*: a future cache-shape change that surfaced `user_id: ''` (empty string, not null) coupled with the same falsy assertion would still bypass the inequality (empty string `!== 'real-uid'` is also `true`, so the path appears safe — but a future predicate that read `profile.user_id` for routing would see the empty string and fail open). The explicit `!profile.user_id` falsy guard rejects the entire "corrupted cache" attack class regardless of which falsy value the corruption produces. AuthGate's caller emits a Sentry `stale_profile_missing_user_id` breadcrumb in this branch (caller-side side effect) so cache corruption is observable without routing on it. **§9.11 ✅ DONE.**
+
+### 5.3 The 9 routing arms (AuthGate, Spec 93 §5 Step 6)
+
+This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section. **Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9. Branch 5 has 4 sub-cases (5a-5d) because the destination depends on which group the user is currently in × `onboarding_complete`; collapsing them in tests would mask sub-case-specific bugs.
+
+```
+1.   !user                                           → /(auth)/sign-in
+2.   AccountDeletedError                             → reactivation modal (no nav)
+3.   ApiError 404                                    → /(onboarding)/profession
+4.   profileError (other)                            → retry UI (no nav)
+4.5. profile.account_preset='manufacturer' && !complete  → /(onboarding)/manufacturer-hold
+5a.  profile && inAuthGroup && !complete             → getResumePath(profile, currentStep)
+5b.  profile && inAuthGroup && complete              → /(app)/ + registerPushToken
+5c.  profile && inOnboardingGroup && complete        → /(app)/
+5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
+```
+
+### 5.4 Lint rule: router useEffect dependency hygiene
+
+Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body. Use lazy `useStore.getState().field` instead. **Exception:** the dep array MUST contain values that — when changed — should cause the routing decision to be re-evaluated (e.g., `segments`, `user`, `profile`). The distinction: `user.uid` is a routing input (in deps); `currentStep` is informational for the destination (lazy read).
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-review-queue.md b/docs/reports/generated/127-surface-review-queue.md
+index 683bc7515df995168eb45ad50b0ee1b1b646e0f8..3c084fba4ee9324e30c0de14bdd3ce2d9926cdd2 100644
+--- a/docs/reports/generated/127-surface-review-queue.md
++++ b/docs/reports/generated/127-surface-review-queue.md
+@@ -198,16 +198,16 @@ Registry detail: [`S-071`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-The "choose your lot" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: "This address has many lots. Add a unit number or pick a nearby address." An intersection: "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected when the page opens.
++The "choose your lot" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: "This address has many lots. Add a unit number or pick a nearby address." An intersection: "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, "has the house" or "no building", then "faces {street}" or "at the back") and the area; an implausible area reads "Not available" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends "Try a nearby address or report it.", with "report it" a link to the Help topic wrong-lot.
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+ | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+ |---|---|---|---|---|---|---|
+-| reads | `parcels` | `parcel_id` · `lot_size_sqm` · `frontage_m` · `zoning_zn_string` · `centroid_lat` · `centroid_lng` · `geom` · `primary_frontage_street_name` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `parcels` | `sources[1]` | `docs/specs/01-pipeline/55_source_parcels.md` |
++| reads | `parcels` | `parcel_id` · `lot_size_sqm` · `frontage_m` · `zoning_zn_string` · `centroid_lat` · `centroid_lng` · `geom` · `primary_frontage_street_name` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `parcels` | `sources[4]` | `docs/specs/01-pipeline/55_source_parcels.md` |
+ | reads | `address_points` | `address_point_id` · `address_full` · `latitude` · `longitude` · `addr_num_normalized` · `linear_name_normalized` · `address_status` · `maint_stage` · `retired_at` | `address_point_id` · `latitude` · `longitude` · `address_number` · `linear_name_full` · `address_full` · `lo_num` · `hi_num` · `maint_stage` · `address_status` · `address_class_desc` · `class_family_desc` · `place_name` · `addr_num_normalized` · `linear_name_normalized` · `geom` · `retired_at` · `street_type_normalized` | `address_points` | `sources[2]` | `docs/specs/01-pipeline/54_source_address_points.md` |
+-| reads | `parcel_address_points` | `parcel_id` · `address_point_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[3]` | `docs/specs/01-pipeline/56_link_parcel_addresses.md` |
+-| reads | `parcel_buildings` | `parcel_id` | `id` · `parcel_id` · `building_id` · `is_primary` · `structure_type` · `linked_at` · `match_type` · `confidence` | `link_massing` | `sources[4]` | `docs/specs/01-pipeline/56_source_massing.md` |
++| reads | `parcel_address_points` | `parcel_id` · `address_point_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[8]` | `docs/specs/01-pipeline/56_link_parcel_addresses.md` |
++| reads | `parcel_buildings` | `parcel_id` | `id` · `parcel_id` · `building_id` · `is_primary` · `structure_type` · `linked_at` · `match_type` · `confidence` | `link_massing` | `sources[15]` | `docs/specs/01-pipeline/56_source_massing.md` |
+ 
+ **3. Which contracts, and who calls them?**
+ 
+@@ -409,7 +409,6 @@ Lets a paying subscriber search for a property by address, or pick a specific cl
+ | reads | `parcels` | `parcel_id` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `id` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `lot_size_sqm` · `lot_size_sqft` · `opt_aor_gfa_sqm` · `opt_aor_storeys` · `opt_coa_gfa_sqm` · `opt_coa_storeys` · `max_buildable_gfa_sqm` · `max_buildable_footprint_sqm` · `imagery_roof_gfa_sqm` · `imagery_roof_footprint_sqm` · `cur_floor_gfa_sqm` · `max_newbuild_coa_gfa_sqm` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `neighbourhood_id` · `neighbourhood_cost_premium` · `feature_type` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `street_type_normalized` · `stated_area_raw` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `lot_size_confidence` · `lot_size_basis` · `lot_size_source` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `abuts_laneway` · `existing_stories` · `existing_height_m` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `existing_data_quality_flag` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `max_build_setback_basis` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_basis` · `max_build_confidence` · `envelope_constrained` · `envelope_constraint_reason` · `max_build_stories_basis` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `massing_enriched_at` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `garden_suite_fits` · `max_garden_suite_gfa_sqm` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `opt_aor_units` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `geom` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `compute_centroids` · `compute_parcel_cost_estimates` · `enrich_centreline` · `enrich_heritage` · `enrich_parcels` · `enrich_ravines` · `parcels` | `sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]` | `docs/specs/01-pipeline/43_chain_sources.md` |
+ | reads | `user_profiles` | `trade_slug` · `trade_slugs_override` · `display_name` · `user_id` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
+ | reads | `logic_variables` | `variable_key` · `variable_value` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/02-web-admin/128_surface_standard_policy.md` |
+-| writes | `user_profiles` | `user_id` · `trade_slug` · `display_name` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
+ | writes | `usage_events` | `user_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `event_id` · `user_id` · `session_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+ 
+ **3. Which contracts, and who calls them?**
+diff --git a/mobile/__tests__/fixtures/lotMap.situations.json b/mobile/__tests__/fixtures/lotMap.situations.json
+index e340dda771a5897823ca4a493c9e42a8df976615..3e68193b3fbdd1bdcb7743ad09668f286c1ce36f 100644
+--- a/mobile/__tests__/fixtures/lotMap.situations.json
++++ b/mobile/__tests__/fixtures/lotMap.situations.json
+@@ -284,7 +284,7 @@
+             },
+             {
+               "parcelId": "PCL-C3",
+-              "area": "3,052 sq ft · 284 m²",
++              "area": null,
+               "frontage": "7.6 m",
+               "zoning": "RD (f12.0; a370)",
+               "centroid": {
+@@ -743,7 +743,7 @@
+             },
+             {
+               "parcelId": "PCL-C3",
+-              "area": "3,052 sq ft · 284 m²",
++              "area": null,
+               "frontage": "7.6 m",
+               "zoning": "RD (f12.0; a370)",
+               "centroid": {
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+index 0270587f27aaad29c97407fa95b84143f1e5c7e5..c81dd17e57665ee1a0628cc41fe29d5097bcec95 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha ffc21a6ec7f45d43)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 288d11e4c76cf6b3)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "goldens": {
+     "error": {
+@@ -167,8 +167,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -309,7 +309,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -338,8 +338,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -488,8 +488,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -811,17 +811,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.0.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -902,17 +906,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -987,7 +992,7 @@
+                         "disabled": true
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "content": "select.none"
+                       },
+                       "accessibilityHint": {
+                         "content": "select.hint"
+@@ -1052,7 +1057,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1083,8 +1088,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -1491,17 +1496,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -1579,17 +1585,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.1.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.zoning"
+                           }
+                         }
+                       },
+@@ -1680,17 +1690,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.2"
++                          "lead": {
++                            "text": {
++                              "content": "lot.letter"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.2"
++                              }
++                            }
+                           },
+                           "area": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.zoning"
++                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -1742,7 +1753,7 @@
+                                 },
+                                 "children": [
+                                   {
+-                                    "contract": "contract_parcels_lookup.map.lots.2.area"
++                                    "content": "lot.null"
+                                   }
+                                 ]
+                               }
+@@ -1765,7 +1776,14 @@
+                         "disabled": false
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "text": {
++                          "content": "select.lot"
++                        },
++                        "vars": {
++                          "letter": {
++                            "derived": "letter.1"
++                          }
++                        }
+                       },
+                       "onPress": {
+                         "action": "push",
+@@ -1824,7 +1842,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1855,8 +1873,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2002,8 +2020,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2119,8 +2137,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2259,8 +2277,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2401,7 +2419,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2430,8 +2448,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2570,8 +2588,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2717,6 +2735,38 @@
+                                 "contract": "contract_parcels_lookup.map.address"
+                               }
+                             }
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-report",
++                              "testID": "parcel-lotmap-report",
++                              "className": "text-xs font-semibold text-report-ink underline",
++                              "accessibilityRole": "link",
++                              "onPress": {
++                                "action": "open_help",
++                                "topic": "wrong-lot",
++                                "q": {
++                                  "derived": "query"
++                                }
++                              }
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.report"
++                              }
++                            ]
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-stop"
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.stop"
++                              }
++                            ]
+                           }
+                         ]
+                       }
+@@ -2732,7 +2782,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2806,8 +2856,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     }
+diff --git a/mobile/__tests__/lotMapPage.behaviour.test.tsx b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+index 1c6e450fe42826615452020149e8d0af7a56b20e..2694a950046a4a2023da6793284dcd0b78216fd3 100644
+--- a/mobile/__tests__/lotMapPage.behaviour.test.tsx
++++ b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+@@ -47,6 +47,8 @@ const { LOT_MAP_SLICE, lotMapData, lotMapProps } = require('@/components/surface
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const { buildLotMapSituation } = require('@/lib/lotMap') as typeof import('@/lib/lotMap');
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
++const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
++// eslint-disable-next-line @typescript-eslint/no-require-imports
+ const Page = require('../app/(app)/parcel-tool/disambiguate').default as React.ComponentType;
+ 
+ type Input = { query: string; data?: unknown; error?: string; isFetching?: boolean; selectedParcelId?: string | null };
+@@ -55,6 +57,12 @@ const input = (k: string): Input => fixture.inputs[k]!;
+ // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): + open_help. Since d20ddec5e (2026-11-19, SRCH.C12) the help link of the lot map is the action
+ // open_help, and SurfaceRenderer throws on an action the host does not list (SurfaceRenderer.tsx:113); the real mount lists it (disambiguate.tsx:51).
+ const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(), open_help: jest.fn() });
++/** SEARCHFIX.3 X1 (task-451; GROUNDER-F :93, GROUNDER-G :83): the same error construction as lotMapScreens.golden.test.ts errorOf (and
++ * scripts/surfaces/lotmap-golden-capture.ts), so the smoke renders the four error inputs as errors, not as the redirect tree. */
++const errorOf = (kind: string | undefined, name: string): unknown =>
++  kind === 'rate_limited' ? new RateLimitError(name === 'rate_limited_zero' ? 0 : 30)
++    : kind === 'entitlement' ? new ApiError(403, 'forbidden')
++      : kind === 'unexpected' || kind === 'schema_drift' ? new Error('boom') : null;
+ const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
+ 
+ beforeEach(() => {
+@@ -67,11 +75,21 @@ beforeEach(() => {
+ describe('render smoke (FE-33 mobile LIST case): every golden situation renders through SurfaceRenderer', () => {
+   it.each(['multi_parcel_2', 'multi_parcel_3plus', 'unlinked', 'too_many_lots', 'intersection', 'loading', 'error', 'rate_limited', 'unauthorized', 'schema_drift'])('%s', (k) => {
+     const i = input(k);
+-    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: null, isFetching: i.isFetching ?? false, schemaDrift: false, selectedParcelId: i.selectedParcelId ?? null });
++    // SEARCHFIX.3 X1 (task-451, dated 2026-11-24; prior text passed error: null and schemaDrift: false for every input, so the four error inputs rendered the redirect tree).
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
+     render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
+     expect(screen.getByTestId('parcel-lotmap-screen')).toBeTruthy();
+     expect(screen.getByTestId('parcel-lotmap-query').props.children).toEqual([i.query]);
+   });
++  // SEARCHFIX.3 X1 (task-451 AC5): each error input renders its own notice; only the unexpected error offers Retry (schema drift is our problem, retry will not help).
++  it.each([['error', 'parcel-lotmap-error', true], ['rate_limited', 'parcel-lotmap-ratelimit', false], ['unauthorized', 'parcel-lotmap-entitlement', false], ['schema_drift', 'parcel-lotmap-error', false]] as const)('%s renders as an error (%s)', (k, id, retry) => {
++    const i = input(k);
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
++    expect([k, s.state]).toEqual([k, 'error']);
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByTestId(id)).toBeTruthy();
++    expect([k, screen.queryByTestId('parcel-lotmap-retry') !== null]).toEqual([k, retry]);
++  });
+   // Dated 2026-11-20 (task-354): the title said "dark props". The map is light since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT: userInterfaceStyle 'light', LotMapBinding.tsx);
+   // the same commit removed the card facts line (C.9), so the frontage and zoning facts reach the screen through the card's accessibility label, and the card title
+   // is the lead line the card reads since 56e96eed5 (SRCH.LOTCARD, RR-0289: "Lot A · has the house · faces Dunmore Lane", "Lot B · no building").
+@@ -87,11 +105,24 @@ describe('render smoke (FE-33 mobile LIST case): every golden situation renders
+     const frame = screen.getByTestId('parcel-lotmap-map', { includeHiddenElements: true });
+     expect([frame.props.importantForAccessibility, frame.props.accessibilityElementsHidden]).toEqual(['no-hide-descendants', true]);
+     expect(screen.getByText('Lot A · has the house · faces Dunmore Lane')).toBeTruthy();
+-    expect(screen.getByText('Lot B · no building')).toBeTruthy();
++    // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24; MD:776 and doc-2 C.7 "Lot B · no building · at the back"; prior text: 'Lot B · no building'): a lot with no fronting street reads "at the back".
++    expect(screen.getByText('Lot B · no building · at the back')).toBeTruthy();
+     expect(screen.getByText('3,052 sq ft · 284 m²')).toBeTruthy();
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel).toBe('Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'); // a null zoning shows the null value
++    // SEARCHFIX.3 V3 (task-451 AC4, dated 2026-11-24; GROUNDER-H D1 "the spoken name is the visible text"; prior labels: 'Lot A, 3,052 sq ft · 284 m², frontage 7.6 m,
++    // zoning RD (f12.0; a370)' and 'Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'): the label is the card's lead line and its area, nothing the card does not show.
++    const labelA = screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel as string;
++    const labelB = screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel as string;
++    expect(labelA).toBe('Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²');
++    expect(labelB).toBe('Lot B · no building · at the back, 2,153 sq ft · 200 m²');
++    for (const l of [labelA, labelB]) expect(l).not.toMatch(/frontage|zoning/i);
+     expect(screen.getByText('Choose a lot')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Choose a lot'); // the spoken name is the visible text
++  });
++  it('SEARCHFIX.3 V1 (task-451 AC2): 3 lots: a house with no fronting street reads "at the back"; a lot that faces a street keeps "faces"', () => {
++    const s = buildLotMapSituation({ query: '5 Elm St', data: input('multi_parcel_3plus').data as never, error: null, isFetching: false, schemaDrift: false, selectedParcelId: null });
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByText('Lot A · has the house · at the back')).toBeTruthy();
++    expect(screen.getByText('Lot B · no building · faces Dunmore Lane')).toBeTruthy();
+   });
+   it('the polygon and the card both call select with the lot id; the clear button calls back', () => {
+     const a = actions();
+@@ -116,6 +147,7 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(mockPush).not.toHaveBeenCalled();
+     fireEvent.press(screen.getByTestId('parcel-lotmap-card-PCL-B2'));
+     expect(screen.getByText('Continue with Lot B')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Continue with Lot B'); // SEARCHFIX.3 V3: the label follows the visible text
+     fireEvent.press(screen.getByTestId('parcel-lotmap-continue'));
+     expect(mockPush.mock.calls).toEqual([['/(app)/parcel-tool/PCL-B2']]);
+     expect(mockReplace).not.toHaveBeenCalled();
+@@ -132,7 +164,10 @@ describe('the real mount (disambiguate.tsx)', () => {
+     mockHook = { data: input('unlinked').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     expect(screen.getByText('No lot linked yet')).toBeTruthy();
+-    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address.")).toBeTruthy();
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; doc-2 B.6 "Try a nearby address or report it."; prior text ended "Try a nearby address."): the body, the link, the stop.
++    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address or report it.")).toBeTruthy();
++    fireEvent.press(screen.getByTestId('parcel-lotmap-report'));
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=12%20Laneway%20Rear']]);
+     // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the unlinked state draws no Continue since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT, B.8 removed); nothing
+     // is picked and there is nothing to press. The Help link is drawn (SRCH.C12).
+     expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();
+@@ -181,11 +216,12 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(screen.queryByText('Pick a lot on the map or in the list.')).toBeNull();
+     expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityHint).toBeUndefined();
+   });
+-  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the lot_match topic and the typed address', () => {
++  // SEARCHFIX.3 B.7 (task-451, dated 2026-11-24; doc-2 B.7 "to /help?topic=wrong-lot"; prior title and URL: "with the lot_match topic", topic=lot_match).
++  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the wrong-lot topic and the typed address', () => {
+     mockParams = { q: '5 Elm St' };
+     mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     fireEvent.press(screen.getByTestId('parcel-lotmap-help'));
+-    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=lot_match&q=5%20Elm%20St']]);
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);
+   });
+ });
+diff --git a/mobile/__tests__/lotMapScreens.golden.test.ts b/mobile/__tests__/lotMapScreens.golden.test.ts
+index 230aff48ceea15f1e90672e5aa5a5f5091ff3b27..04beedbd08be839e164d7478f87854bf40577be2 100644
+--- a/mobile/__tests__/lotMapScreens.golden.test.ts
++++ b/mobile/__tests__/lotMapScreens.golden.test.ts
+@@ -201,7 +201,48 @@ describe('the page rules (named cases)', () => {
+   it('the ruled message texts are verbatim', () => {
+     expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');
+     expect(LOT_MAP_SLICE.content['unlinked.heading']).toBe('No lot linked yet');
+-    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.");
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; ruling source doc-2 B.6 (doc-2:48) "Try a nearby address or report it." and B.7 (doc-2:49) "report it inside
++    // the no-lot message"; plan ruling 8.1 b; prior pin: "... Try a nearby address."): the line is the body, the link "report it", then the full stop.
++    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ");
++    expect([LOT_MAP_SLICE.content['unlinked.report'], LOT_MAP_SLICE.content['unlinked.stop']]).toEqual(['report it', '.']);
++  });
++  it('SEARCHFIX.3 V2 (task-451 AC3): the no-lot message holds the "report it" link to the wrong-lot help topic, then the stop', () => {
++    for (const k of ['unlinked', 'unlinked_no_pin']) {
++      const desc = nodes(byTestID(lotMapProps(situation(k)), 'parcel-lotmap-unlinked')!).find((n) => n.component === 'AlertDescription')!;
++      const [body, link, stop] = desc.children as [unknown, PropsNode, PropsNode];
++      expect([k, body]).toEqual([k, { text: { content: 'unlinked.body' }, vars: { address: { contract: 'contract_parcels_lookup.map.address' } } }]);
++      expect([k, link.component, link.props.key, link.props.testID, link.props.accessibilityRole, link.props.onPress, link.children]).toEqual([
++        k, 'Text', 'unlinked-report', 'parcel-lotmap-report', 'link', { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } }, [{ content: 'unlinked.report' }]]);
++      expect([k, stop.component, stop.props.key, stop.children]).toEqual([k, 'Text', 'unlinked-stop', [{ content: 'unlinked.stop' }]]);
++    }
++  });
++  it('SEARCHFIX.3 B.7 (task-451; doc-2:49 "to /help?topic=wrong-lot ... under every notice"): every help link of the page opens the wrong-lot topic', () => {
++    const topics = ALL.flatMap((k) => nodes(lotMapProps(situation(k))).filter((n) => (n.props.onPress as Json | null | undefined)?.action === 'open_help').map((n) => (n.props.onPress as Json).topic));
++    expect(topics.length).toBeGreaterThan(0);
++    expect([...new Set(topics)]).toEqual(['wrong-lot']);
++  });
++  it('SEARCHFIX.3 ST3 (task-451 AC1; RR-0444 MD:2290-2291 2c): the null area reads "Not available" on the card and in its label', () => {
++    expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');
++    const card = byTestID(lotMapProps(situation('lot_facts_null')), 'parcel-lotmap-card-PCL-A1')!;
++    const area = nodes(card).find((n) => n.props.key === 'card-area')!;
++    expect(area.children).toEqual([{ content: 'lot.null' }]);
++    const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++    expect([label.text, label.vars.area]).toEqual([{ content: 'lot.label' }, { content: 'lot.null' }]);
++  });
++  it('SEARCHFIX.3 V3 (task-451 AC4; GROUNDER-H D1): the card label is the lead line and the area (no frontage, no zoning); Continue speaks its visible text', () => {
++    for (const k of ['multi_parcel_2', 'multi_parcel_3plus', 'multi_parcel_2_lot_b', 'lot_facts_null']) {
++      const t = lotMapProps(situation(k));
++      for (const card of nodes(t).filter((n) => n.props.role === 'radio')) {
++        const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++        const title = nodes(card).find((n) => n.props.key === 'card-title')!.children[0];
++        const area = nodes(card).find((n) => n.props.key === 'card-area')!.children[0];
++        expect([k, label.text, Object.keys(label.vars).sort(), label.vars.lead, label.vars.area]).toEqual([k, { content: 'lot.label' }, ['area', 'lead'], title, area]);
++      }
++      const cont = byTestID(t, 'parcel-lotmap-continue')!;
++      expect([k, cont.props.accessibilityLabel]).toEqual([k, (cont.children[0] as PropsNode).children[0]]);
++    }
++    expect(LOT_MAP_SLICE.content['lot.label']).toBe('{lead}, {area}');
++    expect('select.label' in LOT_MAP_SLICE.content).toBe(false);
+   });
+   it('null lot facts show the content null value, never "0"; an outline-less lot draws no polygon but keeps its card', () => {
+     const s = situation('lot_facts_null');
+

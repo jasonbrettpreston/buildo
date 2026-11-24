@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T17:21:37.074Z file_sha256=6bf0117cdd41895096bc7399f4104085d7d01dddebee419db5587ad3bbdfc0d1 prompt_sha256=6e605abec19cd02a8d2f564f79123411d41c89a0881ee1eff66d71dec15119bc
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:+1776 (the `select.label` -> `select.lot` hunk) "content": "select.lot" ... "derived": "letter.1" — the enabled select/label node that follows the card whose lead binds "derived": "letter.2" now carries a letter.1 screen-reader label, a possible off-by-one that would name lot B on lot C's control — confirm the label derives its letter from the same lot index as the enclosing card (letter.2) or is a page-level Continue control; the enclosing card tree is not visible in this chunk, so the grounder should check LotMapBinding.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  92762ms (92.8s)
+📊 Tokens — total: 52291, input: 34522, output: 17769, reasoning: 17585

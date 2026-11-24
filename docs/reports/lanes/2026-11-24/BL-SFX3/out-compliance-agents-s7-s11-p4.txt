@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.061Z file_sha256=18343a46d3fff0d45ad36d090d2f0d6f89d8e6e8625e34824a843a802e96d2dc prompt_sha256=4d7ab7d91dc482442a4c5594305f12f3b2987d3b3a2db9282641270625d33ad7
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s7-s11-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-451 AC1 "A lot size outside the plausible range reads "Not available" on the card and in its screen-reader label" — src/tests/consumer-parcel-lookup.infra.test.ts:388 "expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);" — in this chunk the clause's words "Not available" live only in comments (consumer-parcel-lookup.infra.test.ts:383 "the area is null and the card shows the content null value"), no assertion pins the card text or its label, so AC1 is comment-carried here — add an assertion that the rendered card text and accessibilityLabel read "Not available" for an out-of-window size, or name the test that holds it.
+
+DEFER severity=MED — Spec 08 §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" and §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — Implementation Notes "Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station" set against the same note's claim "the multi_parcel_3plus golden shows the area null value "Not available" (AC1)" — the golden lock behind AC1 and AC5 has neither a red nor a green at this snapshot — run both mobile jest files at the push station and record the output before the fold and the close.
+
+DEFER severity=LOW — Spec 08 §11.3 "Survive-the-fix locks (green-both) are stated as such per case" — src/tests/surfaces/lot-map-help-link.logic.test.ts:123 "expect(topics).toContain(TOPIC);" — the lock was already green before this change, since src/tests/surfaces/surface-validate.logic.test.ts:90 records "SEARCHFIX.2 (task-450 ...) +1 in ... web_help.content.json (help.mailto.wrong_lot)", and it is not stated as survive-the-fix — mark it green-both in the test comment.
+
+DEFER severity=LOW — Spec 08 §11.3 "Red must land at the DESIGNED assertion" — src/tests/consumer-parcel-lookup.infra.test.ts:122 "const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;" — a third unique return written as resolution: "unique" with double quotes or without the space is not counted, so the lock titled "a lot opens only on an exact match" stays green while the defect it names returns — match /resolution:\s*['"]unique['"]/ or lock the resolution union at one gate.
+
+DEFER severity=LOW — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — Implementation Notes "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit" — no lock on the C.3 note appears in the pasted material and the only carrier says it is not in this commit — add a C.3 note assertion beside the T8 spec-note lock so AC6 has a red of its own.
+
+DEFER severity=LOW — task-451 AC3 "The no-lot line ends "or report it" and links to the wrong-lot help topic" — src/tests/surfaces/surface-validate.logic.test.ts:92 "(unlinked.report and unlinked.stop added, select.label retired)" — the end "or report it" text is carried only by that count comment and an Implementation Notes line in this chunk, cannot see the assertion that the assembled line and the report link are pinned — confirm the mobile behaviour test asserts the line text and the report link topic.
+
+MET — task-451 AC2 "A lot with no fronting street reads "at the back"" — src/tests/surfaces/search-follow-ups.logic.test.ts:149 "for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);" — the two no-street leads are asserted to end with the phrase and the faces and letter leads are asserted not to.
+
+MET — card Must not "add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/tests/consumer-parcel-lookup.infra.test.ts:396-397 — the import from the one home is asserted and no literal bound is typed in the lib.
+
+MET — Spec 08 §11.3 both directions for the X6 detector — src/tests/surfaces/static-page.logic.test.ts:193-197 — the RED plant shows a wrapped three-line import and a bare call are caught while a comment-only mention is not.
+
+MET — Spec 08 §11.1 executed count claim — src/tests/surfaces/surface-validate.logic.test.ts:92 "measured with surface-validate --check before (427) and after (436)" — the arithmetic holds, 427 plus 8 nav strings plus 1 net map string equals 436, and S-sbind at 436 is asserted in both count tests.
+
+MET — card folded finding "B.7 (map links)" — src/tests/surfaces/lot-map-help-link.logic.test.ts:104 "expect(link.props.onPress).toEqual(openHelp(TOPIC));" — every map and notice help link opens wrong-lot and the topic is pinned to the page table.
+
+VERDICT: FAIL
+Clauses checked: 12   Unmet: 3
+Rules met: none
+
+---
+⏱  162356ms (162.4s)
+📊 Tokens — total: 65482, input: 30565, output: 34917, reasoning: 33630

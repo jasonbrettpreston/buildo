@@ -1,0 +1,1022 @@
+LIST surface-136 sha256:c4de01897b08522808dcb713db60aa5dc9bea0ee04c4ad647f3571c2cda379e5 material sha256:1c1ab83b68a4cc3a0035c1ed18a352724271b89151ea3f3ff103159fd1edc17d part 1 of 1 chunk 2 of 4
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-review-queue.md","mobile/__tests__/fixtures/lotMap.situations.json","mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json","mobile/__tests__/lotMapPage.behaviour.test.tsx","mobile/__tests__/lotMapScreens.golden.test.ts","mobile/src/components/surfaces/LotMapBinding.tsx","mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json","scripts/analysis/lot-map-data-check.mjs"]
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-review-queue.md b/docs/reports/generated/127-surface-review-queue.md
+index 683bc7515df995168eb45ad50b0ee1b1b646e0f8..3c084fba4ee9324e30c0de14bdd3ce2d9926cdd2 100644
+--- a/docs/reports/generated/127-surface-review-queue.md
++++ b/docs/reports/generated/127-surface-review-queue.md
+@@ -198,16 +198,16 @@ Registry detail: [`S-071`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-The "choose your lot" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: "This address has many lots. Add a unit number or pick a nearby address." An intersection: "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected when the page opens.
++The "choose your lot" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: "This address has many lots. Add a unit number or pick a nearby address." An intersection: "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, "has the house" or "no building", then "faces {street}" or "at the back") and the area; an implausible area reads "Not available" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends "Try a nearby address or report it.", with "report it" a link to the Help topic wrong-lot.
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+ | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+ |---|---|---|---|---|---|---|
+-| reads | `parcels` | `parcel_id` · `lot_size_sqm` · `frontage_m` · `zoning_zn_string` · `centroid_lat` · `centroid_lng` · `geom` · `primary_frontage_street_name` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `parcels` | `sources[1]` | `docs/specs/01-pipeline/55_source_parcels.md` |
++| reads | `parcels` | `parcel_id` · `lot_size_sqm` · `frontage_m` · `zoning_zn_string` · `centroid_lat` · `centroid_lng` · `geom` · `primary_frontage_street_name` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `parcels` | `sources[4]` | `docs/specs/01-pipeline/55_source_parcels.md` |
+ | reads | `address_points` | `address_point_id` · `address_full` · `latitude` · `longitude` · `addr_num_normalized` · `linear_name_normalized` · `address_status` · `maint_stage` · `retired_at` | `address_point_id` · `latitude` · `longitude` · `address_number` · `linear_name_full` · `address_full` · `lo_num` · `hi_num` · `maint_stage` · `address_status` · `address_class_desc` · `class_family_desc` · `place_name` · `addr_num_normalized` · `linear_name_normalized` · `geom` · `retired_at` · `street_type_normalized` | `address_points` | `sources[2]` | `docs/specs/01-pipeline/54_source_address_points.md` |
+-| reads | `parcel_address_points` | `parcel_id` · `address_point_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[3]` | `docs/specs/01-pipeline/56_link_parcel_addresses.md` |
+-| reads | `parcel_buildings` | `parcel_id` | `id` · `parcel_id` · `building_id` · `is_primary` · `structure_type` · `linked_at` · `match_type` · `confidence` | `link_massing` | `sources[4]` | `docs/specs/01-pipeline/56_source_massing.md` |
++| reads | `parcel_address_points` | `parcel_id` · `address_point_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[8]` | `docs/specs/01-pipeline/56_link_parcel_addresses.md` |
++| reads | `parcel_buildings` | `parcel_id` | `id` · `parcel_id` · `building_id` · `is_primary` · `structure_type` · `linked_at` · `match_type` · `confidence` | `link_massing` | `sources[15]` | `docs/specs/01-pipeline/56_source_massing.md` |
+ 
+ **3. Which contracts, and who calls them?**
+ 
+@@ -409,7 +409,6 @@ Lets a paying subscriber search for a property by address, or pick a specific cl
+ | reads | `parcels` | `parcel_id` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `id` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `lot_size_sqm` · `lot_size_sqft` · `opt_aor_gfa_sqm` · `opt_aor_storeys` · `opt_coa_gfa_sqm` · `opt_coa_storeys` · `max_buildable_gfa_sqm` · `max_buildable_footprint_sqm` · `imagery_roof_gfa_sqm` · `imagery_roof_footprint_sqm` · `cur_floor_gfa_sqm` · `max_newbuild_coa_gfa_sqm` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `neighbourhood_id` · `neighbourhood_cost_premium` · `feature_type` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `street_type_normalized` · `stated_area_raw` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `lot_size_confidence` · `lot_size_basis` · `lot_size_source` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `abuts_laneway` · `existing_stories` · `existing_height_m` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `existing_data_quality_flag` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `max_build_setback_basis` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_basis` · `max_build_confidence` · `envelope_constrained` · `envelope_constraint_reason` · `max_build_stories_basis` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `massing_enriched_at` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `garden_suite_fits` · `max_garden_suite_gfa_sqm` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `opt_aor_units` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `geom` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `compute_centroids` · `compute_parcel_cost_estimates` · `enrich_centreline` · `enrich_heritage` · `enrich_parcels` · `enrich_ravines` · `parcels` | `sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]` | `docs/specs/01-pipeline/43_chain_sources.md` |
+ | reads | `user_profiles` | `trade_slug` · `trade_slugs_override` · `display_name` · `user_id` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
+ | reads | `logic_variables` | `variable_key` · `variable_value` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/02-web-admin/128_surface_standard_policy.md` |
+-| writes | `user_profiles` | `user_id` · `trade_slug` · `display_name` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
+ | writes | `usage_events` | `user_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `event_id` · `user_id` · `session_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+ 
+ **3. Which contracts, and who calls them?**
+diff --git a/mobile/__tests__/fixtures/lotMap.situations.json b/mobile/__tests__/fixtures/lotMap.situations.json
+index e340dda771a5897823ca4a493c9e42a8df976615..3e68193b3fbdd1bdcb7743ad09668f286c1ce36f 100644
+--- a/mobile/__tests__/fixtures/lotMap.situations.json
++++ b/mobile/__tests__/fixtures/lotMap.situations.json
+@@ -284,7 +284,7 @@
+             },
+             {
+               "parcelId": "PCL-C3",
+-              "area": "3,052 sq ft · 284 m²",
++              "area": null,
+               "frontage": "7.6 m",
+               "zoning": "RD (f12.0; a370)",
+               "centroid": {
+@@ -743,7 +743,7 @@
+             },
+             {
+               "parcelId": "PCL-C3",
+-              "area": "3,052 sq ft · 284 m²",
++              "area": null,
+               "frontage": "7.6 m",
+               "zoning": "RD (f12.0; a370)",
+               "centroid": {
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+index 0270587f27aaad29c97407fa95b84143f1e5c7e5..c81dd17e57665ee1a0628cc41fe29d5097bcec95 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha ffc21a6ec7f45d43)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 288d11e4c76cf6b3)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "goldens": {
+     "error": {
+@@ -167,8 +167,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -309,7 +309,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -338,8 +338,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -488,8 +488,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -811,17 +811,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.0.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -902,17 +906,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -987,7 +992,7 @@
+                         "disabled": true
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "content": "select.none"
+                       },
+                       "accessibilityHint": {
+                         "content": "select.hint"
+@@ -1052,7 +1057,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1083,8 +1088,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -1491,17 +1496,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -1579,17 +1585,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.1.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.zoning"
+                           }
+                         }
+                       },
+@@ -1680,17 +1690,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.2"
++                          "lead": {
++                            "text": {
++                              "content": "lot.letter"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.2"
++                              }
++                            }
+                           },
+                           "area": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.zoning"
++                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -1742,7 +1753,7 @@
+                                 },
+                                 "children": [
+                                   {
+-                                    "contract": "contract_parcels_lookup.map.lots.2.area"
++                                    "content": "lot.null"
+                                   }
+                                 ]
+                               }
+@@ -1765,7 +1776,14 @@
+                         "disabled": false
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "text": {
++                          "content": "select.lot"
++                        },
++                        "vars": {
++                          "letter": {
++                            "derived": "letter.1"
++                          }
++                        }
+                       },
+                       "onPress": {
+                         "action": "push",
+@@ -1824,7 +1842,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1855,8 +1873,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2002,8 +2020,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2119,8 +2137,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2259,8 +2277,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2401,7 +2419,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2430,8 +2448,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2570,8 +2588,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2717,6 +2735,38 @@
+                                 "contract": "contract_parcels_lookup.map.address"
+                               }
+                             }
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-report",
++                              "testID": "parcel-lotmap-report",
++                              "className": "text-xs font-semibold text-report-ink underline",
++                              "accessibilityRole": "link",
++                              "onPress": {
++                                "action": "open_help",
++                                "topic": "wrong-lot",
++                                "q": {
++                                  "derived": "query"
++                                }
++                              }
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.report"
++                              }
++                            ]
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-stop"
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.stop"
++                              }
++                            ]
+                           }
+                         ]
+                       }
+@@ -2732,7 +2782,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2806,8 +2856,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     }
+diff --git a/mobile/__tests__/lotMapPage.behaviour.test.tsx b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+index 1c6e450fe42826615452020149e8d0af7a56b20e..2694a950046a4a2023da6793284dcd0b78216fd3 100644
+--- a/mobile/__tests__/lotMapPage.behaviour.test.tsx
++++ b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+@@ -47,6 +47,8 @@ const { LOT_MAP_SLICE, lotMapData, lotMapProps } = require('@/components/surface
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const { buildLotMapSituation } = require('@/lib/lotMap') as typeof import('@/lib/lotMap');
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
++const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
++// eslint-disable-next-line @typescript-eslint/no-require-imports
+ const Page = require('../app/(app)/parcel-tool/disambiguate').default as React.ComponentType;
+ 
+ type Input = { query: string; data?: unknown; error?: string; isFetching?: boolean; selectedParcelId?: string | null };
+@@ -55,6 +57,12 @@ const input = (k: string): Input => fixture.inputs[k]!;
+ // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): + open_help. Since d20ddec5e (2026-11-19, SRCH.C12) the help link of the lot map is the action
+ // open_help, and SurfaceRenderer throws on an action the host does not list (SurfaceRenderer.tsx:113); the real mount lists it (disambiguate.tsx:51).
+ const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(), open_help: jest.fn() });
++/** SEARCHFIX.3 X1 (task-451; GROUNDER-F :93, GROUNDER-G :83): the same error construction as lotMapScreens.golden.test.ts errorOf (and
++ * scripts/surfaces/lotmap-golden-capture.ts), so the smoke renders the four error inputs as errors, not as the redirect tree. */
++const errorOf = (kind: string | undefined, name: string): unknown =>
++  kind === 'rate_limited' ? new RateLimitError(name === 'rate_limited_zero' ? 0 : 30)
++    : kind === 'entitlement' ? new ApiError(403, 'forbidden')
++      : kind === 'unexpected' || kind === 'schema_drift' ? new Error('boom') : null;
+ const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
+ 
+ beforeEach(() => {
+@@ -67,11 +75,21 @@ beforeEach(() => {
+ describe('render smoke (FE-33 mobile LIST case): every golden situation renders through SurfaceRenderer', () => {
+   it.each(['multi_parcel_2', 'multi_parcel_3plus', 'unlinked', 'too_many_lots', 'intersection', 'loading', 'error', 'rate_limited', 'unauthorized', 'schema_drift'])('%s', (k) => {
+     const i = input(k);
+-    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: null, isFetching: i.isFetching ?? false, schemaDrift: false, selectedParcelId: i.selectedParcelId ?? null });
++    // SEARCHFIX.3 X1 (task-451, dated 2026-11-24; prior text passed error: null and schemaDrift: false for every input, so the four error inputs rendered the redirect tree).
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
+     render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
+     expect(screen.getByTestId('parcel-lotmap-screen')).toBeTruthy();
+     expect(screen.getByTestId('parcel-lotmap-query').props.children).toEqual([i.query]);
+   });
++  // SEARCHFIX.3 X1 (task-451 AC5): each error input renders its own notice; only the unexpected error offers Retry (schema drift is our problem, retry will not help).
++  it.each([['error', 'parcel-lotmap-error', true], ['rate_limited', 'parcel-lotmap-ratelimit', false], ['unauthorized', 'parcel-lotmap-entitlement', false], ['schema_drift', 'parcel-lotmap-error', false]] as const)('%s renders as an error (%s)', (k, id, retry) => {
++    const i = input(k);
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
++    expect([k, s.state]).toEqual([k, 'error']);
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByTestId(id)).toBeTruthy();
++    expect([k, screen.queryByTestId('parcel-lotmap-retry') !== null]).toEqual([k, retry]);
++  });
+   // Dated 2026-11-20 (task-354): the title said "dark props". The map is light since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT: userInterfaceStyle 'light', LotMapBinding.tsx);
+   // the same commit removed the card facts line (C.9), so the frontage and zoning facts reach the screen through the card's accessibility label, and the card title
+   // is the lead line the card reads since 56e96eed5 (SRCH.LOTCARD, RR-0289: "Lot A · has the house · faces Dunmore Lane", "Lot B · no building").
+@@ -87,11 +105,24 @@ describe('render smoke (FE-33 mobile LIST case): every golden situation renders
+     const frame = screen.getByTestId('parcel-lotmap-map', { includeHiddenElements: true });
+     expect([frame.props.importantForAccessibility, frame.props.accessibilityElementsHidden]).toEqual(['no-hide-descendants', true]);
+     expect(screen.getByText('Lot A · has the house · faces Dunmore Lane')).toBeTruthy();
+-    expect(screen.getByText('Lot B · no building')).toBeTruthy();
++    // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24; MD:776 and doc-2 C.7 "Lot B · no building · at the back"; prior text: 'Lot B · no building'): a lot with no fronting street reads "at the back".
++    expect(screen.getByText('Lot B · no building · at the back')).toBeTruthy();
+     expect(screen.getByText('3,052 sq ft · 284 m²')).toBeTruthy();
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel).toBe('Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'); // a null zoning shows the null value
++    // SEARCHFIX.3 V3 (task-451 AC4, dated 2026-11-24; GROUNDER-H D1 "the spoken name is the visible text"; prior labels: 'Lot A, 3,052 sq ft · 284 m², frontage 7.6 m,
++    // zoning RD (f12.0; a370)' and 'Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'): the label is the card's lead line and its area, nothing the card does not show.
++    const labelA = screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel as string;
++    const labelB = screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel as string;
++    expect(labelA).toBe('Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²');
++    expect(labelB).toBe('Lot B · no building · at the back, 2,153 sq ft · 200 m²');
++    for (const l of [labelA, labelB]) expect(l).not.toMatch(/frontage|zoning/i);
+     expect(screen.getByText('Choose a lot')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Choose a lot'); // the spoken name is the visible text
++  });
++  it('SEARCHFIX.3 V1 (task-451 AC2): 3 lots: a house with no fronting street reads "at the back"; a lot that faces a street keeps "faces"', () => {
++    const s = buildLotMapSituation({ query: '5 Elm St', data: input('multi_parcel_3plus').data as never, error: null, isFetching: false, schemaDrift: false, selectedParcelId: null });
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByText('Lot A · has the house · at the back')).toBeTruthy();
++    expect(screen.getByText('Lot B · no building · faces Dunmore Lane')).toBeTruthy();
+   });
+   it('the polygon and the card both call select with the lot id; the clear button calls back', () => {
+     const a = actions();
+@@ -116,6 +147,7 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(mockPush).not.toHaveBeenCalled();
+     fireEvent.press(screen.getByTestId('parcel-lotmap-card-PCL-B2'));
+     expect(screen.getByText('Continue with Lot B')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Continue with Lot B'); // SEARCHFIX.3 V3: the label follows the visible text
+     fireEvent.press(screen.getByTestId('parcel-lotmap-continue'));
+     expect(mockPush.mock.calls).toEqual([['/(app)/parcel-tool/PCL-B2']]);
+     expect(mockReplace).not.toHaveBeenCalled();
+@@ -132,7 +164,10 @@ describe('the real mount (disambiguate.tsx)', () => {
+     mockHook = { data: input('unlinked').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     expect(screen.getByText('No lot linked yet')).toBeTruthy();
+-    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address.")).toBeTruthy();
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; doc-2 B.6 "Try a nearby address or report it."; prior text ended "Try a nearby address."): the body, the link, the stop.
++    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address or report it.")).toBeTruthy();
++    fireEvent.press(screen.getByTestId('parcel-lotmap-report'));
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=12%20Laneway%20Rear']]);
+     // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the unlinked state draws no Continue since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT, B.8 removed); nothing
+     // is picked and there is nothing to press. The Help link is drawn (SRCH.C12).
+     expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();
+@@ -181,11 +216,12 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(screen.queryByText('Pick a lot on the map or in the list.')).toBeNull();
+     expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityHint).toBeUndefined();
+   });
+-  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the lot_match topic and the typed address', () => {
++  // SEARCHFIX.3 B.7 (task-451, dated 2026-11-24; doc-2 B.7 "to /help?topic=wrong-lot"; prior title and URL: "with the lot_match topic", topic=lot_match).
++  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the wrong-lot topic and the typed address', () => {
+     mockParams = { q: '5 Elm St' };
+     mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     fireEvent.press(screen.getByTestId('parcel-lotmap-help'));
+-    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=lot_match&q=5%20Elm%20St']]);
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);
+   });
+ });
+diff --git a/mobile/__tests__/lotMapScreens.golden.test.ts b/mobile/__tests__/lotMapScreens.golden.test.ts
+index 230aff48ceea15f1e90672e5aa5a5f5091ff3b27..04beedbd08be839e164d7478f87854bf40577be2 100644
+--- a/mobile/__tests__/lotMapScreens.golden.test.ts
++++ b/mobile/__tests__/lotMapScreens.golden.test.ts
+@@ -201,7 +201,48 @@ describe('the page rules (named cases)', () => {
+   it('the ruled message texts are verbatim', () => {
+     expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');
+     expect(LOT_MAP_SLICE.content['unlinked.heading']).toBe('No lot linked yet');
+-    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.");
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; ruling source doc-2 B.6 (doc-2:48) "Try a nearby address or report it." and B.7 (doc-2:49) "report it inside
++    // the no-lot message"; plan ruling 8.1 b; prior pin: "... Try a nearby address."): the line is the body, the link "report it", then the full stop.
++    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ");
++    expect([LOT_MAP_SLICE.content['unlinked.report'], LOT_MAP_SLICE.content['unlinked.stop']]).toEqual(['report it', '.']);
++  });
++  it('SEARCHFIX.3 V2 (task-451 AC3): the no-lot message holds the "report it" link to the wrong-lot help topic, then the stop', () => {
++    for (const k of ['unlinked', 'unlinked_no_pin']) {
++      const desc = nodes(byTestID(lotMapProps(situation(k)), 'parcel-lotmap-unlinked')!).find((n) => n.component === 'AlertDescription')!;
++      const [body, link, stop] = desc.children as [unknown, PropsNode, PropsNode];
++      expect([k, body]).toEqual([k, { text: { content: 'unlinked.body' }, vars: { address: { contract: 'contract_parcels_lookup.map.address' } } }]);
++      expect([k, link.component, link.props.key, link.props.testID, link.props.accessibilityRole, link.props.onPress, link.children]).toEqual([
++        k, 'Text', 'unlinked-report', 'parcel-lotmap-report', 'link', { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } }, [{ content: 'unlinked.report' }]]);
++      expect([k, stop.component, stop.props.key, stop.children]).toEqual([k, 'Text', 'unlinked-stop', [{ content: 'unlinked.stop' }]]);
++    }
++  });
++  it('SEARCHFIX.3 B.7 (task-451; doc-2:49 "to /help?topic=wrong-lot ... under every notice"): every help link of the page opens the wrong-lot topic', () => {
++    const topics = ALL.flatMap((k) => nodes(lotMapProps(situation(k))).filter((n) => (n.props.onPress as Json | null | undefined)?.action === 'open_help').map((n) => (n.props.onPress as Json).topic));
++    expect(topics.length).toBeGreaterThan(0);
++    expect([...new Set(topics)]).toEqual(['wrong-lot']);
++  });
++  it('SEARCHFIX.3 ST3 (task-451 AC1; RR-0444 MD:2290-2291 2c): the null area reads "Not available" on the card and in its label', () => {
++    expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');
++    const card = byTestID(lotMapProps(situation('lot_facts_null')), 'parcel-lotmap-card-PCL-A1')!;
++    const area = nodes(card).find((n) => n.props.key === 'card-area')!;
++    expect(area.children).toEqual([{ content: 'lot.null' }]);
++    const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++    expect([label.text, label.vars.area]).toEqual([{ content: 'lot.label' }, { content: 'lot.null' }]);
++  });
++  it('SEARCHFIX.3 V3 (task-451 AC4; GROUNDER-H D1): the card label is the lead line and the area (no frontage, no zoning); Continue speaks its visible text', () => {
++    for (const k of ['multi_parcel_2', 'multi_parcel_3plus', 'multi_parcel_2_lot_b', 'lot_facts_null']) {
++      const t = lotMapProps(situation(k));
++      for (const card of nodes(t).filter((n) => n.props.role === 'radio')) {
++        const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++        const title = nodes(card).find((n) => n.props.key === 'card-title')!.children[0];
++        const area = nodes(card).find((n) => n.props.key === 'card-area')!.children[0];
++        expect([k, label.text, Object.keys(label.vars).sort(), label.vars.lead, label.vars.area]).toEqual([k, { content: 'lot.label' }, ['area', 'lead'], title, area]);
++      }
++      const cont = byTestID(t, 'parcel-lotmap-continue')!;
++      expect([k, cont.props.accessibilityLabel]).toEqual([k, (cont.children[0] as PropsNode).children[0]]);
++    }
++    expect(LOT_MAP_SLICE.content['lot.label']).toBe('{lead}, {area}');
++    expect('select.label' in LOT_MAP_SLICE.content).toBe(false);
+   });
+   it('null lot facts show the content null value, never "0"; an outline-less lot draws no polygon but keeps its card', () => {
+     const s = situation('lot_facts_null');
+diff --git a/mobile/src/components/surfaces/LotMapBinding.tsx b/mobile/src/components/surfaces/LotMapBinding.tsx
+index 2b8aa69c1858389ee3cd1b5748ace545b0e876ed..3e89663cc1ec3f8f677ba173f4bcc9bd1217d3b4 100644
+--- a/mobile/src/components/surfaces/LotMapBinding.tsx
++++ b/mobile/src/components/surfaces/LotMapBinding.tsx
+@@ -38,7 +38,8 @@ const content = (key: string): Ref => ({ content: key });
+ const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+-/** A lot fact that may be null: the contract value, else the content null value "—" (never "0", never blank). */
++/** A lot fact that may be null: the contract value, else the content null value (never "0", never blank). SEARCHFIX.3 (task-451, RR-0444 2c): the null value
++ *  reads "Not available"; the server sends a null area for an implausible lot size (src/lib/parcels/consumer-lookup.ts, LOT_SIZE_PLAUSIBLE_M2). */
+ const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));
+ 
+ const pill = (): PropsNode =>
+@@ -85,23 +86,37 @@ const errorNotices = (s: LotMapSituation): PropsNode[] => [
+     : []),
+ ];
+ 
++/** The Help & Support topic of every link on this page (doc-2 B.7, "to /help?topic=wrong-lot"; the Help page has it since task-450). */
++const HELP_TOPIC = 'wrong-lot';
++
++// SEARCHFIX.3 V2 (task-451; doc-2 B.6 "Try a nearby address or report it." and B.7 "report it inside the no-lot message", choose-lot-states.html:277): the
++// line is the body, an inline "report it" link (a nested Text: the vendored AlertDescription is the RN Text, so the press is the native nested-Text press), then the stop.
+ const unlinkedNotice = (): PropsNode =>
+   notice('unlinked', 'MapPin', L.noticeIconNeutral, [
+     node('Text', { key: 'unlinked-heading', className: L.noticeHeading, role: 'header' }, [content('unlinked.heading')]),
+     node('AlertDescription', { key: 'unlinked-text', className: L.noticeTextNeutral }, [
+       { text: content('unlinked.body'), vars: { address: contract('map.address') } },
++      node('Text', {
++        key: 'unlinked-report',
++        testID: 'parcel-lotmap-report',
++        className: L.helpLinkText,
++        accessibilityRole: 'link',
++        onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
++      }, [content('unlinked.report')]),
++      node('Text', { key: 'unlinked-stop' }, [content('unlinked.stop')]),
+     ]),
+   ]);
+ 
+-/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
+-const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
++/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). SEARCHFIX.3 (task-451): every link takes
++ *  the topic wrong-lot (doc-2 B.7); the old topics lot_match and address_match stay on the Help page. */
++const helpLink = (): PropsNode =>
+   node('Button', {
+     key: 'help',
+     testID: 'parcel-lotmap-help',
+     variant: 'link',
+     className: L.helpLink,
+     accessibilityRole: 'link',
+-    onPress: { action: 'open_help', topic, q: derived('query') },
++    onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
+   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
+ 
+ /** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
+@@ -112,7 +127,7 @@ const pickHint = (): PropsNode =>
+ const helpRow = (): PropsNode =>
+   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
+     node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
+-    helpLink('lot_match'),
++    helpLink(),
+   ]);
+ 
+ const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
+@@ -168,17 +183,16 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+     const lot = s.map!.lots[i]!;
+     const checked = l.parcelId === s.selectedParcelId;
+     const area = fact(lot.area, `map.lots.${i}.area`);
+-    const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
+-    const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
+     // C.7 (RR-0284; RR-0289, MORNING-DECISIONS.md:1117, massing is reliable for presence only): a footprint says "has the house", none says
+-    // "no building" (choose-lot.html:306); the street phrase when the street is populated. A response without the field (an older server or a
+-    // cached one) says neither: the plain lot letter.
++    // "no building" (choose-lot.html:306); "faces {street}" when the street is populated, else "at the back" (SEARCHFIX.3 V1, task-451; MD:776, doc-2 C.7).
++    // A response without the footprint field (an older server or a cached one) says neither: the plain lot letter.
+     const known = lot.hasFootprint !== undefined;
+     const house = lot.hasFootprint === true;
+     const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';
+     const leadKey = !known ? 'lot.letter'
+       : house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')
+         : street ? 'lot.lead.no_building_faces' : 'lot.lead.no_building';
++    const lead: Child = { text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } };
+     return node('Button', {
+       key: `card-${l.parcelId}`,
+       testID: `parcel-lotmap-card-${l.parcelId}`,
+@@ -186,11 +200,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+       className: checked ? L.cardChecked : L.card,
+       role: 'radio',
+       accessibilityState: { checked },
+-      accessibilityLabel: { text: content('lot.label'), vars: { letter: derived(`letter.${i}`), area, frontage, zoning } },
++      // SEARCHFIX.3 V3 (task-451; GROUNDER-H D1 "the spoken name is the visible text"): the label is the lead line and the area, the card's own text.
++      accessibilityLabel: { text: content('lot.label'), vars: { lead, area } },
+       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
+     }, [node('View', { key: 'card-row', className: L.cardRow }, [
+       node('View', { key: 'card-text' }, [
+-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
++        node('Text', { key: 'card-title', className: L.cardTitle }, [lead]),
+         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
+       ]),
+       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
+@@ -200,12 +215,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+ /** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
+ const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
+ 
++// SEARCHFIX.3 V3 (task-451): a non-null route always has a picked letter (lotMap.ts builds the route from the picked lot), so the label is "Choose a lot" or
++// "Continue with Lot X"; the button speaks its visible text (GROUNDER-H D1), and the generic "open the report" label is retired.
+ const continueButton = (s: LotMapSituation): PropsNode => {
+   const label: Child = s.route === null
+     ? content('select.none')
+-    : s.selectedLetter === null
+-      ? content('select.label')
+-      : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
++    : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
+   return node('Button', {
+     key: 'continue',
+     testID: 'parcel-lotmap-continue',
+@@ -214,7 +229,7 @@ const continueButton = (s: LotMapSituation): PropsNode => {
+     disabled: awaitingPick(s),
+     accessibilityRole: 'button',
+     accessibilityState: { disabled: awaitingPick(s) },
+-    accessibilityLabel: content('select.label'),
++    accessibilityLabel: label,
+     // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
+     ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
+     onPress: s.route === null ? null : { action: 'push', route: s.route },
+@@ -231,13 +246,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
+     case 'error':
+       return errorNotices(s);
+     case 'intersection':
+-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
++      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink()];
+     case 'too_many_lots':
+-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
++      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink()];
+     case 'unlinked_no_pin':
+-      return [unlinkedNotice(), helpLink('address_match')];
++      return [unlinkedNotice(), helpLink()];
+     case 'unlinked':
+-      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
++      return [unlinkedNotice(), helpLink(), ...mapView(s)];
+     case 'multi_parcel':
+       return [
+         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+index c12d952815490ab7120622df7dc639ff0b8f48bf..2795947907097c8726d89fae40b8f3f199c622e5 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+@@ -1,24 +1,25 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 244e810f9da12a9f)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 6573a522bea3fc40)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "config": {},
+   "content": {
+     "map.heading": "This address covers {count} lots. Which one do you mean?",
+     "map.clear.label": "Back to search",
+     "lot.letter": "Lot {letter}",
+-    "lot.lead.house": "Lot {letter} · has the house",
+-    "lot.lead.no_building": "Lot {letter} · no building",
++    "lot.lead.house": "Lot {letter} · has the house · at the back",
++    "lot.lead.no_building": "Lot {letter} · no building · at the back",
+     "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+     "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-    "lot.null": "—",
+-    "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++    "lot.null": "Not available",
++    "lot.label": "{lead}, {area}",
+     "select.none": "Choose a lot",
+     "select.lot": "Continue with Lot {letter}",
+-    "select.label": "Open the report for the chosen lot",
+     "select.hint": "Pick a lot on the map or in the list.",
+     "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+     "unlinked.heading": "No lot linked yet",
+-    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++    "unlinked.report": "report it",
++    "unlinked.stop": ".",
+     "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+     "state.loading": "Searching",
+     "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/analysis/lot-map-data-check.mjs b/scripts/analysis/lot-map-data-check.mjs
+index d8fc032571bb7ab8ef7648a3a92e0d6ebfd6242d..dab93753817b69891f726793024605e146743f8b 100644
+--- a/scripts/analysis/lot-map-data-check.mjs
++++ b/scripts/analysis/lot-map-data-check.mjs
+@@ -25,16 +25,32 @@ FROM parcels p
+ WHERE p.parcel_id = ANY($1::text[])
+ ORDER BY p.parcel_id`;
+ 
++// SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag whose value is missing or is the next flag sets `error` (main prints the usage and exits 2),
++// so "--parcels --url x" is never read as parcels "--url" and a URL of "x".
++const valueAfter = (argv, i) => {
++  const v = argv[i + 1];
++  return v === undefined || v.startsWith('--') ? null : v;
++};
++
+ export function parseArgs(argv) {
+-  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS] };
++  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS], error: undefined };
+   const u = argv.indexOf('--url');
+-  if (u >= 0) o.url = argv[u + 1] ?? null;
++  if (u >= 0) {
++    o.url = valueAfter(argv, u);
++    if (o.url === null) o.error = '--url needs a value';
++  }
+   const p = argv.indexOf('--parcels');
+-  if (p >= 0) o.parcels = [...SAMPLE_PARCELS, ...String(argv[p + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)];
++  if (p >= 0) {
++    const v = valueAfter(argv, p);
++    if (v === null) o.error = '--parcels needs a value';
++    else o.parcels = [...SAMPLE_PARCELS, ...v.split(',').map((s) => s.trim()).filter(Boolean)];
++  }
+   o.parcels = [...new Set(o.parcels)];
+   return o;
+ }
+ 
++const USAGE = 'Usage: node scripts/analysis/lot-map-data-check.mjs --dry-run | --url <rehearsal stack URL> [--parcels 1,2]';
++
+ /** Returns null when the URL is the rehearsal stack, else the reason it is refused. */
+ export function refuse(url) {
+   let u;
+@@ -54,6 +70,7 @@ export function summarise(rows) {
+ 
+ async function main() {
+   const o = parseArgs(process.argv.slice(2));
++  if (o.error) { console.error(`${o.error}. ${USAGE}`); process.exitCode = 2; return; }
+   if (o.dryRun) {
+     console.log(`-- BEGIN READ ONLY; parameters: $1 = ${JSON.stringify(o.parcels)}\n${SQL};\n-- ROLLBACK;`);
+     return;
+

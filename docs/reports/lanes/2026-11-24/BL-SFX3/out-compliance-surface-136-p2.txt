@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:26:06.940Z file_sha256=fc03d128d1e3004095490a494503c9275ec17c16326d2189c788b26022068b50 prompt_sha256=d97f2ac709e87659741f0a7baa81098d8aa7341149ca112575449a2ababfc641
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.57 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px — mobile/src/components/surfaces/LotMapBinding.tsx:99 "node('Text', { key: 'unlinked-report', testID: 'parcel-lotmap-report', className: L.helpLinkText, accessibilityRole: 'link', onPress: ..." — the new in-paragraph "report it" link is a bare Text with no hitSlop or min height, so this converted mobile golden cannot meet the C-9m 44x44 floor the rule checks under FE-31 — give the link a 44x44 tappable area, hitSlop or the standard link component that carries the floor.
+DEFER severity=MED — fe.56 "a lock never red against the defect it names is not a lock" — "their red and green are UNVERIFIED until the push station" (plan Implementation Notes, 2026-11-24) — the mobile locks added here (lotMapPage.behaviour.test.tsx AC5/X1, lotMapScreens.golden.test.ts ST3/V1/V2/V3) have no recorded red against the pre-fix binding — run both files red against the unpatched binding and paste the run into the card before merge.
+DEFER severity=LOW — task-451 AC2 "A lot with no fronting street reads 'at the back'" — mobile/src/components/surfaces/LotMapBinding.tsx:192 "const leadKey = !known ? 'lot.letter'" — a lot with no fronting street whose response also lacks hasFootprint shows the bare letter, never "at the back" — either append the phrase for that state or record the exclusion in the ruled text.
+MET — fe.33 — mobile/__tests__/lotMapPage.behaviour.test.tsx:78 — the smoke renders every golden situation plus the four error inputs through SurfaceRenderer, and the new strings come from content keys unlinked.report and unlinked.stop.
+MET — fe.24 — mobile/__tests__/lotMapScreens.golden.test.ts:241 "expect('select.label' in LOT_MAP_SLICE.content).toBe(false);" — the retired key is gone from the content json, so no unknown content key reaches the renderer.
+MET — fe.18 — mobile/src/components/surfaces/LotMapBinding.tsx:43 "const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));" — every card value is a contract member or a content field, and the label is a content template.
+MET — fe.36 — mobile/src/components/surfaces/LotMapBinding.tsx:103 "accessibilityRole: 'link'" — the new link has a role and its visible text as the name; the Continue button speaks its visible text.
+MET — fe.32 — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:824 "contract": "contract_parcels_lookup.map.lots.0.frontageStreet" — the street binding uses a declared contract member; area falls back to content only when null.
+MET — fe.06 — mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json:14 "lot.null": "Not available" — the empty slot reads an honest text, never "0" and never blank.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+Rules met: fe.02, fe.03, fe.05, fe.06, fe.18, fe.24, fe.31, fe.32, fe.33, fe.36, fe.44, fe.54
+
+---
+⏱  91630ms (91.6s)
+📊 Tokens — total: 54231, input: 34428, output: 19803, reasoning: 18973

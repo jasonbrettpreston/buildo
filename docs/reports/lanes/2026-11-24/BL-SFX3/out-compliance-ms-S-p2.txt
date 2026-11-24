@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:54.412Z file_sha256=997aff6a521dd5922ec6fdd67a18aa58dfd400fc0a6896f580c190873d4684e8 prompt_sha256=37191eafb78483403e67b86f34bab0e053797f53226e7da57d051de42b16622a
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-451 card "The plan's section 2 lines are this card's acceptance tests, each red first." — Implementation Notes, pasted: "Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station" — the two mobile files that carry AC1, AC2, AC4 and AC5 have no demonstrated red, so the card's red-first clause is unmet for them — run mobile jest for both files, record the red run (errorOf removed) and the green run before the push station, and paste both into the Implementation Notes.
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/tests/consumer-parcel-lookup.infra.test.ts "const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449" — the chunk carries task-449's T6, T7 and T8 suites and Spec 100 locks, none of which task-451's "Findings folded" line names — confirm these hunks are task-449's committed work and rebase the diff base, or remove them from this card's diff.
+
+DEFER severity=LOW — AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE, the doc-2 file is outside this chunk's path list, cannot see — the dated note for AC6 is not in chunk 2, so AC6 cannot be judged from this material — verify the C.3 dated note in the chunk holding backlog/docs/increments/doc-2 and record it there.
+
+DEFER severity=LOW — H Q2 and H Q4 "small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"" — scripts/surfaces/_schema/static-page.json "web_maxbld_error": "error" / "miss" both gain the hero header "role": "wordmark", "content": "nav.home", "href": "/" — the pasted ruling text names the help and terms-privacy pages only, the two error-page states rest on the card's looser "plain pages" wording — confirm plan ruling 8.5 (not pasted) names both web_maxbld_error states, else drop the header from them.
+
+MET — AC1 "A lot size outside the plausible range reads \"Not available\" on the card and in its screen-reader label" — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null" plus content "lot.null": "Not available" — the null area binds content('lot.null') in both the card text and the lot.label vars.
+
+MET — AC2 "A lot with no fronting street reads \"at the back\"" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "lot.lead.house": "Lot {letter} · has the house · at the back" and "lot.lead.no_building": "Lot {letter} · no building · at the back".
+
+MET — AC3 "The no-lot line ends \"or report it\" and links to the wrong-lot help topic" — mobile/src/components/surfaces/LotMapBinding.tsx unlinkedNotice: "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" with "unlinked.report": "report it" and "unlinked.stop": ".".
+
+MET — AC4 "The screen-reader label contains the visible card text" — mobile/src/components/surfaces/LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" over "lot.label": "{lead}, {area}".
+
+MET — Must not "add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — no new bound is typed.
+
+MET — X1 (AC5 material) — mobile/__tests__/lotMapPage.behaviour.test.tsx "const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), ... schemaDrift: i.error === 'schema_drift'" — the four error inputs are now built as errors instead of error: null.
+
+MET — L7 — scripts/analysis/lot-map-data-check.mjs "return v === undefined || v.startsWith('--') ? null : v;" with "if (v === null) o.error = '--parcels needs a value';".
+
+REJECT — H Q2/H Q4 as applied to web_privacy — the change is accused of adding the header to a page the ruling does not name — the pasted quote itself is "terms-privacy.html:262", the privacy page, so the header there is inside the ruling.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  77963ms (78.0s)
+📊 Tokens — total: 51215, input: 34324, output: 16891, reasoning: 15678

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T17:27:34.955Z file_sha256=08ebeab3bf1b024a5abe5bc32e01b609614eae26dd4f9cb053340f9c54f7d64a prompt_sha256=17bebd969c15aa90a6014aec9e28b017c0cd8846d861f9de0e7aacc396ff2976
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-ux-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/lotMapPage.behaviour.test.tsx:92 "expect([k, screen.queryByTestId('parcel-lotmap-retry') !== null]).toEqual([k, retry]);" with "['rate_limited', 'parcel-lotmap-ratelimit', false]" — rate limited and unauthorized are pinned to a notice with no action and no visible path back, so a person who just hit the limit has nothing on screen to press (the notice bodies are not in this chunk, design silent) — state the wait or the next step in those notices, or give them the same way out the error state has.
+
+DEFER severity=MED — mobile/__tests__/lotMapPage.behaviour.test.tsx:86 "['schema_drift', 'parcel-lotmap-error', false]" vs the only error copy in the slice "state.error": "Couldn’t reach the lot service. Check your connection and try again." — a schema drift wears the connection-error notice id with Retry withheld, so the person is told to check a connection that is fine and to try again with no control to do it (the drift branch of errorNotices is not visible in this chunk) — give the drift its own honest line and one next step.
+
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:191 "const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';" vs design "at the back" when it has none — an empty street name (a lot with an unlinked or unnamed fronting street) now prints "Lot B · no building · at the back", a spatial claim the payload does not make, and it can steer the person away from a lot that does front a street — confirm the source tells "no fronting street" from "no street name" before the phrase is asserted.
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx:101 "node('Text', { key: 'unlinked-report', testID: 'parcel-lotmap-report', className: L.helpLinkText, accessibilityRole: 'link'" — the only in-message way to report is a two-word text run nested in a paragraph with no hitSlop, so on a phone the tap target is one text line tall — add hitSlop or padding so the target reaches the standard touch size.
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:17 "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or " — the sentence now ends in a bare "or" with the full stop in a third key, so any consumer that trims or renders the body alone gives the person "address orreport it" or a sentence with no stop — pin the three keys as one sentence, or carry the space on unlinked.report.
+
+REJECT — mobile/__tests__/lotMapPage.behaviour.test.tsx:225 "expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);" vs design "to /help?topic=wrong-lot" — a fragment instead of a query looks like the topic never reaches the help page — the help prefill island reads the fragment and the prior link already used "#topic=lot_match", so the person lands on the wrong-lot topic.
+
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx:204 "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" vs purpose "listed as cards (area, frontage, zoning) under the map" — the screen-reader user no longer hears frontage or zoning — the visible card lost the facts line earlier (C.9) and GROUNDER-H D1 "the spoken name is the visible text" with AC4 require the label to be the card's own text; the stale purpose line already carries a dated note in this diff.
+
+VERDICT: PASS on the person's experience
+States checked: first view (2 lots and 3+ lots), nothing picked, picked, unlinked with pin, unlinked without pin, too many lots, intersection, loading, service error, rate limited, unauthorized/entitlement, schema drift, null lot facts (implausible area), web help, terms, privacy, maxbld error and miss, plain-page header on each   Dead ends found: 1
+
+---
+⏱  120262ms (120.3s)
+📊 Tokens — total: 61556, input: 35979, output: 25577, reasoning: 24586

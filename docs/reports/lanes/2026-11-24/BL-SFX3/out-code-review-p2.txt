@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T17:21:37.064Z file_sha256=08ebeab3bf1b024a5abe5bc32e01b609614eae26dd4f9cb053340f9c54f7d64a prompt_sha256=b993f2152d1e5c9eff721d24798e9594ffb053cc963e9232bf6bdc5864c84f15
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+BUG/DEFER set below. Everything I could not see is marked cannot see rather than guessed.
+
+DEFER severity=MED — mobile/__tests__/lotMapPage.behaviour.test.tsx "const errorOf = (kind: string | undefined, name: string): unknown =>" — the helper erases its own union to unknown, so the four error objects are handed to buildLotMapSituation unchecked and the helper's reason for existing (the right error class per state) is not type-guarded; if that parameter is typed Error | null this also fails the mobile tsc check that jest's babel transform skips — annotate the return as Error | null (or the concrete RateLimitError | ApiError | Error | null) and cast once at the call site.
+
+DEFER severity=MED — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.getByTestId(id)).toBeTruthy();" with rows "['rate_limited', 'parcel-lotmap-ratelimit', false]" and "['error', 'parcel-lotmap-error', true]" — the notice keys inside errorNotices and the retry button's testID sit outside the diff, and the neighbouring convention derives the testID from the notice key verbatim ("notice('unlinked', ...)" gives parcel-lotmap-unlinked in the golden test), so a key written 'rate-limit' would yield parcel-lotmap-rate-limit and this file would fail at the push station, where mobile jest is still UNVERIFIED — cannot see errorNotices; the grounder should confirm parcel-lotmap-ratelimit, parcel-lotmap-entitlement and parcel-lotmap-retry exist.
+
+DEFER severity=LOW — mobile/__tests__/lotMapPage.behaviour.test.tsx "new RateLimitError(name === 'rate_limited_zero' ? 0 : 30)" — no caller reaches the 0 branch: both it.each lists pass k = 'rate_limited', never 'rate_limited_zero', so this is dead code copied from the golden helper — drop the ternary and pass the retry value in, or add the zero case to the list if it is meant to be exercised.
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx ": { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };" — removing the "s.selectedLetter === null" branch also removed the only fallback, so a non-null route whose selectedParcelId is not in s.lots now interpolates derived 'letter.-1' instead of the generic label; the comment asserts lotMap.ts never builds that route, but nothing here enforces it and the parcelId comes from the server payload — cannot see lotMap.ts; keep a guard (index < 0 -> content('select.none') or select.label) or assert the invariant where the route is built.
+
+NIT — src/components/surfaces/web/StaticBinding.tsx "return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);" — unlike the block it sits above ("component: 'nav'" wrapper in the titled hero), the plain page header spreads the nav items straight into the header with no nav landmark, so the same nav renders two different structures — reuse the titled hero's nav Group so both heroes emit the same element tree.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none at CRIT/HIGH; the three items to resolve before merge are the unknown return on errorOf, the unverified error notice testIDs, and the removed selectedLetter fallback
+
+---
+⏱  152200ms (152.2s)
+📊 Tokens — total: 69141, input: 35963, output: 33178, reasoning: 32340

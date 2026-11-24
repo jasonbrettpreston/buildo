@@ -1,0 +1,12 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T17:27:11.579Z file_sha256=6bf0117cdd41895096bc7399f4104085d7d01dddebee419db5587ad3bbdfc0d1 prompt_sha256=a203a515dc8d772316e4d4de52b8f12b2e49af70d735fca301a76412480dbebc
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-security-p1.txt (model: deepseek-reasoner)
+
+NOT APPLICABLE: chunk 1 of 3 is a queue note, two generated registry reports and test fixtures/goldens; it contains no executable change and no runtime behaviour, the only money/entitlement material is descriptive prose about code that lives outside this chunk.
+
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+
+---
+⏱  14729ms (14.7s)
+📊 Tokens — total: 37004, input: 34529, output: 2475, reasoning: 2401

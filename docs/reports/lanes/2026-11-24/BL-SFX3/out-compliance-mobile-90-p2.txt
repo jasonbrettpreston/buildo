@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:09.911Z file_sha256=3fc73824a9129d37048dc777cd459f42be3b7207bb493dd395285b51c3604862 prompt_sha256=487aaca46f62e6a528d157f9863376216dbd497a720c910af998f4de19806383
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-90-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — mobile/src/components/surfaces/LotMapBinding.tsx "node('Text', {\n        key: 'unlinked-report',\n        testID: 'parcel-lotmap-report',\n        className: L.helpLinkText,\n        accessibilityRole: 'link',\n        onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }," (renders as className "text-xs font-semibold text-report-ink underline") — the new "report it" Text is a newly interactive element with no minHeight/minWidth/hitSlop, so its touch target is a 12px text run, below the 44x44 MUST — add hitSlop (or a minHeight/minWidth of 44) to the report Text, or wrap it in a 44px-high pressable that keeps the inline wording.
+
+DEFER severity=LOW — Spec 90 §2 "NativeWind `dark:` variants are required for all UI components." — mobile/src/components/surfaces/LotMapBinding.tsx "node('Text', { key: 'unlinked-stop' }, [content('unlinked.stop')])" — neither new Text node carries a dark: variant, and the pasted note records "How the React Native Reusables components carry their dark values is MF-35's to rule ... Measured fact only; no rule changes" — defer to MF-35's pending ruling rather than adding per-node variants now.
+
+DEFER severity=LOW — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE — the doc-2 dated note for C.3 is not in this chunk (paths list omits doc-2), and the record says "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit" — cannot see it here, confirm that commit lands with C.3's dated note before merge.
+
+MET — AC1 — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null," with content "lot.null": "Not available" — a size outside the window goes null and the card and its label both read Not available.
+
+MET — AC2 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "lot.lead.no_building": "Lot {letter} · no building · at the back" — a lot with no fronting street reads at the back.
+
+MET — AC3 — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" with "unlinked.report": "report it" — the no-lot line ends or report it and the link carries topic wrong-lot.
+
+MET — AC4 — mobile/src/components/surfaces/LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" — the label is built from the same lead Child and area Ref the card renders.
+
+MET — AC5 — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect([k, s.state]).toEqual([k, 'error']);" — the four error inputs now render through errorOf as errors with their own notices.
+
+MET — task-451 "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the one constant is reused, no new setting.
+
+MET — static-page.json dated note "one nav link (nav.sign_in \"Log in\", /login)" — scripts/surfaces/_schema/static-page.json adds kind hero parts wordmark/nav for web_help, web_terms, web_privacy and both web_maxbld_error states — the plain pages get the header links ruled by H Q2 and H Q4.
+
+MET — static-page.json dated note "the sentence before is stale: Help & Support has its mail links" — scripts/surfaces/_schema/static-page.json — R5's stale no-mail-link sentence carries its dated correction.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  66683ms (66.7s)
+📊 Tokens — total: 46533, input: 32852, output: 13681, reasoning: 12634

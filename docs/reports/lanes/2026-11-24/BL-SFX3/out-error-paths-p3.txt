@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T17:27:08.851Z file_sha256=46b0bf2ea512ea32f469363134f7466cd751e978e51d7e0e83a8a36a446bb93c prompt_sha256=93aa9615d4efba14aa5571cc8e2494eeb49e96f6736c5424741cd49ac75ec3c1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-error-paths-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/surface-validate.logic.test.ts:93 "expect(r.stdout).toBe('surface-validate current; ... S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n')" — the new 436 lock rests on stdout text only, so a validator run that exits non-zero yet still writes that line satisfies the gate; whether the spawn harness asserts r.status is not in this chunk (cannot see) — add expect(r.status).toBe(0) beside the toBe.
+
+DEFER severity=MED — Implementation Notes "Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station; an in-memory tsx probe of the binding gave the expected card text" — the four error notices (AC5) and the area null "Not available" path (AC1) are guarded only by those unrun suites, while the two locks changed here cover the desktop string count and golden count only, so a broken mobile error state degrades silently until push — run both mobile jest files green before merge.
+
+DEFER severity=MED — Implementation Notes "emit-mobile-surfaces --write, lotmap-golden-capture --write (11), emit again, buildGoldens one-off (70 goldens, 5 rewritten), generate-surface-registry then --check clean" — only generate-surface-registry is re-run in --check, the two surface emitters and the one-off golden builder have no repeat-run no-op proof, and "goldens unchanged (100)" is a count that cannot see a golden body rewrite (5 rewritten) — re-run both emitters and the golden capture in check mode, or commit a clean second-run diff.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts:263 "note: 'S-sbind ok (17 surfaces, 436 strings)'" — the lock is a net total, so it catches a doubled add (+2 would read 438) but not an equal-size swap: "unlinked.report and unlinked.stop added, select.label retired" nets +1 and a later 1-for-1 key swap keeps 436, the real guard being the SV-SBIND orphan content key rule named in the notes (cannot see it here) — assert the two new map keys by name rather than only the total.
+
+REJECT — src/tests/surfaces/surface-validate.logic.test.ts:94 "expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok ..." — the exact full-string toBe looks brittle against any added status segment — it fails closed: a new or missing segment on the validator line breaks both locks rather than passing quietly, which is the safe direction.
+
+VERDICT: PASS on error-path safety
+Paths walked: validator failure/exit status, missing or retired content key (empty), re-run of emitters and duplicate --write (retry, double-submit), mobile error-state render (degrade safety), net count lock (idempotency/dedup)   Unguarded: 2
+
+---
+⏱  27935ms (27.9s)
+📊 Tokens — total: 11856, input: 6448, output: 5408, reasoning: 4720

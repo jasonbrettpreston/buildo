@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.082Z file_sha256=3b24c07de18111f9867997fe2de5ed433482b6f4bf1b34a6505a61ee37a0a219 prompt_sha256=c5691f987aae5dc00543826d872695b6584898b52a82cde01ba9fcb6c9915b53
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s7-s11-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — mobile/__tests__/lotMapScreens.golden.test.ts:225 "expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');" — the four golden locks this diff adds (AC1 to AC4) were never executed; the card's red (7 files, 22 tests) is the pre-commit related run, which does not reach mobile/, and the card itself records that their red and green are UNVERIFIED until the push station — run mobile/__tests__/lotMapPage.behaviour.test.tsx and lotMapScreens.golden.test.ts at the base commit (red) and at 04c181564 (green), and record both counts in the card before merge.
+
+DEFER severity=MED — 11.1 "a line citation is read, not remembered" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json:413 "the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark" — no pasted clause names a map-style change, the kept text of the same sentence still says "the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts)", and the entry's evidence array cites neither, so the claim rests on memory and adds unruled text (card: "Nothing is added that the plan or a ruling does not name") — cite the file:line that sets userInterfaceStyle light or the ruling, or drop the clause.
+
+DEFER severity=MED — doc-2 B.7 "to /help?topic=wrong-lot ... under every notice" — mobile/src/components/surfaces/LotMapBinding.tsx:130 "helpLink()," — the help row's link, which sits under no notice, is repointed from lot_match to wrong-lot, and the pasted ruling text covers notice links only while the kept doc comment still calls it the SRCH.C12 prefilled link — quote the B.7 sentence that names the help row, or keep lot_match for that row.
+
+DEFER severity=LOW — 7 rule 10 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — mobile/__tests__/lotMapScreens.golden.test.ts:224 "RR-0444 MD:2290-2291 2c" — line hints (doc-2:48, MD:2290-2291, GROUNDER-QUESTIONS.md:75, :77) are cited with no commit sha, so the hint is undated as the form requires — add the sha to each hint or cite id and anchor only.
+
+MET — AC1 "A lot size outside the plausible range reads 'Not available' on the card and in its screen-reader label" — src/lib/parcels/consumer-lookup.ts:238 — area is null outside LOT_SIZE_PLAUSIBLE_M2 and the card area and the label's area var bind the same lot.null ref.
+
+MET — AC2 "A lot with no fronting street reads 'at the back'" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:5 — lot.lead.house and lot.lead.no_building both end " · at the back".
+
+MET — AC3 "The no-lot line ends 'or report it' and links to the wrong-lot help topic" — mobile/src/components/surfaces/LotMapBinding.tsx:104 "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" — the body, then the link to wrong-lot, then the stop.
+
+MET — AC4 "The screen-reader label contains the visible card text" — mobile/src/components/surfaces/LotMapBinding.tsx:204 "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" — the label binds the same two children the card renders as card-title and card-area.
+
+MET — ruling 8.5 / H Q2 H Q4 "every plain page ... opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in 'Log in', /login)" — scripts/surfaces/_schema/static-page.json:18 — the header hero is added to web_help, web_terms, web_privacy and both web_maxbld_error states, and all four content files carry nav.home and nav.sign_in.
+
+MET — card "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts:27 "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the window is imported, no second constant is defined.
+
+MET — L7 (GROUNDER-G item 2) "a flag whose value is missing or is the next flag sets error" — scripts/analysis/lot-map-data-check.mjs:30 "const valueAfter = (argv, i) => {" — a missing or next-flag value is null and main prints the usage and exits 2.
+
+MET — 11.5 "for Admin/Expo/frontend work, 11.1 applies to the domain's executable surface" — src/lib/parcels/consumer-lookup.ts:226 "const plausibleSize = (v: unknown): boolean => {" — the plausibility rule is a testable predicate and its UI effect is a render assertion, not a visual claim.
+
+REJECT — AC4 "The screen-reader label contains the visible card text" — accused of not being verbatim the two rendered lines — not a real issue: the label binds the same two content refs the card renders, so the spoken text contains both.
+
+REJECT — AC2 "A lot with no fronting street reads 'at the back'" — accused of leaving "(area, frontage, zoning)" on the card in the census purpose — not a real issue: the dated-note convention keeps prior text and the note in the same entry, citing C.9, supersedes it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: 11.5
+
+---
+⏱  133002ms (133.0s)
+📊 Tokens — total: 62810, input: 34322, output: 28488, reasoning: 27075

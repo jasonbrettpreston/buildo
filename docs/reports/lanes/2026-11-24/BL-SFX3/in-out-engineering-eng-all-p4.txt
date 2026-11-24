@@ -1,0 +1,922 @@
+LIST eng-all sha256:e4ad258c2dde33284080daf24062fd026b24026e6aa4e18ce631199a5cb3eb3c material sha256:d5dfd8a3ec3f6b999d6b64dbe907c52d92e0450390933eea8c1edca7458bcbdd part 1 of 1 chunk 4 of 4
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+# Engineering Standards & Stability Guardrails
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
+This document outlines the strict engineering standards, stability rules, and defensive programming patterns that all AI agents and human developers must adhere to when contributing to the Buildo codebase.
+
+---
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+## 🗄️ 3. Database Management & Scaling
+
+### 3.1 Zero-Downtime Migration Pattern
+- **Rule:** When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly.
+- **Execution:** Use the **Add-Backfill-Drop** pattern to avoid table-locking:
+  1. Add the new column.
+  2. Backfill data into the new column.
+  3. Swap application references to the new column.
+  4. Drop the old column in a subsequent deployment.
+- **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
+
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
+- **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
+
+---
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+## 📡 6. Centralized Logging
+
+### 6.1 logError Mandate
+- **Rule:** All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules. Client-side components (React `'use client'`) may use `console.error` since `logError` imports server-only modules.
+- **Execution:** `logError(tag, err, context)` writes to `console.error` locally and reports to Sentry when `SENTRY_DSN` is configured in production. The guardrail tests in `api.infra.test.ts` enforce that critical paths import `logError`.
+
+---
+
+## 🔀 7. Dual Code Path Safety
+
+### 7.1 Classification Sync Rule
+- **Rule:** Trade classification logic exists in two parallel implementations that MUST stay in sync:
+  - `src/lib/classification/classifier.ts` — TypeScript API used by the web app
+  - `scripts/classify-permits.js` — standalone Node.js script for batch DB processing
+- **Execution:** When modifying classification rules (tag-trade matrix, tier rules, narrow-scope codes, confidence thresholds), you MUST update **both** files. Before committing, verify both paths produce identical output for the same input by running the classification test suite: `npx vitest run src/tests/classification.logic.test.ts`.
+
+### 7.2 Scope Classification Sync
+- **Rule:** The same dual-path constraint applies to scope classification:
+  - `src/lib/classification/scope.ts` — TypeScript API
+  - `scripts/classify-scope.js` — standalone batch script
+- **Execution:** Changes to scope tags, project types, or the `classifyScope()` algorithm must be mirrored in both files.
+
+---
+
+## ⚙️ 8. Next.js & TypeScript Constraints
+
+### 8.1 API Route Export Rule
+- **Rule:** Next.js App Router `route.ts` files may ONLY export HTTP handler functions (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`). Exporting any other function, constant, or type from a `route.ts` file will cause a build error or silent runtime failure.
+- **Execution:** If a route file needs shared helper logic, extract it to a module under `src/lib/` and import it. Never `export function` or `export const` from route files unless it is a named HTTP handler.
+
+### 8.2 TypeScript Target Gotchas
+- **Rule:** The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:
+  - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
+  - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
+  - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
+
+---
+
+## 🛢️ 9. Pipeline & Script Safety
+
+### 9.1 Transaction Boundaries
+- **Rule:** Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions (`BEGIN` / `COMMIT`). The `ROLLBACK` in the catch block MUST itself be wrapped in a nested try-catch to prevent crash-on-rollback-failure.
+
+### 9.2 PostgreSQL Parameter Limit
+- **Rule:** PostgreSQL has a hard limit of **65,535 parameters** per prepared statement. Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking (e.g., `MAX_ROWS_PER_INSERT = 4000` for a table with 16 columns: 4000 x 16 = 64,000 params).
+- **Execution:** When adding columns to a table that has a batch insert script, recalculate `MAX_ROWS_PER_INSERT` to stay under 65,535. The formula is: `Math.floor(65535 / number_of_columns)`.
+
+### 9.3 Idempotent Scripts
+- **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+## 🛠️ 12. Frontend Foundation Tooling
+
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
+
+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add"): §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`), and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4 "The libraries" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4). This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use.
+
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
+
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
+
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
+
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a container of the target engine image, `docs/specs/_contracts.json` `db_target.test_image` (`public.ecr.aws/supabase/postgres:17.6.1.167`: PG 17 / PostGIS 3.3, the image the local Supabase stack runs), via testcontainers, connects as the non-superuser `postgres` role, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker. The CI service container runs the same image. The pin is locked by T-PIN-1 (`src/tests/db-test-harness-target.infra.test.ts`) and T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) (WF3 PostGIS pin, 2026-10-03).
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Target guard (WF3 2026-10-03):** the globalSetup picks its target with the pure `decideTestDbTarget(env)` in `src/tests/db/setup-testcontainer.ts`. An exported `DATABASE_URL` is migrated only when it is a disposable test DB: a loopback host with `CI=true` (the CI service container) or `BUILDO_TEST_DB_EXTERNAL=1`, or a non-loopback host with `BUILDO_TEST_DB_EXTERNAL=1`. The local Supabase dev stack (loopback port 54322) is never migrated, whatever flags are set. A qualifying URL wins over `BUILDO_TEST_DB=1` (CI runs `npm run test:db`, which always sets it). A URL that does not qualify is replaced by a testcontainer when `BUILDO_TEST_DB=1` is set; otherwise the suite aborts with a `REFUSING` error that names the target with the password redacted. Locked by `src/tests/test-db-setup-guard.logic.test.ts`.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
+
+### 12.12 Property-Based Tests (`fast-check`)
+- **Status:** Adopted 2026-04-08 after Phase 0+1+2 holistic review caught arithmetic-invariant violations (fit_score=23, buildLeadKey '0'/'00' drift) that example-based tests missed.
+- **Rule:** Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases.
+- **What counts as an invariant:** a property that holds for ALL inputs of the type. Examples: `forAll(input => relevance_score(input) <= 100)`, `forAll(input => buildLeadKey(input) === buildLeadKey(normalize(input)))`, `forAll(a < b => format(a) <= format(b))`.
+- **Files:** `src/tests/property/*.property.test.ts`. Run via `npm run test:property` or as part of the standard `npm run test`.
+- **Why:** A counterexample-finding test does the work that human review can't — it tries 100+ inputs and shrinks failures to a minimal reproduction. The Phase 0+1+2 buildLeadKey fix would have shipped 4 phases earlier with this in place.
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+
+---
+
+## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
+
+Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
+
+**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
+
+| Rule | Class it prevents | Domain | Form |
+|------|-------------------|--------|------|
+| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
+| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
+| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
+| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
+| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
+| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
+
+**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

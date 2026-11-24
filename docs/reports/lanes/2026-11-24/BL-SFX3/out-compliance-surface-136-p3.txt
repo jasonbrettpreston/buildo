@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:26:07.555Z file_sha256=c28daf2fbf386cd0b7982030a7f24e5aaa1dd12009bab3ac141871d9a74e1da3 prompt_sha256=09cb7222564dae81535e0ed5f5033d5a218da33cc114cd754989aa1ec4e58a13
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC "#1 A lot size outside the plausible range reads "Not available" on the card and in its screen-reader label" and "#4 The screen-reader label contains the visible card text" — src/tests/consumer-parcel-lookup.infra.test.ts covers only the server half, and the lane states: "Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station" — the card render and the screen-reader label halves of AC1 and AC4 rest on mobile tests that have never been run, so the criteria are unevidenced — run both mobile jest suites red then green at the push station and attach the output to the card before merge.
+
+DEFER severity=MED — fe.36 "a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action" — src/tests/surfaces/static-web-binding.ui.test.tsx "expect(header![1]).toMatch(/<a\b[^>]*href=\"\/\"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);" — the only pasted evidence for the ten new header controls is a rendered anchor, which both Next <Link> and a raw <a href> produce, so FE-36 is unverified for the five new headers — assert the header part renders through the router link component, or name the element in the review note.
+
+DEFER severity=MED — card "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/tests/consumer-parcel-lookup.infra.test.ts "const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';" — the diff adds SEARCHFIX.1 (task-449) T6, T7 and T8 locks plus a Spec 100 task-449 datemark check that this card's folded list (ST3/2c, V1, V2, V3, L2, L7, R3, X1, X6, R5, B.7, H Q2, H Q4) does not name — confirm those hunks are task-449's stacked commits rather than work authored here, or move them out of this change.
+
+DEFER severity=MED — card AC "#5 The lot-map smoke test renders the four error states as errors" — implementation note "an in-memory tsx probe of the binding gave the expected card text, labels, the unlinked line, the four error notices and the single help topic wrong-lot (lane probe.out)" — the four error states are evidenced only by a one-off lane probe, not by the committed smoke test AC5 names — run mobile/__tests__/lotMapPage.behaviour.test.tsx red then green and cite its output.
+
+MET — fe.05 — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the plausibility window comes from the one home, no bound is typed into the lookup and no UI maths is added.
+
+MET — fe.18 — scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json "  \"nav.home\": \"MaxBLD\"," — the new header strings are content fields, and the map derivations stay inside the deviation row that keeps its adjudicator and date.
+
+MET — fe.31 — src/components/surfaces/web/StaticBinding.tsx "return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, ...)" — the header reuses the existing header component and nav classes, no new library, component kind or binding.
+
+MET — fe.33 — src/tests/surfaces/static-web-binding.ui.test.tsx "expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);" — every new displayed string on the plain-page header comes from the content file.
+
+MET — fe.37 — scripts/surfaces/_schema/static-page.json "\"role\": \"wordmark\", \"content\": \"nav.home\", \"href\": \"/\"" — the new sections carry a content key and an href only, no {value} slot and no declared read, so no server read is added or skipped.
+
+MET — fe.54 — scripts/surfaces/_schema/static-page.json web_maxbld_error "miss" section — both failure states keep their declared prose and gain the header, so each failure still declares what the user sees.
+
+MET — fe.02 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line" — the change stays a descriptor plus content edit with the shared bindings, not a coded screen.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 1
+Rules met: fe.02, fe.05, fe.18, fe.31, fe.33, fe.37, fe.54
+
+---
+⏱  128190ms (128.2s)
+📊 Tokens — total: 61656, input: 34688, output: 26968, reasoning: 25779

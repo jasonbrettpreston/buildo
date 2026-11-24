@@ -1,0 +1,725 @@
+LIST inc-S sha256:440bd010c44b3224827ac42e51c9c7b18156e0e8dfe6dc70a91f66735400b04e material sha256:9549cf37083aae0804258c018abcd9508c9395ff478afa3472143e0eee2d093b part 1 of 1 chunk 3 of 3
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json","src/components/surfaces/web/StaticBinding.tsx","src/lib/parcels/consumer-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-24T16:58:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+## Dated notes
+
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **G.1** "Unique match goes straight to the report" stays true for an exact match only. `unique` is now the exact read, or a one-row typeahead that is the typed address in full; a partial address, a street with no number, a one-row leftover that is not the typed address in full, a street type or direction that differs, and the dash and letter forms are `text_candidates` (the list). See Spec 100 §3.2 dated note 2026-11-24.
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **A.3** "Typeahead resolution of the typed text (street-prefix, up to 10)": a typeahead never opens a lot on a prefix; one leftover row opens only when it is the typed address in full, otherwise the person picks from the list. A typed `%` or `_` is escaped, and a window of 10 is not narrowed by direction. See Spec 100 §3.2 dated note 2026-11-24.
+Dated notes 2026-11-24 (M-246, prior text kept; task-451 SEARCHFIX.3, lane BL-SFX3; the table rows above are unchanged):
+- C.3: the map draws no neighbour lots. Operator RR-0446, verbatim: "04  leave it as it is" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302); ruled at MORNING-DECISIONS.md:2303: "the several-lots map stays as built (no neighbour lots); objective C.3's text is corrected". The C.3 words "neighbours in zinc" no longer describe the page.
+- C.7: the status NOT BUILT is wrong. The card lead was built by task-336 (SRCH.LOTCARD); task-451 adds "at the back" for a lot with no fronting street (FOLD-PLAN.md:57), so the card reads "Lot A · has the house · faces Dunmore Lane" and "Lot B · no building · at the back" as the row says. Status: BUILT.
+- C.12: the status NOT BUILT is wrong. The link "Not sure which lot? Get help with an address" was built by task-321 (SRCH.C12; mobile/src/components/surfaces/LotMapBinding.tsx, the help row under the cards). Status: BUILT; task-451 points it at the topic wrong-lot.
+- B.6 and B.7: the no-lot message now ends "Try a nearby address or report it.", with "report it" an inline link to Help & Support, topic wrong-lot; every "Get help with an address" link takes the topic wrong-lot (the Help page has it since task-450).
+- C.9: the card's screen-reader label no longer reads the facts. Frontage and zoning are still sent by the lookup (the map field whitelist) but are no longer shown or spoken; the label is the card's visible text (lead line and area). An implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available" (RR-0444, MORNING-DECISIONS.md:2290-2291).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+index d11c3e7eaa7487f1dbb1d5c25bd74cce21b98d48..82322ba55283d2b0e3db612915a21443ee1541d0 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "privacy.intro": "This policy explains what personal information MaxBLD collects, why, who we share it with, and how you can delete it or ask to see it. It covers the website at maxbld.ca and the MaxBLD app for iOS and Android.",
+   "privacy.s1.account": "Account.",
+   "privacy.s1.account.1": "Your name and email.",
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+index b9a33390972f970f797a677c8c801f5dc8838f7f..6f39587eca813562545fb041e5efe2665129351c 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "terms.intro": "These terms are an agreement between you and MaxBLD (\"we\", \"us\"). They cover the MaxBLD website at maxbld.ca and the MaxBLD app for iOS and Android. By creating an account you agree to these terms. If you do not agree, do not use MaxBLD.",
+   "terms.s1.basis": "Reports are based on public City of Toronto data and our reading of it.",
+   "terms.s1.changes": "Changes to the service. We may change, add or remove features.",
+diff --git a/src/components/surfaces/web/StaticBinding.tsx b/src/components/surfaces/web/StaticBinding.tsx
+index ed219085a18758532112a2a7ee280baaee59ab18..f78f281672e08e7093164c90e2be36a49820458a 100644
+--- a/src/components/surfaces/web/StaticBinding.tsx
++++ b/src/components/surfaces/web/StaticBinding.tsx
+@@ -216,6 +216,11 @@ const heroNode = (s: StaticSection): StaticNode => {
+       media.push(textNode(p, { key, testID: 'landing-caption', className: L.caption }));
+     }
+   });
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77): a hero of only the wordmark and nav links is a plain page's header:
++  // the nav alone, as the <header>. Any other title-less hero still throws.
++  if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav')) {
++    return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);
++  }
+   if (title === null) fail(`${s.id}: a hero has a title`);
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.hero }, [
+     node('Group', { key: `${s.id}-nav`, component: 'nav', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]),
+@@ -325,7 +330,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
+     if (!Array.isArray(s.parts) || s.parts.length === 0) fail(`${at}: no parts`);
+     return { kind: s.kind, id: s.id, parts: (s.parts as unknown[]).map((p, j) => checkPart(p, s.kind as string, `${at} part ${j}`)) };
+   });
+-  const landing = sections.some((s) => s.kind === 'hero');
++  // SEARCHFIX.3 (task-451): the landing is a page with a titled hero; a plain page's header hero keeps the narrow column.
++  const landing = sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'));
+   return node('Stack', { key: 'page', testID: 'static-page', component: 'main', className: L.screen }, [
+     node('Stack', { key: 'column', className: landing ? L.wide : L.column }, sections.map((s) => (KIND_NODES[s.kind] as (x: StaticSection) => StaticNode)(s))),
+   ]);
+diff --git a/src/lib/parcels/consumer-lookup.ts b/src/lib/parcels/consumer-lookup.ts
+index 75df3042051b3eb1aabb9b27cc1e0ab590399d9b..a2ae0cf7ea48eedac0aa7563d308ed64157d2f17 100644
+--- a/src/lib/parcels/consumer-lookup.ts
++++ b/src/lib/parcels/consumer-lookup.ts
+@@ -24,6 +24,7 @@ import {
+ } from '@/app/api/parcels/lookup/types';
+ import type { LotMapRows } from '@/lib/parcels/lot-map';
+ import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
++import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
+ 
+ type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
+ 
+@@ -76,8 +77,9 @@ const CONSUMER_COMPARABLE_FIELDS = [
+ 
+ const MAX_COMPARABLE_EXAMPLES = 12;
+ 
++// SEARCHFIX.3 L2 (task-451; FOLD-PLAN.md:56): an empty string is no value (null), never Number('') = 0. A defensive guard: no stored column holds ''.
+ const num = (v: unknown): number | null => {
+-  if (v == null) return null;
++  if (v == null || v === '') return null;
+   const n = Number(v);
+   return Number.isFinite(n) ? n : null;
+ };
+@@ -218,13 +220,21 @@ export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; ln
+   return { north, south, east, west };
+ }
+ 
++/** SEARCHFIX.3 ST3 (task-451; RR-0444 2c, MORNING-DECISIONS.md:2291 "The lot card shows "Not available" for an implausible area"): the map lot's area is
++ * sent only when the stored size lies inside the one plausible window (LOT_SIZE_PLAUSIBLE_M2, inclusive, the same test as the report's lot_size_implausible);
++ * outside it, or not a number, the area is null and the card shows its null value. */
++const plausibleSize = (v: unknown): boolean => {
++  const n = num(v);
++  return n !== null && n >= LOT_SIZE_PLAUSIBLE_M2.min && n <= LOT_SIZE_PLAUSIBLE_M2.max;
++};
++
+ export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
+   const lots = rows.lots.map((l) => {
+     const lat = num(l.centroid_lat);
+     const lng = num(l.centroid_lng);
+     return {
+       parcelId: String(l.parcel_id),
+-      area: areaSqftM2Dot(l.lot_size_sqm),
++      area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null,
+       frontage: len1(l.frontage_m),
+       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
+       centroid: lat !== null && lng !== null ? { lat, lng } : null,
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

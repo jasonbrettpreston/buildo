@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.053Z file_sha256=c48b155ec0bcdc2cd9a3d1b9118a72fae9dd8b9da9536c8de777f1fddc6705e2 prompt_sha256=d48b42d080a423b13fe8ff0755c7e7f4204875fd9c100c92691bcb50cd78584b
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-451 "Must not: draw neighbour lots" — docs/reports/generated/127-surface-registry.md:682 "An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots" — the unlinked state still reads as drawing the faint neighbouring lots while the same line's note says "no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446)", so the explicit must-not is contradicted in the surface of record — strike "and the faint neighbouring lots" from the active sentence (or mark that clause superseded at the point it appears).
+
+DEFER severity=MED — Rule 11.2 "an expanded edit set kills every restated scope claim" — docs/reports/generated/127-surface-registry.md:682 "listed as cards (area, frontage, zoning) under the map" — the appended C.9 note asserts "There is no frontage or zoning on the card (C.9, removed by the design)" but the kept sentence still lists frontage and zoning, a restated claim surviving its own correction — remove "frontage, zoning" from the card list or flag it as superseded beside the phrase.
+
+DEFER severity=MED — Rule 11.5-FE "§11.1 applies to the domain's executable surface — typecheck, UI-regression suites (*.ui.test.tsx), render tests, a running app" — Implementation Notes "Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station" — AC1-AC5 rest on those render/golden suites, so the executable-surface claim is unproven at this review and only a "tsx probe" stands in for them — run both mobile jest suites red-then-green and attach the result before merge.
+
+REJECT — Rule 11.1 — the diff flips answer 13 `emits` none→ledger while the Evidence row still reads "no ledger INSERT" — not a real issue: the ledger row is written by openReport in src/lib/entitlements/index.ts:590-609 (cited inline by row 13), so the route file itself performs no INSERT and both statements hold.
+
+MET — Rule 7.10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — .cursor/MCFRONTEND-QUEUE.md:418 — the added note quotes RR-0444 (MORNING-DECISIONS.md:2290) and RR-0446 (:2302) with file:line.
+
+MET — AC2 "A lot with no fronting street reads "at the back"" — .cursor/MCFRONTEND-QUEUE.md:418 — "a lot with no fronting street reads "Lot B · no building · at the back" or "Lot A · has the house · at the back"".
+
+MET — AC3 "The no-lot line ends "or report it" and links to the wrong-lot help topic" — .cursor/MCFRONTEND-QUEUE.md:418 — "the no-lot message ends "Try a nearby address or report it." with "report it" an inline link to the same topic".
+
+MET — AC4 "The screen-reader label contains the visible card text" — .cursor/MCFRONTEND-QUEUE.md:418 — "The card's screen-reader label is its visible text (lead line and area, no frontage or zoning)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+Rules met: none
+
+---
+⏱  141978ms (142.0s)
+📊 Tokens — total: 65671, input: 35103, output: 30568, reasoning: 29789

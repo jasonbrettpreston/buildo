@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:24.365Z file_sha256=9a1b853362b2dc06821d45f2cef96a997ffaff83f155e250abb5bdd39c1d33f0 prompt_sha256=8bbc91c8ecfde41f3eb4dbb2286c98bff7d7e7c7d622e1987100f574137eaacc
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-98-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — task-451 card, dated note "There is no frontage or zoning on the card (C.9, removed by the design)" — docs/reports/generated/127-surface-registry.md:682 "listed as cards (area, frontage, zoning) under the map" — the entry still tells the reader the cards list frontage and zoning in the same paragraph that says the card carries neither, so the C.9 clause is recorded but not applied to the text it supersedes — mark the "(area, frontage, zoning)" phrase superseded here and at docs/reports/generated/127-surface-review-queue.md:201, as the queue note does for its own case ("the BL-LOTCARD note above ... is superseded").
+
+BUG severity=MED — task-451 AC6 / RR-0446 "Objective C.3 carries a dated note: no neighbour lots" — docs/reports/generated/127-surface-registry.md:682 "the pin and the faint neighbouring lots, never a silent nearest-lot pick" — the entry keeps the unlinked state drawing faint neighbours while its own added note says "no faint neighbouring lots on the unlinked state (B.8 removed)", and the reads paragraph still promises "on unlinked the neighbour outlines within the logic-variable radius", so the material states both that neighbours are drawn and that none are — date-note or strike the two neighbour phrases here and in the review-queue mirror so one statement survives.
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — docs/reports/generated/127-surface-registry.md:682 "(B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built)" — the pasted RR-0446 "04  leave it as it is" and AC6 name the several-lots map (C.3), not the unlinked state's B.8, so the note attributes to that ruling a change it does not state — cite the ruling that removes B.8 or drop the B.8 sentence from both generated files.
+
+DEFER severity=LOW — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — implementation note "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit" — AC6's artefact (the C.3 note in doc-2) is not in this chunk, cannot see — confirm the C.3 dated note lands in the same change before merge.
+
+DEFER severity=LOW — task-451 AC1 "A lot size outside the plausible range reads \"Not available\" on the card and in its screen-reader label" — mobile/__tests__/fixtures/lotMap.situations.json:287 "\"area\": null" replacing "3,052 sq ft · 284 m²" — the fixture now models a response with no area, not a stored size outside LOT_SIZE_PLAUSIBLE_M2 (that range, src/lib/report-projection/project.ts:79, is not pasted, cannot see whether 284 m² is inside it), so this chunk carries no evidence for the range path — name or add the case whose stored size is out of range.
+
+MET — task-451 AC3 — docs/reports/generated/127-surface-registry.md:682 — records "The no-lot message ends 'Try a nearby address or report it.', with 'report it' a link to the Help topic wrong-lot".
+MET — task-451 AC2 — docs/reports/generated/127-surface-registry.md:682 — records a lot with no fronting street reading "at the back".
+MET — task-451 AC4 — docs/reports/generated/127-surface-registry.md:682 — "the card's screen-reader label is its visible text (lead line and area".
+MET — task-451 AC1, documentation half — docs/reports/generated/127-surface-registry.md:682 — "an implausible area reads 'Not available' (RR-0444 2c)".
+MET — task-451 "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2" — docs/reports/generated/127-surface-registry.md:682 — the note names "LOT_SIZE_PLAUSIBLE_M2" and introduces no new setting.
+MET — task-451 "Dated note owed: task-336" — .cursor/MCFRONTEND-QUEUE.md:418 — the 2026-11-24 MF-53 note is added over the BL-LOTCARD/BL-C12 notes and closes the topic line "the Help page has the topic wrong-lot since task-450".
+
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — the golden fixture edit accused of being a UI snapshot — the MF-35 dated note in §4 holds a render smoke and a screen-behaviour test are not snapshots, and this path is on the card's Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  107864ms (107.9s)
+📊 Tokens — total: 57542, input: 33450, output: 24092, reasoning: 22967

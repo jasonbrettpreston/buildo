@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.056Z file_sha256=6b2d253db1f1f8d2072d574a5226f7ab4f678ec294f15b2c6ee07635d53c9a62 prompt_sha256=b261053cd898dcac6d51caecae2ece4d5cdcc1e4adfb4b1c79fa2919a0b22f76
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card "Must not: draw neighbour lots" and RR-0446 "04  leave it as it is" — docs/reports/generated/127-surface-registry.md:679 "no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built)" against .cursor/MCFRONTEND-QUEUE.md:418 "The several-lots map stays as built: no neighbour lots." and 127-surface-registry.md:1001 "and on unlinked the neighbour outlines within the logic-variable radius" — the two notes this change adds put the removed neighbour lots on different states (unlinked vs several-lots), the unlinked half is named by no pasted ruling, and the same entry still says the unlinked map block sends neighbour outlines within a logic-variable radius, so the document asserts two realities where 5.2 requires one ("spec §X says A; reality is B") — keep the note on the state the ruling names, and either correct the reads sentence or drop the unlinked claim.
+
+DEFER severity=LOW — card "Decisions naming this task ... RR-0444 ... MORNING-DECISIONS.md:2290" — .cursor/MCFRONTEND-QUEUE.md:418 "RR-0444, verbatim: `(c) Add the "Not available - good catach` (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2290)" — the operator words are cut mid-word and the inner quotation is never closed, so the "verbatim" line attributed to :2290 cannot be checked against the verbatim the card gives for that same line — close the quotation or cite RR-0444 clause 2c without the verbatim claim.
+
+DEFER severity=LOW — card "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — docs/reports/generated/127-surface-registry.md:1001 "Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276 ...): exact match opens; ... every other one-row leftover is `text_candidates`" — this diff adds another card's operator-verbatim note (task-449, SEARCHFIX.1) that neither the card nor the implementation notes name — record it in the implementation notes as regeneration catch-up from the base descriptor, or leave it to task-449's lane.
+
+DEFER severity=LOW — card AC1 "A lot size outside the plausible range reads "Not available" on the card and in its screen-reader label" — mobile/__tests__/fixtures/lotMap.situations.json:287 ""area": null," — the AC1 evidence in this chunk feeds a null area to the card, not an out-of-plausible-range stored size, and the range check in src/lib/parcels/consumer-lookup.ts is not in this chunk (cannot see) — point AC1 at the out-of-range to null test, or add one fixture lot that carries the out-of-range number through that path.
+
+MET — card AC2 "A lot with no fronting street reads "at the back"" — .cursor/MCFRONTEND-QUEUE.md:418 — "a lot with no fronting street reads "Lot B · no building · at the back" or "Lot A · has the house · at the back"", with the BL-LOTCARD "at the back is not data" sentence named as superseded.
+
+MET — card AC3 "The no-lot line ends "or report it" and links to the wrong-lot help topic" — docs/reports/generated/127-surface-registry.md:679 — "The no-lot message ends "Try a nearby address or report it.", with "report it" a link to the Help topic wrong-lot."
+
+MET — RR-0444 "Add the "Not available" (as quoted in the queue note for :2290)" — docs/reports/generated/127-surface-registry.md:679 — "an implausible area reads "Not available" (RR-0444 2c)", carried identically in docs/reports/generated/127-surface-review-queue.md:201.
+
+MET — RR-0446 "04  leave it as it is" — docs/reports/generated/127-surface-review-queue.md:201 — "the several-lots map stays as built", the map is recorded as left as built rather than redrawn.
+
+MET — card "Dated note owed: task-336" — .cursor/MCFRONTEND-QUEUE.md:418 — "Dated note 2026-11-24 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-SFX3, task-451 SEARCHFIX.3 ...)" is appended in the MF-53 block beside the task-336 BL-LOTCARD note it supersedes.
+
+MET — 5.2 "verify it against the live code / DB / behavior" (chain positions) — docs/reports/generated/127-surface-registry.md:701 — "sources[4]" for parcels, "sources[8]" for parcel_address_points, "sources[15]" for parcel_buildings, matching the descriptor and census change the implementation notes name (R3) and the same three values in the review queue.
+
+REJECT — card "Must not: draw neighbour lots" — that this change draws neighbour lots — the diff touches only two generated reports, the queue note and a test fixture, with no rendering code in this chunk.
+
+REJECT — 5.1 "Item-by-item, spec-clause → code-line, PASS/FAIL" — that no compliance pass accompanies the change — the pass is a lane-close artifact outside the diff, enforced by check-lane-close.mjs per the dated note, not a diff line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 1
+Rules met: none
+
+---
+⏱  107219ms (107.2s)
+📊 Tokens — total: 56413, input: 34382, output: 22031, reasoning: 20684

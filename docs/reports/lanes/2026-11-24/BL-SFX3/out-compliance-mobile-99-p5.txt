@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:13.536Z file_sha256=04f950812f3b6b60399fde407b37447b7cdd781ef89e43a4fe5bfc068dde9dde prompt_sha256=d7878130b8a8cd1ce88ad070c66ee623fdec68e5e5e79a9324d00b16e3374774
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — AC2 "#2 A lot with no fronting street reads "at the back"" — mobile/src/components/surfaces/LotMapBinding.tsx "const leadKey = !known ? 'lot.letter'" — a payload that omits the footprint field and has no fronting street renders the bare "Lot {letter}", so the card never says "at the back" for that lot — state whether AC2 covers the unknown-footprint case and, if it does, give it a lead key that keeps the letter plus "at the back" / "faces {street}"
+DEFER severity=LOW — AC5 "The lot-map smoke test renders the four error states as errors" — NONE — the smoke test is not in chunk 3 of 4, so its red and the green cannot be seen here (the four error notices themselves are unchanged in the diff) — verify in the chunk carrying src/tests/consumer-parcel-lookup.infra.test.ts and mobile/__tests__/lotMapPage.behaviour.test.tsx
+DEFER severity=LOW — AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE — the note owed to objective C.3 is not visible in this chunk; the descriptor and census notes added here cite B.8/RR-0446 and do not name C.3, and the lane records say the doc-2 notes land in a separate commit — confirm the C.3 dated note exists in the commit that carries docs/reports/generated paths
+MET — §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing useEffect requires either matching an existing pattern in §3-§5 or amending this spec." — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" — the change adds props nodes, content keys and a server-side projection only, no store, no MMKV key, no hydrate effect, no router effect
+MET — §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null" — the area and plausibility decision moves to the server projection, the client keeps no local mirror of it
+MET — §3 "Adding a field to the mobile app requires adding a row here." — mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json "\"unlinked.report\": \"report it\"" — the added keys are surface content strings, not mobile state fields, so no matrix row is owed
+MET — "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the existing constant is reused, inclusive at both ends, no new setting
+MET — H Q2, H Q4 "every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login)" — scripts/surfaces/_schema/static-page.json "role": "nav", "content": "nav.sign_in", "href": "/login" — all five page-states get the header hero and the four content files carry nav.home / nav.sign_in
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: none
+
+---
+⏱  40825ms (40.8s)
+📊 Tokens — total: 40403, input: 31999, output: 8404, reasoning: 7555

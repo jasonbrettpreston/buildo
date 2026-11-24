@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:16.662Z file_sha256=5e975739b68e8fb609df3a8746027afbd92c228040ade935312b40290d010677 prompt_sha256=41b0619aba6ad8d221f0f8aecc696432a08150d217ec013543679b4080fa8c24
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — descriptor closed derived list "Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other)" — mobile/src/components/surfaces/LotMapBinding.tsx "derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`)" — the retired `s.selectedLetter === null` branch means a non-null route whose parcelId matches no lot now emits the derived name letter.-1, which no lot backs, and the guard rests only on a code comment — guard the index (or read the situation's own letter) before emitting the letter ref, and keep the plain "Continue" label as the fallback
+DEFER severity=LOW — AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE — this chunk carries no doc-2 text and the impl note says "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit", so AC6 cannot be seen here — verify the C.3 dated note in that commit before merge
+DEFER severity=LOW — AC5 "The lot-map smoke test renders the four error states as errors" — NONE — no test file is in this chunk and the impl note records "Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station" — confirm the four error notices in mobile/__tests__/lotMapPage.behaviour.test.tsx at the push station
+REJECT — AC3 "links to the wrong-lot help topic" — that the topic id "wrong-lot" (hyphen) will not match the Help page's "help.mailto.wrong_lot" key — the diff's own clause text quotes the design as "to /help?topic=wrong-lot" and states "the Help page has it since task-450", so the hyphen form is the named parameter, not an invention
+MET — AC1 — src/lib/parcels/consumer-lookup.ts "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null" with "lot.null": "Not available" and label "{lead}, {area}" puts the null value on the card and in the label
+MET — AC2 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "lot.lead.house": "Lot {letter} · has the house · at the back" (and the no_building twin)
+MET — AC3 — mobile/src/components/surfaces/LotMapBinding.tsx "const HELP_TOPIC = 'wrong-lot';" and "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }" inside the unlinked notice, with unlinked.report/unlinked.stop
+MET — AC4 — mobile/src/components/surfaces/LotMapBinding.tsx "accessibilityLabel: { text: content('lot.label'), vars: { lead, area } }" is built from the same refs the card title and area line render
+MET — must not "add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';"
+MET — generated mirror — mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json carries the same keys and strings as the F01 content file ("unlinked.body" trailing " or ", "lot.null": "Not available", select.label removed from both)
+MET — Spec 99 §6.1 — mobile/src/components/surfaces/LotMapBinding.tsx adds no useXStore() whole-store read, so the §9.15 atomic-selector glob over mobile/src/components/** gains no new violation
+MET — Spec 99 §6.5 — the same file keeps its page states derived from the stable situation (`s.route`, `lot.hasFootprint === undefined`) and adds no `isFetching` coupling or new carve-out
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: 6.1, 6.5
+
+---
+⏱  109579ms (109.6s)
+📊 Tokens — total: 52535, input: 30489, output: 22046, reasoning: 21031

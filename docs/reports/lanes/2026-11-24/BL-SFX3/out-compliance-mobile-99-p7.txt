@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:18.896Z file_sha256=0720f03507516067ceeae98d0f1a3c858f56ba6bc19b770320b5eb033666e79b prompt_sha256=9e9e5a20b7f2182add36232d10488f62a32886eba90cc1ff75d130e1d0c884b1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE — no dated C.3 note appears anywhere in the material under review; the only support is the card prose "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit", which is a note about a future commit, not the change — land the C.3 dated note (and the C.7/C.12 status notes) in this change before merge, per the card's own "Runs after ... Dated note owed: task-336"
+
+BUG severity=HIGH — RR-0442 "It should open on an exact match and we have a different process for address mistakes" — src/tests/consumer-parcel-lookup.infra.test.ts:127 "expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);" — the only lock on "opens on an exact match" is a count of the literal string `resolution: 'unique'`, so a resolver that opens a lot from a third site written with double quotes, a line break, or a shared variable still passes, and nothing reads what the two sites actually compare — assert the two open sites by their predicate (exact-address equality vs the completed-typeahead row), not by a substring tally
+
+DEFER severity=LOW — task-451 AC1 "A lot size outside the plausible range reads 'Not available' on the card and in its screen-reader label" — src/tests/consumer-parcel-lookup.infra.test.ts:234 "expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);" — within these files AC1 is locked only as `area === null`; no assertion here reads the "Not available" content value on the card or in its screen-reader label, so the second half of AC1 rests on the card prose "card label = lead + area" — add a label/text assertion for the implausible case where that text is checked
+
+DEFER severity=LOW — task-451 AC4 "The screen-reader label contains the visible card text" — NONE — no assertion in these seven files reads the card's accessibility label at all, so AC4 is carried only by the prose "card label = lead + area, Continue label = its visible text" — pin the label in a rendered assertion so AC4 is not comment-only
+
+MET — Spec 99 §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — src/tests/surfaces/*.test.ts* — the chunk adds no store, no MMKV blob, no hydrate effect and no Bridge B2/B3 call; the area, the "at the back" leads and the header links are rendering and content only
+
+MET — Spec 99 §5.1 "Other layouts ... MUST NOT have routing `useEffect`s" — src/tests/surfaces/static-web-binding.ui.test.tsx:185 "const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });" — the plain-page header is a static link set rendered from the page table, no router effect and no §5.3 arm is touched
+
+MET — Spec 99 §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`" — src/tests/surfaces/static-page.logic.test.ts:152 "const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';" — the new reads are `fs.existsSync`/`readFileSync` in a root test, no MMKV or persister path is added
+
+MET — task "Must not: draw neighbour lots, or add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/tests/consumer-parcel-lookup.infra.test.ts:240 "expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);" — the window is imported from the one home and `expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/)` forbids a second bound
+
+MET — task-451 AC2 "A lot with no fronting street reads 'at the back'" — src/tests/surfaces/search-follow-ups.logic.test.ts:145 "'lot.lead.no_building': 'Lot {letter} · no building · at the back'," — both no-street leads are pinned in content and slice, and the faces/letter keys are pinned not to carry the phrase
+
+REJECT — RR-0392 "Push for all 4. I don't think we need any other infastrcuture beyond this.. we are good to go!" — the SEARCHFIX.1 T6/T7/T8 block in consumer-parcel-lookup.infra.test.ts read as unnamed scope added by task-451 — one push carries all four search-fix tasks, so task-449 tests travelling in the same diff are expected, not invented scope
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+Rules met: none
+
+---
+⏱  108848ms (108.8s)
+📊 Tokens — total: 53871, input: 29803, output: 24068, reasoning: 22846

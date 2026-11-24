@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:25:13.119Z file_sha256=b5be361888acc0731f053a1039e76da53aca29bbe7d54de7fbac2d439cf24f67 prompt_sha256=b0a0c66aa2f27812b26796e25d0ed30b289b81174771c3b549a572f2fc025112
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-step-132-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — core.11 "Output is observable. `emits[]` equals what the captures emit and stays flat" — docs/reports/generated/127-surface-registry.md, Evidence row "no Sentry breadcrumb, no analytics capture and no ledger INSERT" — the entry's emits answer was rewritten to `ledger` ("A parcel_tool hit whose report is produced writes one usage_events ledger row ... through openReport") while the same entry's Evidence row still witnesses that no ledger INSERT exists, so the declared emit contradicts the evidence filed beside it — update the Evidence `emits` row to cite openReport (src/app/api/parcels/lookup/route.ts:102-114, src/lib/entitlements/index.ts:590-609) or revert the emits answer to `none`
+
+DEFER severity=LOW — RR-0446 "04  leave it as it is 02 Agrred add to the plan." (card: "the several-lots map stays as built: no neighbour lots") — docs/reports/generated/127-surface-registry.md, "a start view and the faint neighbour outlines" — the entry still declares the neighbour outlines among what the server sends for the unlinked state, so the removal lives only in the appended dated note while the read/write declaration in the same entry keeps it — qualify or strike the neighbour-outlines clause in that paragraph
+
+DEFER severity=LOW — AC6 "Objective C.3 carries a dated note: no neighbour lots" — docs/reports/generated/127-surface-registry.md (chunk 2) carries no C.3 note; Implementation Notes "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit" — AC6 is owed and cannot be confirmed from this material — land the C.3 dated note and cite it before acceptance
+
+DEFER severity=LOW — core.14 "Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`" — docs/reports/generated/127-surface-registry.md, "the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84" — the prose still declares a user_profiles write while the removed "| writes | `user_profiles` |" row and the index (which drops `contract_parcels_lookup` from user_profiles writes) no longer witness it — keep a dev-only writes row or state that the dev-mode insert is not a surface write
+
+DEFER severity=LOW — AC1 "A lot size outside the plausible range reads 'Not available' on the card and in its screen-reader label" (also AC2, AC4, AC5) — docs/reports/generated/127-surface-registry.md is the whole material under review — these are behavioural criteria restated in a dated note only, which is a comment, and the red/green tests are in files not in this chunk, so their satisfaction cannot be seen here — carry the test evidence for AC1, AC2, AC4, AC5 into the material before acceptance
+
+MET — RR-0446 — docs/reports/generated/127-surface-registry.md — dated note records "the several-lots map stays as built" with the RR-0446 citation
+
+MET — R3 (folded finding named in task-451) — docs/reports/generated/127-surface-registry.md — chain positions now read "sources[4]", "sources[8]", "sources[15]" as the Implementation Notes describe
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: core.11, core.14
+
+---
+⏱  118409ms (118.4s)
+📊 Tokens — total: 60734, input: 35037, output: 25697, reasoning: 24881

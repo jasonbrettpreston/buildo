@@ -1,0 +1,1030 @@
+LIST surface-136 sha256:c4de01897b08522808dcb713db60aa5dc9bea0ee04c4ad647f3571c2cda379e5 material sha256:685c3f6f7693f3385c0ffb9274a08df7e03b3482be95c89178fbd8c5d7635389 part 1 of 1 chunk 3 of 4
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/_schema/static-page.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json","scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json","src/components/surfaces/web/StaticBinding.tsx","src/lib/parcels/consumer-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx"]
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 4a4c42bc359dc4fd00a3fced4c11e029f78fd349..d260577d2762ea79fb3a508c6f6619327bb6c902 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -6626,7 +6626,7 @@
+     "kind": "SURFACE",
+     "status": "generated",
+     "docs": {
+-      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+       "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+       "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+     },
+@@ -6678,7 +6678,7 @@
+       "spec_version": "0-draft",
+       "versioning": {
+         "answer": "none",
+-        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+         "evidence": [
+           "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+         ]
+@@ -6733,7 +6733,7 @@
+           "producing_steps": [
+             "parcels"
+           ],
+-          "chain_position": "sources[1]",
++          "chain_position": "sources[4]",
+           "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -6772,7 +6772,7 @@
+           "producing_steps": [
+             "link_parcel_addresses"
+           ],
+-          "chain_position": "sources[3]",
++          "chain_position": "sources[8]",
+           "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -6786,7 +6786,7 @@
+           "producing_steps": [
+             "link_massing"
+           ],
+-          "chain_position": "sources[4]",
++          "chain_position": "sources[15]",
+           "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -6860,7 +6860,7 @@
+       "breakpoints": "mobile_first",
+       "export": "none",
+       "list": {
+-        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+         "pagination": "none",
+         "recycling": "none — at most 10 lots by the contract"
+       }
+@@ -7034,7 +7034,7 @@
+     "deviations": [
+       {
+         "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+         "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+         "date": "2026-11-11"
+       },
+@@ -7068,7 +7068,7 @@
+         "check_id": "parceldisambig_intersection_deferred"
+       },
+       {
+-        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+         "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+         "check_id": "parceldisambig_no_silent_fallback"
+       }
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index d49e207b7bf753c31ecacf192162a632dab5a80f..b41d5f385c080205671096d2d3c45f9e1188a9bd 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -1,9 +1,25 @@
+ {
+- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding.",
++ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R5; prior sentence kept): the sentence before is stale: Help & Support has its mail links (the role mailto, one per topic, reading the one setting support_inbox through src/lib/surfaces/maxbld-support.ts, MF-46 follow-up 2026-11-12); a link is left out only while the setting is unset. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding. Dated note 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, docs/reports/reviews/mcfixreborn-g3/GROUNDER-QUESTIONS.md:75, :77; small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"; plan ruling 8.5): every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login); the binding draws a hero with no title as the header alone and keeps the narrow column.",
+  "pages": {
+   "web_help": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "help",
+@@ -85,6 +101,22 @@
+   "web_terms": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "terms",
+@@ -330,6 +362,22 @@
+   "web_privacy": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "privacy",
+@@ -539,6 +587,22 @@
+   "web_maxbld_error": {
+    "error": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "error",
+@@ -586,6 +650,22 @@
+    },
+    "miss": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "not_found",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+index 2b49a488408a2c9941fd887f454a8692738a8edb..1fe2b475ecc38cfdc42e5d8167a053a30d82956e 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+@@ -2,19 +2,20 @@
+   "map.heading": "This address covers {count} lots. Which one do you mean?",
+   "map.clear.label": "Back to search",
+   "lot.letter": "Lot {letter}",
+-  "lot.lead.house": "Lot {letter} · has the house",
+-  "lot.lead.no_building": "Lot {letter} · no building",
++  "lot.lead.house": "Lot {letter} · has the house · at the back",
++  "lot.lead.no_building": "Lot {letter} · no building · at the back",
+   "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+   "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-  "lot.null": "—",
+-  "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++  "lot.null": "Not available",
++  "lot.label": "{lead}, {area}",
+   "select.none": "Choose a lot",
+   "select.lot": "Continue with Lot {letter}",
+-  "select.label": "Open the report for the chosen lot",
+   "select.hint": "Pick a lot on the map or in the list.",
+   "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+   "unlinked.heading": "No lot linked yet",
+-  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++  "unlinked.report": "report it",
++  "unlinked.stop": ".",
+   "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+   "state.loading": "Searching",
+   "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+index 706e60c4bbaeb5c3b15dd23c725d84d7f1f7ac55..3fe6b6d37d25b216f9c0871e3f1d89bc5f21593d 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+@@ -2,7 +2,7 @@
+   "kind": "SURFACE",
+   "status": "generated",
+   "docs": {
+-    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+     "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+     "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+   },
+@@ -54,7 +54,7 @@
+     "spec_version": "0-draft",
+     "versioning": {
+       "answer": "none",
+-      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+       "evidence": [
+         "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+       ]
+@@ -109,7 +109,7 @@
+         "producing_steps": [
+           "parcels"
+         ],
+-        "chain_position": "sources[1]",
++        "chain_position": "sources[4]",
+         "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -148,7 +148,7 @@
+         "producing_steps": [
+           "link_parcel_addresses"
+         ],
+-        "chain_position": "sources[3]",
++        "chain_position": "sources[8]",
+         "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -162,7 +162,7 @@
+         "producing_steps": [
+           "link_massing"
+         ],
+-        "chain_position": "sources[4]",
++        "chain_position": "sources[15]",
+         "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -236,7 +236,7 @@
+     "breakpoints": "mobile_first",
+     "export": "none",
+     "list": {
+-      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+       "pagination": "none",
+       "recycling": "none — at most 10 lots by the contract"
+     }
+@@ -410,7 +410,7 @@
+   "deviations": [
+     {
+       "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+       "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+       "date": "2026-11-11"
+     },
+@@ -444,7 +444,7 @@
+       "check_id": "parceldisambig_intersection_deferred"
+     },
+     {
+-      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+       "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+       "check_id": "parceldisambig_no_silent_fallback"
+     }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+index add8f5192306c4d96a1c1adbbf0a25989a6b46fa..21c8d90592d9cc242e027af18d3528a8c685fda4 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+@@ -10,5 +10,7 @@
+   "help.mailto.general": "Email support",
+   "help.mailto.lot_match": "Report incorrect lot match",
+   "help.mailto.wrong_lot": "Wrong address or lot",
+-  "help.title": "Help & Support"
++  "help.title": "Help & Support",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+index 3dc63092626dfc61ac107cbede9659ce0ed72d68..6318d80809e3c89ae5935b44eb33cd492c2ec443 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+@@ -6,6 +6,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "not_found.body": "There is no MaxBLD page at this address.",
+   "not_found.title": "Page not found"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+index d11c3e7eaa7487f1dbb1d5c25bd74cce21b98d48..82322ba55283d2b0e3db612915a21443ee1541d0 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "privacy.intro": "This policy explains what personal information MaxBLD collects, why, who we share it with, and how you can delete it or ask to see it. It covers the website at maxbld.ca and the MaxBLD app for iOS and Android.",
+   "privacy.s1.account": "Account.",
+   "privacy.s1.account.1": "Your name and email.",
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+index b9a33390972f970f797a677c8c801f5dc8838f7f..6f39587eca813562545fb041e5efe2665129351c 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "terms.intro": "These terms are an agreement between you and MaxBLD (\"we\", \"us\"). They cover the MaxBLD website at maxbld.ca and the MaxBLD app for iOS and Android. By creating an account you agree to these terms. If you do not agree, do not use MaxBLD.",
+   "terms.s1.basis": "Reports are based on public City of Toronto data and our reading of it.",
+   "terms.s1.changes": "Changes to the service. We may change, add or remove features.",
+diff --git a/src/components/surfaces/web/StaticBinding.tsx b/src/components/surfaces/web/StaticBinding.tsx
+index ed219085a18758532112a2a7ee280baaee59ab18..f78f281672e08e7093164c90e2be36a49820458a 100644
+--- a/src/components/surfaces/web/StaticBinding.tsx
++++ b/src/components/surfaces/web/StaticBinding.tsx
+@@ -216,6 +216,11 @@ const heroNode = (s: StaticSection): StaticNode => {
+       media.push(textNode(p, { key, testID: 'landing-caption', className: L.caption }));
+     }
+   });
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77): a hero of only the wordmark and nav links is a plain page's header:
++  // the nav alone, as the <header>. Any other title-less hero still throws.
++  if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav')) {
++    return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);
++  }
+   if (title === null) fail(`${s.id}: a hero has a title`);
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.hero }, [
+     node('Group', { key: `${s.id}-nav`, component: 'nav', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]),
+@@ -325,7 +330,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
+     if (!Array.isArray(s.parts) || s.parts.length === 0) fail(`${at}: no parts`);
+     return { kind: s.kind, id: s.id, parts: (s.parts as unknown[]).map((p, j) => checkPart(p, s.kind as string, `${at} part ${j}`)) };
+   });
+-  const landing = sections.some((s) => s.kind === 'hero');
++  // SEARCHFIX.3 (task-451): the landing is a page with a titled hero; a plain page's header hero keeps the narrow column.
++  const landing = sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'));
+   return node('Stack', { key: 'page', testID: 'static-page', component: 'main', className: L.screen }, [
+     node('Stack', { key: 'column', className: landing ? L.wide : L.column }, sections.map((s) => (KIND_NODES[s.kind] as (x: StaticSection) => StaticNode)(s))),
+   ]);
+diff --git a/src/lib/parcels/consumer-lookup.ts b/src/lib/parcels/consumer-lookup.ts
+index 75df3042051b3eb1aabb9b27cc1e0ab590399d9b..a2ae0cf7ea48eedac0aa7563d308ed64157d2f17 100644
+--- a/src/lib/parcels/consumer-lookup.ts
++++ b/src/lib/parcels/consumer-lookup.ts
+@@ -24,6 +24,7 @@ import {
+ } from '@/app/api/parcels/lookup/types';
+ import type { LotMapRows } from '@/lib/parcels/lot-map';
+ import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
++import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
+ 
+ type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
+ 
+@@ -76,8 +77,9 @@ const CONSUMER_COMPARABLE_FIELDS = [
+ 
+ const MAX_COMPARABLE_EXAMPLES = 12;
+ 
++// SEARCHFIX.3 L2 (task-451; FOLD-PLAN.md:56): an empty string is no value (null), never Number('') = 0. A defensive guard: no stored column holds ''.
+ const num = (v: unknown): number | null => {
+-  if (v == null) return null;
++  if (v == null || v === '') return null;
+   const n = Number(v);
+   return Number.isFinite(n) ? n : null;
+ };
+@@ -218,13 +220,21 @@ export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; ln
+   return { north, south, east, west };
+ }
+ 
++/** SEARCHFIX.3 ST3 (task-451; RR-0444 2c, MORNING-DECISIONS.md:2291 "The lot card shows "Not available" for an implausible area"): the map lot's area is
++ * sent only when the stored size lies inside the one plausible window (LOT_SIZE_PLAUSIBLE_M2, inclusive, the same test as the report's lot_size_implausible);
++ * outside it, or not a number, the area is null and the card shows its null value. */
++const plausibleSize = (v: unknown): boolean => {
++  const n = num(v);
++  return n !== null && n >= LOT_SIZE_PLAUSIBLE_M2.min && n <= LOT_SIZE_PLAUSIBLE_M2.max;
++};
++
+ export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
+   const lots = rows.lots.map((l) => {
+     const lat = num(l.centroid_lat);
+     const lng = num(l.centroid_lng);
+     return {
+       parcelId: String(l.parcel_id),
+-      area: areaSqftM2Dot(l.lot_size_sqm),
++      area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null,
+       frontage: len1(l.frontage_m),
+       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
+       centroid: lat !== null && lng !== null ? { lat, lng } : null,
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+
