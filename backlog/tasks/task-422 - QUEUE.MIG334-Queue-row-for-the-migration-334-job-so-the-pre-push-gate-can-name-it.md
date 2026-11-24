@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-MIG334'
 created_date: '2026-11-21T16:28:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - McFix
   - McFixReborn
@@ -70,6 +70,8 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's G
 2026-11-21 BL-MIG334 gate check (read-only, no push): gate.mjs --ci --base origin/wf1/mb-rulings at 4b32de544 = GATE OK, no id-no-row for mig-334; falsifier: idLedgerErrors at HEAD~1 = FAIL:Q:id-no-row:mig-334:migrations/334_precommit_budget_registry_repin.sql, at HEAD = []. Output in docs/reports/lanes/2026-11-21/BL-MIG334/gate-check.out. Review: plan and out lens outputs filed, findings untriaged (FINDINGS.md). Grounder owed (RR-0359); task left RUNNING.
 
 2026-11-21 BL-MIG334 grounder Cairn-Ground-O422 ruled 67 findings: 66 REJECTED, 1 CONFIRMED LOW (out-compliance-queue-137#5, next field holds more than one step; same as the 330 row), outcome wontfix per RR-0364 (decision-149); queue row not edited. Evidence: row commit 4b32de544 (hook output docs/reports/lanes/2026-11-21/BL-MIG334/commit.out), gate check docs/reports/lanes/2026-11-21/BL-MIG334/gate-check.out (gate.mjs --ci GATE OK, no id-no-row). check-lane-close --outcomes: checked 1 ids, no refusal.
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 met, .cursor/MCBYLAWS-QUEUE.md:1293-1295 (row INC1B-MIG334, commit 4b32de544). AC2 met, docs/reports/lanes/2026-11-21/BL-MIG334/gate-check.out. The earlier note 'task left RUNNING' is superseded by BUILT.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

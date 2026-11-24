@@ -6,7 +6,7 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:43:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - open-decisions
@@ -50,6 +50,8 @@ Grounded: yes - v8 shows the Clear (x) only in the App frames (search.html:291, 
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0281 · task-330 · Backlog; operator, verbatim: "Task-330 is not required. We dont need a clear search.")
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 not applicable: decision-82 says the Clear button is not required.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

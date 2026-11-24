@@ -6,7 +6,7 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:46:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - open-decisions
@@ -50,6 +50,8 @@ Grounded: yes - the Daylight restyle (task-322, lane BL-DAYLIGHT) used existing 
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0282 · task-335 · Backlog; operator, verbatim: "Task 335 - y keep as built for now")
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 met: decision-83 exists.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

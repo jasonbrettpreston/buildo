@@ -6,7 +6,7 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - gap
@@ -60,6 +60,8 @@ Grounded: the semi question page is on the search flow, so the placeholder exist
 2026-11-19 1·B validation (R10, RR-0257, task-316): created by R10: the semi placeholder scope question (OPERATOR), Grounded and Recommendation in the description.
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0264 · task-323 · Backlog; operator, verbatim: "1 y")
+
+2026-11-23 McFixReborn record check (RR-0437): AC2 is met for task-319 and task-209 only; task-213 was left unchanged by design (decision-76, the store stays at GAP.12).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

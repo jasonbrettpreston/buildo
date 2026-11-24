@@ -4,7 +4,7 @@ title: 'Web search page footer (E.2) has no task: where is it built?'
 status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - gap
@@ -60,6 +60,8 @@ Grounded: doc-2 Elements E.2 'Web footer: legal line, Terms of Service, Privacy 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-324 · Backlog; operator, verbatim: "1. once  -approved")
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-324 · Backlog; operator, verbatim: "this is a shared component")
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 and AC2 met: decision-77 and decision-78; task-332 is in m-1; row MF-91 at .cursor/MCFRONTEND-QUEUE.md; task-287 depends on task-332.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

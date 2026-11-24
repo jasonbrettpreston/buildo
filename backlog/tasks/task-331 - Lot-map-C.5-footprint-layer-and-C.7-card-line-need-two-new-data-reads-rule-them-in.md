@@ -7,7 +7,7 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:43:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - open-decisions
@@ -53,6 +53,8 @@ Grounded: yes - choose-lot.html:306 names the lot-map card fields: building foot
 2026-11-19 restated in plain words after the operator: "this is unintelligble". Plain question: the choose-your-lot design draws the house footprint on each lot and writes on the card which lot has the house and which faces the street; the lookup that feeds the map does not return those two facts today (whether the lot has a building footprint; the street the lot fronts), and the list of columns it may read is locked. Allow adding those two reads (after a data check on the rehearsal stack), or leave the footprint and the card line off for now?
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0284 · task-331 · Backlog; operator, verbatim: "if it a small change let's do it - we have the data - why not")
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 met: decision-84 and task-336 exist.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -4,7 +4,7 @@ title: 'Report meter counts an unsure lot before the semi question shows: intend
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:38:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - open-decisions
@@ -48,6 +48,8 @@ Grounded: yes - for a parcel_tool holder the q lookup runs openReport at route.t
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 decision-81 (RR-0278) entered through G2; resolved by task-334
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 met: decision-81 and task-334 exist.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

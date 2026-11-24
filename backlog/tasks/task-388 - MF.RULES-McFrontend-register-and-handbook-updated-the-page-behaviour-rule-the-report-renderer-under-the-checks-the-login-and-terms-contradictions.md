@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MFRULES'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T18:24:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - McFix
   - McFix E
@@ -45,4 +45,6 @@ Correction: the register file is docs/specs/02-web-admin/135_mcfrontend_decision
 2026-11-20 taken on the board at lane launch (lane BL-MFRULES, worktree /Users/brettpreston_macmini/Buildo-wt-mfrules, branch wf1/inc1b-mfrules), RR-0240
 
 Operator 2026-11-20, verbatim: "FE-45 - yes we dont want spagetti code - what is the probelm" (MORNING-DECISIONS.md, entry "Operator CONFIRMS the FE-45 wording"): the FE-45 wording is confirmed; the WORDING UNCONFIRMED marks come off in the next fix round; the lock stays owed to task-382.
+
+2026-11-23 RR-0437 (MORNING-DECISIONS.md:2247): left out of the McFixReborn folds. Its new register row took an id the board has since given to another rule, and its wording is unconfirmed; to be finished as its own task with the wording put to the operator. Branch wf1/inc1b-mfrules is untouched.
 <!-- SECTION:NOTES:END -->

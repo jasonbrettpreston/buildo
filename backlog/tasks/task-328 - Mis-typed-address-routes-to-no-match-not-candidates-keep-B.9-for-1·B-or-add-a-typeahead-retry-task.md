@@ -6,7 +6,7 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T15:38:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T00:29:00Z'
 labels:
   - S
   - open-decisions
@@ -50,6 +50,8 @@ Grounded: yes - the task-318 title and RR-0182 send a mis-typed address to the c
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 decision-80 (RR-0277) entered through G2; resolved by task-333
+
+2026-11-23 McFixReborn record check (RR-0437): AC1 met: decision-80 and task-333 exist.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
