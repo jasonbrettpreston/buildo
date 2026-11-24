@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T14:59:37.720Z file_sha256=12da90e516c2bfe13c60ed4e262c949ddab976114d2839aa8ba17c44ca3d0cb2 prompt_sha256=a0ec4ed79911bdecc1ec5dc6fd2403aa7cf509e88929dc55f28221d14544191b
+🔍 Lens review of docs/reports/reviews/task-449/context-r1.md (model: deepseek-reasoner)
+
+Surfaces touched: admin (the address resolver behind the lookup route), PII (address to parcel matching), injection (LIKE wildcard escaping).
+
+DEFER severity=MED — "Add `likePrefix(s) = s.replace(/[\\%_]/g, '\\$&') + '%'` and use it at :299 and :330." — the plan escapes exactly two LIKE call sites by line number, so any other LIKE/ILIKE in parcel-lookup.ts (the fuzzy path, conflictList, the :318 unlinked read) keeps raw wildcard input and a typed `%`/`_` still returns unrelated lots there — fix: have the grounder list every LIKE/ILIKE in the file and require each one, unlinked read included, to pass likePrefix before plan-lock.
+
+DEFER severity=MED — "use the property_view write through openReport, drop the dev-only user_profiles write" — if the lookup route really writes user_profiles, this plan deletes only the census claim while "route.ts and its meter are untouched", so a user-linked lookup record stays in production and becomes undocumented PII — fix: read route.ts:102-114 and confirm the write is absent; if present, the write is its own card, not a documentation edit.
+
+DEFER severity=LOW — "It turns every `.` into a space and strips one leading closed-form unit" — a typed period can fold two different query strings onto one key, so a customer's typed address can resolve a parcel other than the one typed (e.g. "St." forms), giving a report page for the wrong property — bounded: the resolver serves public address-to-parcel data with no per-user records, fix: add a seat case where the period form and the non-period form must resolve the same parcel.
+
+DEFER severity=LOW — "(a) Strip and follow the normal path: it opens 5464983." — "Unit 4, 123 Yonge St" now opens the base lot instead of listing, so a unit-level query returns the parcel of a different unit in the same building — bounded: address-level property data is already public via any lookup, fix: confirm the seat case 27 expectation (list) is ruled out by the operator, not only recommended.
+
+DEFER severity=LOW — "More reads on a full miss (up to 2). The miss path only." — a client can force up to two extra exact reads per request by sending letter-suffix or dash-unit forms repeatedly, amplifying DB load without producing a report — bounded to the miss path and two reads, fix: cap or share the read only if the route has no request rate limit (cannot see route.ts).
+
+REJECT — "/^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?\s*,?\s*(?=\d)/i" — looks like a ReDoS candidate on long whitespace or repeated "APT" input — it is anchored at the start with no nested quantifier, so the cost is one linear pass over the whitespace run and the request body is bounded upstream (cannot see that cap here).
+
+REJECT — "The :318 wildcard skip on the unlinked read is kept as is." — looks like a wildcard path left unescaped — the skip short-circuits before the query, so it cannot carry an injected pattern; the only effect is that the unlinked read treats `%` differently from the two escaped paths, a consistency question for the compliance lens, not an exploit.
+
+REJECT — "route.ts and its meter are untouched. Check: the route.ts diff is empty." — looks like a way to reach report data while dodging the meter, since more searches now land on a list — the meter counts report production in route.ts (:102-114), not resolution, and a text_candidates result produces no report, so nothing is gained by the change.
+
+VERDICT: PASS on exploitability
+Surfaces touched: admin, PII, injection (LIKE wildcard)
+
+---
+⏱  29336ms (29.3s)
+📊 Tokens — total: 25946, input: 20735, output: 5211, reasoning: 4359

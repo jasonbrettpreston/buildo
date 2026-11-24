@@ -1,0 +1,48 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T14:59:37.721Z file_sha256=12da90e516c2bfe13c60ed4e262c949ddab976114d2839aa8ba17c44ca3d0cb2 prompt_sha256=e726e03ae4c85a81e1acd44ec5c4194607f0a862f3c065adf8722d21edb78e1d
+🔍 Lens review of docs/reports/reviews/task-449/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3.B.1 (parcel-lookup.ts:226,:183) — removing `q.split(',')[0]` and replacing with `typedText(q)` that does NOT split on comma will regress comma+city input ("123 Yonge St, Toronto ON"); the parser previously got "123 Yonge St" and now gets the whole string with a city suffix — add "123 Yonge St, Toronto ON" as a red-first case in T5 and either keep the city-truncate or make `typedText` split on comma when the segment after it has no digit.
+
+BUG severity=HIGH — §3.B.1/§5 (period strip) — the plan admits it never checked whether any stored street key holds a `"."` and adds no pre-flight guard; if any do, those streets become unreachable after the strip because the typeahead/exact LIKE compares the cleaned typed text to the RAW `street_name_normalized` value — require a pre-flight `SELECT COUNT(*) FROM <parcels> WHERE street_name_normalized LIKE '%.%'` (and the same over `linear_name_full`) and gate the strip only when the count is 0.
+
+BUG severity=MED — §3.B.4 (:304-311) — the plan replaces the block with `if (typeahead.length === 1) return conflictList(typeahead);` but never says where the 2+ typeahead rows go; if :304-311 currently returns text_candidates for 2+, this drops the return and AC #2 (Gerrard/10-row) falls through to no_match — rewrite the step to state explicitly that `typeahead.length >= 1` returns `conflictList(typeahead)` (or that the 2+ branch lives elsewhere).
+
+BUG severity=MED — §3.B.2/§3.B.1 — `typedStreetType(q)` is specced to take `q`, not `typedText(q)`; "St. Clair Ave W" with 2+ rows would compare a typed type of "St." against a row type of "St" and skip the narrowing — call `typedText(q)` inside `typedStreetType` (or state it does) so period and unit cleaning is shared.
+
+BUG severity=MED — §3.B.6 / T5 case 27b — the dash fallback splits "2760-4" on `-` and runs the exact statement for the bare "4"; if a real "4 Yonge St" exists it is surfaced as a candidate unrelated to the typed address — restrict the second read to the larger of the two numbers (or skip bare numbers under ~100) so a unit fragment can't pull a different street number into the list.
+
+BUG severity=MED — §5 (Limits) — the plan names no rollback path for a behavior change; the commit carries the parser, the census, the emitted descriptor and the M-246 spec note together, so a `git revert` also drops the ruling history from Spec 100 — add one line: rollback is `git revert` of the single commit, then re-run `node scripts/violations/generate-surface-registry.mjs --emit-descriptors` and the plain run so `--check` is clean.
+
+DEFER severity=MED — §4 T4 / open choice 4 — importing `findUndocumentedBangs` from `non-null-assertion-comment.logic.test.ts` into `search-parser-guard.logic.test.ts` re-registers the imported suite twice (acknowledged); acceptable but note that the pass/fail count doubles — or move the helper to a shared util to avoid the double-registration.
+
+DEFER severity=MED — §3.C — the census is a 22K-line hand-edited JSON; a trailing comma kills `--emit-descriptors` and `--check` alone won't tell you which edit broke it — add a one-line `node -e 'JSON.parse(require("fs").readFileSync(...))'` before the generator run.
+
+DEFER severity=MED — §3.G — the Spec 100 dated note lands in the same commit as the behavior change, so a revert removes the ruling history from the spec — either land notes and code in separate commits (blocking Standard :465 same-commit) or document the re-land on revert.
+
+DEFER severity=LOW — §3.B.6 / T5 — the space-letter form "2760 A Yonge St" is not covered (only `2760A` and `2760-4`); the typeahead prefix `"2760 A %"` will not match `"2760 "` — add the case to T5 or note the gap.
+
+DEFER severity=LOW — §3.B.3 / §5 (10-row skip) — a user typing "12 Elm St W" where 12 Elm has exactly 10 rows loses direction narrowing and gets E lots; GS-31 acknowledges it but no test asserts the 10-row-with-explicit-direction case — add one or accept per GS-31.
+
+DEFER severity=LOW — §3.E — `127-surface-registry.md` is regenerated per task in the 8-merged-card push (RR-0448); a mid-batch `--emit-descriptors` + plain run can clobber a sibling card's row if it lands after that card's `--check` — sequence the final regen at the end of the fold, or confirm each card lands linearly.
+
+REJECT — §3.D — "the generator is not idempotent / re-running corrupts" — contradicted by its own `--check` invariant (:1604-1627); re-running is a no-op.
+
+REJECT — §3.B.1 — "the new `typedText` regex risks ReDoS" — the pattern is `^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?\s*,?\s*(?=\d)` anchored with no nested quantifiers; safe.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- §3.B.1 drops the comma-truncate without covering comma+city input ("123 Yonge St, Toronto ON") — a prior-working typed form regresses with no test.
+- §3.B.1 period strip has no pre-flight; if any stored street key holds a `.`, those streets become unreachable after the typeahead/exact LIKE.
+- §3.B.4 doesn't state where 2+ typeahead rows return; if the current block returned for 1..N, replacing it with the `=== 1` case breaks AC #2.
+
+Top 3 unverified data premises (with verification):
+- Any stored street key holds a period: `SELECT COUNT(*) FROM parcels WHERE street_name_normalized LIKE '%.%' OR linear_name_full LIKE '%.%';` — non-zero blocks the strip.
+- `addr_num_normalized` really holds dashes for the dash fallback: `SELECT COUNT(*) FROM parcels WHERE addr_num_normalized ~ '^[0-9]+[A-Z]?-[0-9]+$';` — zero means §3.B.6 dash read is dead code.
+- Census counts the plan hardcodes: `jq '.inputs.field_whitelist|length, (.inputs.tables|length)' scripts/surfaces/_schema/census/contracts.json` — must be 80 and 7 or T7 and the "24 fields/7 tables" prose fail immediately.
+- (extra) Gerrard window real row count: `SELECT COUNT(*) FROM parcels WHERE street_name_normalized='GERRARD' AND addr_num_normalized='1000';` — if not ≥10, the `typeahead.length >= 10` skip never fires on the real dataset and AC #2's premise is wrong.
+
+---
+⏱  81813ms (81.8s)
+📊 Tokens — total: 37329, input: 21631, output: 15698, reasoning: 14019

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T14:59:37.720Z file_sha256=12da90e516c2bfe13c60ed4e262c949ddab976114d2839aa8ba17c44ca3d0cb2 prompt_sha256=857f225b1699dc3dd0940969ca6f6ab6ca64fd7c421c9b36858d77fbac94384b
+🔍 Lens review of docs/reports/reviews/task-449/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §7 open choice 7 "A single exact row with a different typed type ... still opens today" and "Recommend no change here" vs design "the address search opens a lot only when the typed address matches exactly" — a person who types Elm St where only Elm Rd exists gets the Elm Rd lot and its report, with no list and no moment to notice the street type differs — when a typed street type exists and the single exact row's printed type differs, return that row as text_candidates, as case 22 already does, instead of opening.
+
+DEFER severity=MED — plan §5 "The 10-row skip: a number+street with exactly 10 lots loses the direction narrowing and shows a list, same as the exact path" vs AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — on a number with 10 or more lots the person who typed the full correct address with the right type still sees a list, an exception AC #3 does not state — name this exception in the Spec 100 note, or run the type narrowing before the truncation check so the exact type still opens.
+
+DEFER severity=MED — plan §5 "that street stops matching. UNVERIFIED without the DB" vs AC #4 "period forms reach the lot or the close-address list, never a dead end" — if any stored street key carries a period, a person typing that valid street falls to no match, which is the exact dead end this card removes — read the stored street keys before lock and strip the period on the row side too for those streets.
+
+DEFER severity=MED — plan §4 T1 "plus 7 more E rows (the seat did not record their ids; UNVERIFIED)" vs AC #2 "with a full 10-row window returns a list, not the one W row" — the Gerrard promise is proven only against invented rows, so a person whose real window holds fewer rows may still have the single W lot opened from a partial "Gerrard St W" — fill the seven rows from the seat record or the database before lock.
+
+DEFER severity=LOW — plan §7 open choice 1 "it opens 5464983" against open choice 2 "Read both numbers on a miss and list them" while the card names both in one line "Unit 4, 123 Yonge St", "2760-4 Yonge St" — two ways of typing a unit address give an open in one and a pick in the other, so the person learns no stable rule for their own address — have the grounder rule both unit forms together before lock.
+
+DEFER severity=LOW — plan §3.6 "run the exact statement for each bare number (at most 2 reads), merge the rows, and return them as text_candidates" — the list for "4-2760 Yonge St" can offer a lot at 4 Yonge St, blocks away from the person's street, labelled as a close address beside the correct one — say in the Spec 100 note that this list mixes both numbers, so picking is expected and the printed address is the guide.
+
+VERDICT: FAIL on the person's experience
+States checked: exact match opens, partial address candidate list, one-row typeahead list, full address with shared number and different street type, single row with a different typed type, 10-row window, unit-first form, dash-unit form, letter suffix, period form, typed wildcard, mistyped address fuzzy list, multi-parcel pick, unlinked pin with map, no match and outside Toronto, intersection; not drawn by this change: loading, error, offline, back, repeat visit, admin tool.   Dead ends found: 1
+
+---
+⏱  90342ms (90.3s)
+📊 Tokens — total: 38061, input: 20744, output: 17317, reasoning: 16524
