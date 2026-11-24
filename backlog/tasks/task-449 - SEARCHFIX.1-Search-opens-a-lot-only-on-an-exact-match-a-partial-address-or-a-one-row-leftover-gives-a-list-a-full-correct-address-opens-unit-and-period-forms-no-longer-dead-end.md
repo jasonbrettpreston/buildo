@@ -7,7 +7,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T14:59:00Z'
+updated_date: '2026-11-24T15:19:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -27,9 +27,9 @@ Findings folded: ST1, 2a (server side), G2 D1, G2 D6, G3 R1; typed-address seat 
 
 Must not: add a new resolution value, or touch the report meter in the lookup route.
 
-Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69.
+Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34).
 
-Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/parcel-lookup-resolution.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -89,12 +89,12 @@ A. Tests first (section 5). Run them and prove them red.
 B. src/lib/admin/parcel-lookup.ts
 1. Clean the typed text before the parse (A1, seat items 4-5).
    - Old: `q.split(',')[0]` at :226 and :183 cuts "Unit 4, 123 Yonge St" down to "Unit 4", which is a miss. "St." leaves "." in the key ("QUEEN ."), which is a miss.
-   - New: add one small `typedText(q)` beside UNIT_TAIL. It turns every `.` into a space and strips one leading closed-form unit: `/^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?\s*,?\s*(?=\d)/i`, anchored, with no nested quantifiers.
+   - New: add one small `typedText(q)` beside UNIT_TAIL. It turns every `.` into a space and strips one leading closed-form unit: `/^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i`, anchored, with no nested quantifiers. The separator after the unit is required: with a separator-free tail (`\s*,?\s*(?=\d)`) the engine backtracks inside the digits, and run in memory it turned Suite 12 Elm St into 2 Elm St (a wrong house number). With the separator, Suite 12 Elm St and #12 Elm St are untouched, and Unit 4, 123 Yonge St, Apt 4B, 12 Elm St and #4 2760 Yonge St are stripped to the address (run in memory). typedText runs first; the existing city cut `q.split(',')[0]` and the trailing-unit strip then run on its result and are not removed, so 123 Yonge St, Toronto ON and 41 Derwyn Road, Toronto parse as today (the form is pinned by parcel-lookup-resolution.logic.test.ts:158, 482 Richmond St W, Toronto).
    - parseFreeTextAddress (:225) and typedDirection (:193) call it first. Their return shapes do not change, so the tests at :62-78 still hold.
 2. Street-type narrowing on the exact path (A1, AC #3).
    - Old: at :264-279, two or more exact rows always give a list, so "32 Fulham Dr" lists Fulham St and Fulham Dr.
-   - New: after the direction guard (:261-263), and only when the window is not truncated, there are 2 or more rows, and a typed street type exists, keep the rows whose printed type equals it. This runs only when it leaves a non-empty set. One row left means `unique`, matchType exact.
-   - The typed type comes from parseLinearName on the street part. Export `typedStreetType(q)` beside typedDirection. The row type comes from parseLinearName of the printed address minus its number.
+   - New: one more guard beside guardByDirection, `guardByType(rows, typedType)`, the same shape: a pure function of the rows the exact read returned, no new query. After the direction guard (:261-263) it acts only when the window is not truncated, a typed street type exists, and every row prints a non-empty street type (a row that prints none proves nothing, as in guardByDirection at :206: the rows stay unchanged and the list stays). Then the rows whose printed type equals the typed type are kept when any match: one row left means `unique`, matchType exact; two or more stay a list or multi_parcel through classifyRows. When none match and the window holds exactly one row, that row is a proven type conflict and is answered as conflictList (text_candidates, the lot still listed), the same one-row rule as the direction guard (:209; RR-0442, RR-0443 c; open choice 7). It never empties a non-empty set.
+   - The typed type comes from parseLinearName on the street part. Export `typedStreetType(q)` beside typedDirection. The row type comes from parseLinearName of the printed address minus its number. The street part is read from the same cleaned base as parseFreeTextAddress (typedText, the comma cut, the trailing-unit strip), so a period, a unit or a city suffix never changes the typed type (parseLinearName reads the bare token ST from St., run in memory).
 3. Gerrard (ST1, AC #2).
    - :301 becomes `guardByDirection(typeahead, typeahead.length >= 10 ? null : typed)`.
    - Reword the :313 comment so it says street-only windows are covered.
@@ -116,21 +116,21 @@ C. scripts/surfaces/_schema/census/contracts.json (row at :22050). This is R1, e
 - states.ambiguous / miss: refresh the parcel-lookup.ts cites (:180-186 and :163 are stale) to the new lines.
 - metering.why: use the page-produced rule wording that data_story already holds. Refresh the cites to route.ts:102-114 and entitlements/index.ts:590-609.
 - emits / outputs: use the property_view write through openReport, drop the dev-only user_profiles write, and say "writes 1".
-- Must NOT add a key or change resolution_vocabulary (:658).
+- Must NOT add a key or change resolution_vocabulary (:658). Keep byte for byte the phrases that src/tests/spec-notes-1b.logic.test.ts:52-59 pins in data_story: "Corrected 2026-11-20 (M-246, FIX.SPECS · task-376", the operator meter words, RR-0278, MORNING-DECISIONS.md:1082 and the quoted sentence "It reads no table today and changes no meter."
 
 D. scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json: emitted with `node scripts/violations/generate-surface-registry.mjs --emit-descriptors`, never edited by hand.
 
-E. OUTSIDE FILES LINE: docs/reports/generated/127-surface-registry.md. It carries this row's text (2 hits for "24 fields" / "reads 9 tables"). Regenerate it with the plain run, then `--check` must be clean. If emitTypes output moves, that is outside too. The lane shows the diff.
+E. OUTSIDE FILES LINE, generated and under docs/reports (exempt from the Files line): docs/reports/generated/127-surface-registry.md and docs/reports/generated/127-surface-review-queue.md. The plain run writes both (generate-surface-registry.mjs:1629-1630) and `--check` tests both (:1607-1627). The registry carries this row's text (2 hits for "24 fields" / "reads 9 tables"); the review queue lists the row's tables, including the user_profiles write that 3.C removes. Regenerate with the plain run, then `--check` must be clean. If the emitTypes output under src/lib/surfaces/generated/ moves (not expected: no schema key changes), the lane stops and says so, because that path is outside the Files line. The lane shows the diff.
 
-F. OUTSIDE FILES LINE: src/tests/parcel-lookup-resolution.logic.test.ts:64-69 pins "typeahead, 1 row -> unique". The suite stays red unless this flips: it now expects text_candidates, match null and candidates [P9].
+F. ON THE FILES LINE (added by the plan grounder, round 1): src/tests/parcel-lookup-resolution.logic.test.ts:64-69 pins "typeahead, 1 row -> unique". The suite stays red unless this flips: it now expects text_candidates, match null and candidates [P9].
 
-G. docs/specs/03-mobile/100_mobile_parcel_cost_tool.md: add one dated note after :107 (the §3.2 note block that starts at :103) and one after :144 (the MF-35 note: "`unique` opens the lot"). Both are M-246 style, prior text kept, quoting the RR-0442 and RR-0443 c words verbatim, and naming what lists now.
+G. docs/specs/03-mobile/100_mobile_parcel_cost_tool.md: add one dated note after :107 (the §3.2 note block that starts at :103) and one after :144 (the MF-35 note: "`unique` opens the lot"). Both are M-246 style, prior text kept, quoting the RR-0442 and RR-0443 c words verbatim, and naming what lists now: a partial address or a one-row leftover, a street type or direction that differs, and the dash and letter forms. The note states the unit rule once: a unit marked by a word or # (trailing, or leading as in Unit 4, 123 Yonge St) is dropped and the address opens when it is exact (RR-0166, ONE-12 a); a bare dash form (2760-4, 4-2760) carries no unit word, so it lists the lots at both numbers, and that list mixes both, so picking is expected and the printed address is the guide.
 
-H. OUTSIDE FILES LINE, open choice 6: docs/specs/02-web-admin/89_parcel_cost_model_tool.md:34. The admin tool calls the same resolver, so Standard :465 asks for a note there.
+H. ON THE FILES LINE (added by the plan grounder, round 1; open choice 6 ruled: add the note, after :34, the item 1 note block, prior text kept): docs/specs/02-web-admin/89_parcel_cost_model_tool.md:34. The admin tool calls the same resolver, so Standard :465 asks for a note there.
 
 ## 4. Tests first (red unless marked "green both")
 In src/tests/search-parser-guard.logic.test.ts (the statement-text mock at :20-26), add a describe "SEARCHFIX.1 exact opens, the rest lists":
-- T1 (ST1, AC #2): typeahead = 1 Gerrard St W 5440777, 1000 Gerrard St E 10640216, 1001 Gerrard St E 5402856, plus 7 more E rows (the seat did not record their ids; UNVERIFIED). Input "Gerrard St W". Expected: text_candidates, 10 candidates.
+- T1 (ST1, AC #2): typeahead = 1 Gerrard St W 5440777, 1000 Gerrard St E 10640216, 1001 Gerrard St E 5402856, plus 7 filler E rows (ids E4 to E10 and their addresses invented; the grounder replayed the real window, 9 E rows and 1 W row, GROUNDER-SEATS.md:25, and this test mocks the window, so only its shape matters). Input "Gerrard St W". Expected: text_candidates, 10 candidates.
 - T2 (2a, AC #1): replace :194-199. Rows E1/W1, input "100 Queen St W". Expected: text_candidates, [W1], match null.
 - T3 (D1, AC #5): "100 %" binds `\%%` as the typeahead $1. "12 Ma_n St" binds `MA\_N%`. The :134 behaviour stays green both.
 - T4 (D6): findUndocumentedBangs (exported at non-null-assertion-comment.logic.test.ts:99) over parcel-lookup.ts returns []. See open choice 4.
@@ -169,6 +169,10 @@ In src/tests/search-parser-guard.logic.test.ts (the statement-text mock at :20-2
 | 28 | 14 Norwood Ter | 14\|NORWOOD TER → 5334051 | unique (the lotForm half is the existing flow test, search-routing.logic.test.ts:136) |
 | extra 2e (now) | 679 Queen St. W | as 1 | unique |
 | extra (now) | 2750 St. Clair Ave W | as 22 | as 22 |
+| extra (now) | 383 Elm St | 383\|ELM → 5191692 "383 Elm Rd" (the only row) | text_candidates [5191692], match null (open choice 7) |
+| extra (now) | 5 Elm St | 5\|ELM → P1 "5 Elm St" and P2 with an empty printed address | text_candidates, 2 rows, never unique (3.B.2: a row with no type stops the narrowing) |
+| extra (now) | 123 Yonge St, Toronto ON | as 11 | unique 5464983 (the city cut stays, 3.B.1) |
+| extra (green both after the fix) | Suite 12 Elm St, and #12 Elm St | none | parseFreeTextAddress never returns num 2 for either (the separator of the 3.B.1 pattern) |
 
 - Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests: parcelSearchMatch.test.ts:63 and :316, and the outside_toronto cases in the same file. They are cited, not re-written.
 - Case 21's lat/lng are placeholders (UNVERIFIED).
@@ -194,11 +198,11 @@ Not done here:
 
 How it could fail or surprise:
 - Admin tool: it shares the resolver, so a one-row typeahead now shows a list of one there too (ParcelCostTool.tsx:215).
-- Period strip: if any stored street_name_normalized holds a ".", that street stops matching. UNVERIFIED without the DB. The db smoke test (src/tests/db/parcel-lookup.db.test.ts:66-70) still passes either way.
+- Period strip: if any stored street_name_normalized holds a ".", the exact and typeahead reads no longer match that street. The consumer route still reaches the close-address list through the mistyped-street read (:352-364: levenshtein within the threshold, default 2, logic-variables-registry.md:484; a period plus a space is distance 2 or less), so it is a list and never a dead end; the admin tool does not run that read and shows no match for such a street. Whether any such street exists is UNVERIFIED without the DB; nothing is built for it (RR-0392). The db smoke test (src/tests/db/parcel-lookup.db.test.ts:66-70) still passes either way.
 - "4-2760 Yonge St" (the unit-first Canadian form): only the dash fallback reaches it, it lists both numbers, and it never opens.
 - More reads on a full miss (up to 2). The miss path only.
-- Type narrowing relies on the printed address. A row with an empty address never narrows.
-- The 10-row skip: a number+street with exactly 10 lots loses the direction narrowing and shows a list, same as the exact path (GROUNDER-SEATS.md:31).
+- Type narrowing relies on the printed address. If any row of the window prints no street type (an empty address, or a type the parser does not list, such as Ter or Crcl), nothing is narrowed and the list stays, so a second parcel on the number is never hidden (RR-0442: a shared number is a pick).
+- The 10-row skip is the typeahead's (:301): a typeahead window of exactly 10 cannot be told from a full one, so it loses the direction narrowing and shows a list (GROUNDER-SEATS.md:32 calls it harmless). The exact path skips narrowing only at 11 rows (:260), and AC #3 is on the exact path, so AC #3 is not affected.
 - T4 imports a test module, so its suites register twice (open choice 4).
 - The generator may also move the types/validator outputs. Detected by `--check` and the lane's diff.
 
@@ -209,7 +213,7 @@ How it could fail or surprise:
 - task-449 status and evidence: `backlog task edit 449`, in the same commit as the work.
 - The card's DoD #2 cites 08_agents.md:462, but the quote is at :495. The orchestrator may correct it.
 
-## 7. Open choices (not decided)
+## 7. Open choices (ruled in round 1 by the plan grounder; QUESTIONS-RULED.md holds each reason; 1 to 5 and 8 follow the Recommend line, 6 and 7 are ruled below)
 1. "Unit 4, 123 Yonge St".
    - (a) Strip and follow the normal path: it opens 5464983. This is A1's "stripped before the parse", and is the same as the ruled trailing unit (RR-0166; seat case 26 opens).
    - (b) Always a list: the seat's case 27 expectation, written before fix 3 existed.
@@ -232,9 +236,9 @@ How it could fail or surprise:
    - (b) Consumer only, behind an option.
    - Recommend (a). It is the simplest, it adds no option (RR-0392), and Spec 89:38 already says typeahead gives "≤10 candidates".
 6. Spec 89 :34 dated note (OUTSIDE FILES LINE). Standard :465 asks for it.
-   - Recommend adding it, or the grounder rules it out.
+   - RULED: add it. The Files line now holds the Spec 89 path; the note goes after :34.
 7. A single exact row with a different typed type (e.g. "383 Elm St" where only Elm Rd exists) still opens today. Case 22 is also still a list of the E lot. A1 names neither.
-   - Recommend no change here, and put both to the grounder (RR-0443 b).
+   - RULED by the plan grounder (QUESTIONS-RULED.md Q7): a single exact row whose printed street type differs from the typed one is answered as the list (3.B.2, guardByType), by RR-0442 and RR-0443 c; case 22 (the direction conflict) stays as it is (RR-0166).
 8. R1 width.
    - (a) All of STATUS.md:133: metering, emits, writes, counts, cites.
    - (b) Only the exact/typeahead sentence plus counts.
@@ -242,10 +246,10 @@ How it could fail or surprise:
 
 ## 8. UNVERIFIED
 - No DB read, so these were not checked:
-  - whether any street key holds a period, or any addr_num_normalized holds a dash;
-  - the 7 other Gerrard window rows;
-  - case 21's pin;
-  - whether parcels.street_type_normalized equals parseLinearName of linear_name_full.
+  - whether any street key holds a period, or any addr_num_normalized holds a dash (ruled: not needed; see section 5 and 3.B.6);
+  - the 7 other Gerrard window rows (ruled: filler rows, see T1);
+  - case 21's pin (ruled: placeholder numbers, the test checks only the pin it was given);
+  - whether parcels.street_type_normalized equals parseLinearName of linear_name_full (ruled: not needed, open choice 3 (a) reads neither column).
 - No test run, so the red/green claims are by reading the code.
 - Whether vitest registers an imported test module's suites twice was not run.
 - One of my Bash calls held a stray Python check. The hook blocked it, nothing ran, and I re-ran the call with node only.
