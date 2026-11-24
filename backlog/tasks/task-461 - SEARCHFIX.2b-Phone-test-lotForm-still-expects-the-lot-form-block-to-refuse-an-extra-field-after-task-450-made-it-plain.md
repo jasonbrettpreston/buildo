@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T18:11:00Z'
-updated_date: '2026-11-24T18:14:00Z'
+updated_date: '2026-11-24T18:22:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -49,7 +49,7 @@ Files: mobile/__tests__/lotForm.test.ts
 Planner: Cairn-Plan-461
 Plan id: PLAN-461-v1
 
-Board head read: 492ef72c7 (wf2/board). `git diff --stat 5af0f7be2 HEAD -- mobile/` is empty, so the failure in phone-5af0f7be2.out still applies at this head. Line numbers below were read at 492ef72c7.
+Board head read: 492ef72c7 (wf2/board). `git diff --stat 5af0f7be2 HEAD -- mobile/` is empty, so the failure in phone-5af0f7be2.out still applies at this head. Line numbers below were read at 492ef72c7. The plan grounder re-read the mobile/ lines at 66ea5bb89 (no mobile/ change since 492ef72c7). Two cites into docs/ are corrected below: 08_agents.md :462 is now :496, and 137_mcqueue.md :84 is now :98.
 
 ## 1. Rule quoted first
 - task-450 card, AC3 (backlog/tasks/task-450 ...md:59): "A lot form with one extra field parses; the closed enum lists stay".
@@ -59,7 +59,7 @@ Board head read: 492ef72c7 (wf2/board). `git diff --stat 5af0f7be2 HEAD -- mobil
 - Schema dated note (mobile/src/lib/schemas.ts:423-424): "Dated 2026-11-24 (task-450 SEARCHFIX.2, L1; GROUNDER-B D1; prior text kept: the object ended in .strict()): plain, the MF-53 form above, so a server-added field never raises ParcelLookupSchemaError on an installed build. The closed enum lists stay."
 - Contract (scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:70-71): "answer": "additive_only"; "adding fields does not" break shipped clients.
 - Changing a test assertion counts as a ruling (.cursor/MCBYLAWS-QUEUE.md:107): "Changing a test assertion, a floor, an oracle case or a worked example is a ruling." The ruling for this change is the chain above: AC3, FOLD :47 and D1.
-- Both directions (docs/specs/00-architecture/08_agents.md:462): "Every lock is proven in BOTH directions". No new mechanism (RR-0392, MORNING-DECISIONS.md:1975): "I don't think we need any other infastrcuture beyond this".
+- Both directions (docs/specs/00-architecture/08_agents.md:496): "Every lock is proven in BOTH directions". No new mechanism (RR-0392, MORNING-DECISIONS.md:1975): "I don't think we need any other infastrcuture beyond this".
 
 **Answer to question (1): fix the test line, not the schema.** task-450's ruled plan made the lot-form block plain on purpose: the card's AC3, FOLD :47, D1, and the schema's own dated note, landed in ee3634771 ("schemas.ts: the lot form is plain, not .strict(); the enums stay (L1)").
 
@@ -80,7 +80,7 @@ mobile/__tests__/lotForm.test.ts. Nothing outside the Files line.
 - Smallest edit:
   - (a) Delete line :71 from the "refuses" case. That case keeps its title, which stays true: the enum refusals at :69-70 remain.
   - (b) Add one line to the "parses ..." case at :63-67: `expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);`
-  - (c) Add a short trailing comment on that line: `// task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses`. Optionally add ", a server-added field" to the case title. The title wording is open choice 8.1.
+  - (c) Add a short trailing comment on that line: `// task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses`. Retitle the case 'parses a payload with the block, without it (older server), with null and with a server-added field' (ruled 8.1 A). The "refuses ..." title stays: the enum refusals at :69-70 remain.
 - Net change: one line moved and flipped, plus one comment. No new file, helper, fixture or setting.
 
 ## 4. Tests first: red, then green
@@ -90,15 +90,15 @@ mobile/__tests__/lotForm.test.ts. Nothing outside the Files line.
   - AC1 (passes in a local phone run and states that an extra field still parses) is met by the moved line.
   - AC2 (no other phone test asserts the strict form) is met by the search in section 5.
   - Fold section 2 line :47 (L1) is met, because the phone suite now agrees with the schema.
-- The other direction (08_agents.md:462): the moved line goes red if `.strict()` is ever put back at schemas.ts:429. schemas.test.ts:329 locks the same thing. Proving this live means re-adding `.strict()` for a moment, which edits a file outside the Files line. That is open choice 8.2.
+- The other direction (08_agents.md:496): the moved line goes red if `.strict()` is ever put back at schemas.ts:429. schemas.test.ts:329 locks the same thing. The lane does not prove this live: Option A is struck (ruled 8.2 B), so no file but lotForm.test.ts is edited, even for a moment.
 - How the lane proves green: lotForm.test.ts imports only `@/lib/schemas` and `@/lib/lotForm`, which need neither missing package. In the 5af0f7be2 run it started and ran; only :71 failed. The 12 suites that could not start fail on '@testing-library/react-native' (11) and 'tailwind-merge' (1, reportScreens.golden). They are not this card.
-  - Command: run the mobile test runner on this one path from mobile/ (no watch, ci form), for example the package's `test:ci` script (mobile/package.json:11) with the path `__tests__/lotForm.test.ts`.
-  - Also run `__tests__/schemas.test.ts` to show task-450's lock is still green. It is not edited.
+  - Command, from mobile/: `npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false`. The package script test:ci (mobile/package.json:11) adds --coverage, which writes mobile/coverage, and that folder is not ignored (.gitignore:12 is the root /coverage only); the lane stages no coverage folder. Expected: two suites pass.
+  - schemas.test.ts runs in the same command to show task-450's lock is still green. It is not edited.
   - mobile/node_modules is a symlink to the main checkout (~/Buildo/mobile/node_modules), which is why the run resolves from ../../Buildo. Nothing is installed.
-  - Record both outputs in the lane folder ~/Buildo-scratch/lanes-20261124/ as red and green evidence. The expected full-run delta is 723 tests with 0 failed; the 13 failed suites drop to 12.
+  - Record both outputs in the lane folder ~/Buildo-scratch/lanes-20261124/ as red and green evidence. The expected full-run delta is 723 tests with 0 failed; the 13 failed suites drop to 12. That green is the runnable part only: 45 of 58 suites ran at 5af0f7be2, and the 12 that cannot start are unproven here (the section 5 search is by reading, so it covers them). Proof for this phone test is RR-0460 (MORNING-DECISIONS.md:2382): a full local run before the push, then the Mobile CI run after it.
 
 ## 5. Search for any other strict assertion (question 2)
-- mobile/__tests__: `git grep` for lotForm|lot_form|LotFormSchema finds only lotForm.test.ts:71, which is this card, and schemas.test.ts:327-339, which already asserts the plain form. No other phone test asserts strict.
+- mobile/__tests__: `git grep` for lotForm|lot_form|LotFormSchema finds only lotForm.test.ts:71, which is this card, and schemas.test.ts:327-339, which already asserts the plain form. No other phone test asserts strict. A second `git grep -n ConsumerParcelLookupResultSchema -- mobile/__tests__/` (the schema parsed at :71) finds lotForm.test.ts, schemas.test.ts and useParcelLookup.test.ts:163 and :200; the last two parse valid payloads and expect true. `git grep -n 'strict()' -- mobile/__tests__` finds no lot-form line (only trackedLots.test.ts:192, another schema). The grep reads all 58 files, the 12 that cannot start included.
 - src/tests: src/tests/parcel-lot-form.logic.test.ts:145-148 is the case "the block is strict and closed". It asserts the SERVER schema ConsumerLotFormSchema (src/app/api/parcels/lookup/types.ts:135-141, `.strict()` at :141), which shapes what the server sends. It is not the phone mirror. D1 names it as a latent trap and gives no fix. No web code parses the phone mirror: `git grep ParcelLotFormSchema` hits mobile/src/lib/schemas.ts only.
 - Descriptors and contract notes:
   - contract_parcels_lookup.descriptor.json:171 lists lotForm, detected, basis and unsure as whitelist names; :70 says additive_only. No strict claim for the lot form.
@@ -122,23 +122,23 @@ mobile/__tests__/lotForm.test.ts. Nothing outside the Files line.
 ## 7. Notes owed (backlog CLI only, never a hand edit)
 - task-461: notes with the red and green outputs, the commit sha and the hook result (DoD #7), and the status line in the same commit as the work (DoD #6). Use `node_modules/.bin/backlog task edit 461 --append-notes "..."`, plus the card's AC checks through the same CLI.
 - task-450: a dated note recording that lotForm.test.ts:71 still asserted the strict form after ee3634771 and was moved and flipped by task-461 (sha). Use `backlog task edit 450 --append-notes`.
-- The queue row in the board file named by Spec 137 (:84) is updated in the same commit, the way the board's other close-outs are.
+- The queue row in the board file named by Spec 137 (:98) is updated in the same commit, the way the board's other close-outs are.
 - No operator ruling is needed: the ruling is AC3, FOLD :47 and D1, quoted above.
 - Principles served (DoD #9): accurate (the test agrees with the ruled schema) and understandable (one statement of the plain form).
 
-## 8. Open choices (not decided)
+## 8. Open choices (all three ruled by the plan grounder, QUESTIONS-RULED.md)
 - 8.1 Placement.
   - A: move the line into the "parses ..." case at :63-67 as true.
   - B: flip it in place at :71 and retitle the case to "refuses a block outside the closed enums; an extra field parses".
   - The rules: AC1 asks the file to "state" the plain form, and MCBYLAWS-QUEUE.md:107 makes any assertion change a ruling, which is already covered.
-  - Recommendation: A. It keeps every case title true with the smallest wording change.
+  - Ruled A: it keeps every case title true with the smallest wording change.
 - 8.2 The other direction.
   - A: the lane re-adds `.strict()` at schemas.ts:429 for a moment, without committing it, runs the file to show the new line red, then restores it.
   - B: rely on the existing red at the head (:71 receives true, which proves the schema is plain) plus schemas.test.ts:329 as the lock.
-  - The rules: 08_agents.md:462 asks for both directions. The card's Files line names only the test file.
-  - Recommendation: B. The head's red already proves the schema side, and A edits a file outside the Files line, even if only for a moment.
+  - The rules: 08_agents.md:496 asks for both directions. The card's Files line names only the test file.
+  - Ruled B (RR-0460, MORNING-DECISIONS.md:2382: no extra old-code run). Option A is struck: it edits a file outside the Files line. The both-direction proof is the head red at :71 plus schemas.test.ts:329, recorded as implicit, not executed.
 - 8.3 Whether the server-side "strict and closed" test (src/tests/parcel-lot-form.logic.test.ts:145) needs its own card. D1 calls it latent and no ruling asks for it.
-  - Recommendation: no card now. Mention it in the close-out only.
+  - Ruled: no card now (D1 calls it latent and no ruling asks for work on it; RR-0392, MORNING-DECISIONS.md:1975). The close-out mentions it in one line.
 
 ## 9. UNVERIFIED
 - I did not run the test file (read-only brief). That the moved line is green rests on reading schemas.ts:425-429 (a plain z.object, so extra keys are stripped) and on the head run receiving true at :71.
