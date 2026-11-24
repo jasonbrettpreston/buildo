@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:28:22.261Z file_sha256=8e74526bf4c81c3b1ec62f663816229a102ad7e15df2c6c0b615d7d2955b26e6 prompt_sha256=ce1a0a33bfba3e350122b8123ea7493f327bd996770384ab3e81e80e069e8652
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan "# Implementation Notes" "Work commits 079f76c30 (code, hooks green: 332 passed) and a997f8fb7 (generated files, doc-2 and task-69 notes)" — the ruled change is recorded as landing its cited doc-2 G.1/A.3 and task-69 notes in a second commit, and those artefacts are absent from this material, so the same-commit condition is not evidenced — land the doc-2 G.1/A.3 and task-69 notes in the same change as the specs they amend, or record the exemption in the plan.
+MET — 14 (promote guideline to a gate) — src/tests/consumer-parcel-lookup.infra.test.ts "expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);" — the finding class (a leftover row opening the lot) is pinned by a deterministic source-shape lock, not by a comment, with a RED plant beside it.
+MET — 14 (behavior-changing ruling updates cited specs) — docs/specs/02-web-admin/89_parcel_cost_model_tool.md "the admin tool calls the same resolveAddress, so the same amendment holds here (Standard §14)" — Spec 100, Spec 89, the system map and both contract descriptors all carry the 2026-11-24 note in this material.
+MET — 14 (cross-ref rot / stale traceability) — src/tests/consumer-parcel-lookup.infra.test.ts "expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);" — the spec note itself is locked by a test, and the census row is set-equal to the emitted descriptor.
+MET — 13.3 "All catch blocks use logError(tag, err, context). NEVER bare `console.error`." — src/lib/admin/parcel-lookup.ts (@@ -191,10 +207,54 @@) — the added resolution code has no try/catch and no console.error; failures propagate to the route's existing logging path.
+MET — 13.1 "Never include user names, emails, addresses in event properties." — src/lib/admin/parcel-lookup.ts (@@ -363,6 +460,17 @@) — no captureEvent call is added and address text stays in the HTTP response, never in an event property; the descriptors still declare emits.analytics as [].
+REJECT — 13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — accused of shipping the exact-match behaviour change with no flag check — this amends the resolution rule of an already live, subscription-gated lookup route rather than adding a new user-facing feature, so the flag rule does not bind it.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  41234ms (41.2s)
+📊 Tokens — total: 40540, input: 32611, output: 7929, reasoning: 7286

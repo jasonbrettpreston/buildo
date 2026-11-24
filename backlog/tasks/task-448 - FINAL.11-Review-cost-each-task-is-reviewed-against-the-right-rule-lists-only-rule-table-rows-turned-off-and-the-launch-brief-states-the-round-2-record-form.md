@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T16:12:00Z'
 labels:
   - McFix
   - McFix Final
@@ -545,6 +545,8 @@ A12: step-132, eng-back, eng-shared, five-words, plan-protocol, inc-S, ms-S
 Green: work commit b2591b815 hook tail 'Tests  373 passed (373)'. A8-A11, A13, A14 are the orchestrator's (not run).
 
 2026-11-23 BL-LISTS448: output review round 1 done on b2591b815 with fresh context context-r3.md: 28 DeepSeek lens outputs (8 compliance lists in 19 parts, eng-all in 7 parts, code-review, error-paths), 61 finding lines (HIGH 3, MED 19, LOW 33, NIT 4, NONE 2), listed untriaged in docs/reports/lanes/2026-11-23/BL-LISTS448/FINDINGS.md. Grounder owed. Task stays RUNNING.
+
+2026-11-24 (task-453 SEARCHFIX.5, RR-0450 MORNING-DECISIONS.md:2325, RR-0452 :2336): the lane-tools row of scripts/analysis/rule-lists.json now attaches agents-s5-1to3, agents-s7-s11 and eng-all only (queue-137 and orchestrator-doc17 off); scripts/analysis/backlog-lib.mjs joins protected_paths (ST4); five-words is out of every_task and plan-protocol is off for build and fix output reviews (output_off). Commit 828ee970e.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.846Z file_sha256=be7c184cdf35fe4ddf089c47301e87a49e92d6479f96dd848c88cce26bbcb2e2 prompt_sha256=00a2405aaa082b66e93c6b4f4ebb3fc993f7251d020a8bf9c1e8b39a09a7889c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card item (3) "README corrected" read with RR-0392 "we don't think we need any other infastrcuture beyond this" — .claude/review-templates/README.md:142 "as fixed since: each lens template carries `{{PLAN}}` once (V2.LIST round 2), so the material is sent once and the 120000 bound is on that prompt", while the deleted line said "the other four lens templates still carry the plan placeholder twice ... `lens-compliance.md` is fixed" — the card's Files line holds no lens template, so this change cannot make the four templates single-placeholder and the README now asserts a state nothing in the material produces — keep the known-limit sentence for the four templates, or name the task that fixed them, until a card that edits the templates lands.
+
+DEFER severity=LOW — card item (3) "an empty acceptance block warns" — scripts/analysis/backlog-brief.mjs:173 "`  (none found in ${t.file})`]), // T8 (task-453): an empty AC block is said, not left blank" — the code emits a neutral parenthetical into the Done-condition list and its own comment narrows the card's word "warns" to "is said", so the warning the card names is not delivered — prefix the line with a warning marker (for example "WARNING: no acceptance criteria in <file>") or write the warning to stderr as well.
+
+DEFER severity=LOW — card "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap); task-448; task-268 (the proof row); task-406 (migration 334 finding)." — NONE (cannot see: the board task files are not in this material; only the Spec 08 note is visible at docs/specs/00-architecture/08_agents.md:358) — three of the four owed dated notes cannot be checked against the material under review — confirm the task-448, task-268 and task-406 notes on the board before the close, and say so in the lane report.
+
+MET — card AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/analysis/rule-lists.json:237 "  \"every_task\": [\"plan-protocol\"]," and :238 "  \"output_off\": [\"plan-protocol\"]," — five-words is out of every_task and plan-protocol is off the output set via scripts/analysis/rule-lists.mjs:306 "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));".
+
+MET — card AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs:161 "if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids');" with :306 "(table?.output_off ?? []).includes(l.id)" — an emptied or absent line leaves every list in the output set, and only a non-array or an id outside every_task is refused.
+
+MET — card AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json:23 "  \"protected_paths\": [\"scripts/hooks/check-lane-close.mjs\", \"scripts/analysis/rule-lists.mjs\", \"scripts/analysis/rule-lists.json\", \"scripts/analysis/backlog-lib.mjs\", \"scripts/deepseek-review.js\", \".husky/*\"]," — the helper joins the protected list.
+
+MET — card AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json:9 "{ \"id\": \"chk3-nothing-new\", \"proof\": \"CHK.3 nothing-new policy check over the tree\", \"notbuilt\": { \"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\" } }" — the row no longer claims a passing policy-checks --all run.
+
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json:166 "      \"lists\": [\"agents-s5-1to3\", \"agents-s7-s11\", \"eng-all\"]," — queue-137 and orchestrator-doc17 are off the lane-tools row and the added why clause says "so no row attaches them".
+
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — docs/specs/00-architecture/08_agents.md:358 "five-words is off at both stages (out of every_task)" and scripts/analysis/rule-lists.json:7 "the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back" — five-words is off with nothing replacing it and docs/specs/00-architecture/plan-protocol.md is not touched in this material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  130189ms (130.2s)
+📊 Tokens — total: 60183, input: 33649, output: 26534, reasoning: 25332

@@ -22000,7 +22000,7 @@
     "status": "exists",
     "docs": {
       "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
-      "data_story": "It reads 9 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements`, `usage_events`, and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss.",
+      "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 80 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged.",
       "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
     },
     "evidence": {
@@ -22034,8 +22034,8 @@
       ],
       "states": [
         "hit: src/app/api/parcels/lookup/route.ts:101-106 (match + parcel payload); outcome label route.ts:112",
-        "ambiguous: src/lib/admin/parcel-lookup.ts:180-186 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
-        "miss: src/lib/admin/parcel-lookup.ts:163 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
+        "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
+        "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
         "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
         "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
         "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
@@ -22075,7 +22075,7 @@
     },
     "inputs": {
       "answer": "app_outputs",
-      "why": "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+      "why": "It reads 7 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
       "evidence": [
         "src/lib/admin/parcel-lookup.ts:194-205",
         "scripts/load-address-points.js",
@@ -22493,31 +22493,13 @@
     },
     "outputs": {
       "answer": "contract_only",
-      "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+      "why": "This route IS the mutation contract: it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84) inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
       "evidence": [
-        "src/lib/auth/get-user-context.ts:83-89",
-        "docs/specs/00-architecture/00_system_map.md:80",
-        "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
-        "src/lib/entitlements/index.ts:508-512"
+        "src/app/api/parcels/lookup/route.ts:102-114",
+        "src/lib/entitlements/index.ts:590-609"
       ],
       "contract_ref": [],
       "tables": [
-        {
-          "table": "user_profiles",
-          "columns": [
-            "user_id",
-            "trade_slug",
-            "display_name"
-          ],
-          "producing_steps": "none",
-          "chain_position": "n/a",
-          "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
-          "evidence": [
-            "src/lib/auth/get-user-context.ts:83-89",
-            "docs/specs/00-architecture/00_system_map.md:80",
-            "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
-          ]
-        },
         {
           "table": "usage_events",
           "columns": [
@@ -22533,7 +22515,7 @@
           "chain_position": "n/a",
           "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
           "evidence": [
-            "src/lib/entitlements/index.ts:508-512",
+            "src/lib/entitlements/index.ts:590-609",
             "migrations/303_parcel_tool_entitlement_usage.sql"
           ]
         }
@@ -22636,7 +22618,7 @@
         "severity": "FAIL",
         "blocking": false,
         "when": "post",
-        "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+        "why": "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
       },
       {
         "id": "contract_parcels_lookup__schema_declared",
@@ -22737,13 +22719,16 @@
       ]
     },
     "emits": {
-      "answer": "none",
-      "why": "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+      "answer": "ledger",
+      "why": "A parcel_tool hit whose report is produced writes one usage_events ledger row (event property_view) through openReport; nothing else is countable (no Sentry breadcrumb, no analytics capture).",
       "evidence": [
-        "src/app/api/parcels/lookup/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+        "src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)",
+        "src/lib/entitlements/index.ts:590-609 (openReport: the row lock, the window count, the INSERT)"
       ],
       "analytics": [],
-      "ledger_events": [],
+      "ledger_events": [
+        "property_view"
+      ],
       "breadcrumbs": []
     },
     "offers": {
@@ -22756,11 +22741,10 @@
     },
     "metering": {
       "answer": "metered",
-      "why": "Each new lot a parcel_tool holder opens in the billing month writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45, D-2..D-6 a). The transitional lead_gen arm is unmetered (deviation below).",
+      "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below).",
       "evidence": [
-        "src/app/api/parcels/lookup/route.ts:124 (the .strict() parse runs before the meter)",
-        "src/app/api/parcels/lookup/route.ts:132-137 (openReport in withTransaction; limit_reached and not_entitled refusals)",
-        "src/lib/entitlements/index.ts:494-514 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+        "src/app/api/parcels/lookup/route.ts:102-114 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)",
+        "src/lib/entitlements/index.ts:590-609 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
         "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
         "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
       ],

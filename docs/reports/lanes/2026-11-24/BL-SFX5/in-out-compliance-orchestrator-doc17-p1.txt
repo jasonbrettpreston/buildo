@@ -1,0 +1,510 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:f841f4e1b6a7114b7f5dc46d3fe8f269c2326e845d298debb2e599f2032b1e85 part 1 of 1 chunk 1 of 3
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs","scripts/analysis/proof-slice.mjs","scripts/analysis/proof-slices.json","scripts/analysis/rule-lists.json"]
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index 56e964fe7121343f4fe668f374ce1e080b9db5a0..9b61de06d39e3a76964980762aba240e03f5d8e3 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -24,8 +24,8 @@ The axes are deliberately disjoint. Run both in parallel at R0; their findings c
+ | Workflow | R0 review recommended? | Notes |
+ |---|---|---|
+ | **WF1 (Genesis)** | YES — high leverage | Plan-level architectural mistakes are 10× more expensive at R8 than at R0. |
+-| **WF2 (Enhancement)** | YES if touching contracts, schema, or UI | Skip if pure refactor / no behavior change. |
+-| **WF3 (Bug fix)** | Usually skip — too small | One-line fixes don't need a plan review. Bundle WF3s (like `realtor-backfill` 4-finding bundle) should use it. |
++| **WF2 (Enhancement)** | YES if touching contracts, schema, or UI | Plan review is mandatory per WF (Spec 08 section 7 rule 1, section 6.4); a lane build or fix launch is refused without plan evidence (check-lane-close.mjs). |
++| **WF3 (Bug fix)** | YES — the lean plan roster | Spec 08 section 6.4: WF3 has a lean plan roster (2-3 premise verifiers); a lane fix launch needs plan evidence like a build. |
+ | **WF5 (Audit)** | N/A | No plan to review. |
+ | **WF6 (Review)** | N/A | This IS the review step. |
+ 
+@@ -84,7 +84,6 @@ The templates encode these lessons as guardrails (the "Anti-patterns" sections)
+ 
+ ## Future improvements
+ 
+-- **Add `--template` flag to both review scripts** so templates can be invoked end-to-end without paste.
+ - **Add a "data-reality" pre-flight** that runs canned queries (row counts, NULL distribution, FK coverage) against the live DB and feeds the result into the DeepSeek `{{DATA_CONTEXT}}` slot automatically.
+ - **Add a third template for the worktree code-reviewer** at R8 with the same triage format. The worktree reviewer's free-prose output is the highest-quality but slowest-to-triage of the three reviewers.
+ 
+@@ -106,9 +105,9 @@ Each lens asks one question, names what it is not responsible for, rejects any f
+ 
+ ### The standard
+ 
+-1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `r1-<lens>.txt`.
+-2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`; the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`; `node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them). The grounder also does the Integration check (A5) itself.
+-3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens.
++1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `out-<lens>.txt` (plan stage: `plan-<lens>.txt`), the only names the close check and `rule-lists.mjs findings` read.
++2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (the grounder pass, Spec 08 section 5.3; not the second review round of section 7 rule 6, "every DeepSeek finding is adjudicated by a tool-having grounder"): CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`; the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`; `node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them). The grounder also does the Integration check (A5) itself.
++3. Reality-Check (A7, Claude) is a seat, not a lens: required at every build or fix launch (the task-375 note in Spec 08), with integration, and regression when the Files line names a tracked path.
+ 4. Wording rule: a claim is "verified" only with the name of what verified it (which lens, which round, or which grounder check). "Verified" alone is not accepted.
+ 
+ ### How to run a lens
+@@ -119,20 +118,12 @@ Output review (the file under review is the diff; the pasted spec clauses, rulin
+ git show <sha> -- <paths> > review-input.diff
+ DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
+   scripts/deepseek-review.js review review-input.diff \
+-  --template .claude/review-templates/lens-<lens>.md --context docs/reports/reviews/<task>/context-rN.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > r1-<lens>.txt
++  --template .claude/review-templates/lens-<lens>.md --context docs/reports/reviews/<task>/context-rN.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > out-<lens>.txt
+ ```
+ 
+ The context file of a lane review is the task, sized (task-375): `docs/reports/reviews/<task>/context-rN.md`, one per review round and never overwritten, written by `scripts/analysis/backlog-brief.mjs` with the task's Implementation Plan and Implementation Notes; the five `--section` flags (the one list CONTEXT_SECTIONS in `scripts/lib/review-template.js`) send only the task, its description, acceptance criteria, decisions and notes. The compliance lens inputs are written by `node scripts/analysis/rule-lists.mjs lens-input --list <id> --context <context-rN.md> --material <diff file>` (the plan phase: `--material-from <context-rN.md>`, which cuts Description, Acceptance criteria and Implementation Plan); `lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context. Each review round (the first output round and every fix round) re-runs the brief in the lane worktree, `node scripts/analysis/backlog-brief.mjs --task <task> --lane <lane> --stage <N> --root <worktree> --board <board checkout> > /dev/null`, so the new context-rN.md holds the task file and the board's decisions as they are then (`--board` reads `<board>/backlog/decisions`; a bare `--board` or a board without that directory is refused), and the round uses the highest-numbered file in every `--context` (task-432, RR-0378 step 5).
+ 
+-Plan review (the plan is `.cursor/active_task.md`; the pasted context goes in `--specs`):
+-
+-```bash
+-DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
+-  scripts/deepseek-review.js plan \
+-  --template .claude/review-templates/lens-<lens>.md --specs <context file> > r1-<lens>.txt
+-```
+-
+-`review --template` is the one runner change of task-358 (a lens cannot reach the model in strict form through `--context`); `plan --template` already existed. Add `--dry-run` to print the two messages without a call.
++Plan review of a lane task: the same `review --template` command on the plan context (`rule-lists.mjs plan-prep review` runs it), output `plan-<lens>.txt`. The legacy `plan --template` route prints no REVIEW header, so its output fails the close check and the launch gate; it is not used for a lane. `review --template` is the one runner change of task-358 (a lens cannot reach the model in strict form through `--context`). Add `--dry-run` to print the two messages without a call.
+ 
+ ## Handbook clause packs
+ 
+@@ -148,18 +139,20 @@ DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/co
+   --template .claude/review-templates/lens-compliance.md   # a lane review passes its committed context-rN.md and the five --section flags instead (above)
+ ```
+ 
+-Size and tool limits found by the COMPLY.1 pass (task-365; findings in `docs/reports/lanes/2026-11-20/BL-COMPLY/FINDINGS.md`): the lens template carries `{{PLAN}}` twice, so the file under review is sent twice and the 120000 bound is on the doubled prompt (keep a diff part to 38000 characters or less with a 33000 character pack); and `scripts/lib/review-template.js` `substitutePlaceholders` passes the text to `String.replace` as a replacement string, so a `$` sequence in a pack or diff expands into other text, and a literal placeholder token inside a diff is substituted again. Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed. The lens returns at most 8 findings per run, so cut a diff into parts rather than sending one large one.
++Size and tool limits found by the COMPLY.1 pass (task-365; findings in `docs/reports/lanes/2026-11-20/BL-COMPLY/FINDINGS.md`), as fixed since: each lens template carries `{{PLAN}}` once (V2.LIST round 2), so the material is sent once and the 120000 bound is on that prompt; `scripts/lib/review-template.js` `substitutePlaceholders` substitutes in one pass with function replacers (task-375), so a `$` sequence or a placeholder token in a pack or diff is sent as written. The lens returns at most 8 findings per run, so cut a diff into parts rather than sending one large one.
+ 
+ ## Rule lists (Task: task-366, COMPLY.2)
+ 
++Task-453 (RR-0440, RR-0450, RR-0452): `every_task` is the plan protocol only (five-words is off at both stages); the table key `output_off` takes plan-protocol off the output review of a build or fix task; the lane-tools row attaches the two Spec 08 lists and eng-all. The strict-format lens templates are closed by their `VERDICT:` line and carry no TKT-1 Ticket header or TKT-2 STATUS line (exempt: the close check reads the VERDICT line, GROUNDER-A D5).
++
+ Operator, verbatim, 2026-11-20 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." The compliance lens "judges against the pasted clauses only" (`lens-compliance.md`), so what it is given decides what it checks. Since COMPLY.2 the lists it is given are decided by data.
+ 
+ 1. **The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists (`rows`: globs or `globs_from` an existing path map, optional `imports_from`, `lists`, `why`). A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause. `node scripts/analysis/rule-lists.mjs validate` checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path; `resolve --files "<Files line>" --type <type> --letter <group>` prints what a Files line attaches.
+-2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
+-3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md > <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part). Task-438 (RR-0385 item 2): a list on the engineering standards file is run by the engineering seat instead, the same commands with `--out <dir>/in-<phase>-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool, filed `<phase>-engineering-L.txt` (joined: `<phase>-engineering-rules`); every other list stays with compliance (`seatOf` in `scripts/analysis/rule-lists.mjs`).
++2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the every-task and milestone lists only, task-448) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
++3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --context <context-rN.md> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --context <context-rN.md> --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md --context <context-rN.md>` with the five `--section` flags `> <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part). Task-438 (RR-0385 item 2): a list on the engineering standards file is run by the engineering seat instead, the same commands with `--out <dir>/in-<phase>-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool, filed `<phase>-engineering-L.txt` (joined: `<phase>-engineering-rules`); every other list stays with compliance (`seatOf` in `scripts/analysis/rule-lists.mjs`).
+ 4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text): a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: each -pN file is one list part with one material chunk; when the material is cut into chunks every chunk repeats every list part, so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand.
+ 5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth or an API or library path, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well. Task-438: the engineering seat's files are `out-engineering-<list id>.txt` (or the joined `out-engineering-rules[-pN].txt`) on `lens-engineering.md`, required for a list on the engineering standards file when the range base holds `lens-engineering.md`; the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it.
+ 
+ The close check also reads the review tool's REVIEW header (`scripts/deepseek-review.js` writes `REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex>` among the first lines of a lens-mode output): a required lens output without it, with another template's name, or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused; the input's first line `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed, and the parts of a list together must carry the whole list as it is now. The lane report dir is scoped to one task by a file `TASK` holding the task id. Every staged task file that moves to a finished status (`finished_statuses` in the table: BUILT, DONE, MERGED) is checked, whatever the commit message says, including the board's auto-commit; a build, fix or check task needs an `@lane-*` assignee in the closing commit; paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line; a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task. A grounder name that contains or is contained in the lane or an assignee (case, punctuation and digits removed) is refused; quotes are 20+ characters, distinct per finding, not on a line that occurs more than 3 times in the cited file; REJECTED and CONFLICT reasons are 30+ characters; a loose reading of the finding lines must count the same as the strict one.
+ 
+-Known tool limits: the other four lens templates still carry the plan placeholder twice in their own prose (the material is sent twice there; `lens-compliance.md` is fixed); positional finding ids shift when a lens is re-run, so a re-run needs fresh verdicts.
++Known tool limits: positional finding ids shift when a lens is re-run, so a re-run needs fresh verdicts.
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 40d3e9ef23e216efd269417259241f860dd83950..094eabb69ea2e603520c1b079aff74cd339bb4ea 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -2,7 +2,7 @@
+ 
+ # What each kind of work receives: the compliance review documents
+ 
+-Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
++Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
+ 
+ ## pipeline step
+ 
+@@ -13,11 +13,10 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+ | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 128,198 | 7 |
++| total | 6 lists | | 122,831 | 6 |
+ 
+ ## McFrontend web
+ 
+@@ -28,11 +27,10 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 161,128 | 7 |
++| total | 6 lists | | 155,761 | 6 |
+ 
+ ## phone
+ 
+@@ -46,11 +44,10 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 10 lists | | 216,416 | 10 |
++| total | 9 lists | | 211,049 | 9 |
+ 
+ ## storage
+ 
+@@ -61,11 +58,10 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
+ | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+ | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 128,198 | 7 |
++| total | 6 lists | | 122,831 | 6 |
+ 
+ ## tooling
+ 
+@@ -74,15 +70,12 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 45,706 | 1 |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 38,251 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 46,314 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+-| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 214,415 | 9 |
++| total | 6 lists | | 139,835 | 6 |
+ 
+ ## spec-only
+ 
+@@ -91,9 +84,8 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 5 lists | | 84,183 | 5 |
++| total | 4 lists | | 78,816 | 4 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index 4928a941cc14863ed3f2f1c92a05d767217a51ab..01b07563d98596c9114e7a87d6f38c123ae758cc 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -355,6 +355,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+    Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1913 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" and :1865 "drop the full engineering when arts can be sent"): the engineering seat of the note above is sent the sections of the engineering standards that fit the task. Three section lists join `eng-all` in `scripts/analysis/rule-lists.json`: `eng-front` (section 1), `eng-back` (sections 3 and 9) and `eng-shared` (sections 2, 4 to 8 and 10 to 14: 8, 10 and 12 by RR-0380 Q2, 11 and 14 placed here by the plan review). The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it. Each of them is an engineering list (`seatOf`), so "today `eng-all`" in the note above now reads "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`", and the per-list rule asks for one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`. When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped (`resolveTask`), so each rule is sent once and no rule that a matched row asked for is lost.
+    Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165, and RR-0383, decision-168; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1853 "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.", :1865 "once the handbook has been updated iwth the critical items" and :1895 "1. what is your recommendation. I approve it"): the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169), so the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach `surface-126`, `surface-127`, `surface-128` and `surface-135`; they attach `surface-136` with their engineering lists, and the mobile row keeps its five mobile lists. A front-end review therefore no longer receives the text of those four specs and receives the handbook rule lines instead; a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: "we will add to the rules overtime"). The specs-web-admin row keeps all five surface lists, so a task that edits a spec under `docs/specs/02-web-admin/` is reviewed with that spec. Every other row is unchanged. The words "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" in the task-366 note of section 5.3 above now hold for those rows only.
+    Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0418, RR-0421, RR-0422, RR-0423, RR-0424, RR-0426 (decisions 203, 205, 207, 208, 209, 211); operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, :2140 "TWe only want to run these tings off not rewrite a new feature. This is simple.", :2161 "1-4 recommendations approved", :2166 "Minimum and 1a. Let's add these small fixes to the cost review task.", :2171 "add teh first two.  Plan approved.  Move forward with the task", :2176 "add it", :2186 "1 and 2 as recommended"): rule lists are turned off in scripts/analysis/rule-lists.json. A front-end task is reviewed against Spec 136 section 2, its engineering lists, the four lenses and the four every-task lists; a back-end task the same with its own handbook. Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16. Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137 and doc-17 stay on the lane-tools row only; the Spec 124 list is attached to no row. This supersedes "(a record-only task gets the queue lists)" (:229) and, in the task-439 note (:356), "the mobile row keeps its five mobile lists" and "The specs-web-admin row keeps all five surface lists" with the clause after it. The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names. Known loss: findings only the turned-off lists raised are no longer raised (tasks 367 and 442).
++   Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452; operator, verbatim, MORNING-DECISIONS.md:2265 "Let's plan to drop the planning and process lists", :2338 "five principles off"): five-words is off at both stages (out of every_task); plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off) and kept at a build task's plan review; queue-137 and orchestrator-doc17 are off the lane-tools row. This supersedes, in the task-448 note above, "the four every-task lists" and that Spec 137 and doc-17 stay on the lane-tools row.
+ 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+ 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+    Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
+index bbcd5c20683cd07402d9a12ef70539513747d4eb..66f5addc0caa1de9f65f385177c3514c5159b133 100644
+--- a/scripts/analysis/backlog-brief.mjs
++++ b/scripts/analysis/backlog-brief.mjs
+@@ -170,10 +170,13 @@ const out = [
+   `Rule: ${rules.length ? rules.map((r) => `\n  - ${r}`).join('') : 'none quoted in the task (the task is a card for the missing rule, MBQ:107)'}`,
+   `Scope: ${taskId} only: ${title}${t.fm.milestone ? ` (milestone ${t.fm.milestone})` : ''}. Wider scope is a new task, not a longer brief (TKT-1, 08_agents.md:504).`,
+   `Done-condition: every acceptance criterion below is checked with evidence, and the definition of done of the config holds:`,
+-  ...ac.map((c) => `  #${c.n} ${c.text}`),
++  ...(ac.length ? ac.map((c) => `  #${c.n} ${c.text}`) : [`  (none found in ${t.file})`]), // T8 (task-453): an empty AC block is said, not left blank
+   `max_fix_rounds: 2`,
+   '',
+-  `Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84): "The status line changes in the same commit as the work." Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`,
++  // T1 (task-453): a lane build or fix task closes in two commits (Spec 137 Rule 3 as amended, 137_mcqueue.md:98); another type keeps the line as it was
++  ['build', 'fix'].includes(String(t.fm.type ?? '').toLowerCase())
++    ? `Status line (Spec 137 rule 3 as amended by its note of 2026-11-20, 137_mcqueue.md:98): the work lands first; the closing commit carries only the lane report dir, the review context dir, the task file and the decision record. Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`
++    : `Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84): "The status line changes in the same commit as the work." Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`,
+   `Substrate (Spec 08 08_agents.md:334): "NEVER run one generic pass" - run the lens set in parallel, each a narrow prompt; and (08_agents.md:339): "spend tool-bearing Claude only when live tree / DB / git tools are strictly required".`,
+   '',
+   `Take order:`,
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index f923a1aaa774fb101efe66cc8d3f4d9f49806bdd..903192ad936b019b3b251361c99cfd9879aa110c 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -22,7 +22,7 @@ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+ import { planGateErrors } from '../hooks/check-lane-close.mjs';
+-import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, seatOf, verifyResolved } from './rule-lists.mjs';
++import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, outputLists, readTable, resolveTask, seatOf, verifyResolved } from './rule-lists.mjs';
+ 
+ const a = args();
+ const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
+@@ -77,7 +77,7 @@ let ruleTable;
+ const letterOf = milestoneLetter(board, t.fm.milestone);
+ try { ruleTable = readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))); resolved = resolveTask({ table: ruleTable, root: board, body: t.body, type: String(t.fm.type ?? ''), letter: letterOf }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
+ if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
+-const missingLists = verifyResolved(ruleTable, resolved, letterOf, String(t.fm.type ?? '')); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
++const missingLists = verifyResolved(ruleTable, resolved, letterOf, String(t.fm.type ?? '')); // V2.LIST (task-406): a launch whose lists lack the plan protocol (every_task) or the milestone objectives is refused
+ if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);
+ const st = git('status', '--porcelain');
+ if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
+@@ -110,7 +110,7 @@ if (gateType === 'build' || gateType === 'fix') {
+ const fmt = (cwd, argv, env, out) => `cd ${q(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${q(v)}`).join(' ')} ` : ''}${argv.map(q).join(' ')}${out ? ` > ${q(out)}` : ''}`;
+ const undo = fmt(board, [bin, 'task', 'edit', taskId, '-s', 'LATER', '-a', '']);
+ let taken = false;
+-const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what}: ${(r && r.error && r.error.message) || String((r && (r.stderr || r.stdout)) || '').trim().split('\n')[0]}${taken ? `; the task is already taken on the board, undo with: ${undo}` : ''}\n`); process.exit(1); };
++const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what}: ${(r && r.error && r.error.message) || String((r && (r.stderr || r.stdout)) || '').trim().split('\n')[0]}${taken ? `; the task is already taken on the board, undo with: ${undo}` : ''}${taken && fs.existsSync(wt) ? `; remove the worktree and its branch with: git -C ${board} worktree remove ${wt} and git -C ${board} branch -D ${branch}` : ''}\n`); process.exit(1); }; // T9 (task-453)
+ const step = (what, cwd, argv, { env, out, must = true } = {}) => {
+   console.log(`$ ${fmt(cwd, argv, env, out)}`);
+   if (dry) return { status: 0, stdout: '', stderr: '' };
+@@ -180,10 +180,12 @@ const lensLine = (task, ctx, lists) => {
+   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
+   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
+   // task-438 (RR-0385 item 2): the lists of the engineering standards file go to the engineering seat (rule-lists.mjs seatOf), the others to compliance
+-  const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);
+-  const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);
++  // task-453 (RR-0440, RR-0450, RR-0452): a build or fix task's output review leaves out the table's output_off lists, the predicate of the close check (check-lane-close.mjs); a check or doc task is asked for every list
++  const outLs = code ? outputLists(ruleTable ?? {}, lists) : lists;
++  const ids = outLs.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);
++  const engIds = outLs.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);
+   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
+-  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
++  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only${code && outLs.length < lists.length ? ` (${lists.filter((l) => !outLs.includes(l)).map((l) => l.id).join(', ')} off: output_off; plan-protocol is asked at the plan stage only)` : ''}: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+   const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385): the fix commit changes the diff, so no round-1 input or output still matches it; round 2 re-makes ALL of them under the SAME names (overwrite out-<lens>[-<list id>][-pN].txt and in-<same name>, then a new GROUNDER.md and its outcome file); the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5); a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.';
+diff --git a/scripts/analysis/proof-slice.mjs b/scripts/analysis/proof-slice.mjs
+index 9c330cfc24424a19941f36d2c6776c98ec228b02..19e09f41a6bbd925a069bbad987b812f26fd5277 100644
+--- a/scripts/analysis/proof-slice.mjs
++++ b/scripts/analysis/proof-slice.mjs
+@@ -143,7 +143,7 @@ export const realIo = () => ({
+     const [cmd, ...rest] = argv;
+     return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
+   },
+-  head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim(),
++  head: (spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout ?? '').trim(), // T4 (task-453): git that cannot start gives '' (main exits 2), not a TypeError
+   writeFile: (f, t) => fs.writeFileSync(f, t),
+   mkdir: (d) => fs.mkdirSync(d, { recursive: true }),
+   print: (s) => console.log(s),
+diff --git a/scripts/analysis/proof-slices.json b/scripts/analysis/proof-slices.json
+index 091033e3e16fda23fcef4ae8f1e9571ebd582f6b..7b3566271699937808b2cc3a300239397134b1a8 100644
+--- a/scripts/analysis/proof-slices.json
++++ b/scripts/analysis/proof-slices.json
+@@ -6,7 +6,7 @@
+       { "id": "lotmap-goldens", "proof": "Lot map goldens equal what the binding renders (11 states)", "argv": ["node_modules/.bin/tsx", "--tsconfig", "mobile/tsconfig.json", "scripts/surfaces/lotmap-golden-capture.ts", "--check"], "expect": "lotmap goldens ok" },
+       { "id": "semi-goldens", "proof": "Semi question goldens equal what the binding renders (8 states)", "argv": ["node_modules/.bin/tsx", "--tsconfig", "mobile/tsconfig.json", "scripts/surfaces/semi-question-golden-capture.ts", "--check"], "expect": "semi-question goldens ok" },
+       { "id": "mobile-jest", "proof": "The three pages behave and the Daylight look is pinned (7 mobile jest files: parcelScreens, lotMapScreens, semiQuestionScreens, daylightSearchPages goldens; three behaviour files)", "notbuilt": { "blockedBy": [], "reason": "not run by this tool: duration unmeasured, and the lane rule refuses the test-runner call; the PLAN gives no other way to measure it" } },
+-      { "id": "chk3-nothing-new", "proof": "CHK.3 nothing-new policy check over the tree", "argv": ["node", "scripts/analysis/policy-checks.mjs", "--all"], "waits": "WAITS CHK.3", "expect": "POLICY CHECKS OK" },
++      { "id": "chk3-nothing-new", "proof": "CHK.3 nothing-new policy check over the tree", "notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" } },
+       { "id": "chk5-mcstorage", "proof": "CHK.5 McStorage writes only to a declared record table", "argv": ["node", "scripts/analysis/policy-checks.mjs", "--all"], "waits": "WAITS CHK.5", "expect": "POLICY CHECKS OK" },
+       { "id": "suite-on-tip", "proof": "Hooks plus full suite on the current tip (reads the push station pass file; never runs the suite). A landed commit already passed the pre-commit chain (Airtight V3 / Spec 132). The suite also covers the address routing, parser guard, lookup resolution and no-client-maths checks listed here", "suite": { "suite_files": ["src/tests/search-routing.logic.test.ts", "src/tests/parcel-lookup-resolution.logic.test.ts", "src/tests/search-parser-guard.logic.test.ts", "src/tests/surfaces/report-no-maths.logic.test.ts"] } },
+       { "id": "design-fit", "proof": "Design fit (RS-12): every stored value maps to a designed element (RR-0306: printed as not built)", "notbuilt": { "blockedBy": ["task-345", "task-67"] } },
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index fe50f811b4fce92eed858b5c88978838c5b89cc9..f020bbde3a8e80c0c97d5bfa2fd9f1d3fc3fbb93 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -4,7 +4,8 @@
+     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
+     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+     "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+-    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
++    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the plan protocol as a repo document; the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
++    "task-453 (SEARCHFIX.5; RR-0440, MORNING-DECISIONS.md:2265; RR-0450, :2325; RR-0452, :2336): `output_off` names every_task lists that are off for OUTPUT reviews only (rule-lists.mjs outputLists, read by the close check and the launch brief for a build or fix task); a build task keeps them at its plan review; emptying the line turns them back on; validate refuses an id that is not in every_task. five-words is out of every_task (off at both stages, nothing replaces it).",
+     "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
+     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+     "exempt src/tests/fixtures/surfaces/*/*.web.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+@@ -19,7 +20,7 @@
+   "contract_version": 1,
+   "base_ref": "wf2/board",
+   "finished_statuses": ["BUILT", "DONE", "MERGED"],
+-  "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"],
++  "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/analysis/backlog-lib.mjs", "scripts/deepseek-review.js", ".husky/*"],
+   "lists": {
+     "five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" },
+     "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true, "generated_by": "hand-written" },
+@@ -84,7 +85,7 @@
+     {
+       "id": "step-pipeline",
+       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
+-      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
++      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", "scripts/lib/review-template.js/**"],
+       "lists": ["step-132", "eng-back", "eng-shared"],
+       "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
+     },
+@@ -160,10 +161,10 @@
+     },
+     {
+       "id": "lane-tools",
+-      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
++      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
+       "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
+-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them"
++      "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"],
++      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them. task-453 (RR-0450, MORNING-DECISIONS.md:2325, decision of 2026-11-24): Spec 137 (queue-137) and doc-17 (orchestrator-doc17) are off this row too, so no row attaches them; scripts/gemini-review.js joins the globs (T2) and the step-pipeline row excepts scripts/lib/review-template.js/** so the file resolves here only"
+     },
+     {
+       "id": "generated-reports",
+@@ -233,7 +234,8 @@
+     "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
+     "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
+   },
+-  "every_task": ["five-words", "plan-protocol"],
++  "every_task": ["plan-protocol"],
++  "output_off": ["plan-protocol"],
+   "milestone_docs": {
+     "1": ["ms-1"],
+     "3": ["ms-3"],
+

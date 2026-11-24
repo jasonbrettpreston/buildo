@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.235Z file_sha256=44af0b9ccfc3879709fbff0b964560c2ce84466b051f76913dc092c664a75d27 prompt_sha256=06e37a09d5fee105bd2bbe724dacc181c19b3facc25d34fa153a95d038a796d3
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0442 "if its a semi potentially - you need to state that?" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "a hit with no page (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question" — the ruling's semi statement is not implemented, tested or dated in this diff; the descriptor only forwards it to a semi question owned by task-360/319, which cannot see here — confirm task-319/360 carries the semi statement and name it in the Spec 100 dated note, or add its lock.
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — 3 of the 29 seat cases are not added as tests in this diff, only cited to mobile tests that cannot see, so AC #6 is only partly evidenced — port cases 24, 29 and the phone half of 23 into this suite or quote the existing passing assertions with file:line.
+
+MET — fe.03 — src/tests/consumer-parcel-lookup.infra.test.ts "the census row equals the emitted descriptor" — the descriptor is checked against the census both directions and each stated count is asserted against its own array.
+MET — fe.27 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "parcels, address_points, parcel_address_points..." — parcels stays a named read source and the projection stays the explicit whitelist, not a passthrough.
+MET — fe.32 — src/tests/consumer-parcel-lookup.infra.test.ts "this check set-equals the projection to inputs.field_whitelist" — the response projection remains bound to the declared CONTRACT descriptor's field_whitelist, member by member.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: fe.03, fe.27, fe.32
+
+---
+⏱  100985ms (101.0s)
+📊 Tokens — total: 56239, input: 35227, output: 21012, reasoning: 20514

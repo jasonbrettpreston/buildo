@@ -1,0 +1,944 @@
+LIST eng-all sha256:e4ad258c2dde33284080daf24062fd026b24026e6aa4e18ce631199a5cb3eb3c material sha256:61c34847afdbc56054d14563dab4acdad7d6ce83758ff3e53f3a6c4477d6814e part 1 of 1 chunk 2 of 3
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.json","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
+
+# Engineering Standards & Stability Guardrails
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
+This document outlines the strict engineering standards, stability rules, and defensive programming patterns that all AI agents and human developers must adhere to when contributing to the Buildo codebase.
+
+---
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+## 🗄️ 3. Database Management & Scaling
+
+### 3.1 Zero-Downtime Migration Pattern
+- **Rule:** When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly.
+- **Execution:** Use the **Add-Backfill-Drop** pattern to avoid table-locking:
+  1. Add the new column.
+  2. Backfill data into the new column.
+  3. Swap application references to the new column.
+  4. Drop the old column in a subsequent deployment.
+- **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
+
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
+- **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
+
+---
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+## 📡 6. Centralized Logging
+
+### 6.1 logError Mandate
+- **Rule:** All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules. Client-side components (React `'use client'`) may use `console.error` since `logError` imports server-only modules.
+- **Execution:** `logError(tag, err, context)` writes to `console.error` locally and reports to Sentry when `SENTRY_DSN` is configured in production. The guardrail tests in `api.infra.test.ts` enforce that critical paths import `logError`.
+
+---
+
+## 🔀 7. Dual Code Path Safety
+
+### 7.1 Classification Sync Rule
+- **Rule:** Trade classification logic exists in two parallel implementations that MUST stay in sync:
+  - `src/lib/classification/classifier.ts` — TypeScript API used by the web app
+  - `scripts/classify-permits.js` — standalone Node.js script for batch DB processing
+- **Execution:** When modifying classification rules (tag-trade matrix, tier rules, narrow-scope codes, confidence thresholds), you MUST update **both** files. Before committing, verify both paths produce identical output for the same input by running the classification test suite: `npx vitest run src/tests/classification.logic.test.ts`.
+
+### 7.2 Scope Classification Sync
+- **Rule:** The same dual-path constraint applies to scope classification:
+  - `src/lib/classification/scope.ts` — TypeScript API
+  - `scripts/classify-scope.js` — standalone batch script
+- **Execution:** Changes to scope tags, project types, or the `classifyScope()` algorithm must be mirrored in both files.
+
+---
+
+## ⚙️ 8. Next.js & TypeScript Constraints
+
+### 8.1 API Route Export Rule
+- **Rule:** Next.js App Router `route.ts` files may ONLY export HTTP handler functions (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`). Exporting any other function, constant, or type from a `route.ts` file will cause a build error or silent runtime failure.
+- **Execution:** If a route file needs shared helper logic, extract it to a module under `src/lib/` and import it. Never `export function` or `export const` from route files unless it is a named HTTP handler.
+
+### 8.2 TypeScript Target Gotchas
+- **Rule:** The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:
+  - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
+  - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
+  - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
+
+---
+
+## 🛢️ 9. Pipeline & Script Safety
+
+### 9.1 Transaction Boundaries
+- **Rule:** Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions (`BEGIN` / `COMMIT`). The `ROLLBACK` in the catch block MUST itself be wrapped in a nested try-catch to prevent crash-on-rollback-failure.
+
+### 9.2 PostgreSQL Parameter Limit
+- **Rule:** PostgreSQL has a hard limit of **65,535 parameters** per prepared statement. Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking (e.g., `MAX_ROWS_PER_INSERT = 4000` for a table with 16 columns: 4000 x 16 = 64,000 params).
+- **Execution:** When adding columns to a table that has a batch insert script, recalculate `MAX_ROWS_PER_INSERT` to stay under 65,535. The formula is: `Math.floor(65535 / number_of_columns)`.
+
+### 9.3 Idempotent Scripts
+- **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+## 🛠️ 12. Frontend Foundation Tooling
+
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
+
+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add"): §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`), and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4 "The libraries" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4). This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use.
+
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
+
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
+
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
+
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a container of the target engine image, `docs/specs/_contracts.json` `db_target.test_image` (`public.ecr.aws/supabase/postgres:17.6.1.167`: PG 17 / PostGIS 3.3, the image the local Supabase stack runs), via testcontainers, connects as the non-superuser `postgres` role, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker. The CI service container runs the same image. The pin is locked by T-PIN-1 (`src/tests/db-test-harness-target.infra.test.ts`) and T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) (WF3 PostGIS pin, 2026-10-03).
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Target guard (WF3 2026-10-03):** the globalSetup picks its target with the pure `decideTestDbTarget(env)` in `src/tests/db/setup-testcontainer.ts`. An exported `DATABASE_URL` is migrated only when it is a disposable test DB: a loopback host with `CI=true` (the CI service container) or `BUILDO_TEST_DB_EXTERNAL=1`, or a non-loopback host with `BUILDO_TEST_DB_EXTERNAL=1`. The local Supabase dev stack (loopback port 54322) is never migrated, whatever flags are set. A qualifying URL wins over `BUILDO_TEST_DB=1` (CI runs `npm run test:db`, which always sets it). A URL that does not qualify is replaced by a testcontainer when `BUILDO_TEST_DB=1` is set; otherwise the suite aborts with a `REFUSING` error that names the target with the password redacted. Locked by `src/tests/test-db-setup-guard.logic.test.ts`.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
+
+### 12.12 Property-Based Tests (`fast-check`)
+- **Status:** Adopted 2026-04-08 after Phase 0+1+2 holistic review caught arithmetic-invariant violations (fit_score=23, buildLeadKey '0'/'00' drift) that example-based tests missed.
+- **Rule:** Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases.
+- **What counts as an invariant:** a property that holds for ALL inputs of the type. Examples: `forAll(input => relevance_score(input) <= 100)`, `forAll(input => buildLeadKey(input) === buildLeadKey(normalize(input)))`, `forAll(a < b => format(a) <= format(b))`.
+- **Files:** `src/tests/property/*.property.test.ts`. Run via `npm run test:property` or as part of the standard `npm run test`.
+- **Why:** A counterexample-finding test does the work that human review can't — it tries 100+ inputs and shrinks failures to a minimal reproduction. The Phase 0+1+2 buildLeadKey fix would have shipped 4 phases earlier with this in place.
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+
+---
+
+## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
+
+Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
+
+**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
+
+| Rule | Class it prevents | Domain | Form |
+|------|-------------------|--------|------|
+| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
+| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
+| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
+| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
+| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
+| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
+
+**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index fe50f811b4fce92eed858b5c88978838c5b89cc9..f020bbde3a8e80c0c97d5bfa2fd9f1d3fc3fbb93 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -4,7 +4,8 @@
+     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
+     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+     "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+-    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
++    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the plan protocol as a repo document; the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
++    "task-453 (SEARCHFIX.5; RR-0440, MORNING-DECISIONS.md:2265; RR-0450, :2325; RR-0452, :2336): `output_off` names every_task lists that are off for OUTPUT reviews only (rule-lists.mjs outputLists, read by the close check and the launch brief for a build or fix task); a build task keeps them at its plan review; emptying the line turns them back on; validate refuses an id that is not in every_task. five-words is out of every_task (off at both stages, nothing replaces it).",
+     "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
+     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+     "exempt src/tests/fixtures/surfaces/*/*.web.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+@@ -19,7 +20,7 @@
+   "contract_version": 1,
+   "base_ref": "wf2/board",
+   "finished_statuses": ["BUILT", "DONE", "MERGED"],
+-  "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"],
++  "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/analysis/backlog-lib.mjs", "scripts/deepseek-review.js", ".husky/*"],
+   "lists": {
+     "five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" },
+     "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true, "generated_by": "hand-written" },
+@@ -84,7 +85,7 @@
+     {
+       "id": "step-pipeline",
+       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
+-      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
++      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", "scripts/lib/review-template.js/**"],
+       "lists": ["step-132", "eng-back", "eng-shared"],
+       "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
+     },
+@@ -160,10 +161,10 @@
+     },
+     {
+       "id": "lane-tools",
+-      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
++      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
+       "not": ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-**"],
+-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them"
++      "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"],
++      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all). task-448 (RR-0421 item 4 a, decision-205): the only row that keeps these lists; an MF pre-registration under scripts/analysis/** is excluded by not and takes none of them. task-453 (RR-0450, MORNING-DECISIONS.md:2325, decision of 2026-11-24): Spec 137 (queue-137) and doc-17 (orchestrator-doc17) are off this row too, so no row attaches them; scripts/gemini-review.js joins the globs (T2) and the step-pipeline row excepts scripts/lib/review-template.js/** so the file resolves here only"
+     },
+     {
+       "id": "generated-reports",
+@@ -233,7 +234,8 @@
+     "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
+     "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
+   },
+-  "every_task": ["five-words", "plan-protocol"],
++  "every_task": ["plan-protocol"],
++  "output_off": ["plan-protocol"],
+   "milestone_docs": {
+     "1": ["ms-1"],
+     "3": ["ms-3"],
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index f73147b1d269190ac51ae76076eede4e1aeefb2e..50ee4f903468c0cae167918548c901bb54913450 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -130,6 +130,7 @@ export function validateTable(table, root) {
+   const any = (g) => { const re = globToRegExp(g); return tracked.some((t) => re.test(t)); };
+   if (!table.lists || typeof table.lists !== 'object') bad.push('lists: missing');
+   for (const [id, l] of Object.entries(table.lists ?? {})) {
++    if (!l || typeof l !== 'object') { bad.push(`list ${id}: not an object`); continue; } // T10 (task-453): a null list is a problem line, not a TypeError
+     if (id === JOINED_ID) { bad.push(`list ${id}: the id "${JOINED_ID}" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }
+     if (typeof l.generated_by !== 'string' || !l.generated_by) bad.push(`list ${id}: generated_by missing (a generator path or "hand-written")`);
+     if (Boolean(l.whole) === Array.isArray(l.sections)) bad.push(`list ${id}: needs exactly one of whole or sections`);
+@@ -137,7 +138,8 @@ export function validateTable(table, root) {
+   }
+   if (!Array.isArray(table.rows)) bad.push('rows: missing');
+   const seen = new Set();
+-  for (const row of table.rows ?? []) {
++  for (const [ri, row] of (Array.isArray(table.rows) ? table.rows : []).entries()) {
++    if (!row || typeof row !== 'object') { bad.push(`rows[${ri}]: not an object`); continue; } // T10 (task-453)
+     if (seen.has(row.id)) bad.push(`row ${row.id}: duplicate id`); seen.add(row.id);
+     for (const l of row.lists ?? []) if (!table.lists?.[l]) bad.push(`row ${row.id}: list ${l} is not defined`);
+     if (!row.why) bad.push(`row ${row.id}: why missing`);
+@@ -153,8 +155,10 @@ export function validateTable(table, root) {
+   if (d && !(table.rows ?? []).some((r) => r.id === d.row)) bad.push(`no_files_default: row ${d.row} is not defined`);
+   for (const [k, id] of Object.entries(table.increment_docs ?? {})) if (!table.lists?.[id]) bad.push(`increment_docs ${k}: list ${id} is not defined`);
+   // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
+-  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the five words and the plan protocol)');
++  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the plan protocol)');
+   else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
++  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of every_task ids (a typo fails closed, it never switches a list off silently)
++  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids'); else for (const id of table.output_off) if (!(table.every_task ?? []).includes(id)) bad.push(`output_off: list ${id} is not in every_task`); }
+   for (const k of Object.keys(table.increment_docs ?? {})) {
+     const m = table.milestone_docs?.[k];
+     if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
+@@ -267,7 +271,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
+   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
+   if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
+   if (letter === undefined && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: 'refused: the task has no milestone (a build or fix task needs one: its milestone objectives are attached to every review; set the milestone with the backlog CLI)' };
+-  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)');
++  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the plan protocol; at the output review of a build or fix task the output_off lists are off)');
+   if (letter !== undefined) {
+     const id = table.increment_docs?.[letter];
+     if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json` };
+@@ -290,7 +294,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
+ export function verifyResolved(table, result, letter, type) {
+   const have = new Set((result?.lists ?? []).map((l) => l.id));
+   const out = [];
+-  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the five words and the plan protocol must be attached to every task)');
++  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the plan protocol must be attached to every task)');
+   for (const id of table.every_task ?? []) if (!have.has(id)) out.push(`every_task list ${id} is not attached`);
+   if (letter === undefined) { if (['build', 'fix'].includes(String(type ?? '').toLowerCase())) out.push('a build or fix task has no milestone: its milestone objectives cannot be attached'); }
+   else if (!table.milestone_docs || typeof table.milestone_docs !== 'object') out.push('the table has no milestone_docs (the objectives of each milestone must be attached)');
+@@ -298,6 +302,8 @@ export function verifyResolved(table, result, letter, type) {
+   else for (const id of table.milestone_docs[letter]) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
+   return out;
+ }
++/** task-453 (RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336): the lists an OUTPUT review of a build or fix task needs: the resolved lists minus the table's output_off (empty or missing: every list). Shared by the close check and the launch brief. */
++export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));
+ 
+ // ---- finding ids (shared with scripts/hooks/check-lane-close.mjs) ----
+ /** A deliberately loose reading of a finding line (decoration, numbering, quotes, bold, a colon, any case). It must give the same count as the strict FINDING_LINE, else lines were altered. */
+@@ -540,7 +546,7 @@ export function renderPage({ table, root }) {
+   const o = [];
+   o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
+   o.push('# What each kind of work receives: the compliance review documents', '');
+-  o.push('Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
++  o.push('Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
+   for (const k of table.kinds ?? []) {
+     const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
+     o.push(`## ${k.label}`, '');
+@@ -552,9 +558,10 @@ export function renderPage({ table, root }) {
+       const def = table.lists[l.id];
+       const c = listBlocks(def, root, l.id).reduce((n, b) => n + b.text.length, 0);
+       let p;
+-      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }
++      let err = '';
++      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch (e) { p = 0; err = String(e?.message ?? e).split('\n')[0].replace(/\|/g, '/'); } // T10 (task-453): the error text is kept and printed
+       chars += c; parts += p;
+-      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || 'does not fit'} |`);
++      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || `does not fit${err ? `: ${err}` : ''}`} |`);
+     }
+     o.push(`| total | ${r.lists.length} lists | | ${fmtN(chars)} | ${parts} |`, '');
+   }
+@@ -579,7 +586,7 @@ class Stop extends Error { constructor(code, msg) { super(msg); this.code = code
+ const shq = (s) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
+ const cmdLine = (cwd, argv, env) => `cd ${shq(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${shq(v)}`).join(' ')} ` : ''}${argv.map(shq).join(' ')}`;
+ const first = (s, n = 8) => String(s).trim().split('\n').slice(0, n).join('\n');
+-const CALL_MS = 900000 + 10000; // deepseek-review.js bounds a call at 900 s (TIMEOUT_MS)
++const CALL_MS = (Number(process.env.DEEPSEEK_REVIEW_TIMEOUT_MS) || 900000) + 10000; // deepseek-review.js bounds a call at DEEPSEEK_REVIEW_TIMEOUT_MS, 900 s by default (TIMEOUT_MS); T10 (task-453)
+ const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+ 
+ export async function planPrep(a) {
+@@ -597,7 +604,7 @@ export async function planPrep(a) {
+   const git = (...g) => spawnSync('git', ['-c', 'core.quotepath=false', ...g], { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
+   const bin = path.resolve(home(str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'))));
+   const say = (cwd, argv, e) => console.log(`$ ${cmdLine(cwd, argv, e)}`);
+-  const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
++  const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env, timeout: 120000 }); // T10 (task-453): a hung backlog call ends
+   const rm = (re) => { if (fs.existsSync(evAbs)) for (const f of fs.readdirSync(evAbs)) if (re.test(f)) fs.rmSync(path.join(evAbs, f)); };
+   try {
+     if (!fs.existsSync(board) || git('rev-parse', '--git-dir').status !== 0) refuse(`board ${board} is not a git checkout`);
+@@ -750,7 +757,7 @@ export async function planPrep(a) {
+       say(board, argv);
+       if (dry) return 0;
+       const e = sh(argv);
+-      if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout, 3)}`);
++      if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout || e.error?.message, 3)}`);
+       console.log(`plan-prep post: ${rounds.length ? '' : 'block and '}${addRefs.length} reference(s) added to ${taskId}`);
+       return 0;
+     }
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 76b04deb59e26d469a16dd21faafce278fce6dd1..5192598434da49009e9002a80725d8e314cccdfc 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -42,7 +42,7 @@ import path from 'node:path';
+ import { createRequire } from 'node:module';
+ import { fileURLToPath } from 'node:url';
+ import { asList, parseFM } from '../analysis/backlog-lib.mjs';
+-import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
++import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, outputLists, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
+ import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
+ 
+ const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
+@@ -136,18 +136,21 @@ export function parseVerdicts(g) {
+   return verdicts;
+ }
+ 
+-// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:346 "fold survivors, file rejections with reasons", rule 6 :350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
++// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:350 "fold survivors, file rejections with reasons", rule 6 :360 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
+ // every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
+ const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
+ const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
+-/** The severity a grounder writes in the first 40 characters of its reason (earliest whole upper-case word), else null. */
+-const reasonSev = (reason) => { const m = /\b(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '').slice(0, 40)); return m ? normSev(m[1]) : null; };
++/** The severity a grounder writes at the START of its reason (the first word, after punctuation), else null. S5 (task-453): a severity word later in the reason ("not a NIT") sets nothing. */
++const reasonSev = (reason) => { const m = /^\W*(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '')); return m ? normSev(m[1]) : null; };
+ /** {kind: BUG|DEFER, sev} of a lens finding line ("BUG severity=HIGH - ..."); the lens writes CRIT, read as CRITICAL. */
+ export const lensKindOf = (line) => { const m = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=([A-Za-z]+)/.exec(line); return { kind: m ? m[1] : 'BUG', sev: m ? normSev(m[2]) : null, line }; };
+-const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;
++const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9-]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/; // S4 (task-453): a seat id may hold a hyphen (reality-check#2)
+ const SEAT_HEAD = /^\s*Seat:\s*(\S+)\s+(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm;
+ /** The `Seat: <name> <repo path> sha256:<12 hex>` lines of a GROUNDER.md, each with its file text from `read` (null when missing). */
+ export const seatLines = (g, read) => [...g.matchAll(SEAT_HEAD)].map((m) => ({ name: m[1], path: m[2], sha: m[3], text: read(m[2]) }));
++/** S1 (task-453): the finding lines of the seat reports [{id, line}], so the quote, cited-line and reason checks of grounderErrors run on them too. A seat that outcomeErrors refuses (no text, another sha, outside the seat root) gives none here. */
++export const seatFindings = (seats, seatRoot = null) => seats.filter((s) => typeof s.text === 'string' && (!seatRoot || String(s.path).startsWith(seatRoot)) && sha(s.text).slice(0, 12) === s.sha)
++  .flatMap((s) => s.text.split('\n').map((ln) => SEAT_LINE.exec(ln)).filter(Boolean).map((m) => ({ id: `${m[1]}#${m[2]}`, line: m[0].trim() })));
+ const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };
+ const unq = (s) => { const t = String(s).trim(); const m = /^"(.*)"$/s.exec(t) ?? /^'(.*)'$/s.exec(t) ?? /^`(.*)`$/s.exec(t); return squash(m ? m[1] : t); };
+ const FAIL = Symbol('fact failed');
+@@ -196,7 +199,7 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
+     const fixWord = mode === 'plan' ? 'folded' : 'fixed';
+     const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
+     const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
+-    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
++    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:360): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
+     const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
+     const text = last.get(id);
+     if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
+@@ -361,7 +364,7 @@ function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneNam
+     const form = 'form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]';
+     if (!v) { errors.push(`${label}: finding ${f.id} has no complete verdict line (${form}): ${f.line.slice(0, 90)}`); continue; }
+     const q = squash(v.quote);
+-    if (q.length < 20) { errors.push(`${label}: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line}`); continue; }
++    if (q.length < 20) { errors.push(`${label}: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line} (a double quote inside the quote ends it; quote a part without one)`); continue; }
+     if (seenQuote.has(q)) errors.push(`${label}: finding ${f.id} has the same quote as ${seenQuote.get(q)}; each finding needs its own quote from the line it concerns`);
+     else seenQuote.set(q, f.id);
+     if (v.word !== 'CONFIRMED' && v.reason.length < 30) errors.push(`${label}: finding ${f.id} is ${v.word} with a reason under 30 characters (Spec 08 5.3: rejections carry reasons; a conflict says what the operator must rule)`);
+@@ -483,10 +486,10 @@ export function closeErrors(i) {
+   const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
+   // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
+   if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)`);
+-  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
++  // V2.LIST (task-406): the every_task lists (the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
+   // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
+   const missing = verifyResolved(i.table, r, i.letter, type);
+-  if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
++  if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
+   for (const m of missing) errors.push(`${id}: ${m} (a task always gets them; the table or the resolver was altered)`);
+ 
+   // Files against the diff
+@@ -518,7 +521,8 @@ export function closeErrors(i) {
+   const phases = build ? ['out'] : ['plan', 'out'];
+   const split = readBase('.claude/review-templates/lens-engineering.md') !== null;
+   for (const seat of ['compliance', 'engineering']) {
+-    const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);
++    // task-453 (RR-0440, RR-0450, RR-0452): a build or fix task's output review leaves out the table's output_off lists (outputLists); any other task is asked for every list at either stage
++    const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter((l) => (split ? seatOf(l) : 'compliance') === seat);
+     if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
+   }
+   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
+@@ -574,13 +578,14 @@ export function closeErrors(i) {
+   if (!(build || findings.length > 0)) return errors;
+   const g = textOf('GROUNDER.md');
+   if (g === undefined) return [...errors, `${id}: GROUNDER.md is missing in ${dirNote}${build ? ' (a build or fix task always needs a separate grounder verdict)' : ` (a lens returned ${findings.length} finding(s))`}`];
+-  const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings, laneName, assignees: i.assignees, id, readRepo });
++  const closeSeats = seatLines(g, readRepo);
++  const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)], laneName, assignees: i.assignees, id, readRepo });
+   errors.push(...ge.errors);
+   const verdicts = ge.verdicts;
+   // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
+   if (build) {
+     const dirPath = mine[0][0];
+-    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
++    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: closeSeats, seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
+   }
+   return errors;
+ }
+@@ -662,12 +667,12 @@ function planGateInner(i) {
+   else {
+     const lensFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
+     const found = findingsIn(lensFiles);
+-    const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: found, laneName: i.laneName, assignees: i.assignees, id, readRepo: i.readRepo });
++    const seats = seatLines(g, i.readRepo);
++    const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: [...found, ...seatFindings(seats, dirNote)], laneName: i.laneName, assignees: i.assignees, id, readRepo: i.readRepo });
+     errors.push(...ge.errors);
+     const lh = /^\s*Lane:\s*(.+?)\s*$/m.exec(g.split('\n').slice(0, 25).join('\n'))?.[1];
+     if (lh && nameKey(lh) !== nameKey(i.laneName)) errors.push(`GROUNDER-PLAN.md: Lane "${lh}" is not the lane being launched (${i.laneName})`);
+-    // the seats
+-    const seats = seatLines(g, i.readRepo);
++    // the seats (read above, S1)
+     const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];
+     for (const n of need) if (!seats.some((x) => x.name.toLowerCase() === n)) errors.push(`GROUNDER-PLAN.md: no "Seat: ${n} <repo path inside ${dirNote}> sha256:<12 hex>" line (a ${n} seat report is required at every build or fix launch${n === 'regression' ? ': the Files line names a path that exists at the board head' : ''})`);
+     // outcomes of every CONFIRMED or CONFLICT id (mode plan) and the round block on the task
+@@ -717,22 +722,26 @@ const entriesOf = (taskText) => filesEntries(taskText) ?? [];
+ function check(msgFile) {
+   if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
+   const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
++  // S3 (task-453, GQ G4 S3 "narrow the skip and fail closed"): a merge is no longer skipped whole; only a move whose staged blob is the merged branch's own is skipped (below)
+   const mergeHead = git(['rev-parse', '--git-path', 'MERGE_HEAD']).stdout.trim();
+-  if (mergeHead && fs.existsSync(path.resolve(mergeHead))) return 0;
++  const inMerge = Boolean(mergeHead && fs.existsSync(path.resolve(mergeHead)));
+   if (!fs.existsSync(path.join(top, 'backlog/tasks'))) return 0;
+-  const tableFile = path.join(top, 'scripts/analysis/rule-lists.json');
+-  const tableInHead = git(['cat-file', '-e', 'HEAD:scripts/analysis/rule-lists.json']).status === 0;
+-  if (!fs.existsSync(tableFile) && !tableInHead) return 0; // a repo that never had the table is not held to it
+-  let table;
+-  try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); }
+   // H1 (V2.WHOLE round 4): the keys that decide what is checked (base_ref, finished_statuses, protected_paths, exempt) come from the BOARD ref, never from the lane's own table or from a ref the lane's table names
+   const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
+   let boardTable = null;
+   if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
++  const tableFile = path.join(top, 'scripts/analysis/rule-lists.json');
++  const tableInHead = git(['cat-file', '-e', 'HEAD:scripts/analysis/rule-lists.json']).status === 0;
++  const tableInTree = fs.existsSync(tableFile);
++  // S2 (task-453): a repo that never had the table is not held to it only when the board has no table either; a branch that lost the table is judged by the board copy
++  if (!tableInTree && !tableInHead && boardRef && git(['cat-file', '-e', `${boardRef}:scripts/analysis/rule-lists.json`]).status !== 0) return 0;
++  let table = boardTable; // the table is in neither the tree nor HEAD: the board copy (null with no readable board: a move is refused below, no move passes)
++  if (tableInTree || tableInHead) { try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); } }
+   // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
+   const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
+   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
+-  const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
++  // S9 (task-453): a task file under backlog/archive/tasks and a numbered subtask file are task files too; docs/backlog/tasks is not (the pattern is anchored)
++  const taskFiles = staged.filter((f) => /^backlog\/(archive\/)?tasks\/task-\d+(\.\d+)*( -.*)?\.md$/i.test(f));
+   const moves = [];
+   for (const f of taskFiles) {
+     const now = git(['show', `:${f}`]);
+@@ -740,7 +749,11 @@ function check(msgFile) {
+     const { fm } = parseFM(now.stdout);
+     const status = String(fm.status ?? '').toUpperCase();
+     if (!finished.has(status)) continue;
+-    const was = git(['show', `HEAD:${f}`]);
++    // S3: during a merge, the merged branch's own blob of the task file is a close made and checked on that branch; any other blob is checked (a failed read is not equal)
++    if (inMerge) { const mh = git(['rev-parse', `MERGE_HEAD:${f}`]); const ix = git(['rev-parse', `:${f}`]); if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue; }
++    // S9: an archived task is compared with the same file name under backlog/tasks at HEAD (archiving a finished task is no move)
++    let was = git(['show', `HEAD:${f}`]);
++    if (was.status !== 0 && f.startsWith('backlog/archive/tasks/')) was = git(['show', `HEAD:backlog/tasks/${path.basename(f)}`]);
+     const headFm = was.status === 0 ? parseFM(was.stdout).fm : {};
+     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
+     moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
+@@ -836,10 +849,10 @@ function check(msgFile) {
+         if (late.length) errors.push(`the closing commit of ${id} stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; commit the work first so the review covers it)`);
+       }
+     }
+-    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task) still the range base's
++    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task, output_off) still the range base's
+     const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
+     const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
+-    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
++    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task, output_off: baseTable.output_off } : { ...baseTable, ...pin };
+     // fields read from the lane's own copy, each pinned (round 6): the Files line the rule lists resolve from is the UNION of the launch copy and the staged one (narrowing it cannot drop a list), and the assignees the grounder must differ from are the staged, HEAD and board ones together
+     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
+     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
+diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
+index f7574a442f9c68a068ea43d496e1acb879b9c124..f09265be5332497f1f9486b6240e960d584e527f 100644
+--- a/scripts/lib/review-template.js
++++ b/scripts/lib/review-template.js
+@@ -133,9 +133,10 @@ function extractSections(markdown, wanted) {
+   return out.join('\n\n');
+ }
+ 
+-/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++/** The number of the next review round of a task: the highest N of the context-r<N>.md files in `dir` (docs/reports/reviews/<task>/) plus one (0 when there is none), so a gap never names an existing file again (T7, task-453). ONE count, shared by the brief that writes the file and the launch that names it. */
+ function contextRound(dir) {
+-  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++  const ns = fs.existsSync(dir) ? fs.readdirSync(dir).map((f) => /^context-r(\d+)\.md$/.exec(f)).filter(Boolean).map((m) => Number(m[1])) : [];
++  return Math.max(0, ...ns) + 1;
+ }
+ 
+ module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index ef391b9fc0f186d069ebaff84481d81381120fbd..aa1844e5cc3d08193fd417c25c20a0c23338c373 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -98,3 +98,24 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stderr).toMatch(/not found|no such task|does not exist/i);
+   });
+ });
++
++// task-453 (SEARCHFIX.5 T1, T8; GROUNDER-C, Spec 137 Rule 3 as amended, 137_mcqueue.md:98): a build or fix ticket names the two-commit close; an empty AC block says so
++describe('task-453: the two-commit Status line and the empty AC block', () => {
++  it('T1: a build task ticket names the amended Rule 3 (137_mcqueue.md:98) and the closing commit limits; a queue-row task keeps the old line', () => {
++    const { d, plan, row } = fixture();
++    const r = brief(d, plan);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toMatch(/Spec 137 rule 3/);
++    expect(r.stdout).toContain('Status line (Spec 137 rule 3 as amended by its note of 2026-11-20, 137_mcqueue.md:98): the work lands first; the closing commit carries only the lane report dir, the review context dir, the task file and the decision record');
++    const q = brief(d, row);
++    expect(q.status, q.stderr).toBe(0);
++    expect(q.stdout).toContain('Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84)');
++  });
++  it('T8: a task with no acceptance criteria prints "(none found in <task file>)" under the Done-condition', () => {
++    const d = makeProject();
++    const t = mk(d, 'No criteria here', ['--type', 'build', '-d', 'Scope text.']);
++    const r = brief(d, t);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toMatch(/^Done-condition:.*\n {2}\(none found in .*task-\d+ - No-criteria-here\.md\)$/m);
++  });
++});
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 841ac0a4b7a13b1f7bb3c52d4dbcec6610699441..08e18774f348339a7e8d6fba1ffd1177df39a608 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -17,6 +17,14 @@ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs'
+ function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
+   const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
+   if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
++  // task-453 S1: the launch gate grounds seat findings (a 20+ character quote of its own, on the cited line of a file the board holds); the shared program cites docs/a.md, which this board
++  // does not hold, with one quote for every seat, so each seat verdict is re-pointed at line 2 of its own seat report and the evidence committed again
++  const gp = path.join(board, `docs/reports/reviews/${task}/GROUNDER-PLAN.md`);
++  const names: Record<string, string> = { int: 'integration', rea: 'reality-check', reg: 'regression' };
++  if (!fs.existsSync(gp)) return; // a task the program writes no evidence for (no resolvable lists)
++  const g = fs.readFileSync(gp, 'utf8').replace(/^(int|rea|reg)#1 REJECTED docs\/a\.md:1 "a small note that changes nothing" (.*)$/gm, (_m, ab: string, why: string) => `${ab}#1 REJECTED docs/reports/reviews/${task}/seat-${names[ab]}-1.md:2 "${ab}#1 LOW: a small note" ${why}`);
++  fs.writeFileSync(gp, g);
++  git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'plan evidence: seat quotes');
+ }
+ 
+ type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
+@@ -562,6 +570,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     refused(r, /--rule-lists/);
+     console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);
+     const ok = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
++    expect(ok.status, ok.stdout + ok.stderr).toBe(3); // D4 (task-453): the run stops on the fake table's own content, not on the override
++    expect(ok.stderr).toMatch(/cannot read the rule-list table or one of its path maps/);
+     expect(ok.stderr).not.toMatch(/--rule-lists/);
+     const e = fixture({ files: 'docs/reports/lanes/x/', type: 'build' });
+     refused(lane(e), /no rule list/);
+@@ -681,9 +691,9 @@ describe('plan-prep review (task-418): refusals, one line, nothing written; each
+ describe('plan-prep review: the calls and what they leave', () => {
+   it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
+     const f = prepFixture();
+-    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
++    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-agents-s7-s11' }); // task-453 (RR-0450): queue-137 is off the lane-tools row
+     expect(bad.status, bad.stdout + bad.stderr).toBe(1);
+-    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
++    expect(bad.stderr).toMatch(/in-plan-compliance-agents-s7-s11\.txt/);
+     expect(names(f, /^(in-)?plan-/)).toEqual([]);
+     const ok = review(f);
+     expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+@@ -800,7 +810,7 @@ function confirmSeat(f: Fx, seat = 'integration', sev = 'HIGH') {
+   const body = `# ${seat} seat\n### ${abbr}#1 ${sev}: a real finding\n`;
+   fs.writeFileSync(path.join(d, `seat-${seat}-1.md`), body);
+   let g = fs.readFileSync(path.join(d, 'GROUNDER-PLAN.md'), 'utf8');
+-  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED $1 ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`);
++  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED docs/reports/reviews/${f.task}/seat-${seat}-1.md:2 "${abbr}#1 ${sev}: a real finding" ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`); // task-453 S1: the verdict quotes its seat line
+   fs.writeFileSync(path.join(d, 'GROUNDER-PLAN.md'), g);
+ }
+ 
+@@ -960,3 +970,34 @@ describe('plan-prep commit and the end to end (task-418)', () => {
+     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
+   });
+ });
++
++// task-453 (SEARCHFIX.5; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336; GROUNDER-D D16, T9): the brief's output lists and the failure after the take
++describe('task-453: output_off in the brief, and the recovery lines after a failure past the take', () => {
++  const extraOf = (o: Parameters<typeof fixture>[0]) => {
++    const f = fixture(o);
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra?: string[] } | null;
++    return (spec?.extra ?? []).join('\n');
++  };
++  it('a build and a fix task are not asked for out-compliance-plan-protocol (output_off); a check task still is (the close asks it at either stage)', () => {
++    for (const type of ['build', 'fix']) {
++      const x = extraOf({ type });
++      expect(x, type).not.toContain('out-compliance-plan-protocol');
++      expect(x, type).toContain('plan-protocol is asked at the plan stage only');
++      expect(x, type).not.toContain('out-compliance-five-words');
++    }
++    expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
++  });
++  it('D16 / T9: a brief.mjs that exits 1 after the take: exit 1, FAILED at, the undo command and the worktree and branch removal lines; the task stays RUNNING', () => {
++    const f = fixture();
++    fs.writeFileSync(path.join(f.pt, 'brief.mjs'), 'process.exit(1);\n');
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(1);
++    expect(r.stderr).toMatch(/FAILED at brief\.mjs/);
++    expect(r.stderr).toMatch(/undo with: .*task edit task-\d+ -s LATER -a ''/);
++    expect(r.stderr).toContain(`git -C ${f.board} worktree remove ${f.wt}`);
++    expect(r.stderr).toContain(`git -C ${f.board} branch -D wf2/t1`);
++    expect(statusOf(f)).toBe('RUNNING');
++  });
++});
+

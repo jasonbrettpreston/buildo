@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.069Z file_sha256=497d973b72c5a1d04ba91aead17b7544ed8e6307a412df19948fb5685fc0e13c prompt_sha256=311f6630d0f265d4699f7b2a4cd07fe38bcda12415dafc19b63c599e5fa662d9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+BUG severity=LOW — AC #4 "A seat finding needs a quote, a cited line and a reason" — src/tests/backlog/check-lane-close.logic.test.ts / scripts/hooks/check-lane-close.mjs "if (v.word !== 'CONFIRMED' && v.reason.length < 30) errors.push(...)" — seat findings now flow through grounderErrors, but a CONFIRMED seat finding is accepted with no reason, so the third element of AC #4 holds only for REJECTED and CONFLICT — require a 30+ character reason on CONFIRMED seat findings too, or narrow AC #4 to "a rejection carries its reason".
+
+MET — AC #1 — scripts/hooks/check-lane-close.mjs "+    const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — a build or fix close leaves out the output_off planning list, and the test closes both a build and a fix task with dropEv.
+MET — AC #2 — src/tests/backlog/rule-lists.logic.test.ts "expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);" — emptying output_off keeps every list, so plan-protocol comes back.
+MET — AC #3 — scripts/hooks/check-lane-close.mjs "+    if (inMerge) { const mh = git(['rev-parse', `MERGE_HEAD:${f}`]); const ix = git(['rev-parse', `:${f}`]); if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue; }" plus "if (!tableInTree && !tableInHead && boardRef && git(['cat-file', '-e', `${boardRef}:scripts/analysis/rule-lists.json`]).status !== 0) return 0;" — only merge-only staging is skipped and a branch with no table reads the board.
+MET — AC #5 — src/tests/backlog/check-lane-close.logic.test.ts "expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');" — the real table protects backlog-lib.mjs, so a lane edit is refused unless its Files line names it.
+MET — AC #6 — scripts/lib/review-template.js "return Math.max(0, ...ns) + 1;" — the next round number is the highest existing plus one.
+MET — RR-0452 "do not add the addiitonal 3 questions" — src/tests/backlog/rule-lists.logic.test.ts "expect(t.every_task).toEqual(['plan-protocol']);" — five-words is off at both stages with nothing replacing it and no three questions added.
+MET — pasted task-410 note "every field that decides what is reviewed ... still from the range base" — scripts/hooks/check-lane-close.mjs "const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task, output_off: baseTable.output_off } : { ...baseTable, ...pin };" — output_off is pinned to the range base.
+REJECT — AC #1 "A build or fix task closes without output reviews for the two planning lists" — accused of failing for a build task that owns the table (task-453 itself still needs out-compliance-plan-protocol) — that is the pinned-base rule the pasted task-410 note requires (a lane may not switch off its own review), so the AC reads as applying to an ordinary task, not the one editing the table.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  163386ms (163.4s)
+📊 Tokens — total: 63814, input: 32380, output: 31434, reasoning: 30572

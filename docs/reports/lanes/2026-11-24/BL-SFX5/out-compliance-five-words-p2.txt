@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.844Z file_sha256=3a098a8da834ee00fd41ada42142eef99272c62e8b21bdfb85ba4da175b03bff prompt_sha256=e05d520d3a0a947b4857c8de75f8e1088e10bbaa46e309b3df0ad46070c771c0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-453 card (1) "plan-protocol for output reviews only, by one data line (output_off) and a small reader of it" — scripts/hooks/check-lane-close.mjs:525 "const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — the reader fires only when build is true (build and fix), so a check task's output review still receives plan-protocol; the narrower scope rests only on a test name, src/tests/backlog/backlog-lane.logic.test.ts "expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');" — apply outputLists to the out phase for every task type (keep the plan phase unfiltered), or have the card state the build and fix scope.
+
+DEFER severity=LOW — task-453 card AC #4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs:152 "sha(s.text).slice(0, 12) === s.sha" — a seat report whose content no longer matches its recorded sha contributes no finding and raises no error on a close that is not build, because outcomeErrors runs only under "if (build) {" at scripts/hooks/check-lane-close.mjs:589, so editing a seat report silently removes its findings from the evidence check — refuse a seat whose sha does not match inside grounderErrors as well, so the check does not depend on task type.
+
+MET — task-453 card AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/hooks/check-lane-close.mjs:525 — outputLists removes the table's output_off lists for build and fix closes, and src/tests/backlog/check-lane-close.logic.test.ts "control: output_off [ev] and no out-compliance-ev closes a build task and a fix task" closes both with status 0.
+
+MET — task-453 card AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — src/tests/backlog/rule-lists.logic.test.ts "expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);" and "expect(t.output_off).toEqual(['plan-protocol']);".
+
+MET — task-453 card AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs:739 "let table = boardTable;" and the MERGE_HEAD blob comparison at :752, with tests "S2 PLANTED DEFECT: a lane that deleted the table is judged by the board copy" and "S3 PLANTED DEFECT: during a merge a finished move whose blob is not the merged branch one is checked".
+
+MET — task-453 card AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — src/tests/backlog/check-lane-close.logic.test.ts "ST4 (AC #5): the real table protects scripts/analysis/backlog-lib.mjs" plus the staged-protected and Files-line refusals in "ST4: a closing commit that stages backlog-lib.mjs is refused".
+
+MET — task-453 card AC #6 "The CHK.3 proof row reads notbuilt with its reason; the next round number is the highest plus one" — scripts/lib/review-template.js:139 "return Math.max(0, ...ns) + 1;" and src/tests/proof-slice.logic.test.ts "expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');".
+
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — src/tests/backlog/rule-lists-table.logic.test.ts "expect(table().rows.find((r) => r.id === 'lane-tools')!.lists).toEqual(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']);" and the per-row loop excluding queue-137 and orchestrator-doc17.
+
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — src/tests/backlog/rule-lists.logic.test.ts "expect(t.every_task).toEqual(['plan-protocol']);" with no three-questions list added anywhere in the chunk.
+
+MET — RR-0419 / card Files line — the chunk's nine paths (scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js and the seven src/tests files) all appear on the card's Files line, so no path outside the named set is touched.
+
+REJECT — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — turning the five-words list off is accused of removing a Glossary obligation — the Glossary defines gate V inside step-validate.mjs, not a rule list attached to reviews, and RR-0452 (:2338) rules the list off at both stages, so nothing in the pasted Glossary is breached.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  201192ms (201.2s)
+📊 Tokens — total: 68994, input: 29979, output: 39015, reasoning: 37766

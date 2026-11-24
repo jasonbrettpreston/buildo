@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:46:08.915Z file_sha256=c51641c93aebd7bac7ccde188f0aca38445487abf946d3265619ae0a803e551b prompt_sha256=1ad8361f1bd9735cd81569eaff83302831728c94b4b51165be57812f9c327050
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-step-132-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card §"Must not" "Must not: add a new resolution value, or touch the report meter in the lookup route." and "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "answer": "ledger", — the descriptor and census hunks rewrite the surface's emits (none to ledger, ledger_events [property_view]), metering.why and outputs.why/tables, and src/tests/consumer-parcel-lookup.infra.test.ts now locks them (`expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']])`), none of which any pasted AC or folded-finding name names — revert the emits/metering/outputs hunks in both JSON files and keep only the exact-opens note plus the count corrections, or record the ruling id that names the meter-description change in the card.
+
+DEFER severity=MED — Acceptance criteria "#6 The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — only cases 1-23 and 25-28 run against resolveAddress; 24, 29 and half of 23 are asserted by reference to a file this chunk does not touch, so AC #6 is not proven here — add case 24 and case 29 rows to the T5 it.each table (expected no_match) or cite their exact test ids and chunk.
+
+DEFER severity=MED — card "The plan's section 2 lines are this card's acceptance tests, each red first." with x-captures.5 "A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green" — src/tests/search-parser-guard.logic.test.ts "it('RED plant: a source with a third `unique` return is caught', () => {" — the only red-direction proof inside the material is T6's count plant; T1-T5 and the T7/T8 locks are shown green only, and the notes' "red proven by the refused commit attempt (red.out in the lane dir)" is not pasted, so red-first is self-reported — paste red.out as the witness or add one red plant per AC to the three touched test files.
+
+DEFER severity=LOW — x-captures.3 "Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work." — NONE — the resolver changes existing outcomes (a one-row typeahead, e.g. case 12 "2760 Yon", moves from unique to text_candidates) yet no explained-diffs entry and no Defect Ledger id appears anywhere in the nine paths — add the golden explanation with its Defect Ledger id, or record in the card that no golden covers this surface.
+
+DEFER severity=LOW — Spec 100 dated note 2026-11-24 "a bare dash form (\"2760-4\", \"4-2760\") carries no unit word, so on a miss it lists the lots at both numbers" — src/tests/search-parser-guard.logic.test.ts "['27b 2760-4 Yonge St', { q: '2760-4 Yonge St', exact: { '2760|YONGE': Y2760 }, resolution: 'text_candidates'" — only the "2760-4" order is exercised; the "4-2760" order the clause also names has no case, so half the clause rests on the regex `/^(\d+)-(\d+)[A-Z]?$/.exec(num)` alone — add a "4-2760 Yonge St" row to the T5 table.
+
+MET — AC #1 "A typeahead that leaves exactly one row returns a list (text_candidates), never unique, unless that row is the typed address in full" — src/lib/admin/parcel-lookup.ts — `if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);`
+MET — AC #2 "\"Gerrard St W\" with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts — `const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);`
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts — `const typeG = guardByType(exact, exactTruncated ? '' : typedType);`
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts — `function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }`
+MET — Spec 100 dated note 2026-11-24 "The JOIN key, `normalizeAddressNumber`, `parseLinearName` and the parity test are unchanged (address.ts is not edited)" — diff paths — no hunk on src/lib/parcels/address.ts or the parity test
+MET — card §"Must not" "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts — every new branch reuses 'text_candidates' / 'unique', no new resolution literal
+MET — Spec 89 dated note 2026-11-24 "`resolveAddress` gains an optional third argument `keepPeriods`, which the admin route does not pass." — src/lib/admin/parcel-lookup.ts — `keepPeriods = false,` in the signature
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 5
+Rules met: x-captures.4, x-crossstep.1, x-tooling.1
+
+---
+⏱  96435ms (96.4s)
+📊 Tokens — total: 55786, input: 35693, output: 20093, reasoning: 18678

@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:47:00Z'
+updated_date: '2026-11-24T16:12:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -99,4 +99,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-268 · Backlog; o
 Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). PROOF.S now WAITS on the page conversion (McFix G: task-390, 391, 392, 393) and the legal-line move (task-389): both change the search pages, so the proof runs on the converted pages.
 
 2026-11-24: ordered after the SEARCHFIX-PRIORITY cards (RR-0447, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308). The 29 typed-address cases of docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md join this proof's checklist (orchestrator reading; not yet ruled).
+
+2026-11-24 (task-453 SEARCHFIX.5 ST5, GROUNDER-SEATS J): the CHK.3 proof row chk3-nothing-new in scripts/analysis/proof-slices.json is now notbuilt, reason "CHK.3 reads the staged diff; --all gives it no input". Commit 4c5bfa249.
 <!-- SECTION:NOTES:END -->

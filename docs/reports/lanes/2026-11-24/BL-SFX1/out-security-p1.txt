@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T16:28:22.283Z file_sha256=6e93104e4295b7e81d29864554cfed8adc681f48c917952721fbac2c24bd53ee prompt_sha256=ee2b9aeb5027b286d3c254aea3f1d285258538915d754d18919ac0764cf35e95
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-security-p1.txt (model: deepseek-reasoner)
+
+Surfaces touched: admin, entitlements, PII (address lookup), no money or auth path changed.
+
+REJECT — src/lib/admin/parcel-lookup.ts:396 "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — looks like a LIKE wildcard/escape bypass: a typed `%` or `_` widening the typeahead and unlinked reads across unrelated addresses — not exploitable: `%`, `_` and the backslash itself are escaped, the value is still bound as the $1 parameter so the SQL text is never rewritten, the unlinked read keeps its `!/[%_]/.test(streetName)` guard, and T3 pins the emitted pattern (`'\\%%'`, `'MA\\_N%'`).
+
+REJECT — src/lib/admin/parcel-lookup.ts:333 "const raw = await resolveAddress(q, { ...opts, matchMistyped: false }, true);" — looks like unbounded self-recursion or a way to strip the fuzzy matcher and the letter/dash fallback by a crafted query — not exploitable: the recursive call passes keepPeriods true which blocks re-entry, it runs only when `q` holds a period and the stripped street name differs, and matchMistyped is forced false on that branch so no extra read is unlocked.
+
+REJECT — src/lib/admin/parcel-lookup.ts:307 "if (same.length > 0) return { rows: same, conflict: false };" — looks like the type guard can silently open a lot the typed address does not name (IDOR-shaped: reach a parcel by guessing a sibling street type) — not exploitable: the guard only narrows rows the exact read already returned, never to an empty set, every parcel it can open is the same public lot already reachable as a `text_candidates` entry, and the callers authorise at route level (`401` at route.ts:54, `403` at route.ts:59 per the descriptor), not per lot.
+
+DEFER severity=LOW — scripts/surfaces/_schema/census/contracts.json "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, ...)" — the stated projection count moves from 24 to 80 in the same descriptor that is the only record of what leaves the server, and the whitelist array itself is not in this chunk — rationale: the parity check set-equals the projection to `inputs.field_whitelist`, so a genuinely widened whitelist would still pass green; the grounder should diff the whitelist names against the 24 previously named and against CONSUMER_WITHHELD_LEGACY_COLS, cannot see them here.
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling" — a client-supplied key is asserted to move a hit between counted and not counted on a metered parcel_tool surface, which is the exact shape of a self-served entitlement waiver, and the handler is in route.ts:102-114 which is not in this chunk — rationale: cannot see whether `semi=answered` can shorten the meter or only hold a page; the grounder should read route.ts and confirm the meter decision does not rest on the client key alone.
+
+VERDICT: PASS on exploitability
+Surfaces touched: admin, entitlements, PII
+
+---
+⏱  32558ms (32.6s)
+📊 Tokens — total: 37396, input: 31105, output: 6291, reasoning: 5511

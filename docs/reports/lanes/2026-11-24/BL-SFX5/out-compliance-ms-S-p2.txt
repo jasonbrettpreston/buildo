@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.844Z file_sha256=47f27f832a8d79c0f58b9dc33bcecda546b2523b443fa3aa1d20430e22f9c7e6 prompt_sha256=85b1cd02ba9d1a256b4f86044b0c844dd4322ea41a73bbdf44ecff08e1e9f713
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — AC #1 and the plan-stage ruling "plan-protocol for output reviews only, by one data line (output_off) and a small reader of it" — src/tests/backlog/backlog-lane.logic.test.ts "expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');" — a check task's output review still carries plan-protocol, so the drop is carved out by task type in the brief and not by the one data line the ruling names — assert not.toContain for the check task too, or get the type carve-out written into the card before merge
+DEFER severity=LOW — AC #4 "A seat finding needs a quote, a cited line and a reason" — src/tests/backlog/check-lane-close.logic.test.ts "it('S1 PLANTED DEFECT: a seat verdict needs a 20+ character quote on its cited line and a 30+ character reason (was accepted)'" — only quote length and reason length are exercised; no case cites a wrong or absent line, so the "cited line" half rests on nothing visible — add a case whose quote is 20+ characters but not on the cited line, refused
+DEFER severity=LOW — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — src/tests/backlog/check-lane-close.logic.test.ts "refused(scenario({ tableEdit: withRow, laneWork: { 'scripts/analysis/backlog-lib.mjs': '// edited\n', 'src/a.ts': `${AFILE}// x\n` } }), /outside the task's Files line: scripts\/analysis\/backlog-lib\.mjs/);" — only the two refusal paths are shown; the "unless its card names the file" half has no passing case — add a close whose Files line names backlog-lib.mjs, expecting exit 0
+DEFER severity=LOW — AC #3 "A branch with no rule table still reads the board" and card text "The close check no longer passes a task with no review when the branch has no rule table or during a merge" — src/tests/backlog/check-lane-close.logic.test.ts "expect(scenario({ table: 'never', mutate: () => ({}) }).status).toBe(0);" — a repo with no rule table in branch or board still closes with no review, which reads as the fail-open the card says is closed — record this carve-out in the card or refuse when neither branch nor board holds a table
+MET — AC #6, next round number — scripts/lib/review-template.js "return Math.max(0, ...ns) + 1;" — the highest context-rN plus one, with the gap test contextRound(dirWith(['context-r1.md', 'context-r3.md'])) expecting 4
+MET — AC #6, CHK.3 proof row — src/tests/proof-slice.logic.test.ts "expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');" — the row reads notbuilt with its reason and no argv
+MET — AC #5, protected list data — src/tests/backlog/check-lane-close.logic.test.ts "expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');" — the real table protects the helper file
+MET — AC #3, merge staging — src/tests/backlog/check-lane-close.logic.test.ts "refused(scenario({ mergeHead: 'other', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);" — only the merge-only blob is skipped, the other blob is checked
+MET — RR-0452, five-words off at both stages with nothing added — src/tests/backlog/rule-lists.logic.test.ts "expect(t.every_task).toEqual(['plan-protocol']);" — the list is defined but off, and no replacement questions appear in the diff
+MET — RR-0450, queue and orchestrator lists off, agent lists kept on lane-tools — src/tests/backlog/rule-lists-table.logic.test.ts "for (const l of ['queue-137', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);" — the two lists come off every row and only lane-tools keeps agents-s5-1to3 and agents-s7-s11
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: none
+
+---
+⏱  106514ms (106.5s)
+📊 Tokens — total: 43620, input: 22793, output: 20827, reasoning: 19801

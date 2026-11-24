@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
   });
 });
 
+// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
+// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
+// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
+// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
+const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
+const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
+const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
+const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
+const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
+type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
+const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
+
+describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
+  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
+    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
+  });
+  it('RED plant: a source with a third `unique` return is caught', () => {
+    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
+  });
+});
+
+describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
+  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
+  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
+  it('the census row equals the emitted descriptor', () => {
+    expect(census).toEqual(d);
+  });
+  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
+    const story = d.docs.data_story as string;
+    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
+    expect(story).not.toContain('24 fields');
+  });
+  it('every stated count equals the array it describes', () => {
+    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
+    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
+    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
+    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
+    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
+  });
+  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
+    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
+  });
+});
+
+describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
+  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
+    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
+    const at = spec.indexOf(SFX_MARK);
+    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
+    const end = spec.indexOf('\n', at);
+    const note = spec.slice(at, end === -1 ? spec.length : end);
+    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
+  });
+});
+
 describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
     const src = route();

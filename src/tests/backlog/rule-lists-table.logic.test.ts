@@ -26,27 +26,27 @@ describe('V2.LIST round 2: the table rows', () => {
     expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
     expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
   });
-  it('a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133', () => {
-    const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
-    expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
-    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four);
+  it('a panel record and an MF pre-registration get the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; five-words off since task-453, RR-0452); a by-law pre-registration keeps bylaw-133', () => {
+    const three = ['plan-protocol', 'inc-S', 'ms-S'];
+    expect(lists('docs/reports/panels/MF-94.json')).toEqual(three);
+    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(three);
     expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133');
   });
-  it('a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)', () => {
+  it('a generated report and a 127-* generated file get eng-all and the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; task-453, RR-0452)', () => {
     const g = lists('docs/reports/generated/x.md');
-    expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
-    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(g).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
     const t = table().lists['policy-124-s2-s5']!;
     expect(t.file).toBe('docs/specs/01-pipeline/124_step_standard_policy.md');
     expect(t.sections).toEqual(['2. The rules', '5. Register of rulings']);
   });
   it('the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed', () => {
-    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
   });
   it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
-    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
     const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
     expect(row.why).toContain('no governing spec found: operator ruling owed');
   });
@@ -165,7 +165,7 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
     expect(r.status, r.stderr).toBe(0);
     const j = JSON.parse(r.stdout) as { exempt: string[]; lists: { id: string }[] };
     expect(j.exempt).toEqual([]);
-    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
   });
   it('every exempt glob beyond the lane and review records names its proving check in $comment (planted defect: a glob with no named check fails)', () => {
     const t = raw();
@@ -207,7 +207,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
     expect(resolveIn(real, FILES[0] as string)).toEqual(expect.arrayContaining(SURFACE));
     const without = resolveIn(real.filter((g) => g !== glob), FILES[0] as string);
     for (const id of SURFACE) expect(without).not.toContain(id);
-    expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(without).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
   });
   // MF-95 C-T5 (task-430): the range is computed from the real register (readFeRows throws unless "Next free id" is the row count plus one),
   // not pinned to 44, so a new FE row moves it by itself; planted: one id more than the register holds is refused.
@@ -226,7 +226,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
 // task-375: lens-input takes --context (A4); see the deviation note on the task
 
 // task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ("DEFER -> review_followups.md with reasons", 08_agents.md:350) names docs/reports/review_followups.md, so the table must know it
-// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attaches agents-s7-s11 (holds rule 6) and queue-137.
+// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attached agents-s7-s11 (holds rule 6) and queue-137 until task-448; it attaches no list now.
 describe('task-412: review_followups.md has its Spec 08 home', () => {
   const FILE = 'docs/reports/review_followups.md';
   const resolveIn = (rows: Row[]) => {
@@ -240,7 +240,7 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
     return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
   };
   it('the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)', () => {
-    expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+    expect(lists(FILE)).toEqual(['plan-protocol', 'inc-S', 'ms-S']);
     const rows = table().rows.filter((r) => r.id === 'review-followups');
     expect(rows).toHaveLength(1);
     expect(rows[0]!.lists).toEqual([]);
@@ -365,11 +365,29 @@ describe('task-431: the engineering standards sent by side', () => {
     const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: [...r.lists, ...FOUR] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
     expect(() => handbookOnly(planted, 'planted: the four back on specs-web-admin')).toThrow();
   });
-  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists', () => {
+  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, no row attaches the queue or doc-17 lists (task-453, RR-0450), and only the lane-tools row attaches the agent lists', () => {
     const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a', 'storage-doc16', 'mobile-100', 'mobile-96', 'policy-124-s2-s5'];
     for (const r of table().rows) {
       for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
-      if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+      for (const l of ['queue-137', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+      if (r.id !== 'lane-tools') for (const l of ['agents-s5-1to3', 'agents-s7-s11']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
     }
+  });
+});
+
+// task-453 (SEARCHFIX.5; RR-0450 MORNING-DECISIONS.md:2325, RR-0452 :2336): the lane-tools row loses the queue rules and the orchestrator note; the review tools resolve through lane-tools only
+describe('task-453: the lane-tools row and the review tools', () => {
+  it('the lane-tools row attaches the two Spec 08 lists and eng-all only (RR-0450)', () => {
+    expect(table().rows.find((r) => r.id === 'lane-tools')!.lists).toEqual(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']);
+  });
+  it('T2: scripts/gemini-review.js resolves through lane-tools (not refused, not the step handbook)', () => {
+    const l = lists('scripts/gemini-review.js');
+    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
+    expect(l).not.toContain('step-132');
+  });
+  it('item 4: scripts/lib/review-template.js draws no step-132, eng-back or eng-shared and still resolves through lane-tools', () => {
+    const l = lists('scripts/lib/review-template.js');
+    for (const x of ['step-132', 'eng-back', 'eng-shared']) expect(l, x).not.toContain(x);
+    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
   });
 });

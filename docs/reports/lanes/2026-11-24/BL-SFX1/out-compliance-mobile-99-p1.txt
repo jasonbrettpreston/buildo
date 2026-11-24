@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:00:40.557Z file_sha256=c0d435afcea73478d7f2d670ba4695dc4efaafbe57cbed14f051cfc82a60c43d prompt_sha256=2e5e0f987c69894d2d5781a0971b3f02107f834ecf20c5b8204a1a2585490f90
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card AC #4 "Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" — the never-a-dead-end claim is carried only for the comma and word-separated unit forms; a separator-free form is left untouched by design ("\"Suite 12 Elm St\" and \"#12 Elm St\" are untouched") and the paired test asserts only that it does not parse to house number 2, so that input still lists nothing and opens nothing — acceptable because the input is ambiguous with a house number and the card's own plain words name only the comma form, so it can be deferred.
+DEFER severity=LOW — card AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — two of the 29 seat cases are not carried by this change and are reached only through a comment naming a file outside the changed paths, so 29-of-29 is not demonstrated by this material — the cited inputs are screen-level and already covered elsewhere, so the gap can be deferred.
+DEFER severity=LOW — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the diff carries the Spec 100 notes (after the 2026-11-19 notes and after the MF-35 note) and the Spec 89 note, but no doc-2 G.1/A.3 objective note and no task-69 append-note appear anywhere in the material; they exist only as the Implementation Notes line "Notes owed landed: ... doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)" — cannot see the backlog-CLI records here, so this is a verification gap, not a proven miss.
+
+MET — card AC #1 — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row typeahead opens only when the printed number, street name and street type match the typed ones, and matchType stays 'typeahead'.
+MET — card AC #2 — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is not narrowed by direction, so "Gerrard St W" is the list.
+MET — card AC #3 — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" plus "if (types.some((t) => t === '')) return { rows, conflict: false };" — the exact rows are narrowed by the typed type, never to an empty set, and not when any row prints no type.
+MET — card AC #5 — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — a typed % or _ is escaped in the typeahead prefix and in the unlinked prefix.
+MET — card AC #4 (unit and period forms) — src/lib/admin/parcel-lookup.ts "if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName)" — the text is tried with its periods kept first and only falls through when that is no_match, so a stored key holding a period opens as before.
+MET — card "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts "resolution: 'text_candidates', lotMap: null" — every new list answer reuses the existing value through conflictList.
+MET — card "Must not: ... touch the report meter in the lookup route" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "No `resolution` value is added and the report meter is untouched." — src/app/api/parcels/lookup/route.ts is not among the nine changed paths, so the meter code is untouched.
+MET — Spec 99 §1 gate "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — src/lib/admin/parcel-lookup.ts (server resolver only) — the change adds no store, no MMKV blob, no bridge and no routing effect, so §2.1's hard rules are not engaged.
+
+REJECT — RR-0442 "if its a semi potentially - you need to state that?" — the change is accused of not stating the semi possibility — the pasted descriptor already records "an unsure lot held before its semi question" as the design of task-360, so this card does not own that clause.
+REJECT — card "Nothing is added that the plan or a ruling does not name (RR-0392...)" — the change is accused of rewriting the descriptor emits answer "none" to "ledger" beyond the card's named findings — the descriptor is a file the card names and the added T7 lock grounds the answer in surface.schema.json rule-9 ("none" on a metered surface), so it is a grounded correction.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: none
+
+---
+⏱  198301ms (198.3s)
+📊 Tokens — total: 71922, input: 34226, output: 37696, reasoning: 36365

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:00:40.563Z file_sha256=f89f3ada64eb69bab37d20b4e13c87adfcff689f0a75dee4655ea849d9209d0c prompt_sha256=8e6480d1e1580546d73baa934f7c75aae5c8389f9bf002c524203db847beefed
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
+
+MET — AC #1 "A typeahead that leaves exactly one row returns a list (text_candidates), never unique, unless that row is the typed address in full" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — the one-row typeahead opens only when isTypedAddressInFull passes, otherwise it returns text_candidates.
+
+MET — AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window passes null so the direction guard cannot narrow it to the one W row.
+
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — the typed street type narrows the exact rows and guardByType never returns an empty set.
+
+MET — AC #4 "Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" — leading-unit strip, raw-first period pass and the bare-number fallback all return the lot or the list.
+
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — likePrefix escapes both wildcards in the typeahead and unlinked reads.
+
+MET — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "it.each(cases)('T5 (AC #6) case %s'" — the cases array carries 29 numbered entries (1-23, 25-28 with 27a/27b/27c).
+
+MET — Task "Must not: add a new resolution value, or touch the report meter in the lookup route" — src/lib/admin/parcel-lookup.ts "resolution: 'text_candidates'" — only the five existing resolution values are used, and src/app/api/parcels/lookup/route.ts is not in the diff.
+
+MET — RR-0278 "I should only be charged a report if I find the address and lot I'm looking for and a report is produced" — src/lib/admin/parcel-lookup.ts "if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };" — non-exact matches now list instead of opening, so no page is produced and no report is counted.
+
+REJECT — B1 "Adding a new server query requires a row here" — the diff adds fallback reads (readExact) with no new query-key row — not a real issue, these are SQL reads inside the existing /api/parcels/lookup endpoint, not a new client TanStack query, and the descriptor still names useParcelLookup as the single caller.
+
+REJECT — B1 "every response MUST be parsed through a Zod schema before TanStack stores it" — the resolution changes are not re-parsed by a new Zod schema — not a real issue, route.ts is not in this diff, the Zod boundary is at the unchanged route and mobile hook.
+
+REJECT — AC #1 "which opens as an exact match" — a one-row typeahead that is the typed address in full carries "matchType: 'typeahead'" — not a real issue, it returns resolution 'unique' (the lot opens), matchType is additive, and the change's own dated note keeps 'typeahead'.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  138847ms (138.8s)
+📊 Tokens — total: 61883, input: 34529, output: 27354, reasoning: 26411

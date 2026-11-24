@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T16:20:02.037Z file_sha256=746481d019eaba5cfff9f9333187d6b32bed2b959b96c1061e5d0fbd4f0bb813 prompt_sha256=2cdcd905cdb74fa6fdd019f487e1fcede7d1c0d5ea63a5ce407ccfee10ed45f4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:25 "git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'plan evidence: seat quotes');" — the early return at line 24 only covers a missing GROUNDER-PLAN.md: if the file exists but carries no line matching `^(int|rea|reg)#1 REJECTED docs\/a\.md:1 "a small note that changes nothing"`, the replace is a no-op, the tree is unchanged, and the commit either throws from the git helper or leaves the rewritten plan outside the evidence commit — fix: keep the text read at line 25, `if (g === before) return;` before the write and the commit so a task with no matching verdict is a clean no-op.
+
+BUG severity=MED — src/tests/proof-slice.logic.test.ts:312 "process.env.PATH = saved;" — when PATH was unset `saved` is `undefined`, and assigning `undefined` to `process.env.PATH` stores the literal string "undefined", so every later `run('node', ...)` in that worker resolves PATH to a junk string — fix: `if (saved === undefined) delete process.env.PATH; else process.env.PATH = saved;`.
+
+DEFER severity=LOW — src/tests/backlog/review-templates.logic.test.ts:58 "const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxr-'));" — the four `dirWith` calls and the `nogit-` dir in proof-slice.logic.test.ts:307 are never removed, and the same change uses two temp-root conventions (`os.tmpdir()` here, "fs.realpathSync(process.env.TMPDIR ?? '/tmp')" in proof-slice) — fix: delete the mkdtemp dirs in a try/finally or afterEach and use `os.tmpdir()` in both files so the leak and the platform assumption are both gone.
+
+NIT — src/tests/backlog/check-lane-close.logic.test.ts:1302 "const SEAT1 = '# seat report\n### rc2#1 HIGH: a seat finding\n';" — this is byte-identical to the `SEAT` constant already defined at line 741 of the same file ("const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';"), and SEAT2 repeats the same header line again — fix: define one shared SEAT (and SEAT2 = SEAT + the reality-check line) at file scope.
+
+NIT — src/tests/backlog/check-lane-close.logic.test.ts:1290 "expect(scenario({ table: 'never', mutate: () => ({}) }).status).toBe(0);" — a bare status assertion with no `r.stderr` message, unlike every neighbouring assertion in this file (`expect(r.status, r.stdout + r.stderr).toBe(...)`), so a failure prints only "expected 1 to be 0" — fix: bind the scenario to a variable and pass `${s.stdout}${s.stderr}` as the assertion message.
+
+REJECT — src/tests/backlog/check-lane-close.logic.test.ts:1264 "const dropEv = (l: Lane): Lane => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null });" — nulling a key looks like it empties the file rather than deleting it, which would defeat the "no out-compliance-ev is refused" test — it is correct: this file's Lane convention uses null for an absent file, as the neighbouring `mutate: (l) => ({ ...l, TASK: null })` (line 368) and `'TRIAGE.md': null` (line 681) do.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- plantEvidence commits an unchanged tree when the seat-verdict replace matches nothing (no guard against a no-op rewrite)
+- realIo test restores an unset PATH as the string "undefined", poisoning later spawns in the same worker
+- mkdtemp dirs are leaked and two temp-root conventions are used across the new tests
+
+---
+⏱  102958ms (103.0s)
+📊 Tokens — total: 42168, input: 20829, output: 21339, reasoning: 20420

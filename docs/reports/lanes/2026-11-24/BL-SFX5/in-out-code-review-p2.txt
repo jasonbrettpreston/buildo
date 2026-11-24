@@ -1,0 +1,611 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:c6bb61de9d4d855812ef51c6466994e52c1481e923c2f85efcac38d55dd2cc4c part 1 of 1 chunk 2 of 2
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 841ac0a4b7a13b1f7bb3c52d4dbcec6610699441..08e18774f348339a7e8d6fba1ffd1177df39a608 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -17,6 +17,14 @@ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs'
+ function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
+   const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
+   if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
++  // task-453 S1: the launch gate grounds seat findings (a 20+ character quote of its own, on the cited line of a file the board holds); the shared program cites docs/a.md, which this board
++  // does not hold, with one quote for every seat, so each seat verdict is re-pointed at line 2 of its own seat report and the evidence committed again
++  const gp = path.join(board, `docs/reports/reviews/${task}/GROUNDER-PLAN.md`);
++  const names: Record<string, string> = { int: 'integration', rea: 'reality-check', reg: 'regression' };
++  if (!fs.existsSync(gp)) return; // a task the program writes no evidence for (no resolvable lists)
++  const g = fs.readFileSync(gp, 'utf8').replace(/^(int|rea|reg)#1 REJECTED docs\/a\.md:1 "a small note that changes nothing" (.*)$/gm, (_m, ab: string, why: string) => `${ab}#1 REJECTED docs/reports/reviews/${task}/seat-${names[ab]}-1.md:2 "${ab}#1 LOW: a small note" ${why}`);
++  fs.writeFileSync(gp, g);
++  git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'plan evidence: seat quotes');
+ }
+ 
+ type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
+@@ -562,6 +570,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     refused(r, /--rule-lists/);
+     console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);
+     const ok = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
++    expect(ok.status, ok.stdout + ok.stderr).toBe(3); // D4 (task-453): the run stops on the fake table's own content, not on the override
++    expect(ok.stderr).toMatch(/cannot read the rule-list table or one of its path maps/);
+     expect(ok.stderr).not.toMatch(/--rule-lists/);
+     const e = fixture({ files: 'docs/reports/lanes/x/', type: 'build' });
+     refused(lane(e), /no rule list/);
+@@ -681,9 +691,9 @@ describe('plan-prep review (task-418): refusals, one line, nothing written; each
+ describe('plan-prep review: the calls and what they leave', () => {
+   it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
+     const f = prepFixture();
+-    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
++    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-agents-s7-s11' }); // task-453 (RR-0450): queue-137 is off the lane-tools row
+     expect(bad.status, bad.stdout + bad.stderr).toBe(1);
+-    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
++    expect(bad.stderr).toMatch(/in-plan-compliance-agents-s7-s11\.txt/);
+     expect(names(f, /^(in-)?plan-/)).toEqual([]);
+     const ok = review(f);
+     expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+@@ -800,7 +810,7 @@ function confirmSeat(f: Fx, seat = 'integration', sev = 'HIGH') {
+   const body = `# ${seat} seat\n### ${abbr}#1 ${sev}: a real finding\n`;
+   fs.writeFileSync(path.join(d, `seat-${seat}-1.md`), body);
+   let g = fs.readFileSync(path.join(d, 'GROUNDER-PLAN.md'), 'utf8');
+-  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED $1 ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`);
++  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED docs/reports/reviews/${f.task}/seat-${seat}-1.md:2 "${abbr}#1 ${sev}: a real finding" ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`); // task-453 S1: the verdict quotes its seat line
+   fs.writeFileSync(path.join(d, 'GROUNDER-PLAN.md'), g);
+ }
+ 
+@@ -960,3 +970,34 @@ describe('plan-prep commit and the end to end (task-418)', () => {
+     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
+   });
+ });
++
++// task-453 (SEARCHFIX.5; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336; GROUNDER-D D16, T9): the brief's output lists and the failure after the take
++describe('task-453: output_off in the brief, and the recovery lines after a failure past the take', () => {
++  const extraOf = (o: Parameters<typeof fixture>[0]) => {
++    const f = fixture(o);
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra?: string[] } | null;
++    return (spec?.extra ?? []).join('\n');
++  };
++  it('a build and a fix task are not asked for out-compliance-plan-protocol (output_off); a check task still is (the close asks it at either stage)', () => {
++    for (const type of ['build', 'fix']) {
++      const x = extraOf({ type });
++      expect(x, type).not.toContain('out-compliance-plan-protocol');
++      expect(x, type).toContain('plan-protocol is asked at the plan stage only');
++      expect(x, type).not.toContain('out-compliance-five-words');
++    }
++    expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
++  });
++  it('D16 / T9: a brief.mjs that exits 1 after the take: exit 1, FAILED at, the undo command and the worktree and branch removal lines; the task stays RUNNING', () => {
++    const f = fixture();
++    fs.writeFileSync(path.join(f.pt, 'brief.mjs'), 'process.exit(1);\n');
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(1);
++    expect(r.stderr).toMatch(/FAILED at brief\.mjs/);
++    expect(r.stderr).toMatch(/undo with: .*task edit task-\d+ -s LATER -a ''/);
++    expect(r.stderr).toContain(`git -C ${f.board} worktree remove ${f.wt}`);
++    expect(r.stderr).toContain(`git -C ${f.board} branch -D wf2/t1`);
++    expect(statusOf(f)).toBe('RUNNING');
++  });
++});
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 684414cb0f7132728d0d468feb74f0c8b6c21a01..54d0889a3194b94cbc20e0208002f723aa9505f7 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -18,7 +18,7 @@ const LD = 'docs/reports/lanes/2026-11-20/BL-COMPLY2';
+ const taskText = (o: { milestone?: string | undefined; id?: string; status: string; type?: string | undefined; files?: string | null | undefined; assignees?: string[] | undefined }) =>
+   `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: ${o.milestone ?? 'm-0'}\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
+ const TABLE = {
+-  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
++  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', 'scripts/analysis/backlog-lib.mjs', '.husky/*'],
+   lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' }, msf: { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' } },
+   every_task: ['ev'], milestone_docs: { F: ['msf'] },
+   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
+@@ -75,6 +75,7 @@ type Opts = {
+   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
++  mergeHead?: 'same' | 'other'; // task-453 S3: .git/MERGE_HEAD names a commit whose task file blob is the staged one (same) or the launch commit (other)
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+   // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
+   // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
+@@ -91,7 +92,7 @@ function scenario(o: Opts = {}) {
+   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
+   if (o.eng) withEng(table);
+   o.tableEdit?.(table);
+-  if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
++  if (o.table !== 'never') { w('scripts/analysis/rule-lists.json', JSON.stringify(table)); w('.git/table.json', JSON.stringify(table)); } // task-453 S2: lens-input reads the copy when the lane deleted the table
+   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
+   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+   if (o.eng) w(ENG_PATH, ENG_TEXT);
+@@ -134,7 +135,7 @@ function scenario(o: Opts = {}) {
+   for (const [id, seat, joinedLists] of jobs) {
+     const tplName = seat === 'compliance' ? 'lens-compliance.md' : (o.engTpl ?? `lens-${seat}.md`);
+     const out = path.join(d, LD, `in-out-${seat}-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', fs.existsSync(path.join(d, 'scripts/analysis/rule-lists.json')) ? path.join(d, 'scripts/analysis/rule-lists.json') : path.join(d, '.git/table.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -183,6 +184,7 @@ function scenario(o: Opts = {}) {
+     fs.writeFileSync(tp, tt);
+   }
+   g('add', '-A');
++  if (o.mergeHead) fs.writeFileSync(path.join(d, '.git/MERGE_HEAD'), `${o.mergeHead === 'same' ? g('commit-tree', g('write-tree').stdout.trim(), '-p', 'HEAD', '-m', 'merged branch').stdout.trim() : baseSha}\n`);
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+   if (o.cli) return script('scripts/hooks/check-lane-close.mjs', ['--outcomes', LD], { cwd: d });
+@@ -364,25 +366,25 @@ describe('close check: scope of the lane report, the diff and who may close', ()
+     refused(scenario({ trailer: false, mutate: (l) => ({ ...l, 'GROUNDER.md': null }) }), /GROUNDER\.md/, 2);
+   });
+   it('ATTACK 2b: the board auto-commit (a docs commit message, only the task file staged) is checked too', () => {
+-    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /TASK|lane report|GROUNDER/, 2);
++    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/, 2);
+   });
+   it('ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused', () => {
+-    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /TASK file|task-7/, 7);
+-    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /TASK file|task-7/, 7);
++    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /holds a TASK file naming exactly task-7/, 7);
++    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /holds a TASK file naming exactly task-7/, 7);
+   });
+   it('ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused', () => {
+     refused(scenario({ laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }), /sneaky\.ts/, 8);
+     expect(scenario({ files: 'src/', laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }).status).toBe(0);
+-    refused(scenario({ files: 'docs/reports/lanes/x/' }), /no rule list|exempt/, 8);
++    refused(scenario({ files: 'docs/reports/lanes/x/' }), /resolves to no rule list \(only exempt paths/, 8);
+   });
+   it('ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too', () => {
+     refused(scenario({ assignees: ['@human'] }), /@lane/, 9);
+-    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /@lane|assignee/, 9);
++    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /closes only as that lane's build or fix task/, 9);
+     refused(scenario({ type: 'check', assignees: ['@human'] }), /@lane/, 9);
+   });
+   it('ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished', () => {
+-    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /protected|self/, 10);
+-    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /protected|self/, 10);
++    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /this commit changes protected path\(s\)/, 10);
++    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /this commit changes protected path\(s\)/, 10);
+   });
+   it('fails closed when the rule-list table that HEAD has is gone; a repo that never had one is not held to it', () => {
+     refused(scenario({ table: 'delete' }), /rule-lists\.json/);
+@@ -651,9 +653,9 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
+ const ID = 'out-compliance-first#1';
+ const DEFER_LINE = 'DEFER severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const other = (extra = '', status = 'RUNNING'): Opts => ({ otherTask: true, otherStatus: status, otherExtra: extra, finding: DEFER_LINE });
+-const cli = (o: Opts = {}) => {
++const cli = (o: Opts, want: number) => {
+   const r = scenario({ ...o, cli: true });
+-  expect(r.status, r.stderr).not.toBeNull();
++  expect(r.status, r.stdout + r.stderr).toBe(want); // T11 (task-453): the exact exit status, not only a non-null one
+   return r;
+ };
+ const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o); expect(r.status, r.stderr).toBe(1); expect(r.stderr).toMatch(re); return r; };
+@@ -669,7 +671,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.status, r.stderr).toBe(0);
+   });
+   it('control: the --outcomes command on the same lane prints "checked 1 ids" and exits 0', () => {
+-    const r = cli();
++    const r = cli({}, 0);
+     expect(r.status, r.stderr).toBe(0);
+     expect(r.stdout).toMatch(/^checked 1 ids\n/);
+   });
+@@ -678,7 +680,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.stderr).toMatch(/form that passes: out-compliance-first#1 fixed:<sha>/);
+   });
+   it('PLANTED DEFECT: with no TRIAGE.md at all every id is refused, one line each, and the CLI prints "checked 1 ids" first', () => {
+-    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' });
++    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' }, 1);
+     expect(r.status, r.stdout).toBe(1);
+     expect(r.stdout.split('\n')[0]).toBe('checked 1 ids');
+     expect(r.stdout.split('\n').filter((x) => /no outcome line/.test(x))).toHaveLength(1);
+@@ -739,7 +741,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';
+     const seatLine = (t: string) => `Seat: rc ${LD}/seat-rc.md sha256:${sha(t).slice(0, 12)}\n`;
+     const seated = (o: { file?: string | null; line?: string; verdict?: boolean; outcome?: boolean } = {}): Opts => ({
+-      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : 'rc2#1 CONFIRMED src/a.ts:1 "seat quote"\n'}` }),
++      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : `rc2#1 CONFIRMED src/a.ts:2 "${quoteAt(2)}"\n`}` }),
+       triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${o.outcome === false ? '' : `rc2#1 fixed:${c.sha} ${c.path}\n`}`,
+     });
+     const ok = scenario(seated());
+@@ -768,7 +770,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.stderr).not.toMatch(/ENOENT/);
+   });
+   it('fix round (g399#5): the --outcomes command refuses a lens finding whose verdict line does not parse (control: the default lane prints checked 1 ids, exit 0)', () => {
+-    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } });
++    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } }, 1);
+     expect(r.status, r.stdout).toBe(1);
+     expect(r.stdout.split('\n')[0]).toMatch(/^checked \d+ ids$/);
+     expect(r.stdout).toMatch(/out-compliance-first#1: no complete verdict line/);
+@@ -776,7 +778,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+   it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
+     const r = scenario({ lensFinding: false });
+     expect(r.status, r.stderr).toBe(0);
+-    const c = cli({ lensFinding: false });
++    const c = cli({ lensFinding: false }, 0);
+     expect(c.status, c.stderr).toBe(0);
+     expect(c.stdout).toBe('checked 0 ids\n');
+   });
+@@ -950,7 +952,7 @@ async function planScenario(o: PO = {}) {
+     if (!o.noFolder) files[`seat-${n}-1.md`] = t;
+     mem[rel] = t;
+     seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
+-    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED src/a.ts:${7 + names.indexOf(n)} "${quoteAt(7 + names.indexOf(n))}" a small observation that changes nothing in the plan text`); // task-453 S1: a seat verdict needs its own 20+ character quote on the cited line
+   }
+   if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
+   const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
+@@ -1259,3 +1261,77 @@ describe('task-438 T4: the launch gate requires the engineering seat for a list
+     expect(r.lists).toBe(4);
+   });
+ });
++
++// ---- task-453 (SEARCHFIX.5; fold plan docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md tasks 10 and 11; RR-0440 MORNING-DECISIONS.md:2265, RR-0444 :2290, RR-0450 :2325, RR-0452 :2336) ----
++// SPEC LINK: Spec 08 section 7 rule 4 (08_agents.md:334) and section 5.3 (the grounder rules every finding with a quote and a reason); GROUNDER-QUESTIONS G4 S3 "narrow the skip and fail closed".
++const dropEv = (l: Lane): Lane => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null });
++describe('task-453 item 1: output_off switches an every_task list off for output reviews only (AC #1, AC #2)', () => {
++  it('control: output_off [ev] and no out-compliance-ev closes a build task and a fix task', () => {
++    for (const type of ['build', 'fix']) {
++      const r = scenario({ type, tableEdit: (t) => { t.output_off = ['ev']; }, mutate: dropEv });
++      expect(r.status, `${type}: ${r.stderr}`).toBe(0);
++    }
++  });
++  it('PLANTED DEFECT: emptying output_off turns the list back on: no out-compliance-ev is refused, naming the file', () => {
++    refused(scenario({ tableEdit: (t) => { t.output_off = []; }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++  it('F10 PLANTED DEFECT: a lane whose own table (its Files line names it) sets output_off is still held to the range base output_off', () => {
++    const off = JSON.stringify({ ...TABLE, rows: [...TABLE.rows, TROW], output_off: ['ev'] });
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': off, 'src/a.ts': `${AFILE}// x\n` }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++});
++
++describe('task-453 item 5: the close check fails closed (AC #3, AC #4, AC #5)', () => {
++  it('S2 PLANTED DEFECT: a lane that deleted the table is judged by the board copy: a missing every_task output is refused (was exit 0)', () => {
++    const o: Opts = { tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'] };
++    const ok = scenario(o);
++    expect(ok.status, ok.stderr).toBe(0);
++    refused(scenario({ ...o, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++  it('S2: with no board ref the same deletion is refused with the board text; a repo whose board never had the table is not held to it', () => {
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'], noBoard: true }), /a task close needs the board/);
++    expect(scenario({ table: 'never', mutate: () => ({}) }).status).toBe(0);
++  });
++  it('S3 PLANTED DEFECT: during a merge a finished move whose blob is not the merged branch one is checked (was exit 0); the merged branch blob is skipped (control)', () => {
++    refused(scenario({ mergeHead: 'other', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
++    const same = scenario({ mergeHead: 'same', mutate: () => ({}) });
++    expect(same.status, same.stderr).toBe(0);
++  });
++  const SEAT2 = '# seat report\n### rc2#1 HIGH: a seat finding\n### reality-check#2 CRITICAL: a seat finding with a hyphenated id\n';
++  const seatOpts = (seat: string, verdicts: string): Opts => ({
++    after: (l) => ({ ...l, 'seat-rc.md': seat, 'GROUNDER.md': `${l['GROUNDER.md']}Seat: rc ${LD}/seat-rc.md sha256:${sha(seat).slice(0, 12)}\n${verdicts}` }),
++    triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n`,
++  });
++  const SEAT1 = '# seat report\n### rc2#1 HIGH: a seat finding\n';
++  it('S1 PLANTED DEFECT: a seat verdict needs a 20+ character quote on its cited line and a 30+ character reason (was accepted)', () => {
++    refused(scenario(seatOpts(SEAT1, 'rc2#1 REJECTED src/a.ts:2 "short" the seat finding is wrong because the line holds a constant\n')), /rc2#1: the quote must be 20\+ characters/);
++    refused(scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" too short\n`)), /rc2#1 is REJECTED with a reason under 30 characters/);
++    const ok = scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`));
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('S4 PLANTED DEFECT: a seat id with a hyphen (reality-check#2) is a finding and needs a verdict (was ignored)', () => {
++    refused(scenario(seatOpts(SEAT2, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`)), /reality-check#2 CRITICAL: seat finding of rc has no verdict line/);
++  });
++  it('S5 PLANTED DEFECT: a severity word after the start of the reason ("not a NIT") does not lower a CRITICAL; one at the start still does (control)', () => {
++    const reason = 'the line is a test fixture and nothing reads it';
++    const crit = (r: string): Opts => ({ finding: 'BUG severity=CRITICAL — clause "x" — src/a.ts:1 "y" — claim — fix\n', g: { verdict: () => `CONFIRMED src/a.ts:1 "${quoteAt(1)}" ${r}` }, triage: () => `${ID} pile:"${reason}"\n` });
++    refused(scenario(crit('the defect is real, not a NIT: it moves money wrongly')), /out-compliance-first#1 CRITICAL: pile is not allowed/);
++    const ok = scenario(crit('NIT-picking aside, the line is cosmetic only'));
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('S9 PLANTED DEFECT: a task moved to backlog/archive/tasks with a finished status is checked (was skipped); archiving a task that was already finished is no move; docs/backlog/tasks is never a task file', () => {
++    refused(scenario({ finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
++    const archived = scenario({ before: 'BUILT', finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) });
++    expect(archived.status, archived.stderr).toBe(0);
++    const notTask = scenario({ finalTaskPath: 'docs/backlog/tasks/task-7 - x.md', mutate: () => ({}) });
++    expect(notTask.status, notTask.stderr).toBe(0);
++  });
++  it('ST4: a closing commit that stages backlog-lib.mjs is refused (protected); a range edit to it that the Files line does not name is refused', () => {
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/', staged: { 'scripts/analysis/backlog-lib.mjs': '// edited\n' } }), /this commit changes protected path\(s\) \(scripts\/analysis\/backlog-lib\.mjs/);
++    refused(scenario({ tableEdit: withRow, laneWork: { 'scripts/analysis/backlog-lib.mjs': '// edited\n', 'src/a.ts': `${AFILE}// x\n` } }), /outside the task's Files line: scripts\/analysis\/backlog-lib\.mjs/);
++  });
++  it('ST4 (AC #5): the real table protects scripts/analysis/backlog-lib.mjs', () => {
++    const real = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { protected_paths: string[] };
++    expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');
++  });
++});
+diff --git a/src/tests/backlog/review-templates.logic.test.ts b/src/tests/backlog/review-templates.logic.test.ts
+index 6aeae065853c276692873014db856d0a748a6fd3..00a2118dbe48215ec0ff4b39a7ba72f30962af51 100644
+--- a/src/tests/backlog/review-templates.logic.test.ts
++++ b/src/tests/backlog/review-templates.logic.test.ts
+@@ -2,6 +2,8 @@
+ // (line 32) and so held the material twice (a 181,810 character prompt for an 85,642 character diff). Each lens template has exactly one plan placeholder.
+ import { describe, expect, it } from 'vitest';
+ import * as fs from 'node:fs';
++import { createRequire } from 'node:module';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { ROOT } from './helpers';
+ 
+@@ -52,3 +54,15 @@ describe('task-438 T1: lens-engineering.md is a lens template of its own', () =>
+     expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>');
+   });
+ });
++
++// task-453 T7 (GROUNDER-D D2, AC #6): the next review round is the highest context-rN number plus one, so a gap never names an existing file again
++describe('task-453 T7: contextRound', () => {
++  const { contextRound } = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { contextRound: (d: string) => number };
++  const dirWith = (names: string[]) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxr-')); for (const n of names) fs.writeFileSync(path.join(d, n), 'x\n'); return d; };
++  it('context-r2 only gives round 3; no context file gives round 1; context-r1 and context-r3 give round 4; a missing folder gives round 1', () => {
++    expect(contextRound(dirWith(['context-r2.md']))).toBe(3);
++    expect(contextRound(dirWith(['GROUNDER.md']))).toBe(1);
++    expect(contextRound(dirWith(['context-r1.md', 'context-r3.md']))).toBe(4);
++    expect(contextRound(path.join(os.tmpdir(), 'no-such-dir-task-453'))).toBe(1);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index e50dada36ba314f8d2938c158f03dcbbb0ef41cc..1043e17976bb8cad6637a70d8f98a5e0d571d9ea 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -26,27 +26,27 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
+     expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
+   });
+-  it('a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133', () => {
+-    const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
+-    expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
+-    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four);
++  it('a panel record and an MF pre-registration get the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; five-words off since task-453, RR-0452); a by-law pre-registration keeps bylaw-133', () => {
++    const three = ['plan-protocol', 'inc-S', 'ms-S'];
++    expect(lists('docs/reports/panels/MF-94.json')).toEqual(three);
++    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(three);
+     expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133');
+   });
+-  it('a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)', () => {
++  it('a generated report and a 127-* generated file get eng-all and the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; task-453, RR-0452)', () => {
+     const g = lists('docs/reports/generated/x.md');
+-    expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+-    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(g).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const t = table().lists['policy-124-s2-s5']!;
+     expect(t.file).toBe('docs/specs/01-pipeline/124_step_standard_policy.md');
+     expect(t.sections).toEqual(['2. The rules', '5. Register of rulings']);
+   });
+   it('the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed', () => {
+-    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
+     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
+   });
+   it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
+-    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+@@ -165,7 +165,7 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
+     expect(r.status, r.stderr).toBe(0);
+     const j = JSON.parse(r.stdout) as { exempt: string[]; lists: { id: string }[] };
+     expect(j.exempt).toEqual([]);
+-    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('every exempt glob beyond the lane and review records names its proving check in $comment (planted defect: a glob with no named check fails)', () => {
+     const t = raw();
+@@ -207,7 +207,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(resolveIn(real, FILES[0] as string)).toEqual(expect.arrayContaining(SURFACE));
+     const without = resolveIn(real.filter((g) => g !== glob), FILES[0] as string);
+     for (const id of SURFACE) expect(without).not.toContain(id);
+-    expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(without).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   // MF-95 C-T5 (task-430): the range is computed from the real register (readFeRows throws unless "Next free id" is the row count plus one),
+   // not pinned to 44, so a new FE row moves it by itself; planted: one id more than the register holds is refused.
+@@ -226,7 +226,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+ // task-375: lens-input takes --context (A4); see the deviation note on the task
+ 
+ // task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ("DEFER -> review_followups.md with reasons", 08_agents.md:350) names docs/reports/review_followups.md, so the table must know it
+-// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attaches agents-s7-s11 (holds rule 6) and queue-137.
++// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attached agents-s7-s11 (holds rule 6) and queue-137 until task-448; it attaches no list now.
+ describe('task-412: review_followups.md has its Spec 08 home', () => {
+   const FILE = 'docs/reports/review_followups.md';
+   const resolveIn = (rows: Row[]) => {
+@@ -240,7 +240,7 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
+     return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
+   };
+   it('the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)', () => {
+-    expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists(FILE)).toEqual(['plan-protocol', 'inc-S', 'ms-S']);
+     const rows = table().rows.filter((r) => r.id === 'review-followups');
+     expect(rows).toHaveLength(1);
+     expect(rows[0]!.lists).toEqual([]);
+@@ -365,11 +365,29 @@ describe('task-431: the engineering standards sent by side', () => {
+     const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: [...r.lists, ...FOUR] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
+     expect(() => handbookOnly(planted, 'planted: the four back on specs-web-admin')).toThrow();
+   });
+-  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists', () => {
++  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, no row attaches the queue or doc-17 lists (task-453, RR-0450), and only the lane-tools row attaches the agent lists', () => {
+     const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a', 'storage-doc16', 'mobile-100', 'mobile-96', 'policy-124-s2-s5'];
+     for (const r of table().rows) {
+       for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+-      if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++      for (const l of ['queue-137', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++      if (r.id !== 'lane-tools') for (const l of ['agents-s5-1to3', 'agents-s7-s11']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+     }
+   });
+ });
++
++// task-453 (SEARCHFIX.5; RR-0450 MORNING-DECISIONS.md:2325, RR-0452 :2336): the lane-tools row loses the queue rules and the orchestrator note; the review tools resolve through lane-tools only
++describe('task-453: the lane-tools row and the review tools', () => {
++  it('the lane-tools row attaches the two Spec 08 lists and eng-all only (RR-0450)', () => {
++    expect(table().rows.find((r) => r.id === 'lane-tools')!.lists).toEqual(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']);
++  });
++  it('T2: scripts/gemini-review.js resolves through lane-tools (not refused, not the step handbook)', () => {
++    const l = lists('scripts/gemini-review.js');
++    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
++    expect(l).not.toContain('step-132');
++  });
++  it('item 4: scripts/lib/review-template.js draws no step-132, eng-back or eng-shared and still resolves through lane-tools', () => {
++    const l = lists('scripts/lib/review-template.js');
++    for (const x of ['step-132', 'eng-back', 'eng-shared']) expect(l, x).not.toContain(x);
++    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 5c3463a09705183a3c5b2e9b408e1d386752bd25..c3974cd241a4480851c62f461815586178c24570 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -69,7 +69,7 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
+     for (const l of ['eng-all', 'surface-136']) expect(web).toContain(l);
+     for (const l of ['agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).not.toContain(l);
+     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
+-    expect(pipe).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-1', 'ms-1']);
++    expect(pipe).toEqual(['eng-all', 'plan-protocol', 'inc-1', 'ms-1']);
+     expect(pipe).not.toContain('mobile-100');
+     expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).not.toContain('queue-137');
+   });
+@@ -341,9 +341,9 @@ const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/
+ const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string, type?: string) => string[] }>;
+ 
+ describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
+-  it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
++  it('the table names every_task = plan-protocol (the repo copy; five-words, the Spec 132 Glossary, is defined but off since task-453, RR-0452), and no removed engineering list id is left anywhere', () => {
+     const t = real();
+-    expect(t.every_task).toEqual(['five-words', 'plan-protocol']);
++    expect(t.every_task).toEqual(['plan-protocol']);
+     expect(t.lists['five-words']).toMatchObject({ file: 'docs/specs/01-pipeline/132_step_standard_handbook.md', sections: ['Glossary'] });
+     expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true });
+     const text = JSON.stringify(t);
+@@ -374,7 +374,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     for (const [k, files] of Object.entries(kinds)) {
+       const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']);
+       expect(r.status, `${k}: ${r.stderr}`).toBe(0);
+-      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['five-words', 'plan-protocol', 'ms-S', 'inc-S']));
++      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['plan-protocol', 'ms-S', 'inc-S']));
++      expect(ids(JSON.parse(r.stdout) as Res), k).not.toContain('five-words');
+     }
+   });
+   it('the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review)', () => {
+@@ -388,8 +389,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     const t = real();
+     const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
+     expect(verifyResolved(t, good, 'S')).toEqual([]);
+-    const planted = { lists: good.lists.filter((l) => l.id !== 'five-words' && l.id !== 'ms-S') };
+-    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/five-words/);
++    const planted = { lists: good.lists.filter((l) => l.id !== 'plan-protocol' && l.id !== 'ms-S') };
++    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/plan-protocol/);
+     expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/ms-S/);
+     expect(verifyResolved({ ...t, every_task: [] }, good, 'S').join('|')).toMatch(/every_task/);
+   });
+@@ -462,8 +463,7 @@ describe('V2.LIST: the generated page of what each kind of work receives', () =>
+     expect(c.status, c.stdout + c.stderr).toBe(0);
+     const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generated/rule-lists-by-kind.md'), 'utf8');
+     for (const k of ['pipeline step', 'McFrontend web', 'phone', 'storage', 'tooling', 'spec-only']) expect(page, k).toContain(k);
+-    expect(page).toMatch(/five-words[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
+-    expect(page).toContain('plan-protocol');
++    expect(page).toMatch(/plan-protocol[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
+     const g = run('node', ['scripts/analysis/gates/generated-docs.mjs'], { cwd: ROOT });
+     expect(g.status, g.stdout + g.stderr).toBe(0);
+     expect(fs.readFileSync(path.join(ROOT, 'scripts/analysis/gates/generated-docs.mjs'), 'utf8')).toContain("file: 'rule-lists-by-kind.md'");
+@@ -928,11 +928,11 @@ const joinedCount = (listIds: string[], material: number, max?: number) => {
+   return { r, files: r.stdout.split('\n').filter(Boolean) };
+ };
+ 
+-describe('task-423 (a): joined input: the nine lists of the tooling kind, whole, in table order, packed by size', () => {
+-  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the nine lists in table order', async () => {
++describe('task-423 (a): joined input: the six lists of the tooling kind (nine until task-453: five-words, queue-137 and orchestrator-doc17 are off), whole, in table order, packed by size', () => {
++  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the six lists in table order', async () => {
+     const m = await jmod();
+     const lists = resolvedIds(FILES_423);
+-    expect(lists).toHaveLength(9);
++    expect(lists).toHaveLength(6);
+     const { r, files } = joinedCount(lists, 12400);
+     expect(r.status, r.stderr).toBe(0);
+     expect(files.length).toBeGreaterThan(0);
+@@ -942,7 +942,7 @@ describe('task-423 (a): joined input: the nine lists of the tooling kind, whole,
+     const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');
+     const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');
+     expect(got).toBe(want);
+-    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(9 lists: /);
++    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(6 lists: /);
+   });
+   it('with --max small the parts are more and every file is under the bound; control: an input with a part shortened no longer matches its stamp', async () => {
+     const m = await jmod();
+@@ -1106,3 +1106,34 @@ describe('task-438 T2: seatOf routes a rule list to the engineering or the compl
+     expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');
+   });
+ });
++
++// task-453 (SEARCHFIX.5 item 1; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336): output_off is one data line that turns a list off for output reviews only; validate fails closed on a typo
++describe('task-453: output_off and validate robustness', () => {
++  type V = { validateTable: (t: unknown, root: string) => string[]; outputLists: (t: unknown, l: { id: string }[]) => { id: string }[] };
++  const vmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<V>;
++  it('the real table switches plan-protocol off for output reviews (output_off) and keeps it in every_task', () => {
++    const t = real() as Table & { output_off?: string[] };
++    expect(t.output_off).toEqual(['plan-protocol']);
++    expect(t.every_task).toContain('plan-protocol');
++  });
++  it('outputLists drops the output_off lists and keeps the rest; an empty or missing output_off keeps every list (AC #2)', async () => {
++    const { outputLists } = await vmod();
++    const ls = [{ id: 'plan-protocol' }, { id: 'eng-all' }, { id: 'inc-S' }];
++    expect(outputLists({ output_off: ['plan-protocol'] }, ls).map((l) => l.id)).toEqual(['eng-all', 'inc-S']);
++    expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
++    expect(outputLists({}, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
++  });
++  it('validate refuses an output_off id that is not in every_task, and an output_off that is not a list (fails closed on a typo)', async () => {
++    const { validateTable } = await vmod();
++    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);
++    expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
++    expect(validateTable(real(), ROOT)).toEqual([]);
++  });
++  it('T10: a null list or a null row is a problem line, not a TypeError', async () => {
++    const { validateTable } = await vmod();
++    const t = real();
++    const bad = validateTable({ ...t, lists: { ...t.lists, broken: null }, rows: [...(t as unknown as { rows: unknown[] }).rows, null] }, ROOT).join('|');
++    expect(bad).toMatch(/list broken: not an object/);
++    expect(bad).toMatch(/rows\[\d+\]: not an object/);
++  });
++});
+diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
+index 4852f11ce28632d0594b9f0bf11f7f1f5551c1c0..c8b543f3ccca4fff7bb2bdaee848e0ecc7c563fa 100644
+--- a/src/tests/proof-slice.logic.test.ts
++++ b/src/tests/proof-slice.logic.test.ts
+@@ -8,7 +8,7 @@
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+-import { checkSpec, main, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
++import { checkSpec, main, realIo, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
+ const REPO = process.cwd();
+ 
+ type Res = { status: number | null; signal?: string | null; error?: { code: string }; stdout?: string; stderr?: string };
+@@ -225,7 +225,11 @@ describe('T8 output review r2 (KEPT findings): positive proof of a run, strict r
+   });
+   it('every golden, surface and policy row in the committed data names the line its check prints', () => {
+     const rows = (JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slices.json'), 'utf8')) as Record<string, { rows: Array<Record<string, unknown>> }>).S?.rows ?? [];
+-    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk3-nothing-new', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
++    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
++    // task-453 ST5 (AC #6): CHK.3 reads the staged diff and --all gives it no input, so its row is printed as not built, with the reason
++    const chk3 = rows.find((r) => r.id === 'chk3-nothing-new') as { notbuilt?: { reason?: string }; argv?: unknown } | undefined;
++    expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');
++    expect(chk3?.argv).toBeUndefined();
+   });
+ });
+ 
+@@ -298,3 +302,17 @@ describe('task-375 D10b: the timeout comes from the registered variable, a bad v
+     }
+   });
+ });
++
++// task-453 T4 (GROUNDER-D D1, proof-slice.mjs:11 "exit 2 ... usage"): with git unspawnable realIo() gives an empty head (main then exits 2), never a TypeError
++describe('task-453 T4: realIo with no git on PATH', () => {
++  it('head is the empty string, no throw', () => {
++    const saved = process.env.PATH;
++    const empty = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR ?? '/tmp'), 'nogit-'));
++    process.env.PATH = empty;
++    try {
++      expect(realIo().head).toBe('');
++    } finally {
++      process.env.PATH = saved;
++    }
++  });
++});
+

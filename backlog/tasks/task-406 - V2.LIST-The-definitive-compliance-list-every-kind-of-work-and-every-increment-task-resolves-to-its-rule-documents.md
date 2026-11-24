@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T16:12:00Z'
 labels:
   - McFix
   - McFix V2
@@ -112,4 +112,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0353 · task-406 · Backlog; o
 Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-406 · Backlog; operator, verbatim: "Agreed. Let's push as soon as possible! Also recolve the scorecards issue now. The gaps are closed in parellel.")
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0362 · task-406 · Backlog; operator, verbatim: "y")
+
+2026-11-24 (task-453 SEARCHFIX.5): finding eng-back#2 (D9, docs/reports/reviews/mcfixreborn-g4/GROUNDER-D.md:117) stays with this task: migration 334 is not edited on task-453 (an applied migration; scripts/migrate.js stores its checksum and --verify fails on a change; no ruling names the edit).
 <!-- SECTION:NOTES:END -->

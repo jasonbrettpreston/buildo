@@ -2,7 +2,7 @@
 
 # What each kind of work receives: the compliance review documents
 
-Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
+Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
 
 ## pipeline step
 
@@ -13,11 +13,10 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
 | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
 | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 129,891 | 7 |
+| total | 6 lists | | 126,115 | 6 |
 
 ## McFrontend web
 
@@ -28,11 +27,10 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
 | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 162,821 | 7 |
+| total | 6 lists | | 159,045 | 6 |
 
 ## phone
 
@@ -46,11 +44,10 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
 | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 10 lists | | 219,160 | 10 |
+| total | 9 lists | | 215,384 | 9 |
 
 ## storage
 
@@ -61,11 +58,10 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
 | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
 | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 129,891 | 7 |
+| total | 6 lists | | 126,115 | 6 |
 
 ## tooling
 
@@ -74,15 +70,12 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 45,706 | 1 |
-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 38,251 | 1 |
+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 46,314 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
-| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 216,108 | 9 |
+| total | 6 lists | | 143,119 | 6 |
 
 ## spec-only
 
@@ -91,9 +84,8 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
-| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,562 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 5 lists | | 85,876 | 5 |
+| total | 4 lists | | 82,100 | 4 |
 

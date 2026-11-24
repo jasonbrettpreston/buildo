@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.088Z file_sha256=1209a02098dde157f62275e1f837ed433698baf10b21040f94993f5781b7da40 prompt_sha256=7b5ac9cacd2b6c6e38c3a7b608a11ea109a789a11e7689bb0c78b2f364c812e5
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts:231 "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — two of the 29 named cases (24, 29) are not carried as tests in this change and the cited mobile test file is not pasted, so AC #6 cannot be confirmed for them — add cases 24 and 29 to the T5 table, or paste the mobile test lines that cover them.
+
+DEFER severity=LOW — card "The plan's section 2 lines are this card's acceptance tests, each red first" — Implementation Notes "(5) T6 is green today too (two `unique` returns already), it is a lock with a red plant" — one acceptance line (T6) was never red first; it passes on arrival with a synthetic plant — record T6 as a lock rather than an acceptance test, or land a genuine red before the code change.
+
+DEFER severity=LOW — card "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/lib/admin/parcel-lookup.ts:460 "if (rows.length > 0) return conflictList(rows.slice(0, 10));" — the letter/dash fallback caps the list at 10 and dedupes by parcel_id, which the build itself logs as deviation (1) from PLAN-449-v1; no pasted ruling names a cap or dedupe for that fallback — cite a pasted clause as authority for the cap, or drop the dedupe and cap.
+
+DEFER severity=LOW — card "Nothing is added that the plan or a ruling does not name (RR-0392)" and "Findings folded: ST1, 2a (server side), G2 D1, G2 D6, G3 R1" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:722 "+    \"answer\": \"ledger\"," — the emits answer flips none to ledger and the user_profiles write row is deleted from outputs.tables, justified only by the test line "surface.schema.json: \"none\" on a metered surface is a rule-9 violation", a rule not pasted and not one of the five folded findings — cite the folded finding or operator ruling that names the emits correction, or confine the edit to the counts G3 R1 names.
+
+DEFER severity=LOW — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/tests/search-parser-guard.logic.test.ts:239 "expect(typeaheadPrefix()).toBe('\\%%');" — only the bound LIKE parameter is asserted; nothing asserts the second half of the criterion, that no unrelated lot comes back for a typed % or _ — add an outcome case (a "%" query whose result would widen if unescaped) asserting the returned candidates.
+
+DEFER severity=LOW — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the Spec 89 and Spec 100 notes are visible in the diff, but the doc-2 G.1/A.3 and task-69 notes land in the backlog store and cannot see them — attach the backlog note ids (or paste the CLI output) so the owed notes are evidenced in the change.
+
+MET — AC #2 "'Gerrard St W' with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts:389 "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is not narrowed by direction.
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts:352 "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" with "if (same.length > 0) return { rows: same, conflict: false };" — the exact rows are narrowed to the typed type, never to an empty set.
+MET — AC #1 "a prefix, a street with no number and a narrowed leftover list" — src/lib/admin/parcel-lookup.ts:397 "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row leftover that is not the typed address in full is the list.
+MET — AC #4 "letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts:466 "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" — letter and dash forms list the lots at the bare numbers, and the keepPeriods first run covers the period forms.
+MET — card "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts:295 "return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };" — every new outcome reuses an existing resolution value.
+MET — card "or touch the report meter in the lookup route" — none of the changed paths is src/app/api/parcels/lookup/route.ts — the meter in the lookup route is untouched.
+
+REJECT — AC #1 "which opens as an exact match" — the change emits matchType 'typeahead' for a one-row hit that is the typed address in full, not 'exact' — AC #1's own parenthetical defines the match by "its printed number and street name equal the typed ones", and the card forbids adding a resolution value, so the emitted typeahead type is not a compliance breach.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  108367ms (108.4s)
+📊 Tokens — total: 58287, input: 34921, output: 23366, reasoning: 21933
