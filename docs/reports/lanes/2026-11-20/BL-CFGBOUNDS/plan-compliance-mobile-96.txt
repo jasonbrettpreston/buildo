@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:34.430Z file_sha256=b763075500c928b4e35c4f86464ff5a9379dcf81765693ee03a027699dc890e8 prompt_sha256=dd185ac939e5c45680e00437167708b0d145fb0c56b1338b6378f4c14ad5e60f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+I'll walk the pasted clauses against the plan, clause by clause.
+
+**Clauses and rulings that bind this change (from the pasted context):**
+
+1. Spec 128 Rule 3 (:30) — "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal"
+2. Spec 126 P4 (:189) — "All tunables are data; zero thresholds in `src/`"
+3. Spec 126 §0a principle 1 (:59) — "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components"
+4. Spec 136 fe.44 (:163) — "the conversion factor is content/settings, never code; one toggle covers every area and length"
+5. Operator verbatim :1476 — "Let the grounder resolve them all as long as the result is compliant" (the compliance condition is the operative clause)
+6. Task-395 note — option (b) recommendation including "the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft"
+7. Task-395 note — "The lane verifies the grounder's facts before building and stops if one is false."
+
+```
+BUG severity=HIGH — Task-395 note, option (b) "the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator" — the option (b) resolution the lane is executing contains a second deliverable, the area factor, and the plan drops it while still claiming to satisfy option (b) — split the lane or state plainly that option (b) is satisfied only in part and that the area factor has no owner in this lane
+BUG severity=HIGH — Task-395 note "The lane verifies the grounder's facts before building and stops if one is false" — plan F6 "NOT TRUE AS STATED (a gap, not one of the four named facts)" — the lane found a grounder fact false and continued building the rest instead of stopping, and F6 narrows "one is false" to "not one of the four named facts" with no pasted clause granting that reading — record the grounder's confirmation of the narrowed reading, or stop the lane
+BUG severity=HIGH — Spec 128 Rule 3 (:30) "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through ctx.config, never a literal" — plan step 3 "the slice gains `bounds` for the keys it copies and REFUSES a value outside its own bounds or a missing bounds entry at generate time" — bounds and on_invalid are carried in the surface schema and the emitted slice, not in a registered logic_variables row resolved through ctx.config as the clause names; the dated note is proposed but no step makes the six keys registered variables — reconcile: either paste the ruling that the note displaces ctx.config, or register the keys
+DEFER severity=MED — Spec 128 Rule 3 (:30) "PRESENCE of its `logic_variables` row is al…" (truncated in the pasted row) — plan step 7 "Bounds values are LANE PROPOSALS, flagged for the grounder" — the clause's presence/validity split (R-G) is invoked as the principle served while the proposed bounds and on_invalid postures have no registry row and no grounder sign-off yet, so compliance is asserted ahead of the ruling — hold the merge of step 7 values until the grounder records them, or mark the lane blocked on that sign-off
+DEFER severity=MED — Operator :1476 "Let the grounder resolve them all as long as the result is compliant" — plan step 7 "debounce_ms [0,2000] clamp; min_query_len [3,120] clamp" — the conditional in the ruling makes the grounder's resolution valid only if compliant, and the clamp posture on bounds the lane itself proposes is the unverified half; nothing pasted shows clamps satisfy Rule 3's validity posture — route step 7 bound values and clamp postures through the grounder before lock
+DEFER severity=LOW — Spec 136 fe.44 (:163) "the conversion factor is content/settings, never code" — plan F6 "mobile/src/lib/parcelCostFormat.ts:11 (imported by no screen...)" — the typed 10.7639 copies in leadDetailFormat.ts:15 and parcelCostFormat.ts:11 remain in code and the plan leaves them, while the clause it cites says the factor is never code — either state the two copies as out of this lane's scope with an owner, or fold them in
+MET — Spec 126 P4 (:189) "All tunables are data; zero thresholds in `src/`" — plan step 5 — SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts is removed and its two tests re-pointed to the slice
+MET — Spec 126 §0a principle 1 (:59) "a screen is a descriptor; the only code is the shared archetype components" — plan step 2 — descriptors, d.ts, validator and registry doc are regenerated by the committed generators, never hand-edited
+MET — Task-395 note "SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts is a dead second copy" — plan step 5 — the dead literal is removed and the two dependent phone tests re-pointed
+```
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+
+**Note on scope I did not judge:** whether the descriptor/schema change is safe against the live generator and census shards is plan-review-deepseek's ground, and the phone-test "green UNPROVEN until Mobile CI" is spec-truth verification, not mine. Both are outside this lens.
+
+---
+⏱  7435ms (7.4s)
+📊 Tokens — total: 14938, input: 13614, output: 1324

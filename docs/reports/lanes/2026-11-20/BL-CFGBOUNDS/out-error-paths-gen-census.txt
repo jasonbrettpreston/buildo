@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:02:34.281Z file_sha256=197c086720063fd5faa5367c80954da1ace6c0e975effb3681dc58649fea918b prompt_sha256=005d92fb89aa9185d72cff086bf75de18d366d556cf97cc14cec9559953a2556
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-census.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/generated/surfaces/mobile_parcel_search.json:15 `"on_invalid": "clamp",` — the only posture declared is for a number out of range, so an absent key or a non-numeric value (older slice, hand-edited census, key dropped in a future emit) has no declared outcome; if sliceNumber yields undefined or NaN, lookup_retry_max compares false and fires zero retries, and debounce_ms used as a timer delay fires immediately per keystroke; the empty path is the exact one this change claims to close — declare a per-key fallback (`default` or `on_missing`) with a literal, or state in the bounds block that a missing or non-finite value resolves to the measured value.
+
+BUG severity=MED — mobile/src/generated/surfaces/mobile_parcel_search.json:37 `"min": 0,` (in `"lookup_stale_ms"`) — clamping an invalid stale time down to 0 turns "stale never" into "stale always", so every consumer refetches on every read, multiplied by lookup_retry_max up to 5, which is a degrade toward a request storm rather than toward safe cached data — set the low floor of lookup_stale_ms and entitlement_stale_ms to a non-zero value, or declare that an invalid stale time clamps up to the measured 60000.
+
+DEFER severity=MED — src/lib/surfaces/generated/surface-descriptor.d.ts:348 `bounds?: Record<string, unknown>;` — the field is optional and untyped, so the read path must handle `bounds === undefined` and `bounds[key] === undefined` (the binding descriptors carry only debounce_ms and min_query_len), and no signature guarantees a bound exists for the key a caller reads; a `bounds[key].min` deref throws on the absent branch — type bounds per key union or make the reader's absent-bound return explicit and tested.
+
+DEFER severity=MED — scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json:173 `"on_invalid": "fail",` — "fail" is declared but its on-device consequence is not in this part of the diff: on a phone, fail can mean a thrown error that blanks the shared list, or a silent skip; neither is stated, so the pinned 0..0 posture has an undefined runtime path when a future regenerate drifts a value — state whether fail throws (and who catches it), or downgrade the pinned keys to clamp for the runtime.
+
+DEFER severity=MED — Design (task-395) `"the phone reader sliceNumber(slice, key) applies them"` — neither sliceNumber nor the SV-DESC validator that refuses a number without bounds is part of this diff part, so clamp/fail application, NaN handling and the refuse-if-no-bounds path cannot be verified here — confirm the reader and validator hunks land in the same change and that a test exercises out-of-range, missing and non-numeric for at least debounce_ms and continue_wait_ms.
+
+DEFER severity=LOW — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:9 `"min": 1000,` — clamping the low end of continue_wait_ms means an out-of-range or zero timeframe becomes a 1 s wait, after which Continue proceeds on the semi question even though the answered lookup may not have returned, i.e. it degrades to proceeding un-informed instead of failing closed — state that proceeding after the bounded wait is the intended degrade, or clamp up to the 60000 measured default.
+
+DEFER severity=LOW — scripts/surfaces/_schema/census/mobile-product.json `"why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder;` — the same five bounds blocks are copied verbatim into census, descriptor and generated slice with no single source, so a later edit to one copy leaves the others stale and the validator only sees the descriptor; two accepted values for one key is a dedup hazard — emit the bounds from the descriptor, or add a check that census, descriptor and slice bounds agree.
+
+REJECT — mobile/src/generated/surfaces/mobile_parcel_search.json:22 `"The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range."` — a client gate lower than the server floor looked like a request that always 400s — it is handled: the gate is bounded to the server range, so the short-query path fails closed at the phone and no rejected request is sent or retried.
+
+REJECT — mobile/src/generated/surfaces/mobile_parcel_search.json:32 `"max": 5,` (in `"lookup_retry_max"`) — an unbounded retry looked possible from the read path — it is handled: the retry count is bounded 0..5 and clamped, so a second attempt, and a third, are bounded and there is no unbounded loop; the diff contains no write or counted event, so repeated taps cannot double-count anything.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (numeric out of range, clamp), empty (absent key, absent bounds, non-numeric), retry (lookup_retry_max bounded 0..5), timeout (continue_wait_ms bounds, lookup_stale_ms/entitlement_stale_ms expiry), double-submit (no write or counted event in this diff), degrade-safety (clamp direction, fail posture), idempotency (no write key to name)   Unguarded: 3
+
+---
+⏱  43253ms (43.3s)
+📊 Tokens — total: 23404, input: 16215, output: 7189, reasoning: 5958

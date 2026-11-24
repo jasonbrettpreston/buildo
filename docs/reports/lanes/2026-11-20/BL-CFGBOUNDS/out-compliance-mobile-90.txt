@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:11.957Z file_sha256=8997ce41fb62c8dbb0146bf22e4a031daefb3a2da53a054e22e40ebee8ea8ab6 prompt_sha256=e19cfc60a6f610f991e1d176916b8ecf46d073a9416f74b68c62143b7f10406f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling 2026-11-20 quoted in the material, "Let the grounder resolve them all as long as the result is compliant" — mobile/src/generated/surfaces/mobile_parcel_search.json:16 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — the change records the same bounds two ways: five descriptor/slice/census sites call them an unresolved lane proposal, while docs/specs/02-web-admin/128_surface_standard_policy.md:45 asserts "the grounder chose option (b)", and the ruling itself is not in the pasted context, so the resolution claimed cannot be verified — pick one record: either reword the "for the grounder" strings to the grounder's resolution with its record line, or drop "the grounder chose option (b)".
+DEFER severity=LOW — Spec 128 note added by this diff, "the schema refuses a descriptor whose number has no entry (SV-DESC, the one validator surface-validate runs)" — scripts/surfaces/_schema/surface.schema.json:2687 "\"x-draft-optional\": true" — a bounds property that is draft-optional and absent from required is not refused by the schema when missing; refusal comes only from the six allOf if/then rules, and how validateDescriptor treats x-draft-optional cannot be seen — reword the note to name the allOf rules as the enforcement, or drop x-draft-optional from bounds.
+DEFER severity=LOW — same note clause, "A number with no entry is refused by the rules below." — scripts/surfaces/_schema/surface.schema.json:2729 "\"if\": { \"required\": [ \"debounce_ms\" ], \"properties\": { \"debounce_ms\": { \"type\": \"integer\" } } }" — the rule fires only when the key holds an integer, so a non-integer numeric value (400.5) carries no schema-level bounds requirement; only emit-mobile-surfaces.mjs catches it later — widen the if to "type": "number" or state the integer restriction in the description.
+DEFER severity=LOW — Spec 90 §3 "This prohibits server-authoritative computed state." — mobile/src/lib/sliceConfig.ts:21 "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — the phone now rewrites a declared tunable to a nearby value instead of reading the settled one, and no pasted Spec 90 clause names bounds or an on_invalid posture, so this runtime behaviour is added without a pasted clause authorising it — cite the authorising clause in the pasted material, or keep the reader verbatim and hold the bounds check entirely in the generator.
+MET — Spec 90 §3 Dumb Glass — mobile/src/lib/sliceConfig.ts:13 — the numbers still come from the pre-calculated generated slice; no device-side server state is computed or mutated.
+MET — Spec 90 §4 Tech Stack Constraints — mobile/src/lib/sliceConfig.ts:8 — no dependency added, the new reader is plain TypeScript under mobile/src.
+MET — Spec 90 §10 Unit Testing (Jest) — mobile/__tests__/sliceConfig.test.ts:10 — a Jest suite covers in-range, clamp, fail, missing bounds, malformed entry and inverted pair.
+MET — Spec 90 §12 Cache Management — mobile/src/hooks/useParcelLookup.ts:57 — lookup_stale_ms / lookup_retry_max / entitlement_stale_ms still read from the slice through the single reader.
+MET — Spec 90 §13 TypeScript Strictness — mobile/src/lib/sliceConfig.ts:9 — SliceBound and SliceNumbers are declared types, so the new reader carries no implicit any.
+REJECT — Spec 90 §7 Validation (Monorepo), "Zod schemas are shared via a `packages/shared-types` monorepo workspace" — the change adds no shared-types workspace — the §4 amendment of 2026-09-15 measured that no monorepo and no packages/shared-types exist, so the clause is already superseded and not this diff's to satisfy.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  56174ms (56.2s)
+📊 Tokens — total: 39651, input: 28920, output: 10731, reasoning: 9798

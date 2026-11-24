@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:52:23.655Z file_sha256=fe1f6d87024f0ebf6563beb012d92623cea505a787e6dac2a15a2cff2346bde3 prompt_sha256=d3cdcd8beaec864eebda31f2d4734df1f305a15af37d22fa24ce6936cc7d5876
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §3.1 "ONE home for the profiles. The table below is GENERATED, and it is the register of record for which fields each archetype makes mandatory." — docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 SEARCH row "`config.debounce_ms` · `config.min_query_len` · `guards.rate_bucket`" and scripts/surfaces/_schema/surface.schema.json:2686 "bounds" with "allOf" requiring "bounds" — the schema now makes `config.bounds.<key>` mandatory for six SEARCH numbers, but the generated register of record still lists only the two config keys, so the one home is now two — regenerate the 126 §3.1 table from the schema, or add `config.bounds.<key>` to the SEARCH profile, before lock.
+
+BUG severity=HIGH — Spec 126 §2 "Schema artifact `surfaces/_schema/surface.schema.json`, archetype-gated" — src/lib/surfaces/generated/surface-descriptor.d.ts:347 "bounds?: Record<string, unknown>;" and scripts/surfaces/_schema/surface.schema.json:2686 "bounds" inside `config` — the generated type places `bounds` at the descriptor root while the schema and every descriptor place it under `config`, so the type is not the schema's shape — nest `bounds` under the config type or regenerate the type from the schema.
+
+DEFER severity=MED — Spec 126 §2.0 consequence 2 "all 137 are emitted and all 137 are validated" — scripts/surfaces/emit-mobile-surfaces.mjs "const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));" and src/tests/surfaces/surface-conformance.logic.test.ts "UNRESEARCHED stays a countable state and needs no bounds" — a config whose keys are all `UNRESEARCHED` and has no `bounds` validates, but the generator dereferences `d.config.bounds` and throws, so a schema-valid descriptor is not emitted — use `const bounds = d.config?.bounds ?? {};` and skip keys with no bounds entry.
+
+DEFER severity=MED — Spec 126 §3.1 (SEARCH MUST answer `config.min_query_len`) and P4 "All tunables are data; zero thresholds in `src/`" — mobile/src/constants/parcelSearch.ts:21 "SEARCH_MIN_QUERY_LEN" and mobile/src/components/surfaces/SearchBinding.tsx:38 "SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len')" — the change removes the debounce constant but leaves a same-named `SEARCH_MIN_QUERY_LEN` constant in `mobile/src/constants/parcelSearch.ts`, so the descriptor's "read by the phone only from the generated slice" claim is false for that key — remove the constant or re-export it from the slice, and update the registry row.
+
+MET — Spec 126 §3.1 (SEARCH MUST answer `config.debounce_ms` · `config.min_query_len`) — src/tests/surfaces/surface-conformance.logic.test.ts "expect(Object.fromEntries(NUMBER_KEYS.filter((k) => k in real.config).map((k) => [k, real.config[k]]))).toEqual({ debounce_ms: 400, min_query_len: 3, ... })" — the values are unchanged and both keys are still declared and read through the one reader.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  158241ms (158.2s)
+📊 Tokens — total: 70741, input: 35352, output: 35389, reasoning: 34587

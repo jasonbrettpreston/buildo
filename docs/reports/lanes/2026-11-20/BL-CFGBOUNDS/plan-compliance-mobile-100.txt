@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:26.993Z file_sha256=71dbab4e659041bdfa5ff34149e7a8800ab4c5e4490e38966111aa0cb308ccfb prompt_sha256=77665894c419acf3271979c9e7d6efa15e760cdd045e48b1bffb577b7e4e66ee
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 §4 "debounced (≥400 ms) typeahead against `?q=`" — plan step 7 "debounce_ms [0,2000] clamp" — the declared minimum of 0 with on_invalid=clamp silently accepts (and clamps to) a 0-399 ms debounce, so a config edit breaches the spec's ≥400 ms floor with no error anywhere — set the floor at the spec's own floor, min 400 ("[400,2000]", clamp or fail), and add a red test for a 399 value.
+BUG severity=HIGH — task-395 Implementation Notes, grounder option (b) "the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft", under operator :1476 "Let the grounder resolve them all as long as the result is compliant" — plan Fact F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator." — the resolved item is dropped, so the change is not the compliant whole the ruling accepted, and the typed factor survives at "mobile/src/lib/parcelCostFormat.ts:11" — either build it (a number-typed pinned-factor key plus the generated slice key, no new surface) or obtain a fresh operator ruling before plan-lock.
+DEFER severity=MED — Spec 100 2026-11-20 FIX.SPECS note "Spec 00 section 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit"" — plan step 6 "Spec 128 dated note on Rule 3 (outside the generated markers)" — only Spec 128 is amended although the plan serves cited Spec 126 P4/§11b.2 and Spec 136 fe.44 and changes validation behaviour — add the dated notes to Spec 126 and Spec 136 in the same commit.
+DEFER severity=MED — operator :1476 "Let the grounder resolve them all as long as the result is compliant" — plan step 7 "Bounds values are LANE PROPOSALS, flagged for the grounder" — the six min/max/on_invalid triples that decide pass, clamp or fail are lane-authored and unresolved at plan-lock, so the change encodes values the operator assigned to the grounder — record the grounder's resolution of the six pairs (or mark them explicitly unbuilt) before lock.
+DEFER severity=LOW — Spec 100 2026-11-20 RULES.ACC "(C2) ... The phone keeps its 3 retries before the error screen" — plan step 7 "lookup_retry_max [0,5] clamp" — a config of 0-2 removes the kept retries and is accepted as in-bounds with no error — raise the lower bound to 1 and record that moving off 3 is a spec change, or narrow the range.
+DEFER severity=LOW — Spec 100 Operating Boundaries "**Out-of-Scope Files:** ALL of `scripts/`, `migrations/`" — plan step 2 "census shards (scripts/surfaces/_schema/census/mobile-product.json, web-product.json)" and step 5 "mobile/src/constants/parcelSearch.ts" — the plan edits `scripts/` (only the "zero migrations" line was relaxed by the MF-53 note, not the scripts fence) plus files absent from Target Files — name the owning spec for the script and generated-slice edits in the plan, or add them to Target Files.
+MET — Spec 100 §4 MF-35 "Kept: the 400 ms debounce" — plan step 7 — the shipped value stays 400, "Every current value lies inside its bounds", only a guard is added.
+MET — Spec 100 2026-11-11 note "The response whitelist (section 3.2) is unchanged" — plan step 3 "`config` stays byte-identical; no value changes".
+MET — Spec 100 §2.8 "never the raw search text `q`" — plan steps 1-7 — no log line is added or altered.
+MET — Spec 126 P4, quoted "All tunables are data; zero thresholds in `src/`" — plan step 5 — removes the literal "SEARCH_DEBOUNCE_MS = 400".
+MET — Spec 100 2026-11-20 SRCH.LEGAL last-block placement — plan step 5 — only two tests are re-pointed to the slice, the legal line and its order are untouched.
+MET — Spec 100 §4 "Query key `['parcel-search', q]`" — plan step 4 — the reader signature changes, query keys and hook keys do not.
+REJECT — Spec 128 Rule 3, quoted "is a registered logic variable resolved through `ctx.config`" — that the change declares bounds and on_invalid in the surface schema rather than in the `logic_variables` registry — the operator's 2026-11-20 words accepted the grounder's option (b), which names the surface schema for exactly this reason ("the phone reads only the generated slice, so a database-registered variable would be a control with no effect").
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 6
+
+---
+⏱  86610ms (86.6s)
+📊 Tokens — total: 36742, input: 19382, output: 17360, reasoning: 16208

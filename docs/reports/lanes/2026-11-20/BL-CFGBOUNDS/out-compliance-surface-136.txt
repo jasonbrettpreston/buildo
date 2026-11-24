@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:57:30.819Z file_sha256=c5989db47bb49edd0c476d5b1b51600e7d865e8074953b60b88be43393008d4d prompt_sha256=7d25b15476085f84d1bebf42475a789d16018638a1a0e05aa18de416c8472033
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.05 "P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI." — mobile/src/lib/sliceConfig.ts:21 "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — the phone now computes a number the declaration does not state, and every bound pair it clamps against is a lane proposal rather than a McBylaws number — make fail the only posture for slice-read numbers, or clamp in the generator so a slice never carries an out-of-range value.
+
+BUG severity=HIGH — fe.04 "Numbers are measured first, then ruled (Q-MF5)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:443 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — five bound pairs are self-labelled unruled proposals, yet the schema allOf, the generator check and the reader already enforce them as law — hold the numbers out of the enforcing schema until the grounder rules them, or land the ruled numbers before merge.
+
+BUG severity=MED — fe.09 "A separate decisions spec, 124a/69a form, with a Lock column that resolves." — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS; operator, verbatim: 'Let the grounder resolve them all as long as the result is compliant', ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476" — the 2026-11-20 operator ruling lands as a prose note plus a scratch-file citation, with no 135 register row and no resolving Lock column — add the register row and the Lock entry that names the lock this change lands (C-10 in surface-conformance.logic.test.ts).
+
+BUG severity=MED — fe.31 "descriptor valid with no UNRESEARCHED and no golden: 'none'" — src/tests/surfaces/surface-conformance.logic.test.ts "it('UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)', () => {" — the new rule keeps UNRESEARCHED a passing state for a numeric config key of a converted surface, so SV-DESC accepts a descriptor fe.31 requires to be free of UNRESEARCHED — refuse UNRESEARCHED in the config of a converted surface, or scope the allowance to unconverted descriptors.
+
+DEFER severity=LOW — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — mobile/src/lib/sliceConfig.ts "throw new Error(`surface config \"${key}\" has no valid bounds (min <= max) in its slice`);" — four new failure-path messages are English literals in code, not content — state in the spec that these are developer-only and never rendered, or route them through slice content.
+
+MET — fe.02 — mobile/src/components/surfaces/SearchBinding.tsx:36 "export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');" — the hand-coded 400 literal is deleted from mobile/src/constants/parcelSearch.ts:14 and the number now comes from the descriptor, so the screen stays declared.
+MET — fe.03 — src/tests/surfaces/surface-conformance.logic.test.ts "expect(v(real)).toEqual([]);" — the live descriptors validate and the measured values are pinned unchanged, both directions.
+MET — fe.33 — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:1322 "\"scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json\": \"bd2f67f4738fdcfd\"" — both platform goldens are re-hashed against the changed descriptor, so the archetype still renders per declared target.
+
+REJECT — fe.01 — adding phone code while the clause says "McFrontend is documents only now" — the change edits config and readers of the already-live parcel-search screens (parcel_product/F01, registry 127), not a McFrontend surface build, so that freeze does not reach it.
+REJECT — fe.16 — editing the surface generator and schema under "No tooling change." — Q-MF1's no-tooling words govern where the specs live (docs/specs/02-web-admin, 135 register, 136 handbook), not scripts/surfaces, so the generator edit is outside that clause.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 5
+
+---
+⏱  84109ms (84.1s)
+📊 Tokens — total: 45091, input: 29229, output: 15862, reasoning: 14787

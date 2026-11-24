@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:52:07.029Z file_sha256=a219813b2a237c77e09655d95e1b4f815a6ee5143f0500a82cc0d3b570bf6a0b prompt_sha256=ae14a0950754c57a52fb337e16efe13ff19c4f6cc6a418b4c93fbd7c60dd9c8a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-step-132-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — pasted context "no pasted context provided" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "The words \"registered logic variable with bounds and an `on_invalid` posture\" are met for a surface config number by declaring, per key, `config.bounds.<key>` = `min`, `max`, `on_invalid`" — the only governing clause this change leans on is not pasted and is rewritten by the same diff, so Rule 3 satisfaction cannot be judged against anything — paste the pre-change Spec 128 Rule 3 text and the operator ruling before merge.
+
+DEFER severity=MED — R-J "no machine check: document governance" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS" — whether an appended dated note is the governed form for amending a mirrored spec block is R-J's subject and R-J's text is not pasted — paste R-J so the document-governance form can be checked.
+
+DEFER severity=MED — cannot see any clause naming the reader contract — mobile/src/lib/sliceConfig.ts:10 "export type SliceBound = { min: number; max: number; on_invalid: string };" — sliceNumber's new bounds enforcement, throw-on-inverted-pair and throw-on-unknown-on_invalid are behaviour no pasted clause names — paste the clause fixing the on_invalid vocabulary (fail, clamp) and the out-of-range posture.
+
+DEFER severity=MED — cannot see any clause naming option (b) — scripts/surfaces/_schema/surface.schema.json:2687 "the bounds and the failure behaviour of every number this config holds, one entry per key. A number with no entry is refused by the rules below." — a new optional schema property plus six if/then rules is added surface that only the unpasted operator ruling and an unpasted grounder decision authorise — paste MORNING-DECISIONS.md:1476 verbatim and the approved design text for option (b).
+
+DEFER severity=LOW — a clause satisfied only by a comment is UNMET — src/tests/surfaces/surface-conformance.logic.test.ts:945 "operator, verbatim, 2026-11-20: \"Let the grounder resolve them all as long as the result is compliant\"" — the ruling is cited only inside comments and a test name in this material, never in the pasted context — paste the ruling so citation and clause can be compared.
+
+REJECT — R-KF/R-KJ/R-KS "OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built)" — the change accused of leaving the register's OWED locks unbuilt — those rows are owned by MB-31/MB-67/MB-68 tasks and the register does not grow from this card, so nothing here is unmet by this diff.
+
+VERDICT: FAIL on compliance with the pasted clauses (no clause or ruling was pasted, so the governing clause the change claims to satisfy could not be checked)
+Clauses checked: 0   Unmet: 1
+
+---
+⏱  38363ms (38.4s)
+📊 Tokens — total: 35878, input: 29178, output: 6700, reasoning: 5974

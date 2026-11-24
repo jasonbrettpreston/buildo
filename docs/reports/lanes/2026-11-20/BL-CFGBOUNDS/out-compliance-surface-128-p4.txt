@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:56:15.431Z file_sha256=8545a67eeacb61f980d4307d34eb27a4e33a7ec3c47a32c8bcc14324ebe0075e prompt_sha256=03fec0bd4cd6927bb33df97f30748164369e2f63fbc2b8e7e1a675bd06de3e5f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-128-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §8 Target Files "the generator that emits §2 and §4" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "+> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS; operator, verbatim: ..." and NONE for scripts/violations/generate-spec-mirror.mjs — the ruling is inserted at the top of §2, the block §8 says that generator emits, and no hunk touches the generator, so the note is not shown to be part of the emitted mirror and a regeneration drops it — move the note into generate-spec-mirror.mjs, or into a non-generated section, and commit the regenerated §2 in this diff.
+
+DEFER severity=MED — §8 Target Files "this spec" plus the two-file target list — scripts/surfaces/_schema/surface.schema.json:2686 "\"bounds\": {" and src/lib/surfaces/generated/surface-descriptor.d.ts:347 "\"bounds?: Record<string, unknown>;\"" — the diff lands a new 190-line descriptor-schema vocabulary and its generated type in files §8's Target Files does not name, so the operating boundary and the change disagree — add those two files to §8 Target Files in this commit, or land the schema edit under the programme that owns the descriptor schema.
+
+DEFER severity=MED — ASK-22 "The fields are required-but-may-be-`UNRESEARCHED`, so an absent field is a build failure while an unfilled one is a counted state." and §6 "left the field `UNRESEARCHED` rather than inventing one" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:443 "\"why\": \"Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.\"" — five of the six bound pairs are lane-invented numbers shipped as settled min/max, and surface.schema.json types min/max as plain numbers so an ungrounded bound has no UNRESEARCHED state — allow an UNRESEARCHED (or grounded/ungrounded) marker per bound key and mark these five, or record the grounder's per-key figure before they can drive a clamp.
+
+DEFER severity=LOW — ASK-10 "A zero in a usage column is indistinguishable from a dead meter." — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:185 "\"min\": 0, \"max\": 0, \"on_invalid\": \"fail\"" — 0 is used as the sentinel for "this binding holds no tunable", so a real tunable of 0 and a non-existent tunable declare the same value, which is the distinction ASK-10 exists to keep — declare the pair absent or as a non-numeric "none" carrying its `why`, or assert in the C-10 test that no runtime path reads these two keys.
+
+REJECT — §8 "a ruling that belongs to the pipeline is filed there, not here" — accused of filing a pipeline Rule 3 ruling inside the 128 mirror instead of Spec 124 — the note scopes itself to surfaces ("Rule 3 on a surface (the phone and the web page config)") and edits no 124 text, so applying Rule 3 to surface config is this spec's own subject.
+
+MET — §8 Out-of-Scope "this spec records rulings about schema, never schema" — no migrations/ path appears in the diff, and the note states "Not a database row: the phone reads only its generated slice, so a registered variable would be a control with no effect."
+
+MET — §8 Out-of-Scope "R-14 exists precisely so this programme does not spend that freeze" — no hunk touches scripts/steps/_schema/step.schema.json; the only schema hunk is scripts/surfaces/_schema/surface.schema.json.
+
+MET — ASK-22 "required-but-may-be-`UNRESEARCHED`" — src/tests/surfaces/surface-conformance.logic.test.ts "UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)" with expect(v(d)).toEqual([]) — an unfilled key validates as a counted state, not a build failure.
+
+MET — ASK-19 "requires a `why`, because \"nothing here is tapped\" is a claim" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:326 "\"why\": \"Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.\"" — every added bounds entry carries a why, including the pinned binding rows.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  113166ms (113.2s)
+📊 Tokens — total: 50908, input: 28809, output: 22099, reasoning: 21010

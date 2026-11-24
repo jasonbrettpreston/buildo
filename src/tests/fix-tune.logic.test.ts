@@ -45,7 +45,7 @@ describe('D14 the phone tunables are declared in the surface config, values unch
     for (const key of KEYS) {
       expect(Object.keys(props), key).toContain(key);
       expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts'), key).toContain(`${key}?:`);
-      expect(src('scripts/surfaces/emit-mobile-surfaces.mjs').match(/CONFIG_KEYS = \[([^\]]*)\]/)?.[1], key).toContain(`'${key}'`);
+      expect(src('scripts/surfaces/emit-mobile-surfaces.mjs').match(/PAGE_SETTINGS = \{([^}]*)\}/)?.[1], key).toContain(`${key}: 'maxbld_page_${key}'`);
     }
   });
   it('semiQuestion.ts types no wait number and reads the slice; the entitlement hook types no stale number and reads the slice', () => {
@@ -55,19 +55,20 @@ describe('D14 the phone tunables are declared in the surface config, values unch
     expect(hook).not.toMatch(/staleTime:\s*\d/);
     expect(hook).not.toMatch(/failureCount\s*<\s*\d/);
     expect(hook).not.toMatch(/length\s*>=\s*\d/);
-    expect(hook).toMatch(/sliceNumber\(searchSlice\.config, 'min_query_len'\)/);
-    for (const key of ['entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) expect(hook, key).toMatch(new RegExp(`sliceNumber\\(searchSlice\\.config, '${key}'\\)`));
+    expect(hook).toMatch(/sliceNumber\(searchSlice, 'min_query_len'\)/);
+    for (const key of ['entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) expect(hook, key).toMatch(new RegExp(`sliceNumber\\(searchSlice, '${key}'\\)`));
   });
   it('both phone read sites use the one reader', () => {
-    expect(code('mobile/src/lib/semiQuestion.ts')).toMatch(/sliceNumber\(slice\.config, 'continue_wait_ms'\)/);
+    expect(code('mobile/src/lib/semiQuestion.ts')).toMatch(/sliceNumber\(slice, 'continue_wait_ms'\)/);
   });
   it('D: the reader throws by key name when the slice value is missing, not a number or not finite, and returns a finite number as is', () => {
-    expect(sliceNumber({ k: 60000 }, 'k')).toBe(60000);
-    expect(sliceNumber({ k: 0 }, 'k')).toBe(0);
+    const sl = (config: Record<string, unknown>) => ({ config, bounds: { k: { min: 0, max: 1e9, on_invalid: 'fail' }, continue_wait_ms: { min: 0, max: 1e9, on_invalid: 'fail' } } }); // FIX.CONFIG-BOUNDS (task-395): the reader takes the slice
+    expect(sliceNumber(sl({ k: 60000 }), 'k')).toBe(60000);
+    expect(sliceNumber(sl({ k: 0 }), 'k')).toBe(0);
     for (const bad of [undefined, null, '60', Number.NaN, Number.POSITIVE_INFINITY]) {
-      expect(() => sliceNumber({ k: bad }, 'k'), String(bad)).toThrow(/"k"/);
+      expect(() => sliceNumber(sl({ k: bad }), 'k'), String(bad)).toThrow(/"k"/);
     }
-    expect(() => sliceNumber({}, 'continue_wait_ms')).toThrow(/continue_wait_ms/);
+    expect(() => sliceNumber(sl({}), 'continue_wait_ms')).toThrow(/continue_wait_ms/);
   });
 });
 

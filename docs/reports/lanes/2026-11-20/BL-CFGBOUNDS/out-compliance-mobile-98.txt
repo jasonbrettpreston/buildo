@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:56.630Z file_sha256=94c91a97d222a51a06045b98f41230ce613ebc1f077ea2fb68865c1eab9e5013 prompt_sha256=878936fe4dbe5d1aaeb80036362961aef32687e2abfd96d17fbd7851ad8992f3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 98 §5 "On every PR targeting `main`, GitHub Actions runs: `npm run typecheck` (TypeScript compiler) ... `npm run test` (Jest unit tests)" — mobile/src/constants/parcelSearch.ts "-export const SEARCH_DEBOUNCE_MS = 400;" (with its removed sibling line "-// The constants of the same names stay for the non-binding readers") — the export the diff deletes is, by its own removed comment, consumed by non-binding readers, and no such reader appears in the diff (the descriptor it edits still says "consumed at mobile/app/(app)/parcel-tool/index.tsx:72"), so §5's typecheck and Jest checks fail on a dangling import this change never shows — grep every importer of SEARCH_DEBOUNCE_MS from '@/constants/parcelSearch' and either repoint it to '@/components/surfaces/SearchBinding' or keep a re-export, and add those files to the diff.
+
+DEFER severity=MED — Spec 98 §4.1 "`useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`) ... `shouldRetryParcelLookup` skips 400/403/429/drift" — mobile/src/hooks/useParcelLookup.ts "const LOOKUP_RETRY_MAX = sliceNumber(searchSlice, 'lookup_retry_max');" — the mandated test for this hook is untouched while every constant read in the hook changed shape and the reader now clamps (on_invalid clamp) where it previously only threw, so a case pinning the old call form or an out-of-bounds fixture goes red under §5's `npm run test` — extend useParcelLookup.test.ts with the four constants plus one clamp and one missing-bounds throw case.
+
+DEFER severity=MED — Spec 98 §5 "`npm run test` (Jest unit tests)" — src/tests/surfaces/surface-conformance.logic.test.ts "import { configBoundsProblems } from '../../../scripts/surfaces/emit-mobile-surfaces.mjs';" — a TS Jest suite now imports an .mjs build script and I cannot see a declaration file, allowJs, or an import-time main guard in the pasted material, so typecheck or the suite may fail (or a generator may run inside the test) — move configBoundsProblems into a typed module and import that, or add the .d.ts and a main guard and show both.
+
+DEFER severity=LOW — Spec 98 §1 "Scope: This spec defines the Windows/Android local development startup routine, the organization of Maestro E2E test flows, database cloning for realistic test data, and the unit testing boundaries" — scripts/surfaces/_schema/census/web-product.json "+      \"bounds\": {" — the change extends bounds enforcement to the web binding descriptors and the web census, which no pasted clause and no pasted operator ruling names (the 2026-11-20 verbatim appears only inside the diff, not in the pasted context) — confirm task-395's card owns the web side or drop those hunks, and paste the ruling if it is the authority so it can be checked against.
+
+MET — Spec 98 §4 "**Tool:** Jest + jest-expo **Location:** `mobile/__tests__/`" — mobile/__tests__/sliceConfig.test.ts — the new reader test is a Jest unit test in the mandated folder.
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — mobile/__tests__/sliceConfig.test.ts — the added cases assert values and thrown errors only, no rendered snapshot.
+MET — Spec 98 §4.1 "**§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — NONE — no store file or clearLocalSessionState is touched, so no count change is owed.
+MET — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — NONE — no Maestro flow, clearState declaration or required-suite entry is added, removed or altered, and §4's "No Maestro flow covers parcel-tool today" is unchanged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  90295ms (90.3s)
+📊 Tokens — total: 39330, input: 28251, output: 11079, reasoning: 10126

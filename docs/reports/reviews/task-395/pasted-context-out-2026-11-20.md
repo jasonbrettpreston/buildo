@@ -1,0 +1,8 @@
+# Pasted context for task-395 output lenses (lean: the clauses and rulings, not the plan)
+## Spec 128 Rule 3 (128_surface_standard_policy.md:30)
+| 3 | Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is al… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 3 | **Tunables externalized** | every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture — same registry, same presence/validity split (R-G). |
+## Operator words (MORNING-DECISIONS.md:1476)
+Operator, verbatim: "Let the grounder resolve them all as long as the result is compliant"
+## Design (task-395): bounds declared per config key in the surface schema (config.bounds.<key> = min, max, on_invalid fail|clamp), refused by the one descriptor validator (SV-DESC) when a number has none; the generator refuses an out-of-range value; the phone reader sliceNumber(slice, key) applies them. Values unchanged. Dead SEARCH_DEBOUNCE_MS copy removed. Spec 128 dated note added. Not built: the phone area factor (no surface slice for its two screens). Bounds values are lane proposals for the grounder. Diff is -U0, split in three parts (code, census and generated, golden fixtures); this part is one of them.
+## Spec 126 P4 (:189)
+| **P4** | **All tunables are data; zero thresholds in `src/`.** | `funnel.ts:154-166` and `SearchPermitsModal.tsx:34 DEBOUNCE_MS = 300` — which the SEARCH archetype turns into a required `config.debounce_ms` declaration. |

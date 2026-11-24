@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:02:02.840Z file_sha256=197c086720063fd5faa5367c80954da1ace6c0e975effb3681dc58649fea918b prompt_sha256=7722318efc4b996659d10696a5a158e7bd8020a366529d262943751e459c151a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-census.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/surfaces/generated/surface-descriptor.d.ts:348 "  bounds?: Record<string, unknown>;" — the type hangs `bounds` off the SurfaceDescriptor root, but the hand-written source of the same field nests it one level down inside the config declaration object, at the same indent as the tunables it bounds (scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:443 "    \"bounds\": {") — fix: emit `bounds` at the level it is actually written to (config.bounds, two spaces deeper) so a typed read cannot resolve undefined, and assert the level in SV-DESC.
+
+DEFER severity=MED — src/lib/surfaces/generated/surface-descriptor.d.ts:348 "  bounds?: Record<string, unknown>;" — `unknown` throws away the shape min, max, on_invalid fail|clamp that the design says SV-DESC validates and sliceNumber applies, so every consumer must narrow or cast by hand and the contract is unenforced at compile time — fix: type it as Record<string, { min: number; max: number; on_invalid: 'fail' | 'clamp' }>.
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md:818 "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN; the server range is src/app/api/parcels/lookup/types.ts:42" — the same entry now says all five keys are "read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts)" while this ref still names the code constant for min_query_len, so either the constant is a dead second source of truth (debounce_ms's copy was removed, this one was not) or the min 3 / max 120 / clamp bounds added for that key are never applied — fix: read min_query_len through sliceNumber and delete the constant, or drop its bounds entry.
+
+DEFER severity=LOW — src/lib/surfaces/generated/surface-descriptor.d.ts:347 "/** FIX.CONFIG-BOUNDS (task-395; ... the bounds and the failure behav */" — the generator truncated the doc comment mid-word, so the field's stated contract ends on "failure behav" and the same silent truncation will hit every long generated comment — fix: stop truncating generated doc text and regenerate.
+
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md:818 "mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72" — the apply-and-log behaviour this finding would rest on lives in mobile/src/lib/sliceConfig.ts and SearchBinding.tsx, neither of which is in this diff part, so I cannot see whether sliceNumber narrows the `unknown` record or casts it; grounder to confirm.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  58499ms (58.5s)
+📊 Tokens — total: 26546, input: 16198, output: 10348, reasoning: 9676

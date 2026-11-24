@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:47.167Z file_sha256=7f28bd5f92606dc9e2888cbccc3187a681be7fb603b113f3740897ae88317f4b prompt_sha256=c6c999d0d8aa85179f71c5eedad02c4e116520c44c90de6f37f1fd273584e630
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture, same registry, same presence/validity split" — plan step 6 "Spec 128 dated note on Rule 3" and step 1 "new optional property `bounds`" — the six config keys get bounds in the surface schema plus a dated note, and no logic_variables row is added for any of them, so the registered-variable clause is satisfied only by a comment, which the operator latitude "as long as the result is compliant" does not license — add the six logic_variables rows with bounds and on_invalid, or obtain an operator ruling amending Rule 3 (a dated note is not a ruling)
+
+BUG severity=HIGH — operator ruling "Let the grounder resolve them all as long as the result is compliant" with task note "The lane verifies the grounder's facts before building and stops if one is false" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator" — the grounded resolution item (area factor reaching the phone as a generated-slice number from the pinned seed row) is declared not true and the lane builds on instead of stopping — stop the lane and return the card, or get operator words narrowing it to bounds only
+
+BUG severity=HIGH — §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity" — plan Tests "Goldens: only the fingerprint hash of the search and semi descriptors moves" — this change adds a schema constraint (bounds), a derivation (fail/clamp) and generated descriptors/d.ts/validator/registry doc, yet the test plan names no parity battery (regenerate to buffer, diff the committed file) and no regression lock — add a parity test diffing regenerated descriptors/d.ts/validator/registry doc against the committed files and a regression test pinning the six current config values and the reader's existing behaviour
+
+BUG severity=HIGH — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan "phone tests cannot run locally: phone-test green UNPROVEN until Mobile CI" — the sliceConfig reader, its bounds branch and the three caller changes are written with no demonstrably failing run anywhere — make the reader test fail reproducibly in a runnable environment first, or hold the reader and caller steps out of this change
+
+BUG severity=HIGH — §5.1 "You MUST always import typed factories from `src/tests/factories.ts`" — plan "planted defects (a descriptor with a numeric config key and no bounds refused by the compiled validator" — planted descriptor and slice fixtures are inline object literals and no factory import is named in the Tests section — name or add a typed descriptor factory in src/tests/factories.ts and cite it for every planted fixture
+
+BUG severity=HIGH — 136 fe.44 "the conversion factor is content/settings, never code" — plan F6 "The two typed copies are mobile/src/lib/leadDetailFormat.ts:15 ... and mobile/src/lib/parcelCostFormat.ts:11" — 10.7639 stays typed in mobile code and the plan leaves both copies in place, so the factor the card names is still code — resolve the factor through the pinned parcels_sqm_to_sqft row to the phone, or get operator words putting the factor part out of scope
+
+DEFER severity=MED — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan "mobile/__tests__/sliceConfig.test.ts (new)" — pure reader tests are filed outside the mandated logic pattern, so the §5.5 layer map cannot count them — rename to sliceConfig.logic.test.ts
+
+DEFER severity=MED — operator ruling "Let the grounder resolve them all" — plan "Bounds values are LANE PROPOSALS, flagged for the grounder: debounce_ms [0,2000] clamp; min_query_len [3,120] clamp" — the bounds the clause requires as resolved are authored by the lane and only flagged, so the delegation is still open at plan-lock — have the grounder record the six values before lock, and note that min_query_len [3,120] duplicates the src literal at src/app/api/parcels/lookup/types.ts:42 and drifts if that floor moves
+
+MET — 126 P4 "All tunables are data; zero thresholds in `src/`" — plan step 5 "Remove the dead second copy SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts" — removes the remaining literal debounce from code and re-points its two tests to the slice
+MET — 128 Rule 3 "on_invalid posture" — plan step 1 "on_invalid fail|clamp, all three required" — bounds and failure posture are declared per key as descriptor data and refused by the compiled validator
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+
+---
+⏱  43796ms (43.8s)
+📊 Tokens — total: 13719, input: 4903, output: 8816, reasoning: 7686

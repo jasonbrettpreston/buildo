@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:59.693Z file_sha256=c3998b2ed14b6015658e95aa1e976186c7e7b40a628701117e16bc9d7326dee9 prompt_sha256=778d5a5c9bc1aecef86e53cde9c4f9b178a716f9e7e7c79d6a17ed7405bf8959
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 dated note 2026-11-20 "resolved by the separate grounder, option (b)" and the operator verbatim it quotes, "Let the grounder resolve them all as long as the result is compliant" — mobile/src/generated/surfaces/mobile_parcel_search.json:16 ""why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."" — four of the six bound entries (debounce_ms, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms) describe themselves as lane proposals still owed to the grounder, so the ruling's "the grounder resolve them all" is not evidenced for those numbers, only for min_query_len which cites src/app/api/parcels/lookup/types.ts:42 — record the grounder's ruling per key in the note and in each why (as min_query_len does), or mark the four bounds as open in the same note.
+
+DEFER severity=MED — Spec 128 dated note 2026-11-20 "the schema refuses a descriptor whose number has no entry (SV-DESC, the one validator `surface-validate` runs)" — scripts/surfaces/_schema/surface.schema.json:2724 ""if": { "required": [ "debounce_ms" ], "properties": { "debounce_ms": { "type": "integer" } } }" — the requirement is restated once per enumerated key name and fires only when the value is typed integer, so a config number under any other key, or a numeric property the schema types as "number" rather than "integer" (the C-10 guard itself filters on JSON.stringify(p).includes('"integer"')), is not refused by the validator the note names; only the root vitest would flag it — add one generic rule (bounds must carry an entry for every numeric value in config) or close config's key set in the schema and assert that closure.
+
+DEFER severity=LOW — Spec 126 §11b.2 Descriptor row "`UNRESEARCHED` fails the gate" — src/tests/surfaces/surface-conformance.logic.test.ts:981 "it('UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)'" with "expect(v(d)).toEqual([]);" — the new test pins a descriptor carrying UNRESEARCHED in config as validating clean, which reads against the Descriptor row's "UNRESEARCHED fails the gate" if that clause is not render.form scoped — state the scope in the test title or in the Spec 128 note so the two readings cannot collide.
+
+MET — Spec 128 note "declaring, per key, `config.bounds.<key>` = `min`, `max`, `on_invalid`" — scripts/surfaces/_schema/surface.schema.json:2686 — bounds object per key, each entry requiring min, max and an on_invalid of const fail or clamp.
+MET — Spec 128 note "the mobile generator refuses a value outside its bounds" — scripts/surfaces/emit-mobile-surfaces.mjs:37 — configBoundsProblems throws from buildOutputs naming config.<key>.
+MET — Spec 128 note "the phone reader `mobile/src/lib/sliceConfig.ts` applies them (fail throws by key name, clamp returns the nearest bound)" — mobile/src/lib/sliceConfig.ts:20 — sliceNumber returns in range, clamps, or throws by key name.
+MET — Spec 128 note "Values did not change" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 — 400, 3, 0, 3, 60000 and 60000 unchanged, bounds added beside them.
+MET — Spec 126 §11b.2 Descriptor row "the validator, types and registry regenerate" — src/lib/surfaces/generated/surface-descriptor.d.ts:347 and docs/reports/generated/127-surface-registry.md:818 — types and registry regenerated with the new bounds member.
+MET — Spec 126 §11b.2 Generator "regenerated, never hand-edited" — mobile/src/generated/surfaces/mobile_parcel_search.json:2 — the $comment input_sha moves with the emitted bounds block.
+MET — Spec 126 §11b.2 Goldens row and the MF-40 restamp precedent "REPORT goldens are unchanged" — src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json:329 — only the descriptor fingerprint changed, no props changed.
+MET — Spec 126 §11b.2 Locks row "conformance (FE-31)" — src/tests/surfaces/surface-conformance.logic.test.ts:943 — a C-10 planted-defect block is added to the conformance lock covering absent bounds, missing bound, missing on_invalid and on_invalid default.
+
+REJECT — Spec 126 §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else" — the change adds config.bounds to binding_mobile_list, binding_web_search and shared_mobile_surface_binding — those descriptors already carry debounce_ms and min_query_len numbers, and Rule 3 requires an entry for every such number, so the addition is the clause being met, not new per-archetype infrastructure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  107892ms (107.9s)
+📊 Tokens — total: 56808, input: 35747, output: 21061, reasoning: 19851

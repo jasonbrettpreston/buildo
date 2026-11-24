@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:02:25.231Z file_sha256=cac35226baa3317dd53cff8504af3c8ded45d1a67e4cf57a579c11fe73d89d59 prompt_sha256=befefd9b602642ef89148f77e8b1b78f3e7b28a411eb639bf4f26c3669e2f557
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-code.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/__tests__/surfaces test "UNRESEARCHED stays a countable state and needs no bounds" against mobile/src/hooks/useParcelLookup.ts:58 "const LOOKUP_STALE_MS = sliceNumber(searchSlice, 'lookup_stale_ms');" — a descriptor that legally holds "UNRESEARCHED" for a tunable (sanctioned by the new conformance test and skipped by the generator's "if (typeof v !== 'number') continue;") emits a slice whose module-scope read throws, so the app crashes at import rather than degrading, two postures for one state — give the reader a declared fallback for a non-number/unresearched value, or make the hook read it lazily and fall back with a logged warning.
+
+BUG severity=MED — mobile/src/components/surfaces/SearchBinding.tsx:37 "export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');" — bounds are now applied at module import, so any out-of-range value with on_invalid fail is a bundle-load crash for every screen that imports the binding, not a search-screen failure, and the old bare read never threw — resolve the number at first use inside the hook/screen so the failure is contained to the search path.
+
+BUG severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs:74 "const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));" — bounds is optional in the schema and required only when a numeric key is present, so a descriptor whose config holds no numbers and no bounds block passes validation and configBoundsProblems, then this line throws "Cannot read properties of undefined" instead of emitting, masking a legal descriptor as a generator defect — guard with d.config.bounds ?? {} and let the empty bounds object be omitted from the slice.
+
+DEFER severity=MED — mobile/src/lib/sliceConfig.ts:22 "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — a clamped value is used silently with no log or telemetry, so a stale window or retry count that drifts out of bounds changes phone behaviour invisibly (LOOKUP_STALE_MS, LOOKUP_RETRY_MAX) — log once per key when clamping so an over-bound slice leaves a trace.
+
+DEFER severity=LOW — scripts/surfaces/_schema/surface.schema.json:2730 "\"debounce_ms\": { \"type\": \"integer\" }" — the bounds requirement is gated on integer, so a non-integer number or a numeric key typed differently in the schema escapes SV-DESC entirely and rests only on the generate-time check, contradicting the note's claim that the schema refuses a number with no entry — gate the if on "type": "number" so a float cannot slip the descriptor validator.
+
+REJECT — mobile/src/lib/sliceConfig.ts:19 "if (b === undefined || typeof b.min !== 'number' || typeof b.max !== 'number' || !(b.min <= b.max)) throw new Error(...)" — a missing or inverted bounds entry looks like a crash path for a hand-edited slice — handled: the generator refuses inverted pairs and absent entries before emitting, and throwing names the key, which is the fail-closed posture the change intends.
+
+REJECT — mobile/src/lib/sliceConfig.ts:20 "if (slice.bounds?.[key]" optional bounds — a slice emitted with no bounds block looks like it would read unguarded — handled: the optional chain plus the undefined check makes every such read throw by key name, never returning a silent undefined to a timer.
+
+VERDICT: FAIL on error-path safety
+Paths walked: in-range read, clamp above and below, fail out-of-range, missing bounds entry, no bounds block, malformed bounds, inverted pair, unknown on_invalid, non-finite and non-number value, unresearched string key, module-load resolution of all six tunables, generator value check and bounds copy, descriptor schema refusal, retry/stale constants, double-submit and write paths (none touched by this diff)   Unguarded: 3
+
+---
+⏱  27326ms (27.3s)
+📊 Tokens — total: 23086, input: 18695, output: 4391, reasoning: 3494

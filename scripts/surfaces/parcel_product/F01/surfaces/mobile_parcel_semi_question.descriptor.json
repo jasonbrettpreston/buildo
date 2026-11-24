@@ -277,13 +277,14 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
+    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378). FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): continue_wait_ms is the registered logic variable maxbld_page_continue_wait_ms, declared in config.logic_variables and resolved from its seed row by the generator; only the phone applies its bounds at run time.",
     "evidence": [
       "migrations/320_parcel_lot_form_view.sql",
       "migrations/323_semi_o4_zone_and_wall_asks.sql",
       "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m",
       "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes",
-      "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice"
+      "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice",
+      "scripts/seeds/logic_variables.json — the row maxbld_page_continue_wait_ms"
     ],
     "logic_variables": [
       {
@@ -320,6 +321,13 @@
         "name": "semi_ask_two_parcel_zone_classes",
         "on_invalid": "default",
         "why": "A missing, empty or out-of-vocabulary list reads as the seeded [RD] inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
+      },
+      {
+        "name": "maxbld_page_continue_wait_ms",
+        "min": 1000,
+        "max": 600000,
+        "on_invalid": "clamp",
+        "why": "Registered logic variable maxbld_page_continue_wait_ms (scripts/seeds/logic_variables.json); min and max mirror the row and the generator refuses a difference. range has NO SOURCE (envelope: load_ravines_download_timeout_ms 1000 to 600000). A value outside the bounds reads as the nearest bound on the phone, with a warning naming the key."
       }
     ],
     "retired": [],

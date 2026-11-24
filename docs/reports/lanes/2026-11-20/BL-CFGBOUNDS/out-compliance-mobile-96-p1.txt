@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:43.082Z file_sha256=4a347758794ab1d3f3f41222948aaebc333a59b5f51dab4d32fc88286af7179a prompt_sha256=a27b6ea7140b52f36383880613d4c1b5d9e080f06edff0ecee2a6ca824a512f5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-96-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 96 scope — "this spec governs the lead-gen product's (Buildo) trial, paywall and subscription gate" — NONE — the diff adds config.bounds to parcel-search surfaces, behaviour no pasted Spec 96 clause or operator ruling names; the cited Spec 128 Rule 3 and 2026-11-20 ruling are only inside the diff, not in the governing context — not assessable under the pasted spec, so paste the governing Spec 128 Rule 3 and ruling or split this diff into its own Spec 128 review
+MET — Spec 96 dated note 2026-11-11 "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes." — diff file list — no subscription, trial, paywall, or lead-gen gate file is touched
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  96938ms (96.9s)
+📊 Tokens — total: 54549, input: 34896, output: 19653, reasoning: 19452

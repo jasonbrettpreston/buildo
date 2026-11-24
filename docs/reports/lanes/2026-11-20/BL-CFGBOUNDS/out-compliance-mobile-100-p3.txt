@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:09.812Z file_sha256=e31221bd7a1950dfe159f95de9021f6894d168681a9cb2fc4eeb4c92b60555b7 prompt_sha256=fe8a774d64f4452da54587abd680a79d0eefe9119fe73d0e6ff23a89c66677e9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-100-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §8 "no v1 code beyond the null placeholder" — `mobile/src/generated/surfaces/mobile_parcel_search.json` `+  "bounds": {` — the diff adds a whole new runtime contract (reader applies per-key bounds, generator refuses out-of-range values, schema allOf rules, `sliceNumber(slice, key)` signature change at all call sites) that no pasted clause or operator ruling names; the only cited authorities (Spec 128 Rule 3, operator verbatim `MORNING-DECISIONS.md:1476`) are not pasted, so compliance cannot be judged — paste that rule and ruling, or drop the bounds work from this diff.
+BUG severity=HIGH — Operating Boundaries "**Out-of-Scope Files:** ALL of `scripts/`, `migrations/` (zero migrations, zero new indexes" — `scripts/surfaces/_schema/surface.schema.json` `+        "bounds": {` — the change edits scripts/ (schema, generator, census, three descriptors, two binding descriptors) and a spec document, all outside the governing card's admitted scope, with no pasted ruling widening it — split the scripts/ contract edits into the card that owns them and keep this diff to the mobile reader call sites.
+DEFER severity=LOW — §6 "`ConsumerParcelLookupResultSchema` parses a server-shaped fixture; rejects a drifted shape" — `mobile/__tests__/sliceConfig.test.ts:1` `+/** @jest-environment node */` — the §6 mobile Jest set is enumerated and does not include `sliceConfig.test.ts`, nor the edits to `parcelScreens.golden.test.ts` and `parcelSearchMatch.test.ts`, while Target Files admits only "the §6 test files" — name these tests in the test plan, or amend the plan, before lock.
+DEFER severity=LOW — §6 "FSI/area formatting" — `mobile/src/lib/parcelCostFormat.ts:11` "the phone area factor (`10.7639`, `mobile/src/lib/leadDetailFormat.ts:15`, `mobile/src/lib/parcelCostFormat.ts:11`) still waits for a surface slice to carry it from the pinned seed row" — the diff's own note leaves the area factor outside the slice/bounds mechanism the card names, and adds no test proving the §6 area-formatting helper — record as a deferred grounder item with an owner, not as done.
+MET — §6 "jest-node — no render tree per Spec 98" — `mobile/__tests__/sliceConfig.test.ts:1` — the added test is a node-environment test with no render tree, as the tier requires.
+MET — Operating Boundaries "`mobile/src/hooks/useParcelLookup.ts`" — `mobile/src/hooks/useParcelLookup.ts` `-const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');` — the one hook the diff rewrites is on the admitted target list.
+REJECT — §8 "v1 access is existing subscribed app users; a distinct home-looker persona, entitlement, and pricing" — accused of adding an entitlement or pricing path — the diff only moves tunable bounds and the reader signature, no persona, entitlement or pricing surface is added, so this is not a real issue.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  46769ms (46.8s)
+📊 Tokens — total: 35890, input: 27186, output: 8704, reasoning: 7960

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:37:53.645Z file_sha256=fa9356628f57c2d9563ed45c259b18e8df567a09387f20dc1dabe2319f7c9424 prompt_sha256=1598dd91c46da62c7af81ca6e4a0c1897b27c85c4d5dd5b37589df58b95bcb9f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-surface-135.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan step 7 "Bounds values are LANE PROPOSALS, flagged for the grounder: debounce_ms [0,2000] clamp; min_query_len [3,120] clamp; continue_wait_ms [1000,300000] clamp" — the ruling delegates numeric resolution to the grounder, so lane-proposed and lane-built min/max/on_invalid triples are behaviour no pasted clause names, and steps 1 to 4 land on unratified numbers — get the grounder to supply and record the six bound triples before any schema/emitter/reader code lands
+
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator." — "resolve them all" is not met, one named part of the resolution is returned unresolved — F6 fact is false and a new surface conversion would be required, so returning it is safe only once the grounder re-resolves it or the operator releases that part before lock
+
+DEFER severity=MED — Spec 128 Rule 3 ":30" "is a registered logic variable resolved through `ctx.config`, never a literal" — plan step 6 "a database-registered variable would be a control with no effect" — the bounds mechanism is not a registered logic variable resolved through ctx.config, so compliance rests entirely on the Rule 3 dated note being the different party's adjudication per Spec 135 rule 1 "A different party adjudicates" — confirm the note is the grounder's adjudication, not lane-authored, before building
+
+DEFER severity=LOW — Spec 135 FE-31 "descriptor valid with no `UNRESEARCHED` and no `golden: \"none\"`" — plan step 1 "for each of the six number keys, an if/then: when the key is an integer, `bounds` is required" — a config key still typed UNRESEARCHED does not trigger the if/then, so a converted descriptor can keep an UNRESEARCHED config key with no bounds — extend the rule to refuse or resolve any UNRESEARCHED config key on a converted surface, since F5 lists the keys as "`integer, minimum 0` or UNRESEARCHED"
+
+REJECT — Spec 135 FE-05 "the front end may show more, never derive differently; every number comes from McBylaws; no maths in the UI." — accused of sliceNumber clamp deriving a value on the client — FE-05 bars UI maths on displayed numbers, and clamping a config tunable is not a displayed reading
+
+REJECT — Spec 135 FE-44 "the conversion factor is content/settings, never code" — accused of leaving 10.7639 typed in code at mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11 — FE-44's scope is unit display across the report and those typed copies sit on the old phone lead screen, outside the report surface, so this row does not reach them
+
+MET — Spec 126 section 0a principle 1 ":59" "a screen is a descriptor" — plan step 1 "new optional property `bounds`" — bounds are declared in schema and census data, screens stay descriptors
+MET — Spec 126 P4 ":189" "zero thresholds in `src/`." — plan step 5 "Remove the dead second copy SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts" — a threshold literal leaves src/
+MET — Spec 128 Rule 3 ":30" "with bounds and an `on_invalid` posture" — plan step 1 "on_invalid fail|clamp" — the failure posture is declared per key
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  97089ms (97.1s)
+📊 Tokens — total: 48417, input: 28985, output: 19432, reasoning: 18553

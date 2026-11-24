@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:04:59.298Z file_sha256=aefce70306256300d24f2d77795bf61c76c49bb8df28c26cddcd60222b906632 prompt_sha256=ec293fb530bf723101cdb34cbbbeb15e01d74fe153ca7ff479675b585de2f974
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11.1 "Approved on paper is not a verification state." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder" — three of the five search bounds and the semi bound are still labelled a lane proposal awaiting the grounder, while the Spec 128 note added in the same diff asserts they were "resolved by the separate grounder, option (b)", so the operator condition "as long as the result is compliant" is asserted on paper only — fix: paste the grounder's per-key resolution into each `why` and the note, or mark those bounds UNVERIFIED in the Spec 128 note.
+
+DEFER severity=MED — 11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/surfaces/surface-conformance.logic.test.ts "the real tree: every live descriptor validates" — the test name claims every live descriptor but the body reads only mobile_parcel_search and mobile_parcel_semi_question, so binding_mobile_list, binding_web_search and shared_mobile_surface_binding are never held to the bounds rule by this lock — fix: validate every scripts/surfaces/**/surfaces/*.descriptor.json in that test.
+
+DEFER severity=MED — 11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW." — src/tests/surfaces/surface-conformance.logic.test.ts "const d1 = search(); delete d1.config.bounds; expect(v(d1).length).toBeGreaterThan(0);" — the RED assertions accept any error at all, so an unrelated validator complaint greens the lock without proving the bounds rule fired — fix: assert the bounds message naming the key, e.g. expect(v(d1).join()).toContain('bounds').
+
+DEFER severity=MED — 11.1 "a census grep runs at the full scope its conclusion covers" — docs/reports/generated/127-surface-registry.md "read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts)" while the same row cites "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN" — the word "only" and "the one reader" are not shown at full scope for min_query_len, which keeps a same-named constant outside sliceNumber in the file the row itself names — fix: route or delete that copy, or narrow the wording to the keys that go through sliceNumber.
+
+DEFER severity=LOW — 10 dated note 2026-11-19 "the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`" — NONE — the diff touches docs but adds no docs/reports/reviews/task-395/ record and no docs/reports/lanes/<date>/BL-CFGBOUNDS/ copy, and this run carried no task-395 context file, so the task's own acceptance criteria are not in the material — fix: land the review record and lane report copy in the lane's last commit and point task-395 at them.
+
+MET — 11.1 "a line citation is read, not remembered" — mobile/src/components/surfaces/SearchBinding.tsx:37 — the cited line is exactly the added SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms'), and parcelSearch.ts:21 is the arithmetically correct post-delete line after "@@ -14,6 +14 @@".
+MET — 11.1 "Values did not change." (Spec 128 note) — src/tests/surfaces/surface-conformance.logic.test.ts "toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 })" — the unchanged-values claim carries an executed assertion on the live descriptor.
+MET — 11.3 "Every lock is proven in BOTH directions" — mobile/__tests__/parcelScreens.golden.test.ts "/export const SEARCH_DEBOUNCE_MS = sliceNumber\(SEARCH_SLICE, 'debounce_ms'\)/" — the shape lock fails on the old SEARCH_SLICE.config.debounce_ms text and passes on the new one.
+MET — 11.3 "a lock that was never red against the defect it names is not a lock" — mobile/__tests__/sliceConfig.test.ts "fail: an out-of-range value throws, naming the key" — the reader is locked on both postures plus inverted pair and unknown on_invalid.
+
+REJECT — 11.1 — that the proposed bound values were never executed or queried — 11.5-FE "Do not demand queries of a design decision" applies here; the bounds are design judgments, so only the record's consistency is in scope, not a query.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 4
+
+---
+⏱  91896ms (91.9s)
+📊 Tokens — total: 51159, input: 32859, output: 18300, reasoning: 17182

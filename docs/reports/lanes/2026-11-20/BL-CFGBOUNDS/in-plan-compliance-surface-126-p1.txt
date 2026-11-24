@@ -1,0 +1,572 @@
+LIST surface-126 sha256:aa0e09f7b7905955bc2b93e313bb6d4294b54043b0dc8f8f3fd53f5f293c2e29 material sha256:141ecd2a764f07c47f25041e386265ea896e84cf16843af322a1b01be8000377 part 1 of 3
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 1 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# SPEC 126 — MaxBLD Surface Standard (the surface descriptor as contract)
+
+> **Status: DRAFT** — Authorized for McFrontend Phase 1 only (card answer Q-FE a: "A Spec 126-128 plan is authorized as documents only, named McFrontend. ... The build starts after McBylaws increment 2 closes"; scope mobile, web, admin and PDF). Phase 1 = the REPORT section (§11a) and the report-page conversion only. Every other phase stays "Not authorized for implementation" until touched for a product reason (card answer Q-MFS a: "Other screens convert only when touched for a product reason"). Companion specs, RULED 2026-11-04 (Q-MF1 a): 135 (decisions register) and 136 (generated handbook), in docs/specs/02-web-admin. Source of the rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`.
+>
+> Dated note 2026-11-09 (McFrontend Phase 2 (expansion); prior text kept, M-246; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): authorized also for **McFrontend Phase 2 (expansion)**: every MaxBLD page on one standard (§11b; D-0). Phase 2 surfaces are those listed in §11b.3 (queue rows MF-35, MF-37..MF-50, MF-30). The 2026-11-02 infra freeze is lifted by name for Phase 2, including the library dependencies and the Spec 33 amendment (D-1). Web first; the separate mobile app, checkout and the maxbld.ca front door are LATER, triggered rows. Other screens stay convert-on-touch; scope D stays fenced (Spec 128 R-03).
+>
+> Prior status line (2026-09-15, kept, M-246): authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation. A WF1 plan with PLAN LOCKED gates every phase below; `.cursor/wf1_spec126_128_active_task.md` is the authoring plan this spec was written under.
+>
+> **Placement note (measured, not chosen).** These three specs span mobile, web and admin, so `docs/specs/04-platform/` was the natural home. It is **not supported today**: `scripts/generate-system-map.mjs:24-31` defines `SECTIONS` as a hard-coded directory allow-list (`00-architecture`, `01-pipeline`, `02-web-admin`, `03-mobile`, `archive`, `reference`) and a directory absent from it is **silently dropped** from the system map — no throw, `collectSpecs` is simply never called for it. `src/tests/system-map.infra.test.ts` hard-codes the same four sub-directories at `:49`, `:300` and `:325`. Creating `04-platform/` therefore means a code change to a generator and a test that are outside this spec's Target Files. **Specs 126/127/128 land in `docs/specs/02-web-admin/` next to Spec 125, and the folder question is filed as `ASK-06` in Spec 128 §6.**
+>
+> ⚠️ **System-map coupling.** These specs list `src/` and `scripts/` paths in their Operating Boundaries, and `src/tests/system-map.infra.test.ts:49` asserts every such path appears in the committed system-map row for the spec. **`docs/specs/00-architecture/00_system_map.md` has been regenerated** (`node scripts/generate-system-map.mjs`) and is part of this change; re-run it whenever a boundary list changes. The map is derived, never hand-edited (PD #2).
+
+---
+
+
+## 0. What this supersedes — Spec 125 is absorbed
+
+**Spec 125 (`docs/specs/02-web-admin/125_schema_driven_ui_engine.md`) is SUPERSEDED by this spec and should be marked so at the commit that lands 126/127/128.** Spec 125 was an operator-supplied blueprint (§1–§13 verbatim) with an orchestrator correction block (§0). It was right about the *shape* — UI as a projection of a descriptor, an archetype registry, generated types, contract tests, one engine rather than N bespoke pages — and it is the reason this programme exists. It was written before the estate was censused, so its arithmetic and several of its mechanisms are wrong against the tree.
+
+This spec is the grounded successor. It is written against **`docs/reports/2026-09-15-spec126-surface-unit-and-schema-model.md`** (the census: 53 rendering surfaces, 61 API contracts, 87 tables, every count executed against this tree) and **`docs/reports/2026-09-15-spec125-mobile-parcel-cost-tool-gap-analysis.md`**.
+
+### 0.1 What carried over from Spec 125
+
+| Spec 125 idea | Where it lives now |
+|---|---|
+| UI as a projection; zero hard-coded business logic in a page | §5 arrow 3 · §2 (the SURFACE unit) · Spec 128 rule 2 |
+| Archetype registry mapping descriptor archetypes to components | §3 (derived from the census rather than proposed) |
+| Server-side heavy lifting (Next.js Server Components) | §5 arrow 3 — **true on web, false on mobile**; see §0.2 |
+| Contract versioning (`schema_version` per descriptor) | §4 `identity.contract_version` + `spec_version` |
+| Fail-safe fallback for an unknown archetype | §3.4 (and it is a `checks[]` entry, not only a render branch) |
+| Generated end-to-end types + runtime Zod parsing | §5 arrow 2 (the highest-value arrow) |
+| `eslint-plugin-boundaries`-style architecture guardrails | §9 Phase 1 — guardrails move to the FIRST phase, not the last |
+| Contract testing against live descriptors | §5 arrow 6 (goldens, as a PAIR) · Spec 127 §3 gate S8 |
+| Centralized telemetry on contract breaks | §7 · §10 |
+| The `app_outputs` materialised projection | §6.3 — now specified: written by a converted pipeline step at the end of chain `sources` |
+
+### 0.2 What was DROPPED from Spec 125, and why
+
+Each row is a deliberate retirement, not an oversight. Retiring it here is the Spec 128 §4 disposition `knowingly-retired`.
+
+| Dropped | Spec 125 site | Why |
+|---|---|---|
+| **"18 categories"**, everywhere | §2, §4, §5 Rule 3, §6 Phase 1, §10 | **20.** `scripts/steps/_schema/step.schema.json` `required.length` → 20 (re-measured at authoring). The "18" was already stale in Spec 122 §1.3, whose own amendment block records the correction propagating to 13 prose sites. §4's mirror is GENERATED from the schema so this cannot recur. |
+| **FlutterFlow** as a mobile option | §6 Phase 3 | The mobile client is Expo / React Native (Spec 90). `mobile/package.json` carries `@supabase/supabase-js`, `expo-router`, NativeWind; there is no Flutter anything in the tree. |
+| **"The database record *is* the specification"** | §6 (Spec-to-Schema Mechanics) | Git is the source; Supabase holds a **projection** (§6.4). Descriptors in a table lose AJV-before-compute validation, golden fingerprinting and diff review — three mechanisms that exist and work. `src/tests/golden-fingerprint.infra.test.ts` exists precisely because a descriptor edit after capture must force a recapture; a table row cannot participate in that. |
+| **Generating migrations from descriptors** | implied by §6 Phase 1 | `npm run db:generate` is `drizzle-kit introspect` — the arrow already runs DB→TS. Reversing it collides with `scripts/migrate.js` (filename-keyed `schema_migrations`), `scripts/hooks/validate-migrations.sh` and `scripts/hooks/check-migration-down-comments.sh`. Replaced by **declare-and-assert** (§6.1). |
+| **`FORM_INPUT` / `DATA_GRID`** as archetype keys | §12 Step 1 | Placeholders. The real vocabulary is derived from the census in §3 and every member is a file in this tree. |
+| **`StepEngine`** as the engine's name | §3, §12 Steps 2–3 | Renamed **`SurfaceEngine`**. "Step" is the pipeline's unit (Spec 122) and is not being renamed; a second meaning for it across the admin/web/mobile trees is exactly the vocabulary collision Spec 122 V1–V6 were ruled to prevent. |
+| **`/workflow/[stepId]/page.tsx`** as the single dynamic route | §6 Phase 2, §11, §12 Step 3 | There is no `workflow` concept in the product. Routes stay where they are; what changes is that each route becomes a thin archetype projection. A single dynamic route would also defeat Next.js route-segment caching and the existing `route-guard.ts` path classification. |
+| **The React Flow admin node-graph** | §4 | Deferred, not adopted. `react-flow` is in neither `package.json`; the pipeline's dependency data already has a generated home (`npm run lineage-docs`). A new dependency for a picture of something already rendered as text is not a Phase-1 spend. Re-opens as `ASK-05` (Spec 128 §6). |
+| **`dependency-cruiser`** code-architecture mapping | §4 | Same reason; the estate already gates architecture with ESLint + ast-grep shape rules. Not a new tool in Phase 1. |
+| **§7 as part of the engine spec** | §7 | Split, per Spec 125 §0 item 7 — but *not* into three specs. Offers + PDF/EXPORT + metering are "same descriptor, different renderer/gate" and are specified together (§7 here, and the product spec that follows). Specifying them apart produces three vocabularies. |
+| **`supagen`** | §3 | Not a dependency and not needed; `drizzle-kit introspect` already generates the DB types. |
+| **"Treat the engine as a one-time core infrastructure build"** | §8 | Retired as a mitigation. The estate's own evidence is that a one-time build is how `/api/leads/view` became a 153-line meter with 44 green tests and zero callers. The engine is built pilot-first, with a kill criterion (§8.3). |
+
+### 0a. The six principles (McFrontend, added 2026-11-04)
+
+Operator verbatim, Q-MFP: "Q-MFP a". The card text of the six, adopted by that answer:
+
+1. **Declared, not coded:** a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code.
+2. **Proven, not reviewed (no errors):** every declaration is checked against the live contracts and the McBylaws catalogue, with golden render states and both-directions locks; observability (usage and drift in-product, Spec 126 P6/P8) sits inside this.
+3. **Fast:** a performance budget per archetype (load, payload) for the user; for the team, a new field or scenario ships in hours.
+4. **Single source:** the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI.
+5. **Honest display:** disclosures, confidence, "at least", not_evaluated and not_modelled always shown, never hidden; status words come from a closed list.
+6. **Same everywhere:** mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15).
+
+Each principle has a Lock in Spec 135 (FE-02..FE-07). The principles table of §2.2.1 reads P2 = no derive differently, P6 = drift shown in-product and P8 = orphans (not "usage"); the operator's "P6/P8" is kept in the operator's words, with no gloss.
+
+### 0b. How McFrontend work is done (the working standard, added 2026-11-11)
+
+Operator, verbatim (2026-11-11): "just to be clear - we are using the queu rules/system, wiring the pages - using a standardized approach with minimal code - I just want to make sure we are not randomly making stuff up or doing it on the side - we dont want a mess at the end - complaince to a standard always - wiring - testing etc. this standrd needs to be written down and we make decisions which are sotres.. rulling and we cite the rulings alwsy." and "x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook". Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the last two 2026-11-11 entries. M-246 form: nothing above is changed. This section gathers rules that already exist and points to each by spec and line (read at `e088bf072`); it restates none of them. Items 7 and 8 write down two working rules that until now lived only in the operator's words and the scratch logs. When this section and a cited rule disagree, the cited rule governs and the gap goes to the operator.
+
+1. **Queue row first.** No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md` ("A task not listed here is not done", `.cursor/MCFRONTEND-QUEUE.md:3`). Wider scope than the row is a new row, not a longer brief (Spec 08 §11.9 TKT-1, `08_agents.md:494`).
+2. **The Spec 08 lane process, per row.** Plan with its tests written in (`08_agents.md:464`, §11.4) → PLAN panel (`08_agents.md:299`, §6.4; §11b.5 below, "Spec 08 PLAN and OUTPUT panels per row") → one decision list to the operator, answers recorded verbatim (item 6) → pre-registration committed alone before the code (`prereg-MF-n-k.json`, Spec 128:171 and :183) → red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7) → build on the current tip through the real hooks → OUTPUT panel (`08_agents.md:471`, the lean pair; the frontend nuance `08_agents.md:472`, §11.5-FE) → one full suite on the current origin tip before "ready" (`08_agents.md:488`, MCINC-4) → the operator pushes (the pre-push "Approve this push? [y/N]", `scripts/analysis/mcbylaws/gate.mjs:543`).
+3. **Screens are declared as data and drawn by the shared bindings; no page code.** Every page is descriptor + content + standard components configured by schema (§0a principle 1, :59; §11b.1, :880-882; Spec 135 FE-02, FE-24, FE-31). Every value binds through the closed binding set (§11a.1; FE-18, FE-27, FE-32). Operator, verbatim (2026-11-11): "just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations".
+4. **Existing components only.** Every build reuses the existing components, bindings and patterns; nothing new is built where an existing one serves (operator, verbatim, 2026-11-11 morning: "also we should be building anything just using existing components"; §11b.1, :881; the import boundary of FE-31). The first use of an archetype on a platform pays only the §11b.5 costs; a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built.
+5. **The server formats every value; the UI does no maths.** FE-05 (Spec 135:27); a page part is the server-formatted string as sent, and a number throws (FE-34). A display transform lives on the server or in content, never in a binding.
+6. **Every operator ruling is recorded verbatim, dated, landed and cited.** The operator's own words with the date and the record path ("Operator verbatim" = the operator's own words, Spec 135:3); landed as a Spec 135 FE row with one lock (Spec 135 rules 2, 3 and 5) or as a dated note with the prior text kept (M-246, `69a_mcbylaw_register.md:141`); cited by every commit, prereg and lock that relies on it (the `McFrontend-Task:` trailer and the prereg `rules[]`, each RULED, Spec 128:170-171; the `Operator-Ruling:` line, as on the landed lane commits). A ruling does not stay only in a scratch file: it lands with its row's next docs commit or a lane R docs commit.
+7. **Pre-approved decisions are logged and confirmed.** Operator, verbatim (2026-11-08): "I can pre-approve some decisions - that meet the folloowing conditions (1)  compliant (show citations),standardized (follows similar rules) observable, understandable - no scope creep and simple. Finally you have high level of confidence with the decision.  I need to see the decisions made and how they met the criteria in the morning". The orchestrator takes such a decision only when all six hold, each with its evidence, and logs it with a D-nn id in the dated pre-approval log (`~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`); never for a push, a DB job, a night go, a spec amendment, a protected-path change or the reversal of a ruling. The operator confirms the log (e.g. "2 y" for D-37..D-39, 2026-11-11), and a landing cites "pre-approved D-nn" (the form of the §11b.2 dated note 2026-11-10, :907).
+8. **Scratch mocks are design inputs only.** Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo (§11b.7 report sub-note item 5, :1058). Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision (operator, verbatim, 2026-11-11: "dont worry about things in the stitch screen that have no source - dont add them - its just an example - not law").
+9. **No rule, no decision on the side.** Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling (Spec 135 rule 1: a different party adjudicates).
+10. **Testing.** Goldens per state per target and one render smoke per archetype per platform (FE-31, FE-33); the gate `surface-validate.mjs --check` (FE-13); the McFront proof canaries (FE-15). Dated note 2026-11-12 (M-246, prior text kept; McTest · McFrontend queue · lane R; MF-78..MF-82; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's", McTest D-1..D-14 all (a); Record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "McTest + MF-46 rulings (2026-11-12)"; plan `~/Buildo-scratch/mctest/PLAN.md`, `scenarios.yaml`, `DECISIONS.md`): testing also proves the real app is wired, end to end, by McTest (FE-40). The cases are rows of one catalogue, `tests/e2e/scenarios.json`; each names its owning task and a status, and a step whose task is not built shows as WAITS. The runs use a separate local test stack and seeded users, never the dev DB on 127.0.0.1:54322. Layers: API journeys and a dead-wire crawler (MF-79), the lot sweep (MF-80), stress and failure drills (MF-81), phone runs (MF-82). One results page and failure cards are written under `~/Buildo-scratch/mctest/runs/` for the orchestrator to route; McTest never edits a queue file. Lock: `src/tests/mctest/catalogue.infra.test.ts`.
+11. **Navigation is a route.** Dated note 2026-11-11 (M-246, prior text kept; navigation lock · McFrontend queue · lanes G and R; MF-75). Operator, verbatim (2026-11-11): "with impeccable review - can we ensuring all novaigation buttons use actual components or router pushes rather than local state toggles", then "yes" to landing the lock now with the six known violations as named exceptions, each tied to the task that will fix it (MF-46, MF-48/MF-74, MF-49), and to writing this item. Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the two 2026-11-11 entries; audit `~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md` (70 controls: 6 violations, 13 flags). It extends §5.3 item 5 ("`expo-router` owns which route is mounted") to every MaxBLD screen, web and mobile. A control that takes the user to another screen or view uses the platform's router: web `<Link>` (or Mantine `Button component={Link}`), `redirect()`/`notFound()` on the server, `router.push/replace` after an action; mobile expo-router `router.push/replace/navigate`, with `router.canGoBack()` before `back()`. A view is never swapped by local state: if Back should undo it, or someone could link to it, it is a route (a path or a search param). Local state is for disclosure only: details panels, How?, sheets, dialogs, modals, selection and edit modes, and the result of a submit. A tab switch uses `navigate`, not `push`. Every pressable that navigates has a role and a name. Leaving the origin (Stripe) uses `window.location`. Lock: `src/tests/surfaces/nav-by-route.logic.test.ts` (rules NAV-1 state-as-route, NAV-2 non-semantic control, NAV-3 unnamed navigating pressable, NAV-4 location hack, NAV-5 back with no `canGoBack`, NAV-6 web button that navigates). Its allow-list is fail-closed both ways (an unexplained finding fails; an entry that no longer matches fails) and holds the six violations as exceptions, each "owed: <row>": audit #3 the report detail Back chevron (MF-48 Stage B / MF-74), #15 and #16 the mobile sign-in email form and its Back, #22 the sign-up "Sign in" link (MF-49), #29 and #30 the web `LoginForm` sign-in/sign-up swap (MF-46). It also lists the disclosure the rules reach (the report toggle wrapper, the phone sheets) and the audited flags they reach (#10 MF-53; #45, #46 MF-44/MF-52), each with its reason and owner. The owning row removes its entry in the commit that fixes the control. Two sentences above are convention, not checked by the lock: a tab switch uses `navigate` (the audit flags #1, #6, #12, owed by MF-49/MF-50, MF-35/MF-52, MF-51/MF-52), and the one origin exit (Stripe, `window.location.assign`) is an `ok` allow-list entry of NAV-4. Register row: owed, FE-36 (reserved; FE-35 is MF-62's, not yet in the register, and the Spec 136 generator refuses a gap in the FE numbering, `scripts/surfaces/generate-surface-handbook.mjs` `readFeRows`); until FE-35 lands this item is the row's home. Row text to land: "| FE-36 | Navigation is a route: a control that moves the user uses the platform router (web `<Link>`, `redirect()`, `router.push/replace` after an action; mobile expo-router with `canGoBack()` before `back()`); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses `window.location`. | 126 §0b item 11; 126 §5.3 item 5 | D pass, P pass, F n/a (no payload), S pass (one mechanism per platform), H n/a, E pass (web and mobile) | Operator, verbatim (2026-11-11): \"with impeccable review - can we ensuring all novaigation buttons use actual components or router pushes rather than local state toggles\" and \"yes\". Record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`. | RULED 2026-11-11, lock landed (MF-75). Lock: `src/tests/surfaces/nav-by-route.logic.test.ts` |".
+
+Register row for this section: owed, FE-40 (reserved). It lands once FE-35..FE-39 are in the register, since the Spec 136 generator refuses a gap in the FE numbering (`scripts/surfaces/generate-surface-handbook.mjs` `readFeRows`); until then this section is the home and Spec 135 FE-02 and FE-31 carry dated notes pointing here.
+
+---
+
+<requirements>
+
+
+## 1. Goal & User Story
+
+**Every surface in this estate is the same surface, except for its projection.**
+
+A *surface* (a mobile screen, a web page, an admin tool, an overlay, an exported PDF) declares what it is in a machine-readable descriptor — its archetype, the contracts it reads and writes by reference, its guards and entitlements, its render states, the events it emits, the tunables it consumes — and a small archetype component set renders it. Nothing about how a surface is gated, guarded, validated, metered or observed is a per-surface invention.
+
+**User story.** As the operator, I can open one admin page and see every surface in the product, which contract it reads, which tables that contract touches, which entitlement gates it, which render states are pinned by a golden, whether its checks pass, and how many times it was used in the last 7 days — because all of it is derived from declarations, and none of it is typed by hand.
+
+**The measured case for it, in one line:** the estate's only usage meter (`POST /api/leads/view`, 153 lines, 44 test cases) has **no production caller**, so `user_profiles.lead_views_count` never moves and `mobile/src/components/paywall/PaywallScreen.tsx:153`'s `leadViewsCount > 0` branch is unreachable in production. No test, no spec and no code review found it, because nothing in this estate holds the join between *"a contract exists"* and *"a surface calls it"*. That join is this spec.
+
+</requirements>
+
+---
+
+<architecture>
+
+
+## 2. The unit set — 3 descriptor kinds + 2 registries
+
+> 📋 **The estate itself is rendered, not described here.** Every surface, contract and job named in this spec has a row — with a plain-language purpose, its gate, its edges, the tables and columns it touches, and its 21 category answers — in the generated **surface registry**: `docs/reports/generated/127-surface-registry.md` (source of record `scripts/surfaces/_schema/surface-census.json`, drift-locked by `src/tests/surface-registry.infra.test.ts`). Spec 127 §8 says how to read it. **Read the registry to review the estate; read this spec to review the standard.**
+
+The operator's proposed unit was **SURFACE = screen + its API contract + its tables**. The census tested it and it breaks at both ends: **13 of 29 mobile surfaces call no API route at all**, **17 of 61 contracts have no static call site anywhere**, and **one contract (`/api/user-profile`) is reached from 11 surfaces + 2 shells by two different idioms**. Folding the contract into the screen destroys the one property that makes MAX-SERVER-SIDE possible: *one contract, N projections*.
+
+| # | Unit | What it declares | Measured today | Schema artifact |
+|---|---|---|---:|---|
+| **1** | **SURFACE** | one thing that renders — archetype · `platforms[]` · the contracts it reads/writes **by reference** · states · guards · emitted events | **53** rendering surfaces (19 mobile screens + 10 mobile overlays + 24 web pages — the 13-line redirect page counted once among them, as STATIC) **+ 6** navigation shells = **59** descriptors | `surfaces/_schema/surface.schema.json`, archetype-gated |
+| **2** | **CONTRACT** | one API route — request · response projection · **tables** · auth class · rate buckets · consumers | **61** route files / 80 method handlers | `contracts/_schema/contract.schema.json` |
+| **3** | **JOB** | server work with no screen and no request — schedule · target · idempotency · ledger rows | **6** non-pipeline, all archetype `SCHEDULED` (4 `pg_cron` + `pipeline-watchdog.yml` + `mutation.yml`); `chain-wsib.yml` has no `schedule:` block and is not a JOB | `jobs/_schema/job.schema.json` — **its own schema; R-14** |
+| **4** | *registry* **ENTITLEMENT** | the closed product vocabulary · per-product statuses · gate sites | **2** products today (`lead_gen`, `flight_center`) → **4** after a single CHECK widening that adds **`parcel_tool`** (R-01) **and `agent_reports`** (R-09) in the same statement | `seeds/entitlements.json`, mirrored into `docs/specs/_contracts.json` |
+| **5** | *registry* **LEDGER** | the closed event vocabulary the usage spine records | 4 existing event tables; **exactly 1** new — `usage_events`. **There is no second ledger:** an earlier draft added a `surface_ledger` for the fan-out graph and it is deleted (R-25) — those edges are the CONTRACT's own `consumers[]`, and a table recording the same join would be a second source of truth for a fact the descriptor already declares | `seeds/usage-events.json` |
+
+> Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): counts are the 2026-09-15 census; the generated registry is the live count (`docs/reports/generated/127-surface-registry.md:20` read 73 surfaces, 62 contracts, 6 jobs at `ac9200aa8`); do not restate a count in prose. The reconcile and generation work is deferred to convert-on-touch (MF-31, `.cursor/MCFRONTEND-QUEUE.md`).
+
+**Two things deliberately NOT units** — this is the scope reduction:
+
+- **PROJECTION is a field, not a unit.** `mobile/app/(app)/map.tsx` and `mobile/app/(app)/index.tsx` are one contract, one Zod schema (`LeadFeedResultSchema`), one hook (`useLeadFeed`), two projections. It becomes `render.projection: list | map | grid | detail`. Making it a unit would have produced a phantom `MAP` archetype and a second descriptor for one payload.
+- **EXPORT is a render target, not a unit.** A PDF of the property preview is the same descriptor with `render.targets: ["screen","pdf"]`. This is the strongest single argument for the approach: *"100% data parity between the web view and the exported document"* stops being a discipline and becomes a golden-capture comparison. (The route that emits the file is a CONTRACT of archetype `EXPORT`.)
+
+**SHELL is an archetype on SURFACE, not a fourth unit** — and the 6 navigation shells sit alongside the 53, not inside them (§3.1) — a shell in this estate is not inert. `mobile/app/(app)/_layout.tsx:236-265` is the sole subscription gate for all five tabs and `mobile/app/_layout.tsx:88` is the sole routing authority (9 branches per `decideAuthGateRoute.ts`). Those are declarations.
+
+### 2.0 What this spec governs — the programme partition
+
+**The estate shares one repository. It does not share one programme.** Every descriptor declares `programme.scope` from a closed set of four, with a measured one-line reason, and the generated registry renders in that order:
+
+| § | Scope | n | What it is | Governed by this spec? |
+|---|---|---:|---|---|
+| **A** | `parcel_product` | **6** | The MaxBLD parcel cost tool itself — the surfaces and contracts a customer touches, plus the five business requirements hanging off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. | **Yes.** This is the programme. |
+| **B** | `parcel_admin` | **13** | The admin surfaces that *operate* the parcel product: usage and entitlements, placements and advertiser accounts, the PDF audit, the `app_outputs` recompute, and the descriptor-native registry / fan-out / orphan / drift / roles pages. | **Yes** — and they convert **with** the product, not after it. An unobservable product is not shipped. |
+| **C** | `platform_shared` | **72** | Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Used by both products, owned by neither. | **Yes** — and changing one changes both products, which is why it is its own scope rather than filed under whichever product noticed it first. |
+| **D** | `estate_other` | **46** | The OTHER product: lead generation, the flight center, the lead feed, permit and job detail, builders and entities. | **No — inventory and seam only.** |
+
+**Scope D is fenced, and the fence is Spec 128 R-03.** Spec 100 §1 states the parcel tool *"is **not** coupled to the Lead Feed, Flight Center, or LeadDetail"*, and this spec does not reverse that. Scope D is inventoried for exactly one reason: so that a contract it **shares** with scope C, or a contract with **no caller at all**, is visible rather than hidden — which is the whole argument for the registry (`/api/leads/view`: a live metered route with 44 passing tests and zero callers, unnoticed for months). Those surfaces convert under this same standard in a later programme. The registry renders them **one line each**, deliberately: expanding them would bury the programme it exists to review.
+
+**Consequences, stated so they are not rediscovered:**
+
+1. **Spec 127 §4.4 batches scopes A–C only.** A scope-D row carries `programme.phase: "not_scheduled"`, and that is an answer rather than an omission.
+2. **The descriptor tree is partitioned by scope**, not merely tagged: `scripts/surfaces/<scope>/<kind>/<id>.descriptor.json`. The standard stays estate-wide — all 137 are emitted and all 137 are validated — but a reader, a checker and the SurfaceEngine each address one programme at a time.
+3. **The pilot is exactly one surface.** `mobile_parcel_detail` carries `programme.pilot: true`; nothing else may.
+4. **A scope-C change is a two-product change.** Its plan says so, and its review panel is sized for it.
+
+### 2.1 `platforms[]` — one descriptor set, three renderers
+
+Every SURFACE declares `platforms[]` from the closed set `web | mobile | pdf`:
+
+| Surface class | `platforms` | Renderer |
+|---|---|---|
+| Admin surfaces (the 15 pages under `src/app/admin/` + `login`, `dashboard`, `subscribe*`, `auth/callback`) | `["web"]` | Next.js RSC + the admin archetype set (Shadcn/Tailwind) |
+| Product surfaces (parcel preview, search, marketing/landing, `permits/[id]`, `builders*`) | `["web","mobile"]` | RSC on web · fetched projection + the RN archetype set on mobile |
+| Export-bearing surfaces | adds `"pdf"` | the same descriptor, a PDF renderer, parity asserted by golden |
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (i)-(ii), `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; operator, verbatim: "D-0-D-4 approved", D-2): (i) `login`, `subscribe*` (registry S-050..S-053) and `auth/callback` in the admin row are web-only customer pages in scope C (§2.0), not admin pages; `dashboard` is scope D (S-069). (ii) shadcn/ui is not installed (Spec 33:44); per D-2 the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4), which supersedes "Shadcn/Tailwind" in the admin row.
+
+**Admin surfaces are descriptored in the SAME pass as the product ones** — one archetype vocabulary, one schema, one validator, one registry page. The admin web tree is where the estate's largest single-file surfaces live (`src/components/admin/` is 13 files / 4,322 lines, `LeadDetailInspector.tsx` alone 727L), and it is where `GenericFieldRenderer.tsx` (83 lines, a type-aware renderer for ~120 heterogeneous DB fields) already proves the archetype-renderer idea works in this repo. Splitting admin into a later pass would produce a second vocabulary; that is the exact failure Spec 122 V1–V6 were ruled to prevent.
+
+### 2.2 The admin estate — catalogued in the same pass
+
+**The admin is not a product; it is the fifth projection of the same descriptor set** — and the one projection allowed to render the *descriptor itself* rather than only its output. Source: `docs/reports/2026-09-15-spec126-admin-best-in-class.md`.
+
+**22 admin surfaces**, assigned the same archetypes: **11 exist today** (the 15 `page.tsx` under `src/app/admin/`, of which 4 collapse into rows below and one — `admin/lead-feed/flight-center` — is a 13-line `permanentRedirect`), **11 are new**, and **11 of the 22 are 100%-or-mostly generated**.
+
+| Group | Surfaces (descriptor id · archetype · Gen?) |
+|---|---|
+| **A. Operations** | `admin_pipeline_dashboard` DASHBOARD · `admin_step_output` REPORT (partial) · `admin_data_quality` DASHBOARD · `admin_engine_health` DASHBOARD · **`admin_run_ledger` LIST (gen, NEW)** · `admin_stale_run_reaper` FORM-console *(exists but wrong shape — `reapStaleRunningRows()` fires only inside `GET /api/admin/stats:189`; no page, no button, no job)* |
+| **B. Recompute triggers** | `admin_recompute_console` FORM (partial; today fragmented across 4 routes, only `resync` has a UI caller) · `admin_global_config` FORM **(gen — the canonical precedent: `logic-variable-groups.json` → `GlobalConfigCard.tsx:20`)** |
+| **C. Usage & entitlements** | `admin_usage_funnel` DASHBOARD (partial) · **`admin_entitlements` LIST+DETAIL (gen)** · `admin_user_detail` DETAIL *(the only page whose mutations are fully audited)* · `admin_user_list` LIST |
+| **D. Advertiser layer** | **`admin_advertiser_accounts` LIST+DETAIL (gen, NEW)** · **`admin_placements` FORM (gen, NEW)** · **`advertiser_self_metrics` DASHBOARD (gen, NEW — role `advertiser`, RLS-scoped, NOT `is_admin`-gated: the first non-admin principal ever admitted to an admin-shaped surface)** |
+| **E. Export / PDF** | **`admin_export_audit` LIST (gen, NEW)** |
+| **F. Descriptor-native — the generated core** | **`admin_surface_registry` LIST (100% gen — the admin PILOT)** · **`admin_contract_fanout` REPORT (100% gen)** · **`admin_orphan_panel` LIST (100% gen)** · **`admin_drift_status` DASHBOARD (100% gen)** · **`admin_role_matrix` REPORT (100% gen)** · **`admin_ledger_visualiser` REPORT (100% gen)** |
+
+**Deliberately NOT in this catalogue:** the lead-feed family (`admin/lead-feed`, `.../inspector`, `admin/flight-center`, `admin/notifications`, `admin/security`). It is Spec 36/91 lead-gen product admin, it is the bulk of the 4,322 hand-built lines, and it converts **last**, not first.
+
+#### 2.2.1 The eleven admin principles
+
+Each names a precedent that already ships **in this repo** and the measured anti-pattern it retires.
+
+| # | Principle | Measured anti-pattern it retires |
+|---|---|---|
+| **P1** | **The admin is a projection, not a product.** An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path. | `src/lib/admin/parcel-lookup.ts` **326L** vs `src/lib/parcels/consumer-lookup.ts` **159L** — two resolvers over the same parcel, diverging independently; the admin twin is 2.1× the consumer's size for the same subject. |
+| **P2** | **No admin-only business logic.** The admin may *reveal* more fields; it may not *derive* differently. | `src/lib/admin/funnel.ts:154-158` hardcodes five SLA thresholds (48 / 8760 / 2160 / 744 / 192 h) and `:166` an eight-slug `LOADER_SLUGS` literal — admin-only policy, invisible to the pipeline producing the rows it judges. |
+| **P3** | **Every admin mutation writes exactly one ledger row**; an audit failure fails the request. `src/lib/admin/admin-audit.ts` already does this correctly (centralised `redactPii`, `scrubAdminAuditForTarget`, and a header that calls an unaudited mutation *"a compliance hole"*). | **9 of the 15 mutating admin routes write no `admin_audit_log` row** — including `control-panel/configs` **PUT**, which rewrites `logic_variables` + three more tunable tables. |
+| **P4** | **All tunables are data; zero thresholds in `src/`.** | `funnel.ts:154-166` and `SearchPermitsModal.tsx:34 DEBOUNCE_MS = 300` — which the SEARCH archetype turns into a required `config.debounce_ms` declaration. |
+| **P5** | **Generated pages over hand-built ones, and the generator is locked by a RED canary.** | **4,322 lines across 13 files** in `src/components/admin/`; `GenericFieldRenderer.tsx` (83L) is the one file that already knows the answer. |
+| **P6** | **Drift is shown in-product, not only in CI.** A checker with no reader is a checker nobody acts on. | `check-spec99-matrix.mjs` wired to nothing; **nine** generated reports under `docs/reports/generated/`, **zero** rendered by an admin page. |
+| **P7** | **Role and policy are data, checked against the live catalogue** (§6.2). | `/builders` gated, `/api/builders` public — nothing in the estate holds that join. |
+| **P8** | **Orphans are a first-class rendered concept.** | `/api/leads/view` (153L, 44 tests, zero callers) **plus 5 of the 29 `/api/admin/*` routes with no call site of any kind** — `builders`, `pipelines/runs`, `rules`, `suppliers/leads`, `sync`. Scoped deliberately: two further routes first counted as orphans (`leads/inspect/[id]`, `pipelines/[slug]`) **are** called, via template literals, and `/api/quality/refresh` is excluded because it is not under `/api/admin/*`. The census's own 17-contract orphan list additionally names `/api/admin/pipelines/history` and `/api/admin/pipelines/schedules`; **that disagreement is not resolved here** — reconciling the two sweeps is part of `ASK-13`, and an orphan count that two passes disagree about is exactly why the panel is a rendered join rather than a remembered number. |
+| **P9** | **Deep links by id, and a command palette over the registry.** | `src/app/admin/page.tsx` (165L) is a hand-maintained hub of `<Link>`s calling no API of its own — a new admin page is invisible until someone edits that file. |
+| **P10** | **Time-travel is the ledger, not a snapshot table** — replay `pipeline_runs` + `usage_events` + `admin_audit_log`, all append-only with PK-as-dedup. | `user_profiles.lead_views_count` — a denormalised counter that never moves, because its only writer has no caller. |
+| **P11** | **Architecture boundaries enforced mechanically, not by review.** A boundaries rule is a config line on a gate (`.husky/pre-commit` → `npm run lint`) that already fires. | `src/components/DataQualityDashboard.tsx` fetches **four** admin contracts from one component — a tile grid with no per-tile `degrade_independently`, which DASHBOARD makes a required declaration. |
+
+#### 2.2.2 The admin pilot — `/admin/surfaces`, and why
+
+`admin_surface_registry` is the admin pilot because **it is 100% generated, so it cannot be faked.** Every other candidate can be shipped by hand and still look right; if the descriptor set is incomplete or the archetype profiles are wrong, this page is visibly empty or visibly wrong on commit 1 — which is the point of a pilot, and the same reason `assert_schema` was pilot 1 on the pipeline side. It is read-only, writes nothing, touches no migration (the `parcel_detail` risk profile). It has a real defect to close on day one (the orphan panel's red rows). It is the direct descendant of the `logic-variable-groups` precedent — generate → commit → import → lock — so the review panel argues about content, not mechanism. And once it exists, `src/app/admin/page.tsx`'s 165 hand-maintained lines become a query over the registry, retiring P9 as a side effect.
+
+**What the admin pilot needs FROM the product pilot** — these are acceptance criteria on `parcel_detail`, not admin follow-ups: (1) a committed `parcel_detail` surface descriptor with a real `archetype: REPORT`; (2) a `parcels_lookup` contract descriptor with a populated **`consumers[]`** — the fan-out graph's edges *are* `consumers[]`; (3) `guards.entitlement: "parcel_tool"` + `metering`; (4) `render.targets: ["screen","pdf"]` + a screen-side golden; (5) the `guards.session` ↔ `auth_class` check declared on a real surface. **What the admin owes the product pilot:** `admin/parcel-cost` (`ParcelCostTool.tsx`, 425L) as the third projection — the fastest available refutation of "one contract, N projections", learned for 425 lines instead of 4,322.
+
+
+## 3. The archetype registry — derived from the census
+
+Under the operator's load-bearing ruling, `archetype` is not a label: it **selects a required-field profile**, exactly as `identity.archetype` does at `scripts/steps/_schema/step.schema.json` with its `allOf` `x-profile` blocks. The precedent, mirrored from the schema:
+
+<!-- generated:mirror:126-archetype-profiles -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: `scripts/steps/_schema/step.schema.json` `properties.identity.properties.archetype.enum` (8 values) + `allOf[].x-profile` (6 profile blocks), docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10.
+
+| Pipeline archetype | Source anchor | What its profile PROVES | Disposition | Surface analogue |
+|---|---|---|---|---|
+| `INGESTOR` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[0]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | the write-side profile: a surface that writes may not declare `outputs: "none"`, and every declared write names its discipline. | ✅ applies | FORM / WIZARD_STEP |
+| `MATERIALIZER` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[1]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | its profile requires `replay` declared (globally) **plus `recovery.reset` may not be `"none"`** — a derived artifact must say how it is rebuilt. The surface analogue: a projection published to more than one render target declares how each target is regenerated, with the goldens proving parity. | ✅ applies | REPORT (`render.targets`) |
+| `LINK` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[2]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | the invalidates-is-non-empty rule becomes: a detail surface that mutates declares which query keys it invalidates. | ✅ applies | DETAIL |
+| `MATCHER` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[3]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | a matcher's accuracy is a sampled number against a before-image (R-O), never a predicate agreeing with itself; a SEARCH surface's candidate quality is measured the same way. | ✅ applies | SEARCH |
+| `ENRICHER` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[4]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | derivation happens server-side, in a CONTRACT or a pipeline step; a surface never enriches. `execution.phases[]` has no analogue. | ⛔ dropped | — |
+| `BACKFILL` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[5]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | no surface re-processes a corpus. | ⛔ dropped | — |
+| `ASSERT` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[6]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | the profile that forces three categories to `"none"` — which is exactly why `assert_schema` was pilot 1 on the pipeline side and why REPORT is the pilot here (census §4.1). | ✅ applies | REPORT / GATE |
+| `RECORDER` | `scripts/steps/_schema/step.schema.json` `identity.archetype.enum[7]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 | `outputs.publish` required becomes: a surface that records (an impression, a click, a view) declares its ledger event and its dedup key. | ✅ applies | SLOT / the `emits` contract |
+
+**The mechanism being mirrored, stated once:** the archetype selects an AJV required-field profile — 6 `allOf` `x-profile` blocks covering all 8 archetypes, asserted in both directions by this generator.
+
+**Coverage (derived):** 6 profile blocks · 8 archetypes covered · 0 uncovered · 0 double-covered.
+
+Each block lives in `scripts/steps/_schema/step.schema.json`. That is what "UI archetypes are LOAD-BEARING" means here: an archetype gates which descriptor fields must be answered, it does not merely label a renderer.
+<!-- /generated:mirror:126-archetype-profiles -->
+
+### 3.1 The archetype registry — SURFACE, CONTRACT, JOB
+
+**ONE home for the profiles.** The table below is GENERATED, and it is the register of record for which fields each archetype makes mandatory. `archetype_registry` (§6.3) therefore carries **no `required_fields` column** — a second copy of a profile is a second thing to keep in sync, which is the defect this whole spec exists to retire.
+
+<!-- generated:mirror:126-surface-profiles -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: `scripts/surfaces/_schema/surface.schema.json` — **DRAFT** (`x-frozen: false`), checked against the generator's own profile map in BOTH directions on every run, and canonical for this table the moment it is ratified. Provenance for the counts and members: `docs/reports/2026-09-15-spec126-surface-unit-and-schema-model.md` §2 — a report, which is why it is not the source. Regenerate: `node scripts/violations/generate-spec-mirror.mjs`.
+
+**SURFACE archetypes.** Every rendering surface is assigned exactly once; the column sums are asserted by the generator, not typed.
+
+| # | Archetype | `platforms` typical | mob. screen | mob. overlay | web page | **n** | One real example | MUST answer (beyond the always-required core) | MUST be `"none"` |
+|---:|---|---|---:|---:|---:|---:|---|---|---|
+| 1 | **LIST** | web+mobile | 3 | 0 | 4 | **7** | `mobile/app/(app)/index.tsx` (264L) | `inputs.contract_ref` · `inputs.query_key` · `list.item_archetype` · `list.pagination` · `list.recycling` · `render.projection` · `states[]` **must include** `empty` and `offline` | — |
+| 2 | **DETAIL** | web+mobile | 2 | 0 | 4 | **6** | `src/app/permits/[id]/page.tsx` (562L) | `inputs.query_key` **single-param** (Spec 99 §4 hygiene, as schema) · `sections[]` · `outputs.invalidates[]` when it mutates · `states[]` must include `error` | — |
+| 3 | **REPORT** | web+mobile+pdf | 1 | 0 | 2 | **3** | `mobile/app/(app)/parcel-tool/[parcelId].tsx` (231L) | `outputs.writes: "none"` **enforced** · `inputs.field_whitelist` (must equal the contract's) · `plausibility[]` ≥1 · `render.targets[]` · `offers` (may be `"none"`) · `metering` (may be `"none"`) | `outputs` · `state` |
+| 4 | **SEARCH** | web+mobile | 1 | 1 | 0 | **2** | `mobile/app/(app)/parcel-tool/index.tsx` (115L) | `config.debounce_ms` · `config.min_query_len` · `guards.rate_bucket` · `candidate_item` · `states[]` must include `empty` · `log_hygiene` (Spec 100 §2 item 8 — never log `q`) | `outputs.writes` unless a claim action exists |
+| 5 | **FORM** | web+mobile | 3 | 2 | 4 | **9** | `src/app/admin/security/page.tsx` (293L) | `fields[]` each carrying the **Spec 99 §3 row as data** (`owner_layer`, `canonical_writer`, `authorized_readers`, `bridge`, `persistence`, `signout_reset`) · `outputs.contract_ref` · `outputs.rollback` · `states[]` must include `error` | — |
+| 6 | **WIZARD_STEP** | web+mobile | 7 | 0 | 3 | **10** | `mobile/app/(onboarding)/address.tsx` (270L) | `step_index` · `advances_on` · `resume_key` · `skip_when` · `terminal` (bool) | `inputs` may be `"none"` — measured: 2 of the 7 onboarding steps call no route |
+| 7 | **DASHBOARD** | web | 0 | 0 | 4 | **4** | `src/app/admin/market-metrics/page.tsx` (462L) | `tiles[]` each with its own `contract_ref` + `degrade_independently` · `refresh.poll_ms` · `states[]` per tile | `outputs.writes` unless a tile declares a COMMAND |
+| 8 | **GATE** | mobile | 2 | 6 | 0 | **8** | `mobile/src/components/paywall/PaywallScreen.tsx` (237L) | `statuses_handled[]` **must cover every value** of the governing closed set (subscription: all 6 of `chk_entitlements_status`) · `fallthrough` · `on_unknown` | `outputs.writes` |
+| 9 | **SLOT** | web+mobile | 0 | 1 | 0 | **1** | `mobile/src/components/parcel/SponsorSlot.tsx` (21L) | `placement` (closed enum) · `inventory_source` (a **table**, never a literal) · `targeting[]` (closed axes) · `flag` · `null_when_off: true` · **`disclosure`** (a `checks[]` entry at `severity: FAIL`) · `max_slots` | `outputs.writes` except the declared impression ledger event |
+| 10 | **STATIC** | web | 0 | 0 | 3 | **3** | `src/app/page.tsx` (116L) | `content_source` · `seo` — **or** `routing.redirect` alone for a redirect-only page (`admin/lead-feed/flight-center/page.tsx`, 13L, `permanentRedirect`) | everything else |
+| | **Rendering surfaces** | | **19** | **10** | **24** | **53** | | | |
+| — | **SHELL** *(navigation shells — NOT among the 53)* | web+mobile | 5 | — | 1 | **6** | `mobile/app/_layout.tsx` (AuthGate, 530L) | `routing.branches[]` (9 for AuthGate, per `decideAuthGateRoute.ts`) · `guards[]` · `children_groups[]` · `emits.route_decision` | `inputs` unless the shell itself fetches — measured: 2 of the 6 read `/api/user-profile` |
+| | **Total descriptors** | | | | | **59** | | | |
+
+**CONTRACT archetypes.** Assigned per exported **method handler**, not per route file — 15 of the 61 route files export more than one method, so a per-file assignment cannot sum. Measured handler tally: GET 46 · POST 23 · PATCH 6 · DELETE 3 · PUT 2 = **80** handlers across **61** route files.
+
+| Archetype | n (of 80 handlers) | Example member | MUST answer |
+|---|---:|---|---|
+| **QUERY** | 46 | `/api/admin/stats` (reads **18 tables**) | `response.projection` (explicit pick-by-name whitelist) · `response.tiers[]` + per-tier degradation · `database.reads[]` · `guards.rate_bucket` · `staleness` · `outputs.writes: "none"` |
+| **MUTATION** | 27 | `/api/user-profile` (PATCH) | `database.writes[]` with `write_discipline` (the Spec 122 §1.4 vocabulary **verbatim**) · `idempotency` · `optimistic_contract` · `rollback` · `consumers[]` |
+| **WEBHOOK** | 1 | `/api/webhooks/stripe` (504L, 6 event types) | `verification` · `events[]` (closed) · `replay_guard` (`stripe_webhook_events` PK) · `ordering_watermark` (`entitlements.last_stripe_event_at`) · `on_unknown_event` |
+| **COMMAND** | 6 | `/api/admin/control-panel/resync` | `job_ref` (which JOB it triggers) · `concurrency` · `audit_row` |
+| **EXPORT** | 0 | *(net-new — the PDF route)* | `render_target` · `source_contract_ref` · `parity_check` (golden equality with the screen projection) · `storage` (bucket + path template) · `share_auth` · `ledger_event` |
+| **TRANSLATION** | 0 | *(net-new — `parcel_id_translation`, §3.4)* | `from_key` · `to_key` · `mapping_table` · `on_unmapped` · `ledger_event` · `consumers: "none"` while R-03 holds |
+| | **80** | | |
+
+**JOB archetypes.**
+
+| Archetype | n | Example member | MUST answer |
+|---|---:|---|---|
+| **SCHEDULED** | 6 | all six, named: the 4 `pg_cron` jobs (`mv_monthly_permit_stats_refresh` `233:90` · `lead_views_retention_purge` `233:96`/`235:134` · `offboarding_sweep_30day` `233:105` · `permit_scrape_outcomes_prune` `237:139`) + `pipeline-watchdog.yml` (`45 18 * * *`) + **`mutation.yml`** (`0 12 * * 1`) | `cron` · `target` (function/SQL) · `idempotency` · `on_missing_extension` (all four `cron.schedule` calls are `pg_extension`-guarded) · `audit_row` |
+
+*A second JOB archetype (`DISPATCH`) was drafted and removed: its only two candidate members — `scripts/dispatch-notifications.js` and `scripts/classify-lifecycle-phase.js` — are **chained pipeline steps** already governed by `step.schema.json`, so they are out of scope here (Spec 126 Operating Boundaries). An archetype with no member this spec owns is a vocabulary nobody uses.*
+<!-- /generated:mirror:126-surface-profiles -->
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"; Spec 128 §4 route, recorded under Spec 135 FE-31): the FORM and LIST profiles gain, in `scripts/surfaces/_schema/surface.schema.json`: a `status: "generated"` FORM MUST carry `render.form` (a contract `schema_ref` plus a closed field list; widgets text, textarea, number, select, checkbox, date, file, hidden); a generated LIST MUST carry `render.list` as an object, and with `render.projection: "list"` its `columns` (field, content-key label, display text/boolean/enum, optional sort_field); a generated surface has no golden `"none"` or `UNRESEARCHED`. The generated table above is NOT regenerated: its mirror `scripts/violations/generate-spec-mirror.mjs` throws at the tip ("an x-profile block names no archetype"), so this note carries the new MUST until the mirror is fixed (follow-up, `docs/reports/review_followups.md`). The closed render vocabulary grows only by the 128 §4 route; the FE-31 lock case C-7 is its lock.
+
+**Three vocabulary decisions, each measured:**
+- **`MAP` is not an archetype** — `map.tsx` and `index.tsx` share hook, contract and Zod schema; the difference is `render.projection: "map"` on a LIST. Making it an archetype would have created a second descriptor for one payload.
+- **`PREVIEW+OFFERS` is `REPORT` + the `offers` category**, not a further archetype. `offers` is required-and-may-be-`"none"` on REPORT — the way `checks[]` may never be `"none"` but everything else may, provided it is written down.
+- **`EXPORT` is not a SURFACE archetype** — it is `render.targets: ["screen","pdf"]` on a REPORT plus one CONTRACT of archetype `EXPORT`.
+
+**The redirect-only page is STATIC, not SHELL.** `src/app/admin/lead-feed/flight-center/page.tsx` (13L, `permanentRedirect('/admin/flight-center')`, [PF9]) renders nothing and declares `routing.redirect` alone. Giving it SHELL's full profile — `routing.branches[]`, `guards[]`, `children_groups[]`, `emits.route_decision` — would force four `"none"` answers onto a page that has no children and makes no route decision. It is counted **once**, inside the 53, as STATIC; the 6 navigation shells are a separate set and keep the full SHELL profile.
+
+### 3.2 On the EXPORT and TRANSLATION archetypes being empty today
+
+`src/lib/export/pdf.ts` is a self-declared stub ("TODO: Replace the HTML string generation with a proper PDF library"), returns `Buffer.from(html)`, is scoped to permits and has **no production caller**. `expo-sharing@~14.0.8` is declared in `mobile/package.json` and never imported. EXPORT is a genuinely empty archetype — the honest place for the PDF requirement, rather than a field bolted onto QUERY.
+
+`TRANSLATION` is empty for a different reason: the thing it describes exists in the database and has never been expressible. See §3.4.
+
+### 3.3 JOB, and what is deliberately not a JOB
+
+The **27 pipeline steps** stay governed by `step.schema.json` and are out of scope. So are the two candidates for a `DISPATCH` archetype — `scripts/dispatch-notifications.js` and `scripts/classify-lifecycle-phase.js` — because both are **chained pipeline steps** with slugs in `scripts/manifest.json`, already standardised by Spec 122. Removing that archetype is the simplification: an archetype whose only members belong to another spec is a vocabulary nobody here uses.
+
+What remains is **6 JOB members under one archetype, `SCHEDULED`**, and that reconciles with §2's unit table exactly: 4 `pg_cron` jobs + `pipeline-watchdog.yml` + `mutation.yml`. `chain-wsib.yml` has no `schedule:` block and is dispatch-only, so it is not a JOB.
+
+**JOB gets its own descriptor schema** (`R-14`, ratify before the pipeline programme's C3 freeze) rather than two new `x-frozen` archetype values inside `step.schema.json`: a `pg_cron` purge and a chain step share a posture but not a lifecycle, and adding archetypes to a schema about to freeze spends a freeze this programme does not own.
+
+### 3.4 `parcel_id_translation` — the only declared seam to Specs 77 / 91
+
+**The join exists in the database and is not expressible anywhere today.** `migrations/125_create_lead_parcels.sql` declares `lead_parcels(lead_id, parcel_id INTEGER REFERENCES parcels(id), …)` — so `lead_parcels.parcel_id` is `parcels.id`, the **SERIAL** (`parcel_pk`), while the consumer API's `parcelId` is `parcels.parcel_id`, the **`VARCHAR(20)` municipal id** (`parcel_ref`). Two different columns share one name across `parcels`, `lead_parcels`, the consumer API and the admin lib. **Any lead ↔ parcel deep link must translate, and nothing does.**
+
+Under **R-03 the fence holds**: Spec 100 §1 states the tool *"is **not** coupled to the Lead Feed, Flight Center, or LeadDetail… The abandoned 23B 'LeadDetail linkage' is explicitly dropped."* This spec does not reverse that. What it adds is the *declaration* of the seam, so a future non-fenced use cannot invent a fifth vocabulary:
+
+| | |
+|---|---|
+| **Unit** | one CONTRACT, archetype **`TRANSLATION`**, id `parcel_id_translation` |
+| **Declares** | `from_key: parcel_ref` · `to_key: parcel_pk` · `mapping_table: lead_parcels` · `on_unmapped` (the ~14.5K-style tail is a legitimate outcome, not an error) · `ledger_event: parcel_id_translated` |
+| **`consumers[]`** | **`"none"` — written down, not omitted**, and a `checks[]` entry at `severity: FAIL` asserts it stays empty while R-03 holds. That check *is* the fence, mechanically. |
+| **No SURFACE** | nothing renders it. `LeadDetailSchema`'s 20 fields gain no parcel reference; `lead_parcels` is read by no surface descriptor. |
+| **Cross-spec** | **Spec 77** (mobile CRM flight board) and **Spec 91** (mobile lead feed) own the surfaces that would consume it. Reversing the fence is an operator decision against those two specs, not an oversight here — and when it is taken, the translation contract already exists, already has a ledger event, and already has a lock proving when it went live. |
+
+### 3.5 Unknown-archetype posture
+
+
+An archetype key the registry does not know **renders a declared fallback card AND raises a `checks[]` FAIL** — Spec 125 §3's fail-safe is kept, but a silent yellow box is not the whole answer. The registry membership is itself a check: every `identity.archetype` value must resolve to a registered component on every declared platform, asserted at build time, not at render time.
+
+
+## 4. The category contract — 20 in, mirrored
+
+Spec 122 §1.2's rule is inherited whole: **the category list and the allowed responses are decided once, for all surfaces.** A surface that needs a value the menu lacks does not add one — it escalates through Spec 128 §4. **Omission is a build failure; `"none"` is a valid value, and it applies PER FIELD, not per category.**
+
+The mirror below is **generated** from `scripts/steps/_schema/step.schema.json` (R2-canonical) plus an authored disposition map, by `node scripts/violations/generate-spec-mirror.mjs`. It cannot drift from the pipeline's schema without `--check` failing.
+
+<!-- generated:mirror:126-categories -->
+> **GENERATED — do not hand-edit between the markers.** Source of record: `scripts/steps/_schema/step.schema.json` `required[]` (20 categories, R2-canonical per docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2) + the authored disposition map in `scripts/violations/generate-spec-mirror.mjs`. Regenerate: `node scripts/violations/generate-spec-mirror.mjs` (an `npm run spec-mirror` alias + `npm run verify` wiring lands in Phase 1).
+
+| # | Spec 122 category | Source anchor | Disposition | SURFACE category | What it declares here / why it was dropped |
+|---:|---|---|---|---|---|
+| 1 | `identity` | `scripts/steps/_schema/step.schema.json` `required[0]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `identity` | route/path · **archetype** · `platforms[]` · `render.projection` · **`owns.components[]`** (required on a web SURFACE — R-13) · owner · spec · `spec_version` · `gate_exempt`. **ONE version axis** — `spec_version` only; the pipeline has no `contract_version` either, and two version fields on one descriptor is two things to forget to bump. |
+| 2 | `inputs` | `scripts/steps/_schema/step.schema.json` `required[1]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `inputs` | `contract_ref[]` (ids into the CONTRACT registry, **never an inline schema**) · params · `query_key` · `version_pin` · `field_whitelist`. |
+| 3 | `outputs` | `scripts/steps/_schema/step.schema.json` `required[2]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `outputs` | mutation `contract_ref[]` · `optimistic` · forced `"none"` on REPORT/GATE/SLOT/STATIC/SHELL. |
+| 4 | `staleness` | `scripts/steps/_schema/step.schema.json` `required[3]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `staleness` | `stale_time_ms` · `gc_time_ms` · `refetch_on_*` — the TanStack defaults `mobile/src/lib/queryClient.ts` sets globally today, declared per surface. |
+| 5 | `guards` | `scripts/steps/_schema/step.schema.json` `required[4]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `guards` | `session` · `entitlement{product, statuses[], on_missing}` · `flag` · device permission · `rate_bucket`. A `"none"` carries a required `why` (census Q12: `/api/quality` is public and unwritten-down). |
+| 6 | `execution` | `scripts/steps/_schema/step.schema.json` `required[5]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ♻️ reshaped | `render` | `txn_scope`/`batch`/`budget`/`needs_disk_mb` have no surface analogue; what survives is HOW it renders — `targets[]` (screen\|pdf\|email) · `projection` · breakpoints (Admin desktop-first `md:` vs Expo mobile-first) · safe-area edges · header/tab-bar behaviour. |
+| 7 | `checks` | `scripts/steps/_schema/step.schema.json` `required[6]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `checks` | ⚠️ **never `"none"`** — inherited verbatim, including the severity vocabulary and the row-derived verdict cascade. |
+| 8 | `invariants` | `scripts/steps/_schema/step.schema.json` `required[7]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `invariants` | declarative assertions over the **projected payload**, single-surface scoped. |
+| 9 | `plausibility` | `scripts/steps/_schema/step.schema.json` `required[8]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `plausibility` | cross-field UI honesty — absent ≠ `fits:false`; "maximum envelope" ≠ "as-of-right". ⚠️ **Ad policy does NOT land here** (R-34): every `plausibility[]` entry requires a `sql` string and is executed as declarative SQL, and a layout rule has no SQL expression — ad policy is a `checks[]` entry, and placement inventory is the `placements` table. |
+| 10 | `override` | `scripts/steps/_schema/step.schema.json` `required[9]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ⛔ dropped | — | a force-full env var has no surface analogue; the nearest thing, a feature flag, is already `guards.flag`. |
+| 11 | `emits` | `scripts/steps/_schema/step.schema.json` `required[10]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ♻️ reshaped | `emits` (merged with `counters`) | analytics events against the `mobile/src/lib/analytics.ts` whitelist · Sentry breadcrumbs · **ledger writes** · `counters{}` + the Spec 99 §7.7 ratio invariants. A surface counter IS an emitted event, so the two pipeline categories collapse to one. |
+| 12 | `deviations` | `scripts/steps/_schema/step.schema.json` `required[11]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `deviations` | `{from, why, adjudicated_by, date}` — unchanged shape. |
+| 13 | `limitations` | `scripts/steps/_schema/step.schema.json` `required[12]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `limitations` | `{what, measured, check_id}` — unchanged shape. |
+| 14 | `interpretation` | `scripts/steps/_schema/step.schema.json` `required[13]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `interpretation` | → `<surface>.notes.json`, capped at 12. Prose is capped; checks are uncapped. |
+| 15 | `recovery` | `scripts/steps/_schema/step.schema.json` `required[14]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ♻️ reshaped | `errors` | `reset`/`resume`/`rollback`/`verify_clean` describe a RUN; a screen has no run. What a screen has is error classes handled — 401/403/429/schema-drift/offline — each with its declared UI and `no_retry[]`. |
+| 16 | `database` | `scripts/steps/_schema/step.schema.json` `required[15]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ⛔ dropped | — (moves to CONTRACT) | a screen does not touch a table; its contract does. This is the schema-level expression of MAX-SERVER-SIDE and the single property that makes "one contract, N projections" expressible (census §1.2c: `/api/user-profile` is reached from 11 surfaces + 2 shells by two idioms). |
+| 17 | `counters` | `scripts/steps/_schema/step.schema.json` `required[16]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ⛔ dropped | — (folded into `emits`) | see `emits` above; a `records_meta` key has no surface analogue. |
+| 18 | `config` | `scripts/steps/_schema/step.schema.json` `required[17]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `config` | tunables as registered logic variables with `min`/`max`/`on_invalid` — debounce, page size, stale time, rate limits. Same registry, same Rule 3. |
+| 19 | `sharing` | `scripts/steps/_schema/step.schema.json` `required[18]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ✅ applies | `sharing` | which surfaces render this contract · what varies by surface · what varies by render target. The category the census says earns its keep on day one (3 renderings of one payload already exist, 771 hand-written lines). |
+| 20 | `terminals` | `scripts/steps/_schema/step.schema.json` `required[19]` · docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.3 | ♻️ reshaped | `states` | renamed; semantics preserved (every exit path, `minItems: 1`). A surface terminal is a render STATE, each pinned by a named golden. |
+| 21 | — | *(no pipeline ancestor)* | 🆕 new | `state` | the Spec 99 §3 row as data: `owner_layer` · `canonical_writer` · `authorized_readers` · `bridge` (B1–B6) · `persistence` · `signout_reset`. Spec 99 §3 already says it is normative and already has a checker (`mobile/scripts/check-spec99-matrix.mjs`) that nothing runs. |
+| 22 | — | *(no pipeline ancestor)* | 🆕 new | `offers` | `placements[]` · `inventory_source` (a table, never a literal) · `targeting[]` (closed axes) · `disclosure` · `null_when_off` · `max_slots`. Demanded by the SLOT archetype. Ad policy is `checks[]` + the `placements` table, never `plausibility[]` (R-34). |
+| 23 | — | *(no pipeline ancestor)* | 🆕 new | `metering` | `unit` · `product` · `ledger_event` · `dedup_key` · `quota_from_config` · `on_exceeded` (402 \| 403 \| paywall). Demanded by the operator ruling that the parcel tool is its own metered product. |
+| 24 | — | *(no pipeline ancestor)* | 🆕 new | `a11y` | touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion. No pipeline analogue and no existing home. |
+
+**Counts (derived, not typed):** 20 pipeline categories in · 17 carried over · 3 dropped · 4 net-new · **21 SURFACE categories out.**
+<!-- /generated:mirror:126-categories -->
+
+**On the count.** The census hand-merged `limitations` + `interpretation` into one row and landed on 20; the generator keeps them separate because the schema does, and lands on 21. **The number is derived, never targeted** — if the count is the thing being managed, the categories are being chosen to hit it.
+
+### 4.1 Why `state` is a category and not a footnote
+
+Spec 99 §3 is already schema-shaped and says so in its own prose — *"This table is **normative**. Adding a field to the mobile app requires adding a row here."* Its columns are literally `Field | Server Type | Local Mirror | Owner Layer | Canonical Writer | Authorized Readers | Bridge`. It has a drift checker, `mobile/scripts/check-spec99-matrix.mjs`, that **nothing runs** (zero matches in `.husky/`, `.github/`, either `package.json`). The category is one `JSON.parse` away from existing; what is missing is the wiring, not the design.
+
+### 4.2 The `"none"` that must be written down
+
+Two live examples of why `"none"` is a required answer rather than an omission, both from the census:
+
+- `/api/quality` is **public and unauthenticated** and serves a curated 11-table list; Spec 26 §3.4 records the widening to all 87 tables as *blocked on an auth/disclosure ruling*. Under this standard it declares `guards.session: "none"` with a **required `why`** and a `disclosure` block naming the exact projected field set.
+- `/builders` and `/builders/[id]` are `authenticated` by fail-closed default while `/api/builders` is **public**. The page is behind a login; the data it renders is not. Under a SURFACE/CONTRACT pair this is a one-line cross-check (`surface.guards.session` vs `contract.guards.auth_class`) at `severity: FAIL` — a `checks[]` entry, not a reviewer's memory.
+
+
+## 5. How schemas work here — the seven arrows
+
+### 5.0 The ONE-SOURCE rule — added 2026-09-15
+
+**There is one source, and everything else is emitted from it.**
+
+```
+  scripts/surfaces/_schema/surface.schema.json          THE SCHEMA — 21 categories, closed vocabularies,
+            |                                            archetype profiles. Ratified once, then canonical.
+            v
+  scripts/surfaces/{surfaces,contracts,jobs}/<id>.descriptor.json     THE DESCRIPTOR — one per thing,
+            |                                            AJV-validated against the schema on every run.
+            |
+            +--> src/lib/surfaces/generated/surface-descriptor.d.ts   TypeScript types
+            +--> src/lib/surfaces/generated/validate-descriptor.mjs   the ONE runtime validator
+            +--> the migration assertions (§6.1 step 4)               declared schema vs live catalog
+            +--> the API contracts (§5.2)                             Zod / OpenAPI, both projections
+            +--> the web / mobile / admin / pdf projections (§5.3-§5.4)
+            +--> docs/reports/generated/127-surface-registry.md       the reviewable registry (Spec 127 §8)
+            +--> the Supabase seeded projection (§6.4)                surface_descriptors, git-sourced
+```
+
+**The rule:** nothing in that fan-out is hand-written, and nothing in it is a *second declaration*. A type that disagrees with the schema is not a disagreement to reconcile — the type is regenerated. A validator in a test that re-implements the rules is banned; the test imports the same module the engine does.
+
+**Why it is stated as a rule.** The measured defect this whole standard exists to retire is one contract declared at **four** sites and locked at **one**, with the two Zod copies disagreeing in strictness — *the client looser than the server it mirrors*. A fan-out with one source cannot produce that. A fan-out with two sources always eventually does.
+
+**Three consequences worth naming:**
+
+1. **A census row IS a descriptor.** The registry's source rows are not a reporting format that later gets converted — they are draft descriptors in the exact schema shape, validated by AJV on every generator run. There is **no re-keying step** between "reviewed in the registry" and "read by the engine".
+2. **A draft may be honestly incomplete, and the incompleteness is counted.** A field the schema marks `x-draft-optional` may carry the literal `UNRESEARCHED`; nothing else may. The registry renders the count per row and in its summary, so an unresearched estate is a number rather than a vague feeling.
+3. **The shards are temporary.** `scripts/surfaces/_schema/census/*.json` exists so researchers can work in parallel without collisions. Once every row is researched, the emitted descriptors become the source and the shards are retired — a hand-over Spec 127 §8.5 governs, with the generator's both-directions `--check` as the proof that the two are equal at the moment of the swap.
+
+### 5.0a The loop, stated once
+
+The repo already runs this exact mechanism, in miniature, end-to-end:
+
+> `scripts/seeds/logic_variables.json` (`admin.group` field) → `scripts/generate-logic-variable-groups.mjs` (**throws in both directions**: a pinned key whose `admin.group` disagrees, *and* a seed key absent from its group) → `src/features/admin-controls/generated/logic-variable-groups.json` → imported at `GlobalConfigCard.tsx:20` → `src/tests/logic-variable-groups.infra.test.ts` (3 tests, the third a **tampered-file RED canary**) → `npm run logic-var-groups -- --check` exits 1 when stale, wired into `npm run verify`.
+
+**One declaration file → a `--check`-capable generator that throws on bidirectional mismatch → a committed generated artifact imported directly → an infra test that re-runs the generator, plus a RED canary proving the check itself fires.** Every arrow below is that loop applied to a surface. Copy the `BUILDO_LOGIC_VARS_SEED_PATH` test-only override too — it is the difference between a canary that can be written and one that cannot. (`scripts/violations/generate-spec-mirror.mjs` already follows both conventions: `--check`, `--self-test`, and `BUILDO_SPEC_MIRROR_*_PATH` overrides.)
+
+### 5.1 Arrow 1 — descriptor → DB schema. **Declare and assert. Do not generate migrations.**
+
+Fully specified in §6. Summary: the descriptor's `database` block is a **declaration that is asserted**, never a generator input — the same posture Spec 122 §1.3 adopted for its own `database` category (*"a step pointed at a 222-migration database refuses"*).
+
+### 5.2 Arrow 2 — descriptor → API contract (Zod / OpenAPI)
+
+**The highest-value arrow; it closes a live defect class.** The parcel cost contract is declared **four** times and locked once:
+
+| Site | Form | Locked to the engine? |
+|---|---|---|
+| `scripts/lib/parcel-cost.js:77` `PARCEL_COST_LINES` | the 13-id engine source | source |
+| `src/components/admin/ParcelCostTool.tsx` `LINE_LABELS` | admin web | ✅ `src/tests/parcel-cost-line-keys.logic.test.ts` |
+| `mobile/src/lib/parcelCostFormat.ts:14` `COST_LINE_ORDER` | mobile, same 13 ids, different order | ❌ **no lock** |
+| `mobile/src/lib/schemas.ts:282` `ParcelCostMenuSchema` | `z.record(z.string(), …)` | ❌ by construction |
+
+And the two Zod declarations disagree in strictness: `src/app/api/parcels/lookup/types.ts` uses `.strict()` **6 times**; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` **5 times** — *the client is looser than the server it mirrors*. The one cross-tree lock that exists (`src/tests/admin-lead-schemas.contract.test.ts`) covers **lead** schemas, not parcel, and is **excluded from CI** because it dynamically imports `mobile/src/lib/schemas.ts`.
+
+**Generating the mobile mirror from the CONTRACT descriptor kills all four problems at once** — the transcription, the strictness drift, the missing parcel lock, and the CI exclusion (there is nothing left to cross-import). Use the `logic-variable-groups` form (§5.0), **not** the `docs/specs/_contracts.json` grep-assertion form; keep `_contracts.json` as the cross-layer numeric/vocabulary constant registry it already is.
+
+An OpenAPI document is a second projection of the same descriptor, generated, never authored.
+
+### 5.3 Arrow 3 — descriptor → web projection (RSC) and mobile projection (fetched)
+
+**The server returns the projected screen JSON; the client renders it through a small archetype component set; there is no client business logic.**
+
+This is not a new posture — Spec 90 §3 is titled *"The Prime Directive: 'Dumb Glass' Architecture"* and already mandates it, and already carves out the exception (*"Ephemeral optimistic UI state… is highly encouraged"*).
+
+**⚠️ The one cost, stated up front: React Native has no Server Components.** Spec 125 §1's "SSR via Next.js Server Components" is **true on web and false on mobile**, and it is not in Spec 125's own correction list. So:
+
+| Platform | Mechanism |
+|---|---|
+| **web** (`platforms` includes `web`) | Next.js App Router **RSC on Vercel** — descriptor parsed server-side, projection assembled server-side, maximum server side. This is the cheap half. |
+| **mobile** | a **fetched projection**: the server returns JSON describing the screen; the client's archetype registry renders it. Plus **build-time generation** of the archetype components and the Zod mirror. Not SSR. |
+| **pdf** | a server route rendering the same projection through a PDF renderer; parity asserted by golden equality, not discipline. |
+
+**Consequences for Spec 99, measured.** Max-server-side moves the Layer-2 / Layer-3 boundary:
+
+| Layer | Today | Under max-server-side |
+|---|---|---|
+| 1 SERVER | canonical for account-scoped data | **grows** — also canonical for the *projection*: section order, labels, formatting decisions, which lines render |
+| 2 TanStack cache | canonical for cached server state | unchanged in role; the cached object is now a projected screen, not a raw payload |
+| 3 Zustand | canonical for local UX state; **7 stores** | **shrinks to device + ephemeral only** |
+| 4a MMKV / 4b SecureStore | persistence | unchanged |
+| 5 Reanimated SharedValues | UI-only | unchanged |
+
+Measured impact: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns; `userProfileStore` (156L) mirrors 5 notification-preference columns. Those two collapse into server-owned projection state, retiring bridges **B2** (TanStack→Zustand) and **B3** (Zustand→Server) for those fields.
+
+**What must stay client-side, named so the design is honest** — these are the boundary, declared per surface (Spec 128 rule 2):
+1. **Device state** — GPS (`expo-location`), push token, permission status. The server cannot know these.
+2. **Optimistic UI** — declared as `outputs.optimistic`, not improvised.
+3. **Offline cache** — `mobile/src/lib/mmkvPersister.ts` (24 h). A server-driven screen still renders with no network; the projection is the cached artifact.
+4. **Animation / gesture** — Spec 99 §2.1's hard rule; orthogonal.
+5. **Navigation position** — `expo-router` owns which route is mounted. Dated note 2026-11-11 (M-246, prior text kept; MF-75): §0b item 11 ("Navigation is a route") extends this to every MaxBLD screen, web and mobile; lock `src/tests/surfaces/nav-by-route.logic.test.ts`.
+
+### 5.4 Arrow 4 — descriptor → admin projection
+
+Same descriptor, a different archetype component set (Shadcn/Tailwind, desktop-first `md:` breakpoints per `.claude/domain-admin.md`, vs RN/NativeWind mobile-first). The precedent is already in the tree and is smaller than expected: `src/components/admin/GenericFieldRenderer.tsx` (83 lines) is a type-aware renderer handling *"~120 heterogeneous DB fields (null / boolean / number / date / string / JSONB)"* without a per-field component — its own header calls it *"a deliberate renderer, not ad-hoc JSX"*. That is one archetype component, already written, already branch-tested. The admin twin of the pilot (`ParcelCostTool.tsx`, 425L) already consumes it.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (ii); operator, verbatim: "D-0-D-4 approved", D-2): "Shadcn/Tailwind" above is superseded. shadcn/ui is not installed (Spec 33:44); the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4).
+
+### 5.5 Arrow 5 — descriptor → Supabase seeded projection
+
+**Git is the source; Supabase holds a projection.** Fully specified in §6.4.
+
+### 5.6 Arrow 6 — descriptor → checkers and goldens
+
+**What a checker looks like here, measured.** `scripts/analysis/step-validate.mjs` is 3,728 lines and does six things for one step: AJV + grandfathered + semantic descriptor validation · the shape gate · targeted vitest · golden-capture presence/freshness/comparison · the Spec 123 scorecard *from artifacts, never prose* · the Spec 124 policy-coverage matrix. Plus **13 "fast invariants"** needing no DB and no vitest.
+
+**The surface seed corpus already exists in embryo** — three mobile lint tests port directly: `mobile/__tests__/routerHygiene.lint.test.ts` (209L, 5 cases), `mobile/__tests__/storeReset.coverage.test.ts` (194L, 5), `mobile/__tests__/spec99.mandates.lint.test.ts` (540L, **31**). That is a 943-line, 41-case head start on `surfaces/surface-validate.mjs`.
+
+**The golden shape — a PAIR, both required.** `surfaces/__goldens__/<surface>/<state>.json` carrying `{ harness, spec, surface, archetype, platforms, state, git_head, request, response_fixture, projection, rendered_tree, a11y_tree, emitted_events, nondeterminism[], normalised[], source_fingerprint, fingerprint_files[] }`:
+
+1. an **API response fixture** — what the contract returned;
+2. a **rendered-tree snapshot** — what the archetype renderer produced from it.
+
+The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers. The **non-determinism inventory is declared before the first diff** (Spec 123 §7 row 5, inherited). For the pilot the states are derivable today from **Spec 100 §2 item 6** (the miss contract — *"the shape drives the client state machine"*) plus items 3 and 5: `loading`, `hit`, `miss` (200 + `match:null` — **not** 404), `ambiguous` (200 + `candidates[]`), `unknown_parcel_id` (200 + nulls), `cost_menu_null`, `tier2_degraded` (`warnings[]` surfaced, Tier 1 intact), `error_400`, `error_403`, `error_429`, `error_500`, `offline`, `schema_drift`. (Spec 100 has no sub-section literally numbered §2.6 — §2 is a 9-item numbered Behavioral Contract; cited by item, not by a section number that does not exist.)
+
+### 5.7 Arrow 7 — descriptor → generated docs
+
+Precedent measured: **10** generated files under `docs/reports/generated/`, plus `npm run system-map`, `npm run db:docs`, `npm run logic-vars-docs`, `npm run lineage-docs`. Ruling R2 is already in force for the pipeline (`step.schema.json:5` — *"This file — not prose — is the single source of truth"*).
+
+Applied here: Spec 100 keeps §1 (goal / user story), §5 (the documented subscription exception) and §8 (futures) as human narrative. §2's numbered behavioural contract and §3.2's field lists become descriptor data and are **deleted from prose** — a value in two places is a drift source, which §5.2 measured four times over.
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# Pasted context for task-395 (lens context; operator words only where quoted; every quote opened at its source line)
+
+## The plan
+# PLAN task-395 FIX.CONFIG-BOUNDS (lane BL-CFGBOUNDS)
+
+## Facts the resolution rests on, each opened (grounder resolution: task-395 Implementation Notes; operator words ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476)
+- F1 operator words at :1476 read exactly: Operator, verbatim: "Let the grounder resolve them all as long as the result is compliant". TRUE.
+- F2 the phone reads only the generated slice: mobile/src/hooks/useParcelLookup.ts:55-58 and mobile/src/lib/semiQuestion.ts:18 read `searchSlice.config` / `slice.config` through sliceNumber; SearchBinding.tsx:36-37 reads SEARCH_SLICE.config directly. TRUE for the six config keys.
+- F3 sliceNumber exists: mobile/src/lib/sliceConfig.ts:7, throws when missing or not finite, no bounds. TRUE.
+- F4 seed row exists and is pinned: scripts/seeds/logic_variables.json:8182 parcels_sqm_to_sqft default 10.7639 min 10.7639 max 10.7639 type number (pinnedSetting, src/lib/report-projection/pinned-settings.ts:9, accepts it); migrations/262_parcels_unit_constants.sql. TRUE.
+- F5 what surface-validate checks on config today: the ONE descriptor validator is the schema-compiled src/lib/surfaces/generated/validate-descriptor.mjs (SV-DESC, screen-checks.mjs:214); config keys debounce_ms, min_query_len, continue_wait_ms, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms are `integer, minimum 0` or UNRESEARCHED; nothing checks a maximum, bounds or a failure behaviour. TRUE (the gap).
+- F6 NOT TRUE AS STATED (a gap, not one of the four named facts): "the phone area factor reaches the phone as a generated-slice number". The two typed copies are mobile/src/lib/leadDetailFormat.ts:15 (read by mobile/app/(app)/[lead].tsx:31, the old lead screen) and mobile/src/lib/parcelCostFormat.ts:11 (imported by no screen: only mobile/__tests__/parcelCostFormat.test.ts). Neither screen has a converted surface or a generated slice (mobile/src/generated/surfaces holds mobile_parcel_detail, mobile_parcel_disambiguation_map, mobile_parcel_search, mobile_parcel_semi_question). A slice key needs a surface that owns the screen; making one is a new surface conversion, not an existing mechanism. The area-factor part is therefore NOT built; it returns to the grounder/operator. The bounds part does not depend on it.
+
+## Change (smallest, existing mechanisms: schema, census shards, generator, emitter, sliceNumber)
+1. surface.schema.json config: new optional property `bounds` (object; per key: min number, max number, on_invalid fail|clamp, all three required, optional why) and, for each of the six number keys, an if/then: when the key is an integer, `bounds` is required and holds that key. The compiled validator (generated, C-6) refuses a descriptor whose numeric key has no bounds: this is what surface-validate (SV-DESC, ctx.validator) runs.
+2. Source rows: census shards (scripts/surfaces/_schema/census/mobile-product.json, web-product.json) for mobile_parcel_search, mobile_parcel_semi_question and the three binding descriptors that hold 0/0 (binding_mobile_list, shared_mobile_surface_binding, binding_web_search); descriptors, d.ts, validator, registry doc regenerated by the committed generators (never hand-edited).
+3. Emitter (emit-mobile-surfaces.mjs): the slice gains `bounds` for the keys it copies and REFUSES a value outside its own bounds or a missing bounds entry at generate time (one pure exported function). `config` stays byte-identical; no value changes.
+4. Reader (sliceConfig.ts): sliceNumber(slice, key) takes the slice, reads config and bounds; absent bounds throws by key name; out of range: on_invalid fail throws, clamp returns the nearest bound. Callers (useParcelLookup.ts, semiQuestion.ts, SearchBinding.tsx) pass the slice. SearchBinding's direct config reads go through the reader.
+5. Remove the dead second copy SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts and re-point its two tests (parcelSearchMatch.test.ts, parcelScreens.golden.test.ts) to the slice; descriptor evidence cites updated.
+6. Spec 128 dated note on Rule 3 (outside the generated markers), M-246 form, quoting :1476 exactly, naming option (b) and the unbuilt area-factor part.
+7. Bounds values are LANE PROPOSALS, flagged for the grounder: debounce_ms [0,2000] clamp; min_query_len [3,120] clamp (3 = server floor src/app/api/parcels/lookup/types.ts:42, 120 = its max on the same line); continue_wait_ms [1000,300000] clamp; entitlement_stale_ms [0,3600000] clamp; lookup_retry_max [0,5] clamp; lookup_stale_ms [0,3600000] clamp; binding rows [0,0] fail. Every current value lies inside its bounds (400, 3, 60000, 0, 3, 60000, and 0/0).
+
+## Tests (red first through the real hooks)
+- src/tests/surfaces/surface-conformance.logic.test.ts: planted defects (a descriptor with a numeric config key and no bounds refused by the compiled validator; bounds with no on_invalid refused; every integer config property of the schema carries its if/then rule; emitter refuses an out-of-range value and a missing bounds entry; real tree clean, values unchanged).
+- mobile/__tests__/sliceConfig.test.ts (new): reader fail, clamp, absent bounds; phone tests cannot run locally: phone-test green UNPROVEN until Mobile CI.
+- Goldens: only the fingerprint hash of the search and semi descriptors moves (explained); no state content moves.
+
+## Principles served: standardized, understandable, simple. Rule: Spec 126 section 0a principle 1 and 11b.2; Spec 128 Rule 3 (:30); Spec 136 fe.44; 08_agents.md section 7 rules 3 and 4.
+
+## Spec 128 Rule 3 row (docs/specs/02-web-admin/128_surface_standard_policy.md:30)
+| 3 | Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is al… | docs/specs/01-pipeline/124_step_standard_policy.md §2 rule 3 | **Tunables externalized** | every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture — same registry, same presence/validity split (R-G). |
+
+## Spec 126 P4 (126_maxbld_surface_standard.md:189)
+| **P4** | **All tunables are data; zero thresholds in `src/`.** | `funnel.ts:154-166` and `SearchPermitsModal.tsx:34 DEBOUNCE_MS = 300` — which the SEARCH archetype turns into a required `config.debounce_ms` declaration. |
+
+## Spec 126 section 0a principle 1 (:59)
+1. **Declared, not coded:** a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code.
+
+## Spec 136 fe.44 (:163)
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is…
+
+## Operator words (MORNING-DECISIONS.md:1476)
+Operator, verbatim: "Let the grounder resolve them all as long as the result is compliant"
+
+## Task notes (task-395)
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added 2026-11-20 after task-378 folded (second grounder): also in this task: the phone area-factor copies mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11 (10.7639 typed): the surface config schema accepts integers only (surface.schema.json), so a number-typed key is part of the bounds decision the operator rules; and SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts is a dead second copy imported only by two phone tests.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: option (b): bounds and the failure behaviour declared per key in the surface schema, refused by surface-validate when absent, with a dated note on Spec 128 Rule 3 citing the words above (the phone reads only the generated slice, so a database-registered variable would be a control with no effect); the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft (a number-typed key for pinned factors only). The lane verifies the grounder's facts before building and stops if one is false.
+
+2026-11-20 taken on the board at lane launch (lane BL-CFGBOUNDS, worktree /Users/brettpreston_macmini/Buildo-wt-cfgbounds, branch wf1/inc1b-cfgbounds), RR-0240
+<!-- SECTION:NOTES:END -->
+
+## Today: sliceNumber (mobile/src/lib/sliceConfig.ts)
+// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (tunables are data), docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3
+//
+// FIX.TUNE (task-378): the one reader of a number the phone takes from a generated surface slice (scripts/surfaces/emit-mobile-surfaces.mjs). A key that is
+// missing or not a finite number throws, naming the key: a silent undefined would reach a timer or a query option and fail later and far from the cause.
+
+/** The number at `key` of a slice's config; throws by key name when it is absent, not a number, or not finite. */
+export function sliceNumber(config: Readonly<Record<string, unknown>>, key: string): number {
+  const v = config[key];
+  if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error(`surface config "${key}" is missing or not a finite number`);
+  return v;
+}
+## Today: config keys in schema (surface.schema.json:2630-2700 shape: integer, minimum 0, or UNRESEARCHED)
+## RR-0328: The app is not in use, in development
+

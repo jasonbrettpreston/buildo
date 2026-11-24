@@ -1,0 +1,150 @@
+AssertionError: expected [ 'debounce_ms', false ] to deeply equal [ 'debounce_ms', true ]
+
+- Expected
++ Received
+
+  Array [
+    "debounce_ms",
+-   true,
++   false,
+  ]
+
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:991:49
+    989|     for (const k of ['debounce_ms', 'min_query_len', 'entitlement_stal…
+    990|       const d = search(); d.config.logic_variables = d.config.logic_va…
+    991|       expect([k, /logic_variables/.test(v(d))]).toEqual([k, true]);
+       |                                                 ^
+    992|     }
+    993|     const wrong = search(); wrong.config.logic_variables[0].name = 'so…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > a 0 on debounce_ms or min_query_len needs no entry (a binding module has no such setting); UNRESEARCHED needs none; every other 0 does
+AssertionError: expected '' to match /logic_variables/
+
+- Expected: 
+/logic_variables/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1002:192
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > every number-typed property a config may hold has its rule, naming the registered variable the generator uses (schema and emitter agree)
+TypeError: Cannot convert undefined or null to object
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1008:19
+    1006|     const numberKeys = Object.entries(cfg.properties as Json).filter((…
+    1007|     expect(numberKeys).toEqual([...KEYS].sort());
+    1008|     expect(Object.keys(E.PAGE_SETTINGS).sort()).toEqual([...KEYS].sort…
+       |                   ^
+    1009|     for (const k of numberKeys) {
+    1010|       const rule = (cfg.allOf as Json[]).find((r) => r.if?.required?.[…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > the generator resolves each bound from the seed row and refuses, by key name: no entry, an absent row, a min or max that differs, a value that is not the row default, a value outside the bounds, on_invalid default
+TypeError: Cannot read properties of undefined (reading 'min')
+ ❯ entry src/tests/surfaces/surface-conformance.logic.test.ts:955:92
+    953|   const v = (d: Json): string => validateDescriptor(d).errors.join('\n…
+    954|   const search = (): Json => convert('SEARCH');
+    955|   const entry = (k: string, over: Json = {}): Json => ({ name: name(k)…
+       |                                                                                            ^
+    956|   const read = (rel: string): Json => rj(path.join(REPO, rel));
+    957|   const SEARCH_D = 'scripts/surfaces/parcel_product/F01/surfaces/mobil…
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1016:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > a config with only UNRESEARCHED keys, no entries, or null entries gives no bounds and no crash
+TypeError: E.pageSettingBounds is not a function
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1028:14
+    1026|   });
+    1027|   it('a config with only UNRESEARCHED keys, no entries, or null entrie…
+    1028|     expect(E.pageSettingBounds({ debounce_ms: 'UNRESEARCHED', min_quer…
+       |              ^
+    1029|     expect(E.pageSettingBounds({}, [null], {})).toEqual({ bounds: {}, …
+    1030|     expect(E.pageSettingBounds({ debounce_ms: 400 }, [null], {}).probl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > the generated slices carry an unchanged config and the row bounds; the dead typed copies are gone
+AssertionError: expected { Object (debounce_ms, min_query_len, ...) } to deeply equal { …(5) }
+
+- Expected
++ Received
+
+  Object {
+    "debounce_ms": Object {
+-     "max": 5000,
+-     "min": 400,
++     "max": 2000,
++     "min": 0,
+      "on_invalid": "clamp",
++     "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it. 0 is the schema minimum it always had.",
+    },
+    "entitlement_stale_ms": Object {
+-     "max": 600000,
++     "max": 3600000,
+      "min": 0,
+      "on_invalid": "clamp",
++     "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.",
+    },
+    "lookup_retry_max": Object {
+-     "max": 10,
++     "max": 5,
+      "min": 0,
+      "on_invalid": "clamp",
++     "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.",
+    },
+    "lookup_stale_ms": Object {
+-     "max": 600000,
++     "max": 3600000,
+      "min": 0,
+      "on_invalid": "clamp",
++     "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.",
+    },
+    "min_query_len": Object {
+      "max": 120,
+      "min": 3,
+      "on_invalid": "clamp",
++     "why": "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range.",
+    },
+  }
+
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1035:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong > Spec 128 Rule 3 carries the dated note with the operator sentence and no area-factor claim
+AssertionError: expected [ false, false, true ] to deeply equal [ true, true, false ]
+
+- Expected
++ Received
+
+  Array [
+-   true,
+-   true,
++   false,
+    false,
++   true,
+  ]
+
+ ❯ src/tests/surfaces/surface-conformance.logic.test.ts:1043:141
+    1041|     const spec = fs.readFileSync(path.join(REPO, 'docs/specs/02-web-ad…
+    1042|     const note = spec.split('\n').find((l) => l.includes('FIX.CONFIG-B…
+    1043|     expect([note.includes('"yes follow the rules register them."'), no…
+       |                                                                                                                                             ^
+    1044|   });
+    1045| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 45 passed (55)
+   Start at  13:39:54
+   Duration  4.52s (transform 3ms, setup 4ms, collect 219ms, tests 1.51s, environment 0ms, prepare 18ms)
+

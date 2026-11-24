@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:49:08.536Z file_sha256=d1c8de930092aa0da7ec236b03558de647b610942b66a90e888653cef9651304 prompt_sha256=b430052dcee30f4af0f138d29defcc68399c1aac3e539c59a7781db41f2c42a5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-eng-s3-s9.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — eng 3.2 "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks ... If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable" — NONE (no file under `migrations/` appears in the diff) — cannot see the Active Task's Database Impact field, so I cannot tell whether a migration is owed for this change — confirm the Active Task field; if it is YES add `NNN_[feature].sql` with `-- UP` and `-- DOWN`, if NO record the NO and drop this item
+DEFER severity=NIT — not pasted (the change's own governing clause, quoted inside the material: 128_surface_standard_policy.md "Rule 3 on a surface ... `config.bounds.<key>` = `min`, `max`, `on_invalid`") — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "+> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 ... operator, verbatim: \"Let the grounder resolve them all as long as the result is compliant\"" — the context block says "(no pasted context provided)", so the spec clause and operator ruling that sanction `config.bounds` are not in my context and I cannot verify the mechanism against them — paste Spec 128 Rule 3 and MORNING-DECISIONS.md:1476 into the context block so the bounds behaviour itself is checkable
+REJECT — eng 9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — the change edits `scripts/surfaces/emit-mobile-surfaces.mjs` and adds `configBoundsProblems` with `throw new Error(...)` and no `pipeline.run`/`pipeline.log` — not a real issue: that file is a build-time `.mjs` generator that reads descriptors and writes JSON, it opens no pool and writes no database, so it is not a `scripts/*.js` pipeline script and 9.4 does not reach it
+MET — eng 3.1 "do NOT use `ALTER TABLE ... ALTER COLUMN` directly" — changed file set (docs, mobile, `scripts/surfaces`, `src/tests`) — no `ALTER TABLE`, no `CREATE INDEX`, no schema-touching SQL anywhere in the diff
+MET — eng 9.2 "Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking" — scripts/surfaces/emit-mobile-surfaces.mjs "@@ -52 +71,4 @@ export function buildOutputs(root = REPO) {" — the only script changed emits files, no INSERT and no `MAX_ROWS_PER_INSERT` is added or affected
+MET — eng 9.3 "All pipeline scripts MUST be safe to re-run" — scripts/surfaces/emit-mobile-surfaces.mjs "@@ -28,0 +31,17 @@" with `configBoundsProblems(config, bounds)` — the generator's output is a pure function of the descriptors (pinned by `$comment` "GENERATED ... (input_sha 12a6e4117f61281b)"), so a re-run rewrites the same slice and duplicates nothing
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  17321ms (17.3s)
+📊 Tokens — total: 29996, input: 26690, output: 3306, reasoning: 2555

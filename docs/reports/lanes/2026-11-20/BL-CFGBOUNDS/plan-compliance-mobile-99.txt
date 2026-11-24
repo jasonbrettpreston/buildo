@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:42.874Z file_sha256=62e77c807fede282268a3d54f9bffc886a98bf2b00285f87c39a820f8ac72560 prompt_sha256=58a2685554f7f55fea0186fd828f03c1bb0789d1ebfbd82e79f6dd10cbef0080
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1476 operator ruling "Let the grounder resolve them all as long as the result is compliant" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator", while the task notes record the grounder's resolution "the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft" — ruling unmet for one of the items it covers, the plan retires a resolution the ruling already delegated instead of building it — add a step that builds the area-factor slice key per the recorded grounder mechanism, or attach a dated operator amendment narrowing "them all" to the bounds part.
+
+BUG severity=HIGH — Spec 136 fe.44 "the conversion factor is content/settings, never code" — plan F6 "The two typed copies are mobile/src/lib/leadDetailFormat.ts:15 ... and mobile/src/lib/parcelCostFormat.ts:11" ("10.7639 typed"), and no plan step 1 through 7 touches either file — clause unmet, the unit conversion factor stays hard-coded in mobile source after this lane — add a step replacing both typed 10.7639 factors with the generated-slice number fed from the parcels_sqm_to_sqft pinned row, or a dated amendment naming the exception.
+
+DEFER severity=MED — Spec 99 amendment "Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row" — plan step 4 "on_invalid fail throws, clamp returns the nearest bound" — a numeric clamp is a decision the client computes, outside the five named client-side boundaries, and step 6 plans only a Rule 3 dated note, no `deviations[]` row — bounded risk because step 3 makes the emitter refuse out-of-range values, so clamp can only fire on a legacy or hand-edited slice — add the dated `deviations[]` row for client clamp, or restrict on_invalid to `fail` only.
+
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — plan step 1 "new optional property `bounds` (object; per key: min number, max number, on_invalid fail|clamp...)" and step 2 adds no `logic_variables` row for any of the six keys — bounds and on_invalid live in the surface descriptor, not the registry row the clause names — bounded because the task notes already argue the phone reads only the generated slice, so a registry row would be a control with no effect — make the step 6 dated note state the presence-clause waiver on its face rather than leaving it implied.
+
+DEFER severity=MED — MORNING-DECISIONS.md:1476 operator ruling "Let the grounder resolve them all as long as the result is compliant" — plan step 7 "Bounds values are LANE PROPOSALS, flagged for the grounder" with ranges debounce_ms [0,2000], min_query_len [3,120], continue_wait_ms [1000,300000], entitlement_stale_ms [0,3600000], lookup_retry_max [0,5], lookup_stale_ms [0,3600000] — the values and postures are the lane's, not the grounder's resolution the ruling delegates, so compliance cannot be asserted at plan-lock — bounded because the plan itself states "Every current value lies inside its bounds (400, 3, 60000, 0, 3, 60000, and 0/0)" — record the grounder's sign-off on those six ranges as the resolution, not as a flagged proposal, before lock.
+
+MET — Spec 99 §3 "This table is **normative**. Adding a field to the mobile app requires adding a row here." — plan steps 1 and 3 — the change adds `bounds` as generated descriptor data and a reader signature, no Zustand, MMKV or query-key field, so the matrix needs no new row.
+
+MET — Spec 99 §4 "These are the only allowed cross-layer flows. A seventh pattern requires a spec amendment." — plan steps 3 and 4 — the emitter refusal and the reader clamp are in-process over generated data, no B1 through B6 flow is added or altered.
+
+REJECT — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — accused of needing a Spec 99 amendment for the slice reader change — not a real issue, the enumerated triggers are store, blob, bridge and routing effect, and the plan adds none.
+
+REJECT — Spec 99 §5.2 "Has onboarding completed? | `useUserProfile().data.onboarding_complete` (canonical = server profile)" — accused of routing on generated slice config — not a real issue, the six config keys reach timers and query options, not a gate decision.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  49855ms (49.9s)
+📊 Tokens — total: 35530, input: 25962, output: 9568, reasoning: 8438

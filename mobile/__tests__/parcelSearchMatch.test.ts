@@ -32,9 +32,8 @@ import {
 import { shouldHideAppTabBar } from '@/lib/appShell';
 import {
   SEARCH_CANDIDATE_LIMIT,
-  SEARCH_DEBOUNCE_MS,
-  SEARCH_MIN_QUERY_LEN,
 } from '@/constants/parcelSearch';
+import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
 import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 
 // A response shaped exactly like the server's whitelist envelope. `parcel` is irrelevant to the
@@ -64,16 +63,18 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
   it('debounce_ms, min_query_len and the candidate cap are the declared values', () => {
     // These three are `config.debounce_ms`, `config.min_query_len` and the contract cap in
     // scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json.
-    expect(SEARCH_DEBOUNCE_MS).toBe(400);
-    expect(SEARCH_MIN_QUERY_LEN).toBe(3);
+    expect(searchSlice.config.debounce_ms).toBe(400); // FIX.CONFIG-BOUNDS (task-395): the typed second copy is gone; the slice is the one home
+    expect(searchSlice.config.min_query_len).toBe(3);
     expect(SEARCH_CANDIDATE_LIMIT).toBe(10);
   });
 
   it('the client minimum never rises above the server minimum', () => {
     // src/app/api/parcels/lookup/types.ts — `q: z.string().trim().min(3)`. A client gate ABOVE the
     // server's floor would silently make valid queries unreachable.
+    // The 3 and the 120 are held to that line, and to the registered row, by src/tests/surfaces/surface-conformance.logic.test.ts (C-10, parity).
     const SERVER_MIN = 3;
-    expect(SEARCH_MIN_QUERY_LEN).toBeLessThanOrEqual(SERVER_MIN);
+    expect(searchSlice.config.min_query_len).toBeLessThanOrEqual(SERVER_MIN);
+    expect(searchSlice.bounds.min_query_len).toMatchObject({ min: 3, max: 120 });
   });
 });
 

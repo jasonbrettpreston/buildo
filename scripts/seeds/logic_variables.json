@@ -10833,5 +10833,65 @@
     "admin": {
       "group": "Source Ingestion"
     }
+  },
+  "maxbld_page_debounce_ms": {
+    "default": 400,
+    "type": "number",
+    "min": 400,
+    "max": 5000,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): how long typing in the phone search box pauses, in milliseconds, before a lookup fires (surface config debounce_ms of mobile_parcel_search; moved out of code unchanged). Bounds 400 to 5000: the minimum 400 is Spec 100 section 2.6 \"debounced (>=400 ms)\" (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:132); NO SOURCE for the maximum of a typing pause: 5000 borrows the maximum of the nearest registered on-screen timing variable, report_check_ready_hold_ms (500 to 5000). on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_search.json, read by mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "maxbld_page_min_query_len": {
+    "default": 3,
+    "type": "number",
+    "min": 3,
+    "max": 120,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): the shortest search text, in characters, the phone sends to the lookup (surface config min_query_len of mobile_parcel_search; moved out of code unchanged). Bounds 3 to 120: the server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42, min(3) and max(120)); a parity test holds both ends to that line. on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_search.json, read by mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "maxbld_page_entitlement_stale_ms": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 600000,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): how long the reports-left entitlement read stays fresh on the phone, in milliseconds; 0 re-reads on every focus (surface config entitlement_stale_ms of mobile_parcel_search; moved out of code unchanged). Bounds 0 to 600000: NO SOURCE for a maximum: the envelope is the nearest registered cache lifetime, media_list_cache_seconds (0 to 600 seconds), in milliseconds. on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_search.json, read by mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "maxbld_page_lookup_retry_max": {
+    "default": 3,
+    "type": "number",
+    "min": 0,
+    "max": 10,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): how many times the phone re-sends a failed lookup or entitlement read before the error screen; a deterministic failure is never retried (surface config lookup_retry_max of mobile_parcel_search; moved out of code unchanged). Bounds 0 to 10: the value 3 is Spec 100 \"The phone keeps its 3 retries before the error screen\" (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125); NO SOURCE for the range: 0 to 10 is the range of the nearest registered retry counts, load_centreline_download_retries and coa_download_retries. on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_search.json, read by mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "maxbld_page_lookup_stale_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 0,
+    "max": 600000,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): how long a lookup read (typeahead search or detail by parcel) stays fresh on the phone, in milliseconds (surface config lookup_stale_ms of mobile_parcel_search; moved out of code unchanged). Bounds 0 to 600000: NO SOURCE for the range: the envelope is the nearest registered cache lifetime, media_list_cache_seconds (0 to 600 seconds), in milliseconds. on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_search.json, read by mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "maxbld_page_continue_wait_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 600000,
+    "description": "FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494), on Spec 128 Rule 3 (every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture)): how long the semi question page Continue waits for the answered lookup before the page ends in its error state, in milliseconds (surface config continue_wait_ms of mobile_parcel_semi_question; an open operator timeframe, moved out of code unchanged). Bounds 1000 to 600000: NO SOURCE for the range: the envelope is the nearest registered request timeouts, load_ravines_download_timeout_ms and load_heritage_download_timeout_ms (1000 to 600000). on_invalid is clamp: a value outside the bounds reads as the nearest bound and the phone warns naming the key and both values; it moves no write and no verdict. The surface descriptor declares it in config.logic_variables and the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves the slice number from this row at generate time, refusing a mismatch or an out-of-range value. Only the phone applies it at run time; no web binding reads this key today. CONSUMED by scripts/surfaces/emit-mobile-surfaces.mjs (the generated slice mobile/src/generated/surfaces/mobile_parcel_semi_question.json, read by mobile/src/lib/semiQuestion.ts through mobile/src/lib/sliceConfig.ts)",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
   }
 }

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:52.147Z file_sha256=53bcfe28fe95c80fc926a6dbd526509ff8abd7cec3a5648ca092e813513f0bf9 prompt_sha256=80465fd7bb82fe5e8e7996aee7d819463d967ea8df31cab36e6e56fa7ded1c26
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 2026-11-20 note "A ruling does not stay only in a scratch file: it lands with its row's next docs commit" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "resolved by the separate grounder, option (b)" versus scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:448 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — the landed note claims the bounds are resolved while all six entries still address the grounder and cite no resolution record, so the numbers that now bind the descriptor, the schema and the emitted slices are unreviewed proposals — land the grounder's record path and verdict per key in the 128 note, or mark each entry pending.
+
+DEFER severity=LOW — 126 §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer." — mobile/src/lib/sliceConfig.ts:21 "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — the change grows a client-side bounds interpreter in mobile/src/lib holding the fail/clamp posture, code outside the enumerated surfaces and not named in a queue row I can see; and since scripts/surfaces/emit-mobile-surfaces.mjs now throws on any out-of-bounds value, the clamp branch is unreachable for a generated slice — name the reader in the task-395 queue row or move posture application to the generator and keep the phone read to a validated value.
+
+DEFER severity=LOW — pasted context "(no pasted context provided)" — NONE — the clauses this change is actually written against (Spec 128 Rule 3, Spec 135 FE-04/FE-31, the SV-DESC validator, the operator words "Let the grounder resolve them all as long as the result is compliant") are not in the pasted context, so compliance with them cannot be judged here, cannot see — paste the Rule 3 text and MORNING-DECISIONS.md:1476 into the review context.
+
+MET — 126 §11b.1 "Every MaxBLD page = descriptor + content + standard library components configured by schema." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:443 — each tunable stays in the descriptor config and the bounds travel with it into the generated slice, no hand-built value in the screen.
+
+MET — 126 §11b.1 "Library imports are allowed only in the declared binding modules." — mobile/src/lib/sliceConfig.ts:9 — the changed reader adds only a type and a pure function, no library import outside SearchBinding.tsx.
+
+MET — 2026-11-20 note "A ruling does not stay only in a scratch file: it lands with its row's next docs commit" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 — the option (b) ruling lands as a dated note in Spec 128 and in the registry row and the six descriptor "why" fields, not in the scratch record only.
+
+MET — 126 §11a.9 MF-19 note (3) "the range is two logic variables" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:8 — the only bounds added on the phone slices are the SEARCH and semi tunables, no lot-size or area range is moved out of its admin settings.
+
+REJECT — 126 §11b.1 note "A new component kind would be a new decision." — the change accused of adding a component kind — sliceNumber is a pure function plus a type in mobile/src/lib/sliceConfig.ts, no JSX, no vendored or wrapper component, so no new component kind is introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  82989ms (83.0s)
+📊 Tokens — total: 51025, input: 35027, output: 15998, reasoning: 15116

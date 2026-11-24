@@ -23,6 +23,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { descArm, loadContext, queueProblems, sbindArm, screenArm, shapeProblems } from '../../../scripts/surfaces/screen-checks.mjs';
+import * as EMIT from '../../../scripts/surfaces/emit-mobile-surfaces.mjs';
 import { isFrontend } from '../../../scripts/analysis/mcbylaws/paths.mjs';
 import { validateDescriptor, unresearchedCount } from '../../lib/surfaces/generated/validate-descriptor.mjs';
 import { ARCHETYPES, buildFixture, convert, editDescriptor, rj } from './screen-fixture';
@@ -999,5 +1000,108 @@ describe('C-12 the web report renderer files have a census owner and are judged 
     expect(got.some((l) => /C-8 structural findings 42, pinned 41 \(a new finding\)/.test(l))).toBe(true);
     expect(reportRendererProblems(texts, { ...REPORT_RENDERER_PIN, [view]: { 'C-2b': 14, 'C-8': 41 } })).toEqual([`C-12 ${view}: C-2b structural findings 13, pinned 14 (fewer: lower the pin)`]);
     expect(reportRendererProblems({ ...texts, [view]: undefined as unknown as string })).toEqual([`C-12 ${view}: not read`]);
+  });
+});
+
+// ---- C-10 FIX.CONFIG-BOUNDS (task-395): the page settings are registered logic variables --------------------------------------------------------------
+// Spec 128 Rule 3: every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture. Operator, verbatim,
+// 2026-11-20: "yes follow the rules register them." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494). The six settings are rows maxbld_page_<key> in the seed; a surface
+// declares each in config.logic_variables (the schema's existing field); the generator resolves the slice number from the row and refuses a mismatch or an out-of-range value.
+describe('C-10 page settings are registered logic variables: declared, resolved from the seed row, refused when absent or wrong', () => {
+  const KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms'];
+  const SEED: Json = rj(path.join(REPO, 'scripts/seeds/logic_variables.json'));
+  const E = EMIT as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- the emitter is an untyped .mjs
+  const name = (k: string): string => `maxbld_page_${k}`;
+  const v = (d: Json): string => validateDescriptor(d).errors.join('\n');
+  const search = (): Json => convert('SEARCH');
+  const entry = (k: string, over: Json = {}): Json => ({ name: name(k), min: SEED[name(k)].min, max: SEED[name(k)].max, on_invalid: 'clamp', why: 'x', ...over });
+  const read = (rel: string): Json => rj(path.join(REPO, rel));
+  const SEARCH_D = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
+  const SEMI_D = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json';
+
+  it('the seed holds the six rows in the registry form (value, number type, min, max, a description stating on_invalid, an admin group), values unchanged', () => {
+    const want: Record<string, [number, number, number]> = { debounce_ms: [400, 400, 5000], min_query_len: [3, 3, 120], continue_wait_ms: [60000, 1000, 600000], entitlement_stale_ms: [0, 0, 600000], lookup_retry_max: [3, 0, 10], lookup_stale_ms: [60000, 0, 600000] };
+    for (const k of KEYS) {
+      const r = SEED[name(k)];
+      expect([k, r.default, r.min, r.max, r.type]).toEqual([k, ...(want[k] as [number, number, number]), 'number'].flat());
+      expect([k, r.default >= r.min && r.default <= r.max, /on_invalid is clamp/.test(r.description), typeof r.admin?.group]).toEqual([k, true, true, 'string']);
+      expect([k, /lane proposal/i.test(r.description)]).toEqual([k, false]);
+    }
+  });
+  it('min_query_len 3 to 120 is the server range: parity with src/app/api/parcels/lookup/types.ts:42', () => {
+    const line = fs.readFileSync(path.join(REPO, 'src/app/api/parcels/lookup/types.ts'), 'utf8').split('\n').find((l) => /^\s*q: z\.string\(\)/.test(l)) ?? '';
+    expect([Number(/\.min\((\d+)/.exec(line)?.[1]), Number(/\.max\((\d+)/.exec(line)?.[1])]).toEqual([SEED[name('min_query_len')].min, SEED[name('min_query_len')].max]);
+  });
+  it('the surfaces declare each setting in config.logic_variables, with the seed row\'s min and max and the descriptor value equal to the row default; no config.bounds exists', () => {
+    const s = read(SEARCH_D); const m = read(SEMI_D);
+    const names = (d: Json): string[] => d.config.logic_variables.map((e: Json) => e.name);
+    expect(['debounce_ms', 'min_query_len', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms'].every((k) => names(s).includes(name(k)))).toBe(true);
+    expect(names(m)).toContain(name('continue_wait_ms'));
+    expect([s.config.answer, m.config.answer]).toEqual(['logic_variables', 'logic_variables']);
+    for (const [d, ks] of [[s, ['debounce_ms', 'min_query_len', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']], [m, ['continue_wait_ms']]] as [Json, string[]][]) {
+      for (const k of ks) {
+        const e = d.config.logic_variables.find((x: Json) => x.name === name(k));
+        expect([k, e.min, e.max, e.on_invalid, d.config[k]]).toEqual([k, SEED[name(k)].min, SEED[name(k)].max, 'clamp', SEED[name(k)].default]);
+      }
+      expect(d.config.bounds).toBeUndefined();
+    }
+    expect(read(`${SCHEMA}/surface.schema.json`).properties.config.properties.bounds).toBeUndefined();
+  });
+  it('RED: a number with no config.logic_variables entry for its row, an entry for another name, or an entry without min, max or on_invalid, is refused by the one validator', () => {
+    for (const k of ['debounce_ms', 'min_query_len', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) {
+      const d = search(); d.config.logic_variables = d.config.logic_variables.filter((e: Json) => e.name !== name(k));
+      expect([k, /logic_variables/.test(v(d))]).toEqual([k, true]);
+    }
+    const wrong = search(); wrong.config.logic_variables[0].name = 'some_other_variable'; expect(v(wrong)).toMatch(/logic_variables/);
+    for (const field of ['min', 'max', 'on_invalid']) {
+      const d = search(); delete d.config.logic_variables.find((e: Json) => e.name === name('debounce_ms'))[field]; expect([field, v(d).length > 0]).toEqual([field, true]);
+    }
+    const none = search(); delete none.config.logic_variables; expect(v(none)).toMatch(/logic_variables/);
+  });
+  it('a 0 on debounce_ms or min_query_len needs no entry (a binding module has no such setting); UNRESEARCHED needs none; every other 0 does', () => {
+    const z = search(); z.config.debounce_ms = 0; z.config.min_query_len = 0; z.config.logic_variables = z.config.logic_variables.filter((e: Json) => !/debounce|min_query/.test(e.name)); expect(v(z)).toBe('');
+    const u = search(); u.config.lookup_stale_ms = 'UNRESEARCHED'; u.config.logic_variables = u.config.logic_variables.filter((e: Json) => e.name !== name('lookup_stale_ms')); expect(v(u)).toBe('');
+    const e0 = search(); e0.config.entitlement_stale_ms = 0; e0.config.logic_variables = e0.config.logic_variables.filter((e: Json) => e.name !== name('entitlement_stale_ms')); expect(v(e0)).toMatch(/logic_variables/);
+  });
+  it('every number-typed property a config may hold has its rule, naming the registered variable the generator uses (schema and emitter agree)', () => {
+    const cfg: Json = read(`${SCHEMA}/surface.schema.json`).properties.config;
+    const numberKeys = Object.entries(cfg.properties as Json).filter(([, p]) => JSON.stringify(p).includes('"integer"')).map(([k]) => k).sort();
+    expect(numberKeys).toEqual([...KEYS].sort());
+    expect(Object.keys(E.PAGE_SETTINGS).sort()).toEqual([...KEYS].sort());
+    for (const k of numberKeys) {
+      const rule = (cfg.allOf as Json[]).find((r) => r.if?.required?.[0] === k);
+      expect([k, rule?.then?.properties?.logic_variables?.contains?.properties?.name?.const, E.PAGE_SETTINGS[k], k && SEED[name(k)] !== undefined]).toEqual([k, name(k), name(k), true]);
+    }
+  });
+  it('the generator resolves each bound from the seed row and refuses, by key name: no entry, an absent row, a min or max that differs, a value that is not the row default, a value outside the bounds, on_invalid default', () => {
+    const seed = { [name('debounce_ms')]: { default: 400, min: 400, max: 5000, type: 'number' } };
+    const ok = [entry('debounce_ms', { min: 400, max: 5000 })];
+    expect(typeof E.pageSettingBounds).toBe('function');
+    expect(E.pageSettingBounds({ debounce_ms: 400 }, ok, seed)).toEqual({ bounds: { debounce_ms: { min: 400, max: 5000, on_invalid: 'clamp' } }, problems: [] });
+    const p = (config: Json, entries: Json[] | undefined, s: Json = seed): string[] => E.pageSettingBounds(config, entries, s).problems;
+    expect(p({ debounce_ms: 400 }, [])).toEqual([`config.debounce_ms: no config.logic_variables entry named ${name('debounce_ms')}`]);
+    expect(p({ debounce_ms: 400 }, ok, {})).toEqual([`config.debounce_ms: seed row ${name('debounce_ms')} is absent or not a bounded number`]);
+    expect(p({ debounce_ms: 400 }, [entry('debounce_ms', { min: 0, max: 5000 })])).toEqual([`config.debounce_ms: the descriptor bounds 0 to 5000 differ from seed row ${name('debounce_ms')} (400 to 5000)`]);
+    expect(p({ debounce_ms: 401 }, ok)).toEqual([`config.debounce_ms: 401 differs from the seed default 400 of ${name('debounce_ms')}`]);
+    expect(p({ debounce_ms: 400 }, [entry('debounce_ms', { min: 400, max: 5000, on_invalid: 'default' })])).toEqual(['config.debounce_ms: on_invalid must be fail or clamp']);
+    expect(p({ debounce_ms: 6000 }, ok, { [name('debounce_ms')]: { default: 6000, min: 400, max: 5000 } })).toEqual(['config.debounce_ms: 6000 is outside its bounds 400 to 5000']);
+  });
+  it('a config with only UNRESEARCHED keys, no entries, or null entries gives no bounds and no crash', () => {
+    expect(E.pageSettingBounds({ debounce_ms: 'UNRESEARCHED', min_query_len: 'UNRESEARCHED' }, undefined, {})).toEqual({ bounds: {}, problems: [] });
+    expect(E.pageSettingBounds({}, [null], {})).toEqual({ bounds: {}, problems: [] });
+    expect(E.pageSettingBounds({ debounce_ms: 400 }, [null], {}).problems).toEqual([`config.debounce_ms: no config.logic_variables entry named ${name('debounce_ms')}`]);
+  });
+  it('the generated slices carry an unchanged config and the row bounds; the dead typed copies are gone', () => {
+    const s = read('mobile/src/generated/surfaces/mobile_parcel_search.json');
+    expect(s.config).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 });
+    expect(s.bounds).toEqual({ debounce_ms: { min: 400, max: 5000, on_invalid: 'clamp' }, min_query_len: { min: 3, max: 120, on_invalid: 'clamp' }, entitlement_stale_ms: { min: 0, max: 600000, on_invalid: 'clamp' }, lookup_retry_max: { min: 0, max: 10, on_invalid: 'clamp' }, lookup_stale_ms: { min: 0, max: 600000, on_invalid: 'clamp' } });
+    expect(read('mobile/src/generated/surfaces/mobile_parcel_semi_question.json').bounds).toEqual({ continue_wait_ms: { min: 1000, max: 600000, on_invalid: 'clamp' } });
+    const consts = fs.readFileSync(path.join(REPO, 'mobile/src/constants/parcelSearch.ts'), 'utf8').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect([/SEARCH_DEBOUNCE_MS/.test(consts), /SEARCH_MIN_QUERY_LEN/.test(consts)]).toEqual([false, false]);
+  });
+  it('Spec 128 Rule 3 carries the dated note with the operator sentence and no area-factor claim', () => {
+    const spec = fs.readFileSync(path.join(REPO, 'docs/specs/02-web-admin/128_surface_standard_policy.md'), 'utf8');
+    const note = spec.split('\n').find((l) => l.includes('FIX.CONFIG-BOUNDS · task-395')) ?? '';
+    expect([note.includes('"yes follow the rules register them."'), note.includes('MORNING-DECISIONS.md:1494'), /area factor/i.test(note)]).toEqual([true, true, false]);
   });
 });

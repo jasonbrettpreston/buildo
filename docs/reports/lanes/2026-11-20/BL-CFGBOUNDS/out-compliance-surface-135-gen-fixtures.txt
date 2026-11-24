@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:56:36.314Z file_sha256=a4788e439f7b17485f338a69800c9105d64b5a1b88ee95674a9e6cf6b372bc4d prompt_sha256=36b55ba2eab5cd7040eed8a2a2f9f1a207d2a814852e065a66311d85544a4edf
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-135-gen-fixtures.txt (model: deepseek-reasoner)
+
+BUG none raised: every line of the material is a generated-fixture fingerprint refresh, and no pasted clause is shown unmet.
+
+DEFER severity=MED — FE-13 "GOLDEN (manifest targets, every state x target file present, nothing stray, fingerprint fresh)" — a287f53a5..123473de4 line "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd" — the refreshed fingerprint names a descriptor file that is not in the material (also `mobile_parcel_semi_question.descriptor.json` to `5c71720ec1a5d862`), so "fingerprint fresh" rests on a hash I cannot see against a descriptor I cannot see — include the two descriptor deltas, or the `surface-validate.mjs --check` GOLDEN output, in the same review material — so freshness is verifiable rather than asserted.
+
+DEFER severity=LOW — FE-31 "generated and vendored files pass `--check`/manifest" — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:2 "input_sha 0adc505660d13843" — the emitter input sha moved (was `2e119c8ad7492541`; semi_question `b88b6819a6238cd7` to `494728933290c3f1`) while no emitter input file is in the diff, so the only evidence these files were regenerated and not hand-edited is the file's own `$comment` — state the emitter run (commit or `--check` result) in the change note — a comment is not proof of generation.
+
+REJECT — FE-31 dated note 2026-11-20 "not a new FE row and not a new lock" — the change is accused of owing a register row because it touches surface goldens — a fingerprint regeneration under existing rows FE-13/FE-31 adds no rule and no lock, so no FE row is owed.
+
+MET — FE-13 "PARITY (the four target files agree)" — src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json:1318 and ambiguous.web.json:1291 — both targets carry the identical new value `bd2f67f4738fdcfd`, so web and mobile agree.
+
+MET — FE-13 "fingerprint fresh" — src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json:329 — every one of the 11 search state files per target moved off the stale `c89c405a30cc0f2e`, with none left behind in the diff.
+
+MET — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json:301 — the 8 fingerprint entries in the goldens file match exactly the 8 `*.mobile.json` fixtures updated (answered, ask, error, loading, rate_limited, redirect, schema_drift, unauthorized), so no state file is orphaned or stray.
+
+MET — FE-02 "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components" — whole diff — no hand-written render code, component or descriptor logic lands; only generated fixtures change.
+
+MET — FE-38 "The mobile parcel screen and the tracked-lots list then show none of them" — src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json:170 — no rendered value in any state changed, only the fingerprint, so this diff neither re-adds nor claims any legacy value; the EI-D1 hide is not contradicted by it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  41404ms (41.4s)
+📊 Tokens — total: 42180, input: 34485, output: 7695, reasoning: 6839

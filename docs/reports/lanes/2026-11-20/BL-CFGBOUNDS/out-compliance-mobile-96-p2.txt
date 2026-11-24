@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:47.320Z file_sha256=d7fe5ecdcc88c11f6f158e4d40d5c3af1e269d84bc2be0c1391b2433d4fc1a89 prompt_sha256=5f17d036e16b21653ed8883f91d6db363bf54182c1395c9c7bcbea4ceb583b27
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-96-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 96 §11 "Target files: - `src/app/api/webhooks/stripe/route.ts` — Stripe webhook handler (new)" — NONE (the diff touches none of the six files listed under §11) — all six §11 target files (`user-profile/route.ts`, `webhooks/stripe/route.ts`, `subscribe/session/route.ts`, `mobile/app/(app)/_layout.tsx`, `PaywallScreen.tsx`, `paywallStore.ts`) receive no change; the entire material under review is surface config bounds work (`mobile/src/lib/sliceConfig.ts`, `scripts/surfaces/_schema/surface.schema.json`), so the §11 target-file clause is unmet — land this diff under its own card (FIX.CONFIG-BOUNDS, task-395, Spec 128) and review the Spec 96 target files against this list, or re-run with the Spec 128 rule list pasted.
+
+BUG severity=HIGH — review rule "A change that adds behaviour no pasted clause or ruling names is a finding" — scripts/surfaces/_schema/surface.schema.json "+        \"bounds\": {" — the diff introduces a new bounds/on_invalid mechanism (schema `allOf` rules, `configBoundsProblems` in `scripts/surfaces/emit-mobile-surfaces.mjs`, a changed `sliceNumber` signature `export function sliceNumber(slice: SliceNumbers, key: string): number`) and no clause in the pasted §11 names any of it — get the authorising ruling pasted into the context and re-reviewed, or drop it from this change.
+
+DEFER severity=MED — pasted context "(no pasted context provided)" — docs/specs/02-web-admin/128_surface_standard_policy.md "+operator, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476`" — the operator ruling the whole change rests on is cited only inside the diff and is not in the pasted context, so its verbatim wording and its scope ("them all", "compliant") cannot be checked here — paste MORNING-DECISIONS.md:1476 and Spec 128 Rule 3 before this is judged for compliance.
+
+MET — Spec 96 §11 "Out of scope: - In-app purchase (Apple IAP) — deliberately excluded" — whole diff — no IAP path, StoreKit call or receipt handling is added.
+
+MET — Spec 96 §11 "Out of scope: - Pricing tier display in-app — managed on web only" — whole diff — no pricing tier rendering or price value is added to any mobile screen.
+
+MET — Spec 96 §11 "Out of scope: - Team/org subscription billing — Phase 2" — whole diff — no org/team billing code, table or endpoint is added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+
+---
+⏱  26906ms (26.9s)
+📊 Tokens — total: 30740, input: 25569, output: 5171, reasoning: 4519

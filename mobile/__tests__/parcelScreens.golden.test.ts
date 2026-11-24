@@ -11,8 +11,8 @@
 // SELECT is disabled with nothing checked; every component is in mapping.mobile.SEARCH; every child node carries a key (RG-15).
 import fs from 'node:fs';
 import path from 'node:path';
-import { DERIVED_NAMES, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
-import { SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN } from '@/constants/parcelSearch';
+import { DERIVED_NAMES, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
+import { SEARCH_CANDIDATE_LIMIT } from '@/constants/parcelSearch';
 import type { SearchSituation } from '@/lib/parcelSearchMatch';
 
 type Json = Record<string, unknown>;
@@ -201,8 +201,8 @@ describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
 describe('one home for the config values (row 24, RG-14)', () => {
   it('OUTPUT fold LOW: the binding re-exports the debounce and the minimum length from the slice (the descriptor is their one home)', () => {
     const src = fs.readFileSync(path.join(MOBILE, 'src/components/surfaces/SearchBinding.tsx'), 'utf8');
-    expect(/export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE\.config\.debounce_ms/.test(src)).toBe(true);
-    expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
+    expect(/export const SEARCH_DEBOUNCE_MS = sliceNumber\(SEARCH_SLICE, 'debounce_ms'\)/.test(src)).toBe(true);
+    expect(/export const SEARCH_MIN_QUERY_LEN = sliceNumber\(SEARCH_SLICE, 'min_query_len'\)/.test(src)).toBe(true);
   });
   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 }); // FIX.TUNE (task-378): the phone tunables are declared beside them

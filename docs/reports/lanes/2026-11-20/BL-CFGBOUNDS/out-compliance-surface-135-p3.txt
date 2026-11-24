@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:57:17.798Z file_sha256=46ed02fbf9a9ccf2b1335ac6b1a6f9d8c1ad5630bd99c3ffbd27c30bfa493177 prompt_sha256=7ab5cca57cdd1d3e6bbd4233279f353230a6691b0ed657cf581db20b4749808f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-135-p3.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Target Files: "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md — this register (documents only; no code lands with it)" — mobile/src/lib/sliceConfig.ts:17 "export function sliceNumber(slice: SliceNumbers, key: string): number {" — the diff modifies no line of 135 and lands executable code across mobile/src, mobile/__tests__ and scripts/surfaces, so the register change carries code it may not carry — split the code into its own card and keep this change to the 135 entry text only.
+
+BUG severity=HIGH — Target Files: "this register (documents only; no code lands with it)" — scripts/surfaces/emit-mobile-surfaces.mjs:73 "if (problems.length > 0) throw new Error(`emit-mobile-surfaces: ${id}: ${problems.join('; ')}`);" — a new generate-time refusal path plus the schema allOf rules are new enforcement behaviour that no pasted clause names, delivered under a documents-only register change — move the schema and generator enforcement to a code card of its own.
+
+BUG severity=HIGH — Cross-Spec Dependencies: "Spec 128 (policy, §2.2a and §4.9-§4.11)" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS" — the change amends the governing policy document itself while the pasted clause names Spec 128 only as a dependency to honour, and the decision text lands in 128 instead of in the target register 135 — record the decision as a 135 entry and leave 128 to its own change.
+
+DEFER severity=MED — Cross-Spec Dependencies: "Spec 126 (contract, §0a and §11a), Spec 127 (procedure, §3.2a)" — mobile/__tests__/sliceConfig.test.ts:2 "// SPEC LINK: docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (bounds and an on_invalid posture per tunable); docs/specs/02-web-admin/126_maxbld_surface_standard.md P4." — none of the named anchors (§0a, §11a, §3.2a, §2.2a, §4.9-§4.11) is cited by the material or by a 135 entry, so the dependency is unaddressed — add the register entry citing each named anchor.
+
+DEFER severity=MED — Cross-Spec Dependencies: "`.cursor/MCFRONTEND-QUEUE.md`: the one source of MF task ids." — mobile/src/constants/parcelSearch.ts:15 "// The debounce has no constant here: config.debounce_ms of the generated slice is its one home, read through the reader in SearchBinding.tsx (FIX.CONFIG-BOUNDS, task-395)." — the change identifies itself by "task-395" and "lane BL-CFGBOUNDS", not an MF id, and the queue file is neither cited nor touched, so the one source of MF task ids is bypassed — cite the MF id from .cursor/MCFRONTEND-QUEUE.md in the register entry.
+
+DEFER severity=LOW — Cross-Spec Dependencies: "Spec 124a and Spec 69a: the register form this file copies." — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept;" — the material contains no register payload at all, so the 124a/69a form cannot be checked against anything — produce the 135 entry in that form.
+
+DEFER severity=LOW — Target Files: "this register (documents only; no code lands with it)" — mobile/src/lib/sliceConfig.ts:8 "/** One key's bounds as the slice carries them; on_invalid is checked here, so the generated JSON (a plain string) fits. */" — the operator words the change leans on are cited only as "MORNING-DECISIONS.md:1476"; cannot see that file or its text, so "Let the grounder resolve them all as long as the result is compliant" cannot be checked — paste the ruling text into the review context.
+
+MET — Out-of-Scope Files ("The McBylaws gate and its policy (gate.mjs, cite-parse.mjs, prereg-name.mjs, arm Q, mcbylaws/protected-paths.json, .husky/*)") — no diff line in the material touches any of those paths, they stay for the freeze lift.
+
+MET — Out-of-Scope Files ("Spec 136 (the generated handbook): its generator is Phase 1 code (MF-18)") — no diff line in the material touches the Spec 136 generator.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+
+---
+⏱  53293ms (53.3s)
+📊 Tokens — total: 18981, input: 12350, output: 6631, reasoning: 5518

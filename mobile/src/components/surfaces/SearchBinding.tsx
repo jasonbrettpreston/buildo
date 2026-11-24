@@ -16,6 +16,7 @@
 // Class strings, sizes and hexes come from the layout table (PARCEL_SEARCH_LAYOUT, mobile/src/constants/parcelSearch.ts).
 // FE-05 (a listed binding module): no numeric literal but 0 and 1, no arithmetic; lengths and caps are decided in parcelSearchMatch.ts.
 import slice from '@/generated/surfaces/mobile_parcel_search.json';
+import { sliceNumber, type SliceBound } from '@/lib/sliceConfig';
 import {
   PARCEL_SEARCH_ICON as I,
   PARCEL_SEARCH_LAYOUT as L,
@@ -28,13 +29,13 @@ import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type Sear
 import { reportsLeftShown } from '@/lib/parcelSearchCore';
 
 /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
-export const SEARCH_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
+export const SEARCH_SLICE: { surface: string; config: Record<string, number>; bounds: Record<string, SliceBound>; content: Record<string, string> } = slice;
 
 // CR3-10 (OUTPUT fold LOW): the screen reads the debounce and the minimum length from the slice, i.e. from the descriptor's config.debounce_ms and
 // config.min_query_len (their one declared home), and the cap (not a descriptor config value) from the constants file, all through the binding.
-// The constants of the same names stay for the non-binding readers; parcelScreens.golden.test.ts pins them equal to the slice.
-export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE.config.debounce_ms;
-export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE.config.min_query_len;
+// FIX.CONFIG-BOUNDS (task-395): both numbers go through sliceNumber, which applies the registered bounds the slice carries (maxbld_page_debounce_ms, maxbld_page_min_query_len). They are the only copies: the typed constants in constants/parcelSearch.ts are gone.
+export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');
+export const SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len');
 export { SEARCH_CANDIDATE_LIMIT };
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
