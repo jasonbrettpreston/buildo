@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=7e0a3d291281e78d9a744b54ce9b987f1e145df8c624de1ac6bd68394d5ad8e1 prompt_sha256=33def010aa002e60070968b7fa38f3e4d0d2192322c9d6c32fb6a3c32f71704b
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #3 "A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files" — .claude/review-templates/README.md item 5 (At close) "Task-438: the engineering seat's files are `out-engineering-<list id>.txt` (or the joined `out-engineering-rules[-pN].txt`) on `lens-engineering.md`, required for a list on the engineering standards file when the range base holds `lens-engineering.md`" — the compliance clause was given the "that output_off leaves on" exclusion but the engineering clause was not, and output_off now names eng-all, eng-front, eng-back and eng-shared, so as written a build or fix lane whose Files line attaches an engineering list is still refused without out-engineering files that AC #3 forbids requiring; no test covers it either, the T6 helper drops only /^(in-)?out-compliance-/ — add the same output_off qualifier to the engineering clause and a close case with a seat-engineering list attached and no out-engineering file.
+
+DEFER severity=MED — RR-0418 "Rule lists per task are cut down by turning lists off in the table" — docs/specs/00-architecture/08_agents.md:357 "of RR-0418 (ux, error-paths and security at output)" — the new dated note supersedes RR-0418 for something RR-0418 does not say (it is about turning lists off in the table, the mechanism this very change relies on), so a grounder can read the note as voiding that ruling and the output_off switch with it — drop RR-0418 from the supersession list and cite RR-0385 and RR-0394 for the lenses it means.
+
+DEFER severity=LOW — AC #4 "A check or doc task still gets every list at either stage" — .claude/review-templates/README.md item 5 "holds one compliance lens output per attached list that output_off leaves on" — with output_off naming every list, the close rule as written leaves a check or doc task's output stage with zero lists, the opposite of AC #4 (the hook itself behaves per T9 "an extra out-error-paths.txt with its Ruled line still closes", only the text is wrong) — qualify the clause with "of a build or fix task".
+
+DEFER severity=NIT — RR-0464 "no separate security review at output; the validating grounder reads the sensitive files" — src/tests/backlog/check-lane-close.logic.test.ts "it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)'" — the case title still says security joins the required output set while the body asserts "expect(noSec.status, noSec.stderr).toBe(0);", so the title contradicts the ruling it now proves — retitle it "security does not join the output set (RR-0464)".
+
+MET — AC #1 — scripts/analysis/rule-lists.mjs:160 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`)" — output_off may name any defined list and an unknown or inherited id is still refused.
+MET — AC #2 — scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]" — the output set of a build or fix task is the code review alone for every Files line, and the plan line above it is unchanged (T3 lock pins the old plan sets).
+MET — AC #3 (lists off, records) — scripts/analysis/rule-lists.json "output_off": ["five-words", "plan-protocol", "step-132", ...] — every list id, pinned by rule-lists.logic.test.ts "expect(t.output_off).toEqual(Object.keys(t.lists));".
+MET — AC #4 — src/tests/backlog/backlog-lane.logic.test.ts:1004 "expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');" — a check task keeps the list text at output with the real table.
+MET — AC #5 — scripts/analysis/backlog-lane.mjs "the diff against the plan as folded and each acceptance line ... each changed descriptor against the code it describes ... the milestone objectives against the diff" and "make no out-compliance or out-engineering file" — the brief names the code review, the grounder duties and no compliance run.
+MET — RR-0464 — scripts/analysis/backlog-lane.mjs "each changed file on an API route, library, money, sign-in, personal-data or admin path (the paths that fire the security lens at the plan stage) read for exploit paths (RR-0464)" — security off at output, kept at plan, grounder reads instead.
+MET — RR-0359 / RR-0385 (must not change) — scripts/analysis/backlog-lane.mjs "the orchestrator launches a grounder that is not you ... ROUNDS (RR-0385, Spec 08 dated note 2026-11-22)" — the grounder and round text is byte-identical to before.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  89352ms (89.4s)
+📊 Tokens — total: 50284, input: 32667, output: 17617, reasoning: 16414

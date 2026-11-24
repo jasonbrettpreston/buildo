@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=8750d7a9ce21afc64e1a04bfa46c24015254f286b476b11ea73d37c1834ba4bb prompt_sha256=dc30015978c0ccb11651945be16843bf51af125bea969e52c863db57a27b96c0
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #4 "#4 A check or doc task still gets every list at either stage" — .claude/review-templates/README.md:153 "holds one compliance lens output per attached list that output_off leaves on" — the rewritten close requirement drops the build-or-fix guard, so with output_off naming every list it reads as zero compliance files for a check or doc task, the opposite of the behaviour the same diff pins in T9 — add the guard words "for a build or fix task" to that clause
+DEFER severity=LOW — AC #6 "#6 The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green" — src/tests/backlog/backlog-lane.logic.test.ts:412 "task-460: the list text is pinned on a check brief (a build or fix brief asks no list at output, asserted at the end of this case)" — the (d) case had to be moved off a build brief for exactly this reason and the pasted diff shows no edit and no evidence for the (a) and (e) cases, cannot see them green — paste the (a) and (e) case lines or their run output
+DEFER severity=LOW — RR-0418 "Rule lists per task are cut down by turning lists off in the table" — docs/specs/00-architecture/08_agents.md:359 "of RR-0418 (ux, error-paths and security at output)" — the new governing note credits RR-0418 with a ruling on the ux, error-paths and security lenses at output, which the pasted RR-0418 text does not say — cite the ruling that actually set the output lens set (RR-0457, RR-0459) or drop the parenthetical
+MET — AC #1 "#1 The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused" — scripts/analysis/rule-lists.mjs:162 — validation now keys on own keys of the lists table and still refuses an unknown id
+MET — AC #2 "#2 The output lens set of a build or fix task is the code review alone for every Files line ...; the plan lens set is unchanged" — scripts/analysis/rule-lists.mjs:196 — out is the code-review term only, the plan line above it is byte for byte unchanged
+MET — AC #3 "#3 A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files" — src/tests/backlog/check-lane-close.logic.test.ts:212 — T6 and T7 close a build and a fix with no list outputs and no error-paths, ux or security file
+MET — AC #5 "#5 The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output" — scripts/analysis/backlog-lane.mjs:196 — the validate sentence names the descriptor, milestone and exploit-path duties and the per branch is replaced by "none for this task"
+MET — AC #3 "emptying output_off puts every list back" — src/tests/backlog/rule-lists.logic.test.ts:1122 — an empty or missing output_off still returns every list
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  116147ms (116.1s)
+📊 Tokens — total: 55507, input: 32198, output: 23309, reasoning: 22544

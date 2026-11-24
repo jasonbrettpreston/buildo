@@ -1,0 +1,702 @@
+LIST eng-all sha256:0bdf38b1496c3dce164180a680f7e9a5490a7aea2d8f4e64b06943c27a45f802 material sha256:7bf33f5d558ede06e21376c65a24ebd0790eb1600924159e8850359842fcaf04 part 1 of 3 chunk 1 of 1
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.json","scripts/analysis/rule-lists.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+# Engineering Standards & Stability Guardrails
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
+This document outlines the strict engineering standards, stability rules, and defensive programming patterns that all AI agents and human developers must adhere to when contributing to the Buildo codebase.
+
+---
+
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+
+## 🗄️ 3. Database Management & Scaling
+
+### 3.1 Zero-Downtime Migration Pattern
+- **Rule:** When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly.
+- **Execution:** Use the **Add-Backfill-Drop** pattern to avoid table-locking:
+  1. Add the new column.
+  2. Backfill data into the new column.
+  3. Swap application references to the new column.
+  4. Drop the old column in a subsequent deployment.
+- **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
+
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
+- **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
+
+---
+
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+
+## 📡 6. Centralized Logging
+
+### 6.1 logError Mandate
+- **Rule:** All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules. Client-side components (React `'use client'`) may use `console.error` since `logError` imports server-only modules.
+- **Execution:** `logError(tag, err, context)` writes to `console.error` locally and reports to Sentry when `SENTRY_DSN` is configured in production. The guardrail tests in `api.infra.test.ts` enforce that critical paths import `logError`.
+
+---
+
+
+## 🔀 7. Dual Code Path Safety
+
+### 7.1 Classification Sync Rule
+- **Rule:** Trade classification logic exists in two parallel implementations that MUST stay in sync:
+  - `src/lib/classification/classifier.ts` — TypeScript API used by the web app
+  - `scripts/classify-permits.js` — standalone Node.js script for batch DB processing
+- **Execution:** When modifying classification rules (tag-trade matrix, tier rules, narrow-scope codes, confidence thresholds), you MUST update **both** files. Before committing, verify both paths produce identical output for the same input by running the classification test suite: `npx vitest run src/tests/classification.logic.test.ts`.
+
+### 7.2 Scope Classification Sync
+- **Rule:** The same dual-path constraint applies to scope classification:
+  - `src/lib/classification/scope.ts` — TypeScript API
+  - `scripts/classify-scope.js` — standalone batch script
+- **Execution:** Changes to scope tags, project types, or the `classifyScope()` algorithm must be mirrored in both files.
+
+---
+
+
+## ⚙️ 8. Next.js & TypeScript Constraints
+
+### 8.1 API Route Export Rule
+- **Rule:** Next.js App Router `route.ts` files may ONLY export HTTP handler functions (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`). Exporting any other function, constant, or type from a `route.ts` file will cause a build error or silent runtime failure.
+- **Execution:** If a route file needs shared helper logic, extract it to a module under `src/lib/` and import it. Never `export function` or `export const` from route files unless it is a named HTTP handler.
+
+### 8.2 TypeScript Target Gotchas
+- **Rule:** The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:
+  - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
+  - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
+  - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index 9b61de06d39e3a76964980762aba240e03f5d8e3..0f9d14ffc13c9f262dd7c91f462a99f0510cd742 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -96,12 +96,12 @@ Each lens asks one question, names what it is not responsible for, rejects any f
+ | Lens template | The one question | Spec 08 seat | When it fires | Altitude |
+ |---|---|---|---|---|
+ | `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |
+-| `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output |
+-| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`, `eng-front`, `eng-back` and `eng-shared`) | plan and output |
++| `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output (not at the output of a build or fix task: output_off, task-460) |
++| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`, `eng-front`, `eng-back` and `eng-shared`) | plan and output (not at the output of a build or fix task: output_off, task-460) |
+ | `lens-code-review.md` | Correct, typed, errors handled and logged, no dead code? | A3 Code Reviewer | any task that writes code | output (plan: only if the plan names code) |
+-| `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan and output |
+-| `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan and output |
+-| `lens-security.md` | How is this exploited? | A12 Security | only when the change touches money, auth, entitlements, PII or admin (Files line: entitlements, auth, stripe, a metered route), or a Files entry is under src/app/api/ or src/lib/ (task-445) | plan and output |
++| `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan (task-460: not at output) |
++| `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan (task-460: not at output, RR-0459) |
++| `lens-security.md` | How is this exploited? | A12 Security | only when the change touches money, auth, entitlements, PII or admin (Files line: entitlements, auth, stripe, a metered route), or a Files entry is under src/app/api/ or src/lib/ (task-445) | plan (task-460: not at output, RR-0464) |
+ 
+ ### The standard
+ 
+@@ -143,15 +143,15 @@ Size and tool limits found by the COMPLY.1 pass (task-365; findings in `docs/rep
+ 
+ ## Rule lists (Task: task-366, COMPLY.2)
+ 
+-Task-453 (RR-0440, RR-0450, RR-0452): `every_task` is the plan protocol only (five-words is off at both stages); the table key `output_off` takes plan-protocol off the output review of a build or fix task; the lane-tools row attaches the two Spec 08 lists and eng-all. The strict-format lens templates are closed by their `VERDICT:` line and carry no TKT-1 Ticket header or TKT-2 STATUS line (exempt: the close check reads the VERDICT line, GROUNDER-A D5).
++Task-453 (RR-0440, RR-0450, RR-0452): `every_task` is the plan protocol only (five-words is off at both stages); the table key `output_off` takes plan-protocol off the output review of a build or fix task; the lane-tools row attaches the two Spec 08 lists and eng-all. Task-460 (PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459): `output_off` names every list, so the output review of a build or fix task is the code review on the diff, the commit hook's checks and one validating grounder (security is off at output and the grounder reads the changed sensitive files for exploit paths, RR-0464 "C: grounder reads instead"); the plan stage is unchanged; a check or doc task keeps every list; emptying `output_off` puts every list back. The strict-format lens templates are closed by their `VERDICT:` line and carry no TKT-1 Ticket header or TKT-2 STATUS line (exempt: the close check reads the VERDICT line, GROUNDER-A D5).
+ 
+ Operator, verbatim, 2026-11-20 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." The compliance lens "judges against the pasted clauses only" (`lens-compliance.md`), so what it is given decides what it checks. Since COMPLY.2 the lists it is given are decided by data.
+ 
+ 1. **The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists (`rows`: globs or `globs_from` an existing path map, optional `imports_from`, `lists`, `why`). A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause. `node scripts/analysis/rule-lists.mjs validate` checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path; `resolve --files "<Files line>" --type <type> --letter <group>` prints what a Files line attaches.
+ 2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the every-task and milestone lists only, task-448) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
+ 3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --context <context-rN.md> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --context <context-rN.md> --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md --context <context-rN.md>` with the five `--section` flags `> <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part). Task-438 (RR-0385 item 2): a list on the engineering standards file is run by the engineering seat instead, the same commands with `--out <dir>/in-<phase>-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool, filed `<phase>-engineering-L.txt` (joined: `<phase>-engineering-rules`); every other list stays with compliance (`seatOf` in `scripts/analysis/rule-lists.mjs`).
+-4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text): a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: each -pN file is one list part with one material chunk; when the material is cut into chunks every chunk repeats every list part, so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand.
+-5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth or an API or library path, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well. Task-438: the engineering seat's files are `out-engineering-<list id>.txt` (or the joined `out-engineering-rules[-pN].txt`) on `lens-engineering.md`, required for a list on the engineering standards file when the range base holds `lens-engineering.md`; the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it.
++4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text): a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: each -pN file is one list part with one material chunk; when the material is cut into chunks every chunk repeats every list part, so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand. Task-460 (RR-0457, RR-0459): for a build or fix task the grounder also validates, in a Validation section of GROUNDER.md (one line per duty, naming what it read or none): the diff against the plan as folded and each acceptance line; the code-review findings; each changed descriptor against the code it describes (each prose field TRUE or FALSE with a file:line quote; numbers and lists equal to the code); the milestone objectives of the task against the diff; each changed file on a path that fires the security lens at the plan stage, read for exploit paths (RR-0464); red then green. A finding raised there is fixed in the lane's round or reported, never filed as a seat report.
++5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list that output_off leaves on (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt` (task-460: no error-paths, ux or security output), and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well. Task-438: the engineering seat's files are `out-engineering-<list id>.txt` (or the joined `out-engineering-rules[-pN].txt`) on `lens-engineering.md`, required for a list on the engineering standards file when the range base holds `lens-engineering.md`; the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it.
+ 
+ The close check also reads the review tool's REVIEW header (`scripts/deepseek-review.js` writes `REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex>` among the first lines of a lens-mode output): a required lens output without it, with another template's name, or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused; the input's first line `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed, and the parts of a list together must carry the whole list as it is now. The lane report dir is scoped to one task by a file `TASK` holding the task id. Every staged task file that moves to a finished status (`finished_statuses` in the table: BUILT, DONE, MERGED) is checked, whatever the commit message says, including the board's auto-commit; a build, fix or check task needs an `@lane-*` assignee in the closing commit; paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line; a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task. A grounder name that contains or is contained in the lane or an assignee (case, punctuation and digits removed) is refused; quotes are 20+ characters, distinct per finding, not on a line that occurs more than 3 times in the cited file; REJECTED and CONFLICT reasons are 30+ characters; a loose reading of the finding lines must count the same as the strict one.
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 7e857537c82b0dc4abdcb8c493242255bc64670b..553e9cb1b7466df7ad24d4ce7f1dbfdb3463e2d5 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -2,7 +2,7 @@
+ 
+ # What each kind of work receives: the compliance review documents
+ 
+-Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
++Every task gets the every_task lists (the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths; the output review of a build or fix task receives none of the lists (output_off, task-460). Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
+ 
+ ## pipeline step
+ 
+@@ -70,12 +70,12 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 46,314 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 47,357 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 6 lists | | 143,119 | 6 |
++| total | 6 lists | | 144,162 | 6 |
+ 
+ ## spec-only
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index 01b07563d98596c9114e7a87d6f38c123ae758cc..ca1ec353d4aa15433f966692ead3bdfe6ec14870 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -356,6 +356,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+    Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165, and RR-0383, decision-168; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1853 "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.", :1865 "once the handbook has been updated iwth the critical items" and :1895 "1. what is your recommendation. I approve it"): the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169), so the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach `surface-126`, `surface-127`, `surface-128` and `surface-135`; they attach `surface-136` with their engineering lists, and the mobile row keeps its five mobile lists. A front-end review therefore no longer receives the text of those four specs and receives the handbook rule lines instead; a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: "we will add to the rules overtime"). The specs-web-admin row keeps all five surface lists, so a task that edits a spec under `docs/specs/02-web-admin/` is reviewed with that spec. Every other row is unchanged. The words "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" in the task-366 note of section 5.3 above now hold for those rows only.
+    Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0418, RR-0421, RR-0422, RR-0423, RR-0424, RR-0426 (decisions 203, 205, 207, 208, 209, 211); operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, :2140 "TWe only want to run these tings off not rewrite a new feature. This is simple.", :2161 "1-4 recommendations approved", :2166 "Minimum and 1a. Let's add these small fixes to the cost review task.", :2171 "add teh first two.  Plan approved.  Move forward with the task", :2176 "add it", :2186 "1 and 2 as recommended"): rule lists are turned off in scripts/analysis/rule-lists.json. A front-end task is reviewed against Spec 136 section 2, its engineering lists, the four lenses and the four every-task lists; a back-end task the same with its own handbook. Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16. Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137 and doc-17 stay on the lane-tools row only; the Spec 124 list is attached to no row. This supersedes "(a record-only task gets the queue lists)" (:229) and, in the task-439 note (:356), "the mobile row keeps its five mobile lists" and "The specs-web-admin row keeps all five surface lists" with the clause after it. The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names. Known loss: findings only the turned-off lists raised are no longer raised (tasks 367 and 442).
+    Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452; operator, verbatim, MORNING-DECISIONS.md:2265 "Let's plan to drop the planning and process lists", :2338 "five principles off"): five-words is off at both stages (out of every_task); plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off) and kept at a build task's plan review; queue-137 and orchestrator-doc17 are off the lane-tools row. This supersedes, in the task-448 note above, "the four every-task lists" and that Spec 137 and doc-17 stay on the lane-tools row.
++   Dated note 2026-11-24 (M-246, prior text kept; task-460 PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459; operator, verbatim, MORNING-DECISIONS.md:2372 "the output approach can stay for all front-end back end etc."): the output review of a build or fix task is the code-review lens on the diff, the commit hook's checks and one separate read-only grounder that also validates the diff against the plan and each acceptance line, each changed descriptor against its code and the milestone objectives against the diff; every rule list is off at output (rule-lists.json output_off). This supersedes, for those tasks, the output half of this rule, of the task-438 note and RR-0385 item 2 (engineering at output), of RR-0418 (ux, error-paths and security at output) and of the 6.4 OUTPUT column (Co, UX, Sec); a fix task never had rule lists at its plan stage, so it has none at either. Security is off at output and stays at the plan stage; the grounder reads the changed sensitive files for exploit paths (RR-0464, :2402, "C: grounder reads instead").
+ 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+ 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+    Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 903192ad936b019b3b251361c99cfd9879aa110c..1a870069ca7dbf5e0512158f30bc6bf1edd0f33b 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -185,11 +185,16 @@ const lensLine = (task, ctx, lists) => {
+   const ids = outLs.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);
+   const engIds = outLs.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);
+   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
+-  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only${code && outLs.length < lists.length ? ` (${lists.filter((l) => !outLs.includes(l)).map((l) => l.id).join(', ')} off: output_off; plan-protocol is asked at the plan stage only)` : ''}: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
++  // task-460 (RR-0457, RR-0458, RR-0459): output_off names every list, so a build or fix brief asks no list run at output; the marker sentence stays (the --spec merge below reads it)
++  const tail = ` Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-<lens>.txt for every output lens named above and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
++  const none = `Compliance lens, ONCE PER RULE LIST, at the output stage only: none for this task (every list it resolves is off: output_off in scripts/analysis/rule-lists.json); make no out-compliance or out-engineering file.${tail}`;
++  const per = code && outLs.length === 0 && lists.length > 0 ? none : `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only${code && outLs.length < lists.length ? ` (${lists.filter((l) => !outLs.includes(l)).map((l) => l.id).join(', ')} off: output_off)` : ''}: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+-  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385): the fix commit changes the diff, so no round-1 input or output still matches it; round 2 re-makes ALL of them under the SAME names (overwrite out-<lens>[-<list id>][-pN].txt and in-<same name>, then a new GROUNDER.md and its outcome file); the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5); a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385): the fix commit changes the diff, so no round-1 input or output still matches it; round 2 re-makes ALL of them under the SAME names (overwrite out-<lens>[-<list id>][-pN].txt and in-<same name>, then a new GROUNDER.md and its outcome file); the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>" added once to the Final Summary, in a commit of its own before the closing commit (task-446, d04026fe5); a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file but never stands in for a round-1 name; a name not starting plan- or out- (fix-*.txt) is never read. Every output lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.';
+-  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file ${ctx}, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
++  // task-460 (RR-0457 MORNING-DECISIONS.md:2366-2367, RR-0459 :2378): for a build or fix task the grounder also validates; prose in GROUNDER.md, not a seat report (plan Q4: check-lane-close.mjs refuses a seat file with no finding line)
++  const validate = code ? " VALIDATION (task-460): the grounder of a build or fix task also rules, in GROUNDER.md: the diff against the plan as folded and each acceptance line; the code-review findings; each changed descriptor against the code it describes: \"For every changed descriptor (scripts/**/*.descriptor.json, *.notes.json, and a file under scripts/surfaces/ with its census row), read it beside the code it describes. Rule each prose field (description, why, why_lock, docs.purpose, docs.data_story, docs.under_126, inputs.why, outputs.why, checks[].why) TRUE or FALSE with a file:line quote. Every number or list it states (tables read or written, fields, counts, ledger events, limits) must equal the code or array it describes. A sentence you cannot tie to a line is a finding.\" The milestone objectives against the diff: \"Also read the milestone objectives list of the task's milestone (the ms-<letter> sections) against the diff.\" Each changed file on an API route, library, money, sign-in, personal-data or admin path (the paths that fire the security lens at the plan stage) read for exploit paths (RR-0464). Red then green for each named test. It ends GROUNDER.md with a Validation section, one line per duty above, each naming what it read (file:line) or none; a finding raised there is fixed in the lane's own round or reported, never filed as a seat report." : '';
++  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file ${ctx}, which holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; without --context a lens sees "(no pasted context provided)"): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses in parallel, one call each, outputs out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}${validate}`;
+ };
+ const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // the round the brief writes at launch: the same count (review-template.js contextRound) over the same tree
+ const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index f020bbde3a8e80c0c97d5bfa2fd9f1d3fc3fbb93..6ffd2df2a8ebfdd2ec200d5aaa3029760c4677ab 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -5,7 +5,7 @@
+     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+     "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+     "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the plan protocol as a repo document; the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
+-    "task-453 (SEARCHFIX.5; RR-0440, MORNING-DECISIONS.md:2265; RR-0450, :2325; RR-0452, :2336): `output_off` names every_task lists that are off for OUTPUT reviews only (rule-lists.mjs outputLists, read by the close check and the launch brief for a build or fix task); a build task keeps them at its plan review; emptying the line turns them back on; validate refuses an id that is not in every_task. five-words is out of every_task (off at both stages, nothing replaces it).",
++    "task-453 (SEARCHFIX.5; RR-0440, MORNING-DECISIONS.md:2265; RR-0450, :2325; RR-0452, :2336): `output_off` names every_task lists that are off for OUTPUT reviews only (rule-lists.mjs outputLists, read by the close check and the launch brief for a build or fix task); a build task keeps them at its plan review; emptying the line turns them back on; five-words is out of every_task (off at both stages, nothing replaces it). task-460 (PROC.OUTSHAPE; RR-0457 :2367, RR-0458 :2372, RR-0459 :2377): output_off may name any defined list and names every list, so the output review of a build or fix task receives none (its plan review keeps them; a check or doc task keeps every list at either stage); validate refuses an id that is not a defined list; emptying the line puts every list back; a list added later is on at output until its id is added here (a test pins output_off to every key of lists).",
+     "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
+     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+     "exempt src/tests/fixtures/surfaces/*/*.web.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+@@ -235,7 +235,7 @@
+     "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
+   },
+   "every_task": ["plan-protocol"],
+-  "output_off": ["plan-protocol"],
++  "output_off": ["five-words", "plan-protocol", "step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-all", "eng-front", "eng-back", "eng-shared", "bylaw-133", "storage-doc16", "surface-136", "surface-126", "surface-127", "surface-135", "surface-128", "mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "queue-137", "agents-s7-s11", "agents-s5-1to3", "orchestrator-doc17", "inc-F", "inc-S", "inc-1-2", "inc-1", "inc-3", "inc-4", "inc-5", "inc-6", "inc-6c", "inc-7", "inc-8", "inc-9", "inc-10", "inc-L", "inc-AL", "ms-F", "ms-S", "ms-1-2", "ms-1", "ms-3", "ms-4", "ms-5", "ms-6", "ms-6c", "ms-7", "ms-8", "ms-9", "ms-10", "ms-L", "ms-AL", "policy-124-s2-s5"],
+   "milestone_docs": {
+     "1": ["ms-1"],
+     "3": ["ms-3"],
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 50ee4f903468c0cae167918548c901bb54913450..f49d353d7993ee99875853c8b9e65fd1427b29c3 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -157,8 +157,9 @@ export function validateTable(table, root) {
+   // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
+   if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the plan protocol)');
+   else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
+-  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of every_task ids (a typo fails closed, it never switches a list off silently)
+-  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids'); else for (const id of table.output_off) if (!(table.every_task ?? []).includes(id)) bad.push(`output_off: list ${id} is not in every_task`); }
++  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of list ids (a typo fails closed, it never switches a list off silently)
++  // task-460 (RR-0457, RR-0458, RR-0459): it may name any defined list (own keys of lists), not only every_task ids
++  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of list ids'); else for (const id of table.output_off) if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`); }
+   for (const k of Object.keys(table.increment_docs ?? {})) {
+     const m = table.milestone_docs?.[k];
+     if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
+@@ -183,6 +184,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
+ /**
+  * The lens set a task type calls for (Spec 08 section 7 rule 4, 08_agents.md:334; task-358): the compliance lens is separate (once per rule list).
+  * Plan and output lenses other than compliance, by task type and by the Files line. Shared by the launch brief and the close check.
++ * task-460 (RR-0457, RR-0458, RR-0459 MORNING-DECISIONS.md:2377): the output set of a build or fix task is the code review (no ux, no error-paths; no security, RR-0464 :2402, the grounder reads the sensitive files instead); the plan set is unchanged.
+  */
+ export function lensSet({ type, files }) {
+   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+@@ -191,7 +193,7 @@ export function lensSet({ type, files }) {
+   return {
+     code,
+     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+-    out: [...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
++    out: [...(code ? ['code-review'] : [])],
+   };
+ }
+ /** The line a grounder restates for every lens output it ruled on: name, sha256 (12 hex) and BUG/DEFER count. */
+@@ -546,7 +548,7 @@ export function renderPage({ table, root }) {
+   const o = [];
+   o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
+   o.push('# What each kind of work receives: the compliance review documents', '');
+-  o.push('Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
++  o.push('Every task gets the every_task lists (the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths; the output review of a build or fix task receives none of the lists (output_off, task-460). Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
+   for (const k of table.kinds ?? []) {
+     const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
+     o.push(`## ${k.label}`, '');
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 08e18774f348339a7e8d6fba1ffd1177df39a608..c070062a95f2daa4f80829f921868e558bb7ae5b 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -273,10 +273,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     expect(spec, r.stdout + r.stderr).not.toBeNull();
+     return spec.extra.join('\n') as string;
+   };
+-  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security', () => {
++  it('a build on a surface: code-review alone (task-460: no compliance, ux or error-paths at output), in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security', () => {
+     const e = lensBrief('build', 'mobile/app/(app)/x.tsx, src/tests/');
+-    for (const l of ['lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
+-    expect(e).not.toContain('lens-security.md');
++    expect(e).toContain('lens-code-review.md');
++    for (const l of ['lens-compliance.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
+     expect(e).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan stage
+     expect(e).not.toMatch(/plan review/i);
+     expect(e).toMatch(/output review/i);
+@@ -307,7 +307,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain('under the SAME names'); // task-448 (RR-0422): a fix round re-makes the review files under the same names
+       expect(e).toContain('fix-*.txt');
+       // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
+-      expect(e).toContain('The compliance lens reviews the WHOLE change');
++      expect(e).toContain('Every output lens reviews the WHOLE change'); // task-460 (plan Q6)
+       expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
+       expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
+       expect(e).toContain('the base is the task\'s launch commit on the board');
+@@ -342,11 +342,12 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
+     expect(ctx).not.toBe('(none)');
+     const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
+-    expect(cmds.length).toBeGreaterThanOrEqual(2); // output lenses and the compliance command; no plan lens (RR-0374)
++    expect(cmds.length).toBeGreaterThanOrEqual(1); // the output lens command (task-460: no compliance command for a build); no plan lens (RR-0374)
+     for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
+     expect(e).not.toContain('<pasted-context file>');
+     expect(e).not.toMatch(/context-<date>|context-20\d\d/);
+-    expect(e).toContain(`lens-input --list L --context ${ctx}`); // the per-document form is the default (RR-0374)
++    expect(e).not.toContain('lens-input --list L'); // task-460: a build brief orders no compliance run at output
++    expect(lensBrief('check', 'scripts/analysis/x.mjs, src/tests/')).toContain('lens-input --list L --context docs/reports/reviews/'); // the per-document form is the default (RR-0374) where lists are asked
+     expect(e).not.toContain('plan: --material-from'); // no plan stage
+     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
+@@ -366,9 +367,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain('Fresh context every review round');
+     }
+   });
+-  it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
++  it('task-460 (RR-0464): no security lens at output when the Files line touches entitlements, auth, stripe or a metered route; the grounder reads those files for exploit paths', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+-      expect(lensBrief('build', files), files).toContain('lens-security.md');
++      expect(lensBrief('build', files), files).not.toContain('lens-security.md');
++      expect(lensBrief('build', files), files).toContain('exploit paths');
+     }
+   });
+   it('a build that is not on a surface has no ux lens', () => {
+@@ -382,8 +384,8 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
+   });
+   // task-445 (FINAL.8, RR-0391): the launch brief names the security lens for an API route or library path
+-  it('B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not', () => {
+-    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).toContain('lens-security.md');
++  it('B1: a build on an API route or a src/lib path names no lens-security.md at output (task-460, RR-0464); control: a front-end component does not either', () => {
++    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).not.toContain('lens-security.md');
+     expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');
+   });
+ });
+@@ -410,7 +412,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
+   });
+   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
+-    const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
++    // task-460: the list text is pinned on a check brief (a build or fix brief asks no list at output, asserted at the end of this case)
++    const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'check' });
+     expect(extra).not.toContain('out-compliance-storage-doc16'); // task-448 (RR-0421 item 3 a)
+     for (const l of ['mobile-98', 'inc-F']) {
+       expect(extra).toContain('out-compliance-' + l);
+@@ -445,10 +448,14 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(extra).not.toContain('plan: --material-from');
+     expect(extra).not.toMatch(/Plan review lenses/);
+     expect(extra).toContain('scripts/analysis/rule-lists.mjs lens-input');
+-    expect(extra).toContain('lens-code-review.md');
+-    expect(extra).toContain('lens-error-paths.md');
+     expect(extra).toMatch(/a separate grounder rules on every finding/);
+     expect(extra).toContain('GROUNDER.md');
++    const b = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' }).extra;
++    expect(b).toContain('lens-code-review.md');
++    expect(b).not.toContain('lens-error-paths.md');
++    expect(b).not.toContain('out-compliance-');
++    expect(b).not.toContain('out-engineering-');
++    expect(b).toContain('ONCE PER RULE LIST');
+   });
+   it('A3/D2: the extra block carries no plan review line (the plan is reviewed before launch, RR-0374)', () => {
+     const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
+@@ -586,7 +593,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(brief).toContain('Rule lists that govern this task');
+     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
+     expect(brief).not.toContain('storage-doc16');
+-    expect(brief).toContain('out-compliance-mobile-98');
++    expect(brief).not.toContain('out-compliance-mobile-98'); // task-460: no list at the output of a build
++    expect(brief).toContain('Compliance lens, ONCE PER RULE LIST'); // the marker the --spec merge reads
+     expect(brief).toContain('own input');
+     expect(brief).toContain('own extra');
+     expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
+@@ -984,7 +992,7 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
+     for (const type of ['build', 'fix']) {
+       const x = extraOf({ type });
+       expect(x, type).not.toContain('out-compliance-plan-protocol');
+-      expect(x, type).toContain('plan-protocol is asked at the plan stage only');
++      expect(x, type).toContain('none for this task'); // task-460: every list is off at output
+       expect(x, type).not.toContain('out-compliance-five-words');
+     }
+     expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
+@@ -1001,3 +1009,30 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
+     expect(statusOf(f)).toBe('RUNNING');
+   });
+ });
++
++// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): the launch brief of a build or fix task names the code review and the grounder's validation duties, and no compliance run at output (AC #5)
++describe('task-460: the brief names the code review and the validating grounder', () => {
++  const extraOf = (o: Parameters<typeof fixture>[0]) => {
++    const f = fixture(o);
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    return ((JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra?: string[] } | null)?.extra ?? []).join('\n');
++  };
++  it('T10: a build and a fix brief name lens-code-review.md, "none for this task" and the descriptor and milestone duties; no list lens, ux or error-paths template, no out-compliance or out-engineering file', () => {
++    for (const type of ['build', 'fix']) {
++      const x = extraOf({ type, files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
++      expect(x, type).toContain('lens-code-review.md');
++      expect(x, type).toContain('none for this task');
++      for (const t of ['lens-compliance.md', 'lens-engineering.md', 'lens-ux.md', 'lens-error-paths.md', 'out-compliance-', 'out-engineering-']) expect(x, `${type} ${t}`).not.toContain(t);
++      for (const t of ['each changed descriptor', 'TRUE or FALSE with a file:line quote', 'milestone objectives', 'Validation section', 'exploit paths']) expect(x, `${type} ${t}`).toContain(t);
++      expect(x, type).toContain('Compliance lens, ONCE PER RULE LIST');
++    }
++  });
++  it('T10 control: a check brief keeps the list text and carries no validation duty sentence', () => {
++    const x = extraOf({ type: 'check', files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
++    expect(x).toContain('out-compliance-');
++    expect(x).toContain('lens-compliance.md');
++    expect(x).not.toContain('each changed descriptor');
++    expect(x).not.toContain('exploit paths');
++  });
++});
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 54d0889a3194b94cbc20e0208002f723aa9505f7..ec8b75f91aa7e4648cefacb50fe51dde75850f79 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -207,21 +207,26 @@ describe('close check: the lens set (AC #3)', () => {
+   it('refuses a lens output with no VERDICT line (a failed run is not an output)', () => {
+     refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-first.txt': `${hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string)}Failed: terminated\n` }) }), /VERDICT/);
+   });
+-  it('refuses a build task missing a lens of its set (code-review, error-paths), and one with no plan-stage output', () => {
++  it('refuses a build task missing a lens of its set (code-review), and one with no plan-stage output; task-460 T7: no out-error-paths closes (RR-0459)', () => {
+     refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': null }) }), /out-code-review\.txt/);
+-    refused(scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) }), /out-error-paths\.txt/);
++    const noEp = scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });
++    expect(noEp.status, noEp.stderr).toBe(0);
+     refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': null }) }), /plan-/);
+   });
+-  it('ux and security join the required set by the Files line, as the launch brief names them', () => {
+-    refused(scenario({ files: 'src/components/x.tsx' }), /out-ux\.txt/);
+-    refused(scenario({ files: 'src/lib/stripe/x.ts' }), /out-security\.txt/);
++  it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)', () => {
++    const noUx = scenario({ files: 'src/a.ts, src/components/x.tsx', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });
++    expect(noUx.status, noUx.stderr).toBe(0);
++    const noSec = scenario({ files: 'src/a.ts, src/lib/stripe/x.ts', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) }); // task-460 (RR-0464): no security output on a money path
++    expect(noSec.status, noSec.stderr).toBe(0);
+   });
+   // task-445 (FINAL.8, RR-0391): an API route or library path on the Files line also requires out-security.txt
+-  it('C1(a): a src/lib path on the Files line requires out-security.txt', () => {
+-    refused(scenario({ files: 'src/a.ts, src/lib/x.ts' }), /out-security\.txt/);
++  it('C1(a): a src/lib path on the Files line closes with no out-security.txt (task-460, RR-0464: security is a plan-stage lens only)', () => {
++    const r = scenario({ files: 'src/a.ts, src/lib/x.ts' });
++    expect(r.status, r.stderr).toBe(0);
+   });
+-  it('C1(b): an API route on the Files line requires out-security.txt (it needs out-ux.txt as well, as before)', () => {
+-    refused(scenario({ files: 'src/a.ts, src/app/api/x/route.ts' }), /out-security\.txt/);
++  it('C1(b): an API route on the Files line closes with no out-security.txt and no out-ux.txt (task-460, RR-0464, RR-0459)', () => {
++    const r = scenario({ files: 'src/a.ts, src/app/api/x/route.ts' });
++    expect(r.status, r.stderr).toBe(0);
+   });
+   it('C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes', () => {
+     const r = scenario({ files: 'src/a.ts, src/lib/x.ts', mutate: (l, d) => ({ ...l, 'out-security.txt': hdr('lens-security.md', fs.readFileSync(path.join(d, '.git/material.txt'), 'utf8')) + body(false) }) });
+@@ -546,7 +551,7 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
+   });
+   it('F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt with a zeroed file_sha256 is refused; one made on the whole-range diff closes (control above)', () => {
+     refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', null) + body(false) }) }), /out-code-review\.txt[\s\S]*file_sha256/, 27);
+-    refused(scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': hdr('lens-error-paths.md', 'only part of the diff\n') + body(false) }) }), /out-error-paths\.txt[\s\S]*file_sha256/, 27);
++    refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', 'only part of the diff\n') + body(false) }) }), /out-code-review\.txt[\s\S]*file_sha256/, 27); // task-460 T8: retargeted from out-error-paths (no longer in the output set)
+   });
+   it('F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt does not stand in for split parts: both present is refused', () => {
+     refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', null) + body(false) }) }), /both exist/, 28);
+@@ -1335,3 +1340,22 @@ describe('task-453 item 5: the close check fails closed (AC #3, AC #4, AC #5)',
+     expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');
+   });
+ });
++
++// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): every list off at output (output_off), the output set is the code review (AC #3, AC #4)
++describe('task-460: a build or fix lane closes with the code review, its records and plan evidence and no list outputs', () => {
++  const ALL_OFF = (t: Record<string, unknown>) => { t.output_off = ['first', 'inc-F', 'ev', 'msf']; };
++  const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(([n, t]) => [n, /^(in-)?out-compliance-/.test(n) ? null : t]));
++  it('T6: output_off naming every list, no out-compliance file and no out-error-paths: a build and a fix task close', () => {
++    for (const type of ['build', 'fix']) {
++      const r = scenario({ type, tableEdit: ALL_OFF, mutate: (l) => ({ ...dropLists(l), 'out-error-paths.txt': null }) });
++      expect(r.status, `${type}: ${r.stderr}`).toBe(0);
++    }
++  });
++  it('T6 control: an extra out-error-paths.txt with its Ruled line still closes', () => {
++    const r = scenario({ tableEdit: ALL_OFF, mutate: dropLists });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('T9 (AC #4 lock): a check task with output_off naming every list is still asked every list', () => {
++    refused(scenario({ type: 'check', tableEdit: ALL_OFF, mutate: (l) => ({ ...l, 'out-compliance-first.txt': null, 'in-out-compliance-first.txt': null }) }), /out-compliance-first/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index c3974cd241a4480851c62f461815586178c24570..3780c1bfd255b08d0f2ababa38c736cf859f565a 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -702,11 +702,11 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
+     const m = await import('../../../scripts/analysis/rule-lists.mjs');
+     return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
+   };
+-  it('an admin path and a PII path add the security lens on both phases', async () => {
++  it('an admin path and a PII path add the security lens at the plan stage; task-460 (RR-0464): not at output', async () => {
+     for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
+       const r = await lens(f);
+       expect(r.plan, f).toContain('security');
+-      expect(r.out, f).toContain('security');
++      expect(r.out, f).not.toContain('security');
+     }
+   });
+   it('control: a path naming none of these adds no security lens', async () => {
+@@ -714,8 +714,9 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
+     expect(r.plan).not.toContain('security');
+     expect(r.out).not.toContain('security');
+   });
+-  it('control: the existing words still fire it', async () => {
+-    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
++  it('control: the existing words still fire it at the plan stage (task-460, RR-0464: not at output)', async () => {
++    expect((await lens('src/lib/stripe/webhook.ts')).plan).toContain('security');
++    expect((await lens('src/lib/stripe/webhook.ts')).out).not.toContain('security');
+   });
+ });
+ 
+@@ -725,18 +726,18 @@ describe('task-445: the security lens runs on an API route or library path (lens
+     const m = await import('../../../scripts/analysis/rule-lists.mjs');
+     return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
+   };
+-  it('S1(a): a src/lib path adds security on both phases, for build and fix (exact sets)', async () => {
++  it('S1(a): a src/lib path adds security at the plan stage, for build and fix (exact sets); task-460 (RR-0459, RR-0464): the output set is the code review alone', async () => {
+     for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts']) {
+       const r = await lens(type, f);
+       expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
+-      expect(r.out, `${type} ${f}`).toEqual(['code-review', 'error-paths', 'security']);
++      expect(r.out, `${type} ${f}`).toEqual(['code-review']); // task-460: no error-paths (RR-0459) and no security (RR-0464, plan Q7 option C) at output
+     }
+   });
+-  it('S1(b): an API route adds security on both phases, for build and fix (toContain: the route also gets ux today, not pinned here)', async () => {
++  it('S1(b): an API route adds security at the plan stage, for build and fix (toContain: the route also gets ux there, not pinned here); task-460 (RR-0464): not at output', async () => {
+     for (const type of ['build', 'fix']) for (const f of ['src/app/api/parcels/search/route.ts', 'src/app/api/']) {
+       const r = await lens(type, f);
+       expect(r.plan, `${type} ${f}`).toContain('security');
+-      expect(r.out, `${type} ${f}`).toContain('security');
++      expect(r.out, `${type} ${f}`).not.toContain('security');
+     }
+   });
+   it('S3 controls (green before and after; each proven by a planted defect): no security for front-end, near-miss and other paths', async () => {
+@@ -1111,10 +1112,10 @@ describe('task-438 T2: seatOf routes a rule list to the engineering or the compl
+ describe('task-453: output_off and validate robustness', () => {
+   type V = { validateTable: (t: unknown, root: string) => string[]; outputLists: (t: unknown, l: { id: string }[]) => { id: string }[] };
+   const vmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<V>;
+-  it('the real table switches plan-protocol off for output reviews (output_off) and keeps it in every_task', () => {
++  it('task-460 T2: the real table switches EVERY list off for output reviews (output_off = every key of lists, in table order) and every_task stays the plan protocol', () => {
+     const t = real() as Table & { output_off?: string[] };
+-    expect(t.output_off).toEqual(['plan-protocol']);
+-    expect(t.every_task).toContain('plan-protocol');
++    expect(t.output_off).toEqual(Object.keys(t.lists));
++    expect(t.every_task).toEqual(['plan-protocol']);
+   });
+   it('outputLists drops the output_off lists and keeps the rest; an empty or missing output_off keeps every list (AC #2)', async () => {
+     const { outputLists } = await vmod();
+@@ -1123,9 +1124,12 @@ describe('task-453: output_off and validate robustness', () => {
+     expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
+     expect(outputLists({}, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
+   });
+-  it('validate refuses an output_off id that is not in every_task, and an output_off that is not a list (fails closed on a typo)', async () => {
++  it('validate refuses an output_off id that is not a defined list, and an output_off that is not a list (fails closed on a typo)', async () => {
+     const { validateTable } = await vmod();
+-    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);
++    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not defined/);
++    // task-460 T1 (AC #1): output_off may name any defined list, not only every_task ids; an inherited key is not a defined list (own keys only)
++    expect(validateTable({ ...real(), output_off: ['step-132'] }, ROOT)).toEqual([]);
++    expect(validateTable({ ...real(), output_off: ['constructor'] }, ROOT).join('|')).toMatch(/output_off: list constructor is not defined/);
+     expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
+     expect(validateTable(real(), ROOT)).toEqual([]);
+   });
+@@ -1137,3 +1141,47 @@ describe('task-453: output_off and validate robustness', () => {
+     expect(bad).toMatch(/rows\[\d+\]: not an object/);
+   });
+ });
++
++// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): the output review of a build or fix task is the code review on the diff (no ux, no error-paths)
++// and no rule list (output_off names every list); the plan lens set is unchanged. Security is off at output too (RR-0464, plan Q7 option C: "C: grounder reads instead").
++describe('task-460: the output lens set is the code review (AC #2) and the plan set is unchanged', () => {
++  const lens = async (type: string, files: string) => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
++  };
++  const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', 'src/lib/parcels/report-compute.ts', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx']);
++  const FILES = [...(real() as unknown as { kinds: { files: string }[] }).kinds.map((k) => k.files), 'src/components/x.tsx', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx', 'mobile/app/(app)/x.tsx', 'scripts/analysis/x.mjs'];
++  it('T3: for build and fix, out is code-review alone on every Files line, security paths included (RR-0464)', async () => {
++    expect(FILES.filter((f) => SEC.has(f))).toHaveLength(5);
++    expect(FILES).toHaveLength(12);
++    for (const type of ['build', 'fix']) for (const f of FILES) {
++      const r = await lens(type, f);
++      expect(r.out, `${type} ${f}`).toEqual(['code-review']);
++      if (SEC.has(f)) expect(r.plan, `${type} ${f}`).toContain('security'); // plan yes, output no
++      expect(r.out, `${type} ${f}`).not.toContain('ux');
++      expect(r.out, `${type} ${f}`).not.toContain('error-paths');
++    }
++  });
++  it('T3 lock: the plan set is unchanged (pinned old sets)', async () => {
++    expect((await lens('build', 'src/lib/stripe/x.ts')).plan).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
++    expect((await lens('fix', 'mobile/app/(app)/x.tsx')).plan).toEqual(['plan-review-deepseek', 'ux', 'error-paths']);
++    expect((await lens('build', 'scripts/analysis/x.mjs')).plan).toEqual(['plan-review-deepseek', 'error-paths']);
++    for (const type of ['check', 'doc', 'record', '']) expect(await lens(type, 'src/app/api/parcels/search/route.ts'), type).toEqual({ code: false, plan: ['plan-review-deepseek'], out: [] });
++  });
++  it('T4 (AC #6): the Spec 08 dated note sits in section 7 before rule 5, and the README names task-460 with an item 5 that asks no out-error-paths or out-ux', () => {
++    const s8 = fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/08_agents.md'), 'utf8');
++    const at = s8.indexOf('task-460 PROC.OUTSHAPE');
++    expect(at).toBeGreaterThan(0);
++    expect(at).toBeLessThan(s8.indexOf('5. **Panel sizing'));
++    expect(at).toBeGreaterThan(s8.indexOf('task-453 SEARCHFIX.5'));
++    const rd = fs.readFileSync(path.join(ROOT, '.claude/review-templates/README.md'), 'utf8');
++    expect(rd).toContain('Task-460');
++    const item5 = /^5\. \*\*At close\*\*.*$/m.exec(rd)?.[0] ?? '';
++    expect(item5).toContain('that output_off leaves on');
++    expect(item5).not.toContain('out-error-paths.txt');
++    expect(item5).not.toContain('out-ux.txt');
++    expect(item5).not.toContain('out-security.txt'); // RR-0464
++    expect(/^\| `lens-security\.md` .*\| plan \(task-460: not at output, RR-0464\) \|$/m.test(rd)).toBe(true);
++    expect(s8.slice(at, s8.indexOf('\n', at))).toContain('RR-0464');
++  });
++});
+

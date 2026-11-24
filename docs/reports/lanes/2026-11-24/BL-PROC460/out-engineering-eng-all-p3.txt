@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=d1344c2bdfdd0e81f27259df6d723451271fd37304d88430416c62ac8e51faa7 prompt_sha256=e2dec78acf4347c72f3101efbfa156e28b4807e5c0f3e784e683000c79996605
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+```
+MET — 12.13 Mutation Testing — scripts/analysis/rule-lists.json:238 "output_off": ["five-words", "plan-protocol", "step-132", ... — none of the four mutation-target modules (cost-model.ts, distance.ts, record-lead-view.ts, builder-query.ts) or their test siblings is in the change, so the 50% floor and the mutation surface are untouched
+MET — 12.12 Property-Based Tests — scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]," — the changed pure functions (lensSet, outputLists, validateTable) hold no arithmetic invariant of the four named classes (scoring formula, key normalizer, distance/unit conversion, cursor comparator), so no fast-check property is owed, and the example tests the rule still requires for paths and edges are added (T1 to T10)
+MET — 12.11 Footgun Lint Gate — scripts/analysis/backlog-lane.mjs:188 "task-460 (RR-0457, RR-0458, RR-0459): output_off names every list, so a build or fix brief asks no list run at output" — the new branch and template text sit in scripts/analysis, outside the rule's scoped paths (src/features/leads and rule-by-rule src/lib), and add no silent catch fallback, no process.env default and no new Pool(
+MET — 13.3 Backend Structured Logging — scripts/analysis/rule-lists.mjs:158 "task-460 (RR-0457, RR-0458, RR-0459): it may name any defined list (own keys of lists), not only every_task ids" — the new failure path pushes a validateTable message instead of swallowing an error, and the diff adds no catch block, no bare console.error and no API route
+MET — 12.8 SQL Linting & Migration Safety — src/tests/backlog/check-lane-close.logic.test.ts:1340 "describe('task-460: a build or fix lane closes with the code review, its records and plan evidence and no list outputs', () => {" — no migration file is among the nine changed paths, so sqlfluff, validate-migration.js, the DOWN block and the 12.10 *.db.test.ts duty are not engaged
+MET — 14 The Prevention Loop — docs/specs/00-architecture/08_agents.md:359 "Dated note 2026-11-24 (M-246, prior text kept; task-460 PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459" — the behaviour-changing ruling lands in the same diff as its cited spec (§7 dated note), the lens firing table (.claude/review-templates/README.md:100 "plan and output (not at the output of a build or fix task: output_off, task-460)"), and the regenerated page, so no cited document is left stale
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 20   Unmet: 0
+```
+
+---
+⏱  83341ms (83.3s)
+📊 Tokens — total: 50048, input: 33725, output: 16323, reasoning: 15646

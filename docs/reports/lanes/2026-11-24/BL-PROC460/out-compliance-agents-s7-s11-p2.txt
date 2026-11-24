@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:25:28.055Z file_sha256=961ede50806a74e73953f8cb2ad92bb112e4e8765a3422e159de2c52e9cffa70 prompt_sha256=2c1ac1ccb5e021cb68fe82be4fe53d0a704136a765b5d1478aad71cb28a960fe
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #5 "and names no compliance run at output" — src/tests/backlog/backlog-lane.logic.test.ts "expect(x, type).toContain('Compliance lens, ONCE PER RULE LIST');" — a build and a fix brief are pinned to carry the compliance-lens instruction text at output, which AC #5 says must not be named, and backlog-lane.mjs is not in this chunk (cannot see it) — confirm in backlog-lane.mjs that this marker is not an output-stage compliance instruction, else drop it for build and fix.
+DEFER severity=LOW — AC #4 "A check or doc task still gets every list at either stage" — src/tests/backlog/check-lane-close.logic.test.ts "T9 (AC #4 lock): a check task with output_off naming every list is still asked every list" — only the check case is exercised in this chunk, no doc-task case pins the every-list guarantee — add a doc-task control asserting every list is still asked.
+
+MET — Spec 08 7 rule 4 note (task-460) "the output review of a build or fix task is the code-review lens on the diff" — src/tests/backlog/rule-lists.logic.test.ts "expect(r.out, `${type} ${f}`).toEqual(['code-review']);" — output lens set pinned to code-review alone for build and fix on every Files line.
+MET — RR-0464 "C: grounder reads instead" — src/tests/backlog/rule-lists.logic.test.ts "if (SEC.has(f)) expect(r.plan, ...).toContain('security');" and "expect(r.out, ...).not.toContain('security');" — security off at output, still on at plan; T10 pins "exploit paths" in the brief.
+MET — AC #2 "the plan lens set is unchanged" — src/tests/backlog/rule-lists.logic.test.ts "expect((await lens('build', 'src/lib/stripe/x.ts')).plan).toEqual(['plan-review-deepseek', 'error-paths', 'security']);" — plan set pinned unchanged.
+MET — AC #1 "an unknown id is still refused" — src/tests/backlog/rule-lists.logic.test.ts "expect(validateTable({ ...real(), output_off: ['constructor'] }, ROOT).join('|')).toMatch(/output_off: list constructor is not defined/);" — unknown id refused, non-every_task list accepted.
+MET — AC #3 "no compliance, engineering, ux or error-paths output files" — src/tests/backlog/check-lane-close.logic.test.ts "T6: output_off naming every list, no out-compliance file and no out-error-paths: a build and a fix task close" — build and fix close with no list outputs.
+MET — AC #6 "the Spec 08 dated note and the README lines are present" — src/tests/backlog/rule-lists.logic.test.ts "expect(at).toBeLessThan(s8.indexOf('5. **Panel sizing'));" — note pinned after task-453 and before rule 5, README item 5 pinned to ask no out-error-paths or out-ux.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  109271ms (109.3s)
+📊 Tokens — total: 48228, input: 25925, output: 22303, reasoning: 21558

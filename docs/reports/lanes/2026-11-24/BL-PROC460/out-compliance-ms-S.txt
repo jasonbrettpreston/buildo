@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=d97be1e02c190c6ae999cabb3f42ad1776092e6503dc74f7d824d5243a810aaf prompt_sha256=1afef511a4644a9fbeb59fae449e9fa5a2e6d9fe862e74ddcfc0b42a42a3b535
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #6 "The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green" — src/tests/backlog/backlog-lane.logic.test.ts:415 "the list text is pinned on a check brief (a build or fix brief asks no list at output, asserted at the end of this case)" — the diff retargets the sibling case (d) off the build fixture because the build brief no longer prints the list text, and shows no change to (a) and (e) which AC #6 names by letter; (a) and (e) cannot be seen in this material, so their green state is not evidenced — run the task-423 block and, if (a) and (e) read the build brief's list text, retarget them to a check brief as (d) was, then paste them green.
+
+DEFER severity=MED — AC #4 "A check or doc task still gets every list at either stage" — .claude/review-templates/README.md:154 "one compliance lens output per attached list that output_off leaves on" — that clause carries no build-or-fix qualifier, so as written a doc task with every list in output_off owes no compliance file at all; the check half is pinned by one new case (src/tests/backlog/check-lane-close.logic.test.ts:1355 "T9 (AC #4 lock): a check task with output_off naming every list is still asked every list") and no doc-task case appears anywhere in the diff — add "for a build or fix task" to that README clause and one doc-task case beside T9.
+
+DEFER severity=LOW — AC #3 "no compliance, engineering, ux or error-paths output files" — scripts/analysis/backlog-lane.mjs:193 "the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list" and "are filed out-<lens>-pN.txt" — the layout text every build and fix brief carries still instructs the lane to file ux, error-paths and security outputs that RR-0459 and RR-0464 rule out at output, and the T10 assertions only test the template filenames so it survives — gate that sentence to the lenses the brief actually orders, or drop the names it no longer orders.
+
+DEFER severity=LOW — AC #5 "The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output" — scripts/analysis/backlog-lane.mjs:190 "Compliance lens, ONCE PER RULE LIST, at the output stage only: none for this task" — a build or fix brief still prints the compliance-lens marker sentence (kept only because it is "the marker the --spec merge reads", src/tests/backlog/backlog-lane.logic.test.ts:597), so the brief names the run it forbids before negating it — reword to a sentence that cannot be read as an order and record the marker the --spec merge needs.
+
+REJECT — AC #3 "its records and plan evidence" — that the close check does not verify the new Validation section of GROUNDER.md, leaving the descriptor and milestone duties prose only — the card says "Must not: change ... the close check's grounder rules" and AC #3 names only the code review, the records and the plan evidence, so prose-only enforcement is what was asked for.
+
+MET — AC #1 — scripts/analysis/rule-lists.mjs:162 — validateTable now accepts any own key of table.lists and still refuses an id that is not defined.
+MET — AC #2 — scripts/analysis/rule-lists.mjs:196 — the out set is "code-review" alone for build and fix and the plan array is left untouched.
+MET — AC #3 — src/tests/backlog/check-lane-close.logic.test.ts:1348 — T6 closes a build and a fix lane with no out-compliance file and no out-error-paths, and T6 control keeps an extra one harmless.
+MET — RR-0459 — scripts/analysis/rule-lists.json:238 — output_off names every list, so no rule list reaches the output review of a build or fix task.
+MET — RR-0464 — docs/specs/00-architecture/08_agents.md:359 — the dated note puts security off at output, at the plan stage still, with the grounder reading the sensitive files, and the brief carries the same duty sentence.
+MET — RR-0392 — scripts/analysis/backlog-lane.mjs:189 — the change is the existing output_off switch plus brief, README and note text, no new table key and no new mechanism.
+MET — RR-0457 — .claude/review-templates/README.md:146 — the output shape stated is the code review on the diff, the hook checks and one validating grounder, matching the ruling quote "I agree let's see the plan below".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 4
+Rules met: none
+
+---
+⏱  107588ms (107.6s)
+📊 Tokens — total: 51115, input: 29476, output: 21639, reasoning: 20499
