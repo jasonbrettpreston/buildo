@@ -28,7 +28,7 @@ Also: L3 (retryAfterSeconds == null, MF35-DF1 closed), Q19 shim deleted, Q8 curl
 - The review diff (mkdiff.sh) is the brief's command plus those four Files-line paths.
 
 ## Output review round 1
-- Context docs/reports/reviews/task-450/context-r3.md (backlog-brief.mjs). Lenses (DeepSeek, parallel): code-review p1-2, ux p1-2, error-paths p1-2, compliance per list (mobile-90 p1-3, mobile-98 p1-3, mobile-99 p1-8, surface-136 p1-4, step-132 p1-4, five-words p1-2, plan-protocol p1-3, inc-S p1-3, ms-S p1-2), engineering eng-all p1-4. 40 outputs, inputs beside them, in docs/reports/lanes/2026-11-24/BL-SFX2/.
+- Context docs/reports/reviews/task-450/context-r3.md (backlog-brief.mjs). Lenses (DeepSeek, parallel): code-review p1-2, ux p1-2, error-paths p1-2, compliance per list (mobile-90 p1-3, mobile-98 p1-3, mobile-99 p1-8, surface-136 p1-4, step-132 p1-4, five-words p1-2, plan-protocol p1-3, inc-S p1-3, ms-S p1-2), engineering eng-all p1-4. 42 outputs, inputs beside them (round-1 count corrected from 40 at the close), in docs/reports/lanes/2026-11-24/BL-SFX2/.
 - 171 findings: CRITICAL 0, HIGH 25, MED 57, LOW 82, NIT 7 (FINDINGS.md). Recurring HIGH themes for the grounder: showMiss without isFetching (first-fetch / previous-data flash claim); "Highway 27" fail-open vs AC1; descriptor text additions vs RR-0392; mobile red not proven by hook; Spec 00 §10.2 frontend may not edit scripts/; Q19 version-skew payload reads as a miss.
 - Grounder owed: GROUNDER.md in that folder by a seat that is not this lane; then a fix round if confirmed.
 

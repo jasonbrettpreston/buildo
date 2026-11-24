@@ -4,11 +4,11 @@ title: >-
   SEARCHFIX.2 Search page: a street with no number asks for a house number;
   no-match flicker, strict lot-form check, typed "3", double retry message and
   the wrong-lot help topic corrected
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:09:00Z'
+updated_date: '2026-11-24T16:43:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -30,6 +30,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-24/BL-SFX2/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/TRIAGE.md
 type: fix
 ordinal: 150020
 ---
@@ -305,3 +307,11 @@ rg#6 MED folded placed in §6.5 after
 
 2026-11-24 output review round 1 (context-r3.md): 40 lens outputs, 171 findings (CRITICAL 0, HIGH 25, MED 57, LOW 82, NIT 7) in docs/reports/lanes/2026-11-24/BL-SFX2/ with FINDINGS.md. Work commit ee3634771, task-319 note 3f4f616fe. Grounder owed (a seat that is not the lane); task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in ee3634771 (work, through the real hooks): the six search page fixes of task-450: (1) a street typed with no house number shows the refine line 'Add a house number to narrow it down.' and keeps the candidate list (ruled B); (2) a settled miss fetched again keeps the no-match line; (3) the lot form parses one extra field, the closed enums stay; (4) the minimum-length copy is filled from config.min_query_len on phone and web, not a typed 3; (5) the semi page opened cold and offline shows loading and does not redirect before the lookup settles; (6) the help page has the topic wrong-lot ('Wrong address or lot') and both search links point at it. Also L3 (a retry-after of 0 shows one message, MF35-DF1 closed), Q19 (client shim deleted), Q8, R2, R4, R5. The Spec 99 section 6.5 dated note is in ee3634771 and the task-319 dated note in 3f4f616fe. The census scripts/surfaces/_schema/census/mobile-product.json and three generated pages (127-surface-registry.md, 127-surface-review-queue.md, rule-lists-by-kind.md) were added to the Files line because the hooks regenerate them from this change. NOT PROVEN BY THE COMMIT HOOK: the mobile jest tests (red and green for AC1, AC2, AC3, AC4, AC5) are not reached by the pre-commit related run; they are owed at the push station, and the task is not complete until they pass there (operator rule: a task is not complete until it actually works). The push station also owes the full suite and the fold with sfx1 and sfx5 (regenerate the three generated pages, re-run surface-validate --check, re-check the 426 to 427 count locks). One later sweep for the 14 piled LOW ids: out-code-review-p1#1, out-code-review-p1#2, out-code-review-p2#3, out-compliance-inc-S-p1#2, out-compliance-mobile-90-p1#4, out-compliance-mobile-98-p1#3, out-compliance-mobile-99-p3#3, out-compliance-plan-protocol-p1#3, out-compliance-plan-protocol-p1#5, out-compliance-step-132-p2#4, out-compliance-surface-136-p1#1, out-compliance-surface-136-p3#3, out-error-paths-p1#1, out-ux-p1#7 (TRIAGE.md).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX2/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX2/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
