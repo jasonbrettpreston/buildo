@@ -1035,4 +1035,11 @@ describe('task-460: the brief names the code review and the validating grounder'
     expect(x).not.toContain('each changed descriptor');
     expect(x).not.toContain('exploit paths');
   });
+  it('T11 (round 1 grounder, out-compliance-agents-s7-s11-p1#1): the layout sentence names the output lenses above, not error-paths, ux and security', () => {
+    for (const type of ['build', 'fix']) {
+      const x = extraOf({ type, files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
+      expect(x, type).not.toContain('error-paths, ux and security lenses');
+      expect(x, type).toContain('the output lenses named above (the code review for a build or fix task)');
+    }
+  });
 });

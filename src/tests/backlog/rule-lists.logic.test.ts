@@ -1184,4 +1184,10 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan 
     expect(/^\| `lens-security\.md` .*\| plan \(task-460: not at output, RR-0464\) \|$/m.test(rd)).toBe(true);
     expect(s8.slice(at, s8.indexOf('\n', at))).toContain('RR-0464');
   });
+  it('T4b (round 1 grounder, out-compliance-agents-s5-1to3#1): README item 5 guards the compliance and engineering files by task type (output_off)', () => {
+    const rd = fs.readFileSync(path.join(ROOT, '.claude/review-templates/README.md'), 'utf8');
+    const item5 = /^5\. \*\*At close\*\*.*$/m.exec(rd)?.[0] ?? '';
+    expect(item5).toContain('for a build or fix task, one per attached list that output_off leaves on');
+    expect(item5).toContain('that output_off leaves on (a build or fix task: none today, task-460) when the range base holds');
+  });
 });
