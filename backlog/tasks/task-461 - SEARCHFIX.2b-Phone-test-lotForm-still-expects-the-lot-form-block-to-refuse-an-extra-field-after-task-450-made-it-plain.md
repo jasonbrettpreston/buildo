@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX6'
 created_date: '2026-11-24T18:11:00Z'
-updated_date: '2026-11-24T18:44:00Z'
+updated_date: '2026-11-24T19:24:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -179,6 +179,8 @@ plan-plan-review-deepseek#3 MED folded That green is the ru
 2026-11-24 build (lane BL-SFX6, plan PLAN-461-v1 as ruled; 8.1 A, 8.2 B). Red before the edit: npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false (from mobile/) -> 1 failed suite, 1 failed test of 40, lotForm.test.ts:71:115 expected false received true (lane dir red.out). Edit: the extra-field line moved from the 'refuses ...' case into the 'parses ...' case as toBe(true) with comment task-450 L1 (GROUNDER-B D1); case retitled '... with null and with a server-added field'; the 'refuses ...' case keeps the two closed-enum refusals. Green after the edit, same command: 2 suites passed, 40 tests passed (lane dir green.out). AC2 search: git grep 'strict()' -- mobile/__tests__ finds nothing; git grep ConsumerParcelLookupResultSchema -- mobile/__tests__ finds lotForm.test.ts (all plain or closed-enum now), schemas.test.ts:326-335 (plain form) and useParcelLookup.test.ts:163,:200 (valid payloads, true); no phone test asserts the strict lot form. Server strict block (src/tests/parcel-lot-form.logic.test.ts:145) left as D1's latent trap, no card (ruled 8.3). The pre-commit related run is not the green proof for mobile tests (task-450 :314); full phone run owed at the push station (RR-0460).
 
 Deviation from plan section 7: the task-450 note could not ride this commit (check-task-files refuses a file outside the Files line of task-461); the task-450 note is owed to the orchestrator, not written.
+
+2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at a12d535f5 by the operator. Proof per RR-0460: full local phone run on that tip before the push, 58 of 58 suites, 866 of 866 tests (~/Buildo-scratch/lanes-20261124/phone-full-a12d535f5.out); Mobile CI run after the push on a12d535f5: success, job Jest + TypeCheck success (GitHub Actions run 45469556482; the simulator job is skipped by design on a manual run).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

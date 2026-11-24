@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T18:06:00Z'
+updated_date: '2026-11-24T19:24:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -294,6 +294,8 @@ rg#6 MED folded this card's, uncondi
 2026-11-24 work commit 04c181564 (hooks: GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); lane green.out). The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit: check-task-files refuses a path outside the Files line beside code, and neither path is code.
 
 2026-11-24 merge 182a28053 of wf2/board (fe88ecf71), ordered by the orchestrator; doc-2 conflict kept both sides, rule-lists page regenerated. Output review round 1 on the merged head: context-r3.md, 52 DeepSeek lens outputs (lens set per the board table: plan-protocol output_off; 9 compliance lists), 184 findings (HIGH 24, MED 72, LOW 82, NIT 4) in docs/reports/lanes/2026-11-24/BL-SFX3/FINDINGS.md. Grounder owed.
+
+2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at a12d535f5 by the operator. Proof per RR-0460: full local phone run on that tip before the push, 58 of 58 suites, 866 of 866 tests (~/Buildo-scratch/lanes-20261124/phone-full-a12d535f5.out); Mobile CI run after the push on a12d535f5: success, job Jest + TypeCheck success (GitHub Actions run 45469556482; the simulator job is skipped by design on a manual run).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
