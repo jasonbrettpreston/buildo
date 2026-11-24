@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:14:00Z'
+updated_date: '2026-11-24T20:20:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-2
@@ -39,4 +39,6 @@ Card opened 2026-11-24 by the orchestrator from RR-0455 (~/Buildo-scratch/queues
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24: moved to Increment 1C by the operator (RR-0463, /Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2397, verbatim: "Move 458").
+
+2026-11-24: scope is the renderer press only (lightImpact once per press on Buttons with variant default or none, parcel pages only) plus the Std 1.3 dated note, so the Files line must list docs/specs/00_engineering_standards.md (452 never listed it). The settle haptics go with task-357 (452 round 1, O2). No dependency on 452. SurfaceRenderer.tsx is shared with 357 in other hunks. The cite of QUESTIONS-RULED.md is docs/reports/reviews/task-452/v1/QUESTIONS-RULED.md.
 <!-- SECTION:NOTES:END -->

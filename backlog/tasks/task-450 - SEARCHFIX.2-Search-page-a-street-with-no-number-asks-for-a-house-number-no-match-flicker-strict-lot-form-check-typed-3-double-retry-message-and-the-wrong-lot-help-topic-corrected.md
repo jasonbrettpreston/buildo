@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T19:24:00Z'
+updated_date: '2026-11-24T20:20:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -310,6 +310,8 @@ rg#6 MED folded placed in §6.5 after
 2026-11-24 (orchestrator, as the task-461 output grounder ruled): mobile/__tests__/lotForm.test.ts:71 still asserted the strict lot-form block after ee3634771 made it plain; a local phone test run found it; moved and flipped by task-461 (acc1affa0, folded 6efcbdb35).
 
 2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at a12d535f5 by the operator. Proof per RR-0460: full local phone run on that tip before the push, 58 of 58 suites, 866 of 866 tests (~/Buildo-scratch/lanes-20261124/phone-full-a12d535f5.out); Mobile CI run after the push on a12d535f5: success, job Jest + TypeCheck success (GitHub Actions run 45469556482; the simulator job is skipped by design on a manual run).
+
+2026-11-24: V5 (open-ended semi wait) and L3 (0s, no retry) taken up by task-457 under RR-0456.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

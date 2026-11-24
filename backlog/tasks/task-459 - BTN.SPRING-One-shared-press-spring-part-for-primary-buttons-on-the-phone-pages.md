@@ -4,6 +4,7 @@ title: BTN.SPRING One shared press-spring part for primary buttons on the phone 
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:30:00Z'
+updated_date: '2026-11-24T20:20:00Z'
 labels: []
 milestone: m-2
 dependencies: []
@@ -30,3 +31,9 @@ Card opened 2026-11-24 by the orchestrator from RR-0455 (~/Buildo-scratch/queues
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24: comes after 458 (wraps the same press). What it needs is in docs/reports/reviews/task-452/v1/QUESTIONS-RULED.md (the old cite path is now v1/): the closed mobile mapping C-8m MOBILE_PARTS in surface-conformance.logic.test.ts, the sha-pinned vendored Button, the bindings.json mapping, reuse of SaveButton.tsx withSpring. It edits surface-conformance.logic.test.ts in another hunk than 452's pins, so it re-measures them.
+<!-- SECTION:NOTES:END -->

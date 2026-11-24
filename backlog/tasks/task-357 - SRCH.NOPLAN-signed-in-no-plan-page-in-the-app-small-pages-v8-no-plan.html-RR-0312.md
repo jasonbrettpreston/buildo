@@ -6,18 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T22:02:00Z'
-updated_date: '2026-11-24T18:41:00Z'
-labels:
-  - dead
+updated_date: '2026-11-24T20:20:00Z'
+labels: []
 milestone: m-1
 dependencies:
   - TASK-320
+  - TASK-452
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1216
   - ~/Buildo-scratch/mcfrontend/small-pages-v8/no-plan.html
   - docs/reports/lanes/2026-11-19/BL-R18/REPORT.md
 type: build
-ordinal: 57012
+ordinal: 150060
 ---
 
 ## Description
@@ -116,4 +116,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-24: absorbed by TASK-452 (SEARCHFIX.4) on the operator's ruling RR-0446 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302, verbatim: "02 Agrred add to the plan."). No lane is launched for this card.
 
 2026-11-24 RR-0455 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2357): task 452 is split; the no-plan page returns to this card. The way to sign up waits for the buying work (RR-0454, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2352). The plan grounder's design ruling for the three screens is in docs/reports/reviews/task-452/QUESTIONS-RULED.md.
+
+2026-11-24: split plan of task-452 (docs/reports/reviews/task-452/GROUNDER-PLAN.md, QUESTIONS-RULED.md). 452 builds the surface mobile_parcel_wall (states rate_limited, unauthorized), searchWall, useWallState and the error classes; this card adds states static, loading and error, 8 keys, flags no_plan, checking, none, the recheck, sign_out (schema action and SurfaceActions) and the settle haptics; searchWall gets a no_plan branch for status null and flips 452's null-status lock test. Pins go 443 to 451 strings, 102 to 105 goldens, no new surface. The old mobile_parcel_no_plan surface, no-plan.tsx and noPlanTrigger.test.ts are superseded; the Files line and the size (GUESS 22) are re-derived at planning. Kept: the trigger rule, Log out kept, Account dropped, the grep for http www $ maxbld.ca, search goldens byte-identical, the Spec 126 and MF-49 notes, the sign-up way waits (RR-0454 item 4). HELD note met: the pilot is folded (cf3f0bf5a). Design cite: docs/reports/reviews/task-452/v1/QUESTIONS-RULED.md:15-20. Dependency on TASK-452 added, ordinal moved after 452, the dead label removed (live again, RR-0455 item 2), per the task-452 plan grounder.
 <!-- SECTION:NOTES:END -->
