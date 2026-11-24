@@ -3,11 +3,11 @@ id: TASK-457
 title: >-
   SEARCHFIX.9 Semi question page: a time limit on the wait; search page: a
   zero-second rate limit retries once
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX7'
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:47:00Z'
+updated_date: '2026-11-24T19:58:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -27,6 +27,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/TRIAGE.md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/REPORT.md
 type: fix
 ordinal: 151210
 ---
@@ -41,8 +44,8 @@ Files: mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParce
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The semi question page stops waiting after the limit and shows a message with Try again
-- [ ] #2 A zero-second rate limit retries the search once, and only once
+- [x] #1 The semi question page stops waiting after the limit and shows a message with Try again
+- [x] #2 A zero-second rate limit retries the search once, and only once
 <!-- AC:END -->
 
 ## Definition of Done
@@ -250,3 +253,11 @@ rg#1 MED folded useParcelSearch serv
 
 2026-11-24 work commit db2c04efe (hooks: typecheck, lint, GATE OK, POLICY CHECKS OK; related run skipped, no src/ or scripts/ staged). Output review round 1: context-r3.md, 11 DeepSeek lens outputs in docs/reports/lanes/2026-11-24/BL-SFX7 (code-review, ux, error-paths; compliance mobile-90, mobile-98, mobile-99, surface-136, inc-S, ms-S; engineering eng-front, eng-shared); 33 findings (0 CRITICAL, 0 HIGH, 4 MED, 25 LOW, 4 NIT) in FINDINGS.md. Grounder owed: the lane does not rule its own findings.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed db2c04efe (6 files): semi question page opening wait bounded by continue_wait_ms (60 s) then the could-not-load notice with Try again (AC1); useParcelSearch retries a zero-second rate limit once via shouldRetryParcelSearch (AC2). Red 5 failed 40 passed of 45, green 45 of 45 in 3 suites (local phone run, RR-0460), mobile typecheck exit 0, hooks green (typecheck, lint, GATE OK, POLICY CHECKS OK). Review records ecadae702. Owed by the orchestrator: full local phone run, push, Mobile CI, task-450 dated note.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 3 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX7/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX7/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
