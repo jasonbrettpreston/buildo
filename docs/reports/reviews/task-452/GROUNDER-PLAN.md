@@ -121,4 +121,4 @@ rg#6 CONFIRMED mobile/src/hooks/useParcelLookup.ts:173 "enabled: !!accessToken,"
 rg#7 CONFIRMED src/app/api/parcels/lookup/route.ts:97 "only a hit whose report is produced" LOW: true: three v1 protections were cut; folded as risk 7 (goldens byte-identical, produced report, semi gap, resolution)
 rg#8 CONFIRMED src/tests/search-routing.logic.test.ts:146 "expect(mount).toContain(" NIT: true: two pinned lines of [parcelId].tsx must stay; folded as one clause in step 8
 
-Plan: task-452 sha256:5f6deeb28853
+Plan: task-452 sha256:91f2fed7fce1
