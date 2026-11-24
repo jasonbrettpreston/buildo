@@ -3,10 +3,11 @@ id: TASK-451
 title: >-
   SEARCHFIX.3 Lot card: "Not available" for an implausible lot size, "at the
   back", "or report it", screen-reader labels, plain-page header links
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:13:00Z'
+updated_date: '2026-11-24T16:47:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -18,6 +19,22 @@ references:
   - docs/reports/reviews/task-451/seat-integration-1.md
   - docs/reports/reviews/task-451/seat-reality-check-1.md
   - docs/reports/reviews/task-451/seat-regression-1.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 150040
 ---
@@ -257,3 +274,9 @@ rg#2 MED folded No existing test bui
 rg#3 MED folded both lists are pinne
 rg#6 MED folded this card's, uncondi
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24 taken on the board at lane launch (lane BL-SFX3, worktree /Users/brettpreston_macmini/Buildo-wt-sfx3, branch wf2/inc1b-sfx3), RR-0240
+<!-- SECTION:NOTES:END -->
