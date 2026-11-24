@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:43:00Z'
+updated_date: '2026-11-24T18:45:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -306,6 +306,8 @@ rg#6 MED folded placed in §6.5 after
 2026-11-24 Files line also gains the three generated pages the pre-commit checks regenerate from this change (docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md from the census, rule-lists-by-kind.md from the Spec 99 edit); check-task-files requires them declared. The task-319 dated note lands in its own commit (no code file staged).
 
 2026-11-24 output review round 1 (context-r3.md): 40 lens outputs, 171 findings (CRITICAL 0, HIGH 25, MED 57, LOW 82, NIT 7) in docs/reports/lanes/2026-11-24/BL-SFX2/ with FINDINGS.md. Work commit ee3634771, task-319 note 3f4f616fe. Grounder owed (a seat that is not the lane); task stays RUNNING.
+
+2026-11-24 (orchestrator, as the task-461 output grounder ruled): mobile/__tests__/lotForm.test.ts:71 still asserted the strict lot-form block after ee3634771 made it plain; a local phone test run found it; moved and flipped by task-461 (acc1affa0, folded 6efcbdb35).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
