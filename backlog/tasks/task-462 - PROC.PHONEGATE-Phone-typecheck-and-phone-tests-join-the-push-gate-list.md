@@ -1,10 +1,11 @@
 ---
 id: TASK-462
 title: PROC.PHONEGATE Phone typecheck and phone tests join the push gate list
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-PROC462'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T19:10:00Z'
+updated_date: '2026-11-24T19:12:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -15,6 +16,16 @@ references:
   - docs/reports/reviews/task-462/seat-integration-1.md
   - docs/reports/reviews/task-462/seat-reality-check-1.md
   - docs/reports/reviews/task-462/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 156210
 ---
@@ -185,3 +196,9 @@ rg#2 MED folded the station refuses
 
 rg#2 MED folded (the station refuses
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24 taken on the board at lane launch (lane BL-PROC462, worktree /Users/brettpreston_macmini/Buildo-wt-proc462, branch wf2/inc1b-proc462), RR-0240
+<!-- SECTION:NOTES:END -->
