@@ -4,11 +4,17 @@ title: PROC.PHONEGATE Phone typecheck and phone tests join the push gate list
 status: LATER
 assignee: []
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T18:49:00Z'
+updated_date: '2026-11-24T19:06:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-462/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-462/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-462/seat-integration-1.md
+  - docs/reports/reviews/task-462/seat-reality-check-1.md
+  - docs/reports/reviews/task-462/seat-regression-1.md
 type: fix
 ordinal: 156210
 ---
@@ -53,20 +59,20 @@ Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLA
 Planner: Cairn-Plan-462
 Plan id: PLAN-462-v1
 
-Read at board head a12d535f5 (wf2/board). Nothing was written and no test, hook or generator was run. One grep with a redirect to /dev/null was refused by the permission system; I re-ran it without the redirect.
+Read at board head a12d535f5 (wf2/board) and re-read by the plan grounder at head dde49d6c9, after task-461 was folded (6efcbdb35). Nothing was written and no test, hook or generator was run. One grep with a redirect to /dev/null was refused by the permission system; I re-ran it without the redirect.
 
 ONE CORRECTION TO THE GROUNDER (it is the reason for the command choice in section 4)
-The grounder proposed `npm --prefix mobile exec -- jest --ci --silent`. From the worktree root this command is wrong. npm 11.19.1 `lib/commands/exec.js` sets `runPath = process.cwd()` ("This is where libnpmexec will actually run the scripts from"), so jest would start in the repo root, not in mobile/. The root package.json has no "jest" block, so the jest-expo preset and moduleNameMapper would not load. babel-jest also takes its cwd from `transformOptions.config.cwd` (mobile/node_modules/babel-jest/build/index.js:160), which would be the repo root. `npm run` is different: it runs in the prefix folder (`lib/commands/run.js:44`, `path: this.npm.localPrefix`). So both new steps use `npm --prefix mobile run`.
+The grounder proposed `npm --prefix mobile exec -- jest --ci --silent`. From the worktree root this command is wrong. npm 11.19.1 `lib/commands/exec.js:51` sets `runPath = process.cwd()` ("This is where libnpmexec will actually run the scripts from"), so jest would start in the repo root, not in mobile/. The root package.json has no "jest" block, so the jest-expo preset and moduleNameMapper would not load. `npm run` is different: it runs in the prefix folder (`lib/commands/run.js:44`, `path: this.npm.localPrefix`). So both new steps use `npm --prefix mobile run`.
 
 2. RULES QUOTED FIRST
-- RR-0462, MD:2391 (operator, verbatim): "Let's just move forward with the basic quick plan. Approved." Step 4 as put to him (MD:2390): "phone typecheck and phone tests join the push gate, 2 lines in .husky/pre-push-checks.sh before the web suite; 4a same card updates the test that pins the gate list; 4b same card adds one dated line in CLAUDE.md and the phone testing spec". MD:2392 ruled: "Step 4 includes the phone typecheck, which replaces "no station change" of 2026-11-19 (:1212) for the gate list." MD:2392, marked as the ORCHESTRATOR'S READING, not his words: "off means removing the two lines".
+- RR-0462, MD:2392 (operator, verbatim): "Let's just move forward with the basic quick plan. Approved." Step 4 as put to him (MD:2391): "phone typecheck and phone tests join the push gate, 2 lines in .husky/pre-push-checks.sh before the web suite; 4a same card updates the test that pins the gate list; 4b same card adds one dated line in CLAUDE.md and the phone testing spec". MD:2393 ruled: "Step 4 includes the phone typecheck, which replaces "no station change" of 2026-11-19 (:1212) for the gate list." MD:2393, marked as the ORCHESTRATOR'S READING, not his words: "off means removing the two lines".
 - RR-0460, MD:2381 (as put to him): "phone tests: local first, then push"; MD:2382 "Approved."
 - MD:1211-1213 (2026-11-19): "Let's do 1"; option 1 as put to him: "...no build, no station change." For the gate list this is replaced by RR-0462. station.sh is still not edited.
 - RR-0392, MD:1975: "I don't think we need any other infastrcuture beyond this". This card adds no file, switch or tool.
 - RR-0429, MD:2202: "Keep notes short."
 - The test pin, hooks-composition.infra.test.ts:524-525: "six `step <name> <command>` lines joined by `&&`, no function and no branch".
 - CLAUDE.md:32: "Never declare a task done until `npm run test` passes."
-- 124a appendix :988 (card DoD #8): "no change adds a tool, field or rule its card or ruling did not name".
+- 124a appendix :992 (row R-IZ; card DoD #8 repeats the quote at :988, a shared template line left alone): "no change adds a tool, field or rule its card or ruling did not name".
 
 3. WHAT EXISTS AND IS REUSED
 - The one list, .husky/pre-push-checks.sh:7-12. Its step lines are `step <name> <cmd> &&`; the suite (:12) is last and has no `&&`.
@@ -101,18 +107,18 @@ Why this exact command (all checked by reading):
 
 4.3 CLAUDE.md: one new line directly after :33 (item 5), indented 3 spaces so it continues item 5. Text in section 7.
 4.4 docs/specs/03-mobile/98_mobile_testing_protocol.md: one blank line plus one dated note after :123 (the end of section 5, before "## 6"). Text in section 7.
-No file outside the Files line. .husky/pre-push and station.sh are not edited.
+No file outside the Files line. docs/specs/00_claude_code_operating_model.md:305 (the Husky pre-push row) lists the steps by name and already omits the McBylaws gate; it is read and left, because the card names no edit to it (124a :992). .husky/pre-push and station.sh are not edited.
 
 (3) BOTH PATHS REACH THE LINES
 - Hook: `git push` runs .husky/pre-push. Its step() just runs the command from the root, so mobile-typecheck runs, then mobile-tests, then the suite.
 - Station: :45 sources the same file in a subshell. steps.log gains `== mobile-typecheck` / `   rc=0` and `== mobile-tests` / `   rc=0`, and the run folder gains mobile-typecheck.log and mobile-tests.log.
 - The pass file (:48) does NOT list steps, and the station writes NO timing lines. AC1's "shows the two new steps" is therefore read from `$run/steps.log` (the pass file's `run:` line names the folder). Timing can only be read from the run folder's file times.
-- Note: `station.sh push` (:66) calls `git push`, so the hook runs the list again, including the phone steps. That repeat already happens for the suite; it adds about 10-20 s per push.
+- Note: `station.sh push` (:66) calls `git push`, so the hook runs the list again, including the phone steps. That repeat already happens for the suite; it adds the phone typecheck and the phone tests (2.7 to 8.5 s) to each station push; the typecheck time was not measured.
 
 (4) A WORKTREE WITHOUT THE mobile/node_modules LINK
 - The station refuses it at :32 before any step runs.
-- The plain hook: `npm --prefix mobile run typecheck` finds the root `tsc` through the ancestor PATH walk (the root .bin has tsc and no jest). tsconfig `extends: expo/tsconfig.base` cannot resolve, tsc exits non-zero, and the push stops loudly at mobile-typecheck. It is never a silent pass.
-- Survey of `git worktree list`: 136 worktrees have the link, 20 lack it (older ones, e.g. Buildo-wt-alpd, -navlock, -queue2), and NONE lacks a mobile/ folder. A worktree with no mobile/ folder would make npm fail (no package.json), so the station's `[ ! -d mobile ]` allowance no longer leads to a pass. No current worktree is of that type.
+- The plain hook: `npm --prefix mobile run typecheck` finds the root `tsc` through the ancestor PATH walk (the root .bin has tsc and no jest). tsconfig `extends: expo/tsconfig.base` cannot resolve, tsc exits non-zero, and the push stops loudly at mobile-typecheck. It is never a silent pass, but on the hook path it stops only after the McBylaws gate has asked the operator and the web checks have run (the station refuses earlier, at :32). The CLAUDE.md line names the missing link in one clause.
+- Survey of `git worktree list` (156): 133 have a working link, 3 are real installs (~/Buildo, ~/Buildo-wt-gate375, ~/Buildo-wt-mf35-spike), and 20 are unusable: 14 have no entry (e.g. Buildo-wt-alpd) and 6 a dangling link (e.g. -navlock, -queue2); NONE lacks a mobile/ folder. A worktree with no mobile/ folder would make npm fail (no package.json), so the station's `[ ! -d mobile ]` allowance no longer leads to a pass. No current worktree is of that type.
 
 5. TESTS FIRST (red, then green)
 - R1 (AC #2): edit hooks-composition first (4.1) and run that one file against the OLD six-line list. Expected red:
@@ -128,24 +134,24 @@ No file outside the Files line. .husky/pre-push and station.sh are not edited.
 
 6. LIMITS, FAILURE MODES AND HOW THE BUILD DETECTS THEM
 - No station.sh, package.json or .husky/pre-push edit. No switch or environment setting. Off = delete the two lines plus the two test entries in one commit.
-- Lands only after task-461 is folded (task-461 is BUILT, not folded). Before that, lotForm.test.ts:71 is red, so mobile-tests fails every push and every station run. Detect: R3 must show 58/58 on the lane's base.
+- task-461 is now folded (commit 6efcbdb35, an ancestor of a12d535f5), so the order condition is met; the lane's base must hold it, else lotForm.test.ts:71 is red and mobile-tests fails every push and every station run. Detect: R3 must show 58/58 on the lane's base. Seen at a12d535f5 in the gate worktree: 58 of 58 suites, 866 tests, and the phone typecheck exited 0.
 - The shared ~/Buildo/mobile/node_modules must hold the 6 packages (card: done, 58/58 in phone-linked-sfx6-18c760bb5.out). If it goes stale again, mobile-tests fails loudly ("Cannot find module"); it never passes silently.
-- That evidence file prints "A worker process has failed to exit gracefully" before PASS. It is a warning and the exit stays 0. If it ever turns into a non-zero exit, the station fails at mobile-tests. Watch the first station runs.
-- Jest uses its default worker count (cores - 1) for about 9 s. At the station this runs under SUITE.lock (:37) before the web suite, so there is no overlap. No worker cap is added (that would be a new setting).
+- Both evidence files print "A worker process has failed to exit gracefully" before the result block. Neither records an exit code; the orchestrator was shown exit 0 for the full run at a12d535f5 (phone-full-a12d535f5.out) and the phone typecheck there exited 0. If it ever turns into a non-zero exit, the station fails at mobile-tests. Watch the first station runs.
+- Jest uses its default worker count (cores - 1); the two evidence runs took 8.5 s and 2.7 s. At the station this runs under SUITE.lock (:37) before the web suite, so there is no overlap. No worker cap is added (that would be a new setting).
 - Node 24 locally vs node 20 in Mobile CI: results on node 20 are not checked here.
 - The 20 worktrees without the link cannot push through the hook until they are linked. Only the operator pushes, so this affects him only.
 
 7. DATED NOTES AND CARD NOTES OWED
 - CLAUDE.md, a new line after :33, exactly:
-   Dated 2026-11-24 (task-462, RR-0462): the pre-push list also runs `mobile-typecheck` and `mobile-tests` (phone typecheck and phone tests, no coverage) after `typecheck` and before the web suite; off = remove those two lines.
+   Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests` (phone typecheck and phone tests, no coverage) after `typecheck` and before the web suite; a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`. To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`.
 - Spec 98, after :123, exactly:
-> Dated note 2026-11-24 (task-462, RR-0462; operator, verbatim: "Let's just move forward with the basic quick plan. Approved."): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite; no coverage written); Mobile CI still runs after the push.
+> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
 - Through the backlog CLI only (never a hand edit), in the same commit as the work: status, the plan, the notes, and the evidence (sha, test, hook and station result) on task-462.
 
 8. OPEN CHOICES (I decide none)
-1. A comment line beside the two steps in pre-push-checks.sh ("task-462: off = remove these two lines"). Against: "two plain step lines" (settled) and RR-0429 "Keep notes short". For: it puts the off rule where someone would turn it off; comments are stripped by execLines (test :541), so the pin allows it. Recommend none: the CLAUDE.md line carries it.
-2. A real planted-failure station run for AC #3. Recommend no: T4 plus the R2 non-zero run plus the orchestrator's AC1 PASS run cover it without a throwaway commit (RR-0392 spirit).
-3. `test:ci -- --coverage=false` vs `test -- --watchAll=false --ci`. Both rely on the same last-wins rule. Recommend test:ci: the flag names exactly the thing turned off (no coverage), and it matches what CI runs.
+1. A comment line beside the two steps in pre-push-checks.sh ("task-462: off = remove these two lines"). Against: "two plain step lines" (settled) and RR-0429 "Keep notes short". For: it puts the off rule where someone would turn it off; comments are stripped by execLines (test :541), so the pin allows it. Recommend none: the CLAUDE.md line carries it. Ruled by the plan grounder: none (RR-0429, RR-0450; the file stays two plain lines).
+2. A real planted-failure station run for AC #3. Recommend no: T4 plus the R2 non-zero run plus the orchestrator's AC1 PASS run cover it without a throwaway commit (RR-0392 spirit). Ruled by the plan grounder: no; the station step() returns the command status (station.sh:41) and the list stops at the first failure.
+3. `test:ci -- --coverage=false` vs `test -- --watchAll=false --ci`. Both rely on the same last-wins rule. Recommend test:ci: the flag names exactly the thing turned off (no coverage), and it matches what CI runs. Ruled by the plan grounder: test:ci.
 
 (7) RULE LISTS AND LENSES FOR THIS CARD'S REVIEWS
 Resolved with `rule-lists.mjs resolve --type fix --letter S` (milestone m-1 is titled "Increment 1·B Search [S]"):
@@ -160,15 +166,20 @@ lensSet (rule-lists.mjs:187-195): code = true (type fix). surface = TRUE, becaus
 If task-460 (RUNNING; it edits rule-lists.json, rule-lists.mjs and backlog-lane.mjs) lands first, the output stage shrinks to what 460 rules. Re-resolve at launch.
 
 (8) SEQUENCING AND CLASHES
-- Order: task-461 folded, then this card. The shared install (steps 2-3) is already done per the card.
+- Order: task-461 folded, then this card (met: 6efcbdb35). The shared install (steps 2-3) is already done per the card.
 - task-460: no shared file. It only changes how this card is reviewed.
 - task-452 (LATER): no shared file. Once this lands, its push must pass the phone tests it changes; that is intended.
 - task-463 (PROC.PHONELINT, LATER) is NOT on the brief's list but edits the same Spec 98 section 5 (:118 lint line). That is a text clash on adjacent lines, so land the two one after the other and rebase the second. Its new text must not drop or contradict this note.
 
 9. UNVERIFIED
 - Neither new command was run (read-only). The no-write claim rests on the reads above.
-- `tsc --noEmit` in mobile/ was never run locally. The grounder's AC6 and the card say it exits 0; I could not check.
+- `tsc --noEmit` in mobile/: the orchestrator reports exit 0 on board tip a12d535f5 in the gate worktree; the plan grounder did not run it.
 - The exit code of the planted `no-such-test-path` run (expected 1, from jest's "No tests found" behaviour) was read from behaviour, not run.
 - Node 20 parity.
 - The milestone letter came from the title line; I did not run milestoneLetter itself.
+
+Plan review round 1: 15 folded, 0 task, 0 ruling, 0 wontfix, 9 pile; grounder docs/reports/reviews/task-462/GROUNDER-PLAN.md; triage docs/reports/reviews/task-462/TRIAGE-PLAN.md
+plan-ux#2 MED folded stops only after the
+rg#1 MED folded task-461 is now fold
+rg#2 MED folded the station refuses
 <!-- SECTION:PLAN:END -->
