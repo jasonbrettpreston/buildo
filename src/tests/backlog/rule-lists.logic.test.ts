@@ -702,11 +702,11 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
     const m = await import('../../../scripts/analysis/rule-lists.mjs');
     return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
   };
-  it('an admin path and a PII path add the security lens on both phases', async () => {
+  it('an admin path and a PII path add the security lens at the plan stage; task-460 (RR-0464): not at output', async () => {
     for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
       const r = await lens(f);
       expect(r.plan, f).toContain('security');
-      expect(r.out, f).toContain('security');
+      expect(r.out, f).not.toContain('security');
     }
   });
   it('control: a path naming none of these adds no security lens', async () => {
@@ -714,8 +714,9 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
     expect(r.plan).not.toContain('security');
     expect(r.out).not.toContain('security');
   });
-  it('control: the existing words still fire it', async () => {
-    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
+  it('control: the existing words still fire it at the plan stage (task-460, RR-0464: not at output)', async () => {
+    expect((await lens('src/lib/stripe/webhook.ts')).plan).toContain('security');
+    expect((await lens('src/lib/stripe/webhook.ts')).out).not.toContain('security');
   });
 });
 
@@ -725,18 +726,18 @@ describe('task-445: the security lens runs on an API route or library path (lens
     const m = await import('../../../scripts/analysis/rule-lists.mjs');
     return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
   };
-  it('S1(a): a src/lib path adds security on both phases, for build and fix (exact sets)', async () => {
+  it('S1(a): a src/lib path adds security at the plan stage, for build and fix (exact sets); task-460 (RR-0459, RR-0464): the output set is the code review alone', async () => {
     for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts']) {
       const r = await lens(type, f);
       expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
-      expect(r.out, `${type} ${f}`).toEqual(['code-review', 'security']); // task-460 (RR-0459): no error-paths at output; security unchanged until plan Q7 is answered
+      expect(r.out, `${type} ${f}`).toEqual(['code-review']); // task-460: no error-paths (RR-0459) and no security (RR-0464, plan Q7 option C) at output
     }
   });
-  it('S1(b): an API route adds security on both phases, for build and fix (toContain: the route also gets ux today, not pinned here)', async () => {
+  it('S1(b): an API route adds security at the plan stage, for build and fix (toContain: the route also gets ux there, not pinned here); task-460 (RR-0464): not at output', async () => {
     for (const type of ['build', 'fix']) for (const f of ['src/app/api/parcels/search/route.ts', 'src/app/api/']) {
       const r = await lens(type, f);
       expect(r.plan, `${type} ${f}`).toContain('security');
-      expect(r.out, `${type} ${f}`).toContain('security');
+      expect(r.out, `${type} ${f}`).not.toContain('security');
     }
   });
   it('S3 controls (green before and after; each proven by a planted defect): no security for front-end, near-miss and other paths', async () => {
@@ -1142,7 +1143,7 @@ describe('task-453: output_off and validate robustness', () => {
 });
 
 // task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): the output review of a build or fix task is the code review on the diff (no ux, no error-paths)
-// and no rule list (output_off names every list); the plan lens set is unchanged. Security at output is the open plan Q7: its term is unchanged here (green before and after).
+// and no rule list (output_off names every list); the plan lens set is unchanged. Security is off at output too (RR-0464, plan Q7 option C: "C: grounder reads instead").
 describe('task-460: the output lens set is the code review (AC #2) and the plan set is unchanged', () => {
   const lens = async (type: string, files: string) => {
     const m = await import('../../../scripts/analysis/rule-lists.mjs');
@@ -1150,11 +1151,13 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan 
   };
   const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', 'src/lib/parcels/report-compute.ts', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx']);
   const FILES = [...(real() as unknown as { kinds: { files: string }[] }).kinds.map((k) => k.files), 'src/components/x.tsx', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx', 'mobile/app/(app)/x.tsx', 'scripts/analysis/x.mjs'];
-  it('T3: for build and fix, out is code-review alone on every Files line (plus security only where the Files line fires it, unchanged until Q7)', async () => {
+  it('T3: for build and fix, out is code-review alone on every Files line, security paths included (RR-0464)', async () => {
+    expect(FILES.filter((f) => SEC.has(f))).toHaveLength(5);
     expect(FILES).toHaveLength(12);
     for (const type of ['build', 'fix']) for (const f of FILES) {
       const r = await lens(type, f);
-      expect(r.out, `${type} ${f}`).toEqual(['code-review', ...(SEC.has(f) ? ['security'] : [])]);
+      expect(r.out, `${type} ${f}`).toEqual(['code-review']);
+      if (SEC.has(f)) expect(r.plan, `${type} ${f}`).toContain('security'); // plan yes, output no
       expect(r.out, `${type} ${f}`).not.toContain('ux');
       expect(r.out, `${type} ${f}`).not.toContain('error-paths');
     }
@@ -1177,5 +1180,8 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan 
     expect(item5).toContain('that output_off leaves on');
     expect(item5).not.toContain('out-error-paths.txt');
     expect(item5).not.toContain('out-ux.txt');
+    expect(item5).not.toContain('out-security.txt'); // RR-0464
+    expect(/^\| `lens-security\.md` .*\| plan \(task-460: not at output, RR-0464\) \|$/m.test(rd)).toBe(true);
+    expect(s8.slice(at, s8.indexOf('\n', at))).toContain('RR-0464');
   });
 });

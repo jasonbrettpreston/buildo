@@ -184,7 +184,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
 /**
  * The lens set a task type calls for (Spec 08 section 7 rule 4, 08_agents.md:334; task-358): the compliance lens is separate (once per rule list).
  * Plan and output lenses other than compliance, by task type and by the Files line. Shared by the launch brief and the close check.
- * task-460 (RR-0457, RR-0458, RR-0459 MORNING-DECISIONS.md:2377): the output set of a build or fix task is the code review (no ux, no error-paths); the security term is unchanged pending plan Q7.
+ * task-460 (RR-0457, RR-0458, RR-0459 MORNING-DECISIONS.md:2377): the output set of a build or fix task is the code review (no ux, no error-paths; no security, RR-0464 :2402, the grounder reads the sensitive files instead); the plan set is unchanged.
  */
 export function lensSet({ type, files }) {
   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
@@ -193,7 +193,7 @@ export function lensSet({ type, files }) {
   return {
     code,
     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
-    out: [...(code ? ['code-review'] : []), ...(code && sec ? ['security'] : [])],
+    out: [...(code ? ['code-review'] : [])],
   };
 }
 /** The line a grounder restates for every lens output it ruled on: name, sha256 (12 hex) and BUG/DEFER count. */

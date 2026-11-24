@@ -216,14 +216,17 @@ describe('close check: the lens set (AC #3)', () => {
   it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)', () => {
     const noUx = scenario({ files: 'src/a.ts, src/components/x.tsx', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });
     expect(noUx.status, noUx.stderr).toBe(0);
-    refused(scenario({ files: 'src/lib/stripe/x.ts' }), /out-security\.txt/);
+    const noSec = scenario({ files: 'src/a.ts, src/lib/stripe/x.ts', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) }); // task-460 (RR-0464): no security output on a money path
+    expect(noSec.status, noSec.stderr).toBe(0);
   });
   // task-445 (FINAL.8, RR-0391): an API route or library path on the Files line also requires out-security.txt
-  it('C1(a): a src/lib path on the Files line requires out-security.txt', () => {
-    refused(scenario({ files: 'src/a.ts, src/lib/x.ts' }), /out-security\.txt/);
+  it('C1(a): a src/lib path on the Files line closes with no out-security.txt (task-460, RR-0464: security is a plan-stage lens only)', () => {
+    const r = scenario({ files: 'src/a.ts, src/lib/x.ts' });
+    expect(r.status, r.stderr).toBe(0);
   });
-  it('C1(b): an API route on the Files line requires out-security.txt (it needs out-ux.txt as well, as before)', () => {
-    refused(scenario({ files: 'src/a.ts, src/app/api/x/route.ts' }), /out-security\.txt/);
+  it('C1(b): an API route on the Files line closes with no out-security.txt and no out-ux.txt (task-460, RR-0464, RR-0459)', () => {
+    const r = scenario({ files: 'src/a.ts, src/app/api/x/route.ts' });
+    expect(r.status, r.stderr).toBe(0);
   });
   it('C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes', () => {
     const r = scenario({ files: 'src/a.ts, src/lib/x.ts', mutate: (l, d) => ({ ...l, 'out-security.txt': hdr('lens-security.md', fs.readFileSync(path.join(d, '.git/material.txt'), 'utf8')) + body(false) }) });

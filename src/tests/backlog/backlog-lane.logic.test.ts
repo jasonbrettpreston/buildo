@@ -367,9 +367,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('Fresh context every review round');
     }
   });
-  it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+  it('task-460 (RR-0464): no security lens at output when the Files line touches entitlements, auth, stripe or a metered route; the grounder reads those files for exploit paths', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
-      expect(lensBrief('build', files), files).toContain('lens-security.md');
+      expect(lensBrief('build', files), files).not.toContain('lens-security.md');
+      expect(lensBrief('build', files), files).toContain('exploit paths');
     }
   });
   it('a build that is not on a surface has no ux lens', () => {
@@ -383,8 +384,8 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
   });
   // task-445 (FINAL.8, RR-0391): the launch brief names the security lens for an API route or library path
-  it('B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not', () => {
-    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).toContain('lens-security.md');
+  it('B1: a build on an API route or a src/lib path names no lens-security.md at output (task-460, RR-0464); control: a front-end component does not either', () => {
+    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).not.toContain('lens-security.md');
     expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');
   });
 });
@@ -1023,7 +1024,7 @@ describe('task-460: the brief names the code review and the validating grounder'
       expect(x, type).toContain('lens-code-review.md');
       expect(x, type).toContain('none for this task');
       for (const t of ['lens-compliance.md', 'lens-engineering.md', 'lens-ux.md', 'lens-error-paths.md', 'out-compliance-', 'out-engineering-']) expect(x, `${type} ${t}`).not.toContain(t);
-      for (const t of ['each changed descriptor', 'TRUE or FALSE with a file:line quote', 'milestone objectives', 'Validation section']) expect(x, `${type} ${t}`).toContain(t);
+      for (const t of ['each changed descriptor', 'TRUE or FALSE with a file:line quote', 'milestone objectives', 'Validation section', 'exploit paths']) expect(x, `${type} ${t}`).toContain(t);
       expect(x, type).toContain('Compliance lens, ONCE PER RULE LIST');
     }
   });
@@ -1032,5 +1033,6 @@ describe('task-460: the brief names the code review and the validating grounder'
     expect(x).toContain('out-compliance-');
     expect(x).toContain('lens-compliance.md');
     expect(x).not.toContain('each changed descriptor');
+    expect(x).not.toContain('exploit paths');
   });
 });
