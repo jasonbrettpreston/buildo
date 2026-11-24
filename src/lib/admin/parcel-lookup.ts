@@ -346,10 +346,10 @@ export async function resolveAddress(
     const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
     if (exactG.conflict) return conflictList(exactG.rows);
     exact = exactG.rows;
-    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; the same truncation rule as the direction guard.
+    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; same truncation rule as the direction guard, which is checked again on the narrowed row (RR-0166: "32 Fulham Dr E" over Fulham St W and Fulham Dr W is the list).
     const typeG = guardByType(exact, exactTruncated ? '' : typedType);
-    if (typeG.conflict) return conflictList(typeG.rows);
     exact = typeG.rows;
+    if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);
     if (exact.length === 1) {
       return {
         // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)

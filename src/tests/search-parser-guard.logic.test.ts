@@ -235,8 +235,8 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
 //   RR-0443 c (:2284): "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close"
 // A lot opens (`unique`) only on an exact match: the exact read, or a one-row typeahead that is the typed address in full. Every other
 // one-row leftover is the list. The fixtures are the rows the typed-address seat recorded on the local test stack
-// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); where the seat recorded fewer rows than the window holds, the
-// extra rows are placeholders and say so.
+// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); case 15 rows 5 to 10 and case 21's point were read on the local
+// test stack, read-only, 2026-11-24.
 describe('SEARCHFIX.1 exact opens, the rest lists', () => {
   const row = (parcel_id: string, address: string) => ({ parcel_id, address });
   /** The first 10 typeahead rows for "Gerrard St" (no number), sorted by printed address, read on the local test stack (the window repeats two ids). */
@@ -304,8 +304,8 @@ describe('SEARCHFIX.1 exact opens, the rest lists', () => {
   const CLAIR = { '2750|CLAIR AVE': [row('5260587', '2750 St Clair Ave E')] };
   const ELM12 = [
     row('5492668', '12 Elm Grove Ave'), row('5264433', '12 Elm Ridge Dr'), row('5510910', '12 Elma St'), row('5017163', '12 Elmartin Dr'),
-    // placeholders: the seat recorded the first four of the ten rows only
-    row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St'),
+    row('5485279', '12 Elmcrest Rd'), row('5151946', '12 Elmdon Crt'), row('5396750', '12 Elmer Ave'), row('5281136', '12 Elmont Dr'),
+    row('5295373', '12 Elmsdale Rd'), row('5278777', '12 Elmsthorpe Ave'),
   ];
   const cases: [string, Case][] = [
     ['1 679 Queen St W', { q: '679 Queen St W', exact: Q679, resolution: 'unique', match: '5476455' }],
@@ -328,8 +328,7 @@ describe('SEARCHFIX.1 exact opens, the rest lists', () => {
     ['18 123 Yongee St', { q: '123 Yongee St', fuzzy: Y123, resolution: 'text_candidates', match: null, candidates: ['5179889', '5464983'] }],
     ['19 2760 Yongee St', { q: '2760 Yongee St', fuzzy: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
     ['20 78 Robert St', { q: '78 Robert St', exact: { '78|ROBERT': [row('5259138', '78 Robert St'), row('5438421', '78 Robert St')] }, resolution: 'multi_parcel', match: null, candidates: ['5259138', '5438421'] }],
-    // case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given
-    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 1, address: '2 Lake Cres', latitude: '43.6', longitude: '-79.5' }], resolution: 'unlinked', match: null }],
+    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 30014230, address: '2 Lake Cres', latitude: '43.6074777', longitude: '-79.4880861' }], resolution: 'unlinked', match: null }],
     ['22 2750 St Clair Ave W', { q: '2750 St Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
     ['23 King and Bay', { q: 'King and Bay', resolution: 'no_match', match: null, candidates: [] }],
     ['25 123 Main St Mississauga', { q: '123 Main St Mississauga', resolution: 'no_match', match: null, candidates: [] }],
@@ -341,6 +340,8 @@ describe('SEARCHFIX.1 exact opens, the rest lists', () => {
     ['extra 2e 679 Queen St. W', { q: '679 Queen St. W', exact: Q679, resolution: 'unique', match: '5476455' }],
     ['extra 2750 St. Clair Ave W', { q: '2750 St. Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
     ['extra 383 Elm St, one exact row printed Elm Rd', { q: '383 Elm St', exact: { '383|ELM': [row('5191692', '383 Elm Rd')] }, resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
+    ['extra 32 Fulham Dr E, the type narrowing leaves a W row: the list', { q: '32 Fulham Dr E', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'text_candidates', match: null, candidates: ['5514141'] }],
+    ['extra 32 Fulham Dr W, same rows, the typed side opens (green both)', { q: '32 Fulham Dr W', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'unique', match: '5514141' }],
     ['extra 5 Elm St, a row with no printed type stops the narrowing', { q: '5 Elm St', exact: { '5|ELM': [row('P1', '5 Elm St'), row('P2', '')] }, resolution: 'text_candidates', match: null, candidates: ['P1', 'P2'] }],
     ['extra 123 Yonge St, Toronto ON', { q: '123 Yonge St, Toronto ON', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
     ['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }],
@@ -358,7 +359,7 @@ describe('SEARCHFIX.1 exact opens, the rest lists', () => {
     if (c.match !== undefined) expect(out.match?.parcelId ?? null).toBe(c.match);
     if (c.candidates) expect(out.candidates.map((x) => x.parcelId)).toEqual(c.candidates);
     if (c.count !== undefined) expect(out.candidates).toHaveLength(c.count);
-    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } });
+    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6074777, lng: -79.4880861 } });
   });
 
   it.each([['Suite 12 Elm St'], ['#12 Elm St']])('T5 extra: %s never parses to house number 2 (the leading-unit strip needs a separator)', (q) => {

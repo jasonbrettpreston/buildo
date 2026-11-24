@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX1'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:06:00Z'
+updated_date: '2026-11-24T16:27:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -47,7 +47,7 @@ Must not: add a new resolution value, or touch the report meter in the lookup ro
 
 Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34).
 
-Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/parcel-lookup-resolution.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/parcel-lookup-resolution.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md, docs/specs/00-architecture/00_system_map.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -302,7 +302,9 @@ rg#2 MED folded names what it amends
 
 2026-11-24 lane BL-SFX1: tests written first (search-parser-guard SEARCHFIX.1 T1-T5, parcel-lookup-resolution one-row partial, consumer-parcel-lookup.infra T6-T8); red proven by the refused commit attempt (red.out in the lane dir).
 
-2026-11-24 build (lane BL-SFX1): plan PLAN-449-v1 built as written. Deviations, recorded not re-planned: (1) the letter and dash fallback dedupes rows by parcel_id and caps the list at 10 (the ≤10 candidates shape of Spec 89:38); (2) the exact statement is read through one helper readExact (same SQL text) so the fallback reuses it; (3) the :226 `!` moved into typedBase as `?? ''` (no `!`), so parcel-lookup.ts holds 10 `!`, each with a why-comment; (4) the fallback and the matcher do not run on the raw-first (keepPeriods) run, per plan 3.B.1 (exact, typeahead and unlinked reads only); (5) T6 is green today too (two `unique` returns already), it is a lock with a red plant; (6) case 15's fixture holds the 4 recorded rows plus 6 placeholders, case 21's pin is a placeholder (UNVERIFIED). Generated files moved: docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md (exempt); src/lib/surfaces/generated/ did not move. Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes).
+2026-11-24 build (lane BL-SFX1): plan PLAN-449-v1 built as written. Deviations, recorded not re-planned: (1) the letter and dash fallback dedupes rows by parcel_id and caps the list at 10 (the ≤10 candidates shape of Spec 89:38); (2) the exact statement is read through one helper readExact (same SQL text) so the fallback reuses it; (3) the :226 `!` moved into typedBase as `?? ''` (no `!`), so parcel-lookup.ts holds 10 `!`, each with a why-comment; (4) the fallback and the matcher do not run on the raw-first (keepPeriods) run, per plan 3.B.1 (exact, typeahead and unlinked reads only); (5) T6 is green today too (two `unique` returns already), it is a lock with a red plant; (6) case 15's ten rows and case 21's point are real rows (local test stack, read-only, 2026-11-24). Generated files moved: docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md (exempt); src/lib/surfaces/generated/ did not move. Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes).
 
 2026-11-24 output review round 1 run (context-r3.md; 24 lens outputs and FINDINGS.md under docs/reports/lanes/2026-11-24/BL-SFX1/; 91 finding ids: 7 HIGH, 8 BUG MED, 28 DEFER MED, 44 LOW, 2 NIT). Grounder owed: the lane does not rule its own findings. Work commits 079f76c30 (code, hooks green: 332 passed) and a997f8fb7 (generated files, doc-2 and task-69 notes).
+
+2026-11-24 round 1 grounder (Cairn-Ground-O449): MED out-compliance-ms-S#1 confirmed; red-r2 then fix (direction re-checked after the type narrowing). Case 15 rows 5-10 and case 21's point now real (local test stack, read-only, 2026-11-24).
 <!-- SECTION:NOTES:END -->
