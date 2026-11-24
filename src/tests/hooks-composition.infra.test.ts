@@ -521,8 +521,9 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
 
 // ---------------------------------------------------------------------------
 // task-424 STATION.ONELIST (RR-0370 option C, operator: "one list of push checks kept in the repo, used by both the
-// hook and the station"). The six non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: six
-// `step <name> <command>` lines joined by `&&`, no function and no branch. Each caller defines step(), GATE_MODE
+// hook and the station"). The eight non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: eight
+// `step <name> <command>` lines joined by `&&`, no function and no branch (task-462, RR-0462: the phone typecheck and
+// phone tests). Each caller defines step(), GATE_MODE
 // and SUITE_ARGS and sources it; .husky/pre-push supplies a plain step(), GATE_MODE=--push and an empty SUITE_ARGS.
 // ---------------------------------------------------------------------------
 describe('task-424 — one list of pre-push checks', () => {
@@ -547,16 +548,18 @@ describe('task-424 — one list of pre-push checks', () => {
     'step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&',
     'step spec-split node scripts/analysis/spec-split-check.mjs --check &&',
     'step typecheck npm run typecheck &&',
+    'step mobile-typecheck npm --prefix mobile run typecheck &&',
+    'step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&',
     'step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS',
   ];
-  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'suite'];
+  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'mobile-typecheck', 'mobile-tests', 'suite'];
 
   it('T1 — .husky/pre-push runs no check itself: its executable lines are only the step runner, the gate mode, the suite arguments and the source line', () => {
     expect(checksIn(PRE_PUSH)).toEqual([]);
     expect(execLines(PRE_PUSH)).toEqual(HOOK_LINES);
   });
 
-  it('T2 — the list holds exactly the six chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
+  it('T2 — the list holds exactly the eight chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
     const lines = execLines(PRE_PUSH_CHECKS);
     expect(lines).toEqual(LIST_LINES);
     lines.slice(0, -1).forEach((l) => expect(l.endsWith(' &&'), l).toBe(true));

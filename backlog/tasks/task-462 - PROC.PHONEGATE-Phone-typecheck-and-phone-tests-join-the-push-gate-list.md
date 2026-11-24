@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROC462'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T19:18:00Z'
+updated_date: '2026-11-24T19:19:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -207,4 +207,6 @@ rg#2 MED folded (the station refuses
 2026-11-24 R1 red proven: commit attempt refused by the pre-commit related run, 2 failed | 52 passed (T2 expected 6 to equal 8 lines; T4 FAIL_AT=mobile-typecheck expected 0 to be 1), red.out in the lane report dir. Build: plan 4.2-4.4 applied as written (two step lines after typecheck in .husky/pre-push-checks.sh; CLAUDE.md dated line after item 5; Spec 98 section 5 dated note). R3 by hand from the worktree root (through guard.mjs --file): mobile-typecheck rc=0; mobile-tests 58/58 suites, 866/866 tests, rc=0; git status shows no mobile/coverage. R2: the planted no-such-test-path run exits 1 (No tests found), so a phone failure propagates through npm and the chain (T4) stops before suite. No deviation from the plan.
 
 2026-11-24 deviation (recorded, not re-planned): the Spec 98 note grows the mobile-98 list, so the pre-commit rule-lists page --check (.husky/pre-commit) refuses the commit until docs/reports/generated/rule-lists-by-kind.md is regenerated (page --write: mobile-98 11,496 -> 11,801 characters, total 215,384 -> 215,689); that generated path is not on the Files line, and check-task-files refuses it beside a code file. The Description is not edited (brief: no Description edit); instead the work lands in two commits: (1) the docs commit (Spec 98 note, CLAUDE.md line, the regenerated page, context-r2.md; no code file, the case check-task-files exempts, as a997f8fb7 did for task-450's generated files), (2) the code commit (the list and its pin). The page sits under docs/reports/, an optional path for the close check. For the grounder: the plan missed this generated file (task-435 and task-446 declared it on their Files lines).
+
+2026-11-24 commit 1 (docs) 06811e273 landed through the real hooks. Commit 2 (code): the two step lines in .husky/pre-push-checks.sh and the eight-step pin in hooks-composition.infra.test.ts; green = this commit's pre-commit related run.
 <!-- SECTION:NOTES:END -->
