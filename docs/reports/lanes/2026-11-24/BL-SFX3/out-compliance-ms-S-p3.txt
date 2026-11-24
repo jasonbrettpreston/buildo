@@ -1,28 +1,16 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:25:07.835Z file_sha256=dbf4e333ee2896f73d652c15ebe8b15f59b6a0b581f935bb4e8e1f9492250fa8 prompt_sha256=84b64c4f916022160f3e71ca0a21f323a3c24273d1b3dcec31f257eb7b11cadd
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:00:08.721Z file_sha256=dbf4e333ee2896f73d652c15ebe8b15f59b6a0b581f935bb4e8e1f9492250fa8 prompt_sha256=84b64c4f916022160f3e71ca0a21f323a3c24273d1b3dcec31f257eb7b11cadd
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
 
-BUG severity — none raised.
-
-DEFER severity=LOW — task-451 description "The plain pages (help, terms) get their header links." — src/tests/surfaces/static-web-binding.ui.test.tsx:177 "'web_privacy', 'static'" — the test requires the header on the privacy page, a third page the card's plain words do not name, and the only support in the material is the test's own comment (help.html and terms-privacy.html:262 at :17) — confirm H Q2 or doc-2 B.6 names web_privacy, else drop it from PLAIN.
-
-DEFER severity=LOW — pasted design text quoted at src/tests/surfaces/static-web-binding.ui.test.tsx:17 "MaxBLD home -> /; Log in -> /login" — src/tests/surfaces/static-web-binding.ui.test.tsx:186 "expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid=\"static-footer\"'));" — the enclosing test (:178) claims the header sits "before the page content" but the only order assertion is against the footer, so a header emitted after the page body still passes — assert the header index is less than the first content element (or a main landmark) instead of the footer, or retitle the test.
-
-DEFER severity=NIT — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — src/tests/surfaces/static-web-binding.ui.test.tsx:189 "expect(html.match(/<h1\\b/g)?.length ?? 0).toBeLessThanOrEqual(1);" — an at-most-one-h1 rule for the five plain-page renders is locked with no pasted clause naming it, which is a standing constraint on markup nobody ruled — either cite the ruling that names it in the comment or drop the assertion.
-
-DEFER severity=NIT — src/tests/surfaces/static-web-binding.ui.test.tsx:192 "'RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws'" — src/tests/surfaces/static-web-binding.ui.test.tsx:194 "(page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });" — the title claims any part other than the wordmark and nav throws, but only a tagline is planted, so the second half of the claim rests on the test name alone — plant one more disallowed part (a prose or link role) or narrow the title.
-
-MET — task-451 "Files: ... src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts" — src/tests/surfaces/static-web-binding.ui.test.tsx, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts — all three changed files are on the card's Files line.
-MET — task-451 "Runs after SEARCHFIX.2 (both write scripts/surfaces/_schema/static-page.json)." — src/tests/surfaces/surface-validate.logic.test.ts:92 and src/tests/surfaces/surface-conformance.logic.test.ts:262 — the SEARCHFIX.2 note (426 to 427) is kept and SEARCHFIX.3 stacks on top of it (427 to 436) in both locks.
-MET — task-451 Implementation Notes "surface-validate --check 427 strings before, 436 after" — src/tests/surfaces/surface-validate.logic.test.ts:93 and src/tests/surfaces/surface-conformance.logic.test.ts:263 — both locks assert 436 and the stated deltas (+8 nav, +1 net in the map content) sum to the 9 counted.
-MET — task-451 "The plain pages (help, terms) get their header links." — src/tests/surfaces/static-web-binding.ui.test.tsx:183-185 — asserts a header anchor href="/" containing MaxBLD, an href="/login" containing Log in, and nav.home/nav.sign_in = MaxBLD/Log in.
-MET — RR-0446 "04  leave it as it is 02 Agrred add to the plan." — src/tests/surfaces/surface-conformance.logic.test.ts:262 — the mobile map delta is text keys only (unlinked.report, unlinked.stop added, select.label retired), no neighbour-lot data.
-MET — task-451 "web_help gains the header section first (H Q2)" (index shift) — src/tests/surfaces/static-web-binding.ui.test.tsx:115, 129-137 — every plant index moves by one and the error page prose moves children[0] to children[1], matching the header section inserted first.
+MET — Project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) — src/tests/surfaces/static-web-binding.ui.test.tsx:127 "expect(plant((p) => { p.sections[1].kind = 'banner'; }))" — the diff only shifts section indices and string counts for the card-named header change, no unnamed behaviour.
+MET — Increment objective "the 65 designed search elements ... E (web search pages), F (landing entry)" (doc-2:27 "| id | element | where | status | deliverers | built |") — src/tests/surfaces/static-web-binding.ui.test.tsx:193 "expect(header![1]).toMatch(/<a\b[^>]*href=\"\/login\"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/)" — verifies the header wordmark / and /login Log in on the plain pages, serving landing entry.
+MET — Operator ruling RR-0446 "leave it as it is 02 Agrred add to the plan." (MORNING-DECISIONS.md:2302) — src/tests/surfaces/surface-conformance.logic.test.ts:262 "select.label retired" — the string diff retires only an unreachable select branch, no neighbour lots drawn.
+DEFER severity=LOW — AC6 "- #6 Objective C.3 carries a dated note: no neighbour lots" — NONE — the C.3 dated note is not present in this chunk's diff and the implementation notes place it in a separate commit — verification only, the doc-2 note lands outside chunk 3 so cannot see it here, safe to defer to that commit's review.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
+Clauses checked: 14   Unmet: 0
 Rules met: none
 
 ---
-⏱  82931ms (82.9s)
-📊 Tokens — total: 28503, input: 9870, output: 18633, reasoning: 17518
+⏱  46946ms (46.9s)
+📊 Tokens — total: 18765, input: 9870, output: 8895, reasoning: 8464
