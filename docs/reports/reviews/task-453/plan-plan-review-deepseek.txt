@@ -1,0 +1,96 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T15:06:45.313Z file_sha256=a1b160d50853449c005c01cf0fd66936e91af72611b508347b3e5d7e84d9cb76 prompt_sha256=a67ac23ec3cac67ccbda1dbadf83cce908f24c96ba3a29c6adb48647048714fd
+🔍 Lens review of docs/reports/reviews/task-453/context-r1.md (model: deepseek-reasoner)
+
+## Axis 1 — Failure Modes & Rollback
+
+BUG severity=HIGH — §6 "RUNNING cards are not re-gated" vs Item 5 :653-658 — the plan adds a fix-branch `complianceSetErrors` with `phases: ['plan']` at **close** time, so every RUNNING fix card that closes after this lands will be refused unless it had a plan-stage `plan-compliance-plan-protocol` review — directly contradicts §6 — either add a branch-date cut (only refuse if `launched > <date>`) or document the exact backfill path for in-flight fix cards.
+
+BUG severity=HIGH — Item 5 S1 (:577 and :665) — routing every seat finding through `grounderErrors` `:359-376` retroactively requires every existing and in-flight seat finding to carry a quote, cited line and ≥30-char reason — §6 names only the fix plan-gate blast radius, not this one — first confirm with `grep -rn 'REJECTED\|seatFindings' docs/reports/reviews/` and `grep -n 'quote' scripts/hooks/check-lane-close.mjs`; if historical seat findings lack `quote`, this is a hard close-blocker across many lanes, so add a warn-once mode or a branch-date cut.
+
+BUG severity=HIGH — Item 5 T10 :600 `timeout: 120000` on `sh` — if `sh` wraps `deepseek-review.js` (as the surrounding `CALL_MS = 900000+10000` on the *same file* implies), a 120-second shell timeout kills any legitimate review that runs 121–910 s, converting success into a stderr cell — verify `grep -n 'function sh\|sh(' scripts/analysis/rule-lists.mjs`; if `sh` invokes the deepseek wrapper, tie the timeout to `CALL_MS` (or reuse the env var) rather than hard-coding 120000.
+
+BUG severity=HIGH — Item 6 T7 `review-template.js:138` — "the next round is the highest N plus 1 (Math.max over the context-rN numbers)" — `Math.max(...[]) === -Infinity`, so a task with no prior `context-rN` files writes `context-r-Infinity` — fix: `Math.max(0, ...nums) + 1`, and add an empty-set case to the review-templates test (the test only covers "r2 only → 3").
+
+BUG severity=HIGH — §3 Items 1/2/3/ST4/T2 write `scripts/analysis/rule-lists.json` in place; a truncated or malformed JSON write halts `validate`, `check-tasks`, `launch` and `close` board-wide — §6 gives no recovery beyond the protected_paths pin — fix: write via `fs.writeFileSync(tmp)` + `fs.renameSync`, and name `git checkout scripts/analysis/rule-lists.json` as the rollback in §6.
+
+BUG severity=HIGH — §6 protected_paths pin vs self-hosting — the plan states `protected_paths` is pinned to the board (:759) but never states whether the close-check **program** that runs at this card's own close is the branch's edited `check-lane-close.mjs` or the board's — if branch's, this card is judged by the S1/S2/S3/S4/S5/S9 it has just introduced (and, being labelled SEARCHFIX, may be type `fix` → refused by its own new plan-gate); if board's, none of the fixes apply to this card — add one sentence to §6 naming which copy runs and, if branch's, how a `fix`-type card satisfies the new plan-gate for its own close.
+
+DEFER severity=MED — Item 5 S3 (:720-721) — the merge-skip only fires when `MERGE_HEAD` exists and the staged blob equals `MERGE_HEAD:<f>`; `git merge --squash` produces no `MERGE_HEAD`, and octopus merges give one `MERGE_HEAD`, so the described "check everything except merge-only staging" behaviour is silently absent for squash folds — add a one-line assumption that the fold uses a non-squash merge, or extend the skip logic to detect squash via `git rev-parse -q --verify SQUASH_MSG`.
+
+DEFER severity=MED — Item 5 S2 — "when the branch lacks it and the board has it, `table = boardTable`" only fires when the branch is table-less; a pre-2026-11-24 branch whose table lacks this card's row still gets the branch table and refuses (fail-closed, but every older lane is blocked on a board edit) — either widen S2 to `boardTable` when `branchTable[row]` is undefined, or add a §6 note "old branches must merge the board before close".
+
+DEFER severity=MED — ST4 "scripts/analysis/backlog-lib.mjs" added to `protected_paths` — every in-flight lane currently editing `backlog-lib.mjs` whose Files line does not name it is refused at close the moment this lands — enumerate them once via `git grep -l 'backlog-lib.mjs' -- 'src' 'scripts'` + `git worktree list` + the open task Files lines, and warn the affected lanes (§6 has no such list).
+
+DEFER severity=MED — Item 1 `validate` at rule-lists.mjs:157 — validates `output_off` ids only against `every_task`, so an author cannot turn off a row-only list (e.g. queue-137 on `lane-tools`) via `output_off` — asymmetric and will be re-edited in the next card — validate against `every_task ∪ ⋃row.lists`.
+
+DEFER severity=MED — Structural — the plan pins `check-lane-close.mjs` to a version that must exist on the board before this card can close, while the same card edits `rule-lists.json:22` to add the new protected line; §6 mentions this for `protected_paths` but not for `check-lane-close.mjs` itself — the same "fold first, close later" must be stated for the code, not just the data.
+
+DEFER severity=LOW — Item 6 T8 `backlog-brief.mjs:172` — "with `ac.length === 0`" throws `TypeError: Cannot read properties of undefined` when `ac` is `undefined` (no AC block at all, which the test at backlog-brief.logic is designed to catch) — change to `!ac || ac.length === 0` and align the code with the test description in §5.
+
+DEFER severity=LOW — Item 5 S5 `:144` `/^\W*(CRITICAL|...)\b/` — "HIGH priority item: …" and "CRITICAL path note: …" now escalate their reason's severity as intended, but also "NON-HIGH ways to fix…" would still trip `HIGH` after `\W*` strips the `NON-` — over-strict is safe for a fail-closed check, but write the over-strictness explicitly in a code comment so a future reader doesn't "fix" it back to `\b`.
+
+DEFER severity=LOW — Item 6 T4 `:146` `(spawnSync(...).stdout ?? '').trim()` — if `spawnSync` was not called with `encoding: 'utf8'`, `stdout` is a `Buffer` and `.trim()` throws `TypeError` — verify the call is `spawnSync(cmd, args, { encoding: 'utf8', ... })`, or coerce to `String(x.stdout ?? '')` before trim.
+
+DEFER severity=LOW — §4 build order — "steps 1 and 2 must stay together" — but step 1 also includes "the Spec 08 section 7 rule 4 dated note" which is a spec edit and **not** one of the two protected source files; splitting the spec-note edit off is safe today — leaving the note inside the same protected-file commit turns a spec-only revert into a full tooling revert.
+
+DEFER severity=LOW — Axis 3 sibling — `check-lane-close.mjs` almost certainly has more `return 0` fail-open leaves than the two the grounders flagged (e.g. empty `findings`, no stage moves, `tableReadOK` short-circuits) — the plan fixes only `:722-727` and `:720-721` — add a one-line audit: `grep -n 'return 0\|return { ok: true }' scripts/hooks/check-lane-close.mjs` and refuse to close the plan until each line has a fail-closed justification; a single missed early-return re-opens the same class of bug.
+
+DEFER severity=MED — Sibling/concurrency — task-448 (RR-0424, RR-0426) also writes `rule-lists.json` and `check-lane-close.mjs`; §7 names task-448 as the owner of the follow-up notes but never sequences the two cards — if both are LATER and land concurrently the protected files collide — add "task-453 lands before task-448 opens" (or vice versâ) to §4.
+
+## Axis 2 — Data Reality Verification
+
+Every line-number citation in §2, §3 and §5 is UNVERIFIED: §9 says "No tests were run (brief)". Line-addressed edits against drifted line numbers will edit the wrong token. Concrete verifications the plan must bake in at the top of §3:
+
+- **`"every_task"` value today** — §2 claims `rule-lists.json:236` holds `["five-words","plan-protocol"]` — verify now: `grep -n '"every_task"' scripts/analysis/rule-lists.json` and confirm the array carries both ids.
+- **Guard lines** — §2 claims `rule-lists.mjs:156-157`, `:293-294`, `check-lane-close.mjs:489` only refuse empty/missing `every_task` — verify: `sed -n '150,160p;285,300p' scripts/analysis/rule-lists.mjs; sed -n '485,495p' scripts/hooks/check-lane-close.mjs`; each line must reference only `every_task`, none plan-protocol / five-words directly.
+- **`sh` helper semantics** — verify whether `sh` at rule-lists.mjs:600 invokes `deepseek-review.js` (calls `CALL_MS`) or a fast local subprocess: `sed -n '580,610p' scripts/analysis/rule-lists.mjs` — this decides whether T10's 120 s timeout is lethal.
+- **`lane-tools` row's current lists** — §3 Item 3 claims `rule-lists.json:165` today lists `["agents-s5-1to3","agents-s7-s11","eng-all","queue-137","orchestrator-doc17"]` (approximately) — verify: `sed -n '160,170p' scripts/analysis/rule-lists.json`; also `grep -n 'queue-137\|orchestrator-doc17' scripts/analysis/rule-lists.json` to confirm no other row or kind uses them (the plan's own claim).
+- **`proof-slices.json:9` shape** — §3 ST5 claims `chk3-nothing-new` currently carries `argv`, `waits`, `expect` — verify: `grep -A5 'chk3-nothing-new' scripts/analysis/proof-slices.json`; and `sed -n '55,70p' scripts/analysis/proof-slice.mjs` to confirm the schema key is `notbuilt.reason` (not `why` / `blockedReason`) — the field name is critical for AC #6.
+- **`review-template.js:138`** — read the actual Math.max expression before "one line" replacement: `sed -n '130,145p' scripts/lib/review-template.js` — the assertion "Math.max over context-rN numbers" is an assumption about the current code path.
+- **`backlog-lib.mjs` exists** — `ls -la scripts/analysis/backlog-lib.mjs` before ST4 lands a protected line for a file that may not exist.
+- **`gemini-review.js` exists** — `ls -la scripts/gemini-review.js` before T2 adds it to `lane-tools` globs; a missing file in a glob is a silent no-op that will hide the missing-review.
+- **08_agents.md rule-4/5/6 shift** — §6 claims the note "moves rule 5 and rule 6 down one line"; a multi-line note moves them by N lines, which breaks the T12 citations (`:350`, `:359`) — verify by writing the note FIRST, then `grep -n '^### Rule 5\|^### Rule 6' docs/specs/00-architecture/08_agents.md` before drafting those citations.
+- **MERGE_HEAD test harness** — §9 honestly lists this as UNVERIFIED; the S3 test cannot be written until a test can build a MERGE_HEAD state inside the harness — a one-line `git merge --no-ff <branch>` on a temp repo is the check.
+
+**Live-DB premises**: none in this plan — the plan edits committed files only.
+
+## Axis 3 — Sibling Bugs & Edge Cases
+
+DEFER severity=MED — Item 5 S9 `:735` `backlog/(archive/)?tasks/task-\d+(\.\d+)*` — unanchored substring; matches `docs/backlog/tasks/...`, `mydocs/backlog/tasks/...`, and `(\.\d+)*` admits unlimited subtask depth — fix: anchor to `(?:^|/)backlog/(?:archive/)?tasks/task-\d+(?:\.\d+){0,2}$` (or exactly the depth the existing id-versus-number check at :791 accepts); add a negative test that `foo-backlog/tasks/task-1` is not treated as a task file.
+
+DEFER severity=MED — Item 5 S4 `:147` SEAT_LINE id `[a-z0-9-]+` — if any existing seat id uses `.` (e.g. `agents-s5.1to3`) or `_`, the regex drops the seat and silences its findings — verify: `grep -rn 'seat' src/tests/backlog/check-lane-close.logic.test.ts docs/reports/reviews/ | grep -oE '[a-z0-9._-]+#[0-9]+' | sort -u`; widen to `[a-z0-9._-]+` if any hit contains `.` or `_`.
+
+DEFER severity=MED — Item 5 S1 `:577` and `:665` — same seat findings pushed onto `findings` at **two** call sites; if both sites are on the same return path (or `findings` is summed), one seat finding produces two refusals, and the `S11` "tighten `:656` `not.toBeNull()` to the exact value" test will lock in the double-message shape — verify: `grep -n 'findings' scripts/hooks/check-lane-close.mjs` between those lines, and add a test that a single seat finding yields **exactly one** message.
+
+DEFER severity=LOW — `output_lists` helper — `lists.filter((l) => !(table.output_off ?? []).includes(l.id))` throws on a null `l`; T10's null-list problem line at rule-lists.mjs:134/:141 is the upstream guard, but `outputLists` is also called from `check-lane-close.mjs:521` and `backlog-lane.mjs:183` which may run before that guard has fired — filter with `l && l.id` for defense.
+
+DEFER severity=LOW — Edge — Item 1 `output_off: ["plan-protocol"]` in `rule-lists.json` plus the Item 2 change `every_task: ["plan-protocol"]` — these two are order-dependent: if the builder lands `every_task` change first, the `output_off` validate at rule-lists.mjs:157 still passes (plan-protocol in every_task); if landed the other way, validate also passes; there is no idempotency break — but the tests must run AFTER both changes, else `output_off: ['ev']` fixtures need an `ev` every_task entry that a future card will delete — state in §5 the fixture `ev` id is deliberately ephemeral.
+
+DEFER severity=LOW — Concurrent two-user input (analogue: two lanes editing `rule-lists.json` on separate branches) — §4 build order is linear within the card but §7 tasks 448/358/375/363/418/410 are owners of follow-ups; if one of them is LATER and already LATER-opened, merged bases race — see Axis-1 task-448 finding.
+
+DEFER severity=LOW — Time-boundary input — Item 3's dated clause on `rule-lists.json:165` and Task 45x dated notes all write a `2026-11-24` literal into the file; two lanes both writing `2026-11-24` line-adds to the same rows is a textual conflict on the same line — either merge sequentially (single-writer) or add the date only after the fold.
+
+DEFER severity=NIT — Item 6 T1 `backlog-brief.mjs:176` — the ticket text now lands "Rule 3 as amended (…)" for every build or fix task; an existing task that already copied the old "two commits" text into its ticket body will keep the stale phrase in the ticket body even though the generator's head line is corrected — the plan correctly fixes the generator, but a one-time "re-print the ticket" step for cards launched before the fold is missing; safe to defer.
+
+DEFER severity=NIT — §3 Item 6 ST5 — the `reason` string `"CHK.3 reads the staged diff; --all gives it no input"` is written verbatim into JSON; if it ever contains a `"` or `\`, JSON output becomes invalid — the current string is safe; note the invariant in the code comment on the `notbuilt` writer.
+
+---
+
+```
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Fix-task plan-gate back-compat: §6 "RUNNING cards are not re-gated" contradicts Item 5 :653-658 (close-time `complianceSetErrors` with `phases:['plan']`), so all in-flight fix cards are refused at close — must either branch-date-cut the close check or backfill plan-protocol for live fix cards.
+- Seat-finding quote/cited-line requirement (Item 5 S1) retroactively rejects every existing/in-flight seat finding; §6 names only the fix plan-gate blast radius, not this one — verify existing seat-finding shape and add a warn-once or date-cut before this ships.
+- rule-lists.json non-atomic write halts the entire board (validate, check-tasks, launch, close all share it) with no rollback path in §6 — require temp-file + rename and name `git checkout` as the recovery.
+
+Top 3 unverified data premises (regardless of verdict):
+- `rule-lists.json:236` today is `["five-words","plan-protocol"]` and every other reference to `queue-137` / `orchestrator-doc17` / `step-132` is exactly where the plan says — verify: `grep -n 'every_task\|queue-137\|orchestrator-doc17\|step-132' scripts/analysis/rule-lists.json`.
+- `sh(...)` at `rule-lists.mjs:600` invokes the same code path that `CALL_MS = 900000+10000` budgets for — verify: `sed -n '580,610p' scripts/analysis/rule-lists.mjs`; if it does, T10's 120000 ms timeout is a hard truncation of long reviews.
+- `proof-slices.json:9` `chk3-nothing-new` currently carries `argv`/`waits`/`expect` and the schema key for the replacement is `notbuilt.reason` (not `why`) — verify: `grep -A5 'chk3-nothing-new' scripts/analysis/proof-slices.json; sed -n '55,70p' scripts/analysis/proof-slice.mjs`.
+```
+
+---
+⏱  85963ms (86.0s)
+📊 Tokens — total: 40726, input: 23802, output: 16924, reasoning: 12369

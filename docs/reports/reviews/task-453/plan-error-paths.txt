@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T15:06:45.313Z file_sha256=a1b160d50853449c005c01cf0fd66936e91af72611b508347b3e5d7e84d9cb76 prompt_sha256=e3be31a879c95b0963bba3e3ce4d7b7288929d57ff313a07621a4f11a94e8de0
+🔍 Lens review of docs/reports/reviews/task-453/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan item 5, S2, ":722-727: today the check returns 0 when neither the working tree nor HEAD has the table. New: return 0 only when the board ref has no table either." — the fail-open is moved one step out: when the board ref itself cannot be read (no board worktree, git show fails, sh times out per :600) boardTable is null and the close returns 0 again, and no line names that error — refuse with the board read's error text and add a test where the board worktree is missing.
+
+BUG severity=HIGH — plan section 6, "The fix-task plan gate now asks for plan-compliance-plan-protocol. A fix card launched before this lands without it is refused at launch only; RUNNING cards are not re-gated." — the new fix branch at :653-658 sits inside the close check, so a fix card already RUNNING closes after this lands with no plan-compliance-plan-protocol and is refused at close, which is the gate this diff adds, not launch — gate on a plan written after the landing commit, or land this step only when no fix card is in flight, and say which in the plan.
+
+BUG severity=HIGH — plan item 6, "T7 (c), review-template.js:138: the next round is the highest N plus 1 (Math.max over the context-rN numbers)." — two launches, or one launch re-sent after a crash, both read the same highest N and both write context-r(N+1), so the second clobbers the first round's context and the reviewer reads the wrong round; there is no key other than the number — create the round directory with a non-clobbering create (mkdir or wx) and recompute the number on EEXIST.
+
+DEFER severity=MED — plan item 5, ":600: add `timeout: 120000` to sh;" — a killed sh returns status null with empty stdout, and only :558 and :753 are named as reading the error, so every other sh caller (git show of the table, rev-parse of MERGE_HEAD, list resolution) can read empty stdout as "no rows" or "no table" and pass — have sh return an explicit ok/status/out/err and refuse at each caller that judges a close when ok is false.
+
+DEFER severity=MED — plan item 6, "T4 (c), proof-slice.mjs:146: `head: (spawnSync(...).stdout ?? '').trim()`. One line. The exit-code half stays with task-343." — the crash becomes an empty head, and a slice whose head names no commit has no input, while the exit half that would fail it is deferred, so the row can still read as proven with nothing read — treat an empty or non-40-hex head as notbuilt with a reason until task-343 lands.
+
+DEFER severity=MED — plan item 5, ":134 and :141: skip a null list or row with a problem line;" — the exit status of a skipped list or row is unnamed, so a corrupt table shrinks the checked set while the close still reads as passing — count the skips and exit non-zero, or refuse, when any list or row is skipped.
+
+DEFER severity=MED — plan section 9, "That a MERGE_HEAD scenario can be built inside the test harness's git (not run)." — S3's new skip is the one line that decides whether a move is merge-only, and it has no buildable red test until this is settled; nothing also names what a failed `git show MERGE_HEAD:<f>` does, which must refuse and not skip — write MERGE_HEAD and its git file directly in the fixture, add the unreadable case, and hold S3 if the harness cannot build it.
+
+REJECT — plan item 6, "\"notbuilt\": {\"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\"}" — dropping a row that reads as built looks like lost coverage — it is the fail-closed move: the slice now reads notbuilt with its reason and cannot read as proven, and the proof-slice test at :228 pins the same array.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (board-ref read, MERGE_HEAD read, spawn, sh), empty (null list, null row, empty AC block, empty every_task, absent output_off), retry and time-out (CALL_MS, sh 120000, round numbering), double-submit (round dir, in-flight fix card at close), degrade-safe (S2, S3, T4), idempotency (outputLists pure, round dir has no key)   Unguarded: 4
+
+---
+⏱  36664ms (36.7s)
+📊 Tokens — total: 30050, input: 22916, output: 7134, reasoning: 6106
