@@ -6,11 +6,17 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:25:00Z'
+updated_date: '2026-11-24T19:38:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-457/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-457/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-457/seat-integration-1.md
+  - docs/reports/reviews/task-457/seat-reality-check-1.md
+  - docs/reports/reviews/task-457/seat-regression-1.md
 type: fix
 ordinal: 151210
 ---
@@ -58,7 +64,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
 - RR-0456 replaces two task-450 rejections that rested on RR-0392: BL-SFX2/GROUNDER.md:200 "a timed auto-retry is new infrastructure (RR-0392)" and :217 "a bounded wait is a new timer beyond RR-0392". Both are now ruled for.
 - RR-0429, MD:2203: "dated notes are kept short".
 - RR-0460, MD:2380-2383: the phone tests run locally before a push. The full local run was 58 suites and 866 tests at a12d535f5.
-- RR-0455 (1), MD:2350-ish: "the web waits for its switch-on". The web search makes no requests today (SearchPageClient.tsx:7 "No fetch, no query cache"), so no web change is due.
+- RR-0455 (1), MD:2358: "the web waits for its switch-on". The web search makes no requests today (SearchPageClient.tsx:7 "No fetch, no query cache"), so no web change is due.
 - Plan protocol 3, plan-protocol.md:28-30: no new research, and the task count does not grow.
 
 ## 2. What exists and is reused
@@ -75,6 +81,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
 - The retry setting (3 attempts) only applies after a failed attempt. fetchWithAuth (apiClient.ts:34) has no timeout.
 - With a disabled query (no access token, :106) the result is the same.
 - semiQuestion.ts:76 reads "no data with an id" as loading, so the page shows "Searching" with no end.
+- This is a rare case, not the usual one: the report route opens this page only after the same query key has settled data (mobile/app/(app)/parcel-tool/[parcelId].tsx:27; gcTime is 24 h, mobile/src/lib/queryClient.ts:41), so the page normally opens with the question showing. The endless wait is a cold open with no cached lookup (a deep link or a restored route), an offline start or a hung request (fetchWithAuth has no timeout). The limit is a backstop for those cases (plan grounder, rc#1).
 - What the page shows per state:
   - loading: "Searching"
   - ask: the question, three answers, Continue
@@ -84,7 +91,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
   - redirect: the route is replaced
 
 **Candidates for the limit length:**
-- (a) continue_wait_ms 60 s, semiQuestion.ts:18. Same page, same lookup, same error end. RECOMMENDED.
+- (a) continue_wait_ms 60 s, semiQuestion.ts:18. Same page, same lookup, same error end. RECOMMENDED. Ruled (plan grounder, round 1): (a). It is already a registered variable with bounds 1000 to 600000 (scripts/seeds/logic_variables.json:10887); the others are a stale time, a typing delay and a count. The longest wait is 60 s and then a notice; only the person pressing Try again starts another.
 - (b) lookup_stale_ms 60 s, useParcelLookup.ts:56. This is a staleness time on the search surface, not a wait.
 - (c) debounce_ms 400 ms. A typing delay.
 - (d) lookup_retry_max 3. A count, not a time.
@@ -92,7 +99,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
 
 **(2) The zero-second rate limit.**
 - The wait comes from the Retry-After header, never the body (apiClient.ts:43-44). A missing or unreadable header becomes 60.
-- Our server always sends 60: error-mapping.ts:46-48, used by lookup route.ts:90 (ADR 005). A zero only comes from another sender in between or from a future change.
+- Our server always sends 60: src/features/leads/api/error-mapping.ts:46-48, used by src/app/api/parcels/lookup/route.ts:90 (ADR 005). A zero only comes from another sender in between or from a future change.
 - "Try again in 0s." is built from the content key search.ratelimit with seconds taken from errors.429.retryAfterSeconds (SearchBinding.tsx:131-132, :252). That value comes from parcelSearchMatch.ts:299.
 - At zero today, :65 refuses every RateLimitError, so there is one attempt, then the notice with no button. Nothing fetches again until the query changes, the page remounts or the app regains focus.
 - The smallest fix and its once-flag are in section 3, step 2.
@@ -101,7 +108,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
 **1. mobile/src/hooks/useParcelLookup.ts**
 - After :70, add:
   ```ts
-  /** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. */
+  /** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. A zero-second wait is not a throttle the person must sit out, so the 429 guard at :60-61 stays for every other wait. Once is the ruling and not a setting (RR-0392). */
   export function shouldRetryParcelSearch(failureCount: number, err: unknown): boolean {
     if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;
     return shouldRetryParcelLookup(failureCount, err);
@@ -114,7 +121,7 @@ Read at board head e192b5e3e (wf2/board). Nothing was run. The only change in th
 **2. How the once-flag works**
 - The flag is TanStack's failure count for one fetch. No state of our own is added.
 - It resets with every new fetch: a new query, a remount or a refocus.
-- During the retry, about 1 s, the query's error stays null and isFetching is true. The person sees the spinner and no "0s" notice.
+- During the retry, about 1 s, the query's error stays null and isFetching is true. While online the person sees the spinner and no "0s" notice (offline in that second the retry pauses and the page shows neither, as a 500 retry does today).
 - If the retry is refused again (failure count 1), the hook returns false, the query errors with RateLimitError(0), and today's "Too many searches. Try again in 0s." shows. There is no further automatic retry.
 
 **3. mobile/app/(app)/parcel-tool/semi-question.tsx**
@@ -180,6 +187,7 @@ Files: mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParce
 ## 6. Limits and failure modes
 **Limits**
 - Phone only.
+- useParcelSearch serves two pages: the search page (index.tsx:61) and the lot-map page (disambiguate.tsx:27), which is the pick step of the same search under the same key. Both get the zero retry. That is the ruled search (RR-0456), not an extension. The lot-map page has its own 0s notice, and its tests mock the hook, so none of them sees the retry (plan grounder, rg#1).
 - The semi page's own "Try again in 0s" (rate_limited, no button) is unchanged. RR-0456 named the search.
 - The report lookup and the entitlement read keep "no retry on 429".
 - No button is added to the 429 notice.
@@ -202,19 +210,23 @@ Files: mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParce
 1. **Descriptor and census text for continue_wait_ms.** Its why text (descriptor :280 and the census twin at mobile-product.json:7398) says "how long Continue waits for the answered lookup".
    - (a) Leave it. The value, bounds and name do not change, and the code comment says it.
    - (b) Add one dated sentence to both, then rerun --emit-descriptors and the three generated pages. That shares the 127 pages with 452, so 457 would go after 452.
-   - Recommend (a): smallest change and no clash.
+   - Recommend (a): smallest change and no clash. Ruled (a) by the plan grounder: RR-0429 and RR-0450 (short notes, text only) and 124a :992 (nothing added that the card did not name); the descriptor and the generated pages stay untouched.
 2. **Scope of the zero retry.** RR-0456 MD:2363 says "retries the search".
-   - (a) Search only (this plan).
+   - (a) Search only, meaning the one search hook, so the search page and the lot-map pick step both retry (this plan).
    - (b) Inside shouldRetryParcelLookup, so the report, the semi page and the entitlement read are covered too.
-   - Recommend (a). It is what was ruled and is a one-word revert.
+   - Recommend (a). It is what was ruled and is a one-word revert. Ruled (a) by the plan grounder, with no operator question: see the lot-map line in the Limits.
 3. **The error used for the limit.**
    - (a) NetworkError.
    - (b) Export SemiContinueTimeoutError (semiQuestion.ts:20).
-   - Both draw the same notice. Recommend (a): no new export.
+   - Both draw the same notice. Recommend (a): no new export. Ruled (a) by the plan grounder.
 
 ## 9. UNVERIFIED
 - No tests or typecheck were run (brief rules). The test totals and pin stability are projections.
 - That RN onlineManager reads online under jest (T5 and T6 need it) is from reading, not running.
 - The backlog CLI's flag name for appending notes was not checked.
 - I accidentally ran one read-only command with a `2>/dev/null` redirect (a grep for mount_internal). It wrote no file. One earlier `ls` was refused by the classifier and was re-run in a simpler form.
+
+Plan review round 1: 7 folded, 0 task, 0 ruling, 0 wontfix, 10 pile; grounder docs/reports/reviews/task-457/GROUNDER-PLAN.md; triage docs/reports/reviews/task-457/TRIAGE-PLAN.md
+rc#1 MED folded This is a rare case,
+rg#1 MED folded useParcelSearch serv
 <!-- SECTION:PLAN:END -->
