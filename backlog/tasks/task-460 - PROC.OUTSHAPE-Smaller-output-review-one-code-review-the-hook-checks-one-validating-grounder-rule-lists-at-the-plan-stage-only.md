@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
-updated_date: '2026-11-24T19:50:00Z'
+updated_date: '2026-11-24T19:56:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -24,6 +24,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/TRIAGE.md
 type: fix
 ordinal: 154210
 ---
