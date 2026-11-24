@@ -848,6 +848,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'step_phase_recancel_divisor',
   'step_stall_ticker_multiplier',
   'step_seam_chain_run_scan_limit',
+  // task-395 FIX.CONFIG-BOUNDS: the six page settings, group "Parcel Lookup", seed rows only (no migration; apply-logic-variables inserts seed keys).
+  'maxbld_page_debounce_ms', 'maxbld_page_min_query_len', 'maxbld_page_entitlement_stale_ms',
+  'maxbld_page_lookup_retry_max', 'maxbld_page_lookup_stale_ms', 'maxbld_page_continue_wait_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
