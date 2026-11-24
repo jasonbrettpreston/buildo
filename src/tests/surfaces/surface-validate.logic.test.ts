@@ -88,25 +88,25 @@ describe('FE-13 surface-validate gate: real tree', () => {
     // SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 "it appears we will need it so we should build it"): 424 -> 425 strings (+1: search.reports_left in mobile_parcel_search.content.json) and 98 -> 100 goldens (+2: the state hit, golden reports_left, mobile and web); measured with surface-validate --check before (424, 98) and after (425, 100).
     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
   });
 
-  it('MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {
+  it('MF-42: a missing screen-checks.mjs gives four unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {
     const root = mkRoot();
     fs.rmSync(path.join(root, 'scripts/surfaces/screen-checks.mjs'));
     fs.rmSync(gold(root, 'at_least', 'pdf'));
     const r = run(root);
     expect(r.code).toBe(1);
     expect(r.lines[0]).toBe('SV-GOLDEN at_least.pdf.json: missing');
-    expect(r.lines.slice(1).map((l) => l.replace(/unavailable: .*$/, 'unavailable:'))).toEqual(['SV-DESC arm: screen-checks.mjs unavailable:', 'SV-SCREEN arm: screen-checks.mjs unavailable:', 'SV-SBIND arm: screen-checks.mjs unavailable:']);
+    expect(r.lines.slice(1).map((l) => l.replace(/unavailable: .*$/, 'unavailable:'))).toEqual(['SV-DESC arm: screen-checks.mjs unavailable:', 'SV-SCREEN arm: screen-checks.mjs unavailable:', 'SV-SBIND arm: screen-checks.mjs unavailable:', 'SV-PAGE arm: screen-checks.mjs unavailable:']);
     expect(r.err).not.toContain('    at ');
   });
   it('MF-42: a temp tree that examines nothing prints WAITS for the generic arms, never a finding', () => {
     const r = run(mkRoot());
     expect(r.code).toBe(0);
-    expect(r.out).toContain('· budget WAITS MF-08 · S-desc ok (examined 0 in scope: converted 0, pending 0, parked 0, report 0) · S-screen WAITS MF-37 · S-sbind WAITS MF-37\n');
+    expect(r.out).toContain('· budget WAITS MF-08 · S-desc ok (examined 0 in scope: converted 0, pending 0, parked 0, report 0) · S-screen WAITS MF-37 · S-sbind WAITS MF-37 · S-page WAITS MF-37\n');
   });
 
   it('the real goldens cover each lifecycle state and an at_least tree (guards against a vacuous status arm)', () => {
