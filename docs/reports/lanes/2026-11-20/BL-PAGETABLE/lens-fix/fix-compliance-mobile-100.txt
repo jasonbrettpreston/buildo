@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:01.205Z file_sha256=aabab6fdb06cec5b6c4aa861dbd1c7e189a4999488748682e77bd502c26ae7be prompt_sha256=1eec78e6656ca580e76a13e6939160d25e2bd718d624a5bf1459576fe2a63d5d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 Operating Boundaries "Out-of-Scope Files: ALL of `scripts/`, `migrations/` (zero migrations, zero new indexes ...)" — scripts/surfaces/screen-checks.mjs:409 "+// ---- SV-PAGE (PAGE.TABLE, task-390 fix round)" and scripts/surfaces/_schema/static-page.json:1209 (plus static-page.schema.json, census/mobile-product.json, F14 descriptor, surface-validate.mjs) — the diff rewrites six files under `scripts/`, a directory the pasted spec puts wholly out of scope, and no pasted clause authorises any `scripts/` edit — paste the Spec 126 §11b.2 / Spec 135 FE-31 / Spec 127 §3.2a ruling that owns this work into the rule list, or move the schema and the S-page arm out of Spec 100's scope before merge.
+
+BUG severity=HIGH — walk item 4 "A change that adds behaviour no pasted clause or ruling names is a finding" — scripts/surfaces/_schema/static-page.schema.json:5 "$comment ... operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\" ... may name `targets` for the whole screen, and a choices row names its action payload key `arg` (a closed list, so the builder holds no page-specific name)" — the new required screen `binding`, the whole-screen `targets` throw and the required choices `arg` are authorised only by a quote written inside the file under review, not by any ruling pasted in the context — paste the 2026-11-20 PAGE.TABLE ruling and the page of Spec 126 §11b.2 naming these three fields; a ruling cited in the changed file's own comment does not satisfy the clause.
+
+DEFER severity=MED — Spec 100 dated note 2026-11-13 "(2) When `unsure` is true the app shows one question before the report" — mobile/src/components/surfaces/PageTableBinding.tsx:52 "+    if (!Object.hasOwn(values, name)) throw new Error(`page table: the value ${name} is not supplied`);" — a runtime value the caller omits now throws at render where it previously read as null, so a missing `route` or `selected` at the semi call site blanks the question page instead of drawing it, and only the row names are checked at build time, not the values the binding actually passes (the runtime call into `pageProps` is not visible in this diff) — lock the semi binding's passed value set with a test, or fall back to null on the question path.
+
+MET — Spec 100 dated note 2026-11-13 "(2) ... \"Is this house one half of a semi-detached pair?\": yes / no / not sure" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:37 "export const SEMI_QUESTION_CHOICES: Record<string, readonly SemiAnswer[]> = { answers: ['yes', 'no', 'not_sure'] };" — the three answers stay the closed list, now declared as data and checked against the content leaves.
+
+MET — Spec 100 dated note 2026-11-13 "(2) The answer is a route param applied in the app (`lot_form_user_override` ...)" — mobile/src/components/surfaces/PageTableBinding.tsx:118 "+            onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }," with scripts/surfaces/_schema/static-page.json:1304 "\"action\": \"select\", \"arg\": \"parcelId\"" — the answer's onPress payload key is byte-identical to the replaced hard-coded `parcelId`, so the semi answer routing is unchanged.
+
+MET — Spec 100 dated note 2026-11-10 "its 429 class lists `fields: [\"retryAfterSeconds\"]` (the `Retry-After` header in seconds, read by the client)" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:36 "export const SEMI_QUESTION_VAR_PATHS = ['errors.429.retryAfterSeconds'] as const;" — the one vars path the rows use stays the contract's 429 field and is now checked at build time.
+
+REJECT — Spec 100 §3.2 "The response is an explicit allow-list, not a deny-list" — accused of widening the consumer payload — the diff touches no route, `types.ts`, `consumer-lookup.ts` or whitelist test, and adds no key to `ConsumerParcelLookupResponse`.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+
+---
+⏱  68049ms (68.0s)
+📊 Tokens — total: 41630, input: 28414, output: 13216, reasoning: 12176

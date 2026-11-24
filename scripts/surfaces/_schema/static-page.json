@@ -1,5 +1,5 @@
 {
- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section.",
+ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding.",
  "pages": {
   "web_help": {
    "static": {
@@ -1200,6 +1200,122 @@
      }
     ]
    }
+  }
+ },
+ "screens": {
+  "mobile_parcel_semi_question": {
+   "prefix": "parcel-semi",
+   "contract": "contract_parcels_lookup",
+   "binding": "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+   "platforms": [
+    "mobile"
+   ],
+   "sections": [
+    {
+     "kind": "bar",
+     "id": "header",
+     "parts": [
+      {
+       "role": "back",
+       "icon": "ChevronLeft",
+       "content": "back.label",
+       "action": "back"
+      }
+     ]
+    },
+    {
+     "kind": "status",
+     "id": "loading",
+     "when": "loading",
+     "content": "state.loading"
+    },
+    {
+     "kind": "notice",
+     "id": "ratelimit",
+     "when": "rate_limited",
+     "tone": "error",
+     "icon": "AlertTriangle",
+     "parts": [
+      {
+       "role": "text",
+       "content": "state.ratelimit",
+       "vars": {
+        "seconds": "errors.429.retryAfterSeconds"
+       }
+      }
+     ]
+    },
+    {
+     "kind": "notice",
+     "id": "entitlement",
+     "when": "entitlement",
+     "tone": "neutral",
+     "icon": "Info",
+     "parts": [
+      {
+       "role": "text",
+       "content": "state.entitlement"
+      }
+     ]
+    },
+    {
+     "kind": "notice",
+     "id": "error",
+     "when": "unexpected",
+     "tone": "error",
+     "icon": "AlertTriangle",
+     "parts": [
+      {
+       "role": "text",
+       "content": "state.error",
+       "when": "plain_error"
+      },
+      {
+       "role": "text",
+       "content": "state.schema_drift",
+       "when": "schema_drift"
+      },
+      {
+       "role": "button",
+       "id": "retry",
+       "variant": "outline",
+       "label": "retry.label",
+       "content": "retry.text",
+       "action": "retry",
+       "when": "plain_error"
+      }
+     ]
+    },
+    {
+     "kind": "text",
+     "id": "question",
+     "when": "ask",
+     "role": "header",
+     "content": "question.title"
+    },
+    {
+     "kind": "choices",
+     "id": "answer",
+     "when": "ask",
+     "list": "answers",
+     "select": "selected",
+     "content": "answer",
+     "action": "select",
+     "arg": "parcelId"
+    },
+    {
+     "kind": "button",
+     "id": "continue",
+     "when": "ask",
+     "variant": "default",
+     "label": "select.label",
+     "content": "select.go",
+     "idle": "select.none",
+     "action": "push",
+     "target": "route",
+     "busy": "busy"
+    }
+   ]
   }
  }
 }

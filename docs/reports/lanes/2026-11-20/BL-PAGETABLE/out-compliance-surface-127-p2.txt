@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:43:31.390Z file_sha256=c164ed1231842302b4b69d219866ae8ee9fb475891eda79e75fcf4c9384501d6 prompt_sha256=42f40cefcb63a68aef8b4a4158f4e9aa4ce4eeef3ff987324172239aa5fc5e5d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-127-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §8.2 item 4 "Every component file under `src/components/**` or `mobile/src/components/**` must appear in exactly one surface's `owns.components[]`" — mobile/src/components/surfaces/PageTableBinding.tsx (new) "+++ b/mobile/src/components/surfaces/PageTableBinding.tsx" — the new R-13 component file is claimed only by a bindings.json modules[] row, the diff carries no census shard edit and no regenerated docs/reports/generated/127-surface-registry.md, so §8.5 "A conversion that does not move its registry row has not been recorded" is unmet and the `--check` drift arm cannot be green — fix: add PageTableBinding.tsx to the owning census row's owns.components[] and regenerate the registry and descriptors in this same commit.
+
+BUG severity=MED — §4.3 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers, so any of those changing forces a recapture" — mobile/src/components/surfaces/PageTableBinding.tsx:12 "The tree shape is the one SemiQuestionBinding drew before the table (same keys, same order of props), so its goldens are unchanged." — the archetype binding changed (SemiQuestionBinding.tsx is gutted to flags+values, PageTableBinding.tsx is new, the slice input_sha moves 441b16cf to 576c9451) yet no golden or fingerprint file appears anywhere in the diff and the zero-diff claim rests on a comment only — fix: restate the mobile goldens (or cite the mobile golden test that covers the binding) in this commit so the recapture is evidenced, not asserted.
+
+DEFER severity=MED — §4.2 "Every hand-written constant frozen at PH-0 step 6 is classified with the closed set" and "Its disposition is `encoded-as-descriptor-field`, and the cutover deletes it" — mobile/src/components/surfaces/SemiQuestionBinding.tsx (deleted lines) "-const continueButton = (s: SemiQuestionSituation): PropsNode =>" — the deleted hand-written page structure (block order, testIDs, action names, idle/busy text pair) is now descriptor rows but no Intent Ledger row classifying it encoded-as-descriptor-field with its lock is in the diff, so the disposition is asserted by code and comments only — fix: add the ledger row (constant, disposition encoded-as-descriptor-field, lock page-table.logic.test.ts T9) to the assessment report.
+
+DEFER severity=LOW — §5 dated note 2026-11-09 (MF-15) "It is REPORT-only" and §4.4 "Eligibility is declared data, not a claim" — mobile/src/components/surfaces/PageTableBinding.tsx:51 "const drawn = (g: Gate): boolean => (g.targets === undefined || g.targets.includes('mobile')) && on(g.when);" — web/mobile target gating is new behaviour whose only authority in the material is a $comment in static-page.schema.json quoting an elided ruling, no pasted ruling names `targets` and no row declares it as data — fix: cite the ruling that names per-target section gating, or drop the field until a web screen consumes it.
+
+DEFER severity=LOW — §7 OUTPUT roster "it must state the fence for every deletion" — mobile/src/components/surfaces/SemiQuestionBinding.tsx (deleted lines) "-const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [" — roughly 100 lines of existing render code are deleted with no stated fence per deletion, only a general note that the rows replace them — fix: state the fence for each deleted builder (which row now produces each node) in the change description.
+
+MET — §8.4 "there is no re-keying step between the thing a human reviews and the thing the engine reads" — scripts/surfaces/emit-mobile-surfaces.mjs:52 "const slice = { surface: id, config, content, ...(screens[id] === undefined ? {} : { page: screens[id] }) };" — the rows reviewed in static-page.json are copied verbatim into the slice the binding draws.
+
+MET — §5 dated note 2026-11-04 "Reuse, no parallel infra" — src/tests/surfaces/static-page.logic.test.ts:94 "describe('T9 the interactive screens (PAGE.TABLE, task-390)'" — the new coverage joins the existing lock file rather than adding a gate or script.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  88477ms (88.5s)
+📊 Tokens — total: 50658, input: 33497, output: 17161, reasoning: 16151

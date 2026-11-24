@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:32:31.824Z file_sha256=87091becbe5cd3c76a83311dbeb8b40537075fc217f6451bc1adcb93f0f626de prompt_sha256=4540948ea42e2bec0433fcbcf1cd4242e1bd12fd1d16e4bba576677ac524b5c2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §2.1 "Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date." — plan step 4 "the situation -> flags and values derivation" — the binding derives the flags that drive `when` section inclusion on the client, which is neither device state, optimistic UI, offline cache, animation nor nav position, and no `deviations[]` row (or named exception from the five, which §2.1 requires "declared per surface") appears anywhere in the plan — name the exception category per surface or add a `deviations[]` row with an adjudicator and a date before plan-lock.
+
+BUG severity=HIGH — Spec 128 §3 Rule B4 "A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture." — plan "Goldens expected to move: none." — steps 1, 2 and 5 edit `static-page.schema.json`, `static-page.json` and the generator, and B4 makes the recapture mechanical over `fingerprint_files[]` rather than a reviewer's expectation, yet the plan names neither the fingerprint file list nor whether the page table is in it, and says the mobile jest golden test is UNVERIFIED — state the `fingerprint_files[]` contents and land the recapture (or the `--check` proof that the page table is not fingerprinted) instead of an expectation of "none".
+
+BUG severity=HIGH — Spec 128 §2.2a Rule 15 row "over the WHOLE declaration; any per-target difference fails. A comparison of one builder's tree does not count." — plan "optional `targets` (subset of web, mobile; default both)" — the new field lets one declaration render differently per target by design, while web and the reports are out of scope and no golden PAIR is planned, so nothing tests rule 15 over the whole declaration — either prove parity across the targets the `screens` rows actually declare, or record why a mobile-only table needs a per-section `targets` field at all.
+
+DEFER severity=MED — Spec 128 §3 Rule B2 "The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size), never hand-computed once and forgotten." — plan step 2 "= 8 sections: bar(back), status(loading), 3 notices ... text(question), choices(answers), button(continue)" — eight declared sections and a new schema block land with no footprint measurement and no `surface-validate.mjs --check` in the change list, although §4.11 item 8 puts it in pre-commit and CI — add the footprint run and its numbers to the plan.
+
+DEFER severity=MED — Spec 128 §2 rule 1 "it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order." — plan step 1 "a new top-level `screens`" — the plan jumps to a new schema field without stating why an entry in the existing `pages` (descriptor data) or a shape rule cannot carry a screen row, so the ordered choice is asserted rather than demonstrated — write the one-line reason `pages` cannot express `screens`.
+
+DEFER severity=MED — Spec 128 §2 rule 12 "An unhandled state is a FAIL, not a blank screen." — plan step 3 "Throws on a when naming no flag." — a throw inside the renderer path yields a blank or crashed screen unless the declared schema-drift notice catches it, and the plan names no catch site — name where the throw is caught and which declared section renders.
+
+DEFER severity=LOW — Spec 128 §2 rule 6 "'none' is legal; silence is not." — plan step 1 "`targets` (subset of web, mobile; default both)" — a default lets `targets` be omitted, which is silence made legal on a field that decides what a person sees — require the field to be written, or record why a default is acceptable here.
+
+DEFER severity=LOW — Spec 128 §2 rule 6 / §4.7a "a clause that is not pasted is not yours to invent" — plan "Rule: Spec 126 section 0a principle 1 and 11b.2 ... fe.02" — the three clauses the plan names as governing are not in the pasted context, so conformance to them cannot be judged here (cannot see), and the operator's "stop rule" is visible only as clipped text — paste Spec 126 §0a, §11b.2 and fe.02 with the full 2026-11-20 ruling on the next pass.
+
+MET — Spec 128 §2 rule 4 "which fields render, in which order, with which labels, is a declaration the server owns" — plan step 2 — section order, kind, action and content keys move into `static-page.json` `screens`, so the projection is declared rather than implicit in the component.
+MET — Spec 128 §2 rule 3 "never a literal" — plan step 1 "Every shown text is a content key, never a typed value or number." — displayed values are keys, not typed values.
+MET — operator 2026-11-20 "remember the app is not being used - we are in development" (no migration or fallback code) — plan "Out of scope: ... any migration or compatibility code." — no migration or fallback is planned.
+MET — Spec 128 §4 step 4 "the same commit that records the ruling adds a both-directions test" — plan step 6 "Red through a commit attempt with only tests and the task file staged." — the locks are written and shown red before the implementation.
+
+REJECT — Spec 128 §2.2a rules 16-20 — the change adds a builder component and generated output without the FE-05 scan or the Rule 19 `--check` lock — those rows are pasted with "Scope: the REPORT archetype now" and this surface is not a REPORT, so they are not binding here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  51225ms (51.2s)
+📊 Tokens — total: 32639, input: 23146, output: 9493, reasoning: 8134

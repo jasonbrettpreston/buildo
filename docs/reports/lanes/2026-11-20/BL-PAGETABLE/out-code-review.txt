@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:48:43.957Z file_sha256=7d5d5b8b78d7c6790d895396f6c5d2a4ef3fbe164bb823f628ecb038af485cb5 prompt_sha256=cf7f8aceb370d1f5fcaa95cf3144da1f3ed85f42880e67553d57ddeb34ff61c0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/DIFF-code.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx "return node('AlertDescription', { key: `${s.id}-text`, className: t.text }, [child]);" — every text part of one notice receives the same React key, so a notice row with two shown text parts produces duplicate keys (B5 in page-table.logic.test.ts only passes because plain/drift are mutually exclusive) — key the part by its position, e.g. `${s.id}-text${i === 0 ? '' : i}`, keeping `error-text` for the first part so the goldens stay put.
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx "key: p.role, testID: testID(p.role), variant: 'ghost', size: 'icon', className: styles.back, accessibilityRole: 'button'," — `BarPart.role` is only `'back'`, so a `parts` array of more than one element yields the same key/testID for each button — key by index (`${p.role}-${i}`) or narrow `parts` to a single part.
+DEFER severity=LOW — mobile/src/components/surfaces/SemiQuestionBinding.tsx "const CONTRACT = 'contract_parcels_lookup';" — the 429 var ref now comes from the row data in pageProps (`${screen.contract}.${path}`), so this constant and the page table's `contract` field are two sources for the same name and T9 never compares them — add an assertion in T9 that `SCREENS[ID].contract === CONTRACT` (or drop the constant if its only remaining reader is gone).
+DEFER severity=LOW — mobile/src/components/surfaces/SemiQuestionBinding.tsx "export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {" — the function now returns `pageProps(...)` typed `PageNode`, a parallel re-declaration of `Child`/`PropsNode` that only unifies structurally; cannot see SearchBinding.tsx, so the safety of the removed `Child, Ref` imports rests on the two recursive shapes being identical — import `PageNode` and check it is assignable to `PropsNode` in a type test, or have PageTableBinding reuse the SearchBinding types.
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx "return typeof v === 'string' ? v : null;" — a missing or wrongly typed value is silently coerced to null, so a `route` that was never wired renders a permanently disabled Continue button instead of failing closed the way the `choices` list does ("page table: the list ${s.list} is not supplied") — throw on an absent key and keep null as the legal "disabled" value only.
+NIT — src/tests/surfaces/page-table.logic.test.ts "const column = (t: unknown): N[] => (((t as N).children[1] as N).children[0] as N).children as N[];" — three unchecked casts plus `find(...)!` in `cont` mean a tree-shape regression surfaces as an opaque TypeError instead of an assertion message — walk with a small helper that asserts each step or index the nodes by key name.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  106255ms (106.3s)
+📊 Tokens — total: 42284, input: 21777, output: 20507, reasoning: 19803

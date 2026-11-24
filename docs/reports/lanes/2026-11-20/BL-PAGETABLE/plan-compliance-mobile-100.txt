@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:30:54.310Z file_sha256=707b0c3828c97371dea87cffec8cb6d3def8d59d8ed534d88282f064626f1a41 prompt_sha256=9e5da95fff9d39cce57ccd2076e35d38d7c053472cc9828127ea31083fd734c5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 100 Operating Boundaries "Out-of-Scope Files: ALL of `scripts/`" — plan step 1 "static-page.schema.json: a new top-level `screens`" and step 5 "emit-mobile-surfaces.mjs: copies the screen rows into the generated slice (`page`)" — the plan edits four files under the out-of-scope `scripts/` tree and no pasted clause moves them into Target Files — amend Spec 100's Target Files for `scripts/surfaces/_schema/*` and `scripts/surfaces/emit-mobile-surfaces.mjs`, or cite the pasted ruling that widens the fence.
+DEFER severity=MED — Spec 100 MF-48 Stage B note "A hit also carries `page`: the mobile report page view ... Every level is `.strict()` (target, layout, sections, parts, ad)" — plan step 5 "copies the screen rows into the generated slice (`page`)" — a second, differently shaped contract now reuses the identifier `page` that the pasted ruling binds to the report page view — name the slice key `screen` (or `screenRows`), or state in the plan that the two payloads never meet.
+DEFER severity=MED — STOP RULE "if a golden cannot be reproduced byte for byte, stop and report which bytes differ" — plan step 6 "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" with "Goldens expected to move: none." — byte-for-byte is proven only for the capture script, not for the renderer golden the change is actually about — run the renderer golden before landing or record the unverified path explicitly.
+DEFER severity=LOW — Spec 100 SEMI-B note "the app shows one question before the report" — plan step 1 "optional `targets` (subset of web, mobile; default both)" — the schema default lets an app-only page emit a web consumer that no pasted clause names — declare `targets: ["mobile"]` for `screens.mobile_parcel_semi_question`.
+DEFER severity=LOW — Spec 100 SEMI-B note "The answer is a route param applied in the app (`lot_form_user_override`; O-12: the pipeline never reads it)" — plan step 1 "Closed lists for action (back, retry, push, select)" — `push` declares a screen transition the pasted semi ruling never gives, it stops at the answer being applied as a route param — drop `push` from the closed list or name the transition the plan needs.
+REJECT — Spec 126 §0a principle 1 and §11b.2 "page structure is data" — accused of being the authority for the `screens` table — Spec 126 and fe.02 are not pasted in this context, so this run cannot judge them.
+REJECT — operator 2026-11-20 "approved ... 1. Go on the schema extension plus the semi pilot" — accused of widening the Spec 100 file fence and licensing the new section kinds — the words appear only inside the material under review, not in the pasted context, so their scope is not raised here.
+REJECT — Spec 100 SEMI-B note "yes / no / not sure" — accused of the status, rate-limit, entitlement and error/retry sections contradicting the one-question ruling — the 8 goldens stay byte for byte and the note itself mounts the question on an existing page, so no visible behaviour is added.
+MET — Spec 100 SEMI-B note item 2 "not sure writes nothing and shows the semi view" — plan step 4 "the situation -> flags and values derivation ... semiQuestionData unchanged" — the answer handling stays in code, not in the table.
+MET — Spec 100 §2 item 1 "Presentation only" — plan step 3 "Style class tables stay typed in the binding that calls it (PageStyles argument)" — derivation and styling stay typed in the binding.
+MET — Spec 100 §3.2 closing line "the response contract and its whitelist (§3.2) do not change" — plan Out of scope "the reports, the web" and no file under `src/app/api/parcels/` is touched — no response field or whitelist entry moves.
+MET — Spec 100 RR-0313 note "one value in `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json`, read by the app and the web" — plan step 1 "Every shown text is a content key, never a typed value or number" with T9 "content keys exist" — text stays in content files.
+MET — Spec 100 section 4 note 2026-11-12 "ParcelDetailScreen is retired" — plan Out of scope "SurfaceRenderer.tsx, semiQuestion.ts ..., the other three pages, the reports, the web" — the retired screen and the other surfaces are untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  60129ms (60.1s)
+📊 Tokens — total: 28052, input: 15845, output: 12207, reasoning: 11117

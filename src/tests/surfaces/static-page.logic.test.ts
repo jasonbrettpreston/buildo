@@ -66,6 +66,23 @@ describe('T1 the page table against the contract', () => {
       ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
       ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
       ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
+      // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+      ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+      ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+      ['an action outside the closed list', (t) => { t.screens.mobile_parcel_semi_question.sections[7].action = 'delete_all'; }],
+      ['an icon outside the closed list', (t) => { t.screens.mobile_parcel_semi_question.sections[0].parts[0].icon = 'Skull'; }],
+      ['a when that is an expression', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = 'loading && ask'; }],
+      ['a when that is a negation', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = '!loading'; }],
+      ['a when that is a list of flags', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = ['loading', 'ask']; }],
+      ['a platform outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.sections[1].platforms = ['tablet']; }],
+      ['a field the kind does not name', (t) => { t.screens.mobile_parcel_semi_question.sections[1].href = '/help'; }],
+      ['a choices row with no payload key', (t) => { delete t.screens.mobile_parcel_semi_question.sections[6].arg; }],
+      ['a choices payload key outside the list', (t) => { t.screens.mobile_parcel_semi_question.sections[6].arg = 'anything'; }],
+      ['a screen with no binding', (t) => { delete t.screens.mobile_parcel_semi_question.binding; }],
+      ['a screen binding outside the surfaces folder', (t) => { t.screens.mobile_parcel_semi_question.binding = '../x.tsx'; }],
+      ['a screen platform outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.platforms = ['tablet']; }],
+      ['the old field name targets', (t) => { t.screens.mobile_parcel_semi_question.targets = ['mobile']; }],
+      ['a screen with no sections', (t) => { t.screens.mobile_parcel_semi_question.sections = []; }],
     ];
     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
   });
@@ -77,6 +94,26 @@ describe('T2 totality: the table and the converted STATIC surfaces, both ways', 
     expect(Object.keys(TABLE.pages).sort()).toEqual(converted.sort());
     expect(Object.keys(STATIC_CONTENT).sort()).toEqual(converted.sort());
     for (const id of converted) expect([id, Object.keys(TABLE.pages[id]).sort()]).toEqual([id, descriptor(id).states.map((s: Json) => s.name).sort()]);
+  });
+});
+
+describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
+  const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
+  const BINDING = 'mobile/src/components/surfaces/SemiQuestionBinding.tsx';
+  const ID = 'mobile_parcel_semi_question';
+  const SCREENS = TABLE.screens as Json;
+  it('every screen is a converted LIST surface of the phone, drawn on the phone only, with its row set copied to the generated slice', () => {
+    expect(Object.keys(SCREENS)).toEqual([ID]);
+    const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
+    expect([MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([true, 'LIST', ['mobile']]);
+    expect([SCREENS[ID].platforms, SCREENS[ID].targets]).toEqual([['mobile'], undefined]);
+    expect(SCREENS[ID].binding).toBe(BINDING);
+    expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);
+  });
+  it('the binding keeps flags and values only: no JSX element names and no content key typed in it', () => {
+    const b = read(BINDING);
+    expect(b).not.toMatch(/node\('(Button|Alert|AlertDescription|Text|View)'/);
+    expect(b).not.toMatch(/content\('[a-z]+\./);
   });
 });
 

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:39:50.852Z file_sha256=7eca85cead0c64176df5cdbf983a176550cbc6e7b3cae556fc2faafa1a014062 prompt_sha256=42e8098d0462fe1599b66aeb01684a893d32ba6d328e803fa316516a79c51e81
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — mobile/src/components/surfaces/PageTableBinding.tsx "export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boolean>>, values: PageValues, styles: PageStyles): PageNode {" — a pure rows-to-props builder adds no store, blob, hydration bridge or routing effect, so no §1 trigger fires.
+
+MET — Spec 99 §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer." — mobile/src/components/surfaces/SemiQuestionBinding.tsx "return pageProps(SEMI_QUESTION_SLICE.page, flagsOf(s), { answers: s.answers, selected: s.selected, route: s.route, navigate: s.navigate }, STYLES);" — the values are function arguments from the situation (the Layer-2 lookup) and no new Zustand mirror store is introduced.
+
+MET — Spec 99 §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — scripts/surfaces/emit-mobile-surfaces.mjs "const screens = rj(root, PAGE_TABLE).screens ?? {};" — the rows are read at build time from a repo file and shipped in the bundled slice; no `createMMKV().getString()` is added anywhere.
+
+MET — Spec 99 §2.1 "Layer 4a (MMKV) is UNENCRYPTED. Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b" — scripts/surfaces/_schema/static-page.json "content": "state.loading" — the new `screens` rows carry only content keys, flag names and icon/action enums, no credential or PII, so nothing sensitive is being persisted.
+
+MET — Spec 99 §3 "This table is normative. Adding a field to the mobile app requires adding a row here." — mobile/src/components/surfaces/PageTableBinding.tsx "const list = values[s.list];" — `answers`, `selected`, `route`, `navigate` are transient render arguments derived per-call, not owned or persisted fields, so no §3 matrix row is due for them.
+
+MET — Spec 99 §1.2 goal 3 "Where bridges are allowed — only the patterns in §4. Anything else is a spec amendment." — scripts/surfaces/emit-mobile-surfaces.mjs "const slice = { surface: id, config, content, ...(screens[id] === undefined ? {} : { page: screens[id] }) };" — this is a static-schema-to-code generation path, not a runtime state bridge between Layers 1-4, so §4 does not apply.
+
+REJECT — Spec 99 §1 "requires either matching an existing pattern in §3-§5 or amending this spec" — accused of adding a new page-rendering pattern that is not a §3-§5 pattern and has no Spec 99 amendment — not a real issue: the code added is a pure, import-free props builder with no state ownership, persistence or routing effect, so it falls outside §1's enumerated triggers (store / MMKV blob / hydration bridge / routing useEffect) and Spec 99 is not the governing spec for UI row rendering.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  42914ms (42.9s)
+📊 Tokens — total: 40505, input: 32385, output: 8120, reasoning: 7304

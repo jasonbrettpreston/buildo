@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:44:59.918Z file_sha256=134b2186c35b05de41ed7f382d34a5b5728c5738ed99390401ebf8a367ae537b prompt_sha256=28e97e17985f3cfd6ecd2c42e3f8ead69dbca20b963dc4292759337a62a43134
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-128-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §6 preamble "An Ask is not a ruling: it carries a recommended default and a reversibility note, and it is resolved by the operator before the phase it gates." — scripts/surfaces/_schema/static-page.schema.json "$comment" "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 'approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule')" — the whole change (the `screens` schema extension, PageTableBinding.tsx, the emitter change, two new/extended test files, the bindings.json module row) is authorised only by an operator approval asserted inside the diff; no pasted clause or ruling in §6, §7 or §8 names PAGE.TABLE, task-390 or a `screens` table — paste that approval (and the phase it gates) into the review context, or split the schema extension into its own resolved Ask so this pilot does not ride on an unpasted ruling.
+
+DEFER severity=LOW — ASK-18 "`targets: "none"` is legal and is an answer, not an omission." — scripts/surfaces/_schema/static-page.schema.json "$defs/screen_bar / screen_status / screen_text / screen_notice / screen_choices / screen_button" "'targets': { 'type': 'array', 'minItems': 1, 'uniqueItems': true, 'items': { 'enum': [ 'web', 'mobile' ] } }" — the row-level field reuses the vocabulary name `targets` with an incompatible value space (a platform array, `none` not expressible), so one standard now carries two meanings for one name — rename the row field to `platforms`, the word ASK-03 already fixes for "a field (`platforms[]`)", and leave `targets` to the descriptor enum.
+
+MET — ASK-05 "`react-flow` as a dependency ... Recommended default: Server-computed inline SVG." — mobile/src/components/surfaces/PageTableBinding.tsx "Pure and import-free (read by relative path by the root tests, as parcelSearchCore.ts is)" — no dependency is added; bindings.json `libraries` is untouched in the diff and the new module note states "it renders only components of mapping.mobile.LIST and imports nothing".
+
+MET — ASK-17 "the latter deliberately not available to a SURFACE, because a screen writing directly is the defect this standard retires" — scripts/surfaces/_schema/static-page.schema.json "$defs/action" "'enum': [ 'back', 'retry', 'push', 'select' ]" — no row action can express a direct DB write, so the retired defect is not reintroduced by the page table.
+
+MET — ASK-19 "A measured value below 44 is a FINDING, not a setting" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "default: { className: L.semiSelect, busyClassName: `${L.semiSelect} opacity-[0.85]`, text: L.selectText }" — every tappable element still takes its class from the unchanged MF-53 token table, and the new bindings.json note records "mapping, mounts and touch_targets are unchanged".
+
+MET — §8 Out-of-Scope Files "`migrations/**` — this spec records rulings about schema, never schema." — no hunk in the diff touches `migrations/**`; the touched paths are mobile/**, scripts/surfaces/_schema/{bindings,static-page,static-page.schema}.json, scripts/surfaces/emit-mobile-surfaces.mjs and src/tests/surfaces/*.
+
+MET — §8 Out-of-Scope Files "`scripts/steps/_schema/step.schema.json` — frozen at C3 ... R-14 exists precisely so this programme does not spend that freeze." — the new definitions land in scripts/surfaces/_schema/static-page.schema.json "'screens': { 'type': 'object', ... 'additionalProperties': { '$ref': '#/$defs/screen' } }", not in the frozen step schema.
+
+MET — §8 Cross-Spec Dependencies "**Spec 122 §7.4 — `scripts/reconcile-runs.js`**, the Step-0 reaper of the `sources` chain. NOT a target of this spec and never edited by a surface conversion" — no hunk touches scripts/reconcile-runs.js, consistent with ASK-12's "`reapStaleRunningRows` + `src/tests/db/admin-stats-reaper.db.test.ts` are RETAINED".
+
+MET — ASK-11 "Does the schema get an **`i18n`** category now? **No** — a `locale` sub-field of `a11y` when i18n arrives." — the added `$defs` are only "flag", "contentKey", "icon", "action" and the six "screen_*" kinds; no `i18n` category and no `locale` field is introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  56598ms (56.6s)
+📊 Tokens — total: 40108, input: 29282, output: 10826, reasoning: 9700

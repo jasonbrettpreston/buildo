@@ -52,7 +52,7 @@ for (const [label, arm, run] of usage ? [] : arms) {
   if (f.length === 0) ok.push(label);
 }
 
-// MF-42 (FE-31, FE-13 dated note): the generic arms DESC, SCREEN and SBIND, loaded after the usage check by an awaited import inside their own guard,
+// MF-42 (FE-31, FE-13 dated note): the generic arms DESC, SCREEN, SBIND and PAGE (PAGE.TABLE, task-390: the names of a screen row against its binding), loaded after the usage check by an awaited import inside their own guard,
 // so a missing module or validator is a stated finding per arm and the REPORT arms above still report. Each returns {findings, note}; a WAITS note is
 // read from the manifest and is never `ok`.
 const screenNotes = [];
@@ -69,7 +69,7 @@ if (!usage) {
   } catch (e) {
     unavailable = `${e?.message ?? e}`.split('\n')[0];
   }
-  for (const arm of ['DESC', 'SCREEN', 'SBIND']) {
+  for (const arm of ['DESC', 'SCREEN', 'SBIND', 'PAGE']) {
     const r = unavailable ? { findings: [`SV-${arm} arm: screen-checks.mjs unavailable: ${unavailable}`], note: '' }
       : await guardedAsync(arm, async () => mod.ARMS.find(([, a]) => a === arm)[2](ctx));
     findings.push(...r.findings);

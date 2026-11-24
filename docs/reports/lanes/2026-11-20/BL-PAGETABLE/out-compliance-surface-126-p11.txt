@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:40:33.817Z file_sha256=08e5329c11b888318280cce273e0152cb1600ba58b8e8d2d6b03ad18e4a4ee60 prompt_sha256=441cf5c50841a62c5ab564b333c38ced89bbad42fa5e1a5e7fd3a51cd51a0fbf
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §12 "There is ONE sequence in this programme, and it lives in Spec 127 §4.4" and "if a batch moves, it moves in Spec 127 and this table follows" — scripts/surfaces/_schema/bindings.json:1 "$comment" 'Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule")' — the change lands a new page contract (static-page.json `screens`, static-page.schema.json `screens`, a new phone rendering module) that appears in no row of the pasted phase table and in no pasted note, and the approval it rests on, plus the 'stop rule' it is conditioned on, are quoted only inside the diff itself, so batch placement and the condition cannot be verified — fix: put the dated note, the operator words and the stop-rule text into Spec 126 §12 and Spec 127 §4.4 (or hold the change until they are there), since a data-file `$comment` is not the sequence's home.
+
+DEFER severity=MED — Spec 126 §13 "**UI:** `*.ui.test.tsx` — every archetype renderer against its golden rendered-tree snapshot, per declared state" — mobile/src/components/surfaces/PageTableBinding.tsx:12 "The tree shape is the one SemiQuestionBinding drew before the table (same keys, same order of props), so its goldens are unchanged." — the second LIST renderer path is pinned only by hand-written prop probes (page-table.logic.test.ts B1 to B5 assert `keys(...)`, `cont(...)`), no golden rendered-tree snapshot over the generated `page` slice appears in the material, so the equality claim rests on a comment — fix: drive the LIST golden fixtures from the slice `page` rows (or add the ui snapshot per declared state) so the tree is asserted, not asserted-about.
+
+DEFER severity=MED — Spec 126 §13 "**a RED canary per lock**, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — src/tests/surfaces/static-page.logic.test.ts:123 "const t = clone(SCREENS) as Json;" — the new rows to flags to slice drift lock is proven only on an in-memory clone of an already-parsed object, so nothing proves the check fires against the real static-page.json or the emitted slice on disk — fix: tamper a temp copy of the file (or the file with restore, per the infra model) and assert the lock fires both directions.
+
+MET — Spec 126 §12, P1 row "Deliverable is the schema + validator, not a converted surface" — scripts/surfaces/_schema/static-page.schema.json `screens` adds a closed section-kind contract and no entry is added to converted-surfaces.json.
+
+REJECT — Spec 126 §12, P4 row "B3 — DASHBOARD + LIST" — accused of landing LIST conversion out of batch order — not a real issue: bindings.json already lists `SemiQuestionBinding.tsx` as `"archetypes": ["LIST"]`, so the diff changes how an existing converted member draws, not which member converts in which batch.
+
+REJECT — Spec 126 §14 Out-of-Scope Files "scripts/manifest.json and every scripts/**/*.descriptor.json" — accused of editing descriptor data — not a real issue: the diff touches static-page.json, static-page.schema.json and bindings.json, none of which match `*.descriptor.json`.
+
+REJECT — Spec 126 §12, "never | (fenced) | mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx" — accused of crossing the auth fence — not a real issue: every mobile path in the diff is under `mobile/src/components/surfaces/` or `mobile/src/generated/surfaces/`.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  113930ms (113.9s)
+📊 Tokens — total: 51399, input: 29085, output: 22314, reasoning: 21417

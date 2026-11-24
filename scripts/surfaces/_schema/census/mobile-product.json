@@ -14873,7 +14873,8 @@
       "owns": {
         "components": [
           "mobile/src/components/surfaces/LotMapBinding.tsx",
-          "mobile/src/components/surfaces/SemiQuestionBinding.tsx"
+          "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+          "mobile/src/components/surfaces/PageTableBinding.tsx"
         ]
       },
       "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
@@ -15042,7 +15043,14 @@
       "i18n": "none",
       "safe_area": "none"
     },
-    "deviations": "none",
+    "deviations": [
+      {
+        "from": "Spec 128 §2.1 (line 55): anything computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date",
+        "why": "flagsOf in mobile/src/components/surfaces/SemiQuestionBinding.tsx turns one situation (mobile/src/lib/semiQuestion.ts) into the closed flag list SEMI_QUESTION_FLAG_NAMES (loading, ask, rate_limited, entitlement, unexpected, plain_error, schema_drift, busy): boolean state tests only, no arithmetic and no new value; the rows of screens.mobile_parcel_semi_question in static-page.json may name only those flags in a `when` or `busy` (scripts/surfaces/screen-checks.mjs arm S-page checks it at build time). Derivation stays code (Spec 126 §11b.2); no code change.",
+        "adjudicated_by": "the separate grounder verdict of 2026-11-20 (task-390 conflict (c)), under the operator delegation \"Let the grounder resolve them all as long as the result is compliant\" (MORNING-DECISIONS.md:1476)",
+        "date": "2026-11-20"
+      }
+    ],
     "limitations": [],
     "interpretation": "none",
     "notes": "MF-53 (plan v4 §3, §8 item 2; the MF-48 D-2 a form for a second archetype): archetype LIST; the render half stays SurfaceRenderer.tsx (shared_mobile_surface_binding), which lists SEARCH and LIST. The SEARCH/LIST-gated fields describe the consuming surface, not this binding, and are answered none with a why. Ref S-083 (the next free ref: S-082 is binding_web_search, MF-44).",

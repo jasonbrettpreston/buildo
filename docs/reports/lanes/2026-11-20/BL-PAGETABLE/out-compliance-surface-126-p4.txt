@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:41:53.586Z file_sha256=e5b45d71f52339d8682763d0c5a9a51863c8ab58e0ec8cf28767ac50da71e519 prompt_sha256=f6ba3f98b29ec8fb13b42149768912b60d3a474a4f54f86df87102d8bd32b7e1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.0 one-source "nothing in it is a second declaration ... A type that disagrees with the schema ... the type is regenerated" — mobile/src/components/surfaces/PageTableBinding.tsx:20 "export type PageSection = Gate & (" — the screen row shape and its closed vocabularies are declared a second time by hand (ButtonRow "variant: 'default' | 'outline'" at :18, notice "tone: 'error' | 'neutral'" at :24, kind union at :21-26) beside static-page.schema.json, and SemiQuestionBinding.tsx consumes it as `slice as unknown as {...}` rather than a generated type, so a schema change cannot reach the code — emit the screen types from static-page.schema.json (generated d.ts) and import them; drop the cast.
+
+BUG severity=HIGH — §5.2 "The parcel cost contract is declared four times and locked once ... Generating the mobile mirror from the CONTRACT descriptor kills all four problems at once" — scripts/surfaces/_schema/static-page.json:1230 "\"seconds\": \"errors.429.retryAfterSeconds\"" — the page table is a new hand-typed home of a contract field path, and the schema accepts any string ("pattern": "^[A-Za-z0-9_.]+$"), while T9 checks only content keys, never the contract descriptor's inputs.field_whitelist — validate every `vars` path against the CONTRACT descriptor in the emitter or the T9 test, or emit the ref from the descriptor.
+
+BUG severity=HIGH — §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers." — mobile/src/components/surfaces/PageTableBinding.tsx:10 "so its goldens are unchanged" — a new module and the page rows now produce rendered_tree, yet no golden or fingerprint_files change appears, so a byte-identical golden proves only that the fingerprint set is unchanged and a change to PageTableBinding.tsx or static-page.json screens would not invalidate a golden — add PageTableBinding.tsx and the screen rows to fingerprint_files and regenerate (the fingerprint changes, the tree does not).
+
+BUG severity=HIGH — §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — src/tests/surfaces/static-page.logic.test.ts:100 "const flagsOf = (s: Json): string[] => [s.when, s.busy, ...(s.parts ?? []).flatMap((p: Json) => [p.when])]" — T9 re-implements in the test the flag-membership and content-key rules that PageTableBinding.tsx's `on()` and the content resolve already enforce — export the rule from an importable module and call it from both the engine and the test.
+
+DEFER severity=MED — §5.2 "Use the logic-variable-groups form (§5.0), not the docs/specs/_contracts.json grep-assertion form" — src/tests/surfaces/static-page.logic.test.ts:99 "const names = (src: string, list: string): string[] => [...(new RegExp(`export const ${list} = \\[([^\\]]*)\\]`).exec(src)?.[1] ?? '')" — the closed flag list is read by grepping the component's source text, so a reformat of the binding (double quotes, a spread, a helper) disarms the lock silently — move SEMI_QUESTION_FLAG_NAMES to an import-free constants module and import it, or derive the list from the schema.
+
+DEFER severity=MED — §5.0 "validated by AJV on every generator run" — scripts/surfaces/emit-mobile-surfaces.mjs:46 "const screens = rj(root, PAGE_TABLE).screens ?? {};" — the generator copies the screen rows into the committed slice with no AJV pass against static-page.schema.json, so an invalid row reaches the slice and the engine on a real run and only vitest objects — validate the page table inside buildOutputs with the shared validator and throw.
+
+DEFER severity=MED — §5.0a "plus a RED canary proving the check itself fires" — src/tests/surfaces/static-page.logic.test.ts:114 "expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);" — the new page merge into the slice gets a one-directional equality lock with no tampered-slice canary, and no BUILDO_*_PATH override exists to write one — add the test-only path override §5.0a prescribes and a RED case where a mutated generated page must fail.
+
+MET — §5.0 "There is one source, and everything else is emitted from it" — scripts/surfaces/emit-mobile-surfaces.mjs:53 "...(screens[id] === undefined ? {} : { page: screens[id] })" — the slice's page block is emitted from the page table, not hand-written.
+MET — §5.0 consequence 1 "There is no re-keying step" — scripts/surfaces/_schema/static-page.json "screens": { "mobile_parcel_semi_question": { ... "sections": [ ... same keys and order as the emitted page.
+MET — §5.6 "a rendered-tree snapshot" — mobile/src/components/surfaces/PageTableBinding.tsx:10 "same keys, same order of props" — the built tree matches the removed SemiQuestionBinding builder key for key and prop order for prop order (bar, scroll, column, cards, continue, busy state), so no golden was hand-edited.
+MET — §5.3 "there is no client business logic" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "function flagsOf(s: SemiQuestionSituation): SemiQuestionFlags" — derivation stays in the binding and only block order, texts and actions are rows.
+REJECT — §6.1 "For every table below, without exception" — accused of adding `screens` to a schema without a declare-and-assert table descriptor — not a real issue: §6.1 binds DB tables, this change adds no table, migration or policy, so no §6.1/§6.2 clause is engaged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  123210ms (123.2s)
+📊 Tokens — total: 57034, input: 32695, output: 24339, reasoning: 22939

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:33:07.245Z file_sha256=fefdf20f4c0a98e7ea60a15f92b9d96b0758289cead871f9e20b6a58c0995e65 prompt_sha256=7b8e2edd10cf202b51576a6121a17936688b01f968ed06db44c269d6b38f086c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/PLAN.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan block "pageProps(screen, flags, values, styles) builds the props tree the renderer already draws. Throws on a when naming no flag." — the `flags` parameter is the situation's derived values map, not the declared name list, so an undeclared `when` and a declared-but-absent (false) flag are indistinguishable; a section whose flag is simply false in this situation will throw at render — pass the declared name list (SEMI_QUESTION_FLAG_NAMES) as a fifth parameter and validate `when` against it, treating an absent declared flag as false, never as "no flag".
+
+BUG severity=HIGH — plan block "Closed section kinds bar, status, text, notice, choices, button" together with "3 notices (rate limit, entitlement, error with parts for plain error / schema drift / retry button)" — `sections[]` is flat, so a retry button living inside the error notice has no declared shape: the schema step and the builder's prop types are both undefined for `parts`, and the "smallest change" cannot be typed as written — declare `notice.parts` as a closed list of its own (including a button part) in the schema step and in PageTableBinding's types before the builder is written.
+
+DEFER severity=MED — plan block "mobile/src/components/surfaces/PageTableBinding.tsx (new, import-free, pure)" and "Style class tables stay typed in the binding that calls it (PageStyles argument)" — an import-free module cannot import the renderer's style type, so PageStyles must be restated locally and can drift or degrade to `any`/an `as` cast at the call site that hides the mismatch (renderer itself cannot see, do not guess its prop type) — put PageStyles in a tiny shared types module imported by both the binding and the builder.
+
+DEFER severity=MED — plan block "optional `targets` (subset of web, mobile; default both)" — no consumer: pageProps takes no platform argument and SurfaceRenderer is explicitly out of scope, so `targets` is dead schema data that would silently draw a web-only section on mobile the first time one is authored — add `platform` to pageProps and filter on it, or drop `targets` until a consumer exists.
+
+DEFER severity=MED — plan block "semiQuestionProps = pageProps(slice.page, ...), semiQuestionData unchanged" — if the renderer now draws semiQuestionProps, the retained semiQuestionData derivation becomes dead code, and the plan does not name what still reads it — state the surviving consumer of semiQuestionData or delete it in this lane.
+
+DEFER severity=LOW — plan block "Throws on a when naming no flag" — no message, error class or logging is specified, so the failure is unloggable in Mobile CI — throw a real Error carrying screen id and section index, e.g. `page table: screen ${screen} section ${i} when "${name}" is not a declared flag`.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Throwing on `when` using only the values map cannot tell an undeclared flag from a declared false flag, so false sections throw at render.
+- The flat closed section kinds do not describe the nested retry button inside the error notice, leaving `parts` untyped.
+- `targets` and a locally restated PageStyles type have no consumer or no shared definition, inviting dead data and type drift.
+
+---
+⏱  22265ms (22.3s)
+📊 Tokens — total: 6536, input: 2577, output: 3959, reasoning: 3214

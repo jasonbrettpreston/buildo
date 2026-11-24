@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:48:43.958Z file_sha256=7d5d5b8b78d7c6790d895396f6c5d2a4ef3fbe164bb823f628ecb038af485cb5 prompt_sha256=2a3484cca517a833309f7c8271187ee81d5465e0e1a0ee1be9f3f8d635f7bfde
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/DIFF-code.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/components/surfaces/PageTableBinding.tsx:126 "...(navigate !== null ? { navigate } : {})" — the previous root guard was "...(s.navigate ? { navigate: s.navigate } : {})" (removed from SemiQuestionBinding.tsx), so an empty-string navigate used to be swallowed and is now emitted, and str() at PageTableBinding.tsx:54 "return typeof v === 'string' ? v : null;" keeps "" as a string; the redirect mount effect then replaces the route with an empty path, a fail-open on the empty path — treat blank as absent: const navigate = str('navigate'); ...((navigate !== null && navigate !== '') ? { navigate } : {}).
+
+DEFER severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx:72 "accessibilityState: busy ? { disabled: target === null, busy: true } : { disabled: target === null }," — busy changes only the class and the a11y state, never "disabled: target === null" at line 70, so a second tap on Continue during the in-flight answered lookup re-fires { action: b.action, [b.target]: target } at line 74; no in-tree dedup — set disabled: target === null || busy so the double-submit path is blocked, not just announced.
+
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx:95 "return node('AlertDescription', { key: `${s.id}-text`, className: t.text }, [child]);" — every text part of a notice gets the same key, so any notice whose rows make two text parts visible at once (both gates on, or one ungated) collides on "error-text" and React drops or duplicates the child; key by p.content or part index.
+
+DEFER severity=LOW — mobile/src/components/surfaces/SemiQuestionBinding.tsx:22 "= slice as unknown as {" — the cast asserts a page field the emitter adds only when scripts/surfaces/_schema/static-page.json has a screens entry, so if the generated slice ever lacks it, pageProps(undefined, ...) throws a bare TypeError at screen.sections.filter (PageTableBinding.tsx:124) on every render instead of the named fail-closed error; assert SEMI_QUESTION_SLICE.page at module load with a named message, or draw a status row.
+
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx:100 "if (!Array.isArray(list)) throw new Error(`page table: the list ${s.list} is not supplied`);" — a missing or non-array answers value in the ask state throws during render and takes the screen down, where the builder already degrades fine for an empty array (question plus a null-route disabled Continue); draw the empty case and only throw on a non-array non-null value.
+
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx:21 "| ({ role: 'button'; id: string } & Omit<ButtonRow, 'idle' | 'target' | 'busy'>)" — a notice button cannot express busy or disabled, so the retry path has no in-tree in-flight guard and two taps in the same frame both emit { action: 'retry' }; whether the fetch dedups cannot see from this diff, so allow busy on notice buttons and gate the retry the same way as Continue.
+
+REJECT — mobile/src/components/surfaces/PageTableBinding.tsx:48 "if (!Object.hasOwn(flags, name)) throw new Error(`page table: the flag ${name} is not supplied`);" — a render-time throw looks like it could blank or crash the screen — handled: flagsOf returns its typed Record with all eight SEMI_QUESTION_FLAG_NAMES on every situation, and static-page.logic.test.ts T9 fails CI when a row names a flag outside that list, so drift cannot reach render.
+
+REJECT — mobile/src/components/surfaces/PageTableBinding.tsx:54 "return typeof v === 'string' ? v : null;" — collapsing a degenerate route value to null looks like silent data loss — handled: null is the documented "disabled, idle label, no action" state at lines 70 and 74, so a bad value degrades to no navigation rather than pushing a malformed route.
+
+VERDICT: FAIL on error-path safety
+Paths walked: loading status row, ask with empty answers, ask with null route, ask with busy (double tap), error rate-limited, error entitlement, error unexpected plain, error schema drift, redirect with navigate set, unset and empty string, gated notice parts, unknown flag, missing answers list, missing page in the generated slice, retry double tap
+Unguarded: 4
+
+---
+⏱  70976ms (71.0s)
+📊 Tokens — total: 36227, input: 21794, output: 14433, reasoning: 13398

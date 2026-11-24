@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:44:38.023Z file_sha256=551dc077edc25f65e68cf58d6fffd5bffbd1f7b9eda4078037ea714154edb7e9 prompt_sha256=f7fb2562aea7e193bdda3e75817b538526edc0386a2651e3f724280273aaf2ca
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §4 step 3 "The ruling is recorded in **§5's Register of rulings** with an id, the statement, and what it amends." — scripts/surfaces/_schema/static-page.json:2 "1. Go on the schema extension plus the semi pilot, with the stop rule" — the ruling is recorded only inside a JSON `$comment`; no register id, statement, Amends or Lock cell appears anywhere in the material, so under §4.7a and §4 step 3 the rule has not reached policy while its schema, builder and tests land — land the register row (id, one-line statement, Amends, Lock path) in this same commit.
+
+BUG severity=HIGH — Spec 128 §4 step 4 "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new)" — src/tests/surfaces/static-page.logic.test.ts:70 "['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }]" — every plant on `t.screens.*` already returns false under the pre-change schema because the top level is `"additionalProperties": false` with only `pages`, so each plant is green before and after and proves no closed-kind rule; the lock does not lock — add paired controls (one valid screen passes, the same row with one field changed fails) per closed list so each case is red on the old schema and green on the new.
+
+DEFER severity=MED — Spec 128 §4 step 3 "with an id, the statement, and what it amends" — scripts/surfaces/_schema/static-page.schema.json:5 "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule" — the approval is truncated to "approved ...", names no record path (every other dated note pasted here names a DECISIONS.md or plan path), and its condition "the stop rule" is written down nowhere, so neither the statement nor its condition can be resolved or checked — name the record path and encode the stop rule as a stated, testable condition in the same commit.
+
+DEFER severity=MED — Spec 128 §4 step 5 "If the ruling changes what §2 says generically (not just for one step), this spec is amended in the same commit as the lock" — NONE — the diff touches no file under docs/specs, yet the rule is generic (block order, texts, actions, flags and `targets` for every `screens` surface, web and mobile) and exists only as a schema `$comment`, which is the "only lives in a pilot report" case — amend the governing spec's generic section in this commit, or record why the ruling is single-surface only.
+
+DEFER severity=MED — Spec 128 §4 step 7 "every non-empty moved line found verbatim in the destination, nothing dropped" — mobile/src/components/surfaces/PageTableBinding.tsx:12 "// The tree shape is the one SemiQuestionBinding drew before the table (same keys, same order of props), so its goldens are unchanged." — the move of the semi page's block order, texts and actions out of SemiQuestionBinding.tsx into static-page.json rows is asserted equal by a comment only, and the new test file src/tests/surfaces/page-table.logic.test.ts:22 "const SCREEN: PageScreen = {" runs on a planted screen, never the moved rows — run the unchanged semi goldens or a before/after props-tree comparison against the real row set and cite it in this commit.
+
+DEFER severity=LOW — Spec 128 §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions, one per Spec 126 §0a principle" — mobile/src/components/surfaces/PageTableBinding.tsx:1 "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2" — the change cites existing FE-05, FE-18 and FE-31 but adds no new FE row carrying a `Six` cell for the page-table rule, so on §4.9 the rule is not RULED — add the FE row with its Six cell alongside the register row.
+
+DEFER severity=LOW — Spec 128 §4.10 "One lock per register row (multi-lock rows are split)." — src/tests/surfaces/static-page.logic.test.ts:94 "describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {" — this one rule is locked by two paths (this T9 block and src/tests/surfaces/page-table.logic.test.ts), which §4.10 forbids in one row — split it into two rows or record a single lock path and cite the second as supporting evidence.
+
+MET — Spec 128 §4 step 4 — src/tests/surfaces/page-table.logic.test.ts:22 — the green direction exists: B1 to B5 exercise the new builder on a planted screen, so only the red-on-old-behaviour direction is missing.
+MET — Spec 128 §4.8.1 — src/tests/surfaces/page-table.logic.test.ts:13 "import { pageProps, type PageScreen, type PageStyles } from '../../../mobile/src/components/surfaces/PageTableBinding';" — the lock is a real repo path the existing resolver can resolve, not prose.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 6
+
+---
+⏱  91778ms (91.8s)
+📊 Tokens — total: 48369, input: 30470, output: 17899, reasoning: 16671

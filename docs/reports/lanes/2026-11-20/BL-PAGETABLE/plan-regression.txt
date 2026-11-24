@@ -1,0 +1,55 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:33:26.019Z file_sha256=fefdf20f4c0a98e7ea60a15f92b9d96b0758289cead871f9e20b6a58c0995e65 prompt_sha256=52061ce33083bfc31e4b64da02975175cb4cd4ec72f6baa7bde474683dd34721
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/PLAN.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — change 3 (PageTableBinding.tsx "import-free, pure") — an import-free builder cannot import `PageProps` from `SurfaceRenderer.tsx`, so the builder's output shape can silently drift from the renderer's expected shape and only a golden catches it — allow `import type { PageProps }` (erased at runtime) and add a `.ts` assertion `const _: PageProps = pageProps(...)` in B1-B5.
+
+BUG severity=HIGH — change 5 (emit-mobile-surfaces.mjs) — regenerating all surfaces (not per-surface) means any shared serialization/ordering change silently shifts other pages' emitted slices and their goldens — add a scoped `--surface=mobile_parcel_semi_question` mode or assert `git diff` on the other three pages' emitted slices is empty before commit.
+
+BUG severity=HIGH — change 1 (`targets` default both) — if the web emit path also iterates `screens` and selects on `targets`, the default leaks `mobile_parcel_semi_question` into the web slice — set `targets: ["mobile"]` explicitly on this screen and add a test that the web slice excludes it.
+
+BUG severity=HIGH — change 6 verification ("mobile jest golden test is UNVERIFIED locally") — if `semi-question-golden-capture.ts --check` does not import `SurfaceRenderer.tsx` and run it through `PageTableBinding`, the STOP-RULE byte-identity gate cannot be evaluated before push (catches only at Mobile CI) — assert the capture script's import graph reaches `mobile/src/components/surfaces/SurfaceRenderer.tsx`, or add a local render that produces the same bytes.
+
+BUG severity=HIGH — change 2 section list (bar, status, 3 notices, text, choices, button) — the section order must match the current renderer's draw order exactly or every golden shifts; the stop rule catches this only after the emit is generated and diffed (post-push) — commit a snapshot of the current render tree's section order and assert the table's order equals it in B1.
+
+MED — change 4 derived flags — `when` is a single positive flag with no precedence, so a concurrent state (loading && error) renders both sections; if the current binding short-circuits with `if/else`, the semantics silently change at concurrent states — add a test that the situation→flags derivation yields mutually-exclusive flags (or express an explicit priority field).
+
+MED — T9 "flags in the declared list" — a `when` naming a *declared-but-never-set* flag permanently hides the section with no test failure — extend T9 to assert every section's `when` flag is set true by at least one situation and every declared flag is referenced by at least one section.
+
+MED — T9 "content keys exist" — no assertion that every section's style class is a key of the `PageStyles` table; a missing class may silently fall back — extend T9 to assert each referenced style class exists in `PageStyles`, and have `pageProps` throw on a missing style key.
+
+MED — change 2 `status(loading)` / `bar(back)` as unconditional table rows — if the current binding renders status only when loading, or back only when can-go-back, "always on" is a behavior change not caught by a section-count test — state each row's `when` explicitly or add a golden that exercises the non-loading / no-back situation.
+
+MED — change 1 closed lists action {back, retry, push, select} / icon {ChevronLeft, AlertTriangle, Info} — if the existing SemiQuestionBinding uses another action or icon (e.g., a close/dismiss), the migration cannot encode it and the golden fails late — grep the existing binding for action/icon identifiers now and extend the closed lists before implementation.
+
+MED — change 6 tests-first — the first commit is red-by-design; if Mobile CI gates per-commit, the branch is red at commit 1 — confirm CI gates only the final commit, or plan a squash of the tests-first + impl into one pushable commit.
+
+MED — rollback path — `git revert` of the implementation commit alone leaves the red tests in the tree; the revert unit is both commits — state rollback as `git revert -n <tests-commit>..<impl-commit>` (or revert both hashes) explicitly in the plan.
+
+LOW — change 2 `text(question)` / `choices(answers)` — empty or single-element answers, or a whitespace-only question, may render a `text`/`choices` container where the current binding renders nothing — verify `values.question` is non-empty and `values.answers` is non-empty for all semi question situations.
+
+LOW — change 1 `when` (one positive flag, no expression) — a typo landing on a *different declared* flag silently misroutes to another section; only a golden exercising that situation catches it — add a note that any future situation must ship a covering golden.
+
+DEFER severity=MED — change 5 `--check` — if `--check` diffs the slice against a cached artifact rather than re-deriving it from `_schema/static-page.json`, a stale slice passes silently — ensure `--check` regenerates from the schema and idempotently diffs.
+
+REJECT — cache poisoning (MMKV / TanStack Query) — this refactor ships no query or cache changes — operator note confirms dev-only, no cache persistence concerns.
+
+REJECT — DB migration / DOWN block / FK / NULL writes (`lead_score` 23502 pattern) — this change writes to source files only; no DB writes, no migrations, no FK edges exist to violate.
+
+REJECT — two-writer row contention / watermark drift — this is a source-tree refactor with a single commit unit; the only "writer" risk is partial commits, already covered above.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Local verification loop cannot evaluate the STOP RULE (mobile jest golden test UNVERIFIED locally); if `semi-question-golden-capture.ts --check` does not run the real renderer through `PageTableBinding`, byte-identity is only provable post-push.
+- `targets` default `both` (change 1) plus a possibly-non-filtering web emit path leaks a mobile-only screen into web.
+- `emit-mobile-surfaces.mjs` regeneration blast radius: a change to a shared generator can silently shift the other three pages' emitted slices and goldens.
+
+Top 3 unverified data premises (regardless of verdict):
+- "The existing SemiQuestionBinding renders exactly 8 sections bar/status/3 notices/text/choices/button" — verify by opening `mobile/src/components/surfaces/SemiQuestionBinding.tsx` and enumerating each rendered element in order.
+- "The existing capture reproduces the committed fixtures byte-for-byte on the untouched tree" — run `tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check` on the current HEAD (exit 0 = valid baseline).
+- "PageStyles from `lotMap` covers every section's style class" — `rg -n "lotMap|pageStyles|styleClass" mobile/src/components/surfaces/SemiQuestionBinding.tsx` and diff the keys against the 8 sections' style classes before writing the table.
+
+---
+⏱  58404ms (58.4s)
+📊 Tokens — total: 13206, input: 2672, output: 10534, reasoning: 8943

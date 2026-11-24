@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:19.332Z file_sha256=d60d74143cbf5538e783cd5370844385ca6a50325a377d6807c432a7191f8cf1 prompt_sha256=bd2774125f818a9eda89db8dd54b18e004579c2dcac0fb7d4f59a34ae013c7d2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-100-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 amendment 2026-09-15 item 1 "`mobile/app/(app)/parcel-tool/[parcelId].tsx` becomes a descriptor of archetype **REPORT**, and `parcel-tool/index.tsx` a **SEARCH**." — scripts/surfaces/_schema/bindings.json:2 "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\")" — the pasted conversion names exactly two surfaces, neither touched here, and this diff converts a third surface (the mobile semi question, contract_parcels_lookup) to data rows plus a new top-level `screens` schema; its only authority is its own comment, and Spec 126 §0a/§11b.2 and the 2026-11-20 ruling are not pasted, so the added behaviour is unnamed by any pasted clause — paste Spec 126 §0a and §11b.2 and the operator words into the context, or split the semi question conversion and the `screens` schema extension out of this change.
+
+DEFER severity=MED — Spec 100 dated note 2026-11-11 "A new lot past the monthly allowance is a 403 `REPORT_LIMIT_REACHED` with `reportsLimit` and `resetsOn` and no parcel payload" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', 'unexpected', 'plain_error', 'schema_drift', 'busy'] as const;" — no flag or row renders the limit-reached 403 or its `resetsOn`, and this is the screen whose Continue runs the answered lookup, so a user past the allowance would fall to the entitlement copy ("reactivate to search lots again"), which misstates a monthly limit — add a `limit_reached` flag and a notice row carrying `resetsOn`, or record that state as outside this screen in the pasted ruling.
+
+MET — Spec 100 §2.5 "The Tier-1 payload MUST never go blank because a Tier-2 blob drifted." — SemiQuestionBinding.tsx flagsOf "plain_error: unexpected && !s.errors.schemaDrift, schema_drift: unexpected && s.errors.schemaDrift" — drift keeps its own text and the retry action stays exclusive to plain errors, as before.
+
+MET — Spec 100 §2.6 "A miss is a result, not an error (Spec 89 §5 exact payloads)." — mobile_parcel_semi_question.json page "kind": "choices", "list": "answers" — the screen still branches on the situation's state, not on an HTTP status.
+
+MET — Spec 100 §2.7 "The proprietary cost model is gated in the handler ... 403" — mobile_parcel_semi_question.json page "content": "state.entitlement" with "tone": "neutral" — the refusal state is preserved through the rows.
+
+MET — Spec 100 amendment item 3 "§2 and §3.2 are deleted from prose **only at the conversion commit**, not before, and not by this amendment." — no file under docs/specs in the diff — Spec 100's prose is untouched.
+
+MET — Spec 100 measured-defect note "`mobile/src/lib/parcelCostFormat.ts:14 COST_LINE_ORDER` transcribes `scripts/lib/parcel-cost.js:77 PARCEL_COST_LINES` with a different order and **no lock**." — src/tests/surfaces/static-page.logic.test.ts "expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);" — this new rows-to-slice transcription is locked against its source, unlike the cost-line case.
+
+REJECT — Spec 100 §1 "Zero writes; zero migrations; zero pipeline changes." — the emit-mobile-surfaces.mjs edit is called a pipeline change — the clause governs the parcel/coa data path (writes, migrations, ingestion), and no data path is touched; surface codegen is not that pipeline.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+
+---
+⏱  97621ms (97.6s)
+📊 Tokens — total: 48234, input: 28854, output: 19380, reasoning: 18418

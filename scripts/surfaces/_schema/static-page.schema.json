@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "static-page.schema.json",
   "title": "MaxBLD static page (archetype STATIC, web)",
-  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number. Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; DECISIONS-v1 D-6 (a), plan v1 fold 8): prose gains the role mailto, a mail link to the one support inbox. Its content is the visible label (also the mail subject); its topic is one of a closed list; its value is the declared server read support_inbox (FE-37, migration 314), never an address or an href in the data. The server leaves a mailto part out while the inbox is unset (the value mechanism of MF-76).",
+  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number. Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; DECISIONS-v1 D-6 (a), plan v1 fold 8): prose gains the role mailto, a mail link to the one support inbox. Its content is the visible label (also the mail subject); its topic is one of a closed list; its value is the declared server read support_inbox (FE-37, migration 314), never an address or an href in the data. The server leaves a mailto part out while the inbox is unset (the value mechanism of MF-76). Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"; Spec 126 section 0a principle 1 and section 11b.2): a top-level `screens` joins `pages`: one INTERACTIVE page per surface (surface id -> prefix, contract, sections), its block order, texts, actions and the block shown under a named flag are rows. CLOSED section kinds bar, status, text, notice, choices and button; a `when` is ONE positive flag name (a name, never an expression, a negation or a list) from the closed per-surface list the surface's binding declares (checked by static-page.logic.test.ts T9); `targets` is a subset of web and mobile (default both); action and icon are closed lists; every shown text is a content key, never a typed value or a number. Derivation (the flags and values), geometry, input state and fetch stay code; the class tables stay typed per platform. Read by mobile/src/components/surfaces/PageTableBinding.tsx through the generated slice (scripts/surfaces/emit-mobile-surfaces.mjs); the web static pages and `pages` are untouched. Dated note 2026-11-20 (PAGE.TABLE fix round, task-390): a screen names its `binding` (the module whose closed name lists the rows may use; scripts/surfaces/surface-validate.mjs arm S-page checks every flag, value, vars path, contract and content leaf against it at build time), may name `targets` for the whole screen, and a choices row names its action payload key `arg` (a closed list, so the builder holds no page-specific name). Dated note 2026-11-20 (PAGE.TABLE round 3, task-390; grounder resolution under the operator delegation, MORNING-DECISIONS.md:1476): the field `targets` is renamed `platforms`, values web and mobile only, the same word and closed list as the surface descriptor's identity.platforms (Spec 126:238-248; scripts/surfaces/_schema/surface.schema.json identity.platforms). It is optional on a screen and on a section; absent means both; the phone builder draws a section only when it lists mobile.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -26,6 +26,15 @@
         "additionalProperties": {
           "$ref": "#/$defs/page"
         }
+      }
+    },
+    "screens": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/screen"
       }
     }
   },
@@ -500,6 +509,449 @@
               }
             }
           }
+        }
+      }
+    },
+    "flag": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "contentKey": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)+$"
+    },
+    "icon": {
+      "enum": [
+        "ChevronLeft",
+        "AlertTriangle",
+        "Info"
+      ]
+    },
+    "action": {
+      "enum": [
+        "back",
+        "retry",
+        "push",
+        "select"
+      ]
+    },
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "contract",
+        "binding",
+        "sections"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "contract": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/screen_bar"
+              },
+              {
+                "$ref": "#/$defs/screen_status"
+              },
+              {
+                "$ref": "#/$defs/screen_text"
+              },
+              {
+                "$ref": "#/$defs/screen_notice"
+              },
+              {
+                "$ref": "#/$defs/screen_choices"
+              },
+              {
+                "$ref": "#/$defs/screen_button"
+              }
+            ]
+          }
+        },
+        "binding": {
+          "type": "string",
+          "pattern": "^mobile/src/components/surfaces/[A-Za-z0-9]+\\.tsx$"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        }
+      }
+    },
+    "screen_bar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "bar"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "icon",
+              "content",
+              "action"
+            ],
+            "properties": {
+              "role": {
+                "const": "back"
+              },
+              "icon": {
+                "$ref": "#/$defs/icon"
+              },
+              "content": {
+                "$ref": "#/$defs/contentKey"
+              },
+              "action": {
+                "const": "back"
+              }
+            }
+          }
+        }
+      }
+    },
+    "screen_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "content"
+      ],
+      "properties": {
+        "kind": {
+          "const": "status"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "content": {
+          "$ref": "#/$defs/contentKey"
+        }
+      }
+    },
+    "screen_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "role",
+        "content"
+      ],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "role": {
+          "const": "header"
+        },
+        "content": {
+          "$ref": "#/$defs/contentKey"
+        }
+      }
+    },
+    "screen_notice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "tone",
+        "icon",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "notice"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "tone": {
+          "enum": [
+            "error",
+            "neutral"
+          ]
+        },
+        "icon": {
+          "$ref": "#/$defs/icon"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "content"
+                ],
+                "properties": {
+                  "role": {
+                    "const": "text"
+                  },
+                  "content": {
+                    "$ref": "#/$defs/contentKey"
+                  },
+                  "vars": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "propertyNames": {
+                      "pattern": "^[a-z0-9_]+$"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9_.]+$"
+                    }
+                  },
+                  "when": {
+                    "$ref": "#/$defs/flag"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "id",
+                  "variant",
+                  "label",
+                  "content",
+                  "action"
+                ],
+                "properties": {
+                  "role": {
+                    "const": "button"
+                  },
+                  "id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "variant": {
+                    "enum": [
+                      "default",
+                      "outline"
+                    ]
+                  },
+                  "label": {
+                    "$ref": "#/$defs/contentKey"
+                  },
+                  "content": {
+                    "$ref": "#/$defs/contentKey"
+                  },
+                  "action": {
+                    "$ref": "#/$defs/action"
+                  },
+                  "when": {
+                    "$ref": "#/$defs/flag"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "screen_choices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "list",
+        "select",
+        "content",
+        "action",
+        "arg"
+      ],
+      "properties": {
+        "kind": {
+          "const": "choices"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "list": {
+          "$ref": "#/$defs/id"
+        },
+        "select": {
+          "$ref": "#/$defs/id"
+        },
+        "content": {
+          "$ref": "#/$defs/id"
+        },
+        "action": {
+          "const": "select"
+        },
+        "arg": {
+          "enum": [
+            "parcelId"
+          ]
+        }
+      }
+    },
+    "screen_button": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "variant",
+        "label",
+        "content",
+        "action"
+      ],
+      "properties": {
+        "kind": {
+          "const": "button"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "when": {
+          "$ref": "#/$defs/flag"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "web",
+              "mobile"
+            ]
+          }
+        },
+        "variant": {
+          "enum": [
+            "default",
+            "outline"
+          ]
+        },
+        "label": {
+          "$ref": "#/$defs/contentKey"
+        },
+        "content": {
+          "$ref": "#/$defs/contentKey"
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "idle": {
+          "$ref": "#/$defs/contentKey"
+        },
+        "target": {
+          "$ref": "#/$defs/id"
+        },
+        "busy": {
+          "$ref": "#/$defs/flag"
         }
       }
     }

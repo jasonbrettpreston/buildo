@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:42:29.856Z file_sha256=a302661cbae81f8ed1cab3ac3e4c24c23144efbae5245b1281648df0c70acdfe prompt_sha256=48991def76cbff2750febf0f7da05d7580ca1959309f3e55b02f1aa5b34844b8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling cited for this change (2026-11-20 PAGE.TABLE approval) is not in the pasted context — scripts/surfaces/_schema/bindings.json:2 "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\")" — the only authority for the whole change (the new `screens` table, six new section kinds, the semi pilot, the stop rule) is quoted inside the material itself and no pasted clause or ruling names it — paste the 2026-11-20 ruling plus the Spec 126 §11b.2 dated note and the Spec 135 FE row into the review context before lock.
+
+DEFER severity=MED — Spec 126 §0a principle 1 and §11b.2, the clauses the diff says it obeys, are not in the pasted part (part 7 of 11 covers §11a.7 to §11a.10) — mobile/src/components/surfaces/PageTableBinding.tsx:1 "SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2" — the central claim of the change (block order and texts are DATA rows, derivation, geometry, input state and fetch stay code) rests on text that cannot be seen — paste those sections, or record in the material that they are reviewed in their own part.
+
+DEFER severity=LOW — MF-57 dated note 2026-11-11 "A page tree is the sections of the page table `report-page.json` in screen order" — scripts/surfaces/_schema/static-page.json:1204 "\"screens\": { \"mobile_parcel_semi_question\": {" — the pasted rulings name one page table for a PAGE tree (the report page, report-page.schema.json), and this change creates a second page table and a second page schema (static-page.schema.json `screens`) for interactive pages with no pasted clause saying where an interactive page's rows live — record the interactive-page home in the pasted spec text so the two tables cannot later be read as one contract.
+
+MET — §11a.7 items (2) and (7), golden path src/tests/fixtures/surfaces/report/<state>.<target>.json and the one node contract report-tree.schema.json — scripts/surfaces/emit-mobile-surfaces.mjs:55 "const slice = { surface: id, config, content, ...(screens[id] === undefined ? {} : { page: screens[id] }) };" with src/tests/surfaces/page-table.logic.test.ts:78 "expect(Object.keys(SCREENS)).toEqual([ID]);" — only the semi question slice gains `page`, so the report slices, report-state goldens and report-tree contract are untouched.
+
+MET — §11a.9 goldens no_user_entry, user_entry, user_entry_outranked and the MF-19 page states entry_off, entered, entered_used — the diff changes only the LIST semi question screen and its slice, no report page row or page golden — the section's goldens stand.
+
+REJECT — §11a.10 ad slots — the change is accused of disturbing the ad-slot rules — no `ad_slot` source, slot id, scenario card row or targeting key appears in the added `screens` rows, so that clause is untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  51795ms (51.8s)
+📊 Tokens — total: 43967, input: 34038, output: 9929, reasoning: 9138

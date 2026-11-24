@@ -1,0 +1,40 @@
+- ]
++ Array []
+
+ ❯ src/tests/surfaces/page-arm.logic.test.ts:103:21
+    101|   it('RED: a missing table, an empty screens map and a failed context …
+    102|     const missing = pageArm(ctxOf(rootWith(null))).findings;
+    103|     expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable scree…
+       |                     ^
+    104|     expect(pageArm(ctxOf(rootWith(JSON.stringify({ pages: {}, screens:…
+    105|     expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/surfaces/page-arm.logic.test.ts > P4 the arm fails on an unreadable or empty table > RED: a second caller of the builder with no screen in the table is a finding with both counts
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "SV-PAGE scripts/surfaces/_schema/static-page.json: 1 screen(s) read, 2 expected (the binding modules that call the page builder)",
+- ]
++ Array []
+
+ ❯ src/tests/surfaces/page-arm.logic.test.ts:112:33
+    110|     fs.writeFileSync(path.join(root, other), 'export const x = pagePro…
+    111|     const c = ctxOf(root); c.bindings.modules.push({ path: other, plat…
+    112|     expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 1 scr…
+       |                                 ^
+    113|   });
+    114| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 passed (17)
+   Start at  12:27:00
+   Duration  2.60s (transform 2ms, setup 5ms, collect 13ms, tests 9ms, environment 0ms, prepare 19ms)
+
+exit=1

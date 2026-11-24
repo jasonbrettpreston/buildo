@@ -8,129 +8,74 @@
 // the generated slice), {"contract": p} a 429 detail, {"derived": n} a value from the situation (the closed list SEMI_QUESTION_DERIVED_NAMES).
 // The three answers are radio cards (the lot-card idiom), nothing selected at open, Continue disabled until one is chosen. Classes, hexes and numbers
 // are the MF-53 layout table (mobile/src/constants/lotMap.ts); SRCH.SEMI stage 2 (task-319, MF-93) draws the approved mock with the semi-prefixed keys of that table.
+//
+// PAGE.TABLE (task-390): the page structure (block order, texts, actions, which block shows under a named flag) is the rows of `screens.mobile_parcel_semi_question`
+// in scripts/surfaces/_schema/static-page.json, copied into the slice (`page`) and drawn by pageProps (PageTableBinding.tsx). This file keeps what stays code:
+// the closed flag list, the situation -> flags and values derivation, and the typed class table.
 import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
 import { LOT_MAP_BOTTOM_PADDING, LOT_MAP_HEX as H, LOT_MAP_LAYOUT as L, LOT_MAP_SIZES as Z } from '@/constants/lotMap';
 import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
 import type { SemiQuestionSituation } from '@/lib/semiQuestion';
-import type { Child, PropsNode, Ref } from '@/components/surfaces/SearchBinding';
+import type { SemiAnswer } from '@/lib/lotForm';
+import type { PropsNode } from '@/components/surfaces/SearchBinding';
+import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';
 
-/** The generated slice: the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
-export const SEMI_QUESTION_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
+/** The generated slice: the content strings and the page rows (scripts/surfaces/emit-mobile-surfaces.mjs). */
+export const SEMI_QUESTION_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string>; page: PageScreen } = slice as unknown as {
+  surface: string; config: Record<string, number>; content: Record<string, string>; page: PageScreen;
+};
 
 /** The closed list of derived names (patterns), declared in the S-093 deviation entry. */
 export const SEMI_QUESTION_DERIVED_NAMES = [/^answer\.(0|[1-9][0-9]*)$/];
 
-const CONTRACT = 'contract_parcels_lookup';
-const content = (key: string): Ref => ({ content: key });
-const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
-const derived = (name: string): Ref => ({ derived: name });
-const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+/** The closed list of flag names a `when` of the rows may name (static-page.logic.test.ts T9 checks the rows against it). */
+export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', 'unexpected', 'plain_error', 'schema_drift', 'busy'] as const;
+/** The closed lists of the other names the rows may use: the values the binding passes, the contract paths it resolves, the leaves a choices row expands to, and its contract id
+ *  (read by the S-page arm of scripts/surfaces/surface-validate.mjs; data, not logic). */
+export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;
+export const SEMI_QUESTION_VAR_PATHS = ['errors.429.retryAfterSeconds'] as const;
+export const SEMI_QUESTION_CHOICES: Record<string, readonly SemiAnswer[]> = { answers: ['yes', 'no', 'not_sure'] };
+export const SEMI_QUESTION_CONTRACT = 'contract_parcels_lookup';
+type SemiQuestionFlags = Record<(typeof SEMI_QUESTION_FLAG_NAMES)[number], boolean>;
 
-const header = (): PropsNode =>
-  node('View', { key: 'header', className: L.semiTop }, [
-    node('Button', {
-      key: 'back',
-      testID: 'parcel-semi-back',
-      variant: 'ghost',
-      size: 'icon',
-      className: L.semiBack,
-      accessibilityRole: 'button',
-      accessibilityLabel: content('back.label'),
-      onPress: { action: 'back' },
-    }, [node('Icon', { key: 'back-icon', icon: 'ChevronLeft', size: Z.backIcon, color: H.icon })]),
-  ]);
+const CONTRACT = SEMI_QUESTION_CONTRACT;
 
-const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
-  node('Alert', { key, testID: `parcel-semi-${key}`, icon, iconClassName, className }, children as PropsNode[]);
-
-const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
-  ...(s.errors.rateLimited
-    ? [notice('ratelimit', 'AlertTriangle', L.noticeIcon, [node('AlertDescription', { key: 'ratelimit-text', className: L.noticeText }, [
-      { text: content('state.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } },
-    ])], L.noticeError)]
-    : []),
-  ...(s.errors.entitlement
-    ? [notice('entitlement', 'Info', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
-    : []),
-  ...(s.errors.unexpected
-    ? [notice('error', 'AlertTriangle', L.noticeIcon, [
-      node('AlertDescription', { key: 'error-text', className: L.noticeText }, [content(s.errors.schemaDrift ? 'state.schema_drift' : 'state.error')]),
-      ...(s.errors.schemaDrift ? [] : [node('Button', {
-        key: 'retry',
-        testID: 'parcel-semi-retry',
-        variant: 'outline',
-        className: L.semiRetry,
-        accessibilityRole: 'button',
-        accessibilityLabel: content('retry.label'),
-        onPress: { action: 'retry' },
-      }, [node('Text', { key: 'retry-text', className: L.retryText }, [content('retry.text')])])]),
-    ], L.noticeError)]
-    : []),
-];
-
-const cards = (s: SemiQuestionSituation): PropsNode[] =>
-  s.answers.map((a, i) => {
-    const checked = a === s.selected;
-    return node('Button', {
-      key: `answer-${a}`,
-      testID: `parcel-semi-answer-${a}`,
-      variant: 'outline',
-      className: checked ? L.semiCardChecked : L.semiCard,
-      role: 'radio',
-      accessibilityState: { checked },
-      accessibilityLabel: content(`answer.${a}`),
-      onPress: { action: 'select', parcelId: derived(`answer.${i}`) },
-    }, [node('View', { key: 'card-row', className: L.semiCardRow }, [
-      node('View', { key: 'card-dot', className: checked ? L.semiDotChecked : L.semiDot }),
-      node('Text', { key: 'card-title', className: L.semiCardText }, [content(`answer.${a}`)]),
-    ])]);
-  });
-
-// SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: accessibilityState busy and the approved busy look, the rule the mock draws
-// (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }`; v8 choose-lot.html:132). The mock draws no busy section and no busy text.
-const continueButton = (s: SemiQuestionSituation): PropsNode =>
-  node('Button', {
-    key: 'continue',
-    testID: 'parcel-semi-continue',
-    variant: 'default',
-    className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect,
-    disabled: s.route === null,
-    accessibilityRole: 'button',
-    accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null },
-    accessibilityLabel: content('select.label'),
-    onPress: s.route === null ? null : { action: 'push', route: s.route },
-  }, [node('Text', { key: 'continue-text', className: L.selectText }, [content(s.route === null ? 'select.none' : 'select.go')])]);
-
-const body = (s: SemiQuestionSituation): PropsNode[] => {
-  switch (s.state) {
-    case 'loading':
-      return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];
-    case 'error':
-      return errorNotices(s);
-    case 'ask':
-      return [
-        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.semiHeading, role: 'header' }, [content('question.title')]),
-        ...cards(s),
-        continueButton(s),
-      ];
-    case 'redirect':
-      return [];
-  }
+/** The typed per-platform class table (the MF-53 layout table; the rows never carry a class). */
+const STYLES: PageStyles = {
+  screen: L.screen, scroll: L.scroll, column: L.column, bottomPadding: LOT_MAP_BOTTOM_PADDING, maxWidth: SEARCH_MAX_WIDTH,
+  bar: L.semiTop, back: L.semiBack, backIconSize: Z.backIcon, iconColor: H.icon,
+  status: L.semiLoadingText, heading: L.semiHeading,
+  notice: {
+    error: { box: L.noticeError, icon: L.noticeIcon, text: L.noticeText },
+    neutral: { box: L.notice, icon: L.noticeIconNeutral, text: L.noticeTextNeutral },
+  },
+  card: { idle: L.semiCard, checked: L.semiCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiCardText },
+  // SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: the approved busy look (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85 }`).
+  button: {
+    default: { className: L.semiSelect, busyClassName: `${L.semiSelect} opacity-[0.85]`, text: L.selectText },
+    outline: { className: L.semiRetry, busyClassName: L.semiRetry, text: L.retryText },
+  },
 };
+
+/** The flags of one situation (derivation stays code): the notices show in the error state only; the schema-drift text and the retry are exclusive. */
+function flagsOf(s: SemiQuestionSituation): SemiQuestionFlags {
+  const error = s.state === 'error';
+  const unexpected = error && s.errors.unexpected;
+  return {
+    loading: s.state === 'loading',
+    ask: s.state === 'ask',
+    rate_limited: error && s.errors.rateLimited,
+    entitlement: error && s.errors.entitlement,
+    unexpected,
+    plain_error: unexpected && !s.errors.schemaDrift,
+    schema_drift: unexpected && s.errors.schemaDrift,
+    busy: s.busy,
+  };
+}
 
 /** The props tree of one render. The redirect state adds `navigate` (the mount's effect replaces the route with it). */
 export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {
-  return node('SafeAreaView', { className: L.screen, edges: { top: 'additive' }, testID: 'parcel-semi-screen', ...(s.navigate ? { navigate: s.navigate } : {}) }, [
-    header(),
-    node('ScrollView', {
-      key: 'scroll',
-      className: L.scroll,
-      contentContainerStyle: { paddingBottom: LOT_MAP_BOTTOM_PADDING, alignItems: 'center' },
-      keyboardShouldPersistTaps: 'handled',
-    }, [node('View', { key: 'column', testID: 'parcel-semi-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
-      ...body(s),
-    ])]),
-  ]);
+  return pageProps(SEMI_QUESTION_SLICE.page, flagsOf(s), { answers: s.answers, selected: s.selected, route: s.route, navigate: s.navigate }, STYLES);
 }
 
 export type SemiQuestionBindingData = { contract: Record<string, unknown>; derived: Record<string, unknown> };

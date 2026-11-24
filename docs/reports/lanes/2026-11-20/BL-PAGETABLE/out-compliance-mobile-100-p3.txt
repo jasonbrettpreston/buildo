@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:19.319Z file_sha256=35bb8d96635285340dcb847dced9477e65007c2b2e98c0ab2e7ee3611cd571c7 prompt_sha256=4b3026672fc920e2406d48aebf71a5e3ba370ddba8361eda150449146ba6a95f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-100-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Operating Boundaries, Out-of-Scope Files "ALL of `scripts/`, `migrations/` (zero migrations, zero new indexes — the resolver reuses Spec 89 §3.3's indexed normalized columns)" — "diff --git a/scripts/surfaces/_schema/static-page.schema.json b/scripts/surfaces/_schema/static-page.schema.json" plus edits to scripts/surfaces/_schema/static-page.json, scripts/surfaces/_schema/bindings.json and scripts/surfaces/emit-mobile-surfaces.mjs — clause unmet: four files under `scripts/` are changed by a change whose pasted scope declares `scripts/` out of scope — move the schema/table/emitter work to the item that owns `scripts/`, or get the out-of-scope clause amended by ruling before merge
+
+BUG severity=HIGH — Operating Boundaries, Target Files "Target Files: `src/app/api/parcels/lookup/{route.ts,types.ts}` · … · `mobile/src/components/parcel/SponsorSlot.tsx` · `mobile/app/(app)/parcel-tool/{_layout.tsx,index.tsx,[parcelId].tsx}` · one tab entry in `mobile/app/(app)/_layout.tsx` · the §6 test files." — "+++ b/mobile/src/components/surfaces/PageTableBinding.tsx" and "+++ b/mobile/src/components/surfaces/SemiQuestionBinding.tsx" — clause unmet: the new module and the binding rewrite fall outside the closed target-file list — add them to Target Files by ruling or land this under the spec that owns the surface bindings
+
+BUG severity=HIGH — Pasted context authorises none of this work "The material under review (everything below this line)" plus "a change that adds behaviour no pasted clause or ruling names is a finding" — scripts/surfaces/_schema/bindings.json "$comment": "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\")" — clause unmet: the authorising ruling (task-390, the "semi pilot") is asserted only inside the material, no pasted spec clause or operator ruling names a page table, a `screens` table or the semi question screen — paste that ruling into the review context or defer the change until a pasted ruling covers it
+
+BUG severity=MED — §6 Test Plan "**Mobile Jest (`mobile/__tests__/`, jest-node — no render tree per Spec 98):** the `ConsumerParcelLookupResultSchema` parses a server-shaped fixture …" — "+++ b/src/tests/surfaces/page-table.logic.test.ts" with "import { describe, expect, it } from 'vitest';" and "describe('T9 the interactive screens (PAGE.TABLE, task-390)'" inside static-page.logic.test.ts — clause unmet: the mobile screen rows are asserted in vitest suites under `src/tests`, not in the declared mobile Jest tier location — move or mirror the mobile assertions into `mobile/__tests__/`
+
+MET — Operator note 2026-11-10 (MF-35 panel fold) "its 429 class lists `fields: [\"retryAfterSeconds\"]` (the `Retry-After` header in seconds, read by the client)" — scripts/surfaces/_schema/static-page.json `"seconds": "errors.429.retryAfterSeconds"` — the retry-after stays a contract-field read, no typed value or number in the row
+
+MET — §4 "**`RateLimitError` retry-after surfaced inline**" — mobile/src/components/surfaces/PageTableBinding.tsx `{ contract: `${screen.contract}.${path}` }` — the notice variable resolves against the screen contract, so the inline retry text is drawn from the contract field, not hardcoded
+
+MET — §4 "NO Layer-3 store (read-only)" (screen-level rule the new builder is most likely to break) — mobile/src/components/surfaces/PageTableBinding.tsx first lines `type Ref = { content: string } | { contract: string } | { derived: string };` with no import or hook in the file — the builder reads only its arguments, no store, no fetch
+
+REJECT — §4 dated note 2026-11-12 "Item 1-5 above (the headlines, the cost cards, the neighbours summary, the examples and the reserved `SponsorSlot`) leave the screen" — accused of reinstating the retired lot-screen sections — the diff draws only bar, status, notice, text, choices and button rows and no SponsorSlot, so the retirement is untouched
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+
+---
+⏱  34885ms (34.9s)
+📊 Tokens — total: 37077, input: 30095, output: 6982, reasoning: 5920

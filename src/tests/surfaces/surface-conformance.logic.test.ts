@@ -388,7 +388,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([13, 8, 25]); // task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([14, 8, 25]); // PAGE.TABLE (dated 2026-11-20, task-390): + PageTableBinding.tsx (the shared phone page-table builder; operator "yes approved", MORNING-DECISIONS.md:1444); task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -804,7 +804,7 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
   it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList', () => {
     console.log(`C-8m: ${mods.length} mobile modules`);
     // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list). MF-53: + LotMapBinding.tsx (no JSX).
-    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/SemiQuestionBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
+    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/SemiQuestionBinding.tsx', 'mobile/src/components/surfaces/PageTableBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
     for (const m of mods) {
       const host = MOBILE_HOSTS[m.path];
       const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];

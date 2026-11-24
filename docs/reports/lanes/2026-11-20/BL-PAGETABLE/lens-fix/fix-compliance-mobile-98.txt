@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:33.674Z file_sha256=79efe04b930a8a4a6a07e77def7b38df43ae0d3b0e47fa6e902a9c9671b25772 prompt_sha256=c08d731f4ff215c8174510e9ae44ce28b5d46cddba78bc4bb63ea85d66368842
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — Spec 98 §4 "**Tool:** Jest + jest-expo / **Location:** `mobile/__tests__/`" — src/tests/surfaces/page-table.logic.test.ts:90 "+describe('B6 names the builder is given that no value supplies', () => {" — the new behaviour of the mobile page-table builder (throw on an unsupplied name, screen targets, choices `arg`) is tested only in the root vitest suite under src/tests, so the pasted mobile unit-test tool and location carry no test for it — add mobile/__tests__/pageTableBinding.test.ts (Jest + jest-expo) covering the same three throws, or record in Spec 98 §4 that builder tests live in src/tests.
+DEFER severity=MED — pasted context "(no pasted context provided)" — scripts/surfaces/_schema/static-page.json:1209 "+   \"binding\": \"mobile/src/components/surfaces/SemiQuestionBinding.tsx\"," — no pasted clause or operator ruling names the screen-level `binding`, the screen `targets`, or the choices `arg` field; the only authority in the material is the diff's own $comment dated note (task-390 "approved ... 1. Go on the schema extension plus the semi pilot"), which is material under review and not a pasted ruling, so traceability cannot see a governing clause — paste the task-390 operator ruling and Spec 126 §11b.2 text so the added fields are judged against a clause, or drop the fields.
+DEFER severity=LOW — Spec 98 §5 "`npm run test` (Jest unit tests)" — src/tests/surfaces/static-page.logic.test.ts:114 "−  it('every flag a row names is in the closed list the binding declares; every content key is in the content file; none is a typed text', () => {" — the flag and content-key check is deleted from the vitest suite and now rests only on the S-page arm of scripts/surfaces/screen-checks.mjs, which the pasted §5 PR-check list does not name, so on any PR where the surfaces hook does not run the check is gone — keep a thin vitest assertion on the table or confirm the hook is in the §5 PR sequence.
+MET — Spec 98 §3.1 "Every Maestro YAML file must explicitly define its state expectations using `clearState`" — mobile/src/components/surfaces/PageTableBinding.tsx:118 "+            onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }," — the payload key is now a row field whose only closed value is `parcelId`, so the emitted action is byte-identical to the previous `parcelId` key and no Maestro flow or state expectation changes.
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — src/tests/surfaces/page-table.logic.test.ts:100 "+    expect(c.props.onPress).toEqual({ action: 'select', lotId: { derived: 'answer.0' } });" — the added tests assert throws and single props, not snapshots, so the snapshot exclusion is respected.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+```
+
+---
+⏱  65607ms (65.6s)
+📊 Tokens — total: 23610, input: 16429, output: 7181, reasoning: 6453

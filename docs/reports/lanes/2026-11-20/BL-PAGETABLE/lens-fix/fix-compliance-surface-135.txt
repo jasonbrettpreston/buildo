@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:06.051Z file_sha256=d8cf1293524548ed55b0cbe0f97fb2ee1d683f61c57f89d272dc52f5d83d600d prompt_sha256=e881b8323ec95ecbc4af887e39335252fc2f00b76d257f0ce36f3b6d63c51c86
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-surface-135.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-13 dated note 2026-11-09 (MF-42) "MF-42 adds the generic arms SV-DESC (incl. `UNRESEARCHED`), SV-SCREEN and SV-SBIND in `scripts/surfaces/screen-checks.mjs`" — scripts/surfaces/screen-checks.mjs "export const ARMS = [['S-desc', 'DESC', descArm], ['S-screen', 'SCREEN', screenArm], ['S-sbind', 'SBIND', sbindArm], ['S-page', 'PAGE', pageArm]];" — a fourth gate arm (SV-PAGE, task-390) ships and no pasted clause or operator ruling names it: the ruled arm set is closed at three and no dated note records a ruling for PAGE.TABLE — land the dated note (or new FE row) with the operator words for the PAGE arm before it ships, or leave ARMS at three.
+
+BUG severity=HIGH — FE-13 dated note 2026-11-09 "the lock's assertion is amended to that full string, still an exact `toBe`, red evidence `docs/reports/red-evidence/MF-42/no-maths-gate-red.txt`" and "it is never relaxed to `toContain` or a regex" — scripts/surfaces/surface-validate.mjs "for (const arm of ['DESC', 'SCREEN', 'SBIND', 'PAGE']) {" — extending the arm loop appends an S-page note to the gate success line, while no amendment of the exact-string assertion at `src/tests/surfaces/surface-validate.logic.test.ts:61` and no red-evidence file appear in the diff (cannot see them) — amend the lock to the new full string as an exact `toBe` with new red evidence in the same commit.
+
+BUG severity=MED — FE-32 dated note 2026-11-10 "The second segment `errors` is reserved for `<contract_id>.errors.<class>.<field>`", and "the member is now a PATH `<contract_id>.<name|index>...`" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "export const SEMI_QUESTION_VAR_PATHS = ['errors.429.retryAfterSeconds'] as const;" — the declared path carries no `<contract_id>` first segment, and pageProblems only tests list membership (`if (!supplied.vars.includes(v))`), so no FE-32 path check runs on the vars value — declare the full contract-anchored path, or resolve the var path through the FE-32 path check instead of a flat list.
+
+DEFER severity=MED — FE-31 dated note item (2) "the closed render vocabulary grows only by this escalation, and case C-7 of the lock is its lock" — mobile/src/components/surfaces/PageTableBinding.tsx "| { kind: 'choices'; id: string; list: string; select: string; content: string; action: string; arg: string }" and "export type PageScreen = { prefix: string; contract: string; binding: string; targets?: ReadonlyArray<'web' | 'mobile'>; sections: PageSection[] }" — the page-table row grows `arg` and the screen row grows `binding` (a second home beside `bindings.json`, FE-31 item (3)) and `targets`, with no pasted Spec 128 §4 escalation and no lock case named — record the escalation and its lock case, or derive the binding module from bindings.json and keep `arg` out of the row.
+
+DEFER severity=LOW — FE-13 dated note "Budget is NOT checked: the gate prints `budget WAITS MF-08`, which is a stated waiting, never a pass" — scripts/surfaces/screen-checks.mjs "return { findings: out, note: waits ?? `S-page ok (${ids.length} screens)` };" — with an absent or empty `static-page.json` `screens` map the arm reports "S-page ok (0 screens)", a pass on zero examined rows — emit a finding, or a WAITS note, when `ids` is empty.
+
+MET — FE-13 dated note (guarded import, "a missing module prints one \"unavailable\" line per arm and the REPORT arms still report") — scripts/surfaces/surface-validate.mjs "for (const arm of ['DESC', 'SCREEN', 'SBIND', 'PAGE']) {" inside the existing guardedAsync block — the PAGE arm joins the same per-arm guard, so its absence is a stated finding and the REPORT arms are untouched.
+
+MET — FE-13 dated note "Arms, one finding per line on stderr as `SV-<ARM> <subject>: <problem>`" — scripts/surfaces/screen-checks.mjs "const at = (s) => `SV-PAGE ${id} ${s.id ?? 'screen'}`;" — findings carry the arm prefix and a subject before the problem.
+
+MET — FE-33 "every displayed string, library default strings and form error messages included, comes from content" — scripts/surfaces/screen-checks.mjs "else for (const a of answers) leaf(s, `${s.content}.${a}`);" — each choices answer label is checked as a content leaf, not a hard-coded string.
+
+REJECT — FE-13 dated note "The check logic has one home, `scripts/surfaces/report-checks.mjs`" — the change is accused of a second check home for the PAGE logic in screen-checks.mjs — not a real issue: the same dated note places the generic DESC, SCREEN and SBIND checks in screen-checks.mjs, and R-27 governs the REPORT arms only.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  72282ms (72.3s)
+📊 Tokens — total: 44191, input: 30020, output: 14171, reasoning: 12908

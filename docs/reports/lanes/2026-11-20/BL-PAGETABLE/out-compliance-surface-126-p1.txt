@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:40:19.318Z file_sha256=0869bdd1bb2e31e474f0edf13fea66beab61ee2cea59072c462c94741a04b37c prompt_sha256=284baab096dab0d31f992653935ae47561574b0a2e48730d329e49df1cfd8962
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited. The operator's own words with the date and the record path" — scripts/surfaces/_schema/bindings.json:3 "operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"" — the ruling is truncated with an ellipsis and cites no record path (the neighbouring notes cite MORNING-DECISIONS.md:1227 or ~/Buildo-scratch/...), and the named "stop rule" is nowhere recorded, so the approved scope cannot be verified — replace with the operator's verbatim words, the date and the record path, and record the stop rule.
+
+DEFER severity=MED — §0a principle 1 "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components; a new scenario reaches the report with no code." — mobile/src/components/surfaces/PageTableBinding.tsx:112 "onPress: { action: s.action, parcelId: { derived: \`${s.id}.${i}\` } }" — the shared builder hardcodes the surface action argument `parcelId` and the select shape in code, so a second choices screen needs a builder edit rather than rows, weakening declared-not-coded — name the action argument in the row and its schema (or pass it through values) so any choices screen is data.
+
+MET — §0b item 5 — mobile/src/components/surfaces/PageTableBinding.tsx:42 — text is emitted only as `{ content: key }`, `{ contract: ... }` and `{ derived: ... }` refs with no arithmetic in the builder, so the UI does no maths.
+
+MET — §0b item 11 — mobile/src/components/surfaces/PageTableBinding.tsx:71 and :83 — every pressable carries `accessibilityRole: 'button'` and `accessibilityLabel: content(...)` and fires `{ action: ... }` (a routed action, not a local-state view swap).
+
+MET — §0b item 3 — scripts/surfaces/_schema/static-page.json `screens` and PageTableBinding.tsx:45 — block order, texts, actions and `when` are rows drawn by the shared `pageProps`, with derivation and the typed style table kept in the binding.
+
+MET — §0b item 10 — src/tests/surfaces/page-table.logic.test.ts and src/tests/surfaces/static-page.logic.test.ts T9 — B1..B5 plus the schema and closed-list checks were added, and the props tree shape is preserved so the existing goldens stay green.
+
+REJECT — §0a principle 1 — the new PageTableBinding.tsx is accused of being "page code" contrary to "only the shared archetype components" — it is import-free, emits only mapping.mobile.LIST components, and §0b item 3 expressly permits drawing by the shared bindings, so it is not per-page code.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 1
+
+---
+⏱  146175ms (146.2s)
+📊 Tokens — total: 63672, input: 32122, output: 31550, reasoning: 30861

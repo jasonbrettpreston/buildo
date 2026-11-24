@@ -7212,7 +7212,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Calls.** —
 
-**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx`
+**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx`
 
 **Emits.** —
 
@@ -7254,7 +7254,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `none` | No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no "none" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), and the screen applies them. — `mobile/src/components/surfaces/LotMapBinding.tsx — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN re-exported from the consumer slice`, `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3` |
 | 17 | `sharing` | `shared` | Every converted mobile surface (the parcel search page first). — `scripts/surfaces/_schema/bindings.json — modules` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 
@@ -9978,7 +9978,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 74 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 75 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|

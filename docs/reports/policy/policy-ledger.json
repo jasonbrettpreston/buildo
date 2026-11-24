@@ -1,4 +1,11 @@
 {
   "_note": "The one escape of the policy checks. Row = { rule, item, ruling, quote }: rule id (chk5-producer ...), the trimmed source line text or path or name the check reports, a dated-note ruling id (MD:YYYY-MM-DD:<line>, M-<n>, D-<n>; never M-246) and the operator's words verbatim. A row allows exactly one violation (ledger.mjs matchLedger). Each row a commit adds needs its ruling id in an Operator-Ruling: trailer of that commit.",
-  "rows": []
+  "rows": [
+    {
+      "rule": "chk3-new-component",
+      "item": "mobile/src/components/surfaces/PageTableBinding.tsx",
+      "ruling": "MD:2026-11-20:1444",
+      "quote": "yes approved"
+    }
+  ]
 }

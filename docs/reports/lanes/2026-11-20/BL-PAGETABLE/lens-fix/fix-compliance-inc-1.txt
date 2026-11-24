@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:01.207Z file_sha256=48c8380696c95ae2ed581ed8f8f7ae0d4458b8e93a56d5c0703311c79914c8c5 prompt_sha256=acf0533d2e60e80a6a8ef29595e829531c948f91d3570f59cfc92acbbfd721f1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-inc-1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-4 Increment 1 requirements, the whole feature list "- F-REPORT-CORE REPORT core: buildTree/assertTree/viewOf, buildPage/assertPage/pageViewOf, declaration and layout table: ON ORIGIN" through "- F-LOOKUP Lookup route page hand-off" — NONE (no diff line maps to any named feature or element) — the change adds a page-table schema extension (`binding`, screen `targets`, choices `arg`), a new build-time arm S-page and a builder throw for a surface (the mobile parcel semi-question screen) that no pasted clause of the governing spec names, so no pasted clause authorises it — paste the PAGE.TABLE task-390 ruling or card into the context, or hold the change.
+BUG severity=HIGH — operator ruling as it appears only inside the change: 'operator 2026-11-20 "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule"' — static-page.schema.json:5 "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 ...)" — the only authority for the schema extension is a comment inside the diff, and a clause satisfied only by a comment is UNMET; the real ruling is not pasted, so the approval scope cannot be checked — paste the operator words as context, then re-review.
+DEFER severity=MED — operator words carried by the change: 'with the stop rule' — static-page.schema.json:5 "plus the semi pilot, with the stop rule" — the diff never states where the pilot stops (it touches the builder, the generated slice, the census/descriptor owns lists, the schema, a new arm and three test files) and no pasted clause fixes the boundary, so conformance with the stop rule is unjudgeable — restate the stop boundary in the reviewer context and confirm each touched file sits inside it.
+DEFER severity=MED — change design text: "`targets` is a subset of web and mobile (default both)" — mobile/src/components/surfaces/PageTableBinding.tsx:46 "if (screen.targets !== undefined && !screen.targets.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile')" — a screen declared targets ['web'] passes the schema and the S-page arm (pageProblems checks only contract, flags, values, vars and leaves, not screen targets) yet throws at render, and no pasted clause says which is right — either have the arm refuse a screen its binding cannot draw, or drop the throw and skip.
+MET — doc-4 F-LOOKUP "page = null for every customer lot" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:1 — the served lookup payload is untouched; this diff is build-time schema, validator and builder field names only, so F-LOOKUP still holds.
+REJECT — doc-4 F-REPORT-MOBILE "the customer producer answers null for every lot (miss text) until MB-44" — the change is accused of moving what the mobile report serves before MB-44 — nothing here touches the producer, the ReportBinding or any served value; only schema rows, checks and test fixtures change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 3
+
+---
+⏱  37468ms (37.5s)
+📊 Tokens — total: 24222, input: 17768, output: 6454, reasoning: 5720
