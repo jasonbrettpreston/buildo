@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T20:57:00Z'
+updated_date: '2026-11-24T21:03:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -398,4 +398,6 @@ Lane BL-SFX4 work commit (RR-0466 card, plan sha256:7a8c2de9fe27). Deviation 1: 
 Deviation 4: surface-conformance.logic.test.ts C-7 pins the live descriptor count (172 -> 173, +mobile_parcel_wall); the plan's pin list did not name it; the first work-commit attempt's related run refused on it (expected 173 to be 172).
 
 CHK.3: WallBinding.tsx lands with the policy-ledger row chk3-new-component (ruling MD:2026-11-20:1476, the operator's delegation, plan step 6). The ruling is a delegation; the operator's confirmation of the file is asked on his return, and nothing is pushed before it.
+
+Output review round 1 (task-460 shape): one code-review lens over 4 chunks (out-code-review-p1..p4.txt in docs/reports/lanes/2026-11-24/BL-SFX4/), 15 findings (HIGH 3, MED 3, LOW 7, NIT 2), listed in FINDINGS.md there. Grounder owed: the separate validating grounder rules them; the task stays RUNNING.
 <!-- SECTION:NOTES:END -->
