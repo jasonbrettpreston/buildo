@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T18:14:58.902Z file_sha256=bce4ece6b8ef6e9dd50575060d4fc37dbb3967a093df421ccba2c7b425151f6e prompt_sha256=e75863e4671403ed63e67d62ba7c143375ede002d7cacacbd4d59346d1a74e39
+🔍 Lens review of docs/reports/reviews/task-461/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — Section 4 (green-proof bullet, mobile/package.json:11) — "for example the package's `test:ci` script … with the path" leaves the exact invocation unpinned; a single-file run through a `test:ci` that sets `--coverage` with global thresholds goes red on coverage with 0 failing tests, reading as a false negative — pin the command to `npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false` (or confirm package.json:11's flags) and state the expected two-suite pass.
+
+BUG severity=MED — Section 5 (AC2 search) — the grep set (`lotForm|lot_form|LotFormSchema`, `ParcelLotFormSchema`) does not cover the schema actually parsed at :71 (`ConsumerParcelLookupResultSchema`), so a sibling test that feeds an extra lot-form field through `ConsumerParcelLookupResultSchema.safeParse` expecting `false` would be missed and AC2 falsely satisfied — add `git grep -n "ConsumerParcelLookupResultSchema" -- mobile/__tests__/` and read each hit's lot-form payload.
+
+BUG severity=MED — Section 4 / Section 6 Surprise 1 ("the 12 suites that could not start") — those 12 suites never run, so any task-450-caused regression *inside* them is invisible today; "723 tests / 0 failed" means 0 failed across the runnable subset only — state that the green is runnable-subset-only and record the 12 suites as unverified against task-450's schema change (defer to the dependency-install card).
+
+DEFER severity=LOW — Section 3 / mobile/src/lib/schemas.ts:425-429 — the plan calls the lot form "plain" but never confirms there is no nested `z.object`/`.strict()` inside, so a server-added *nested* field could still throw despite the top-level fix — one-line check: read :425-429 and confirm the fields are flat scalars/enums (they appear to be: semi_half, doubt_multi_parcel_abut, unsure).
+
+DEFER severity=LOW — Section 8.2 / docs/specs/00-architecture/08_agents.md:462 — recommended option B does not prove the reverse direction live (re-add `.strict()`, show the new line red); it leans on the head-red at :71 plus schemas.test.ts:329 — acceptable because the new line is the same payload/schema as :71, but record that both-direction proof is implicit, not executed.
+
+DEFER severity=LOW — Section 8.2 option A path — if a lane chooses A and temporarily re-adds `.strict()` at schemas.ts:429, an accidental stage/commit ships a strict schema that rejects additive fields on installed builds — guard: any temporary schema edit must be a working-tree/stash revert, never staged; recommendation B sidesteps this entirely.
+
+DEFER severity=NIT — Section 7 (notes/status in same commit) — if the backlog note append or queue-row update fails after the code commit, the card carries no sha/status (DoD #6/#7 gap) — recoverable by re-running the CLI; not a plan blocker.
+
+DEFER severity=NIT — Section 6 (rollback not stated) — no rollback line, but the change is one test file, so `git revert <sha>` fully restores prior state with zero blast radius — safe to leave implicit.
+
+VERDICT: PASS
+
+Top 3 operational blockers (if FAIL): none — no data-corruption, lockup, or irreversible-state risk in a one-test-file flip; the MED findings above should be tightened before implementation but do not block plan-lock.
+
+Top 3 unverified data premises (regardless of verdict):
+- "Expected full-run delta is 723 tests / 0 failed; 13 failed suites drop to 12" — verify against the run summary: `grep -E "Tests:|Suites:" ~/Buildo-scratch/lanes-20261124/phone-5af0f7be2.out`, then re-run and compare counts.
+- "Only :71 failed among runnable suites; the other 12 can't start on module resolution" — verify every other failure is module-not-found, not an assertion: `grep -E "FAIL|Cannot find module|● " phone-5af0f7be2.out`.
+- "AC2: no other phone test asserts the strict lot form" — prove breadth, not just tokens: `git grep -n "ConsumerParcelLookupResultSchema" -- mobile/__tests__/` and inspect each lot-form payload.
+- (env) "node_modules symlink to ~/Buildo/mobile/node_modules resolves for lotForm.test.ts imports" — verify: `ls -l mobile/node_modules && npx --no-install jest --listTests __tests__/lotForm.test.ts`.
+
+---
+⏱  100332ms (100.3s)
+📊 Tokens — total: 29134, input: 17180, output: 11954, reasoning: 10886

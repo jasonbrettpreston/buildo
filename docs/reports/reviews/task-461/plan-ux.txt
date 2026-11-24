@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T18:14:58.902Z file_sha256=bce4ece6b8ef6e9dd50575060d4fc37dbb3967a093df421ccba2c7b425151f6e prompt_sha256=cac6f43b4c0bbec000a185a75d095a5ca602cd9250589437b1909ea19c8f4de2
+🔍 Lens review of docs/reports/reviews/task-461/context-r1.md (model: deepseek-reasoner)
+
+REJECT — mobile/__tests__/lotForm.test.ts:71 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(false)" — flipping this to true means the phone now silently discards a field it does not recognise, which can look to a reader like the app ignoring part of a newer server answer — it matches the approved design: schemas.ts:423-424 "plain, the MF-53 form above, so a server-added field never raises ParcelLookupSchemaError on an installed build" and contract_parcels_lookup.descriptor.json:70-71 "adding fields does not" break shipped clients.
+
+REJECT — plan section 3(b) ".toBe(true);" added to the case at :63-67 — the same plain-form fact is then stated twice in the phone suite, which can look like duplicated cover for one behaviour — harmless, AC1 asks this file specifically: "states that an extra field in the lot-form block still parses", and schemas.test.ts:329 is a lock, not a contradiction.
+
+DEFER severity=NIT — plan section 3(c) "Optionally add \", a server-added field\" to the case title. The title wording is open choice 8.1." — whichever title is picked, the case will either under-describe or over-describe the three payloads it parses, and a future reader takes the title as the contract — pick one title in the lane and state all three inputs in it, no person sees a screen either way.
+
+DEFER severity=NIT — plan section 3(a) "That case keeps its title, which stays true: the enum refusals at :69-70 remain." — after the move, the title "refuses a block outside the contract" promises more than the case now refuses (only the enum values 'maybe' and 'x') — this is a test-reader wording risk only, the design text is silent on test titles, so note it in the lane and move on.
+
+REJECT — plan section 4 "Green after the edit: \"parses a payload with the block, without it (older server) and with null\", same input, expects true." — no person-reachable screen state (first view, loading, answered, error, empty, offline, back, repeat visit) is drawn by this change, so nothing they see or can do changes — the user-visible states the tested schema covers (block present, block absent from an older server, null block, extra field, unknown enum value) keep the same behaviour they have today.
+
+VERDICT: PASS on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit (none drawn by this change); lot form present, block absent (older server), null block, extra field from a newer server, unknown enum value   Dead ends found: 0
+
+---
+⏱  17159ms (17.2s)
+📊 Tokens — total: 19467, input: 16293, output: 3174, reasoning: 2551

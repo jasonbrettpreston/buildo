@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T18:14:58.902Z file_sha256=bce4ece6b8ef6e9dd50575060d4fc37dbb3967a093df421ccba2c7b425151f6e prompt_sha256=5228c40df2c088122e7080bbfc08743002a73f942ca12d6c777c2d246f938667
+🔍 Lens review of docs/reports/reviews/task-461/context-r1.md (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT lines only, per format.
+
+DEFER severity=MED — plan 8.2 "A: the lane re-adds `.strict()` at schemas.ts:429 for a moment, without committing it, runs the file to show the new line red, then restores it." — no automated restore: if the run crashes, times out or the lane is interrupted mid-window, `.strict()` stays in the working tree, and because "mobile/node_modules is a symlink to the main checkout (~/Buildo/mobile/node_modules)" a sibling lane running in that checkout sees the strict schema and goes spuriously red, and a later `git commit -a` carries a file outside the Files line — fix: take option B, or run add-edit-run-restore as one command ending in `git checkout -- mobile/src/lib/schemas.ts` and assert `git diff --name-only` is empty before the lane continues.
+
+DEFER severity=LOW — plan 4 "How the lane proves green: lotForm.test.ts imports only `@/lib/schemas` and `@/lib/lotForm`, which need neither missing package." — the only green proof depends on a symlink target outside the repo, and the plan names no path for a run that cannot start (or a red that does not reproduce at :71), so a lane can fall back on the head red at 5af0f7be2 and claim green off a stale run — fix: state in step 4 that a non-starting run or a non-reproducing red is recorded as such and the lane stops for a grounder note instead of substituting the 5af0f7be2 output.
+
+REJECT — plan 1 "plain, the MF-53 form above, so a server-added field never raises ParcelLookupSchemaError on an installed build. The closed enum lists stay." — stripping an unknown field looks like fail-open on a dependency mismatch — handled: the contract is `additive_only` (contract_parcels_lookup.descriptor.json:70) and the closed-enum refusals stay at :69-70, so the fail-open is the ruled behaviour and unknown enum values still throw.
+
+REJECT — plan 6 "the moved line duplicates schemas.test.ts:333-335. That is acceptable because the card asks this file to state the plain form (AC1)." — repeating the same invariant in two files looks like a double-count — handled: assertions are not writes or counted events, a repeat parse check is a no-op and needs no key or dedup.
+
+REJECT — plan 3 "(a) Delete line :71 from the "refuses" case" plus "(b) Add one line to the "parses ..." case at :63-67" — applying the edit twice, or applying A and B both, looks like a double-submit hazard — handled: the leftover `toBe(false)` at :71 and the new `toBe(true)` on the same payload contradict each other, so the file fails loudly on the next run and the mistake cannot stay hidden.
+
+REJECT — plan 2 "mobile/__tests__/lotForm.test.ts:63-67 is the case "parses a payload with the block, without it (older server) and with null"." — the empty and absent path could be lost in the move — handled: the case is not edited, and `lotForm: ParcelLotFormSchema.nullable().optional()` at schemas.ts:440 is explicitly untouched, so null and absent stay covered.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (test run cannot start, red does not reproduce), empty (null lotForm, absent lotForm, older-server payload), retry/time-out (no network or storage call in the change, only re-execution of one file run), double-submit (edit applied twice, options A and B both applied), degrade-safety (unknown field stripped instead of thrown), idempotency (no write or count in the change)   Unguarded: 1
+
+---
+⏱  49140ms (49.1s)
+📊 Tokens — total: 21698, input: 16294, output: 5404, reasoning: 4550
