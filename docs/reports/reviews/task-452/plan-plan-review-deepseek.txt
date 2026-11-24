@@ -1,0 +1,53 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T19:29:55.523Z file_sha256=36a69a53ac9414846026677b2388a21c63c499c1a6ebc5a37a343d81cd4f0f63 prompt_sha256=e253d2eccd547a11ed995ffd2107852828fefee4603ec6a9118ff7a17bdf0fa5
+🔍 Lens review of docs/reports/reviews/task-452/context-r1.md (model: deepseek-reasoner)
+
+# Review: task-452 SEARCHFIX.4 (PLAN-452-v2)
+
+Scope note: this is a mobile UI plan (no DB writes), so the classic row-corruption/null-constraint categories are N/A. I've redirected the three axes to the plan's actual risk surface: error-class propagation, the entitlement-read coupling, generated pins/goldens, and cross-card file ownership with 357/458.
+
+---
+
+BUG severity=HIGH — §5 step 3 + §4 `WALL_VAR_PATHS [reportsLimit, resetsOnDisplay]` — `searchWall` returns `'limit'` only when the entitlement read carries `resetsOnDisplay`, but the only cited 403 payload (AC1) is `resetsOn` (ISO); the read's field shape is never verified, so the wall may never render and AC2's "reset date" silently fails — add a build step that greps the `useParcelEntitlement` response type for `resetsOnDisplay`, and if absent derive the Toronto label from `resetsOn` or fall back to the 403's parsed values.
+
+BUG severity=HIGH — §5 step 6 "the 403's own values are never drawn" — the wall discards the 403's already-verified `{reportsLimit, resetsOn}` and depends entirely on the entitlement read; a slow or failed read collapses a genuine limit/expired customer to today's generic notice even though the 403 already proved the state — use the parsed 403 values as the wall's fallback when the read is null/incomplete.
+
+BUG severity=MED — §5 steps 7/8 vs §2 "The search page reads it at index.tsx:52" — the search page already calls `useParcelEntitlement`; `useWallState` calls it again with no dedupe proof, so two fetches can fire with divergent results or extra latency — verify a stable TanStack query key, or hoist one read into the host and pass it into `useWallState`.
+
+BUG severity=MED — §5 step 9 `ReportPageHost` `wall` prop — the host renders the wall "in place of the lifecycle when it is set", with no stated guard that it is set only for `limit|reactivate`; a transient 500/network error misclassified as a wall drops the retry path and dead-ends the user — gate the prop on `searchWall` returning `'limit'|'reactivate'`, never on generic error presence.
+
+BUG severity=MED — §5 step 2 apiClient widening — `REPORT_LIMIT_REACHED`/`SUBSCRIPTION_REQUIRED` 403s now throw subclasses; other error consumers (e.g. `semi-question.tsx:77-78` and any exact-class or `message ===` checks) are not audited for the identity change — grep error consumers for `constructor ===`/string checks and confirm subclass-safe handling before writing the catch.
+
+BUG severity=MED — §6 AC3 "status null keeps today's notice (a lock until task-357)" — this assertion becomes a false lock the moment 357 lands its `no_plan` branch, and the plan records no handoff to flip it — annotate the test inline with the task-357 reference and put a line on 357's card to update this assertion.
+
+DEFER severity=MED — §5 step 8 `useWallState` — the hook must be called unconditionally at the top of both hosts (rules of hooks); the plan doesn't state this and a lane could gate it behind `if (error)` and crash the tree — one line: call unconditionally, pass error as an argument.
+
+DEFER severity=MED — §4/§6 pins (436→443 strings, 100→102 goldens, 17→18 surfaces) — the pins are written into the test files as projections *before* the surface exists; if measurement ≠ projection the tests go red mid-build and a lane may "delete the check" (the plan flags this only for T9:107) — measure all three pins against the live board first, then write them.
+
+DEFER severity=MED — §12 O3 "Record a TASK-452 dependency on task-357" — reads as 452 blocked by 357, inverting the stated order ("452 lands before 357"); if taken literally it is circular since 357 extends 452 — reword to "record task-452 as a dependency of task-357."
+
+DEFER severity=LOW — §5 step 6 copy `"You've used all {limit} reports"` — a zero allowance renders "You've used all 0 reports"; confirm the server never sends `reportsLimit: 0` at the limit or add a branch.
+
+DEFER severity=LOW — §6 AC2 "Go to Tracked Lots calls navigate with '/(app)/parcel-tool/tracked'" — asserted as a raw literal while the plan elsewhere warns against the wrong navigate (index.tsx:81-86 records a recent search); if a route constant exists, assert against it or the literal pins the wrong target.
+
+DEFER severity=LOW — §5 step 7 `'wait'` state — if `useParcelEntitlement` hangs under TanStack retries the wall shows loading with no cap; confirm the hook's retry/timeout bound (RR-0341's 60 s cap is the report animation, not this read).
+
+REJECT — §5 step 2 "Every other 403 stays ApiError(403)" — the worry that subclassing breaks existing generic 403 handling — subclass instances still satisfy `instanceof ApiError`, so generic catches are unaffected; not a real issue.
+
+---
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers:
+- `resetsOnDisplay` is assumed on the entitlement read but only `resetsOn` is cited on the 403; AC2's reset date is unproven (§5.3, §4).
+- The wall throws away the 403's verified `{reportsLimit, resetsOn}` and fail-opens to the generic notice on a bad read (§5.6).
+- `ReportPageHost` replaces the whole lifecycle "when set" with no guard that only `limit|reactivate` sets the prop (§5.9).
+
+Top 3 unverified data premises:
+- The entitlement read's field shape: `grep -n "resetsOnDisplay\|resetsOn" mobile/src/hooks/useParcelLookup.ts` (useParcelEntitlement @ :162-170) and its response type — confirm the formatted label exists there.
+- The next free S id (assumed S-096): `grep -o "S-0[0-9][0-9]" scripts/surfaces/_schema/census/mobile-product.json | sort -u | tail`.
+- Whether SV-DESC/descriptor attach rules to `rate_limited`/`unauthorized` beyond the closed list: read the SV-DESC validator schema and `grep -n "rate_limited\|unauthorized" scripts/surfaces/_schema/*.json`.
+
+---
+⏱  82647ms (82.6s)
+📊 Tokens — total: 43581, input: 28189, output: 15392, reasoning: 13868

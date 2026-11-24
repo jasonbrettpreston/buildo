@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.529Z file_sha256=cdd3ebf444da0d896162cd16e29155b89e64d88724a6f5cdc458b5cc5d067b62 prompt_sha256=0cfa92a44996cb11aa18222eb13c59aa7bff449b0d196bb19bf3971328210ce4
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=MED — AC #2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the plan line" — plan §5 step 3 "ReportLimitError: 'wait' while pending; 'limit' once the read answered with a number for reportsLimit and a resetsOnDisplay; else null." — a person at the limit with a failed or incomplete entitlement read gets today's notice, not the wall, and §5 step 6 "the 403's own values are never drawn" throws away the limit and reset date AC #1 preserves; §10 risk 2 "A failed read keeps today's notice (accepted)." cites no ruling for that acceptance — either return 'limit' from the 403's own reportsLimit and resetsOn when the read fails, or quote the ruling that accepts the fallback.
+DEFER severity=LOW — card "Split by RR-0455 (MD:2357-2358): the no-plan page returns to task-357, the haptic is task-458, the spring is task-459; the web waits for its switch-on." — plan §7 "drop the no-plan sentence and the haptic sentence" — the edit list leaves description sentence "One wall layout serves the three states, built phone first and also on the web, following how the other pages were built (RR-0445, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2296)." in the new card text — add that sentence to the §7 edit list and rewrite it as one layout, limit and reactivate states, phone only.
+DEFER severity=LOW — card "the phone wall carries the line or link, not a checkout" — plan §5 step 5 "wall.tracked "Go to Tracked Lots"" — no pasted clause or ruling names a Tracked Lots control on the wall, only the plan line or link for the purchase — cite the report-limit.html line that carries it, or drop the key.
+DEFER severity=NIT — card "Starts from the approved mocks (report-limit.html, small-pages-v8 no-plan.html)" — plan §5 step 5 "wall.limit.opened; wall.limit.stay" — two of the seven keys are listed with no copy, so the golden's "strings equal report-limit.html state 3" has no source text — write both strings from the mock into step 5.
+REJECT — RR-0443 "yes, they need a screen with a top up or a higher subscription" — the plan builds no top-up or upgrade control — AC #2 of the same card carries the later RR-0454 item 3 "no top-up or upgrade control until the buying work", and the wall carries the plan line instead.
+REJECT — RR-0446 "04  leave it as it is 02 Agrred add to the plan." — the plan puts the no-plan page in task-357 instead of 452 — the card's later line "the no-plan page returns to task-357" governs, and the card states the split governs where the text still names it.
+
+MET — AC #1 — plan §5 step 1 — "ReportLimitError and SubscriptionRequiredError extend ApiError: status 403, message 'Forbidden', a code member." with reportsLimit and resetsOn, and the apiClient catch widened.
+MET — AC #3 — plan §5 step 3 — "'reactivate' only for status 'expired'; null for any other status (including null, until 357) and for a failed read."
+MET — AC #4 — plan §5 step 10 — "The web is unchanged (RR-0455 item 1). No web file is edited".
+MET — card "Corrects the BUILT mark on objective G.6 by a dated note" — plan §11 — "doc-2 G.6 ... the limit and reactivate walls are built on the phone only".
+MET — card "the search content is not edited" — plan §5 step 5 — "wall.reactivate (today's search.entitlement sentence, copied; the search content is not edited)".
+MET — RR-0460 — plan §6 — "Phone tests run in the full local run before the push (RR-0460), then Mobile CI after it."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: none
+
+---
+⏱  162107ms (162.1s)
+📊 Tokens — total: 40820, input: 19723, output: 21097, reasoning: 20139

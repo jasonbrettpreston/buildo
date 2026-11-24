@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T19:29:55.526Z file_sha256=36a69a53ac9414846026677b2388a21c63c499c1a6ebc5a37a343d81cd4f0f63 prompt_sha256=09ae04279dc4beaa3ba260f8753d382cb851ab8287f149fdc32c9bed9ad8e83d
+🔍 Lens review of docs/reports/reviews/task-452/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-452-v2 §5.8 "the wall props, push uses router.navigate" with §5.9 "When it is set, :60-65 render `top` then the wall Renderer in place of the lifecycle." — the report screen's wall render is the only wall state that replaces an already-failed request, and the plan never says what ReportPageHost draws for the 'wait' state that §5.3 introduces ("'wait' while pending"), so on a pending entitlement read the host either hands 'wait' to a Renderer whose closed list is WALL_FLAG_NAMES [limit, reactivate] or falls back to the lifecycle, and the report screen then shows the lifecycle error while the search page shows a spinner for the same person — name the 'wait' render for ReportPageHost (keep the lifecycle, set no wall prop) and add a reportPage.behaviour case that the wall appears only for limit and reactivate.
+
+DEFER severity=MED — PLAN-452-v2 §5.3 "ReportLimitError: 'wait' while pending; 'limit' once the read answered with a number for reportsLimit and a resetsOnDisplay; else null." — the new wait state holds back the 403 notice for as long as the entitlement read is pending and the plan names no bound, no fallback and no retry (the recheck is task-357), so a read that never settles leaves the person on a loading state under a limit error with no way out, against RR-0341 (loading gives up after 60 s) — fall back to today's notice when the read has not settled inside the existing bound, and test a read that never resolves.
+
+DEFER severity=MED — PLAN-452-v2 §4 "The rows do not name the other SurfaceActions, so they follow the semi host's no-op pattern (semi-question.tsx:77-78)." — two of the 7 keys, wall.limit.opened and wall.limit.stay, therefore get no action, no disabled state and no feedback (the press haptic is task-458), so a press cannot be told from a dropped tap and repeated taps are unguarded, and neither string is asserted in any test listed for AC2 — render the two rows disabled, or leave them out of 452's key list until a card gives them an action, and assert the disabled state.
+
+DEFER severity=MED — PLAN-452-v2 §5.12 "Run order: wall-golden-capture.ts --write, then emit --write, then surface-validate --check." — the plan does not say a second --write is a no-op, so a re-run after a content or descriptor edit can append a second copy of rate_limited or unauthorized into mobile_parcel_wall.goldens.json or the .mobile.json fixture and the later --check still passes — have the capture rewrite each state wholesale and fail --check on any diff, and run it twice in the lane.
+
+DEFER severity=LOW — PLAN-452-v2 §5.3 "'limit' once the read answered with a number for reportsLimit and a resetsOnDisplay" — zero and negative are numbers, so reportsLimit 0 passes the guard and the wall renders "You've used all {limit} reports" with 0 — require a positive integer, else null and today's notice, with one test at 0.
+
+REJECT — PLAN-452-v2 §5.3 "null for any other status (including null, until 357) and for a failed read." — looks like a silently missing state and a swallowed failure — handled, it fails safe to today's notice and is the ruled O1(a) path AC3 asserts.
+
+REJECT — PLAN-452-v2 §5.6 "Count and date come from the read; the 403's own values are never drawn." with AC1 "Bad details give reportsLimit null" — looks like a lost count when a 403 body is malformed — handled, it fails closed to today's notice instead of drawing a wrong number, and the read is the one source.
+
+REJECT — PLAN-452-v2 §5.8 "push uses router.navigate to the tracked route (never index.tsx:81-86 navigate, which records a recent search)" — looks like a write that a double tap could duplicate (two recent-search records) — handled, the wall path uses the navigate that records no recent search, and a second navigate to the same route is the existing route, not a new write.
+
+VERDICT: FAIL on error-path safety
+Paths walked: 403 code mapping and class split, malformed 403 body, pending entitlement read, failed entitlement read, status null/active/expired, missing resetsOnDisplay, zero count, report-host wall render, tracked-route double tap, golden capture re-run, no-op wall rows   Unguarded: 4
+
+---
+⏱  59868ms (59.9s)
+📊 Tokens — total: 37622, input: 27303, output: 10319, reasoning: 9283

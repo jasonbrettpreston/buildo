@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.501Z file_sha256=c8154b7554df1e8ecd94c5f54600939173b3ebde1c6e3b0ec21b3aff8a89528d prompt_sha256=56ef08ac9be89e9ef6f7c4b0e42eeae09747f09e2b125b76f6ce9c47f8edfce9
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC #1 "A 403 keeps its code, limit and reset date; limit reached and subscription required are two error classes" — plan §5 step 2 "Every other 403 stays ApiError(403)" — a 403 whose code is neither REPORT_LIMIT_REACHED nor SUBSCRIPTION_REQUIRED loses its code on the fallback path, so AC1's "keeps its code" holds only for the two new classes, and the AC1 test list asserts codes only for them ("ENTRY_OFF stays ApiError") — carry `code` onto the fallback ApiError(403) and add an ENTRY_OFF / ACCOUNT_DELETED code assertion beside apiClient.test.ts:113.
+
+BUG severity=HIGH — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — plan §5 step 7 "[8] useWallState.ts (new): reads useParcelEntitlement, calls searchWall, builds the wall props, push uses router.navigate to the tracked route" — the new cross-layer bridge (query read to binding props) names no Spec 99 §3-§5 pattern and no Spec 99 amendment, so the clause is unmet — cite the Spec 99 pattern or amendment the hook follows in step 7, or add the Spec 99 amendment to the Files line.
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift." — plan §5 step 2 "Details are taken only when typed right." — the 403 body's code, reportsLimit and resetsOn are hand-checked with no Zod schema, and mobile/src/lib/schemas.ts is absent from the 32-entry Files line — parse the error body through a schema in schemas.ts or state why the boundary does not reach error payloads.
+
+DEFER severity=MED — Spec 90 §5 "NO Inline `renderItem`: Never pass an inline arrow function to a FlashList/FlatList `renderItem`. Always use `useCallback` or extract the function." — plan §5 step 4 "Descriptor: archetype LIST and identity.platforms [mobile], which T9 requires" — the new LIST surface is declared with no statement of where its renderItem is stabilised — name the useCallback or extracted renderItem site for the wall and assert it in wallScreens.golden.test.ts.
+
+DEFER severity=MED — card "Runs after SEARCHFIX.2 and SEARCHFIX.3 (shared match file and the string pins)." — plan §8 "451 (04c181564, fold 5af0f7be2) edited static-page.json (header rows and the :2 note), census mobile-product.json (the map entry), static-page.logic.test.ts, the validate pin :93 and the conformance pin :262-263" — only the string-pin card is evidenced as landed; SEARCHFIX.2 (the shared match file) is never named, yet the plan's cites into parcelSearchMatch.ts (:253-257, :298-301, "The file ends at :366") depend on it — record SEARCHFIX.2 as landed with its sha before the cites stand.
+
+DEFER severity=LOW — Spec 90 §2 "NativeWind `dark:` variants are required for all UI components." — plan §5 step 6 "[6] WallBinding.tsx (new, SemiQuestionBinding shape). ... Classes from the semi class table (lotMap.ts, min-h-[44px])" — the new UI component is specified with no dark: variant, the same measured gap the dated note records — state whether the wall inherits dark values from the semi table or needs its own dark: classes.
+
+DEFER severity=LOW — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — plan §6 lists the new unit tests but no coverage run or threshold — add the coverage threshold to the phone run so the new hook and binding are counted.
+
+MET — card AC #2 "the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3)" — plan §5 step 6 "Count and date come from the read; the 403's own values are never drawn." — the wall draws no purchase control and 7 keys carry the count, date and plan line.
+
+MET — card AC #3 "a subscription-required 403 with no plan, an active status or a failed read keeps today's notice" — plan §5 step 3 "null for any other status (including null, until 357) and for a failed read." — only status 'expired' reaches the reactivate wall.
+
+MET — card AC #4 "The web is unchanged by this card" — plan §5 step 10 "The web is unchanged (RR-0455 item 1). No web file is edited" — no web path appears on the Files line and AC4 checks the diff.
+
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — plan §6 "the 44 px and layout walkers pass" — the wall classes come from the semi table with min-h-[44px] and the golden asserts it.
+
+REJECT — Spec 90 §14 "Tactile Feedback: Use `expo-haptics` on major interactions." — the plan ships no haptic on the wall's primary button — RR-0455 item 2 and the card's "Must not: call expo-haptics directly" move it to task-458, so its absence here is the ruled state, not a breach.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+Rules met: none
+
+---
+⏱  102889ms (102.9s)
+📊 Tokens — total: 28423, input: 16219, output: 12204, reasoning: 10915

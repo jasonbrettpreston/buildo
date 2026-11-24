@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.512Z file_sha256=c867982bca89f39f0530f807d755773fc51662306500fdf92e2489bc0ff1a1e9 prompt_sha256=c72ffe22a9297facfb53401c3e6c8ec2f4e5b662183c8b2c37e1753e1dce2412
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §10 Authorized amendment process "any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review" — plan §5 step 7 "push uses router.navigate to the tracked route (never index.tsx:81-86 navigate, which records a recent search)" — the plan introduces a new router.navigate authority path plus a new wall render branch in the hosts and never states whether §5 or §4 rules change, so the §10 amendment obligation is left unresolved — add one line either declaring no §3/§4/§5 rule changes, or carrying the WF1 amendment with adversarial review inside the plan.
+DEFER severity=MED — pasted decisions "RR-0456 Semi question page gets a time limit; a zero-second rate limit retries once (names RR-0456)" — plan §3 "Nothing leaves to task-457. Its items (RR-0456, the semi page wait and the zero-second retry) were never part of the 452 plan." — a ruling the pasted decisions list attaches to this card is pushed to task-457 with no pasted ruling authorizing that move, since RR-0455 item 2 splits only the no-plan page, the haptic, the spring and the web — cite the ruling that assigns RR-0456 to 457, or add it to the §3 split map.
+DEFER severity=LOW — AC #2 "the wall with the count, the reset date and the plan line ... never the reactivate copy" and card Description "Nothing is added that the plan or a ruling does not name (RR-0392" — plan §5 step 5 "wall.limit.opened; wall.limit.stay; wall.plan; wall.tracked \"Go to Tracked Lots\"" — three keys beyond the enumerated count, reset date and plan line, one of them a navigation control ("Go to Tracked Lots calls navigate with '/(app)/parcel-tool/tracked'"), are added with no pasted clause naming them — name the report-limit.html state 3 line that carries them, or drop the keys.
+DEFER severity=LOW — card Description "RR-0447 (..., add the new tasks with the search-fix labels, dependencies and order)" — plan §12 O3 "452 lands before 357, because 357 extends 452's surface, hook, searchWall and classes. Record a TASK-452 dependency on task-357." — the dependency is recorded in the direction opposite to the order the same item asserts, so the order-and-dependencies half of RR-0447 is not clearly satisfied — record 357 as depending on 452 and 459 on 458, in words that cannot read either way.
+
+MET — AC #2 "(no top-up or upgrade control until the buying work, RR-0454 item 3)" — plan §10 Limits "No purchase or upgrade control (RR-0454 item 3)." — the limit wall ships with no buying control.
+MET — card Description "the purchase itself happens on the web; the phone wall carries the line or link, not a checkout" — plan §4 "Content key wall.plan \"Your plan is managed on the web.\" lives in 452's content." — the wall carries the web-managed line only.
+MET — AC #3 "(the no-plan page is task-357, RR-0455 item 2)" — plan §5 step 3 "'reactivate' only for status 'expired'; null for any other status (including null, until 357)" — no no-plan state is built and status null keeps today's notice.
+MET — AC #4 "The web is unchanged by this card" — plan §5 step 10 "The web is unchanged (RR-0455 item 1). No web file is edited" — no web path appears in the plan.
+MET — card Description "Must not: ... move the report goldens (wall copy lives in the wall surface's own content file, mobile_parcel_wall.content.json; the search content is not edited)" — plan §5 step 5 "the search content is not edited" and step 12 new goldens under the wall folder — the search content and the report goldens are untouched.
+MET — RR-0460 "a full local run passing before the push, then the Mobile CI run after it" — plan §6 "Phone tests run in the full local run before the push (RR-0460), then Mobile CI after it." — run order recorded.
+MET — §9.23 "the existing `mobile/src/lib/apiClient.ts:65-84` 401 interceptor as a normative bridge" — plan §5 step 2 "apiClient.ts:49-63" — the edit is bounded to the 403 block, the B6 interceptor at :65-84 is not touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 4
+Rules met: none
+
+---
+⏱  80582ms (80.6s)
+📊 Tokens — total: 33191, input: 17567, output: 15624, reasoning: 14553

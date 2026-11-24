@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T19:29:55.528Z file_sha256=36a69a53ac9414846026677b2388a21c63c499c1a6ebc5a37a343d81cd4f0f63 prompt_sha256=baea247cdc1cac6f7ca5c8ddaea631371b8841e12d27d6fbf7604945c3720171
+🔍 Lens review of docs/reports/reviews/task-452/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-452-v2 step 5 "wall.reactivate (today's search.entitlement sentence, copied; the search content is not edited)" vs design "a user with an expired subscription gets a reactivate screen" — the expired person is shown the same words as today's notice, and the AC3 check names only "the wall's prefix testIDs and "Go to Tracked Lots"", so the screen called reactivate carries no line or link telling them how to reactivate — name what the reactivate wall carries, the wall.plan line or a web link, since the approved reading says "the phone wall carries the line or link, not a checkout".
+
+DEFER severity=MED — PLAN-452-v2 step 6 "Count and date come from the read; the 403's own values are never drawn." — a person at the limit whose entitlement read fails or gives no count drops to today's generic notice and never learns their count or reset date, though the 403 just carried both — one state, bounded, but AC2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the plan line" is worded without that condition and risk 2 "A failed read keeps today's notice (accepted)" accepts it only in the plan's own words, so it needs a ruling before lock.
+
+DEFER severity=LOW — PLAN-452-v2 step 3 "'limit' once the read answered with a number for reportsLimit and a resetsOnDisplay; else null" — the limit branch does not look at the read's status while the subscription branch does, so if the read answers 'expired' after a limit 403 the person whose subscription just lapsed sees "You’ve used all N reports" and never the reactivate copy — narrow race, AC3 "An expired subscription shows the reactivate state" covers only the normal path.
+
+DEFER severity=LOW — PLAN-452-v2 risk 4 "A no-plan or expired person sees the loading state briefly while the read is pending (the 'wait' state)." — a person who has just been refused sees the loading screen again before the wall, and on a slow read that is a wait with no explanation of the limit — brief and pre-existing behaviour, but it is the first thing the person sees after the refusal.
+
+DEFER severity=LOW — AC4 "The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (RR-0455 item 1)" — a web customer at the report limit is told they are not entitled, not that they hit the limit or when it resets — ruled by RR-0455 item 1, so not a departure, but it should travel in the web switch-on card's text.
+
+DEFER severity=LOW — PLAN-452-v2 AC2 test "The limit wall shows the read's count and date." — the report-screen check omits the plan line, so nothing catches a report screen that shows the count and date but not where the plan is managed, while AC2 requires "the count, the reset date and the plan line" on both surfaces — ask for the plan line in the report-screen assertion too.
+
+REJECT — PLAN-452-v2 §4 "Content key wall.plan "Your plan is managed on the web." lives in 452's content." — to the person at the limit this reads as a direction with no link on the phone and looks like a dead end — it is exactly what RR-0454 item 3 ruled, "The limit screen says the plan is managed on the web for now", and the reading "the phone wall carries the line or link, not a checkout".
+
+VERDICT: FAIL on the person's experience
+States checked: search page at the limit, search page expired, subscription required with no plan or active or failed read, pending read (wait, loading), read failure at the limit, report screen at the limit, report screen expired with Back, repeat visit with no error, web at the limit, no-plan state (out of scope, task-357)   Dead ends found: 1
+
+---
+⏱  90274ms (90.3s)
+📊 Tokens — total: 43988, input: 27302, output: 16686, reasoning: 15809

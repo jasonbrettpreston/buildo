@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.511Z file_sha256=99fc407a086ea95de4aa14d4ff78a95bbbee9589f5ebe32c0f7c8ae08da70fdd prompt_sha256=e01a18dece66a887b3949b97b53923b3d7953c3dcbafa8574d57dea4d5b4581d
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy" — plan §5 step 3 "ReportLimitError: 'wait' while pending; 'limit' once the read answered with a number for reportsLimit and a resetsOnDisplay; else null" — at the limit with a failed read, or a read whose reportsLimit is not a number, the plan returns null and the user keeps today's notice, which AC2 does not excuse (AC3 excuses a failed read only for the subscription-required branch), so the limit wall is conditional on the read where the pasted clause is not — fall back to the 403's own reportsLimit and resetsOn (kept per AC1) when the read has not answered, or obtain a ruling that step 6's "the 403's own values are never drawn" widens AC2.
+
+DEFER severity=MED — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — plan §6 "wallScreens.golden.test.ts (new): the rate_limited golden equals wallProps; every key is used; the 44 px and layout walkers pass" — a Jest file inside mobile/__tests__/ that pins rendered props and walks 44 px layout is the excluded kind; the pasted dated note exempts only "a render smoke ... and a screen-behaviour test", not goldens — cite the surface-golden mandate (a spec not pasted) in the plan or get a ruling, otherwise this clause is unmet.
+
+DEFER severity=MED — Spec 98 §4.1 "gate-stability tests (no `isFetching` in render gates per §6.5)" — plan §6 "reportScreen.gateStability (:22) ::: give their useParcelLookup mock a useParcelEntitlement stub; gateStability is re-run" — the plan adds a new render decision ('wait' while the read is pending, "A wall replaces the search tree, or goes to ReportPageHost's wall prop") and only re-runs the existing gate-stability case with a stub, adding no assertion for the new gate — add one gate-stability case for the wall path so the §8.3 mandate is satisfied for the new gate.
+
+DEFER severity=LOW — Spec 98 §5 "npm run typecheck (TypeScript compiler)" and "npm run lint (ESLint)" — plan §4 "Phone suite: 58 files, 866 tests at a12d535f5. wallScreens.golden.test.ts makes 59 files; the lane records the test total" — the pre-push local evidence names only Jest counts and the surface-validate check, not typecheck or lint on the new TS (WallBinding, useWallState, the two error classes, the widened T9) — run and record typecheck and lint in the pre-push run.
+
+DEFER severity=LOW — card "Nothing is added that the plan or a ruling does not name (RR-0392" and AC2 "the wall with the count, the reset date and the plan line" — plan §5 step 5 "wall.limit.opened; wall.limit.stay; wall.plan; wall.tracked 'Go to Tracked Lots'" — two keys and a navigation control are named by no pasted ruling or acceptance line; only the approved report-limit.html mock could name them and that mock is not pasted — confirm both keys and the tracked-lots control appear in report-limit.html state 3, or drop them.
+
+DEFER severity=LOW — RR-0460 "Phone tests local first; ... proof for new phone tests" — plan §4 "the lane records the test total" — a total file/test count is not proof for the new phone tests; section 6 says "red, then green" but names no artifact — record the red run and the green run per new test file as the proof.
+
+MET — RR-0454 item 3 — plan §5 step 5 — the limit wall carries "Your plan is managed on the web." and no top-up or upgrade control.
+MET — RR-0455 item 2 — plan §3 — "the no_plan return goes to 357", sign_out to 357, the press haptic to 458.
+MET — RR-0455 item 1 — plan §5 step 10 — "The web is unchanged (RR-0455 item 1). No web file is edited".
+MET — RR-0444 — plan §5 step 3 — "'reactivate' only for status 'expired'".
+MET — RR-0455 item 3 — plan §3 — "'No spring' goes to task-459".
+MET — card, PaywallScreen check — plan §2 — "PaywallScreen is not reused".
+
+REJECT — RR-0443 "yes, they need a screen with a top up or a higher subscription" — accused of shipping a limit screen with no top-up or upgrade control — RR-0454 item 3 later rules "the top-up or upgrade offer of RR-0443 waits for the buying work", so the plan follows the later ruling.
+
+REJECT — RR-0445 "we are mobie first ... but it works onthe web" — accused of shipping no web work — RR-0455 item 1 rules "(1) yes, the web waits for its switch-on", so no web file is correct for this card.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 1
+Rules met: none
+
+---
+⏱  118759ms (118.8s)
+📊 Tokens — total: 39345, input: 15550, output: 23795, reasoning: 22569

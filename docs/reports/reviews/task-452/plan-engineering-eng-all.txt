@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:29:55.508Z file_sha256=2e2625814c0cf162b73074e27ca3b208dbef051fdf2b119510a80221f017025c prompt_sha256=5f9072ffbf825d9ae204f0342916bf2950a4a5ecb3ee53640f081f7a2afa2c37
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.2 The Try-Catch Boundary Rule "Every newly created API route ... MUST have an overarching `try-catch` block wrapping the entire handler body." — plan section 5 step 3 "parcelSearchMatch.ts, append `searchWall(error, read)` after :366" — not applicable, no API route is created or modified by this plan; the server 403 senders are explicitly "All unchanged." — no fix needed, record the route files as untouched.
+
+REJECT — 2.1 "The 'Unhappy Path' Test Mandate" — plan omits .infra.test.ts error-path tests — this plan creates no API route and no DB mutation, so §2.1's `.infra.test.ts` mandate does not attach; the unhappy paths it does own (403 mapping, failed read) are covered in apiClient.test.ts and parcelSearchMatch.test.ts.
+
+REJECT — 3.2 Migration Rollback Safety "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks" — plan lists no migration — Database Impact is NO; no migration file is in the Files line, so §3.2 has no subject.
+
+REJECT — 5.1 Typed Factories Only "You MUST always import typed factories from `src/tests/factories.ts`" — plan writes new mobile fixtures (wall.situations.json) — the rule names `src/tests/factories.ts`, a web/server test asset; the change adds JSON fixture data under mobile/__tests__/fixtures/ and no untyped inline TS mock is proposed in the plan text.
+
+MET — 1.1 Mobile-First UI Mandate — plan section 6 "the 44 px and layout walkers pass" and step 6 "Classes from the semi class table (lotMap.ts, min-h-[44px])" — wall built phone first with 44px targets asserted by a walker.
+
+MET — 5.2 Test File Pattern — plan section 6 "wallScreens.golden.test.ts (new)" plus parcelSearchMatch.test.ts and behaviour tests — derivation logic gets a logic-layer test, components get behaviour/golden tests, matching the table's mandated layers.
+
+MET — 5.3 Red-Green Test Cycle — plan section 6 "each maps to an acceptance line", "These three are red", "red: the function is missing" — tests written and failing before implementation.
+
+MET — 4.3 Frontend Security — plan section 5 step 3 and 6 — no secret in a client component; user/limit values rendered from the entitlement read, and the plan's own watch in AC3 keeps the wall behind testIDs, escaping via JSX.
+
+MET — 6.1 logError Mandate — NONE required — no server file is touched; the plan's only error handling is client-side (apiClient.ts, a React Native lib), where §6.1 explicitly allows client logging.
+
+MET — 8.1 API Route Export Rule — plan section 5 step 4/13 — no `route.ts` export is added; new logic lives in parcelSearchMatch.ts and a component binding.
+
+MET — 12.8 SQL Linting & Migration Safety — NONE — no new migration, so sqlfluff/validate-migration have no subject.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  5767ms (5.8s)
+📊 Tokens — total: 25201, input: 24476, output: 725

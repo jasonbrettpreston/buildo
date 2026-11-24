@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.508Z file_sha256=c8d61f3ace54162daa702587732539d26d83371f0958d034b7aa5cc6c50aef41 prompt_sha256=3c8df6d66296db28aa680da04d5fe0cf68240f7d44074c054b14eea9b91ccbb5
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — plan §6 "Case "limit wall"" / §5 step 8 "'wait' draws the existing loading state. A wall replaces the search tree" — no listed test renders the new wall/'wait' gate twice with isFetching true then false; the only gateStability item is a mock stub re-run — add an isFetching true/false pair to parcelSearchScreen.behaviour.test.tsx and reportPage.behaviour.test.tsx asserting identical JSX.
+DEFER severity=MED — §5.3 "2. AccountDeletedError → reactivation modal (no nav)" and §5.2 "Account in deletion window? | `profileError instanceof AccountDeletedError`" — plan §5 step 2 "Every other 403 stays ApiError(403)." — read literally this drops the AccountDeletedError throw at apiClient.ts:54 and breaks AuthGate arm 2 — state in step 2 that ACCOUNT_DELETED keeps throwing AccountDeletedError and that the kept lock (plan §6 ":113") guards it.
+DEFER severity=MED — §4 B1 "the caller's plan and this month's report count ...; a display, never a gate" — plan §5 step 3 "SubscriptionRequiredError: 'wait' while pending; 'reactivate' only for status 'expired'; null for any other status (including null, until 357) and for a failed read" — the `['parcel-entitlement']` read now selects which screen renders, which the pasted registry row forbids, and no amendment is proposed — add a dated note to the §4 B1 registry row in the same commit, or state that the server 403 remains the only gate and the read only chooses copy.
+DEFER severity=MED — "RR-0447 (... add the new tasks with the search-fix labels, dependencies and order)" — plan §12 O3 "452 lands before 357, because 357 extends 452's surface" against "Record a TASK-452 dependency on task-357." — the recorded dependency runs backwards, so 452 would wait on the card that extends it — record task-357 depending on task-452 instead.
+DEFER severity=LOW — "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — plan §12 O1 "(b) Return 'no_plan' now and have the hosts ignore it." — O1 is already ruled by AC3 "keeps today's notice", so presenting (b) invites an unnamed 'no_plan' branch ahead of task-357 — mark O1 ruled by AC3 and strike option (b).
+DEFER severity=LOW — AC2 "show the wall with the count, the reset date and the plan line" — plan §13 "Whether a notice part can carry the title and date." — AC2's rendering is carried as UNVERIFIED with no confirmed slot for title and date — verify the notice part slot at plan stage or name the fallback that still satisfies AC2.
+MET — §4 B6 "Removing the interceptor without a corresponding B6 spec amendment is forbidden." — plan §5 step 2 "apiClient.ts:49-63." — the edit is confined to the 403 block, the 401 interceptor at :65-84 is untouched.
+MET — §3.4c "`add(query)` from `parcel-tool/index.tsx`, only when a search opens a page" — plan §5 step 7 "push uses router.navigate to the tracked route (never index.tsx:81-86 navigate, which records a recent search)." — the wall's link does not record a recent search.
+MET — §4 B1 "Adding a new server query requires a row here" — plan §2 "useParcelEntitlement is at useParcelLookup.ts:162-170." — no new query key, the existing `['parcel-entitlement']` row is reused.
+MET — §8.5 "Adding a store without a reset call OR exemption fails CI." — plan §5 step 7 "useWallState.ts (new)" — the addition is a hook, not a `create<*Store>`, so no reset call is owed.
+MET — "RR-0455 ... the spring is one shared-part card in Increment 1·C" — plan §3 "- "No spring" goes to task-459." — the spring is split out, not built here.
+MET — "RR-0460 ... a full local run passing before the push, then the Mobile CI run after it" — plan §6 "Phone tests run in the full local run before the push (RR-0460), then Mobile CI after it." — the run order is stated.
+MET — "Must not: ... move the report goldens (wall copy lives in the wall surface's own content file ...; the search content is not edited)" — plan §5 step 5 "wall.reactivate (today's search.entitlement sentence, copied; the search content is not edited)" — copy lands in the wall content file, search content untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 1
+Rules met: none
+
+---
+⏱  104393ms (104.4s)
+📊 Tokens — total: 50925, input: 30131, output: 20794, reasoning: 19620

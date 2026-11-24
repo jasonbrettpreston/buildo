@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.508Z file_sha256=fbdd65cd19d85672bc3d3f199c4693b2c847ebc90d90fbb1e9a7724302716c0a prompt_sha256=0771b4bc1085fb75dba4a827300f42ba5432cb3c9be7de2713efa011b111ff91
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — five principles / no scope creep, pasted rule "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — plan section 8 "for v2's review the five-principles list is off and queue rules are not reviewed against code" and section 1 "RR-0452, MD:2337: the five-principles list is off" — the plan grants itself an exemption from a pasted clause; the pasted RR-0452 verbatim is only "Plan approved with one change - do not add the addiitonal 3 questions" and RR-0450 is only "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive.", neither takes the five principles off, so the scope test that would police the new surface, new hook and new binding is unenforced — strike the exemption and carry each added file (mobile_parcel_wall surface, useWallState.ts, WallBinding.tsx) and each state against the five principles, especially "no scope creep".
+
+BUG severity=HIGH — Acceptance #2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the plan line" — plan section 5 step 6 "Count and date come from the read; the 403's own values are never drawn" with section 5 step 3 requiring "a number for reportsLimit and a resetsOnDisplay" — the required reset date is drawn only from useParcelEntitlement (useParcelLookup.ts:162-170), whose fields the plan never establishes in section 2 and never lists in section 13 UNVERIFIED, while the 403 that AC1 says "keeps its code, limit and reset date" is deliberately ignored, so the date shown is a dependency the plan has not verified and AC2 can go unmet with the data already in hand — verify in section 2 that the entitlement read returns reportsLimit and resetsOnDisplay, or draw the preserved 403 values and record that choice.
+
+DEFER severity=MED — RR-0455 pasted "1 y 2 y 3 y 4 I dont understand this question 5. is this after a search - provide context" — plan section 1 "(4) and (5) NOT ruled" followed by "Item (4) (the way to sign up) now travels with task-357" — the plan disposes of question 4 to task-357 while its own reading of the same ruling records item 4 as not ruled, so an operator-unruled item is being moved by plan fiat — get a ruling on item 4 or drop the sentence and leave item 4 open.
+
+DEFER severity=MED — card "Orchestrator reading ... the phone wall carries the line or link, not a checkout" and "Nothing is added that the plan or a ruling does not name (RR-0392 ...)" — plan section 5 step 5 "wall.tracked "Go to Tracked Lots"" and step 7 "push uses router.navigate to the tracked route" — a navigation control and a router action on the wall are not named by any pasted clause; the only possible source is report-limit.html, which is not pasted and whose state 3 the plan asserts without quoting a label — quote the report-limit.html lines that carry the tracked-lots control in section 5, or drop the action and the key.
+
+DEFER severity=LOW — card Files line, which does not list docs/specs/00_engineering_standards.md — plan section 6 "Before the suite runs, the lane writes the Std 11 checklist (00_engineering_standards.md:288)" against section 3 "458 must list docs/specs/00_engineering_standards.md" — 452 holds 458 to a Files-line rule it does not apply to itself while requiring a Std 11 check against a file off its own line — add docs/specs/00_engineering_standards.md to the Files line or drop the pre-suite checklist to a note.
+
+MET — Acceptance #2, no top-up or upgrade control — plan section 10 "No purchase or upgrade control (RR-0454 item 3)".
+MET — Acceptance #4, web unchanged — plan step 10 "The web is unchanged (RR-0455 item 1). No web file is edited".
+MET — Acceptance #3, no-plan keeps today's notice — plan step 3 "null for any other status (including null, until 357) and for a failed read".
+MET — RR-0444 reactivate state — plan step 3 "'reactivate' only for status 'expired'".
+MET — RR-0455 item 3, spring is one shared card — plan section 3 "No spring" goes to task-459 with "459 after 458".
+MET — Must not move the report goldens, search content not edited — plan step 5 "today's search.entitlement sentence, copied; the search content is not edited".
+MET — dated note owed to task-320 — plan section 11 "task-320 --append-notes: ST2 closed".
+MET — RR-0460 phone tests local first — plan section 6 "Phone tests run in the full local run before the push (RR-0460), then Mobile CI after it".
+
+REJECT — RR-0443 "yes, they need a screen with a top up or a higher subscription" — change accused of building no top-up control — RR-0454 item 3 as carried by Acceptance #2 defers the top-up or upgrade control to the buying work, so its absence is ruled, not missed.
+REJECT — card "the existing PaywallScreen is checked first for the reactivate state" — change accused of not reusing PaywallScreen — the clause asks only that it be checked first, and plan section 2 records the check and the reason.
+REJECT — card "Findings folded: ST2, 2b, the O1 slot, Q14" — change accused of dropping Q14 — RR-0455 items 2 and 3 send Q14's haptic half to task-458 and its spring half to task-459, which plan section 3 traces.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 4
+Rules met: none
+
+---
+⏱  81716ms (81.7s)
+📊 Tokens — total: 29435, input: 13291, output: 16144, reasoning: 14784

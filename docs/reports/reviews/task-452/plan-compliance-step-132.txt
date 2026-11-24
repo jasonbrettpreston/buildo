@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.524Z file_sha256=4b0e485c1455156cb54ab61f15417be7e9e27cac4aa82c7aa212bb204c3dc5cd prompt_sha256=cb40d048b4990efca9c29f448a2e3ae29dbc09b00309c744922c3ed9dfb6c71a
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0447 "add the new tasks with the search-fix labels, dependencies and order" — §12 O3 "452 lands before 357, because 357 extends 452's surface, hook, searchWall and classes. Record a TASK-452 dependency on task-357." — the dependency is recorded on the card that must land first, inverting the order the same sentence gives, and §7's new card text names no label and no dependency at all — record the dependency on task-357 ('blocked by task-452'), leave 452 unblocked, and add the SEARCHFIX label line plus O3's order to the §7 card text.
+
+BUG severity=MED — AC1 "A 403 keeps its code, limit and reset date" and AC2 "show the wall with the count, the reset date and the plan line" — §5 step 6 "Count and date come from the read; the 403's own values are never drawn." with §5 step 3 "else null" — ReportLimitError parses reportsLimit and resetsOn but nothing draws them, so a limit 403 whose entitlement read fails or is pending renders today's notice, not the wall with the count and reset date the 403 carried — fall back to the 403's typed reportsLimit and a formatted resetsOn when the read gives no number, or declare the source precedence as a testable clause.
+
+BUG severity=MED — AC2 "never the reactivate copy" — §6 AC2 "Case 'limit wall': {reportsLimit:10, ...} shows 'You’ve used all 10 reports', 'Your count resets on 9 Dec 2026.', 'Your plan is managed on the web.', and no parcel-search-entitlement." — no test asserts the reactivate string or its testID is absent in the limit state, and §6 AC3 warns "the reactivate words equal today's notice word for word", so a leak would read as green — add an explicit absence assertion for wall.reactivate and the wall prefix testIDs to the behaviour case and the rate_limited golden.
+
+BUG severity=MED — RR-0443 "yes, they need a screen with a top up or a higher subscription" — §10 "No purchase or upgrade control (RR-0454 item 3)." and §11 dated notes list only doc-2 G.6, task-320, task-452, task-357 — the deferred upgrade offer names no successor card or dependency, while §7 keeps the title "subscription upgrade with more report room", so nothing pasted says where RR-0443's top-up will be built — add a short §11 note and a dependency naming the buying-work card for the top-up offer.
+
+BUG severity=MED — RR-0454 "1 no switch 2 yes 3 yes 4 yes 5 please explain - isnt this a shared component for the nxt 1c" — §1 "RR-0454, MD:2353: '(3) The limit screen says the plan is managed on the web for now; the top-up or upgrade offer of RR-0443 waits for the buying work.'" — the plan presents that sentence as the operator's item 3 when the pasted record is only '3 yes', so the wall.plan copy and the deferral cite words the decision log does not contain — mark it a paraphrase and cite the review-page question it answers, or quote the record verbatim and ground the content in the card's own AC2 line.
+
+DEFER severity=MED — card "Runs after SEARCHFIX.2 and SEARCHFIX.3 (shared match file and the string pins)" — §8 "450 (ee3634771) was already in the grounder's read. 449 (fe88ecf71 ...). 451 (04c181564 ...). 461 (acc1affa0) touched lotForm.test.ts only." with §13 "The pin numbers and the S-golden count are projections." — no landed sha is named for SEARCHFIX.2 or SEARCHFIX.3, yet the plan appends to the shared match file after parcelSearchMatch.ts:366 and re-derives the 436-string pin at surface-conformance.logic.test.ts:263 — name the two landed shas in §4 or §8, or mark 452 blocked until they land.
+
+DEFER severity=LOW — card "Findings folded: ST2, 2b, the O1 slot, Q14" — §7 "'Findings folded: ST2, 2b, the O1 slot.'" against §9 "Moot: ms-S#7, spring half only (task-459 exists). Its semi and map notice half stays as the pile." and §10 "The semi and map notices are piled." — the folded line drops the semi and map notice pile that the plan says stays in this card, so a reader cannot tell what 452 owes — list the pile on the folded line or state on the line that it stays unbuilt here.
+
+REJECT — core.1 to core.18 and the x-* clauses of Spec 132 — accused of not declaring a descriptor, checks, logic_variables, a capture bracket and pins — RR-0450 pasted says "the step handbook is for compute only" and this material is a mobile surface plan (mobile/* and scripts/surfaces/*), so no Spec 132 clause binds it.
+
+MET — AC1 "limit reached and subscription required are two error classes" — §5 steps 1-2 "ReportLimitError and SubscriptionRequiredError extend ApiError: status 403" — two classes with code members and the catch widened to rethrow ApiError.
+MET — AC3 "An expired subscription shows the reactivate state" — §5 step 3 "'reactivate' only for status 'expired'; null for any other status" — expired-only rule, with null, active, failed read and plain 403 cases asserted null.
+MET — AC4 "The web is unchanged by this card" — §5 step 10 "No web file is edited; it keeps its one not-entitled notice." — plus §6 'no web path in the diff' and the admin-media T7 lock held at 70.
+MET — RR-0454 item 3 "no top-up or upgrade control" — §5 step 5 wall.plan "Your plan is managed on the web." — plan line carried in the wall content, no purchase or checkout control.
+MET — RR-0460 "Phone tests local first" — §6 "Phone tests run in the full local run before the push (RR-0460), then Mobile CI after it." — local suite before push, CI after.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 7
+Rules met: none
+
+---
+⏱  161427ms (161.4s)
+📊 Tokens — total: 46312, input: 27011, output: 19301, reasoning: 17845

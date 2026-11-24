@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:29:55.511Z file_sha256=8fbb7e1ccceb95044d8f71912b495e5a8baa9ed37d60e9ae3ea0dd24fd80b587 prompt_sha256=03d0d15d3074cfe22b48c2a4ed902cff18c0f3581e7c086102072b4038b1581b
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §5.5 TIME "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN §5 steps 1-13 and §11 (plan text) NONE — neither task-452 nor the split cards carry any estimate, so the clause is unmet for every task this plan touches — add an estimate line per task (452, 357, 458, 459) in §5 or §11, MEASURED with source or GUESS labelled.
+
+BUG severity=HIGH — card "Runs after SEARCHFIX.2 and SEARCHFIX.3 (shared match file and the string pins)." — PLAN §12 O3 "452 lands before 357, because 357 extends 452's surface, hook, searchWall and classes. Record a TASK-452 dependency on task-357." — the plan inverts the only dependency it records (352-before-357 means 357 depends on 452) and records no dependsOn on SEARCHFIX.2 or SEARCHFIX.3, so the ordering clause is unmet — record dependsOn SEARCHFIX.2 and SEARCHFIX.3 on task-452 and make task-357 depend on task-452.
+
+BUG severity=HIGH — card "Split by RR-0455 (MD:2357-2358): the no-plan page returns to task-357, the haptic is task-458, the spring is task-459" — PLAN §3 "LEAVE to task-357: ... The success and error haptics." — haptic work is handed to task-357, which the ruling makes the no-plan card, while §12 O2 lists the same assignment as still open, so the split is unmet twice over — route the settle haptics to task-458 only (357 taking a dependency if it needs them) and delete O2 as a question.
+
+BUG severity=HIGH — AC4 "The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (RR-0455 item 1)" — PLAN §5.10 "The web is unchanged (RR-0455 item 1). No web file is edited; it keeps its one not-entitled notice." — only the first half of AC4 is planned; the web limit and reactivate screens have no owning task, note or source anywhere in §3, §9 or §11 — name the card that owns the web switch-on screens with its source and a dependency on task-452.
+
+DEFER severity=MED — AC2 "never the reactivate copy" — PLAN §6 "Case "limit wall": {reportsLimit:10, resetsOnDisplay:'9 Dec 2026', status:'active'} shows "You’ve used all 10 reports", "Your count resets on 9 Dec 2026.", "Your plan is managed on the web.", and no parcel-search-entitlement." — no assertion forbids the reactivate sentence on the limit wall, and the plan itself notes the copy is word for word ("wall.reactivate (today's search.entitlement sentence, copied"); add the wall.reactivate absent assertion to the limit-wall case.
+
+DEFER severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN §12 O1 "RR-0392 and "do it right" point to (a). Recommend (a): no unused branch, and AC3 says so." — O1 is already answered by the card's AC3 and O2/O3 quote no search of the record, so three operator questions reach the sitting the record answers — rule O1 from AC3, quote the search for O2 and O3, keep only what the record leaves open.
+
+DEFER severity=MED — plan-protocol §5.2 "search fixes ... lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only" — PLAN §13 "Task ... status: LATER · milestone: m-1" NONE — the plan never states which home this search fix sits in, nor a gap-register or launch-list row as its source — record 452's home (increment "1-2 shared" or the Launch gate) and its register or launch-list source row.
+
+MET — RR-0454 item 3 "(no top-up or upgrade control until the buying work, RR-0454 item 3)" — PLAN §10 "No purchase or upgrade control (RR-0454 item 3)." and §5.5 "wall.plan" — no control is built, only the plan line.
+
+MET — RR-0455 item 2 "the no-plan page returns to task-357" — PLAN §5 step 3 "null for any other status (including null, until 357) and for a failed read." — status null keeps today's notice, no no-plan branch is added.
+
+MET — card "Must not: ... the search content is not edited" — PLAN §5 step 5 "wall.reactivate (today's search.entitlement sentence, copied; the search content is not edited)." — copy is duplicated into the wall content file, the search content is untouched.
+
+MET — AC1 "limit reached and subscription required are two error classes" — PLAN §5 step 2 "Read errObj.code and throw the matching class. Details are taken only when typed right." — two classes with code, limit and reset date kept.
+
+MET — card "Corrects the BUILT mark on objective G.6 by a dated note. Dated note owed: task-320." — PLAN §11 "doc-2 G.6 ... the limit and reactivate walls are built on the phone only; no top-up until the buying work; the no-plan page is task-357; the web waits" — both owed notes are listed.
+
+MET — plan-protocol §0 bullet 3 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — card "on the operator's rulings: RR-0444 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2290, fold the findings), RR-0447 ... and RR-0448" — every item this card adds carries a ruling file:line.
+
+REJECT — RR-0455 item 2 "the no-plan page returns to task-357" — accused of dropping the no-plan state delivered by the earlier card text — not a real issue, the split governs and the plan keeps that state as today's notice until 357 extends the same surface.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+Rules met: none
+
+---
+⏱  82287ms (82.3s)
+📊 Tokens — total: 31533, input: 14905, output: 16628, reasoning: 15174
