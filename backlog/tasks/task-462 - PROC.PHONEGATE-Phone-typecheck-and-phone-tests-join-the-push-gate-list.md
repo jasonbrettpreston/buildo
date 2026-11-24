@@ -4,7 +4,7 @@ title: PROC.PHONEGATE Phone typecheck and phone tests join the push gate list
 status: LATER
 assignee: []
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T19:06:00Z'
+updated_date: '2026-11-24T19:10:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -182,4 +182,6 @@ Plan review round 1: 15 folded, 0 task, 0 ruling, 0 wontfix, 9 pile; grounder do
 plan-ux#2 MED folded stops only after the
 rg#1 MED folded task-461 is now fold
 rg#2 MED folded the station refuses
+
+rg#2 MED folded (the station refuses
 <!-- SECTION:PLAN:END -->
