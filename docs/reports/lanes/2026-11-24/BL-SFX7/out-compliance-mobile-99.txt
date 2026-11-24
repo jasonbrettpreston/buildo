@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.092Z file_sha256=cb36f97aee29a24fefa98bedbe83e3434f1342a109279d26c8e4b911c684edc0 prompt_sha256=cb628ffcc1a108c6cdf68b8a16f161c0cc8737a348c7e759db5697e9be35a755
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0456, card "the length of the limit is for the plan grounder to rule from existing settings" — `mobile/app/(app)/parcel-tool/semi-question.tsx:53` "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the opening wait reuses Continue's `continue_wait_ms` constant, so retuning the Continue bound silently retunes the page wait, and the grounder ruling the card delegates is not pasted (cannot see it) — record the grounder's ruling in the lane notes, or declare a separate slice key for the opening wait so the two bounds cannot move together.
+DEFER severity=LOW — RR-0460, "Phone tests local first; inline report it link accepted; proof for new phone tests" — `Implementation Notes` "Full local phone run owed before the push (RR-0460)." — both ACs are connection-loss and rate-limit behaviours whose only stated proof is a phone run the plan itself says is still owed, and the diff carries no such evidence — attach the local phone run (offline open, zero-second 429) before the push.
+DEFER severity=NIT — RR-0392 "one push for all four; no other infrastructure beyond this" — `mobile/src/hooks/useParcelLookup.ts:72` "Once is the ruling and not a setting (RR-0392)." — the cited ruling's pasted text is about push infrastructure and says nothing about retry-once being fixed, so the attribution in the comment is wrong; the authority for "once" is RR-0456 "Q5 retry once auto at zero" — cite RR-0456 there instead.
+DEFER severity=NIT — RR-0456 "Q4 add a limit Q5 retry once auto at zero" — `mobile/app/(app)/parcel-tool/semi-question.tsx:46` "const shown = submitError ?? error ?? (data ? null : waitError);" — data arriving after the over-limit notice silently overriding that notice is a transition neither the card nor the ruling names — one line in the lane notes stating the late-data-wins choice, so the extra state transition is explicit.
+MET — AC #1 "The semi question page stops waiting after the limit and shows a message with Try again" — `mobile/app/(app)/parcel-tool/semi-question.tsx:53` — the timer sets an error after `SEMI_CONTINUE_WAIT_MS` and `retry:` clears it and refetches, with the retry test id asserted in the behaviour test.
+MET — AC #2 "A zero-second rate limit retries the search once, and only once" — `mobile/src/hooks/useParcelLookup.ts:72` — "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" retries the first failure only.
+MET — RR-0456 "Q4 add a limit Q5 retry once auto at zero" — `mobile/src/hooks/useParcelLookup.ts:90` "retry: shouldRetryParcelSearch," — the search query is the site that carries the auto retry, the lookup and entitlement reads keep none.
+MET — Spec 99 dated note 2026-11-24 "the semi question page reads no data with a parcel id as loading, never as a redirect" — `mobile/__tests__/semiQuestionPage.behaviour.test.tsx:262` "expect(mockReplace).not.toHaveBeenCalled();" — the new state is an error with Try again, not a redirect, and no §6.5 carve-out is added.
+MET — Spec 99 §4 B1 "the parcel detail; depends ONLY on parcelId (query-key hygiene, never on the search string)" — `mobile/src/hooks/useParcelLookup.ts:87` — the query key and `queryFn` are untouched, only the `retry` predicate changes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  95380ms (95.4s)
+📊 Tokens — total: 47703, input: 29559, output: 18144, reasoning: 17232

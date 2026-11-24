@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.094Z file_sha256=e2bd51250b42c93ab1c8227147818b1eabe1586623dabbe951c29ddf37e006f7 prompt_sha256=66d6460bf0dbe724c475ac4a1ec18fce2bba59c39704edfb2a5bb6cd82214f70
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-457 AC#2 / RR-0456 "Q5 retry once auto at zero" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx "is retried once (TanStack's first retry delay, 1000 ms), and only once" — the one automatic retry fires one second after a zero-second rate-limit answer, so the zero-wait state still sits for a second, which is not "at zero" if the ruling means immediately — set retryDelay to 0 when the error is a RateLimitError with retryAfterSeconds 0, keeping TanStack's default for every other error
+DEFER severity=LOW — Task Description "the length of the limit is for the plan grounder to rule from existing settings" — mobile/src/lib/semiQuestion.ts "It also bounds the page's opening wait (task-457, RR-0456)" — the opening wait's length is the Continue bound continue_wait_ms, and no grounder ruling naming that length for the opening wait is pasted, so the length cannot be checked and retuning Continue now also retunes the opening wait — paste the grounder ruling for the opening wait, or read a separate wait setting
+DEFER severity=LOW — task-457 AC#2 "A zero-second rate limit retries the search once, and only once" — mobile/src/hooks/useParcelLookup.ts "retry: shouldRetryParcelSearch" (inside useParcelSearch) — the retry is added only to the debounced typeahead query and the search screen that prints "Try again in 0s" is not in the diff, so cannot see that the ruled surface is this query — confirm the search screen's lookup runs through useParcelSearch, or add the retry to the query that surface uses
+MET — task-457 AC#1 "The semi question page stops waiting after the limit and shows a message with Try again" — mobile/app/(app)/parcel-tool/semi-question.tsx "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the loading state is bounded by the page's own limit and falls into the built error state whose parcel-semi-retry control is pressed in the test
+MET — task-457 AC#2 "and only once" — mobile/src/hooks/useParcelLookup.ts "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — the first failure only is retried, and the hook test pins exactly two fetches before the RateLimitError surfaces
+MET — Task Description "shows a could-not-load message with Try again" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();" — the notice is the built could-not-load message, shown after the limit and cleared when data lands
+MET — Task Files "mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/semiQuestion.ts, ..." — diff headers list exactly those six paths and no others — no file outside the card's declared set is touched
+MET — RR-0460 "proof for new phone tests" — Implementation Notes "Red (lane file red.out, npx jest on the three files from mobile/, RR-0460 local phone run...): 5 failed, 40 passed of 45 ... Green (green.out): 3 suites, 45 of 45." — the new phone tests T1 to T7 carry a local red then green proof
+MET — doc-2 D.7 "Question-page states: loading, error, rate limit, entitlement, schema drift" — mobile/app/(app)/parcel-tool/semi-question.tsx "schemaDrift: shown instanceof ParcelLookupSchemaError" — the added wait limit reuses the existing state set and adds no new state to the page
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  51998ms (52.0s)
+📊 Tokens — total: 24414, input: 14181, output: 10233, reasoning: 9312

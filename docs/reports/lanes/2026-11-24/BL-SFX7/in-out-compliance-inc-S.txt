@@ -1,0 +1,418 @@
+LIST inc-S sha256:440bd010c44b3224827ac42e51c9c7b18156e0e8dfe6dc70a91f66735400b04e material sha256:8cb8a87a8f3016613acf3259d4697990c01cae5dc7df2de13c51fe968dd9877e part 1 of 1 chunk 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/useAnswerParcelLookup.hook.test.tsx","mobile/__tests__/useParcelLookup.test.ts","mobile/app/(app)/parcel-tool/semi-question.tsx","mobile/src/hooks/useParcelLookup.ts","mobile/src/lib/semiQuestion.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-24T16:58:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+## Dated notes
+
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **G.1** "Unique match goes straight to the report" stays true for an exact match only. `unique` is now the exact read, or a one-row typeahead that is the typed address in full; a partial address, a street with no number, a one-row leftover that is not the typed address in full, a street type or direction that differs, and the dash and letter forms are `text_candidates` (the list). See Spec 100 §3.2 dated note 2026-11-24.
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **A.3** "Typeahead resolution of the typed text (street-prefix, up to 10)": a typeahead never opens a lot on a prefix; one leftover row opens only when it is the typed address in full, otherwise the person picks from the list. A typed `%` or `_` is escaped, and a window of 10 is not narrowed by direction. See Spec 100 §3.2 dated note 2026-11-24.
+Dated notes 2026-11-24 (M-246, prior text kept; task-451 SEARCHFIX.3, lane BL-SFX3; the table rows above are unchanged):
+- C.3: the map draws no neighbour lots. Operator RR-0446, verbatim: "04  leave it as it is" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302); ruled at MORNING-DECISIONS.md:2303: "the several-lots map stays as built (no neighbour lots); objective C.3's text is corrected". The C.3 words "neighbours in zinc" no longer describe the page.
+- C.7: the status NOT BUILT is wrong. The card lead was built by task-336 (SRCH.LOTCARD); task-451 adds "at the back" for a lot with no fronting street (FOLD-PLAN.md:57), so the card reads "Lot A · has the house · faces Dunmore Lane" and "Lot B · no building · at the back" as the row says. Status: BUILT.
+- C.12: the status NOT BUILT is wrong. The link "Not sure which lot? Get help with an address" was built by task-321 (SRCH.C12; mobile/src/components/surfaces/LotMapBinding.tsx, the help row under the cards). Status: BUILT; task-451 points it at the topic wrong-lot.
+- B.6 and B.7: the no-lot message now ends "Try a nearby address or report it.", with "report it" an inline link to Help & Support, topic wrong-lot; every "Get help with an address" link takes the topic wrong-lot (the Help page has it since task-450).
+- C.9: the card's screen-reader label no longer reads the facts. Frontage and zoning are still sent by the lookup (the map field whitelist) but are no longer shown or spoken; the label is the card's visible text (lead line and area). An implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available" (RR-0444, MORNING-DECISIONS.md:2290-2291).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index 33221cf7553527f7b6160d835f857c49d03009c6..1fc226b98abf2f254a91a0fde598945fee024bae 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -246,6 +246,43 @@ describe('the question page (semi-question.tsx)', () => {
+     fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+     expect(mockHook.refetch).toHaveBeenCalledTimes(1);
+   });
++  // task-457 AC1 (RR-0456 Q4, MORNING-DECISIONS.md:2362 "Q4 add a limit"): the opening wait is bounded by the page's own wait limit (continue_wait_ms).
++  it('task-457 AC1: opened with no connection, the page stops waiting after the limit and shows the could-not-load message with Try again; Try again fetches again and waits again', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });
++      expect(screen.getByText('Searching')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++      await act(async () => { jest.advanceTimersByTime(1); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      expect(screen.queryByText('Searching')).toBeNull();
++      expect(mockReplace).not.toHaveBeenCalled();
++      fireEvent.press(screen.getByTestId('parcel-semi-retry'));
++      expect(mockHook.refetch).toHaveBeenCalledTimes(1);
++      expect(screen.getByText('Searching')).toBeTruthy();
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
++  it('task-457: data arriving after the limit opens the question', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      const view = render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      mockHook = { ...mockHook, data: data(form(true)) };
++      view.rerender(<Question />);
++      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
+ });
+ 
+ describe('the report mount (the redirect)', () => {
+diff --git a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+index 791ad3e223bd998d89b565762355a50f5ba7441a..ba6fce4168b0bc0b8d64d0611691a13e4371bc6b 100644
+--- a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
++++ b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+@@ -15,7 +15,8 @@ jest.mock('@/store/authStore', () => ({
+ jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
+ 
+ import { fetchWithAuth } from '@/lib/apiClient';
+-import { answeredParcelLookup, useAnswerParcelLookup } from '@/hooks/useParcelLookup';
++import { RateLimitError } from '@/lib/errors';
++import { answeredParcelLookup, useAnswerParcelLookup, useParcelSearch } from '@/hooks/useParcelLookup';
+ 
+ const mockFetch = fetchWithAuth as jest.MockedFunction<typeof fetchWithAuth>;
+ 
+@@ -34,3 +35,44 @@ describe('useAnswerParcelLookup under a real QueryClient', () => {
+     expect(mockFetch.mock.calls).toEqual([['/api/parcels/lookup?parcelId=PIN-777&semi=answered']]);
+   });
+ });
++
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the REAL search hook under a REAL QueryClient; a zero-second rate limit
++// is retried once (TanStack's first retry delay, 1000 ms), and only once; any other wait is not retried.
++describe('task-457 useParcelSearch under a real QueryClient', () => {
++  const empty = { data: { match: null, candidates: [], warnings: [], parcel: null, page: null } };
++  const mount = () => {
++    const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
++    const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
++    return renderHook(() => useParcelSearch('26 Hurlingham Cres'), { wrapper });
++  };
++  beforeEach(() => { mockFetch.mockReset(); jest.useFakeTimers(); });
++  afterEach(() => { jest.useRealTimers(); });
++
++  it('a zero-second rate limit is retried once; the retry succeeds and no error shows while it waits', async () => {
++    mockFetch.mockRejectedValueOnce(new RateLimitError(0)).mockResolvedValueOnce(empty);
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(10); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeNull();
++    expect(result.current.isFetching).toBe(true);
++    await act(async () => { await jest.advanceTimersByTimeAsync(1000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeNull();
++    expect(result.current.data).toEqual(empty.data);
++  });
++  it('a zero-second rate limit refused again ends in the rate-limit error after exactly two fetches', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(0));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++    expect((result.current.error as RateLimitError).retryAfterSeconds).toBe(0);
++  });
++  it('a rate limit with a wait above zero is not retried', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(7));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++  });
++});
+diff --git a/mobile/__tests__/useParcelLookup.test.ts b/mobile/__tests__/useParcelLookup.test.ts
+index e16974a961d4b486d559dabff6eafaed6eccfe04..99c2898775bfefa8c30168d147c9b3ae6e59ba56 100644
+--- a/mobile/__tests__/useParcelLookup.test.ts
++++ b/mobile/__tests__/useParcelLookup.test.ts
+@@ -28,6 +28,7 @@ import {
+   fetchParcelLookup,
+   parcelLookupParams,
+   shouldRetryParcelLookup,
++  shouldRetryParcelSearch,
+   ParcelLookupSchemaError,
+ } from '@/hooks/useParcelLookup';
+ 
+@@ -187,6 +188,20 @@ describe('shouldRetryParcelLookup — deterministic states are not retried', ()
+   });
+ });
+ 
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the search retries a zero-second rate limit once, on the first failure only.
++describe('task-457 AC2: shouldRetryParcelSearch', () => {
++  it('retries a zero-second rate limit once and only once; every other error follows shouldRetryParcelLookup', () => {
++    expect(shouldRetryParcelSearch(0, new RateLimitError(0))).toBe(true);
++    expect(shouldRetryParcelSearch(1, new RateLimitError(0))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new RateLimitError(30))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new ApiError(500, 'boom'))).toBe(true);
++    expect(shouldRetryParcelSearch(3, new ApiError(500, 'boom'))).toBe(false);
++  });
++  it('the lookup and the entitlement read keep no retry on a zero-second rate limit', () => {
++    expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);
++  });
++});
++
+ // FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219 "Every server fetch MUST go through TanStack Query"): the semi page's Continue lookup is the
+ // mutation of useAnswerParcelLookup. The two pins below keep what task-361 built: a failed or offline lookup ends in the error state at once (networkMode
+ // 'always': TanStack's default would pause a mutation offline, so the bounded wait would never start and the page would stay busy), and no retry re-sends it.
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 12d8cca09b6602253ca94393e63a7325a67489e3..fc9e632cd45d76dfda0c0b2d3dbc51f022d788fc 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -18,7 +18,8 @@ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/comp
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
++import { buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
++import { NetworkError } from '@/lib/errors';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -29,6 +30,8 @@ export default function SemiQuestionScreen() {
+   const storeLookup = useSetParcelLookup();
+   const { mutateAsync: answerLookup } = useAnswerParcelLookup();
+   const [submitError, setSubmitError] = useState<unknown>(null);
++  // task-457 (RR-0456 Q4): the opening wait has a limit; past it the page shows the could-not-load notice with Try again. Data that arrives later replaces it.
++  const [waitError, setWaitError] = useState<unknown>(null);
+   const [submitting, setSubmitting] = useState(false);
+   const submittingRef = useRef(false);
+   const mountedRef = useRef(true);
+@@ -38,15 +41,22 @@ export default function SemiQuestionScreen() {
+     return () => { mountedRef.current = false; };
+   }, []);
+ 
+-  const situation = useMemo(
+-    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
+-    [id, data, error, submitError, isFetching, selected, submitting],
+-  );
++  const situation = useMemo(() => {
++    const shown = submitError ?? error ?? (data ? null : waitError);
++    return buildSemiQuestionSituation({ parcelId: id, data, error: shown, isFetching, schemaDrift: shown instanceof ParcelLookupSchemaError, selected, submitting });
++  }, [id, data, error, submitError, waitError, isFetching, selected, submitting]);
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+   const markRedirected = useSettledRedirect(situation.navigate, isFetching);
+   const goBack = useGoBack();
+ 
++  // task-457: the limit is the page's own wait (continue_wait_ms, the same bound Continue uses); it runs only while the page is loading and is cleared on leaving it.
++  useEffect(() => {
++    if (situation.state !== 'loading') return;
++    const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);
++    return () => clearTimeout(t);
++  }, [situation.state]);
++
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+   // a lookup that does not settle ends in the same built error state as a failed one, and the next Continue works.
+@@ -76,7 +86,7 @@ export default function SemiQuestionScreen() {
+     () => ({
+       change_input: () => undefined,
+       set_input: () => undefined,
+-      retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); },
++      retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } },
+       // The renderer's `select` carries a string; here it is the answer (the descriptor's deviation entry).
+       select: (answer: string) => {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 342af672f716a98abc7938801325d0255763ecca..d2d879ffe41332bf92dad19624ef9e3db9d6264f 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -69,6 +69,12 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
+   );
+ }
+ 
++/** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. A zero-second wait is not a throttle the person must sit out, so the 429 guard above stays for every other wait. Once is the ruling and not a setting (RR-0392). */
++export function shouldRetryParcelSearch(failureCount: number, err: unknown): boolean {
++  if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;
++  return shouldRetryParcelLookup(failureCount, err);
++}
++
+ /**
+  * Debounced typeahead search. Fires when the trimmed query is ≥ 3 chars (the server min).
+  * The screen owns the ≥400ms debounce (Spec 100 §4); this hook just caches per query string.
+@@ -81,7 +87,7 @@ export function useParcelSearch(q: string) {
+     queryFn: () => fetchParcelLookup({ q: trimmed }),
+     enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken,
+     staleTime: LOOKUP_STALE_MS,
+-    retry: shouldRetryParcelLookup,
++    retry: shouldRetryParcelSearch,
+   });
+ }
+ 
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 3d0bb19b5e44cc2ba3f32e10a54dd1d6d2000c80..6d34c7862adc1ef44fdf5cb843613df2a5c19fa1 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -14,7 +14,7 @@ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
+-/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. It also bounds the page's opening wait (task-457, RR-0456). */
+ export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');
+ 
+ class SemiContinueTimeoutError extends Error {
+

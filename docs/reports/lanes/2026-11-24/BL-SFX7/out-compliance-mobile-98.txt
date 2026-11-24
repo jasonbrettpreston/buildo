@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.093Z file_sha256=dd14e8350059dab4652d76a2968edb3eb5a0ecf54b02773e3f08b7e06dbed2a3 prompt_sha256=72cc9ab6da0ae7dae2f340f0e68498b57a226f5a5bf129c127074d11f54dd15c
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-457 AC1 "The semi question page stops waiting after the limit and shows a message with Try again" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx: "mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };" — the proof pins a settled hook, not the "opened with no connection" case the card names, where the lookup stays pending and isFetching is true, so whether buildSemiQuestionSituation yields the built error state while isFetching is true cannot be seen in the diff — add a case that holds isFetching: true through the limit and asserts the notice and parcel-semi-retry
+DEFER severity=LOW — RR-0460 "Phone tests local first; inline report it link accepted; proof for new phone tests" — Implementation Notes: "Full local phone run owed before the push (RR-0460)." — the three touched suites have local red then green proof but the full phone suite is still owed, so the proof clause is incomplete — run the full local phone suite and record it before the push
+DEFER severity=NIT — task-457 AC1 "add a time limit, then a could-not-load message with Try again" — mobile/app/(app)/parcel-tool/semi-question.tsx: "const shown = submitError ?? error ?? (data ? null : waitError);" — clearing the notice when data lands later is behaviour neither the card nor the ruling names — keep it only if the lane wants late data to replace the notice, and say so in the lane report
+MET — task-457 AC2 "A zero-second rate limit retries the search once, and only once" — mobile/src/hooks/useParcelLookup.ts:72 "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — exactly one automatic retry, wired as useParcelSearch retry
+MET — RR-0456 "Q4 add a limit Q5 retry once auto at zero" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx: 2 fetches for a zero-second limit, 1 fetch for a 7-second wait, RateLimitError after the two, under a real QueryClient
+MET — Spec 98 §4 "shouldRetryParcelLookup skips 400/403/429/drift" — mobile/__tests__/useParcelLookup.test.ts "expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);" — the lookup and the entitlement read keep their no-retry on 429
+MET — Task card "the length of the limit is for the plan grounder to rule from existing settings" — mobile/src/lib/semiQuestion.ts: "SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms')" — the limit is the existing setting, not a typed number
+MET — Spec 98 §4 dated note "a render smoke ... and a screen-behaviour test are not snapshots" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx — additions are text and test-id behaviour assertions, no snapshot
+MET — RR-0392 "no other infrastructure beyond this" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx "new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } })" — no new dependency or harness, only the existing RNTL/QueryClient setup
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  73169ms (73.2s)
+📊 Tokens — total: 24637, input: 10087, output: 14550, reasoning: 13750

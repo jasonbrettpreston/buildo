@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.096Z file_sha256=aec852c1faa523bc03c6321e10131b39a2394d522129037b27bea44efc477382 prompt_sha256=c5df83d399a90b8837686794819d08a077fc9dc23fde83e4327ebbac9256dc61
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+```
+MET — task-457 AC1 "The semi question page stops waiting after the limit and shows a message with Try again" — mobile/app/(app)/parcel-tool/semi-question.tsx "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the opening wait ends at the limit, the built error state carries the message and Try again, and the test pins the notice at limit-1 / limit.
+MET — task-457 AC1 "the retry: ... setWaitError(null); void refetch();" — mobile/app/(app)/parcel-tool/semi-question.tsx "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } }" — Try again clears the wait error, refetches and re-arms the same limit, matching the card's "Try again".
+MET — task-457 AC2 "A zero-second rate limit retries the search once, and only once" — mobile/src/hooks/useParcelLookup.ts "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — exactly one automatic retry at zero and none for any other wait, pinned by the two-fetch / one-fetch tests.
+MET — task-457 Description "the length of the limit is for the plan grounder to rule from existing settings" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');" — the limit is an existing surface setting, not a new number typed in code.
+MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — mobile/src/hooks/useParcelLookup.ts "return shouldRetryParcelLookup(failureCount, err);" — no new infrastructure; the existing predicate is reused and the search hook is the only caller changed.
+MET — task-457 Files list "mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/semiQuestion.ts" — diff paths — the change touches only the six files the card names, no seventh file.
+DEFER severity=LOW — RR-0460 "Phone tests local first; inline report it link accepted; proof for new phone tests" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "it('task-457 AC1: opened with no connection, the page stops waiting after the limit and shows the could-not-load message with Try again" — new phone tests are added but the card itself records the proof as owed, "Full local phone run owed before the push (RR-0460).", and no such run is in the material — attach the green local phone run output before the push.
+DEFER severity=LOW — RR-0456 "Q4 add a limit Q5 retry once auto at zero" — mobile/src/hooks/useParcelLookup.ts "retry: shouldRetryParcelSearch," — the retry is scheduled on TanStack's default 1000 ms delay (pinned at "advanceTimersByTimeAsync(1000)") rather than at the zero the server asked for, so the person waits a second on a zero-second limit — return 0 from a retryDelay for a zero-second RateLimitError, or record why 1 s is accepted.
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  35842ms (35.8s)
+📊 Tokens — total: 14612, input: 7749, output: 6863, reasoning: 6052

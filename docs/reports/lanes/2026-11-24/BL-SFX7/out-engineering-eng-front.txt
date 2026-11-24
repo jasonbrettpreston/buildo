@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:44:33.092Z file_sha256=d8afec0c7b05bdb670c0d257a45743dc7c9d704c8851acc2f97cde8bbefdf84d prompt_sha256=baf7e20aed6f31eec8d785aacbe7cd082f9141be413035bc6b10f4c9b6075ca1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-engineering-eng-front.txt (model: deepseek-reasoner)
+
+REJECT — 1.1 Mobile-First UI Mandate "All Tailwind CSS styling MUST be written mobile-first." — desktop-first styling introduced — the diff adds no Tailwind classes or layout JSX, so this rule does not bind the change — not applicable.
+REJECT — 1.2 Component Isolation "Shared UI components (`src/components/ui/`) must remain pure and stateless where possible." — a shared component now fetching data — no file under src/components/ui/ is in the diff — not applicable.
+REJECT — 1.3 TanStack Query Hardening "onlineManager.setEventListener must be called synchronously at app boot" — boot, MMKV or 401 changes — the diff only edits the search retry predicate and page state, none of the three hardening bullets is touched — not applicable.
+REJECT — 1.3 Design System Fidelity "font-mono is reserved strictly for data values" — monospace on labels or hardcoded dark colours — the diff adds no font or colour classes — not applicable.
+REJECT — 1.3 Micro-animations & Haptics "Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic" — the new could-not-load notice lacks a haptic — it is an inline page notice, not an error toast, and it touches no financial or account data (a parcel lookup), so the clause does not require one — not applicable.
+DEFER severity=LOW — 1.1 Touch Targets "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — mobile/app/(app)/parcel-tool/semi-question.tsx "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } }" — the Try again control's markup and its 44px hit area are not in this chunk, so compliance cannot be seen — include the renderer/descriptor in the reviewed chunk or cite its min-h-[44px] or hitSlop.
+DEFER severity=LOW — 1.1 Responsive Layout "Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop." — semi-question.tsx "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the could-not-load message row markup is not in this chunk, so its mobile stacking cannot be seen — verify the renderer uses flex flex-col md:flex-row.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  50623ms (50.6s)
+📊 Tokens — total: 17186, input: 7707, output: 9479, reasoning: 8906

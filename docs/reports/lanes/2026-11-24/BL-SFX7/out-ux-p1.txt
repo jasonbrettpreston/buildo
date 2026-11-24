@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T19:44:33.094Z file_sha256=f0222b1a52d8df5718c29000c9ed079ed40e03ac38afd6739f5e6128fb3ddcc5 prompt_sha256=fbeaa43f0b6659e136a1f9044d0d8ed0e679e0917e54c6086b11d62e2ae387e8
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts:73 "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — when the one automatic retry is also rate-limited at zero seconds, the person is still shown "Try again in 0s", the exact string the card opened on "a rate limit answer of zero seconds reads Try again in 0s and nothing retries (task-450 L3)" — AC2 ("retries once, and only once") is met and the operator ruled once, and what the person should read after that one retry is spent is design silent, so this is a copy deferral, not a departure.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:52 "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — a person on a working connection whose service is merely slow is shown the could-not-load copy "Couldn’t reach the lot service. Check your connection and try again.", which points at the wrong cause — the card asks only for "a could-not-load message with Try again" and says nothing about the slow-but-online case, so the wording is design silent.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:89 "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } }" — the notice says the lot service could not be reached while a fetch may still be in flight, so a person who taps Try again restarts a full wait on a request that was already running — design silent, bounded, and data that lands later replaces the notice (asserted in the new test), so nothing is trapped.
+
+REJECT — mobile/src/lib/semiQuestion.ts:17 "It also bounds the page's opening wait (task-457, RR-0456)." — looks like a Continue-only setting now governs how long the person waits at open — the card rules "the length of the limit is for the plan grounder to rule from existing settings" and the implementation notes record no code deviation, so the source of the number matches the approved text.
+
+REJECT — mobile/src/hooks/useParcelLookup.ts:92 "retry: shouldRetryParcelSearch," — looks like the semi page's own opening lookup still shows a zero-second wait with no retry and is therefore left behind — the card scopes it to "search page: a zero-second rate limit retries once", and the lookup keeps its 429 guard as ruled.
+
+VERDICT: PASS on the person's experience
+States checked: first view, searching/loading (offline and slow, covered by the new limit), wait limit reached with the notice and Try again, Try again pressed (Searching returns, test asserts), data arriving after the limit (notice replaced by the question, test asserts), fetch error before the limit, answered question, redirect, search with a zero-second rate limit (retry succeeds, retry refused again, wait above zero), back and repeat visit cannot see the renderer so not judged, skip link none   Dead ends found: 0
+
+---
+⏱  74235ms (74.2s)
+📊 Tokens — total: 20082, input: 6870, output: 13212, reasoning: 12502
