@@ -3,10 +3,11 @@ id: TASK-453
 title: >-
   SEARCHFIX.5 Review tooling: the two planning lists turned off for output
   reviews, the close check's fail-open paths closed, review-tool fixes
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX5'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:40:00Z'
+updated_date: '2026-11-24T16:24:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -17,6 +18,19 @@ references:
   - docs/reports/reviews/task-453/seat-integration-1.md
   - docs/reports/reviews/task-453/seat-reality-check-1.md
   - docs/reports/reviews/task-453/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX5/REPORT.md
 type: fix
 ordinal: 150030
 ---
@@ -295,4 +309,18 @@ rg#5 MED folded is still held to the
 2026-11-24: scope added by the operator's ruling RR-0450 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2325, verbatim: "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive."): (a) the queue-137 and orchestrator-doc17 lists come off the lane-tools row of scripts/analysis/rule-lists.json; (b) the step handbook list stays on the compute rows only (orchestrator reading: already so, the plan confirms); (c) the five-principles list is replaced by three focused questions asked at the plan stage: is this the simplest design; are we adding infrastructure and complexity for small gains; is the scope limited (RR-0449, /Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2320). Switches and text changes only. Also on the Files line by this note: docs/specs/00-architecture/plan-protocol.md.
 
 2026-11-24: RR-0452 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2336, operator verbatim: "Plan approved with one change - do not add the addiitonal 3 questions"): item (c) of the note above is withdrawn. The five-principles list is turned off and nothing replaces it; no three questions; docs/specs/00-architecture/plan-protocol.md is not edited for them.
+
+2026-11-24 taken on the board at lane launch (lane BL-SFX5, worktree /Users/brettpreston_macmini/Buildo-wt-sfx5, branch wf2/inc1b-sfx5), RR-0240
+
+2026-11-24 build (lane BL-SFX5): step 1 (lists) and step 2 (close check) tests written first: rule-lists-table, rule-lists, check-lane-close, backlog-lane, backlog-brief, review-templates and proof-slice cases per Implementation Plan section 5; red run through the pre-commit related run before any code.
+
+2026-11-24 build steps 1-3 (lists, close check, messages): red proven by the refused commit attempt (36 failing cases, lane run file red.out); code: rule-lists.json (every_task plan-protocol only, output_off, lane-tools lists, gemini-review glob, review-template.js/** not, backlog-lib protected), rule-lists.mjs (outputLists, output_off validate, T10), check-lane-close.mjs (item 1, F10 output_off pin, S1-S6, S9, T12), backlog-lane.mjs (output ids, T9), Spec 08 section 7 rule 4 dated note, regenerated rule-lists-by-kind.md. Deviation: the scenario builder of check-lane-close.logic.test.ts reads a .git/table.json copy for lens-input when the lane deleted the table (S2 needs it).
+
+2026-11-24 deviation: S1 makes the launch gate ground seat findings, so the shared fixture docs/reports/reviews/task-375/plant-evidence.mjs (exempt review records path) now quotes 20+ characters of its seat file line instead of docs/a.md, which the fixture board does not hold; the first green attempt was refused by 18 backlog-lane cases on that line (lane run file green-a.out).
+
+2026-11-24 correction to the note above: plant-evidence.mjs is outside this card's Files line (check-task-files refused it), so it is left unchanged; the plantEvidence wrapper of backlog-lane.logic.test.ts re-points each seat verdict at line 2 of its own seat report and commits the evidence again.
+
+2026-11-24 build step 4 (review tools): phase A landed 828ee970e (hook tail: 394 related tests passed, lane run file green-a.out); T1 two-commit Status line, T8 empty AC block, T7 contextRound highest plus one, T4 proof-slice head, ST5 CHK.3 row notbuilt, README fixes (GROUNDER-A D1, GROUNDER-B 3, GROUNDER-C 1-3) and the T6 exemption note; red for these was the same refused attempt (red.out).
+
+2026-11-24 output review round 1 run (context-r3.md; 29 lens outputs, 95 findings: 1 CRITICAL, 5 HIGH, 42 MED, 41 LOW, 7 NIT, listed in docs/reports/lanes/2026-11-24/BL-SFX5/FINDINGS.md). Grounder owed: the lane does not rule its own findings.
 <!-- SECTION:NOTES:END -->

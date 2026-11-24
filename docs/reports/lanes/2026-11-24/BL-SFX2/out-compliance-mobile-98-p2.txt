@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:01:04.547Z file_sha256=d91ba890861d1c539f7efb562401e34eaaaa0206f8a0ed9f07ca376d81d4b68a prompt_sha256=38f9e3dd4e8b8c7ca213025157edb731a51b7d094d0ceaba2be3c78c23d29554
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-98-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-450 AC #2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts:358 "showMiss: outcome === 'no_match' && error == null" — with no payload the resolver now falls through to "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';", so the miss line renders during the first in-flight fetch (data undefined, error null), a flash that no pasted clause names and that the must-survive text "the miss only when not fetching and no error" forbade; Spec 99 §6.5 is cited but not pasted — scope the miss to a settled payload instead of dropping the gate: "showMiss: outcome === 'no_match' && data != null && error == null".
+
+DEFER severity=LOW — "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "flag": "MAXBLD_WEB_LIVE (web target only)" — the guards.flag value is rewritten from "none" with no clause, ruling or task-450 annotation naming a flag for the search surface — cite the ruling that puts the search guard behind MAXBLD_WEB_LIVE or revert to "none".
+
+DEFER severity=LOW — "Nothing is added that the plan or a ruling does not name (RR-0392 ...:1975)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json "answer.yes": "Yes, it's one half of a semi" — an unnamed copy edit (curly apostrophe) that leaves "answer.no": "No, it's detached" straight and the descriptor purpose still quoting "Yes, it's one half of a semi" — revert it or name the ruling that changes this string.
+
+DEFER severity=LOW — "on the phone and web search pages, a street typed with no house number shows the existing "add a house number" line" — NONE (src/components/surfaces/web/SearchBinding.tsx only renders "s.overCap"; the builder that produces WebSituation is not in this chunk) — the web half of AC #1 and #2 cannot be seen, and the card itself scopes finding 2a to "(phone side)" — confirm the web page derives its situation from buildSearchSituation or add the same noNumber and miss rules there.
+
+DEFER severity=LOW — "Dated notes owed: Spec 99 (the redirect-once pattern); task-319." — NONE (docs/specs/03-mobile/99_mobile_state_architecture.md is not in this chunk) — the owed dated notes cannot be seen in the material under review — confirm the Spec 99 and task-319 notes land with this task.
+
+MET — AC #1 — mobile/src/lib/parcelSearchMatch.ts "overCap: noNumber || isOverCandidateCap(candidates, args.cap)" with "const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);" — the refine line shows for a street with no house number, and "candidates" is untouched so the list stays.
+
+MET — AC #3 — mobile/src/lib/schemas.ts "export const ParcelLotFormSchema = z.object({" — .strict() is dropped and both closed enum lists kept, so one extra field parses.
+
+MET — AC #4 — mobile/src/components/surfaces/SearchBinding.tsx "min_query_len: SEARCH_MIN_QUERY_LEN" plus content "Enter at least {min} characters to search for a lot" — the copy is filled from the setting, not a typed 3 (the web binding fills it from "sliceNumber(searchSlice, 'min_query_len')").
+
+MET — AC #5 — mobile/src/lib/semiQuestion.ts "if (parcelId) state = 'loading';" — no data with an id no longer redirects before the lookup settles, only an empty id does.
+
+MET — AC #6 — scripts/surfaces/_schema/static-page.schema.json "\"wrong-lot\"," and both bindings "topic: 'wrong-lot'" — the help topic exists and both search links point at it.
+
+MET — §8.3 gate-stability tests (no `isFetching` in render gates per §6.5) — mobile/src/lib/parcelSearchMatch.ts "const { parcelId, data, error } = args;" in semiQuestion.ts and the dropped "!isFetching" on showMiss — isFetching is out of both render gates (the missing data guard is the separate finding above).
+
+MET — Q19 (the shim) — mobile/src/lib/parcelSearchMatch.ts "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — the TODO(contract) shim is deleted as Q19 ordered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: §8.3
+
+---
+⏱  105552ms (105.6s)
+📊 Tokens — total: 50645, input: 31459, output: 19186, reasoning: 18061

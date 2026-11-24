@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T16:20:02.036Z file_sha256=746481d019eaba5cfff9f9333187d6b32bed2b959b96c1061e5d0fbd4f0bb813 prompt_sha256=79426c207fa439941b9a6233da9a9e34d75bebfdffaf433592afa61d1f9fab6c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:23 "const names: Record<string, string> = { int: 'integration', rea: 'reality-check', reg: 'regression' };" — a seat abbreviation outside int/rea/reg makes names[ab] undefined and the rewrite re-points the verdict at seat-undefined-1.md, a file the gate cannot ground, so the run fails 18 cases on a downstream gate message that hides the real cause — look the seat up and throw `unknown seat ${ab}` when it is missing.
+
+BUG severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:25 "const g = fs.readFileSync(gp, 'utf8').replace(" — the replace is unchecked, so when the program's verdict wording drifts the helper writes the file back unchanged and the seat evidence stays ungrounded, a silent no-op that surfaces later as an unrelated refusal — capture the replacement count and throw unless it equals the number of seat lines found.
+
+BUG severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:27 "git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'plan evidence: seat quotes');" — a second plantEvidence call for the same board stages nothing and commits a clean tree, which exits non-zero and throws out of the helper, so the call is not idempotent — skip the commit when `git status --porcelain` is empty, or key the commit on the file sha.
+
+DEFER severity=MED — src/tests/proof-slice.logic.test.ts:312 "expect(realIo().head).toBe('');" — only the empty head is asserted although the comment says "main then exits 2", and nothing calls main with the emptied PATH, so a build where the slice runs against an empty head and prints a passing table keeps this test green (the degrade path itself cannot be seen here) — add a case that runs main under the emptied PATH and asserts status 2 and no table on stdout.
+
+DEFER severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:1000 "expect(statusOf(f)).toBe('RUNNING');" — the failure past the take leaves the task RUNNING with the worktree and branch still present and the undo line printed only, and no case re-runs the lane after that failure to show a second take is refused or is a no-op — add a re-run case asserting a clean refusal naming the existing worktree path.
+
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:314 "process.env.PATH = saved;" — when PATH was unset, saved is undefined and the restore writes the string "undefined", so any later spawn in this file fails with a confusing ENOENT, and the mkdtemp dir is never removed — use `if (saved === undefined) delete process.env.PATH; else process.env.PATH = saved;` and rm the temp dir in the finally.
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts:1128 "expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);" — a typo'd or non-array output_off could silently keep a list on, the fail-open risk behind AC #2 — refused at validate, and an empty or missing output_off keeps every list exactly as the ruling asks.
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts:1136 "expect(bad).toMatch(/list broken: not an object/);" — a null list or null row could throw a TypeError out of validate and abort the whole table check — reported as a problem line instead, so one bad entry does not lose the other problems.
+
+VERDICT: PASS on error-path safety
+Paths walked: plantEvidence seat rewrite and its repeated commit, TASK-JSON parse in extraOf, D16 brief failure past the take and a re-run, missing board table at close (S2), MERGE_HEAD merge path (S3), output_off empty/missing/typo/non-array, validateTable null list and null row, contextRound with no context file and with a missing folder, realIo with no git on PATH plus PATH restore.
+Unguarded: 4
+
+---
+⏱  62709ms (62.7s)
+📊 Tokens — total: 33967, input: 20846, output: 13121, reasoning: 12162

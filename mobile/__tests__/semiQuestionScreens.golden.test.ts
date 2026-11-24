@@ -152,8 +152,13 @@ describe('the page rules (named cases)', () => {
     expect(String(busy.props.className)).toContain('opacity-[0.85]');
     expect(semiQuestionProblems(semiQuestionProps(situation('ask_yes_busy')), situation('ask_yes_busy'))).toEqual([]);
   });
-  it('no data and not fetching replaces with the Lookup route; a stale pick outside the ask state is dropped', () => {
-    expect(situation('redirect_no_data').navigate).toBe(PARCEL_TAB_ROUTE.lookup);
+  // Dated 2026-11-24 (task-450 SEARCHFIX.2, V5; prior title kept: "no data and not fetching replaces with the Lookup route"): no data with a parcel id is
+  // loading, never a redirect (a paused offline first fetch reports isFetching false); only an empty parcel id goes to Lookup. The input keeps its name.
+  it('no data with a parcel id is loading, not a redirect; an empty parcel id goes to the Lookup route; a stale pick outside the ask state is dropped', () => {
+    expect(situation('redirect_no_data').state).toBe('loading');
+    expect(situation('redirect_no_data').navigate).toBeNull();
+    const empty = buildSemiQuestionSituation({ parcelId: '', data: undefined, error: null, isFetching: false, schemaDrift: false, selected: null });
+    expect(empty.navigate).toBe(PARCEL_TAB_ROUTE.lookup);
     const s = situation('stale_pick_outside_ask');
     expect([s.selected, s.route]).toEqual([null, null]);
   });

@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:05:43.774Z file_sha256=d4ebace497490334ed084a9b87ca668b4d44e3312204b1344a25bcc74346ffe1 prompt_sha256=6e0a742ca71b47bf5a44b576fa726099a00bed3f24fb342fbef218c8e7df1a14
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-surface-136-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC6 "The help page has the topic wrong-lot and both search links go to it" — src/tests/surfaces/static-page.logic.test.ts:235 "expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'wrong-lot', q: { derived: 'input' } }, [{ content: 'list.report' }]]);" — the pasted material locks only the mobile search link's topic; no pasted line asserts the web search link opens topic wrong-lot — add or cite a web-side assertion (search-web-binding.ui.test.tsx) that the help action carries topic wrong-lot
+DEFER severity=LOW — fe.56 "a lock never red against the defect it names is not a lock" — src/tests/surfaces/surface-validate.logic.test.ts:91 "// SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings ... measured with surface-validate --check before (426) and after (427)." — the SEARCHFIX.2 count lock names no red-evidence artifact, while the SEMI-B and MF-19 notes beside it name count-locks-red.txt files, so the red proof rests on card prose only — record the red path (the card says red.out in the lane report) against the new count
+DEFER severity=NIT — AC6 "The help page has the topic wrong-lot and both search links go to it" — src/tests/surfaces/static-page.logic.test.ts:229 "// Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: \"...opens it with topic address_match and the query\"): the topic is wrong-lot." — the dated note reads as if the title naming address_match was kept while the title now names wrong-lot, so the record of what changed is ambiguous — say plainly that the prior title is superseded, or drop the "prior title kept" clause
+MET — fe.13 — src/tests/surfaces/surface-validate.logic.test.ts:92 — the FE-13 gate lock's exact stdout now expects 17 surfaces / 427 strings, with before (426) and after (427) measured by surface-validate --check
+MET — fe.31 — src/tests/surfaces/surface-conformance.logic.test.ts:262 — the conformance lock moves 426 to 427 strings from content (help.mailto.wrong_lot in web_help.content.json), screen arm unchanged at 17 surfaces / 100 goldens
+MET — fe.03 — src/tests/surfaces/surface-validate.logic.test.ts:92 — every both-directions assertion (S-gen, S-golden, S-parity, binding, closed-status, S-desc, S-screen, S-sbind, S-page) is retained at exact value, none weakened
+MET — fe.07 — src/tests/surfaces/surface-validate.logic.test.ts:92 — "S-parity ok" stays in the locked output, so the parity lock is not loosened by the topic change
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: fe.03, fe.07, fe.13, fe.31
+
+---
+⏱  72685ms (72.7s)
+📊 Tokens — total: 27830, input: 14836, output: 12994, reasoning: 12237

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.865Z file_sha256=7227557c79d41ccee14cd8c0182fd16996dcf7083ade7f4c4d5a0a0d4e9b4445 prompt_sha256=d7b7b29ccc33094895413461fa8a6baadbb011d9abbf30970bb9452ccd13c1ea
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings and MET lines below. Note: chunk 1 of 2 only; the `scripts/hooks/check-lane-close.mjs` diff (evidence for AC #1, #3, #4 and the close half of #5) and the test files are not in this material, so those clauses are "cannot see" here and are not ruled unmet.
+
+DEFER severity=LOW — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json "lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)." — the lane-tools `why` still names Spec 137 and doc-17 as governing while its `lists` drops both, so the row's rationale contradicts the data RR-0450 ordered — rewrite the opening `why` sentence to name only agents-s5-1to3, agents-s7-s11 and eng-all, keeping the task-453 closing sentence as the supersession record.
+
+DEFER severity=NIT — RR-0440 "Which reviewers caught the most issues? Let's plan to drop the planning and process lists" (implemented by `output_off` for plan-protocol at the output review of a build or fix task) — docs/reports/generated/rule-lists-by-kind.md "Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off)" against "| total | 6 lists | | 139,835 | 6 |" — the page states plan-protocol is off for a build task's output review yet every kind total still counts its 8,825 characters and one part, so the "what each kind of work receives" figures overstate the output review — subtract the output_off lists from the kind totals or mark them off in the table.
+
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — scripts/analysis/rule-lists.json "every_task": ["plan-protocol"], "output_off": ["plan-protocol"] — five-words off at both stages, no three-questions list added.
+
+MET — RR-0450 "queue rules and orchestrator notes are valuable to anything from a code persepctive" (recorded off the lane-tools row) — scripts/analysis/rule-lists.json "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"] — queue-137 and orchestrator-doc17 removed from lane-tools.
+
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" — an empty output_off filters nothing, and validateTable accepts an empty array.
+
+MET — AC #6 (CHK.3 half) "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json "{ \"id\": \"chk3-nothing-new\", \"proof\": \"CHK.3 nothing-new policy check over the tree\", \"notbuilt\": { \"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\" } }".
+
+MET — AC #5 (table half) "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json "\"protected_paths\": [ ... \"scripts/analysis/backlog-lib.mjs\", ...]" — the helper is now in the protected list (the close-check clause itself is chunk 2, cannot see).
+
+MET — RR-0429 "Keep notes short." — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452; ...): five-words is off at both stages..." — a single short paragraph under section 7 rule 4, the owed dated note.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  122462ms (122.5s)
+📊 Tokens — total: 54009, input: 29809, output: 24200, reasoning: 23207

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:04:05.467Z file_sha256=b57fd54612117431ee9e38e447822c338e465f117c6ec53215fb621f891ce1b6 prompt_sha256=29f6a1cdc7b416796b81de066968112e5550813987d5dc6e3afbf7484bf161cb
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0442 "It should open on an exact match and we have a different process for address mistakes, if the lot is shared by two parcels - you need to pick one - if its a semi potentially - you need to state that?" — mobile/__tests__/parcelSearchMatch.test.ts "expect(deriveMatchType('26 Hurlingham Cres', response({ match: { parcelId: 'P', matchType: 'exact', address: '26 Hurlingham Cres' } }))).toBe('no_match');" — Q19 deletes the client fallback (the removed MF-53 text "a payload without it keeps the client derivation above (an older server)"), so any exact match arriving without `resolution`, from an older server, a rollback, or a cached payload, now renders the no-match line instead of opening the lot — keep the derivation as the fallback when `resolution` is absent, or version-gate the shim and add a test that an exact match still opens the lot.
+
+DEFER severity=MED — task-450 AC1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts "expect(at('Highway 27', tc(rows(['P1', '1 Highway 27']))).overCap).toBe(false);" — the digit heuristic makes numbered street names ("Highway 27", "Highway 401") count as numbered, so AC1 is met only for streets without a digit — treat a leading house number ("^\d+[a-z]?\s") as numbered rather than any digit, or get the numbered-street case ruled.
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md "the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number" — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);" — the only cap assertion uses a query with no house number, so it passes with the cap check deleted, and nothing pasted asserts the candidates survive at 10+ rows — add a numbered query at the cap asserting overCap true and candidates non-empty.
+
+DEFER severity=MED — task-450 "The plan's section 2 lines are this card's acceptance tests, each red first." — task-450 Implementation Notes "the mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station)" — red-first for AC1 to AC5 rests on a note, not a recorded red run — run and record the mobile jest red before the implementation commit and cite red.out in the lane report.
+
+DEFER severity=LOW — task-450 AC4 "The minimum-length copy is filled from the setting, not a typed 3" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();" — the assertion compares against the SearchBinding constant, not the generated slice value, so copy filled from the constant rather than the setting would still pass — assert against SEARCH_SLICE.config.min_query_len in this test.
+
+DEFER severity=LOW — task-450 "Findings folded: ... Q8" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe" — no acceptance criterion names this copy change and Q8's ruled text is not pasted, so the new wording cannot be checked against a ruling — cite Q8's ruled words in the card or drop the copy change from this task.
+
+DEFER severity=LOW — task-450 AC6 "The help page has the topic wrong-lot and both search links go to it" — NONE (the web link in src/components/surfaces/web/SearchBinding.tsx and the wrong-lot topic in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json are not in this chunk: cannot see) — only the phone link and its goldens are shown, so half of "both search links" is unevidenced here — confirm in the chunk that carries the web binding and the help content.
+
+MET — task-450 AC2 — mobile/__tests__/parcelSearchMatch.test.ts — "expect(refetching.showMiss).toBe(true);" with the flipped "expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);" keeps the no-match line on a settled miss fetched again.
+MET — task-450 AC3 — mobile/__tests__/schemas.test.ts — "expect(() => ParcelLotFormSchema.parse({ ...lotForm, detected: 'triplex' })).toThrow(ZodError);" keeps the closed enum alongside the extra-field case.
+MET — task-450 AC5 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx — "expect(mockReplace).not.toHaveBeenCalled();" plus "expect(screen.getByText('Searching')).toBeTruthy();" for the cold offline open, with the empty-id redirect kept separate.
+MET — task-450 AC6 (phone half) — mobile/__tests__/surfaceRenderer.smoke.test.tsx — "expect(a.open_help).toHaveBeenCalledWith('wrong-lot', (S.ambiguous as SearchSituation).input);"
+MET — task-450 "Dated notes owed: Spec 99 (the redirect-once pattern)" — docs/specs/03-mobile/99_mobile_state_architecture.md — "**Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2 ...):** the redirect-once pattern of the MaxBLD parcel-tool pages." with "No carve-out is added to the enumeration above."
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 7
+Rules met: none
+
+---
+⏱  98211ms (98.2s)
+📊 Tokens — total: 52137, input: 32686, output: 19451, reasoning: 18059

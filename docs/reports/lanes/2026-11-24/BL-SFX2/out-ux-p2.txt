@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T16:07:04.824Z file_sha256=4a44894dd7b46c0188210a10dda5fc82f75ad7b5c70340c48ac436678f84e4a0 prompt_sha256=709d8fd8ebbbf15f35d17b79947e28b913c6eb027c4b3e21b829f9ad6c45f3b0
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-ux-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/lib/parcelSearchMatch.ts:359 "showMiss: outcome === 'no_match' && error == null" rendered at src/components/surfaces/web/SearchBinding.tsx "…(s.showMiss ? [node('Text', { key: 'miss', testID: 'parcel-search-empty'…" vs design "a settled miss keeps its line on a re-fetch; isFetching is not a render gate here" — with no result yet (first lookup in flight, data absent, error null) the fall-through at mobile/src/lib/parcelSearchMatch.ts:199 "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" marks no_match, so the person reads "No parcel found for that address." while their first search is still running, and on a short query it renders beside "Type at least {min} characters to search." — gate showMiss on a result having arrived for the typed query (data present), not on isFetching, so the line survives only a re-fetch of a settled miss.
+
+DEFER severity=MED — mobile/src/lib/semiQuestion.ts:77 "if (parcelId) state = 'loading';" — opened cold and offline the first fetch is paused, so it neither errors nor settles and the person sits on an unnamed loading state indefinitely, told nothing about why, with only "Back to search" out; design silent on the paused-offline state (AC #5 only forbids the early redirect) — bounded to the offline cold open, but the wait is unexplained.
+
+REJECT — mobile/src/lib/parcelSearchMatch.ts "overCap: noNumber || isOverCandidateCap(candidates, args.cap)," with "list.refine": "Add a house number to narrow it down." — a person who typed a house number and got more than ten matches is told to add a house number they already typed, it matches the approved descriptor line "the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number." so it is the operator's ruled copy, list stays and selectable.
+
+REJECT — mobile/src/lib/parcelSearchMatch.ts:199 "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — a payload carrying candidates but no `resolution` now reads as "No parcel found for that address." with no list, where the list used to show, it matches the ruled note "a payload without `resolution` reads as the server's no_match" plus "The server always sends it (lookup-flow.ts)."
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:4 ""answer.yes": "Yes, it’s one half of a semi"" beside "answer.no": "No, it's detached" — the two adjacent answer cards use different apostrophe glyphs and the descriptor still quotes "Yes, it's one half of a semi" (straight), no ruling names this edit — cosmetic, one string, no behaviour.
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "search.ratelimit": "Too many searches. Try again in {seconds}s." with parcelSearchMatch.ts "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — a 429 with retry-after 0 now reaches this line and reads "Too many searches. Try again in 0s.", design silent on the zero case — one message as ruled, only the number reads oddly.
+
+VERDICT: FAIL on the person's experience
+States checked: phone search idle, typing below the minimum, first lookup in flight, candidate list with a house number, candidate list with no house number, over-cap list, miss, miss re-fetched, rate-limited, rate-limited with retry-after 0, entitlement refusal, network error/offline, schema drift, outside Toronto, recent chips repeat visit; web search idle, first lookup in flight, ambiguous list, report link; help page with the wrong-lot topic; semi page ask, loading, loading cold and offline, error, redirect with empty id, answered, back navigation   Dead ends found: 1
+
+---
+⏱  124191ms (124.2s)
+📊 Tokens — total: 53640, input: 30389, output: 23251, reasoning: 22331

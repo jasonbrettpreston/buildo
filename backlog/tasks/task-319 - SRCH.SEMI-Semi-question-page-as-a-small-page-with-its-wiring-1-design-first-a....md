@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SEMI2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T15:49:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -115,6 +115,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0308 · task-319 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0309 · task-319 · Backlog; operator, verbatim: "Mock approved. Looks good!")
 
 2026-11-19 (R17, task-350): stage 1 questions 1, 2 and 4 are approved as drawn in the regenerated mock (RR-0309, decision-94; back chevron, info icon, secondary Try again, quiet loading line). Question 3 (curly apostrophes) is NOT answered and no string changed. Status not changed.
+
+2026-11-24 dated note (task-450 SEARCHFIX.2, finding L1; GROUNDER-B D1; RR-0444 MD:2290): .strict() was removed from the lot form schema (mobile/src/lib/schemas.ts ParcelLotFormSchema), so a server-added field never raises ParcelLookupSchemaError on an installed build; the closed enum lists (detected, basis) stay. The semi answer reads 'Yes, it’s one half of a semi' (curly apostrophe, Q8).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:02:48.871Z file_sha256=a81661cb02a39062d189a7532c00cc5d770e1f1225059333ee21c48fe9524706 prompt_sha256=ade68ad2ba17e7737e1189083b4b178f038bba2e1023c1451800516bce869bb6
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-99-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-450 Description "on the phone and web search pages, a street typed with no house number shows the existing" — src/components/surfaces/web/SearchBinding.tsx:248 "...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : [])," — the web refine line still renders only when the WebSituation's overCap is true, and no file in the card's Files list builds that situation, so the web half of the sentence has no implementing line; the plan-stage ruled text narrows it to "with no house number the phone shows the refine line and keeps the candidate list as today" — confirm the web scope with the operator or set overCap from the no-house-number outcome in the web situation builder.
+
+DEFER severity=LOW — AC #4 "The minimum-length copy is filled from the setting, not a typed 3" — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:22 "const CONFIG: Record<string, string> = { SEARCH_CANDIDATE_LIMIT: '10' };" — with the typed 3 removed and both sides normalized to "{}" ("so the legacy hint and prompt match as {} forms"), the oracle can no longer tell a filled {min} from an unfilled one on the phone, and the phone-side assertion is not in this chunk (cannot see) — keep a phone behaviour test asserting the generated setting's literal value in the rendered hint and prompt.
+
+REJECT — the semi_question descriptor under_126 note — accused of adding text no ruling names — the note itself cites "task-450 SEARCHFIX.2, R4; GROUNDER-H D6" and R4 is listed among the folded findings, so it is inside the card's scope.
+
+MET — AC #4 (minimum length from the setting) — src/components/surfaces/web/SearchBinding.tsx:280 "min_query_len: SEARCH_MIN_QUERY_LEN," with :29 "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" — the web copy is filled from the generated slice setting, not a typed 3.
+
+MET — AC #6 (help topic wrong-lot) — scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json:12 "+ \"help.mailto.wrong_lot\": \"Wrong address or lot\"," — the topic label exists with the description's wording.
+
+MET — AC #6 (both search links) — src/components/surfaces/web/SearchBinding.tsx:242 "onClick: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }," and src/tests/surfaces/static-page.logic.test.ts "topic: 'wrong-lot'" on the mobile golden — both pages point at the new topic.
+
+MET — AC #1 (refine line reworded) — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:31 "'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.':" — the wording change is declared as an intentional change with RR-0443 c and QUESTIONS-RULED Q8.2 cited.
+
+MET — string count lock — src/tests/surfaces/surface-validate.logic.test.ts "S-sbind ok (17 surfaces, 427 strings)" and src/tests/surfaces/surface-conformance.logic.test.ts the same — the single added string is accounted for, matching the implementation note's 426 to 427 measurement.
+
+VERDICT: PASS
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  104338ms (104.3s)
+📊 Tokens — total: 43694, input: 23483, output: 20211, reasoning: 19391

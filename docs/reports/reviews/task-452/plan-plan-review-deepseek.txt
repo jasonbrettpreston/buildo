@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T16:24:42.572Z file_sha256=da453e866cc3b3ac92a7fee02e14033c2d8ae10ce8b186ad571290046a813df5 prompt_sha256=58f3f625064dab9061a4965fe4cde179657e338b5df303888e5f61b5500c332a
+🔍 Lens review of docs/reports/reviews/task-452/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3.7 + §3.8 — the no-plan recheck loop (`planCheck`, `refetchEntitlement`, the disable-while-checking) lives only on `parcel-tool/index.tsx`; the report screen (`[parcelId].tsx`) mounts the same `no_plan` wall with `retry` = the report's refetch and no `planCheck`, so "I've set up my plan" re-403s the report, never disables, and hammers the report route on each tap — fix: pass a real entitlement recheck (or a disabled/absent button) to the report-screen wall, and drive `planCheck` there too.
+BUG severity=HIGH — §3.7 — a hung/never-settling entitlement refetch leaves `planCheck='checking'` and the recheck button `disabled` forever with no give-up (contrast RR-0341's 60 s escape); fix: add a timeout that flips to `none` + `errorNotification()` after N seconds.
+BUG severity=HIGH — §3.3 + §2 + §9 ("the meter is off … latent") — the entire limit wall is triggered by a `REPORT_LIMIT_REACHED` 403 that has never fired; its `details.{reportsLimit(number), resetsOn(ISO string)}` shape is asserted from source only, never observed, so the parser and the title/reset bindings are untested against a real response — fix: add a route contract test that emits and asserts the 403 body, or a staging check with the meter on, before relying on the typing.
+DEFER severity=MED — §3.5 + §3 ("Bad details give reportsLimit null") — the limit title binds `{limit: contract('errors.403.reportsLimit')}`; when details are malformed the error carries `reportsLimit: null` and the title renders "You've used all null/ reports" with no fallback — add a generic title for a null limit.
+DEFER severity=MED — §5 Risk 5 + §4 AC4 — "Log out" only has a test asserting `signOut` was called; the user-visible outcome (ends on sign-in) is UNVERIFIED and deferred to a post-close device check, so a broken logout ships green — add an assertion (or a required device-check artifact) that the gate clears to sign-in after `sign_out`.
+DEFER severity=MED — §8.4(a) + §8.5(b) + §3.10 vs AC2/AC5 — on web the wall drops `wall.plan` (no buy route) and only reactivate/limit are reachable (no-plan out of scope), and buttons are disabled while the site is not live, so the web wall is inert and missing the "upgrade line" AC2 names and the third state AC5 names — record this as a scoped AC gap with a dated note rather than letting it read as "done".
+DEFER severity=MED — §3.13 + §6 — the string pins are stated "436 → 453", but at head 9b709f475 (450 built-not-folded) the pin is 426; the "436" anchor will not exist until 451 folds, so edit-by-anchor will mis-target — verify the pin value at lane start and treat 453 as projected only.
+DEFER severity=MED — §8.7 — open_help 'billing' is recommended, but it is unverified whether 'billing' has an actual help answer or only a `static-page.schema.json:179-187` topic entry; a topic with no answer dead-ends "How are reports counted?" — verify the help content exists before wiring the link.
+DEFER severity=MED — §5 Risk 2 + §3.3 — a genuine no-plan user whose entitlement read fails/lags sees the reactivate copy (told to reactivate a subscription they never had) until/unless the read answers; acknowledged, but user-facing and wrong — consider a neutral "no active plan" fallback when the read is undefined.
+DEFER severity=LOW — §3.3 + §8.11 — the error carries `resetsOn` but the reset line binds the read's `resetsOnDisplay`; two independent sources of "reset date" can drift and the 403's own value is display-unused — pick one source or assert they agree.
+DEFER severity=LOW — §3.6 + §3.7 — the renderer haptic wraps every `variant:'default'` Button app-wide, and `errorNotification()` fires on each settle-to-null (including StrictMode double-invoke or repeated retries), risking double haptics on one press and across a re-render — guard the settle fires and confirm no handler already haptics.
+DEFER severity=LOW — §3.4 — the new content is authored "with curly apostrophes" with no check against the content validator or the mocks; a straight/curly mismatch fails the content validate or changes the fingerprint silently — confirm against the mock text.
+DEFER severity=NIT — §3.6 — `() => { lightImpact(); fn(); }` builds a new `onPress` every render for every default Button, defeating `React.memo` on the vendored Button — hoist or memoize the wrapper where it matters.
+REJECT — §3.3 (`...(wall ? {wall, planCheck} : {})`) — concern that the optional-key spread churns unseen golden trees — for situations not given a `wall` key, the spread adds nothing and `!s.wall` reads true, so those trees are byte-identical; only the deliberately-edited `unauthorized` changes.
+REJECT — §3.5 (no-plan button, search screen) — concern that the "I've set up my plan" button could retry-storm on the search screen — it is disabled while `planCheck='checking'`, so one refetch at a time; the storm risk is only on the report screen (see the HIGH above).
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- Report-screen no-plan wall wires `retry` to the report refetch with no `planCheck`, giving a dead CTA plus a retry storm on the report route (§3.8/§3.7).
+- `planCheck='checking'` has no timeout; a hung entitlement refetch freezes the wall with the button disabled forever (§3.7).
+- The limit wall rests on a `REPORT_LIMIT_REACHED` 403 that has never fired (meter off); its `{reportsLimit, resetsOn}` details shape is unobserved (§3.3/§9).
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- The deployed lookup route's 403 body really carries `details.reportsLimit` (number) and `details.resetsOn` (ISO string) — verify: `rg -n "REPORT_LIMIT_REACHED" src` and read route.ts:112/error-mapping.ts:37, then emit one response (staging limit or a route contract test).
+- `useParcelEntitlement` distinguishes "not loaded" (`undefined`) from "no plan" (`null`) — verify: read mobile/src/lib/useParcelLookup.ts:161-170 and index.ts:59-77; `rg -n "status" mobile/src/lib/useParcelLookup.ts` to confirm `data.status` is null only when settled.
+- The string-count pin is 436 at lane start (as the plan asserts) — verify at head: `rg -n "436" mobile/__tests__/surface-validate.logic.test.ts mobile/__tests__/surface-conformance.logic.test.ts` (expect 426 until 451 folds), and `rg -n '"billing"' scripts/surfaces` to confirm the help answer exists.
+
+---
+⏱  72778ms (72.8s)
+📊 Tokens — total: 38456, input: 24228, output: 14228, reasoning: 12518

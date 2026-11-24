@@ -1,0 +1,849 @@
+LIST surface-136 sha256:c4de01897b08522808dcb713db60aa5dc9bea0ee04c4ad647f3571c2cda379e5 material sha256:a51f7c4060cbf5b2ca993c5384d04b3aba0c8abf10a602645949ee27fb8dfadc part 1 of 1 chunk 1 of 4
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-registry.md","docs/reports/generated/127-surface-review-queue.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/03-mobile/99_mobile_state_architecture.md","mobile/__tests__/daylightSearchPages.golden.test.ts","mobile/__tests__/fixtures/parcelSearch.situations.json","mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json","mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json","mobile/__tests__/parcelScreens.golden.test.ts"]
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
+index 7d4276b858648f76d7081dd3b7051c7875b464cb..2be6d8c6b4777e0b2351ea6a789556816adb6f80 100644
+--- a/docs/reports/generated/127-surface-registry.md
++++ b/docs/reports/generated/127-surface-registry.md
+@@ -569,13 +569,13 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
+ - **The spec says:** By design, and the design is what makes it the lowest-risk pilot. The question is whether the shipped product should stay that way once the standard is proven.
+ - **Evidence:** `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:14` · `mobile/app/(app)/parcel-tool/[parcelId].tsx:5 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" and "S1 a": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]`
+ 
+-**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?
++**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a).
+ 
+ - **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.
+ - **The spec says:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
+ - **Evidence:** `src/app/api/parcels/lookup/route.ts:47-60` · `src/lib/entitlements/index.ts:68` · `migrations/228 — chk_entitlements_product`
+ 
+-**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?
++**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`).
+ 
+ - **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.
+ - **The spec says:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
+@@ -756,13 +756,13 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **Programme.** `S-002` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — The parcel tool's entry screen, `mobile/app/(app)/parcel-tool/index.tsx` — the same Spec 100 feature and the same contract, reached by the `q` path.
+ 
+-**❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? — see §2.9.
++**❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a). · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`). — see §2.9.
+ 
+-**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.
++**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
+ 
+-**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.
++**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): "It holds no client store at all" is no longer true: the recent searches are kept on the phone in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).
+ 
+-**Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module.
++**Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page also keeps the recent searches on the phone, in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).
+ 
+ **kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · `web` · **status** generated · **lines** 714 · **shard** `mobile-product` · **researched** ✅ every field
+ 
+@@ -793,7 +793,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | `tables` | `src/lib/admin/parcel-lookup.ts:196-199` · `src/lib/admin/parcel-lookup.ts:169` |
+ | `gate` | `src/app/api/parcels/lookup/route.ts:47-60` · `src/app/api/parcels/lookup/route.ts:71-76` · `src/lib/auth/route-guard.ts:120-132` |
+ | `states` | `mobile/app/(app)/parcel-tool/index.tsx:84-92 — const outcome = deriveMatchType(...) / const candidates` · `mobile/app/(app)/parcel-tool/index.tsx:127-134 — retryAfter / isEntitlementRefusal / isSchemaDrift / isUnexpectedError` · `mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType` |
+-| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file` · `src/app/api/parcels/lookup/route.ts:113-119` |
++| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-128 — no track() call in the file (task-450 R2: the file has 128 lines; prior cite :1-312)` · `src/app/api/parcels/lookup/route.ts:113-119` |
+ | `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.8` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.9` |
+ 
+ <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+@@ -811,10 +811,10 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+-| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications`, `mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto`, `mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit`, `mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement`, `mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error` |
+-| 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-115`, `src/app/api/parcels/lookup/route.ts:113-119` |
++| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)`, `mobile/src/components/surfaces/SearchBinding.tsx:128 — testID parcel-search-outside-toronto (task-450 R2: prior cite index.tsx:201)`, `mobile/src/components/surfaces/SearchBinding.tsx:131 — testID parcel-search-ratelimit (task-450 R2: prior cite index.tsx:214)`, `mobile/src/components/surfaces/SearchBinding.tsx:135 — testID parcel-search-entitlement (task-450 R2: prior cite index.tsx:222)`, `mobile/src/components/surfaces/SearchBinding.tsx:138 — testID parcel-search-error (task-450 R2: prior cite index.tsx:234)` |
++| 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-128 (task-450 R2: the whole file; prior cite :1-115)`, `src/app/api/parcels/lookup/route.ts:113-119` |
+ | 14 | `offers` | `none` | No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] — `mobile/src/components/parcel/SponsorSlot.tsx:16-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]` |
+-| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
++| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page counts nothing; the lookup it calls counts a produced report (F02). — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+ | 16 | `config` | `logic_variables` | The six page settings of the phone search and semi pages are REGISTERED logic variables (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494): debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are rows maxbld_page_<key> in scripts/seeds/logic_variables.json (min, max, a stated on_invalid, a why), declared here in config.logic_variables. The generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves each slice number from its row and refuses a mismatch or an out-of-range value; the phone reads only the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts), which applies the bounds. The values are unchanged: debounce_ms 400, min_query_len 3, entitlement_stale_ms 0, lookup_retry_max 3, lookup_stale_ms 60000. Only the phone applies them at run time; no web binding reads these keys today. — `mobile/src/components/surfaces/SearchBinding.tsx:37-38 — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN read from the slice through sliceNumber (bounds applied); the debounce is consumed at mobile/app/(app)/parcel-tool/index.tsx:42`, `scripts/seeds/logic_variables.json — the six rows maxbld_page_<key>`, `scripts/surfaces/emit-mobile-surfaces.mjs — PAGE_SETTINGS and pageSettingBounds (the slice number is resolved from the seed row)`, `scripts/surfaces/_schema/surface.schema.json — the per-key config rules that require the config.logic_variables entry`, `src/app/api/parcels/lookup/types.ts:42 — the server range 3 to 120 of min_query_len` |
+ | 17 | `sharing` | `shared` | It is the q-branch of the same GET /api/parcels/lookup route the detail screen calls with ?parcelId=; one contract, two surfaces, two rate buckets. — `mobile/src/hooks/useParcelLookup.ts:59-83`, `src/app/api/parcels/lookup/route.ts:72-74` |
+ | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+@@ -836,7 +836,7 @@ TORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in T
+ 
+ BRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.
+ 
+-MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the "Report incorrect address match" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: "teh phone check isnt possible - continue with MF-35").
++MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the "Report incorrect address match" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: "teh phone check isnt possible - continue with MF-35"). Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the two product_questions below are closed: the entitlement product by MF-45 D-4 (a) (the parcel_tool product, the deviation entry above; removed by MF-50), and the two unreachable branches by MF-53 (the server names multi_parcel and unlinked in `resolution`).
+ 
+ <a id="s-004"></a>
+ 
+@@ -926,7 +926,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
+ 
+ **What it reads and writes.** It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.
+ 
+-**Under Spec 126.** **CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component.
++**Under Spec 126.** **CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component. Dated 2026-11-24 (task-450 SEARCHFIX.2, R4; GROUNDER-H D6; prior text kept): render.projection stays none beside a populated render.list because the repo schema requires render.list.columns for a generated LIST with projection list (surface.schema.json, "/render/list must have required property 'columns'") and three answer cards have no columns; the busy overlay is the busy flag of the ask state (SemiQuestionBinding.tsx SEMI_QUESTION_FLAG_NAMES), not a state name: the closed state list has no busy state.
+ 
+ **kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** generated · **lines** 0 · **shard** `mobile-product` · **researched** ✅ every field
+ 
+diff --git a/docs/reports/generated/127-surface-review-queue.md b/docs/reports/generated/127-surface-review-queue.md
+index 2b22c6fb20db98c69ff2a13aa70bf8b1884fde30..683bc7515df995168eb45ad50b0ee1b1b646e0f8 100644
+--- a/docs/reports/generated/127-surface-review-queue.md
++++ b/docs/reports/generated/127-surface-review-queue.md
+@@ -249,7 +249,7 @@ Registry detail: [`S-002`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.
++A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+@@ -279,8 +279,8 @@ Swept; none found.
+ 
+ Spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · anchors: `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.8` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.9`
+ 
+-- ❓ MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one. **Spec:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
+-- ❓ The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path. **Spec:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
++- ❓ MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a). **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one. **Spec:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
++- ❓ The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`). **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path. **Spec:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
+ 
+ **8. What is still unresearched?**
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 40d3e9ef23e216efd269417259241f860dd83950..c345e2ababa32c5371988f6801887acc37fcfc69 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -42,7 +42,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | --- | --- | --- | ---: | ---: |
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+ | mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
+-| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
++| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+@@ -50,7 +50,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 10 lists | | 216,416 | 10 |
++| total | 10 lists | | 217,467 | 10 |
+ 
+ ## storage
+ 
+diff --git a/docs/specs/03-mobile/99_mobile_state_architecture.md b/docs/specs/03-mobile/99_mobile_state_architecture.md
+index a3c026772131e1425c0444f04a6184afba55cd1b..f599c88f48a18be06948d4daad80cb51d64c1163 100644
+--- a/docs/specs/03-mobile/99_mobile_state_architecture.md
++++ b/docs/specs/03-mobile/99_mobile_state_architecture.md
+@@ -551,6 +551,8 @@ if (isLoading || profile == null || profile.subscription_status == null) {
+ >   *Why this carve-out instead of a `useMutation`-backed flag refactor:* A flag refactor narrows the protection to AppState→active-initiated refetches only, leaving `refetchOnReconnect` and other automatic refetch paths exposed to the one-frame flash. The carve-out covers all refetch sources for the same UX cost.
+ >
+ > Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out.
++>
++> **Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2; RR-0444 MD:2290 "Now we need to fold the findings"; findings V4, V5, N4; GROUNDER-B D2, D3, D5):** the redirect-once pattern of the MaxBLD parcel-tool pages. (1) A page replaces itself through `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25): the first time the fetch is not running and a target route exists, and never again; its effect dependencies name the route string (`target`), not an object. (2) The page states are derived from stable signals, not from `isFetching`: the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`), and the semi question page reads no data with a parcel id as loading, never as a redirect (mobile/src/lib/semiQuestion.ts `buildSemiQuestionSituation`), because a paused offline first fetch reports `isFetching` false with no data; only an empty parcel id goes to the Lookup route. No carve-out is added to the enumeration above.
+ 
+ **Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
+ - _Previously-tracked §6.5 violations all resolved_: line 202 broad gate removed by §9.4a (✅ DONE); line 216 narrow `expired` carve-out permitted by 2026-05-05 amendment above (now an enumerated exception).
+diff --git a/mobile/__tests__/daylightSearchPages.golden.test.ts b/mobile/__tests__/daylightSearchPages.golden.test.ts
+index 3a655228142691ded1d92927d5291e6f935bddde..f6a82a0545c9a4da0f6e4361d68533105efda1ad 100644
+--- a/mobile/__tests__/daylightSearchPages.golden.test.ts
++++ b/mobile/__tests__/daylightSearchPages.golden.test.ts
+@@ -4,9 +4,10 @@
+ //
+ // SRCH.DAYLIGHT (task-322) · the search pages (search + candidate list, choose-your-lot map page, semi question page) use only the Daylight
+ // report-* tokens of mobile/tailwind.config.js, and the three elements small pages v8 drops are gone: A.13 (in-bar Account button), B.8 (faint
+-// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the three layout tables and the render
++// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the two layout tables and the render
+ // trees; the Account, Tracked Lots and shelf constants (PARCEL_SEARCH_TOKENS, TRACKED_LOTS_HEX, PARCEL_SHELF_HEX, PARCEL_SEARCH_HEX) are named
+-// exemptions because those screens still read them.
++// exemptions because those screens still read them. Dated 2026-11-24 (task-450 R5, GROUNDER-D D7; prior text kept): "three layout tables" read "two": the rule reads
++// PARCEL_SEARCH_LAYOUT and LOT_MAP_LAYOUT.
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { searchProps, SEARCH_SLICE, type PropsNode } from '@/components/surfaces/SearchBinding';
+@@ -40,7 +41,7 @@ const classTokens = (c: string): string[] => c.split(/\s+/).filter(Boolean);
+ const LEGACY = /(\[#[0-9a-fA-F]{3,8}\]|zinc-\d+|red-\d+|bg-feed|text-primary$)/;
+ 
+ describe('Daylight tokens only (R-D1, small pages v8)', () => {
+-  it('the three layout tables hold no legacy dark class and no raw hex class', () => {
++  it('the two layout tables hold no legacy dark class and no raw hex class', () => {
+     const bad: string[] = [];
+     for (const [table, o] of Object.entries({ PARCEL_SEARCH_LAYOUT, LOT_MAP_LAYOUT }) as Array<[string, Record<string, string>]>) {
+       for (const [k, v] of Object.entries(o)) for (const t of classTokens(v)) if (LEGACY.test(t.replace(/^[a-z-]*:/, ''))) bad.push(`${table}.${k}: ${t}`);
+diff --git a/mobile/__tests__/fixtures/parcelSearch.situations.json b/mobile/__tests__/fixtures/parcelSearch.situations.json
+index 25ddc83ccdaf56bdd7618de40f431cc1bed6acdf..f56f95ac35bdf8a05134bb95538c46e2b84f4a06 100644
+--- a/mobile/__tests__/fixtures/parcelSearch.situations.json
++++ b/mobile/__tests__/fixtures/parcelSearch.situations.json
+@@ -262,7 +262,7 @@
+       "rateLimited": true,
+       "retryAfterSeconds": 0,
+       "entitlement": false,
+-      "unexpected": true,
++      "unexpected": false,
+       "schemaDrift": false
+     },
+     "candidates": [],
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+index 21fb69da70f26b550158801756fce34442d85ab5..d21538c07a85f3fe9be3219317295651fb0b3c5b 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha d41e93f656495d4d)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha e590add93daf00d7)",
+   "surface": "mobile_parcel_search",
+   "goldens": {
+     "ambiguous": {
+@@ -129,7 +129,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1263,7 +1270,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "input"
+                         }
+@@ -1318,8 +1325,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1450,7 +1457,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1631,8 +1645,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1763,7 +1777,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1855,8 +1876,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1987,7 +2008,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2028,8 +2056,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2160,7 +2188,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2220,8 +2255,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2352,7 +2387,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2411,8 +2453,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2544,7 +2586,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2621,8 +2670,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2753,7 +2802,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2924,7 +2980,14 @@
+                     },
+                     "children": [
+                       {
+-                        "content": "search.prompt"
++                        "text": {
++                          "content": "search.prompt"
++                        },
++                        "vars": {
++                          "min": {
++                            "derived": "min_query_len"
++                          }
++                        }
+                       }
+                     ]
+                   },
+@@ -2949,8 +3012,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3081,7 +3144,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3133,8 +3203,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3265,7 +3335,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3410,7 +3487,14 @@
+                     },
+                     "children": [
+                       {
+-                        "content": "search.prompt"
++                        "text": {
++                          "content": "search.prompt"
++                        },
++                        "vars": {
++                          "min": {
++                            "derived": "min_query_len"
++                          }
++                        }
+                       }
+                     ]
+                   },
+@@ -3435,8 +3519,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3567,7 +3651,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3619,8 +3710,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     }
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
+index 52791d9120d44123a0fef7d26f6d760face81aa2..a081d2966332fc8e5a317d091658f245adcab17d 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha fd03b711113a2c21)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 322127be1b089d20)",
+   "surface": "mobile_parcel_semi_question",
+   "goldens": {
+     "answered": {
+@@ -297,8 +297,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -594,8 +594,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -740,8 +740,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -846,8 +846,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -969,8 +969,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -1061,8 +1061,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -1177,8 +1177,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     },
+@@ -1293,8 +1293,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "7c996801afbc81d6"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+         }
+       }
+     }
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index 1e3c9e30151afcc57902c044e06e1a06d41bb326..26ce0bc0302db546b0a2161a5cd50526aeb2acc2 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -157,16 +157,20 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
+ describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
+   const at = (k: string): PropsNode => searchProps(situations[k] as SearchSituation);
+   const ids = (t: PropsNode): string[] => nodes(t).map((n) => n.props.testID).filter((x): x is string => typeof x === 'string');
+-  it('RateLimitError(0) renders BOTH the 429 notice ("0s") and the error block with Retry (MF35-DF1, pinned, not fixed)', () => {
++  // Dated 2026-11-24 (task-450 L3, FOLD-PLAN.md:44; prior title kept: "renders BOTH the 429 notice ("0s") and the error block with Retry (MF35-DF1,
++  // pinned, not fixed)"): MF35-DF1 is closed; a retry-after of 0 shows one message, as the 7-second case does.
++  it('RateLimitError(0) renders the 429 notice ("0s") only, no error block and no Retry (MF35-DF1 closed, task-450)', () => {
+     const t = at('rate_limited_zero');
+-    expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-ratelimit', 'parcel-search-error', 'parcel-search-retry']));
++    expect(ids(t)).toContain('parcel-search-ratelimit');
++    expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-error']));
++    expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-retry']));
+     expect(refs(t, 'contract')).toContain('contract_parcels_lookup.errors.429.retryAfterSeconds');
+   });
+   it('the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt', () => {
+     const t = at('fetching_with_candidates');
+     expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-spinner', 'parcel-candidate-100100']));
+     const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty|prompt/.test(x));
+-    expect(order).toEqual(['parcel-search-ratelimit', 'parcel-search-error', 'parcel-search-retry']);
++    expect(order).toEqual(['parcel-search-ratelimit']); // task-450 L3: one message for a retry-after of 0
+   });
+   it('the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt', () => {
+     expect(ids(at('prompt_type_more'))).toContain('parcel-search-prompt');
+@@ -206,9 +210,11 @@ describe('one home for the config values (row 24, RG-14)', () => {
+   });
+   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
+     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 }); // FIX.TUNE (task-378): the phone tunables are declared beside them
+-    expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+-    expect(SEARCH_SLICE.content['search.input.hint']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+-    expect(SEARCH_SLICE.content['list.refine']).toContain(`More than ${SEARCH_CANDIDATE_LIMIT} lots`);
++    // Dated 2026-11-24 (task-450 L5 and Q8.2; prior text kept: the strings held "at least ${SEARCH_MIN_QUERY_LEN} characters" and "More than
++    // ${SEARCH_CANDIDATE_LIMIT} lots"): the minimum length is a {min} template filled from the setting, and the refine line names no count.
++    expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');
++    expect(SEARCH_SLICE.content['search.input.hint']).toContain('at least {min} characters');
++    expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');
+   });
+ });
+ 
+

@@ -318,3 +318,24 @@ describe('AuthGate — useRootNavigationState guard (regression)', () => {
     );
   });
 });
+
+// task-450 SEARCHFIX.2 AC3 (fold section 2 line 47, finding L1; GROUNDER-B D1): the lookup's additive rule (schemas.ts "a server-added field never raises
+// ParcelLookupSchemaError on an installed build") now holds for the lot form too: one extra field parses. The closed enum lists stay.
+describe('ParcelLotFormSchema — additive, closed enums', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ParcelLotFormSchema, ConsumerParcelLookupResultSchema } = require('@/lib/schemas') as typeof import('@/lib/schemas');
+  const lotForm = { detected: 'semi_half', basis: 'doubt_multi_parcel_abut', unsure: true, extra: 1 };
+
+  it('a lot form with one extra field parses', () => {
+    expect(ParcelLotFormSchema.parse(lotForm)).toMatchObject({ detected: 'semi_half', basis: 'doubt_multi_parcel_abut', unsure: true });
+  });
+
+  it('a lookup result with that lot form parses', () => {
+    const result = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', lotForm };
+    expect(ConsumerParcelLookupResultSchema.parse(result).lotForm).toMatchObject({ detected: 'semi_half', unsure: true });
+  });
+
+  it('the closed enums stay: an unknown detected value still throws', () => {
+    expect(() => ParcelLotFormSchema.parse({ ...lotForm, detected: 'triplex' })).toThrow(ZodError);
+  });
+});

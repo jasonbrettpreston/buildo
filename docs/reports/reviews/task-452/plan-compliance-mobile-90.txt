@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.573Z file_sha256=5f92cac26b61a0105f1d8bebeadb5c7d6c90cfc0d2998e02a29cfca8ca0801d3 prompt_sha256=d0b9d88da6f87329cc14691a977008cde6896a94844c8303b3242d8eda7c9fa1
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC6 "Primary buttons spring and critical actions call the existing haptics wrapper" — PLAN-452 §8.6 "(B) Haptics now and the spring on its own card. Recommend (B)" and §4 "The spring test depends on choice 8.6" — the spring half of AC6 is deferred to a future card by the recommended option, so the plan cannot satisfy AC6 or Std 1.3 "Primary interactive cards and buttons must use Reanimated `withSpring`" — add the spring deliverable (choice 8.6(A): the one spring part, the C-8m lock edit, the bindings.json mapping) or obtain an operator ruling narrowing AC6 before plan-lock.
+
+BUG severity=HIGH — AC5 "The web shows the same three states" and RR-0445 "we are mobie first ... but it works onthe web" — PLAN-452 §8.5 "(b) Binding parity only; the not-entitled page shows reactivate. Recommend (b)" — under the recommended option the web renders reactivate where the no-plan state belongs, so the web shows two of the three states, not the same three — adopt 8.5(a) (requireParcelToolPage returns the status it already reads, page.tsx and maxbld-web.ts pick the wall) or obtain a ruling that narrows AC5 for the web.
+
+BUG severity=HIGH — AC2 "the wall with the count, the reset date and the upgrade line" — PLAN-452 §3.5 "the reset line {date: entitlement('resetsOnDisplay')}, drawn only when the read answered" and §8.11 "(a) The read's resetsOnDisplay (RR-0310). Recommend (a)" — when the entitlement read has not answered the reset date is dropped from the limit wall even though AC1's kept data (§3.1 "resetsOn: string|null") holds it, so AC2's reset date is unmet in that state — fall back to formatting the 403's resetsOn when resetsOnDisplay is absent (choice 8.11(b)).
+
+BUG severity=HIGH — AC4 "A signed-in customer with no plan sees the no-plan page in the app" — PLAN-452 §5 "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." — that signed-in no-plan user state never sees the no-plan page, so AC4 is unmet for it — route the no-plan-row read result to the no_plan wall inside this card, or obtain a ruling that narrows AC4 to the status-null case.
+
+BUG severity=MED — RR-0392 "I don't think we need any other infastrcuture beyond this" — PLAN-452 §6 "in renderNode (:157-159), a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`" with risk 6 "The renderer haptic fires on every primary press, including Select" — haptics are added to every default-variant Button on every surface the renderer serves, while the card names only "primary buttons on the parcel pages", so behaviour beyond the named scope is added — gate the wrapper to the parcel surfaces or record a named ruling for the wider scope.
+
+DEFER severity=MED — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — PLAN-452 §5 new interactive elements ("Account (push PARCEL_TAB_ROUTE.account) and Log out (sign_out)", the "How are reports counted?" link) with no 44px statement — the plan never commits the new wall controls to the pasted minimum — state the 44px minimum in the wall builder and assert it in the behaviour test.
+
+DEFER severity=LOW — AC5 "The web shows the same three states" — PLAN-452 §8.4 "(a) No buy button until MF-86, and the web drops wall.plan." — the web limit wall then carries no plan line, so the "same" limit state differs in content from mobile's — keep wall.plan on the web (mock A1's line) while omitting only the buy target.
+
+MET — AC1 — PLAN-452 §3.1-3.2 — ReportLimitError carries reportsLimit and resetsOn, SubscriptionRequiredError is a separate class, and apiClient maps REPORT_LIMIT_REACHED and SUBSCRIPTION_REQUIRED from errObj.code.
+MET — AC2 "never the reactivate copy" — PLAN-452 §5 "notices() :134-136 draws the entitlement notice only when `!s.wall`" — the entitlement copy is suppressed whenever the wall is drawn.
+MET — AC3 — PLAN-452 §4 "SubscriptionRequiredError with status 'expired' shows the search.entitlement text inside parcel-search-wall-reactivate".
+MET — card "Must not: ... move the report goldens (wall copy lives in the search content)" — PLAN-452 §8 "The report goldens and REPORT content do not move (FOLD-PLAN.md:83)".
+MET — card "Must not: build a new plan or checkout flow; call expo-haptics directly" — PLAN-452 §6 "Nothing calls expo-haptics directly." and §5 "No purchase and no checkout."
+MET — card "the existing PaywallScreen is checked first for the reactivate state" — PLAN-452 §2 "PaywallScreen checked first, as the card asks. It does NOT serve this user".
+MET — card "Corrects the BUILT mark on objective G.6 by a dated note. Dated note owed: task-320." — PLAN-452 §7 doc-2 update and "task-320: `backlog task edit 320 --append-notes`, saying ST2 is closed."
+MET — RR-0446 "02 Agrred add to the plan." — PLAN-452 §3.7 and §5 the no_plan state is delivered in this card for status null.
+
+REJECT — AC2 / RR-0443 "yes, they need a screen with a top up or a higher subscription" — the change is accused of shipping no upgrade button, only "Your plan is managed on the web." (choice 8.3(a)) — the approved mock A1 "the app says only "Your plan is managed on the web."" and the orchestrator reading "the phone wall carries the line or link, not a checkout" name the line, so no phone checkout is owed.
+REJECT — Spec 90 §2 "NativeWind `dark:` variants are required for all UI components." — the change is accused of adding wall surfaces with no dark: variants — the dated note records that no `.tsx` under `mobile/src` or `mobile/app` uses a `dark:` class and that how the components carry dark values is "MF-35's to rule", so the method is not this card's to invent.
+REJECT — Spec 90 §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace" — the change is accused of transcribing content per tree — the AMENDMENT 2026-09-15 records "There is no monorepo and no `packages/shared-types`", so the clause as written is not this card's to satisfy.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 7
+Rules met: none
+
+---
+⏱  62851ms (62.9s)
+📊 Tokens — total: 27981, input: 14461, output: 13520, reasoning: 11906

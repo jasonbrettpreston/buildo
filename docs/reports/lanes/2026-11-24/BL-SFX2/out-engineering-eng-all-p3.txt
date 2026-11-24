@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:06:19.518Z file_sha256=3cb1f7a95df685ebb7714674728677065952d5fab960ab8e7ce1e95574cc8322 prompt_sha256=a10ca21069f060e60b6804d1abcfe266658ddc75b3a320c230508078a0f48128
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 10.2 Frontend Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." (restated as a §11 gate: "No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)") — scripts/surfaces/_schema/static-page.schema.json:184 "+            \"wrong-lot\"," (also scripts/surfaces/_schema/static-page.json:31 "+ \"role\": \"mailto\",", scripts/surfaces/_schema/census/mobile-product.json:7169 "+      \"flag\": \"MAXBLD_WEB_LIVE (web target only)\",", scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:8 "-  \"list.refine\": \"More than 10 lots match. Add a house number to narrow it down.\",") — this mobile/frontend change edits four files under scripts/, which the pasted boundary rule forbids outright — get a recorded operator/domain-owner exception in the plan for the surface descriptor and schema edits, or hand those edits to the pipeline/surface domain owner, before merge.
+
+BUG severity=HIGH — 5.3 Red-Green Test Cycle (Golden Rule) "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — plan Implementation Notes "The mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station)" — the red light is admitted unproven for the mobile half, which includes the changed pure logic in mobile/src/lib/semiQuestion.ts and the mobile content/derived changes, so the golden rule is unmet for those files — run the new mobile tests against the unmodified implementation, capture the failing run in the lane report, and only then keep the implementation.
+
+DEFER severity=MED — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan Files line "mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx" (no logic-layer test for buildSemiQuestionSituation listed) — the V5 branch change is a pure derivation (`parcelId` truthy plus no data yields loading), and a behaviour/golden test does not pin that function in the layer §5.2 mandates — add a logic test over buildSemiQuestionSituation covering data undefined with a non-empty parcelId, empty parcelId, error set, and the settling path.
+
+MET — 2.3 Assumption Documentation — mobile/src/lib/semiQuestion.ts (hunk @@ -58,19 +58,22 @@) "else if (data.lotForm?.unsure === true) state = 'ask';" — nested access is guarded with optional chaining and the diff adds no non-null assertion.
+
+MET — 11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:14 "+  \"search.prompt\": \"Type at least {min} characters to search.\"," — the typed 3 is replaced by a placeholder filled from config.min_query_len, removing a duplicated literal.
+
+MET — 14 The Prevention Loop "Every source/test file's SPEC LINK points at the spec **AND the section (§N)**" — mobile/src/lib/semiQuestion.ts (added comment) "task-450 V5 (Spec 99 §6.5 :527-530; QUESTIONS-RULED.md Q8.4 a)" — the new coupling cites the spec and its section.
+
+REJECT — 1.1 Mobile-First UI Mandate — the diff is accused of desktop-first styling — no Tailwind utility class appears in this chunk, the UI-facing changes are content strings and a pure state function.
+
+REJECT — 4.1 Route Guarding — accused of leaving an endpoint unprotected — no file under src/app/api/ appears in this chunk.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  38903ms (38.9s)
+📊 Tokens — total: 32370, input: 25074, output: 7296, reasoning: 6336

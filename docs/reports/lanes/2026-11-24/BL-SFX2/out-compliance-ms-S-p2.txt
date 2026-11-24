@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:03:48.704Z file_sha256=abf41ac0577d6d58bfa32df3e69ce0d299a5c89f6ea56f59024fa8fc9d2137a7 prompt_sha256=a2edd4c9106ff3f999af745891d166a5b6a9e85fe23789edd4a1f0ec3f6eb1a3
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0392 "Nothing is added that the plan or a ruling does not name" with the card's plain words "The \"no match\" line no longer flickers on a re-fetch" — mobile/src/lib/parcelSearchMatch.ts:356 "showMiss: outcome === 'no_match' && error == null," and src/components/surfaces/web/SearchBinding.tsx:250 "...(s.showMiss ? [node('Text', { key: 'miss', testID: 'parcel-search-empty'..." — with no settled data and no error the outcome is already 'no_match', so the miss line now renders during the FIRST in-flight lookup of every new key, a miss before anything has settled that no ruling names — gate it on settled data, e.g. "&& (!isFetching || data != null)"
+DEFER severity=MED — AC #1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — src/components/surfaces/web/SearchBinding.tsx:248 "...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine'..." — the only no-house-number computation pasted is in the mobile module (hasHouseNumber, buildSearchSituation); whether the web situation's overCap carries it cannot be seen in this chunk, so AC #1's web half is unproven — cite or extend the code that builds the web situation's overCap
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json "answer.yes": "Yes, it’s one half of a semi" — an apostrophe-only copy edit on a built page that no acceptance criterion and no folded finding names, while the next line keeps "No, it's detached" — revert it or name the finding that rules it
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — scripts/surfaces/_schema/census/mobile-product.json and mobile_parcel_search.descriptor.json "\"flag\": \"MAXBLD_WEB_LIVE (web target only)\"," — a guards.flag change away from "none" that no pasted acceptance criterion covers and whose folded-finding id (N4 or Q4) cannot be seen — cite the finding id in the dated note or revert to "none"
+MET — AC #1 (phone half) — mobile/src/lib/parcelSearchMatch.ts:346 "const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);" — the refine line shows for a candidate list with no house number and the candidates stay in the returned situation
+MET — AC #2 — mobile/src/lib/parcelSearchMatch.ts:356 "showMiss: outcome === 'no_match' && error == null" — a settled miss fetched again keeps its line, the isFetching gate is gone
+MET — AC #3 — mobile/src/lib/schemas.ts:424 "export const ParcelLotFormSchema = z.object({" — .strict() removed, the closed enum lists kept
+MET — AC #4 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "search.prompt": "Type at least {min} characters to search." with src/components/surfaces/web/SearchBinding.tsx:280 "min_query_len: SEARCH_MIN_QUERY_LEN," — the copy is a template filled from the generated slice setting
+MET — AC #5 — mobile/src/lib/semiQuestion.ts:76 "if (parcelId) state = 'loading';" — no data with a parcel id stays loading instead of redirecting before the lookup settles
+MET — AC #6 — scripts/surfaces/_schema/static-page.json "\"topic\": \"wrong-lot\"," with src/components/surfaces/web/SearchBinding.tsx:242 "topic: 'wrong-lot'" — the help page gains the topic and the web search link points at it, the phone golden asserted in src/tests/surfaces/static-page.logic.test.ts
+MET — plan-stage ruling "with no house number the phone shows the refine line and keeps the candidate list as today" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "list.refine": "Add a house number to narrow it down." — reworded true at any row count, list kept
+MET — card plain words "a retry-after of zero shows one message" — mobile/src/lib/parcelSearchMatch.ts:301 "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — a RateLimitError(0) now classifies as rate limited only
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  58358ms (58.4s)
+📊 Tokens — total: 42413, input: 31268, output: 11145, reasoning: 10063

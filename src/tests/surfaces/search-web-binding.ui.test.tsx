@@ -27,6 +27,11 @@ const GOLDENS = fs.readdirSync(DIR).filter((f) => f.endsWith('.web.json')).sort(
 const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
 const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 const bind = (s: WebSituation, extra: Json = {}): ReactElement => h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), ...extra });
+// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the prompt and the input
+// description are templates filled with it.
+const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);
+const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);
+const HINT = (C['search.input.hint'] as string).replace('{min}', MIN);
 
 // Console errors a library prints during a server render that are not defects of the binding. Empty today: any entry needs a comment naming why.
 const CONSOLE_ALLOW: RegExp[] = [];
@@ -72,13 +77,19 @@ describe('(a) every web golden renders with its situation', () => {
     expect(decode(renderToStaticMarkup(provided(bind(amb))))).toContain((C['list.badge'] as string).replace('{count}', String(amb.candidates.length)));
     const st = SITUATIONS.static as WebSituation;
     expect(decode(renderToStaticMarkup(provided(bind(st))))).toContain(`aria-label="${(C['search.chip.label'] as string).replace('{query}', st.recent[0] as string)}"`);
+    // task-450 AC4 (L5): the prompt and the input description carry the setting's value, no "{min}" left and no typed 3 in the content.
+    expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
+    const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
+    expect(idle).toContain(PROMPT);
+    expect(idle).toContain(`aria-description="${HINT}"`);
+    expect(idle).not.toContain('{min}');
     expect(errors).toEqual([]);
   });
   it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)', () => {
     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
-    expect([idle.includes(C['search.prompt'] as string), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
+    expect([idle.includes(PROMPT), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
     const no = decode(renderToStaticMarkup(provided(bind(WEB_UNAUTHORIZED_SITUATION))));
-    expect([no.includes(C['search.entitlement'] as string), no.includes(C['search.prompt'] as string)]).toEqual([true, false]);
+    expect([no.includes(C['search.entitlement'] as string), no.includes(PROMPT)]).toEqual([true, false]);
     const err = decode(renderToStaticMarkup(provided(bind(WEB_ERROR_SITUATION))));
     expect([err.includes(C['search.error'] as string), err.includes(C['search.retry.text'] as string)]).toEqual([true, true]);
     expect({ ...WEB_STATIC_SITUATION, recent: [] }).toEqual({ ...(SITUATIONS.static as WebSituation), recent: [] });
@@ -118,11 +129,21 @@ describe('(c) actions reach the mount', () => {
     fireEvent.click(screen.getByTestId('parcel-search-select'));
     expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
-  it('the report link opens /help with topic address_match and the encoded input in the fragment', () => {
+  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...with topic address_match..."): the topic is wrong-lot ("Wrong address or lot").
+  it('the report link opens /help with topic wrong-lot and the encoded input in the fragment', () => {
     const amb = { ...(SITUATIONS.ambiguous as WebSituation), input: 'Queen & Spadina #2' };
     render(provided(bind(amb)));
     const a = screen.getByTestId('parcel-search-report') as HTMLAnchorElement;
-    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=address_match&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
+    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=wrong-lot&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
+  });
+  it('task-450 AC6: the search link topic is a mailto topic of web_help in static-page.json', () => {
+    const table = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/static-page.json'), 'utf8')) as Json;
+    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((sec) => (sec.parts ?? []) as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic);
+    render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
+    const href = (screen.getByTestId('parcel-search-report') as HTMLAnchorElement).getAttribute('href') as string;
+    const topic = /#topic=([^&]+)/.exec(href)?.[1];
+    expect(topics).toContain(topic);
+    expect(topic).toBe('wrong-lot');
   });
 });
 

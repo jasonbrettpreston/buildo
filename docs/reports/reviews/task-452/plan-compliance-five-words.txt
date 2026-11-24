@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.581Z file_sha256=946b03a6d3c0c2650a5875916caf6046032bd19f7d621a80855ecc6e458f6ae2 prompt_sha256=8941e96deb9f8eef47d5551684dbb5586e429a5ae0a008433d291162f8aadcee
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC#5 "The web shows the same three states" and RR-0445 "we are mobie first ... but it works onthe web" — plan §8.5 "Recommend (b). Binding parity only; the not-entitled page shows reactivate." — the recommended web wiring collapses no-plan into reactivate, so the web shows two states, not three, and plan §4's AC5 test ("the three wall situations render server-side") contradicts the recommendation it depends on — adopt 8.5(a) or select the web wall from the status requireParcelToolPage already reads (:54-61) and make the AC5 test red against that selection.
+
+BUG severity=HIGH — AC#6 "Primary buttons spring and critical actions call the existing haptics wrapper" and Std 1.3 "Primary interactive cards and buttons must use Reanimated `withSpring`" — plan §8.6 "Recommend (B): RR-0392" and §4 "The spring test depends on choice 8.6." — the recommended option ships haptics only and defers the spring, so AC6 is unmet at plan-lock and its test is left conditional — adopt 8.6(A) with the C-8m lock and bindings.json edit named, or record a dated operator ruling on the card before lock.
+
+BUG severity=HIGH — AC#2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the upgrade line; never the reactivate copy" — plan §5 risk 3 "If the read has not answered, that line is left out (choice 8.11)." — the limit wall drops the reset date whenever the entitlement read has not answered, although step 1 keeps the 403's resetsOn, so the clause's reset date is not guaranteed — fall back to the error's resetsOn when the read has not answered and cover that case with a test beside the limit-wall behaviour case.
+
+DEFER severity=MED — AC#4 "A signed-in customer with no plan sees the no-plan page in the app" and RR-0446 "02 Agrred add to the plan." — plan §5 Limits "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." — the acceptance criterion is met for one user state only and the plan itself names the state that never reaches the page — either route the no-plan read so state 1 reaches the wall, or record the ruling/dated note that narrows AC4 to state 2.
+
+DEFER severity=MED — RR-0392 "I don't think we need any other infastrcuture beyond this" and card "Nothing is added that the plan or a ruling does not name" — plan §3 step 6 "SurfaceActions (:34-45) gains optional `sign_out?: () => void`, with a case in action()" — a new action kind in the shared renderer plus its content values is added for Log out, and no pasted clause names Log out (the relied-on task-357 AC3 is not pasted, cannot see) — drop sign_out per choice 8.8(b) or paste and cite the operator ruling that names it before lock.
+
+DEFER severity=LOW — AC#6 governed by the plan's own red-first rule "The plan's section 2 lines are this card's acceptance tests, each red first" — plan §3 step 13 "go from 436 to 453, with a dated comment" against §9 "The exact string total. The lane measures it." — a pin number is fixed in the plan while the plan states it is unmeasured — leave the pin to be set from the lane's measurement and note the measured before/after in the commit instead.
+
+MET — AC#1 — mobile/src/lib/errors.ts after :22 — ReportLimitError and SubscriptionRequiredError thrown from apiClient.ts:51-63 with details typed only, never coerced, and all six red cases listed at apiClient.test.ts.
+MET — AC#3 — parcelSearchMatch.ts searchWall and SearchBinding wall() reactivate branch — an expired status gives reactivate and renders the existing search.entitlement copy.
+MET — AC#2 report-screen half — ReportPageHost.tsx:34-68 wall prop — renders the wall tree in place of the lifecycle with existing tags only.
+MET — Must not "call expo-haptics directly" — SurfaceRenderer.tsx renderNode :157-159 — wraps onPress with lightImpact imported from @/lib/haptics.
+MET — Must not "build a new plan or checkout flow" — plan §5 "No purchase and no checkout." and §8.4 "Recommend (a)" — no route, setting or server change is added.
+MET — Must not "move the report goldens" — plan §3 step 8 "The report goldens and REPORT content do not move" — only search goldens are regenerated, from search content.
+MET — RR-0310 "your recommendation is approved" — SearchBinding wall() limit branch binds entitlement('resetsOnDisplay') — the server's Toronto date is the wall's date source.
+MET — RR-0442 "It should open on an exact match" — plan §1 "This card changes no search outcome." — searchWall and buildSearchSituation leave every existing situation and fixture unchanged.
+
+REJECT — RR-0443 / RR-0444 "yes, they need a screen with a top up or a higher subscription" — accused of putting no upgrade action on the phone wall — the pasted orchestrator reading "the phone wall carries the line or link, not a checkout" and mock note A1 permit a line, and AC#2 asks for "the upgrade line" only.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 4
+Rules met: none
+
+---
+⏱  45319ms (45.3s)
+📊 Tokens — total: 21741, input: 12323, output: 9418, reasoning: 8155

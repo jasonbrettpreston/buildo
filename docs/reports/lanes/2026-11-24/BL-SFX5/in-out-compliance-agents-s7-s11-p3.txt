@@ -1,0 +1,623 @@
+LIST agents-s7-s11 sha256:841d823c552938bc765de2257db756f6b279c6ade9687261adc9a61402682cde material sha256:262d6b4fad6c911c60fcf70e36173d6ecb2f0468e1085f8d324513a1e68e8f70 part 1 of 1 chunk 3 of 3
+RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.logic.test.ts"]
+
+## 7. Rules & economics
+
+1. **Two altitudes, same roles — both mandatory per WF (§6.4).** *Plan review* points agents at `.cursor/active_task.md` + the live tree/DB (grounders query reality; CLIs read the plan text) — hunts completeness/consistency/factual-correctness BEFORE code. *Output review* points them at the diff + re-run values. The two are COMPLEMENTARY: the reality-grounders (RC/SF/GT/Integration) earn their keep at BOTH — RC caught the $105.24M gut-line and the $159.9M T3 tail at PLAN altitude (`review_followups.md` 25/2510). WF3 runs a LEAN plan roster (premise-verifiers only); it is no longer output-only.
+2. **Ground-truth gates Compliance** (§5.1/§5.2): validate the spec against reality before checking code against the spec.
+3. **Round-2 always** for money/pipeline-critical work (§5.3): panel → DeepSeek+Integration adjudicate the findings → fold survivors, file rejections with reasons.
+4. **Cost-tiering — DeepSeek as multi-pass breadth at BOTH altitudes.** DeepSeek is ~free and a distinct lineage. NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt: (1) `spec` = the Compliance (A10) substrate, (2) security, (3) idempotency/dedup, (4) error-paths/degrade-safety. Run the set at plan AND output for WF1/WF2; at output for WF3. Every DeepSeek finding is adjudicated by a tool-having grounder before folding (§9 CLI blind spots — the 25E cursor-leak HIGH was a false premise refuted by `streamQuery` try/finally). Reserve the pricier Claude Task agents for the tool-needing roles (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't).
+   Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
+   Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL-SIMPLE423, Increment 1·B; operator, verbatim, 2026-11-21, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, RR-0363 at :1718: "We just need the rules for deepseek." and the objective at :1711: "the objective is an effective compliance review on the plan and the output.  It isn't 17"): the joined run is an accepted form of the compliance lens output set and is NOT the default: the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`), one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined), and the close check and the plan gate accept it; a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`). The default stays one compliance run per rule list, as the notes above say, because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"); a list is never trimmed in either form (the "never trimmed" sentence above stays true), and nothing orders the join. Plan findings are ruled once, at the plan: when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line, the lane close requires no `plan-*.txt` in the lane folder and reads only the `out-*.txt` findings and their `Ruled:` lines; absent that file the older rule stands. Rule 6 is not changed here.
+   Dated note 2026-11-22 (M-246, prior text kept; task-438 FINAL.3, McFix Final; RR-0385 item 2, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." and "We need a new name for an agent called engineering."): a review seat named `engineering`, separate from compliance, at plan and at output. A rule list whose file is the engineering standards (`docs/specs/00_engineering_standards.md`, today `eng-all`; `seatOf` in `scripts/analysis/rule-lists.mjs`) is reviewed by `.claude/review-templates/lens-engineering.md`, and every other list by `lens-compliance.md`, which is not edited. The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>` (and `plan-compliance-<id>` or `plan-engineering-<id>`), by the seat of the list; the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage. The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias. The close applies the split when the range base holds `lens-engineering.md`: a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name.
+   Dated note 2026-11-22 (M-246, prior text kept; task-431 INPUTS.3, McFix Final; RR-0385 item 7, decision-170, and RR-0380 Q1, decision-165; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1913 "Task 431 - this now serves teh engineering seat with the right sections for the task - front-end vs backend" and :1865 "drop the full engineering when arts can be sent"): the engineering seat of the note above is sent the sections of the engineering standards that fit the task. Three section lists join `eng-all` in `scripts/analysis/rule-lists.json`: `eng-front` (section 1), `eng-back` (sections 3 and 9) and `eng-shared` (sections 2, 4 to 8 and 10 to 14: 8, 10 and 12 by RR-0380 Q2, 11 and 14 placed here by the plan review). The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it. Each of them is an engineering list (`seatOf`), so "today `eng-all`" in the note above now reads "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`", and the per-list rule asks for one `out-engineering-<id>` per resolved engineering list, or the joined `out-engineering-rules`. When a task resolves a whole list and a sections list of the same file, the whole list is kept and the sections list is dropped (`resolveTask`), so each rule is sent once and no rule that a matched row asked for is lost.
+   Dated note 2026-11-23 (M-246, prior text kept; task-439 FINAL.4, McFix Final; RR-0380 Q1, decision-165, and RR-0383, decision-168; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1853 "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.", :1865 "once the handbook has been updated iwth the critical items" and :1895 "1. what is your recommendation. I approve it"): the McFrontend handbook (Spec 136 section 2) now holds the 13 lines he approved for task-430 (RR-0384, decision-169), so the surfaces and mobile rows of `scripts/analysis/rule-lists.json` no longer attach `surface-126`, `surface-127`, `surface-128` and `surface-135`; they attach `surface-136` with their engineering lists, and the mobile row keeps its five mobile lists. A front-end review therefore no longer receives the text of those four specs and receives the handbook rule lines instead; a rule of those specs with no handbook line yet reaches no front-end review until a line is added (RR-0379, :1859: "we will add to the rules overtime"). The specs-web-admin row keeps all five surface lists, so a task that edits a spec under `docs/specs/02-web-admin/` is reviewed with that spec. Every other row is unchanged. The words "the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table" in the task-366 note of section 5.3 above now hold for those rows only.
+   Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0418, RR-0421, RR-0422, RR-0423, RR-0424, RR-0426 (decisions 203, 205, 207, 208, 209, 211); operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, :2140 "TWe only want to run these tings off not rewrite a new feature. This is simple.", :2161 "1-4 recommendations approved", :2166 "Minimum and 1a. Let's add these small fixes to the cost review task.", :2171 "add teh first two.  Plan approved.  Move forward with the task", :2176 "add it", :2186 "1 and 2 as recommended"): rule lists are turned off in scripts/analysis/rule-lists.json. A front-end task is reviewed against Spec 136 section 2, its engineering lists, the four lenses and the four every-task lists; a back-end task the same with its own handbook. Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383), Specs 100 and 96, the four Airtight lists, doc-16. Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137 and doc-17 stay on the lane-tools row only; the Spec 124 list is attached to no row. This supersedes "(a record-only task gets the queue lists)" (:229) and, in the task-439 note (:356), "the mobile row keeps its five mobile lists" and "The specs-web-admin row keeps all five surface lists" with the clause after it. The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names. Known loss: findings only the turned-off lists raised are no longer raised (tasks 367 and 442).
+   Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452; operator, verbatim, MORNING-DECISIONS.md:2265 "Let's plan to drop the planning and process lists", :2338 "five principles off"): five-words is off at both stages (out of every_task); plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off) and kept at a build task's plan review; queue-137 and orchestrator-doc17 are off the lane-tools row. This supersedes, in the task-448 note above, "the four every-task lists" and that Spec 137 and doc-17 stay on the lane-tools row.
+5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+   Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+   Dated note 2026-11-20 (M-246, prior text kept; task-399 fix round 1, grounder out-code-review#1 and g399#3; decisions RR-0333 and RR-0338): the note above is corrected in three places. (1) `task:task-N` passes only when the card's text holds the finding id as a whole token; the earlier alternative (the cited file path in the card's text) is removed because any card naming the file closed the deferral, and the closing task itself is refused as the card. (2) CRITICAL, HIGH and MED close by fixed or ruling, and by task only for a DEFER finding (rule 6: DEFER goes to review_followups.md with reasons); the sentence above left the DEFER exception out. (3) A fix round does not file `out-<lens>-rN.txt`: the close requires every in- input and out- output to equal the diff of the whole range at HEAD, so after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names (re-running only the changed chunks is task-414). The Final Summary block is looked for in the Final Summary section of the task, not the whole file.
+   Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1910 "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." and :1912 "Validate the plan and the output as you mentioned as per your criteria."): at the plan and at the output, round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2, the second review round (not the grounder's 5.3 round-2 pass), resolves CRITICAL and HIGH only; two rounds at most. Two is the most: when a second round is run stays as RR-0363 and RR-0369 left it. This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369. LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364, whose medium part RR-0369 replaced). A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only. The grounder's verdict line for that id gives the reason and names the round (the round line on the card cannot), and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792). After round 2 the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator. It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due. Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED; plan-prep supports one round, and a second plan round line is entered by hand.
+7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
+8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+   Dated note 2026-11-06 (MB-85, M-246, prior text kept; E2, revised form): the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".
+   Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek. This supersedes "on Sonnet" in the note above for the building lane only, and the sentence "Opus only for hard design adjudication" at `.cursor/MCBYLAWS-QUEUE.md:247` for the plan seat and the building lane. `scripts/analysis/backlog-lane.mjs` prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line and writes the same split into the brief. Not enforced: the lane guard (outside the repo) allows "sonnet" or "opus" on every Agent call and cannot tell a planner or a builder from a seat or a grounder; the building lane's model is carried by that line and the brief, the plan seat's by this note alone.
+10. **Claims and briefs are checked before they leave the orchestrator.** (a) No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67). (b) A DeepSeek brief names only checks runnable through `bash_allow` (§C.4); otherwise provider `claude` with the reason logged (§B). Recorded as Spec 124a R-KO (`2026-10-30-batch-aj#CHAT-211.G10`).
+    Dated note 2026-11-06 (MB-85, M-246, prior text kept; C2 and C3): (C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
+    Dated note 2026-11-19 (M-246, prior text kept; RR-0232 (c), RR-0235; task-308 R8c · lane BL-R8c · stage 8; operator, verbatim, RR-0232 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:925): "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)."; RR-0235 (:931): "We need them linked with all the relevant data - beyond just the data references"): the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo. The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo). The 2026-11-19 reports of BL-R6, BL-R7a and BL-R7b are copied as the first set.
+
+## 11. Grounded Verification Protocol — execute claims, validate folds (ratified by operator 2026-08-13)
+
+> **Calibration scope:** this section is EVIDENCE-BASED FOR BACKEND/PIPELINE (DB/SQL/chain) work — the Phase A C1–C7 ledger below is its provenance. The general form that transfers to every domain: **execute what's executable; ground what's groundable; judge the rest.** See §11.5 for the frontend nuance (operator-ruled: this may not be the case for front-end work — do not port the roster mechanics there uncritically).
+
+### 11.1 No unexecuted executable claim
+A plan or fold may not contain a claim that COULD be executed but wasn't: a data claim carries its query **run** (host + `current_database()` printed — lessons `:83`); a SQL shape is **parse-tested** against a real DB before any reviewer approves it; a census grep runs at the **full scope its conclusion covers**; a line citation is **read**, not remembered. "Approved on paper" is not a verification state.
+*Incidents:* C2's "397 permits" premise — one missing column (`permit_type`) survived four review rounds (2026-08-12) · C7's `$16` CASE — THREE review passes approved SQL that Postgres rejects (`inconsistent types deduced`); Case C2's red caught it by executing (2026-08-13) · C7's Q1 census — the plan's recorded query could not reproduce the plan's own fourth-writer finding (fold-validation #1).
+
+### 11.2 Fold-validation is a STEP, not a courtesy
+After folding any review round, and BEFORE implementation: **one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**. Folds are read as a SET — the worst defects are collisions between corrections adopted separately (`tasks/lessons.md:117`). Sub-rules with incident bodies: **a fold must be exercised in every execution mode the file has** (the C4 `!pool` guard redded plain-Husky mode — cross-reading could not catch it, only running could) · **an expanded edit set kills every restated scope claim** ("the three SET terms. Nothing else." survived one fold past its own falsification).
+*Yield:* C4 fold-validation — 2 blocking (four-chain watchdog scope; the dropped `PIPELINE_CHAIN` harness line). C7 fold-validation — 10 defects incl. an unwritten fourth SQL expression and a falsified census query. Orchestrator folds averaged ~5 defects each across the session; the validation pass caught every one at the cost of two agents.
+
+Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it: see the Spec 137 note of the same date; a fold checked at a later round leaves no required record). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The wording "the agent stays in the roster and may be asked for" is approved by RR-0360 (:1692). CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
+
+Dated note 2026-11-23 (M-246, prior text kept; task-448 FINAL.11, McFix Final; RR-0423, decision-208; operator, verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2171 "add teh first two.  Plan approved.  Move forward with the task"): for a plan launch, the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan; no separate fold-check agent is run. The scope of :486 (every claim in the fold) and the launch gate (check-lane-close.mjs:692-712) are unchanged.
+
+### 11.3 Red-first mechanics
+Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
+
+### 11.4 Tests live in the plan; the plan panel reviews them
+The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan and reviewed at PLAN altitude, collapsing the separate test-panel round. *Incident:* C7 Case B's hash-guard vacuity was caught by three blind reviewers BEFORE the test file existed; the authored test then enforced the corrected design.
+
+### 11.5 Roster consequences (Backend/Pipeline) + the frontend nuance
+* **Lean grounder-first PLAN panel (3–4 seats):** Integration (main tree, live DB — the session's highest hit-rate seat: refuted C2's premise, found the live fourth writer, ruled the `--file` harness) · **Idempotency lens** (agent charter — owns replay/transaction/collision classes: F18, the backup-atomicity race, the stuck-interim-accretion collision) · **Regression Guardian, ALWAYS provisioned with shell+git** (fence archaeology: `f238b814`, the `c6bf9f1d` founding-intent ruling, Spec 41's fiction-from-birth, the inverted runSync-history claim) · + Reality-Check when derived values change (subject-matter trigger, §10.3).
+* **Cross-read Adversary is a NAMED role** (spawn: *"Hunt collisions between the plan's separately-folded decisions — pairwise, mechanically, with zero deference; walk every checklist line for staleness against the fold; verify the tests still cohere as a suite."*).
+* **CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators.** Their yield files to `review_followups.md`, never folds into a diff review. Evidence 2026-08-13: two CLI diff reviews produced ZERO diff findings; one produced a critical-sounding verdict phrase that did not reproduce and matched no line finding; DeepSeek re-raised the C1-refuted `PG_HOST` claim verbatim. Their pre-existing-defect inventories remain genuinely valuable (the close-stale safety-guard bundle) — that is their job now. Always grounder-adjudicated (§9).
+* **Lean OUTPUT panel: Guardian + one grounded reviewer.** The C7 five-seat output round produced exactly two novel catches, both reachable by that pair.
+* **§11.5-FE (operator nuance, 2026-08-13):** for Admin/Expo/frontend work, §11.1 applies to the domain's executable surface — typecheck, UI-regression suites (`*.ui.test.tsx`), render tests, a running app — but visual/UX/interaction-quality claims are NOT executable; reviewer judgment, the non-pipeline 3-reviewer panel, and the Spec 33/99 conventions carry the weight there. Fold-validation is recommended-lean (one validator) for multi-round frontend folds and mandatory only where a fold asserts executable facts. Do not demand queries of a design decision.
+
+### 11.6 Why this is the EFFICIENT shape, not just the safe one
+Grounding first means the plan panel argues about a true map instead of discovering the territory mid-round; tests-in-plan merges two panel rounds into one; fold-validation replaces "another full round" (historically low-yield — eight reviewers missed what one cross-read caught) with two targeted agents (which caught everything). C7 ran ~11 agent passes plan-to-ship under the old shape; this protocol's shape is ~7 for the same defect coverage. Reviewer METHOD diversity beats reviewer count.
+
+### 11.7 Validation panels for calculation answer keys (McProof; operator 2026-10-31)
+McProof is the validation standard for every Phase 3 increment (MB-77; `~/Buildo-scratch/mcbylaws/MB-77/MCPROOF.md`). Its rows are in Spec 69a, M-436 to M-447 and the dated note on M-358 (batch `2026-10-31-batch-an`); the two seat rules below live here because this spec governs seats and panels (operator, `CARD-mcproof-1-7` item 7).
+1. (MCPROOF-3, M-438) Independence. The author of an example never reviews its own example. The blind check withholds the answer, the working and all evidence. The calculation recheck does its own sums before it sees the key. A different seat or model family runs stage 3 from stage 4.
+2. (MCPROOF-13, M-447) Gemini tie-break and parking. Gemini runs when the blind value differs from the key or stage 4 says change; its answer is recorded in the blind stage; agreeing with DeepSeek sends the example back to stage 4 once; a three-way split goes to the operator; after `max_fix_rounds` the example is parked with an operator card. Scope: disagreements about worked-example ANSWERS only; keying of law and formula rows stays under M-17 and M-62 (operator adjudicates every disagreement), see `conflicts.md`. Gemini runs when the blind answer (stage 3) differs from the key or the Claude check (stage 4) recommends a change (card decision 3); two fix rounds, then the example is parked and goes to the operator (card decision 5). MCPROOF-13 covers worked-example answers only. M-17 and M-62 disagreements stay with the operator. (The clause "its answer is recorded ... goes to the operator" was drafted by lane R and confirmed by the operator at O-27, CARD-o27-foot18: "0-27 confirm all if in compliance with handbook, foot 18 keet it as pending"; handbook compliance checked in ~/Buildo-scratch/mcbylaws/MB-78/verify.md.)
+Dated note 2026-11-06 (MB-85, M-246, prior text kept; operator, `CARD-ticket-status.md`): MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.
+Dated note 2026-11-13 (M-246, prior text kept; operator Q4 b, verbatim: "Q4 b"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` Q4 and the ruling section, verbatim: "all recommendations accepted. proceed with the plan"; seat-4 finding F5, `~/Buildo-scratch/review-20261113/seat4-process.md`): item 2's Gemini tie-break is not run. McProof runs Claude and DeepSeek only, no Gemini (increments 5 and 6; Gemini was unavailable in increments 3 and 5). Every disagreement about a worked-example answer goes to the operator, so the three-way split of item 2 becomes a two-way split to the operator. The text above stands. Missing mandatory stages (MCPROOF stages 3-5, or the independent seat of item 1) are listed as named, accepted gaps in each increment's decision list D-0 (MCINC-3), never silently.
+
+### 11.8 The McIncrement recipe (MCINC; operator 2026-11-06)
+Every Phase 3 increment runs the same six steps, starting with increment 3 (card MCINC, `~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md`; operator "a) now, so increment 3 uses the recipe from day one, and (b) with DR-5 when the freeze lifts."). Its rows are in Spec 69a, M-488 to M-493 (batch `2026-11-06-batch-bb`); the dated note on the McBylaws queue increments table points every later increment here. Enforcement (a), now: the existing loop gate, prereg checker and door already refuse any move that no ruling names; the recipe moves those catches to step 2. Added check: none. The second-seat check on each increment's plan verifies the impact map exists and was measured on the tip. Enforcement (b) is OWED to card DR-5: the prereg names its impact-map file, and the prereg checker fails if a moved test, golden or version is missing from that file. It extends the checker that exists, with no new gate; it is infra work, so it waits for the freeze lift by name (operator rule, 2026-11-02).
+1. (MCINC-1, M-488) Scope and answer key (McProof first). The increment's targets and the 25-case answer key are hand-derived from the by-law text under McProof (§11.7, M-436..M-447). The operator walks the disputed items one at a time. Nothing is built before this.
+2. (MCINC-2, M-489) One impact map, measured on the current origin tip. Use a throwaway sandbox worktree with the work applied and the affected tests run. It lists every file, assertion, worked example, golden and oracle file that moves; every version and pin that moves; whether a Layer 2 night is needed; every disclosure the increment produces. Anything not measured is marked UNVERIFIED.
+Dated note 2026-11-13 (M-246, prior text kept; operator, verbatim: "all recommendations accepted. proceed with the plan"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K5; seat-4 finding F7): the impact-map form gains a "Map defects" heading. Every stop the map missed (step 3) is listed under it, and the increment's close note counts them. Text only; the map's other contents are unchanged.
+3. (MCINC-3, M-490) One decision list. Every ruling the map needs goes to the operator at once. For each: the rule quoted, compliant options only, a recommendation. The answers are recorded verbatim. A stop during the build that the map missed is a map defect: it is recorded and added to the map template.
+4. (MCINC-4, M-491) Build on the tip. Red tests first, then the code, through the real hooks. The full suite runs on the current origin tip before "ready" (existing memory rule). Never port a stale draft: re-cut it on the tip.
+5. (MCINC-5, M-492) At most one Layer 2 night per increment, from the standard checklist. The night uses the night-checklist-axis.v2 form: dry run, prereg, go, C1-C6, the night record.
+6. (MCINC-6, M-493) Close. The increment is green in the loop: every case passes or is a named, accepted finding. Every owed item has a card and a lock, and the disclosure lock is green (L3-DISC). One push per landing set.
+
+Dated note 2026-11-12 (M-246, prior text kept; card MCINC, "Amendment 2026-11-12: MCINC-7 and MCINC-8"): the recipe gains steps 7 and 8. Operator, verbatim: "1 and 2" and "the rules need to be written into the recipe and followed - not just memory". Their rows are in Spec 69a, M-514 and M-515 (batch `2026-11-12-batch-bf`). They apply to every lane and every DB job, not only Phase 3 increments. Why: on 2026-11-12 one DB job (MB-35) needed five night attempts, each a stop found live (a shell path bug, row-level security text, a composite-key retract, a JSON type, 22 retired settings rows), then a witness hard stop at commit; separately three numbers collided across lanes (MF-77, FE-38, migration 313). Enforcement: two scratch tools named in each step (no repo tool or code; infra freeze, operator rule 2026-11-02).
+7. (MCINC-7, M-514) Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.
+8. (MCINC-8, M-515) One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-4 above; McBylaws queue · lane INC6-RECORDS; operator 2026-11-06, "P3" (memory note ready-means-hooks-and-suite-on-tip, "Amended 2026-11-06 (operator P3: "P3")"); panel record `~/Buildo-scratch/plan-gen/data/rule-conflicts.md`, row 1): MCINC-4 reads "the current origin tip"; under the operator's P3 the base is the current mb-rul tip once that tip is suite-green and push-ready, and need not be on origin. The suite runs locally on your commits stacked on the latest suite-green tip, in a clean worktree, and the push is made from a clean worktree at the pushed commit (the pre-push suite tests the working tree). GitHub is not a substitute. Applies the spec; no new decision.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-7 above; McBylaws queue lanes row D · lane INC6-RECORDS; operator, verbatim: "y to all" (2026-11-16, DBJ-FIX (b)); record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:456): the test-stack guard checks the target database only; dev keeps the global match. (b) is the standing rule.
+
+### 11.9 Ticket header and closed reply status (TKT; operator 2026-11-06, MB-85)
+Operator, verbatim: "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well." Items 1 and 2 apply to every seat and lane agent, Claude and DeepSeek (Sonnet seats, lane agents, panel seats, lane reports). Items 3 and 4 apply to McProof (§11.7). Added check: none; no tool or code change.
+1. (TKT-1) Ticket header. The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` (queue Process 11); `Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number; when the header omits it the default is 2 (D6 B). Wider scope than the header is a new MB item, not a longer brief.
+   Dated note 2026-11-19 (M-246, prior text kept; task-1 BL.0 · McIncrement plan · lane BL-R4 · stage R4; operator, verbatim, RR-0205 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:843-844): "yes of course"; RR-0212 (:864-867): "we needd the loader and the three gates"): for a lane working a plan task the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`; `Rule:`, `Scope:`, `Done-condition:` (the task's acceptance criteria) and `max_fix_rounds:` come from the task and are generated by `scripts/analysis/backlog-brief.mjs`. A lane cut before the import may still carry `Ticket: MB-nn · lane X · stage N`. The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`, so the rule quoted with file:line (§7 rule 10 (a)) comes from the task's decisions and acceptance criteria, not from scratch. A code commit names its task by the trailer `Task: task-N` (Spec 137 §4 rule 3, gate G3). MCINC-4 (§11.8): a lane's base is the programme tip that carries the import (`backlog/`), so its `Task:` trailer and the task file are in the same commit.
+   Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS, lane BL-GATE375, Increment 1·B; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1595 "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition", :1615 "397 reality check and regression need to be claude sonnet . they need to be included in the protocol - grounding is different than reality check - whcih independantly runs the calculations and regression looks back over previous decisions", :1620 "Let's include them in the protocol as they are defined in the spec  - regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently", :1625 "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required", :1630 "these only run on the plan", :1605 "agreed"): two points. (1) The review context file of a task is docs/reports/reviews/<task>/context-rN.md, one per review round and never overwritten (N = the context-r*.md files already there + 1), written by `scripts/analysis/backlog-brief.mjs`; it replaces the earlier name context-<date>.md in every note above that uses it. Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS (scripts/lib/review-template.js: Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes), `rule-lists.mjs lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context. (2) The tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate (`scripts/analysis/backlog-lane.mjs`, `planGateErrors` in `scripts/hooks/check-lane-close.mjs`) requires their Seat lines in GROUNDER-PLAN.md. This differs from rule 1 (:344, both altitudes mandatory), from rule 7 (:351, Reality-Check by subject matter) and from the section 6.4 table that also lists Integration and Regression on the output roster: no seat is required on the output, which keeps the DeepSeek lens set per rule list and the separate grounder, who also verifies each fix (his :1605). Reality-Check is required at every build or fix launch for now (his :1625); emptying that name is his later decision.
+2. (TKT-2) Closed reply status. Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question. ready: the done-condition is met and the evidence is in the reply. blocked: a ruling, card or input is missing; the question names it. failed: the work did not complete, or the reply is empty or truncated (TKT-4). dropped: the ticket is withdrawn or superseded; the reason is one line. This is a reply-level word. It never writes a queue status cell: the queue's own words (DONE, RUNNING, WAITS, OPERATOR, HELD, LATER; stage 10 is set by the checker) stay as they are.
+3. (TKT-3) McProof answer-first. A McProof reply puts its answers first, in the answer table the code already requires (`scripts/analysis/mcproof/prompts.mjs:10`, one row per example id: a number with an optional unit, a closed status, or `cannot decide`); the working follows the table. Rows outside the table are not read.
+4. (TKT-4) Empty or truncated is failed. An empty or truncated reply is `failed`, never a verdict and never a pass. One concise rerun is allowed; a second empty or truncated reply parks the ticket with an operator card (MCPROOF-13). McProof stage runs keep the configured retry count (`scripts/analysis/mcproof/mcproof.config.json:69`, `max_retries_per_stage` = 2) until that value is moved by a ruling (OWED, infra, frozen): this rule changes no config and no code. Output-cap and stop-reason logging are infra and frozen.
+5. (TKT-5, E1) No agent teams; lane-to-lane facts go through the orchestrator. A fact one lane needs from another goes through the orchestrator as a note of at most 100 words that cites file:line and grants no authority. Claude Code agent teams are not enabled (a harness setting is infra, frozen until lifted by name). Source (verbatim, operator 2026-11-06): "E1 a" ("E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry").
+Operator source lines for this section (verbatim): "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?" "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?" Rulings: D1 B, D2 A, D3 A, D4 A, D5 A, D6 B, D7 A (MB-85 DECISIONS.md); TKT-1 carries D6 (default `max_fix_rounds` 2) and D7 (header in the body); TKT-3 is D2 A; TKT-4 is D3 A; TKT-2 is D5 A.
+
+Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): where every queue lives, the one-line status form and the queue rules (7-day expiry, DB lane, dated-note rulings, the weekly snapshot) are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). Nothing in §11.8 or §11.9 changes.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 684414cb0f7132728d0d468feb74f0c8b6c21a01..54d0889a3194b94cbc20e0208002f723aa9505f7 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -18,7 +18,7 @@ const LD = 'docs/reports/lanes/2026-11-20/BL-COMPLY2';
+ const taskText = (o: { milestone?: string | undefined; id?: string; status: string; type?: string | undefined; files?: string | null | undefined; assignees?: string[] | undefined }) =>
+   `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: ${o.milestone ?? 'm-0'}\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
+ const TABLE = {
+-  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
++  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', 'scripts/analysis/backlog-lib.mjs', '.husky/*'],
+   lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' }, msf: { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' } },
+   every_task: ['ev'], milestone_docs: { F: ['msf'] },
+   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
+@@ -75,6 +75,7 @@ type Opts = {
+   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
++  mergeHead?: 'same' | 'other'; // task-453 S3: .git/MERGE_HEAD names a commit whose task file blob is the staged one (same) or the launch commit (other)
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+   // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
+   // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
+@@ -91,7 +92,7 @@ function scenario(o: Opts = {}) {
+   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
+   if (o.eng) withEng(table);
+   o.tableEdit?.(table);
+-  if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
++  if (o.table !== 'never') { w('scripts/analysis/rule-lists.json', JSON.stringify(table)); w('.git/table.json', JSON.stringify(table)); } // task-453 S2: lens-input reads the copy when the lane deleted the table
+   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
+   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+   if (o.eng) w(ENG_PATH, ENG_TEXT);
+@@ -134,7 +135,7 @@ function scenario(o: Opts = {}) {
+   for (const [id, seat, joinedLists] of jobs) {
+     const tplName = seat === 'compliance' ? 'lens-compliance.md' : (o.engTpl ?? `lens-${seat}.md`);
+     const out = path.join(d, LD, `in-out-${seat}-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', fs.existsSync(path.join(d, 'scripts/analysis/rule-lists.json')) ? path.join(d, 'scripts/analysis/rule-lists.json') : path.join(d, '.git/table.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -183,6 +184,7 @@ function scenario(o: Opts = {}) {
+     fs.writeFileSync(tp, tt);
+   }
+   g('add', '-A');
++  if (o.mergeHead) fs.writeFileSync(path.join(d, '.git/MERGE_HEAD'), `${o.mergeHead === 'same' ? g('commit-tree', g('write-tree').stdout.trim(), '-p', 'HEAD', '-m', 'merged branch').stdout.trim() : baseSha}\n`);
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+   if (o.cli) return script('scripts/hooks/check-lane-close.mjs', ['--outcomes', LD], { cwd: d });
+@@ -364,25 +366,25 @@ describe('close check: scope of the lane report, the diff and who may close', ()
+     refused(scenario({ trailer: false, mutate: (l) => ({ ...l, 'GROUNDER.md': null }) }), /GROUNDER\.md/, 2);
+   });
+   it('ATTACK 2b: the board auto-commit (a docs commit message, only the task file staged) is checked too', () => {
+-    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /TASK|lane report|GROUNDER/, 2);
++    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/, 2);
+   });
+   it('ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused', () => {
+-    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /TASK file|task-7/, 7);
+-    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /TASK file|task-7/, 7);
++    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /holds a TASK file naming exactly task-7/, 7);
++    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /holds a TASK file naming exactly task-7/, 7);
+   });
+   it('ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused', () => {
+     refused(scenario({ laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }), /sneaky\.ts/, 8);
+     expect(scenario({ files: 'src/', laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }).status).toBe(0);
+-    refused(scenario({ files: 'docs/reports/lanes/x/' }), /no rule list|exempt/, 8);
++    refused(scenario({ files: 'docs/reports/lanes/x/' }), /resolves to no rule list \(only exempt paths/, 8);
+   });
+   it('ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too', () => {
+     refused(scenario({ assignees: ['@human'] }), /@lane/, 9);
+-    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /@lane|assignee/, 9);
++    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /closes only as that lane's build or fix task/, 9);
+     refused(scenario({ type: 'check', assignees: ['@human'] }), /@lane/, 9);
+   });
+   it('ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished', () => {
+-    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /protected|self/, 10);
+-    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /protected|self/, 10);
++    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /this commit changes protected path\(s\)/, 10);
++    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /this commit changes protected path\(s\)/, 10);
+   });
+   it('fails closed when the rule-list table that HEAD has is gone; a repo that never had one is not held to it', () => {
+     refused(scenario({ table: 'delete' }), /rule-lists\.json/);
+@@ -651,9 +653,9 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
+ const ID = 'out-compliance-first#1';
+ const DEFER_LINE = 'DEFER severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const other = (extra = '', status = 'RUNNING'): Opts => ({ otherTask: true, otherStatus: status, otherExtra: extra, finding: DEFER_LINE });
+-const cli = (o: Opts = {}) => {
++const cli = (o: Opts, want: number) => {
+   const r = scenario({ ...o, cli: true });
+-  expect(r.status, r.stderr).not.toBeNull();
++  expect(r.status, r.stdout + r.stderr).toBe(want); // T11 (task-453): the exact exit status, not only a non-null one
+   return r;
+ };
+ const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o); expect(r.status, r.stderr).toBe(1); expect(r.stderr).toMatch(re); return r; };
+@@ -669,7 +671,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.status, r.stderr).toBe(0);
+   });
+   it('control: the --outcomes command on the same lane prints "checked 1 ids" and exits 0', () => {
+-    const r = cli();
++    const r = cli({}, 0);
+     expect(r.status, r.stderr).toBe(0);
+     expect(r.stdout).toMatch(/^checked 1 ids\n/);
+   });
+@@ -678,7 +680,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.stderr).toMatch(/form that passes: out-compliance-first#1 fixed:<sha>/);
+   });
+   it('PLANTED DEFECT: with no TRIAGE.md at all every id is refused, one line each, and the CLI prints "checked 1 ids" first', () => {
+-    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' });
++    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' }, 1);
+     expect(r.status, r.stdout).toBe(1);
+     expect(r.stdout.split('\n')[0]).toBe('checked 1 ids');
+     expect(r.stdout.split('\n').filter((x) => /no outcome line/.test(x))).toHaveLength(1);
+@@ -739,7 +741,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';
+     const seatLine = (t: string) => `Seat: rc ${LD}/seat-rc.md sha256:${sha(t).slice(0, 12)}\n`;
+     const seated = (o: { file?: string | null; line?: string; verdict?: boolean; outcome?: boolean } = {}): Opts => ({
+-      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : 'rc2#1 CONFIRMED src/a.ts:1 "seat quote"\n'}` }),
++      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : `rc2#1 CONFIRMED src/a.ts:2 "${quoteAt(2)}"\n`}` }),
+       triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${o.outcome === false ? '' : `rc2#1 fixed:${c.sha} ${c.path}\n`}`,
+     });
+     const ok = scenario(seated());
+@@ -768,7 +770,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+     expect(r.stderr).not.toMatch(/ENOENT/);
+   });
+   it('fix round (g399#5): the --outcomes command refuses a lens finding whose verdict line does not parse (control: the default lane prints checked 1 ids, exit 0)', () => {
+-    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } });
++    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } }, 1);
+     expect(r.status, r.stdout).toBe(1);
+     expect(r.stdout.split('\n')[0]).toMatch(/^checked \d+ ids$/);
+     expect(r.stdout).toMatch(/out-compliance-first#1: no complete verdict line/);
+@@ -776,7 +778,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome
+   it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
+     const r = scenario({ lensFinding: false });
+     expect(r.status, r.stderr).toBe(0);
+-    const c = cli({ lensFinding: false });
++    const c = cli({ lensFinding: false }, 0);
+     expect(c.status, c.stderr).toBe(0);
+     expect(c.stdout).toBe('checked 0 ids\n');
+   });
+@@ -950,7 +952,7 @@ async function planScenario(o: PO = {}) {
+     if (!o.noFolder) files[`seat-${n}-1.md`] = t;
+     mem[rel] = t;
+     seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
+-    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED src/a.ts:${7 + names.indexOf(n)} "${quoteAt(7 + names.indexOf(n))}" a small observation that changes nothing in the plan text`); // task-453 S1: a seat verdict needs its own 20+ character quote on the cited line
+   }
+   if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
+   const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
+@@ -1259,3 +1261,77 @@ describe('task-438 T4: the launch gate requires the engineering seat for a list
+     expect(r.lists).toBe(4);
+   });
+ });
++
++// ---- task-453 (SEARCHFIX.5; fold plan docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md tasks 10 and 11; RR-0440 MORNING-DECISIONS.md:2265, RR-0444 :2290, RR-0450 :2325, RR-0452 :2336) ----
++// SPEC LINK: Spec 08 section 7 rule 4 (08_agents.md:334) and section 5.3 (the grounder rules every finding with a quote and a reason); GROUNDER-QUESTIONS G4 S3 "narrow the skip and fail closed".
++const dropEv = (l: Lane): Lane => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null });
++describe('task-453 item 1: output_off switches an every_task list off for output reviews only (AC #1, AC #2)', () => {
++  it('control: output_off [ev] and no out-compliance-ev closes a build task and a fix task', () => {
++    for (const type of ['build', 'fix']) {
++      const r = scenario({ type, tableEdit: (t) => { t.output_off = ['ev']; }, mutate: dropEv });
++      expect(r.status, `${type}: ${r.stderr}`).toBe(0);
++    }
++  });
++  it('PLANTED DEFECT: emptying output_off turns the list back on: no out-compliance-ev is refused, naming the file', () => {
++    refused(scenario({ tableEdit: (t) => { t.output_off = []; }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++  it('F10 PLANTED DEFECT: a lane whose own table (its Files line names it) sets output_off is still held to the range base output_off', () => {
++    const off = JSON.stringify({ ...TABLE, rows: [...TABLE.rows, TROW], output_off: ['ev'] });
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': off, 'src/a.ts': `${AFILE}// x\n` }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++});
++
++describe('task-453 item 5: the close check fails closed (AC #3, AC #4, AC #5)', () => {
++  it('S2 PLANTED DEFECT: a lane that deleted the table is judged by the board copy: a missing every_task output is refused (was exit 0)', () => {
++    const o: Opts = { tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'] };
++    const ok = scenario(o);
++    expect(ok.status, ok.stderr).toBe(0);
++    refused(scenario({ ...o, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
++  });
++  it('S2: with no board ref the same deletion is refused with the board text; a repo whose board never had the table is not held to it', () => {
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'], noBoard: true }), /a task close needs the board/);
++    expect(scenario({ table: 'never', mutate: () => ({}) }).status).toBe(0);
++  });
++  it('S3 PLANTED DEFECT: during a merge a finished move whose blob is not the merged branch one is checked (was exit 0); the merged branch blob is skipped (control)', () => {
++    refused(scenario({ mergeHead: 'other', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
++    const same = scenario({ mergeHead: 'same', mutate: () => ({}) });
++    expect(same.status, same.stderr).toBe(0);
++  });
++  const SEAT2 = '# seat report\n### rc2#1 HIGH: a seat finding\n### reality-check#2 CRITICAL: a seat finding with a hyphenated id\n';
++  const seatOpts = (seat: string, verdicts: string): Opts => ({
++    after: (l) => ({ ...l, 'seat-rc.md': seat, 'GROUNDER.md': `${l['GROUNDER.md']}Seat: rc ${LD}/seat-rc.md sha256:${sha(seat).slice(0, 12)}\n${verdicts}` }),
++    triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n`,
++  });
++  const SEAT1 = '# seat report\n### rc2#1 HIGH: a seat finding\n';
++  it('S1 PLANTED DEFECT: a seat verdict needs a 20+ character quote on its cited line and a 30+ character reason (was accepted)', () => {
++    refused(scenario(seatOpts(SEAT1, 'rc2#1 REJECTED src/a.ts:2 "short" the seat finding is wrong because the line holds a constant\n')), /rc2#1: the quote must be 20\+ characters/);
++    refused(scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" too short\n`)), /rc2#1 is REJECTED with a reason under 30 characters/);
++    const ok = scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`));
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('S4 PLANTED DEFECT: a seat id with a hyphen (reality-check#2) is a finding and needs a verdict (was ignored)', () => {
++    refused(scenario(seatOpts(SEAT2, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`)), /reality-check#2 CRITICAL: seat finding of rc has no verdict line/);
++  });
++  it('S5 PLANTED DEFECT: a severity word after the start of the reason ("not a NIT") does not lower a CRITICAL; one at the start still does (control)', () => {
++    const reason = 'the line is a test fixture and nothing reads it';
++    const crit = (r: string): Opts => ({ finding: 'BUG severity=CRITICAL — clause "x" — src/a.ts:1 "y" — claim — fix\n', g: { verdict: () => `CONFIRMED src/a.ts:1 "${quoteAt(1)}" ${r}` }, triage: () => `${ID} pile:"${reason}"\n` });
++    refused(scenario(crit('the defect is real, not a NIT: it moves money wrongly')), /out-compliance-first#1 CRITICAL: pile is not allowed/);
++    const ok = scenario(crit('NIT-picking aside, the line is cosmetic only'));
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('S9 PLANTED DEFECT: a task moved to backlog/archive/tasks with a finished status is checked (was skipped); archiving a task that was already finished is no move; docs/backlog/tasks is never a task file', () => {
++    refused(scenario({ finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
++    const archived = scenario({ before: 'BUILT', finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) });
++    expect(archived.status, archived.stderr).toBe(0);
++    const notTask = scenario({ finalTaskPath: 'docs/backlog/tasks/task-7 - x.md', mutate: () => ({}) });
++    expect(notTask.status, notTask.stderr).toBe(0);
++  });
++  it('ST4: a closing commit that stages backlog-lib.mjs is refused (protected); a range edit to it that the Files line does not name is refused', () => {
++    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/', staged: { 'scripts/analysis/backlog-lib.mjs': '// edited\n' } }), /this commit changes protected path\(s\) \(scripts\/analysis\/backlog-lib\.mjs/);
++    refused(scenario({ tableEdit: withRow, laneWork: { 'scripts/analysis/backlog-lib.mjs': '// edited\n', 'src/a.ts': `${AFILE}// x\n` } }), /outside the task's Files line: scripts\/analysis\/backlog-lib\.mjs/);
++  });
++  it('ST4 (AC #5): the real table protects scripts/analysis/backlog-lib.mjs', () => {
++    const real = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { protected_paths: string[] };
++    expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');
++  });
++});
+diff --git a/src/tests/backlog/review-templates.logic.test.ts b/src/tests/backlog/review-templates.logic.test.ts
+index 6aeae065853c276692873014db856d0a748a6fd3..00a2118dbe48215ec0ff4b39a7ba72f30962af51 100644
+--- a/src/tests/backlog/review-templates.logic.test.ts
++++ b/src/tests/backlog/review-templates.logic.test.ts
+@@ -2,6 +2,8 @@
+ // (line 32) and so held the material twice (a 181,810 character prompt for an 85,642 character diff). Each lens template has exactly one plan placeholder.
+ import { describe, expect, it } from 'vitest';
+ import * as fs from 'node:fs';
++import { createRequire } from 'node:module';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { ROOT } from './helpers';
+ 
+@@ -52,3 +54,15 @@ describe('task-438 T1: lens-engineering.md is a lens template of its own', () =>
+     expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>');
+   });
+ });
++
++// task-453 T7 (GROUNDER-D D2, AC #6): the next review round is the highest context-rN number plus one, so a gap never names an existing file again
++describe('task-453 T7: contextRound', () => {
++  const { contextRound } = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { contextRound: (d: string) => number };
++  const dirWith = (names: string[]) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxr-')); for (const n of names) fs.writeFileSync(path.join(d, n), 'x\n'); return d; };
++  it('context-r2 only gives round 3; no context file gives round 1; context-r1 and context-r3 give round 4; a missing folder gives round 1', () => {
++    expect(contextRound(dirWith(['context-r2.md']))).toBe(3);
++    expect(contextRound(dirWith(['GROUNDER.md']))).toBe(1);
++    expect(contextRound(dirWith(['context-r1.md', 'context-r3.md']))).toBe(4);
++    expect(contextRound(path.join(os.tmpdir(), 'no-such-dir-task-453'))).toBe(1);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index e50dada36ba314f8d2938c158f03dcbbb0ef41cc..1043e17976bb8cad6637a70d8f98a5e0d571d9ea 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -26,27 +26,27 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));
+     expect(table().rows.find((r) => r.id === 'surfaces')!.lists, 'surfaces').toContain('eng-all');
+   });
+-  it('a panel record and an MF pre-registration get the four every-task lists only (task-448, RR-0421 items 1 a and 4 a); a by-law pre-registration keeps bylaw-133', () => {
+-    const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];
+-    expect(lists('docs/reports/panels/MF-94.json')).toEqual(four);
+-    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(four);
++  it('a panel record and an MF pre-registration get the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; five-words off since task-453, RR-0452); a by-law pre-registration keeps bylaw-133', () => {
++    const three = ['plan-protocol', 'inc-S', 'ms-S'];
++    expect(lists('docs/reports/panels/MF-94.json')).toEqual(three);
++    expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MF-96-1.json')).toEqual(three);
+     expect(lists('scripts/analysis/bylaw-validation/coa-expected/prereg-MB-18-1.json')).toContain('bylaw-133');
+   });
+-  it('a generated report and a 127-* generated file get eng-all and the four every-task lists only (task-448, RR-0421 items 1 a and 4 a)', () => {
++  it('a generated report and a 127-* generated file get eng-all and the three every-task and milestone lists only (task-448, RR-0421 items 1 a and 4 a; task-453, RR-0452)', () => {
+     const g = lists('docs/reports/generated/x.md');
+-    expect(g).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+-    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(g).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reports/generated/127-surface-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const t = table().lists['policy-124-s2-s5']!;
+     expect(t.file).toBe('docs/specs/01-pipeline/124_step_standard_policy.md');
+     expect(t.sections).toEqual(['2. The rules', '5. Register of rulings']);
+   });
+   it('the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed', () => {
+-    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reports/policy/x.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
+     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
+   });
+   it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
+-    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+     const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+@@ -165,7 +165,7 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
+     expect(r.status, r.stderr).toBe(0);
+     const j = JSON.parse(r.stdout) as { exempt: string[]; lists: { id: string }[] };
+     expect(j.exempt).toEqual([]);
+-    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('every exempt glob beyond the lane and review records names its proving check in $comment (planted defect: a glob with no named check fails)', () => {
+     const t = raw();
+@@ -207,7 +207,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(resolveIn(real, FILES[0] as string)).toEqual(expect.arrayContaining(SURFACE));
+     const without = resolveIn(real.filter((g) => g !== glob), FILES[0] as string);
+     for (const id of SURFACE) expect(without).not.toContain(id);
+-    expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(without).toEqual(['eng-all', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   // MF-95 C-T5 (task-430): the range is computed from the real register (readFeRows throws unless "Next free id" is the row count plus one),
+   // not pinned to 44, so a new FE row moves it by itself; planted: one id more than the register holds is refused.
+@@ -226,7 +226,7 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+ // task-375: lens-input takes --context (A4); see the deviation note on the task
+ 
+ // task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ("DEFER -> review_followups.md with reasons", 08_agents.md:350) names docs/reports/review_followups.md, so the table must know it
+-// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attaches agents-s7-s11 (holds rule 6) and queue-137.
++// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attached agents-s7-s11 (holds rule 6) and queue-137 until task-448; it attaches no list now.
+ describe('task-412: review_followups.md has its Spec 08 home', () => {
+   const FILE = 'docs/reports/review_followups.md';
+   const resolveIn = (rows: Row[]) => {
+@@ -240,7 +240,7 @@ describe('task-412: review_followups.md has its Spec 08 home', () => {
+     return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
+   };
+   it('the real table: the file resolves through exactly one row, which attaches no list since task-448 (RR-0421 item 4 a)', () => {
+-    expect(lists(FILE)).toEqual(['five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++    expect(lists(FILE)).toEqual(['plan-protocol', 'inc-S', 'ms-S']);
+     const rows = table().rows.filter((r) => r.id === 'review-followups');
+     expect(rows).toHaveLength(1);
+     expect(rows[0]!.lists).toEqual([]);
+@@ -365,11 +365,29 @@ describe('task-431: the engineering standards sent by side', () => {
+     const planted = resolveIn(withRow('specs-web-admin', (r) => ({ ...r, lists: [...r.lists, ...FOUR] })), 'docs/specs/02-web-admin/128_surface_standard_policy.md');
+     expect(() => handbookOnly(planted, 'planted: the four back on specs-web-admin')).toThrow();
+   });
+-  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, and only the lane-tools row attaches the queue, agent and doc-17 lists', () => {
++  it('task-448 (RR-0418, RR-0421): no row attaches Specs 126, 127, 128, 135, the four Airtight lists, doc-16, mobile-100, mobile-96 or the Spec 124 list, no row attaches the queue or doc-17 lists (task-453, RR-0450), and only the lane-tools row attaches the agent lists', () => {
+     const OFF = [...FOUR, 'airtight-124a', 'airtight-v3-122', 'airtight-v2-122', 'airtight-122a', 'storage-doc16', 'mobile-100', 'mobile-96', 'policy-124-s2-s5'];
+     for (const r of table().rows) {
+       for (const l of OFF) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+-      if (r.id !== 'lane-tools') for (const l of ['queue-137', 'agents-s5-1to3', 'agents-s7-s11', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++      for (const l of ['queue-137', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
++      if (r.id !== 'lane-tools') for (const l of ['agents-s5-1to3', 'agents-s7-s11']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);
+     }
+   });
+ });
++
++// task-453 (SEARCHFIX.5; RR-0450 MORNING-DECISIONS.md:2325, RR-0452 :2336): the lane-tools row loses the queue rules and the orchestrator note; the review tools resolve through lane-tools only
++describe('task-453: the lane-tools row and the review tools', () => {
++  it('the lane-tools row attaches the two Spec 08 lists and eng-all only (RR-0450)', () => {
++    expect(table().rows.find((r) => r.id === 'lane-tools')!.lists).toEqual(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']);
++  });
++  it('T2: scripts/gemini-review.js resolves through lane-tools (not refused, not the step handbook)', () => {
++    const l = lists('scripts/gemini-review.js');
++    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
++    expect(l).not.toContain('step-132');
++  });
++  it('item 4: scripts/lib/review-template.js draws no step-132, eng-back or eng-shared and still resolves through lane-tools', () => {
++    const l = lists('scripts/lib/review-template.js');
++    for (const x of ['step-132', 'eng-back', 'eng-shared']) expect(l, x).not.toContain(x);
++    expect(l).toEqual(expect.arrayContaining(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']));
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 5c3463a09705183a3c5b2e9b408e1d386752bd25..c3974cd241a4480851c62f461815586178c24570 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -69,7 +69,7 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
+     for (const l of ['eng-all', 'surface-136']) expect(web).toContain(l);
+     for (const l of ['agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).not.toContain(l);
+     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
+-    expect(pipe).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-1', 'ms-1']);
++    expect(pipe).toEqual(['eng-all', 'plan-protocol', 'inc-1', 'ms-1']);
+     expect(pipe).not.toContain('mobile-100');
+     expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).not.toContain('queue-137');
+   });
+@@ -341,9 +341,9 @@ const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/
+ const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string, type?: string) => string[] }>;
+ 
+ describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
+-  it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
++  it('the table names every_task = plan-protocol (the repo copy; five-words, the Spec 132 Glossary, is defined but off since task-453, RR-0452), and no removed engineering list id is left anywhere', () => {
+     const t = real();
+-    expect(t.every_task).toEqual(['five-words', 'plan-protocol']);
++    expect(t.every_task).toEqual(['plan-protocol']);
+     expect(t.lists['five-words']).toMatchObject({ file: 'docs/specs/01-pipeline/132_step_standard_handbook.md', sections: ['Glossary'] });
+     expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true });
+     const text = JSON.stringify(t);
+@@ -374,7 +374,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     for (const [k, files] of Object.entries(kinds)) {
+       const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']);
+       expect(r.status, `${k}: ${r.stderr}`).toBe(0);
+-      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['five-words', 'plan-protocol', 'ms-S', 'inc-S']));
++      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['plan-protocol', 'ms-S', 'inc-S']));
++      expect(ids(JSON.parse(r.stdout) as Res), k).not.toContain('five-words');
+     }
+   });
+   it('the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review)', () => {
+@@ -388,8 +389,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     const t = real();
+     const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
+     expect(verifyResolved(t, good, 'S')).toEqual([]);
+-    const planted = { lists: good.lists.filter((l) => l.id !== 'five-words' && l.id !== 'ms-S') };
+-    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/five-words/);
++    const planted = { lists: good.lists.filter((l) => l.id !== 'plan-protocol' && l.id !== 'ms-S') };
++    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/plan-protocol/);
+     expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/ms-S/);
+     expect(verifyResolved({ ...t, every_task: [] }, good, 'S').join('|')).toMatch(/every_task/);
+   });
+@@ -462,8 +463,7 @@ describe('V2.LIST: the generated page of what each kind of work receives', () =>
+     expect(c.status, c.stdout + c.stderr).toBe(0);
+     const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generated/rule-lists-by-kind.md'), 'utf8');
+     for (const k of ['pipeline step', 'McFrontend web', 'phone', 'storage', 'tooling', 'spec-only']) expect(page, k).toContain(k);
+-    expect(page).toMatch(/five-words[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
+-    expect(page).toContain('plan-protocol');
++    expect(page).toMatch(/plan-protocol[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
+     const g = run('node', ['scripts/analysis/gates/generated-docs.mjs'], { cwd: ROOT });
+     expect(g.status, g.stdout + g.stderr).toBe(0);
+     expect(fs.readFileSync(path.join(ROOT, 'scripts/analysis/gates/generated-docs.mjs'), 'utf8')).toContain("file: 'rule-lists-by-kind.md'");
+@@ -928,11 +928,11 @@ const joinedCount = (listIds: string[], material: number, max?: number) => {
+   return { r, files: r.stdout.split('\n').filter(Boolean) };
+ };
+ 
+-describe('task-423 (a): joined input: the nine lists of the tooling kind, whole, in table order, packed by size', () => {
+-  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the nine lists in table order', async () => {
++describe('task-423 (a): joined input: the six lists of the tooling kind (nine until task-453: five-words, queue-137 and orchestrator-doc17 are off), whole, in table order, packed by size', () => {
++  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the six lists in table order', async () => {
+     const m = await jmod();
+     const lists = resolvedIds(FILES_423);
+-    expect(lists).toHaveLength(9);
++    expect(lists).toHaveLength(6);
+     const { r, files } = joinedCount(lists, 12400);
+     expect(r.status, r.stderr).toBe(0);
+     expect(files.length).toBeGreaterThan(0);
+@@ -942,7 +942,7 @@ describe('task-423 (a): joined input: the nine lists of the tooling kind, whole,
+     const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');
+     const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');
+     expect(got).toBe(want);
+-    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(9 lists: /);
++    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(6 lists: /);
+   });
+   it('with --max small the parts are more and every file is under the bound; control: an input with a part shortened no longer matches its stamp', async () => {
+     const m = await jmod();
+@@ -1106,3 +1106,34 @@ describe('task-438 T2: seatOf routes a rule list to the engineering or the compl
+     expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');
+   });
+ });
++
++// task-453 (SEARCHFIX.5 item 1; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336): output_off is one data line that turns a list off for output reviews only; validate fails closed on a typo
++describe('task-453: output_off and validate robustness', () => {
++  type V = { validateTable: (t: unknown, root: string) => string[]; outputLists: (t: unknown, l: { id: string }[]) => { id: string }[] };
++  const vmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<V>;
++  it('the real table switches plan-protocol off for output reviews (output_off) and keeps it in every_task', () => {
++    const t = real() as Table & { output_off?: string[] };
++    expect(t.output_off).toEqual(['plan-protocol']);
++    expect(t.every_task).toContain('plan-protocol');
++  });
++  it('outputLists drops the output_off lists and keeps the rest; an empty or missing output_off keeps every list (AC #2)', async () => {
++    const { outputLists } = await vmod();
++    const ls = [{ id: 'plan-protocol' }, { id: 'eng-all' }, { id: 'inc-S' }];
++    expect(outputLists({ output_off: ['plan-protocol'] }, ls).map((l) => l.id)).toEqual(['eng-all', 'inc-S']);
++    expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
++    expect(outputLists({}, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
++  });
++  it('validate refuses an output_off id that is not in every_task, and an output_off that is not a list (fails closed on a typo)', async () => {
++    const { validateTable } = await vmod();
++    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);
++    expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
++    expect(validateTable(real(), ROOT)).toEqual([]);
++  });
++  it('T10: a null list or a null row is a problem line, not a TypeError', async () => {
++    const { validateTable } = await vmod();
++    const t = real();
++    const bad = validateTable({ ...t, lists: { ...t.lists, broken: null }, rows: [...(t as unknown as { rows: unknown[] }).rows, null] }, ROOT).join('|');
++    expect(bad).toMatch(/list broken: not an object/);
++    expect(bad).toMatch(/rows\[\d+\]: not an object/);
++  });
++});
+diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
+index 4852f11ce28632d0594b9f0bf11f7f1f5551c1c0..c8b543f3ccca4fff7bb2bdaee848e0ecc7c563fa 100644
+--- a/src/tests/proof-slice.logic.test.ts
++++ b/src/tests/proof-slice.logic.test.ts
+@@ -8,7 +8,7 @@
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+-import { checkSpec, main, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
++import { checkSpec, main, realIo, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
+ const REPO = process.cwd();
+ 
+ type Res = { status: number | null; signal?: string | null; error?: { code: string }; stdout?: string; stderr?: string };
+@@ -225,7 +225,11 @@ describe('T8 output review r2 (KEPT findings): positive proof of a run, strict r
+   });
+   it('every golden, surface and policy row in the committed data names the line its check prints', () => {
+     const rows = (JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slices.json'), 'utf8')) as Record<string, { rows: Array<Record<string, unknown>> }>).S?.rows ?? [];
+-    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk3-nothing-new', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
++    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
++    // task-453 ST5 (AC #6): CHK.3 reads the staged diff and --all gives it no input, so its row is printed as not built, with the reason
++    const chk3 = rows.find((r) => r.id === 'chk3-nothing-new') as { notbuilt?: { reason?: string }; argv?: unknown } | undefined;
++    expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');
++    expect(chk3?.argv).toBeUndefined();
+   });
+ });
+ 
+@@ -298,3 +302,17 @@ describe('task-375 D10b: the timeout comes from the registered variable, a bad v
+     }
+   });
+ });
++
++// task-453 T4 (GROUNDER-D D1, proof-slice.mjs:11 "exit 2 ... usage"): with git unspawnable realIo() gives an empty head (main then exits 2), never a TypeError
++describe('task-453 T4: realIo with no git on PATH', () => {
++  it('head is the empty string, no throw', () => {
++    const saved = process.env.PATH;
++    const empty = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR ?? '/tmp'), 'nogit-'));
++    process.env.PATH = empty;
++    try {
++      expect(realIo().head).toBe('');
++    } finally {
++      process.env.PATH = saved;
++    }
++  });
++});
+

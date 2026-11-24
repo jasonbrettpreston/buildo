@@ -45,8 +45,9 @@ const Screen = require('../app/(app)/parcel-tool/index').default as React.Compon
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { useRecentSearchesStore } = require('@/store/recentSearchesStore') as typeof import('@/store/recentSearchesStore');
 
-const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null });
-const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null };
+// Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's resolution; a payload without it now reads as no_match.
+const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
+const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null, resolution: 'text_candidates' };
 const type = (text: string) => { fireEvent.changeText(screen.getByTestId('parcel-search-input'), text); act(() => { jest.advanceTimersByTime(400); }); };
 
 beforeEach(() => {
@@ -159,7 +160,25 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     type('Bathurst St');
     fireEvent.press(screen.getByTestId('parcel-search-report'));
     expect(mockOpenBrowser).toHaveBeenCalledTimes(1);
-    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=Bathurst%20St');
+    // task-450 AC6 (B.7, doc-2:49): the link opens the help topic "Wrong address or lot".
+    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');
     expect(mockPush).not.toHaveBeenCalled();
+  });
+  it('task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: list };
+    type('Bathurst St');
+    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+    expect(screen.getByTestId('parcel-candidate-P1')).toBeTruthy();
+    expect(screen.getByTestId('parcel-candidate-P2')).toBeTruthy();
+    type('2 Bathurst St');
+    expect(screen.queryByTestId('parcel-search-refine')).toBeNull();
+  });
+  it('task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { SEARCH_MIN_QUERY_LEN } = require('@/components/surfaces/SearchBinding') as typeof import('@/components/surfaces/SearchBinding');
+    render(<Screen />);
+    type('12');
+    expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();
   });
 });

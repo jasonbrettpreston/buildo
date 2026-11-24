@@ -170,10 +170,13 @@ const out = [
   `Rule: ${rules.length ? rules.map((r) => `\n  - ${r}`).join('') : 'none quoted in the task (the task is a card for the missing rule, MBQ:107)'}`,
   `Scope: ${taskId} only: ${title}${t.fm.milestone ? ` (milestone ${t.fm.milestone})` : ''}. Wider scope is a new task, not a longer brief (TKT-1, 08_agents.md:504).`,
   `Done-condition: every acceptance criterion below is checked with evidence, and the definition of done of the config holds:`,
-  ...ac.map((c) => `  #${c.n} ${c.text}`),
+  ...(ac.length ? ac.map((c) => `  #${c.n} ${c.text}`) : [`  (none found in ${t.file})`]), // T8 (task-453): an empty AC block is said, not left blank
   `max_fix_rounds: 2`,
   '',
-  `Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84): "The status line changes in the same commit as the work." Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`,
+  // T1 (task-453): a lane build or fix task closes in two commits (Spec 137 Rule 3 as amended, 137_mcqueue.md:98); another type keeps the line as it was
+  ['build', 'fix'].includes(String(t.fm.type ?? '').toLowerCase())
+    ? `Status line (Spec 137 rule 3 as amended by its note of 2026-11-20, 137_mcqueue.md:98): the work lands first; the closing commit carries only the lane report dir, the review context dir, the task file and the decision record. Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`
+    : `Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84): "The status line changes in the same commit as the work." Every code commit carries "Task: ${taskId}" and the task file in the same diff (hook check-backlog-task.mjs).`,
   `Substrate (Spec 08 08_agents.md:334): "NEVER run one generic pass" - run the lens set in parallel, each a narrow prompt; and (08_agents.md:339): "spend tool-bearing Claude only when live tree / DB / git tools are strictly required".`,
   '',
   `Take order:`,

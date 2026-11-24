@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkSpec, main, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
+import { checkSpec, main, realIo, renderTable, runSlice } from '../../scripts/analysis/proof-slice.mjs';
 const REPO = process.cwd();
 
 type Res = { status: number | null; signal?: string | null; error?: { code: string }; stdout?: string; stderr?: string };
@@ -225,7 +225,11 @@ describe('T8 output review r2 (KEPT findings): positive proof of a run, strict r
   });
   it('every golden, surface and policy row in the committed data names the line its check prints', () => {
     const rows = (JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slices.json'), 'utf8')) as Record<string, { rows: Array<Record<string, unknown>> }>).S?.rows ?? [];
-    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk3-nothing-new', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
+    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
+    // task-453 ST5 (AC #6): CHK.3 reads the staged diff and --all gives it no input, so its row is printed as not built, with the reason
+    const chk3 = rows.find((r) => r.id === 'chk3-nothing-new') as { notbuilt?: { reason?: string }; argv?: unknown } | undefined;
+    expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');
+    expect(chk3?.argv).toBeUndefined();
   });
 });
 
@@ -295,6 +299,20 @@ describe('task-375 D10b: the timeout comes from the registered variable, a bad v
     expect(typeof m.TIMEOUT_VARIABLE).toBe('string');
     for (const bad of [undefined, null, '', '   ', 0, '0', -5, '-5', 1.5, '1.5', 'abc', '12s', Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));
+    }
+  });
+});
+
+// task-453 T4 (GROUNDER-D D1, proof-slice.mjs:11 "exit 2 ... usage"): with git unspawnable realIo() gives an empty head (main then exits 2), never a TypeError
+describe('task-453 T4: realIo with no git on PATH', () => {
+  it('head is the empty string, no throw', () => {
+    const saved = process.env.PATH;
+    const empty = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR ?? '/tmp'), 'nogit-'));
+    process.env.PATH = empty;
+    try {
+      expect(realIo().head).toBe('');
+    } finally {
+      process.env.PATH = saved;
     }
   });
 });

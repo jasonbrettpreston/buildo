@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.066Z file_sha256=83d21f0d2ca5fcce47eb572852eae28dab6fbd1fb4d6a6e0d2980c0f295efb30 prompt_sha256=a6e81990f7f76e101320ce728aae9992112b4ea695965125fc61daa20641efa0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-step-132-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0450 "queue rules and orchestrator note off for code reviews; step handbook for compute only; three questions replace the five principles" — docs/reports/generated/rule-lists-by-kind.md:30 "| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" (under "## McFrontend web") — the step handbook list is still attached to the McFrontend web row, whose example Files line is "src/components/report/, scripts/surfaces/parcel_product/F02", so the "compute only" half of RR-0450 is unmet and the card's "(b) the step handbook list stays on the compute rows only (orchestrator reading: already so, the plan confirms)" is contradicted by the generated file this change ships — drop step-132 from the front-end row in scripts/analysis/rule-lists.json (or record in the 08_agents dated note why that row counts as compute) and regenerate.
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name" — .claude/review-templates/README.md:111 "Reality-Check (A7, Claude) is a seat, not a lens: required at every build or fix launch (the task-375 note in Spec 08), with integration, and regression when the Files line names a tracked path." — the card's item 3 names only the CHK.3 proof row, the two-commit ticket text, the highest-plus-one round number, the empty-AC warning and README corrections, and no pasted clause names a Reality-Check seat required at every build or fix launch or a conditional regression seat, so this turns "runs only when values are served" into a new launch requirement no pasted ruling names and no pasted close-check requirement reads — restore the previous "runs only when values are served (DB fields, derived numbers); it is not a lens" sentence, or cite the ruling id and the artifact a close check reads for it.
+
+DEFER severity=LOW — RR-0440 "plan to drop the planning and process lists from reviews" with the card's "a build task's plan review keeps plan-protocol and a fix task, which has no per-list plan review, gets none" — docs/reports/generated/rule-lists-by-kind.md:5 "Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone" — the generated description puts plan-protocol off only at the output review, while a fix task gets none at the plan stage either (scripts/analysis/backlog-lane.mjs:186 says "plan-protocol is asked at the plan stage only"), so a reader of the generated page expects a fix task's plan review to carry plan-protocol — mirror the fix-task caveat in the generator's header sentence.
+
+REJECT — RR-0429 "Keep notes short." — the new Spec 08 dated note is accused of being too long — it is the shortest note in that block (about 110 words against 200+ above it) and carries the two verbatim operator quotes the ruling protocol requires.
+
+MET — RR-0452 "five principles off" — docs/reports/generated/rule-lists-by-kind.md:13 — five-words row and its 5,367 characters are gone from every kind table and the totals recompute (pipeline step 122,831 = 47,779+5,377+37,472+8,825+20,869+2,509).
+
+MET — RR-0450 queue rules and orchestrator note — docs/reports/generated/rule-lists-by-kind.md:74 — the tooling row drops queue-137 and orchestrator-doc17 and its total falls from 9 lists 214,415 to 6 lists 139,835.
+
+MET — core.8 (R-A) — scripts/analysis/proof-slice.mjs:146 — the touched function still takes its only number from `gateVariable('tooling_spawn_max_buffer_mb')` and the new fallback `stdout ?? ''` is not a literal.
+
+MET — x-tooling.1 (R-GQ) — docs/reports/generated/rule-lists-by-kind.md:19 — the regenerated page carries its own recomputed totals per kind, so the generator, not a hand edit, is the author of that change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: core.8, x-tooling.1
+
+---
+⏱  122636ms (122.6s)
+📊 Tokens — total: 58538, input: 34504, output: 24034, reasoning: 22999

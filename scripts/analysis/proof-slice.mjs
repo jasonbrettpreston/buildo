@@ -143,7 +143,7 @@ export const realIo = () => ({
     const [cmd, ...rest] = argv;
     return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
   },
-  head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim(),
+  head: (spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout ?? '').trim(), // T4 (task-453): git that cannot start gives '' (main exits 2), not a TypeError
   writeFile: (f, t) => fs.writeFileSync(f, t),
   mkdir: (d) => fs.mkdirSync(d, { recursive: true }),
   print: (s) => console.log(s),

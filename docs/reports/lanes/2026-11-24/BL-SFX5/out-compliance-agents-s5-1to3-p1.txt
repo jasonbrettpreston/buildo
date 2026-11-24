@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.069Z file_sha256=7de5f51c9274fa2e641db9cc2bbb4a0cdfa3a2b17a404d968965fdc41129ab46 prompt_sha256=d6f21d8a63d6e575ad5f9b9d78c03b08eeaa550267eaa6700d9cc1aa0547e11c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 section 5.3, dated note 2026-11-20 correction round 3 (task-410): "a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first)." — scripts/analysis/rule-lists.json:23 "+"protected_paths": [ ..., "scripts/analysis/backlog-lib.mjs", ... ]" — the lane branch widens protected_paths, one of the four keys the pasted clause says is read from refs/heads/wf2/board and refused when the lane's copy differs, so AC #5's mechanism cannot close from this branch — land the backlog-lib.mjs entry on the board ref in a board commit first, and keep the branch's four keys identical to the board's (naming rule-lists.json on the Files line does not exempt the four keys, only lists and rows).
+
+DEFER severity=MED — task card (task-453 Description): "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap); task-448; task-268 (the proof row); task-406 (migration 334 finding)." — docs/specs/00-architecture/08_agents.md:358 "Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452" — this is the only dated note the material adds (it covers section 7 rule 4 and the task-448 supersession); no line addresses the note owed to task-268 for the CHK.3 proof row changed at scripts/analysis/proof-slices.json:9, or the task-406 migration-334 note, so two of the four owed notes are unmet — write the two owed notes at their spec locations, or record in the Final Summary where each is owed and why it is not in this diff.
+
+DEFER severity=LOW — 08_agents section 5.3, dated note 2026-11-21 (task-423): "one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined)" — .claude/review-templates/README.md:109 "the only names the close check and `rule-lists.mjs findings` read" — the rewritten README line states a -rN round file is not read, while the pasted ruling makes -rN count as the joined set and the brief says an out-...-rN.txt is read for findings like any out- file — name the -rN form in that sentence so the two documents agree.
+
+DEFER severity=LOW — task card (task-453 Description): "a build task's plan review keeps plan-protocol and a fix task, which has no per-list plan review, gets none" — scripts/analysis/backlog-lane.mjs:188 "off: output_off; plan-protocol is asked at the plan stage only" — for a fix task this parenthetical asserts a plan stage the card says it does not have, and the same brief string later says "the plan was ruled once, at the plan: the lane runs no plan lens" — say in the parenthetical that a build task keeps plan-protocol at the plan review and a fix task has no plan review.
+
+MET — task card, Acceptance criterion #2 — scripts/analysis/rule-lists.mjs:306 — outputLists filters with "(table?.output_off ?? [])", so an empty or absent output_off returns every list (plan-protocol back on for output reviews).
+
+MET — RR-0450 ("I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive.") — scripts/analysis/rule-lists.json:165 — the lane-tools lists are now ["agents-s5-1to3", "agents-s7-s11", "eng-all"]; queue-137 and orchestrator-doc17 are removed and the added why text records it.
+
+MET — 08_agents section 5.3, dated note 2026-11-21 (task-423) — scripts/analysis/backlog-lane.mjs:188 — the joined run is kept as accepted and not the default, "a stage holding both forms is refused", unchanged by this diff.
+
+MET — 08_agents section 5.3, dated note 2026-11-20 (task-366) — scripts/analysis/backlog-lane.mjs:188 — the list is still pasted whole ahead of the material, split by its own headings, "a list is never trimmed".
+
+MET — task card, Acceptance criterion #6 (first half) — scripts/analysis/proof-slices.json:9 — the chk3-nothing-new row is now "notbuilt" with the reason "CHK.3 reads the staged diff; --all gives it no input".
+
+MET — scripts/analysis/rule-lists.json header clause "validate refuses an id that is not in every_task" — scripts/analysis/rule-lists.mjs:161 — output_off, when present, must be an array and every id must be in every_task.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: none
+
+---
+⏱  153507ms (153.5s)
+📊 Tokens — total: 62620, input: 31386, output: 31234, reasoning: 30041

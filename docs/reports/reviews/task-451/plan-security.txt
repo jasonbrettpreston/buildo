@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T15:43:04.661Z file_sha256=76d87949f34a00bd33f807b139d734b73c611231778ac89d9029c5d20704fea9 prompt_sha256=b0bfb50a7c8424f543ecd76f3a46c2af3dea6757ce5fb7a3925e387a33a9f04f
+🔍 Lens review of docs/reports/reviews/task-451/context-r1.md (model: deepseek-reasoner)
+
+First line: PII (property address shown on the card and in the screen-reader label; the typed search query echoed into a help URL). No money, auth, entitlement or admin surface changes.
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx:88-94 "onPress `{action:'open_help', topic:'wrong-lot', q: derived('query')}`" — the searched address is now carried in a help URL (`q=12%20Laneway%20Rear`), so it can land in browser history, referrer headers, screenshots or any analytics on the help page — do not forward the `q` value to help-page analytics or third-party embeds, and keep it confined to the user's own session.
+
+REJECT — src/components/surfaces/web/StaticBinding.tsx:184-226 "a hero whose parts are only wordmark and nav returns the nav Group alone as `component:'header'`" — looks like an open-redirect or href-injection surface — the hrefs are `href:'/'` and `href:'/login'` from committed content JSON (scripts/surfaces/_schema/static-page.json), not from request input, so a caller cannot supply a target.
+
+REJECT — src/lib/parcels/consumer-lookup.ts:227 "area: areaSqftM2Dot(l.lot_size_sqm)" replaced by a LOT_SIZE_PLAUSIBLE_M2 window check — looks like a client-controllable gate on a displayed value — the value is read from the server row, not from the request, and the null only suppresses display; no entitlement, price or report output depends on it.
+
+REJECT — src/lib/parcels/consumer-lookup.ts:81 "if (v == null) returns null" becoming "v == null || v === ''" — looks like a validation bypass feeding a downstream default — an empty string yields null (absence), never a numeric default or a permissive branch; no authz or money path reads it.
+
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx:189 accessibilityLabel becomes "the same title template as :193" with `vars: {lead, area}` — looks like template injection from server fields into a spoken label — the fields are lot letter, street name and a formatted area rendered as text by RN, with no HTML or URL sink.
+
+VERDICT: PASS on exploitability
+Surfaces touched: PII (display and help-URL echo only)
+
+---
+⏱  29036ms (29.0s)
+📊 Tokens — total: 24760, input: 21496, output: 3264, reasoning: 2733

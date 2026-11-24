@@ -18,7 +18,7 @@ const LD = 'docs/reports/lanes/2026-11-20/BL-COMPLY2';
 const taskText = (o: { milestone?: string | undefined; id?: string; status: string; type?: string | undefined; files?: string | null | undefined; assignees?: string[] | undefined }) =>
   `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: ${o.milestone ?? 'm-0'}\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
 const TABLE = {
-  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
+  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', 'scripts/analysis/backlog-lib.mjs', '.husky/*'],
   lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' }, msf: { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' } },
   every_task: ['ev'], milestone_docs: { F: ['msf'] },
   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
@@ -75,6 +75,7 @@ type Opts = {
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+  mergeHead?: 'same' | 'other'; // task-453 S3: .git/MERGE_HEAD names a commit whose task file blob is the staged one (same) or the launch commit (other)
   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
   // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
   // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
@@ -91,7 +92,7 @@ function scenario(o: Opts = {}) {
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
   if (o.eng) withEng(table);
   o.tableEdit?.(table);
-  if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
+  if (o.table !== 'never') { w('scripts/analysis/rule-lists.json', JSON.stringify(table)); w('.git/table.json', JSON.stringify(table)); } // task-453 S2: lens-input reads the copy when the lane deleted the table
   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
   if (o.eng) w(ENG_PATH, ENG_TEXT);
@@ -134,7 +135,7 @@ function scenario(o: Opts = {}) {
   for (const [id, seat, joinedLists] of jobs) {
     const tplName = seat === 'compliance' ? 'lens-compliance.md' : (o.engTpl ?? `lens-${seat}.md`);
     const out = path.join(d, LD, `in-out-${seat}-${id}`);
-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', fs.existsSync(path.join(d, 'scripts/analysis/rule-lists.json')) ? path.join(d, 'scripts/analysis/rule-lists.json') : path.join(d, '.git/table.json'), '--list', id, ...(joinedLists ? ['--lists', joinedLists] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
     for (const p of r.stdout.split('\n').filter(Boolean)) {
       const nm = path.basename(p);
@@ -183,6 +184,7 @@ function scenario(o: Opts = {}) {
     fs.writeFileSync(tp, tt);
   }
   g('add', '-A');
+  if (o.mergeHead) fs.writeFileSync(path.join(d, '.git/MERGE_HEAD'), `${o.mergeHead === 'same' ? g('commit-tree', g('write-tree').stdout.trim(), '-p', 'HEAD', '-m', 'merged branch').stdout.trim() : baseSha}\n`);
   const msgFile = path.join(d, '.git/MSG');
   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
   if (o.cli) return script('scripts/hooks/check-lane-close.mjs', ['--outcomes', LD], { cwd: d });
@@ -364,25 +366,25 @@ describe('close check: scope of the lane report, the diff and who may close', ()
     refused(scenario({ trailer: false, mutate: (l) => ({ ...l, 'GROUNDER.md': null }) }), /GROUNDER\.md/, 2);
   });
   it('ATTACK 2b: the board auto-commit (a docs commit message, only the task file staged) is checked too', () => {
-    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /TASK|lane report|GROUNDER/, 2);
+    refused(scenario({ msg: 'docs(137_mcqueue): board edits 2026-11-20 08:10\n', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/, 2);
   });
   it('ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused', () => {
-    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /TASK file|task-7/, 7);
-    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /TASK file|task-7/, 7);
+    refused(scenario({ mutate: (l) => ({ ...l, TASK: 'task-8\n' }) }), /holds a TASK file naming exactly task-7/, 7);
+    refused(scenario({ mutate: (l) => ({ ...l, TASK: null }) }), /holds a TASK file naming exactly task-7/, 7);
   });
   it('ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused', () => {
     refused(scenario({ laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }), /sneaky\.ts/, 8);
     expect(scenario({ files: 'src/', laneWork: { 'src/sneaky.ts': 'export const s = 1;\n' } }).status).toBe(0);
-    refused(scenario({ files: 'docs/reports/lanes/x/' }), /no rule list|exempt/, 8);
+    refused(scenario({ files: 'docs/reports/lanes/x/' }), /resolves to no rule list \(only exempt paths/, 8);
   });
   it('ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too', () => {
     refused(scenario({ assignees: ['@human'] }), /@lane/, 9);
-    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /@lane|assignee/, 9);
+    refused(scenario({ assignees: [] , beforeAssignees: ['@lane-BL-COMPLY2'] }), /closes only as that lane's build or fix task/, 9);
     refused(scenario({ type: 'check', assignees: ['@human'] }), /@lane/, 9);
   });
   it('ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished', () => {
-    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /protected|self/, 10);
-    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /protected|self/, 10);
+    refused(scenario({ staged: { 'scripts/hooks/check-lane-close.mjs': '// edited\n' }, files: 'src/a.ts, scripts/hooks/' }), /this commit changes protected path\(s\)/, 10);
+    refused(scenario({ staged: { '.husky/commit-msg': '#!/bin/sh\n' }, files: 'src/a.ts, .husky/' }), /this commit changes protected path\(s\)/, 10);
   });
   it('fails closed when the rule-list table that HEAD has is gone; a repo that never had one is not held to it', () => {
     refused(scenario({ table: 'delete' }), /rule-lists\.json/);
@@ -651,9 +653,9 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
 const ID = 'out-compliance-first#1';
 const DEFER_LINE = 'DEFER severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
 const other = (extra = '', status = 'RUNNING'): Opts => ({ otherTask: true, otherStatus: status, otherExtra: extra, finding: DEFER_LINE });
-const cli = (o: Opts = {}) => {
+const cli = (o: Opts, want: number) => {
   const r = scenario({ ...o, cli: true });
-  expect(r.status, r.stderr).not.toBeNull();
+  expect(r.status, r.stdout + r.stderr).toBe(want); // T11 (task-453): the exact exit status, not only a non-null one
   return r;
 };
 const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o); expect(r.status, r.stderr).toBe(1); expect(r.stderr).toMatch(re); return r; };
@@ -669,7 +671,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     expect(r.status, r.stderr).toBe(0);
   });
   it('control: the --outcomes command on the same lane prints "checked 1 ids" and exits 0', () => {
-    const r = cli();
+    const r = cli({}, 0);
     expect(r.status, r.stderr).toBe(0);
     expect(r.stdout).toMatch(/^checked 1 ids\n/);
   });
@@ -678,7 +680,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     expect(r.stderr).toMatch(/form that passes: out-compliance-first#1 fixed:<sha>/);
   });
   it('PLANTED DEFECT: with no TRIAGE.md at all every id is refused, one line each, and the CLI prints "checked 1 ids" first', () => {
-    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' });
+    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' }, 1);
     expect(r.status, r.stdout).toBe(1);
     expect(r.stdout.split('\n')[0]).toBe('checked 1 ids');
     expect(r.stdout.split('\n').filter((x) => /no outcome line/.test(x))).toHaveLength(1);
@@ -739,7 +741,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';
     const seatLine = (t: string) => `Seat: rc ${LD}/seat-rc.md sha256:${sha(t).slice(0, 12)}\n`;
     const seated = (o: { file?: string | null; line?: string; verdict?: boolean; outcome?: boolean } = {}): Opts => ({
-      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : 'rc2#1 CONFIRMED src/a.ts:1 "seat quote"\n'}` }),
+      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : `rc2#1 CONFIRMED src/a.ts:2 "${quoteAt(2)}"\n`}` }),
       triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${o.outcome === false ? '' : `rc2#1 fixed:${c.sha} ${c.path}\n`}`,
     });
     const ok = scenario(seated());
@@ -768,7 +770,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     expect(r.stderr).not.toMatch(/ENOENT/);
   });
   it('fix round (g399#5): the --outcomes command refuses a lens finding whose verdict line does not parse (control: the default lane prints checked 1 ids, exit 0)', () => {
-    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } });
+    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } }, 1);
     expect(r.status, r.stdout).toBe(1);
     expect(r.stdout.split('\n')[0]).toMatch(/^checked \d+ ids$/);
     expect(r.stdout).toMatch(/out-compliance-first#1: no complete verdict line/);
@@ -776,7 +778,7 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
   it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
     const r = scenario({ lensFinding: false });
     expect(r.status, r.stderr).toBe(0);
-    const c = cli({ lensFinding: false });
+    const c = cli({ lensFinding: false }, 0);
     expect(c.status, c.stderr).toBe(0);
     expect(c.stdout).toBe('checked 0 ids\n');
   });
@@ -950,7 +952,7 @@ async function planScenario(o: PO = {}) {
     if (!o.noFolder) files[`seat-${n}-1.md`] = t;
     mem[rel] = t;
     seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
-    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
+    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED src/a.ts:${7 + names.indexOf(n)} "${quoteAt(7 + names.indexOf(n))}" a small observation that changes nothing in the plan text`); // task-453 S1: a seat verdict needs its own 20+ character quote on the cited line
   }
   if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
   const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
@@ -1257,5 +1259,79 @@ describe('task-438 T4: the launch gate requires the engineering seat for a list 
     const r = await planScenario();
     expect(r.errors, r.errors.join('\n')).toEqual([]);
     expect(r.lists).toBe(4);
+  });
+});
+
+// ---- task-453 (SEARCHFIX.5; fold plan docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md tasks 10 and 11; RR-0440 MORNING-DECISIONS.md:2265, RR-0444 :2290, RR-0450 :2325, RR-0452 :2336) ----
+// SPEC LINK: Spec 08 section 7 rule 4 (08_agents.md:334) and section 5.3 (the grounder rules every finding with a quote and a reason); GROUNDER-QUESTIONS G4 S3 "narrow the skip and fail closed".
+const dropEv = (l: Lane): Lane => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null });
+describe('task-453 item 1: output_off switches an every_task list off for output reviews only (AC #1, AC #2)', () => {
+  it('control: output_off [ev] and no out-compliance-ev closes a build task and a fix task', () => {
+    for (const type of ['build', 'fix']) {
+      const r = scenario({ type, tableEdit: (t) => { t.output_off = ['ev']; }, mutate: dropEv });
+      expect(r.status, `${type}: ${r.stderr}`).toBe(0);
+    }
+  });
+  it('PLANTED DEFECT: emptying output_off turns the list back on: no out-compliance-ev is refused, naming the file', () => {
+    refused(scenario({ tableEdit: (t) => { t.output_off = []; }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
+  });
+  it('F10 PLANTED DEFECT: a lane whose own table (its Files line names it) sets output_off is still held to the range base output_off', () => {
+    const off = JSON.stringify({ ...TABLE, rows: [...TABLE.rows, TROW], output_off: ['ev'] });
+    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': off, 'src/a.ts': `${AFILE}// x\n` }, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
+  });
+});
+
+describe('task-453 item 5: the close check fails closed (AC #3, AC #4, AC #5)', () => {
+  it('S2 PLANTED DEFECT: a lane that deleted the table is judged by the board copy: a missing every_task output is refused (was exit 0)', () => {
+    const o: Opts = { tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'] };
+    const ok = scenario(o);
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ ...o, mutate: dropEv }), /list ev[\s\S]*out-compliance-ev\.txt/);
+  });
+  it('S2: with no board ref the same deletion is refused with the board text; a repo whose board never had the table is not held to it', () => {
+    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneDelete: ['scripts/analysis/rule-lists.json'], noBoard: true }), /a task close needs the board/);
+    expect(scenario({ table: 'never', mutate: () => ({}) }).status).toBe(0);
+  });
+  it('S3 PLANTED DEFECT: during a merge a finished move whose blob is not the merged branch one is checked (was exit 0); the merged branch blob is skipped (control)', () => {
+    refused(scenario({ mergeHead: 'other', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
+    const same = scenario({ mergeHead: 'same', mutate: () => ({}) });
+    expect(same.status, same.stderr).toBe(0);
+  });
+  const SEAT2 = '# seat report\n### rc2#1 HIGH: a seat finding\n### reality-check#2 CRITICAL: a seat finding with a hyphenated id\n';
+  const seatOpts = (seat: string, verdicts: string): Opts => ({
+    after: (l) => ({ ...l, 'seat-rc.md': seat, 'GROUNDER.md': `${l['GROUNDER.md']}Seat: rc ${LD}/seat-rc.md sha256:${sha(seat).slice(0, 12)}\n${verdicts}` }),
+    triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n`,
+  });
+  const SEAT1 = '# seat report\n### rc2#1 HIGH: a seat finding\n';
+  it('S1 PLANTED DEFECT: a seat verdict needs a 20+ character quote on its cited line and a 30+ character reason (was accepted)', () => {
+    refused(scenario(seatOpts(SEAT1, 'rc2#1 REJECTED src/a.ts:2 "short" the seat finding is wrong because the line holds a constant\n')), /rc2#1: the quote must be 20\+ characters/);
+    refused(scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" too short\n`)), /rc2#1 is REJECTED with a reason under 30 characters/);
+    const ok = scenario(seatOpts(SEAT1, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`));
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('S4 PLANTED DEFECT: a seat id with a hyphen (reality-check#2) is a finding and needs a verdict (was ignored)', () => {
+    refused(scenario(seatOpts(SEAT2, `rc2#1 REJECTED src/a.ts:2 "${quoteAt(2)}" the seat finding is wrong because the line holds a constant\n`)), /reality-check#2 CRITICAL: seat finding of rc has no verdict line/);
+  });
+  it('S5 PLANTED DEFECT: a severity word after the start of the reason ("not a NIT") does not lower a CRITICAL; one at the start still does (control)', () => {
+    const reason = 'the line is a test fixture and nothing reads it';
+    const crit = (r: string): Opts => ({ finding: 'BUG severity=CRITICAL — clause "x" — src/a.ts:1 "y" — claim — fix\n', g: { verdict: () => `CONFIRMED src/a.ts:1 "${quoteAt(1)}" ${r}` }, triage: () => `${ID} pile:"${reason}"\n` });
+    refused(scenario(crit('the defect is real, not a NIT: it moves money wrongly')), /out-compliance-first#1 CRITICAL: pile is not allowed/);
+    const ok = scenario(crit('NIT-picking aside, the line is cosmetic only'));
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('S9 PLANTED DEFECT: a task moved to backlog/archive/tasks with a finished status is checked (was skipped); archiving a task that was already finished is no move; docs/backlog/tasks is never a task file', () => {
+    refused(scenario({ finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) }), /holds a TASK file naming exactly task-7/);
+    const archived = scenario({ before: 'BUILT', finalTaskPath: 'backlog/archive/tasks/task-7 - Lane work.md', mutate: () => ({}) });
+    expect(archived.status, archived.stderr).toBe(0);
+    const notTask = scenario({ finalTaskPath: 'docs/backlog/tasks/task-7 - x.md', mutate: () => ({}) });
+    expect(notTask.status, notTask.stderr).toBe(0);
+  });
+  it('ST4: a closing commit that stages backlog-lib.mjs is refused (protected); a range edit to it that the Files line does not name is refused', () => {
+    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/', staged: { 'scripts/analysis/backlog-lib.mjs': '// edited\n' } }), /this commit changes protected path\(s\) \(scripts\/analysis\/backlog-lib\.mjs/);
+    refused(scenario({ tableEdit: withRow, laneWork: { 'scripts/analysis/backlog-lib.mjs': '// edited\n', 'src/a.ts': `${AFILE}// x\n` } }), /outside the task's Files line: scripts\/analysis\/backlog-lib\.mjs/);
+  });
+  it('ST4 (AC #5): the real table protects scripts/analysis/backlog-lib.mjs', () => {
+    const real = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { protected_paths: string[] };
+    expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');
   });
 });

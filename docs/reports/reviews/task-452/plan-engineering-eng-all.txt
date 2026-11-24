@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:24:42.582Z file_sha256=ceeab390b9cfefca8cd0bdf541852cb8c418aa50d6a65076d253101553f5b49c prompt_sha256=08088b256a3b77feb8d1bc8f3ad546e6b6825e00c8daef0784d1ccb308feeddf
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 1.3 Mobile Front-End Patterns & UX "Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity)." — plan §8.6 "Recommend (B): RR-0392, and task-357's line that a new component kind "needs a named reason and a ruling"." — the recommended option ships no spring at all, so AC6 and the pasted standard are unmet at plan-lock — adopt 8.6(A), one spring part plus the C-8m and bindings.json lock edit inside this card, or attach a dated ruling that exempts §1.3.
+BUG severity=HIGH — 1.1 Mobile-First UI Mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**." — plan §3.5 "then Account (push PARCEL_TAB_ROUTE.account) and Log out (sign_out)." — no step sets 44px or hitSlop on any wall CTA (two open_help links, Account, Log out, Go to Tracked Lots) and §11's "375px viewport test in test plan" is absent from §4 — add min-h-[44px] min-w-[44px] or hitSlop to every wall button/link and a 375px viewport case to the test list.
+DEFER severity=MED — 1.1 Mobile-First UI Mandate "Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone)." — plan §3.5 "then one action row" — the limit row (button plus link) and the no_plan row (Account, Log out) have no stacking rule, so two CTAs sit side by side at 375px — specify flex-col base with md:flex-row on both action rows.
+DEFER severity=MED — 11 Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan §4 "Tests first (red, then green)" — the plan names no self-skeptical checklist deliverable and no WF3 sibling-bug list — add a §4.0 naming the governing spec section and the PASS/FAIL checklist to be emitted before the suite runs.
+DEFER severity=LOW — 5.1 Typed Factories Only "Never write untyped inline mocks ... You MUST always import typed factories from `src/tests/factories.ts`." — plan §4 "The mocks at :34-39 gain an error and an entitlement data" — the new error and entitlement mocks are inline literals — build them from a typed factory and name the factory file in the plan.
+DEFER severity=LOW — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan §4 "mobile/__tests__/parcelSearchMatch.test.ts, describe "searchWall"" — the new pure searchWall() is tested in a file outside the mandated pattern — move the describe into a *.logic.test.ts or record why the mobile suite has no logic layer.
+DEFER severity=LOW — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — plan §3.11 "scripts/surfaces/_schema/census/mobile-product.json, entry mobile_parcel_search. Two edits" — the plan edits scripts/ and runs its generators with no boundary exception recorded — record a dated exception citing the card Files line, or have the content and census edits ruled.
+MET — 1.3 Mobile Front-End Patterns & UX — plan §3.6 "a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`. Nothing calls expo-haptics directly." — haptics go through the existing wrapper, never expo-haptics.
+MET — 2.3 Assumption Documentation — plan §3.2 "with the details taken only when typed right (number, string), never coerced" — no `!`, no blind nested property read.
+MET — 5.3 Red-Green Test Cycle — plan §4 "each red first" and "Red today: every case is ApiError(403,'Forbidden')." — the failing tests precede the code.
+MET — 12.2 Server State (TanStack Query) — plan §3.7 ":109 retry also calls refetchEntitlement" — the plan check re-reads through the query, no useEffect data fetch.
+MET — 4.3 Frontend Security — plan §3.5 "title {limit: contract('errors.403.reportsLimit')}" and §4 "Bad details give reportsLimit null" — server-supplied values are type-checked before display and nothing uses dangerouslySetInnerHTML.
+REJECT — 6.1 logError Mandate — that the new error subclasses are handled without logError — the touched surfaces are mobile client code and the web 'use client' binding, which §6.1 exempts from logError.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 24   Unmet: 7
+
+---
+⏱  51084ms (51.1s)
+📊 Tokens — total: 33564, input: 22718, output: 10846, reasoning: 9682

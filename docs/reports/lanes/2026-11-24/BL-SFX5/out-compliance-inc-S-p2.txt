@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.841Z file_sha256=aefd875abeb6f992d9e027100d7942c0fea9e9c33a295319ff94b65d0730926b prompt_sha256=58713e3daa31f68f2c03970987d81b5605d3078be1baa96088cc2e8b87ac38a5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-453 "Findings folded: G4 S1, S2, S3, S4, S5, S9, T1, T2, T3, T4 (git stack part), T6, T7, T8, T9, T10, T11, T12; ST4, ST5." — scripts/hooks/check-lane-close.mjs " 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors' " — the citation move is applied to the header (rule 3 :350, rule 6 :360) and the DEFER branch (:360) only, so the same function now cites rule 6 at both :350 and :360 and rule 3 at both :346 and :350, T12 is half applied — move the BUG branch and the low branch to the same line numbers the header now states.
+DEFER severity=LOW — AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs " if (!tableInTree && !tableInHead && boardRef && git(['cat-file', '-e', `${boardRef}:scripts/analysis/rule-lists.json`]).status !== 0) return 0; " — the exemption the S2 comment states ("not held to it only when the board has no table either") now requires a board ref to exist, so a repo that never had the table and has no board ref is refused on any finished move where it previously passed — grant the exemption on the absence of a readable board table, not on boardRef being set.
+DEFER severity=NIT — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — Implementation Notes "check-lane-close.mjs (item 1, F10 output_off pin, S1-S6, S9, T12)" — S6 is claimed as landed in this file but no S6 appears in the card's folded list and no line of this chunk is labelled S6, so an unnamed change may have shipped — name S6 and its folded id, or correct the note to S1-S5.
+MET — AC #1 "#1 A build or fix task closes without output reviews for the two planning lists" — scripts/hooks/check-lane-close.mjs — "const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter(...)" drops the output_off list from a build or fix task's output review, and the F10 pin keeps a lane from switching it off itself.
+MET — AC #2 "#2 Emptying the output_off line turns plan-protocol back on for output reviews" — src/tests/backlog/rule-lists.logic.test.ts — "expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S'])", with the close check planted defect that emptying output_off refuses the missing out-compliance-ev.
+MET — AC #3 (merge half) — scripts/hooks/check-lane-close.mjs — "if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue;" and the removed whole-merge early return, with the mergeHead same/other cases.
+MET — AC #4 "#4 A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs — "const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)] ... })", enforced by the S1 planted defect on a short quote and a short reason.
+MET — AC #6 "the next round number is the highest plus one" — scripts/lib/review-template.js — "return Math.max(0, ...ns) + 1;" with the T7 cases (r2 gives 3, r1 and r3 give 4).
+MET — RR-0450 "queue rules and orchestrator note off for code reviews; step handbook for compute only" — src/tests/backlog/rule-lists-table.logic.test.ts — "expect(table().rows.find((r) => r.id === 'lane-tools')!.lists).toEqual(['agents-s5-1to3', 'agents-s7-s11', 'eng-all']);" plus no row attaching queue-137 or orchestrator-doc17.
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — src/tests/backlog/rule-lists.logic.test.ts — "expect(t.every_task).toEqual(['plan-protocol']);" and no three-questions text anywhere in the material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  163233ms (163.2s)
+📊 Tokens — total: 66808, input: 34643, output: 32165, reasoning: 31036

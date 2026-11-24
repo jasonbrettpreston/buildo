@@ -98,3 +98,24 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stderr).toMatch(/not found|no such task|does not exist/i);
   });
 });
+
+// task-453 (SEARCHFIX.5 T1, T8; GROUNDER-C, Spec 137 Rule 3 as amended, 137_mcqueue.md:98): a build or fix ticket names the two-commit close; an empty AC block says so
+describe('task-453: the two-commit Status line and the empty AC block', () => {
+  it('T1: a build task ticket names the amended Rule 3 (137_mcqueue.md:98) and the closing commit limits; a queue-row task keeps the old line', () => {
+    const { d, plan, row } = fixture();
+    const r = brief(d, plan);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/Spec 137 rule 3/);
+    expect(r.stdout).toContain('Status line (Spec 137 rule 3 as amended by its note of 2026-11-20, 137_mcqueue.md:98): the work lands first; the closing commit carries only the lane report dir, the review context dir, the task file and the decision record');
+    const q = brief(d, row);
+    expect(q.status, q.stderr).toBe(0);
+    expect(q.stdout).toContain('Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84)');
+  });
+  it('T8: a task with no acceptance criteria prints "(none found in <task file>)" under the Done-condition', () => {
+    const d = makeProject();
+    const t = mk(d, 'No criteria here', ['--type', 'build', '-d', 'Scope text.']);
+    const r = brief(d, t);
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/^Done-condition:.*\n {2}\(none found in .*task-\d+ - No-criteria-here\.md\)$/m);
+  });
+});
