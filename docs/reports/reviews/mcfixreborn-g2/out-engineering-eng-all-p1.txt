@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T02:37:35.618Z file_sha256=60b50c3357748d2fa63f6f4e30da84cd74dc5f750c40b0010d2cab8615d23e17 prompt_sha256=a827f40bcf0b65a6a54c6f086f2218cc373cda9a81daffc8304a9e668e96f001
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+```
+DEFER severity=MED — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/admin-report-preview-live.logic.test.ts:35 "type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any" — the new test builds its lot, stamp, stored-row and DB-handle doubles inline (`const STAMP: LotStamp = {...}`, `const fakeDb = (answers ...) => {...}`) and imports nothing from `src/tests/factories.ts` — add typed factories for lot, stamp, stored rows and a Queryable handle in `src/tests/factories.ts` and use them here
+DEFER severity=MED — 5.5 "`*.infra.test.ts` (no DB) | API envelope / query shape / error paths ... `*.logic.test.ts` | The pure function computes the right value" — src/tests/admin-report-preview-live.logic.test.ts:~455 "describe('L3 and L6: the switch and the id gate read no lot data when they refuse'" — the query-shape, static-SQL and logError/rethrow proofs for the stored read sit in a `.logic.test.ts` on a fake handle, the wrong layer for a claim about DB queries — move the L3/L6 block into a `*.infra.test.ts` and leave the logic file to the projection and formatter
+DEFER severity=MED — 3.2 "If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it." — src/tests/control-panel.logic.test.ts:~271 "'maxbld_report_lot_size_implausible_min_sqm', 'maxbld_report_lot_size_implausible_max_sqm' ... (seed only; the DB mirror migration is owed)" — the diff itself records an owed mirror migration for a new setting, so the deliverable is skipped — land the UP/DOWN migration for the MaxBLD Lot Size group or delete the "owed" note once the seed-only path is proven to be the whole delivery
+DEFER severity=LOW — 12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test" — src/tests/admin-report-preview-live.logic.test.ts "for (const [m, expected] of SQFT) expect(`${fmt('area_sqft', m)} sq ft`).toBe(`${expected} sq ft`);" — the sq-ft/m2 factor and rounding invariant, and the lot-size window, are pinned by example tables only; no fast-check property test is visible in this chunk (cannot see `src/tests/property/`) — add a `*.property.test.ts` with `forAll(m >= 0)` round-trip and factor invariants
+DEFER severity=LOW — 4.2 "String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist." — scripts/analysis/src-sql-ledger.mjs:~111 "'src/lib/parcels/report-compute.ts', // LOAD.1 ... the batch statement text is built by the Layer 3 step's own core (buildSourceSql: checked-literal settings and the one lot id read from the database as an integer ...)" — a new non-static SQL surface is admitted into the interpolated set, and whether the build blocks are a static whitelist cannot be seen here — cite the whitelist constant in report-compute.ts or make the statement fully static with binds only
+DEFER severity=LOW — Cross-Layer Contracts Check "If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure" — src/tests/control-panel.logic.test.ts:~269 "// FIX.PROJ (task-372, D9; core.8): the report projection's pinned lot-size window, group \"MaxBLD Lot Size\"" — two new thresholds enter the seed, and no contracts.infra.test.ts row is visible in this chunk (cannot see) — add the two mapping rows in the same commit
+```
+
+MET / REJECT lines:
+
+```
+MET — 6.1 — src/tests/admin-report-preview-live.logic.test.ts:22 — `@/lib/logger` is mocked and `logError` is asserted with tag and context ("expect(vi.mocked(logError)).toHaveBeenCalledWith('[admin/report-preview]', expect.any(Error), ...)"), no bare console.error path
+MET — 2.3 — src/tests/admin-report-preview-live.logic.test.ts "calls[0]?.sql" and "if (out.outcome !== 'ok') throw new Error('not ok');" — optional chaining and an explicit type guard instead of a non-null assertion
+MET — 5.2 — src/tests/control-panel.logic.test.ts:848 — the parity battery's EXPECTED_LOGIC_VAR_KEYS gains the new seed keys in the same diff as the seed rows
+REJECT — 10.2 — that the change touches `scripts/` (src-sql-ledger.mjs, the prereg files) — the ledger is the measured registry of src SQL-bearing files and must move with the new src file, the preregs are lane records, and no pipeline data-entry file is modified
+```
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 22   Unmet: 6
+
+---
+⏱  99118ms (99.1s)
+📊 Tokens — total: 43551, input: 31896, output: 11655, reasoning: 10404

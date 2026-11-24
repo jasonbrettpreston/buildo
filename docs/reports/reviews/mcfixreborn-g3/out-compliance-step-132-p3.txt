@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:36:55.108Z file_sha256=03b96eb86c9a8414f71ff7ce253c7422181d014195b9e913b88573bc318a3467 prompt_sha256=06cb76003197b3c61ed3e589dfc0f2eaec2d23271479388191580212356343bb
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-step-132-p3.txt (model: deepseek-reasoner)
+
+BUG-none. Findings follow.
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:183 "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)" — the 30/min bucket is a surface number recorded only as prose; this descriptor's own config block registers two allowances and `"retired": []`, so nothing makes the rate a settable value, cannot see the route to tell whether 30 is a literal — register the bucket rate as a logic variable (or pin it) and cite its row in guards.rate_bucket.
+
+DEFER severity=MED — core.14 "Declared equals witnessed." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:312 "on_invalid": "fail" against line 302 "a value outside them shows the counts as null" — the declared failure behaviour (a value outside the 1-1000 bounds fails the request) contradicts the behaviour the same block describes (the counts render null), so one of the two statements is false — state the witnessed behaviour once and make on_invalid agree with it.
+
+DEFER severity=LOW — core.6 "A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:206 "blocking": false (with line 205 "severity": "FAIL", and again at 213/214 and 221/222) — three of four checks are declared FAIL and non-blocking, so a failing row cannot redden the verdict — cannot see scripts/surfaces/_schema/surface.schema.json, so if `blocking` is not a schema field this rises to HIGH; if it is, record why a FAIL check is allowed not to block.
+
+REJECT — core.1 — that the descriptor is not accompanied by a compute module and a thin shell exporting pipeline.step — the file is a surface CONTRACT, "kind": "CONTRACT" and "archetype": "QUERY", not a pipeline step under scripts/steps/_schema/step.schema.json, so the three-file step shape does not govern it.
+
+MET — core.2 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:227 "invariants": "none", :342 "deviations": "none", :350 "interpretation": "none" — every category is answered, absent values written "none", and four checks are declared at :193-226.
+MET — core.11 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:282 "analytics": [], :283 "ledger_events": [], :284 "breadcrumbs": [] — emits is answered none with the evidence that the route was read in full.
+MET — core.12 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:136 "answer": "none" with :142 "tables": [] — it declares no write target, so no per-target write discipline is owed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: core.2, core.11, core.12
+
+---
+⏱  44677ms (44.7s)
+📊 Tokens — total: 33021, input: 23050, output: 9971, reasoning: 9167

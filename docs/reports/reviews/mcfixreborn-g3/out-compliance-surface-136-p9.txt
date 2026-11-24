@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:47:53.343Z file_sha256=147c8743f050a37f902d5808c2a0ee3195ce4fec6fe94fcc8c35b3785836170a prompt_sha256=7dfafa45d37d07a7883005856320eb0003f22341edba69b00c9f5a82b132d271
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue" — mobile_parcel_search.descriptor.json "product": "parcel_tool" vs note "guards.entitlement.product is lead_gen" — the descriptor contradicts itself on which product gates the surface, so the declaration is not proven against the live constraint (migration 228 note) — fix: reconcile the field and the note to the current live constraint (or cite the migration that admits parcel_tool).
+
+DEFER severity=LOW — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue" — mobile_parcel_search.descriptor.json {"name": "hit", "golden": "reports_left"} vs note "hit is renamed redirect (the screen navigates, it renders no hit)" — a stale, unreachable state is still declared in states[] though the built screen renders no hit — fix: remove the `hit` state or rename it to the reports-left state it actually covers.
+
+DEFER severity=LOW — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — mobile_parcel_search.descriptor.json "rate_bucket": "parcels-search:{uid}" 60 per min (and contract_parcels_entitlement 30 per min) declared as literals with no config.logic_variables row — the rate limit is a threshold not registered as data — fix: add rate-limit rows to config.logic_variables with bounds and an on_invalid posture.
+
+DEFER severity=LOW — fe.45 "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date" — mobile_parcel_search.descriptor.json "isOutsideToronto for the Toronto-only rule, once by isIntersectionQuery" — client-side Toronto and intersection detection are not covered by any deviations[] row (item 2 lists only derived display names) — fix: add a deviations[] row with adjudicator and date for the client-side rules, or move them to the server.
+
+REJECT — fe.18 — the search binds client-derived display values as {"derived": name} outside the closed binding set — this is a real issue only if undisclosed, but deviations[1] records exactly these derived names (input, candidate_count, recent, label, segments) with an operator adjudication and date, so the closed-set rule is deviated with a recorded row.
+
+REJECT — fe.19 — the semi answer is kept private (route param only, not the shared database) — not a fe.19 breach for this page because the rule's current reading scopes user inputs to the width/depth lot-size entry, and the semi answer is a view selection, not a confidence-bearing entered fact.
+
+MET — fe.31 — mobile_parcel_search.descriptor.json states[] — every state carries a concrete golden, no `golden: "none"`.
+MET — fe.32 — contract_parcels_entitlement field_whitelist "resetsOnDisplay", "reportsLeft" — the search reports-left line binds members that exist in the declared contract projection.
+MET — fe.57 — both phone descriptors "touch_target_min_px": 44 — the 44 px floor is declared on every interactive phone page.
+MET — fe.54 — mobile_parcel_search errors.classes 403/429/500/schema_drift — every failure class has its own rendered line with a testID.
+MET — fe.52 — contract_parcels_entitlement usage_events "subject_kind" — the ledger read keeps the required closed subject_kind column.
+
+VERDICT: PASS
+Clauses checked: 23   Unmet: 0
+Rules met: fe.02, fe.05, fe.06, fe.18, fe.31, fe.32, fe.52, fe.54, fe.57
+
+---
+⏱  153164ms (153.2s)
+📊 Tokens — total: 63175, input: 33297, output: 29878, reasoning: 29029

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T02:44:48.762Z file_sha256=54a51079c884fb353a5df445911fbd51d8c81b56ed811a82a772c6b4c218d74a prompt_sha256=75e27f6d4b02c2a60a602ad885ca1c54ebdec70c2fcd23824a58c840525c8559
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/report-honest-k2b.logic.test.ts:67 "expect(withSw([sw(null)])[key]).toBeUndefined();" — an option whose readings carry no confidence sends nothing, so the person sees an empty badge with neither a word nor the unknown marker the spec uses ("null is '—'", pasted 78 6.6 rule 1), and cannot tell "no confidence recorded" from "nothing to show" — design silent on the empty badge; record the blank slot so a later ruling can pick word, dash or hide.
+
+DEFER severity=MED — src/tests/surfaces/report-honest-k2b.logic.test.ts:100 "switches: [sw('low'), sw('medium-high')]" with "toBeUndefined()" — one reading whose confidence word the register does not know blanks the whole badge, so the person loses the "Low confidence" that the other reading would have given, with no visible sign why — fails closed but silently; accepted as deliberate in the test name at line 96, worth a recorded note that the loss is person-visible.
+
+DEFER severity=LOW — src/tests/surfaces/report-honest-k2b.logic.test.ts:51 "expect(v[byCol.is_corner_lot as string]).toBeUndefined();" — the assert proves only that nothing is sent for a null lot fact; whether the person actually sees "—" (78 6.6 rule 1) or a blank cell rests on the test name "the face shows the dash" and cannot be seen in this material — the dash rendering for absent keys is not asserted anywhere here.
+
+DEFER severity=LOW — src/tests/surfaces/report-honest-k2b.logic.test.ts:34 "expect(formatTextRule('yes_no', 'true')).toBeNull();" — if a stored parcels flag ever arrives as the text 'true' or 'yes', the person sees the unknown marker for a heritage or ravine fact that is in fact known — design silent on text-typed flags; bounded because the columns are boolean.
+
+DEFER severity=MED — src/tests/surfaces/report-honest-k2b.logic.test.ts:58 "expect(size(sec).rule, sec).toBe('confidence');" vs design "M-481 (confidence beside each reading)" — the person gets one confidence word per option (the weakest of every switch, line 65), not a confidence beside each reading, so they cannot see which reading is the weak one — recorded as a departure to rule on, not a redesign.
+
+REJECT — src/tests/surfaces/report-honest-k2b.logic.test.ts:79 "expect(v[notes('o1').key as string]).toBe('A site-specific exception applies; not yet evaluated.');" — two differently worded "not yet evaluated" sentences can now sit in the same See details panel — harmless, because R-2 rules the sentence only for "not_in_engine_population" ("Not yet evaluated", asserted at engine-inputs-bind.logic.test.ts:38) and this is the authored exception wording.
+
+REJECT — src/tests/surfaces/engine-inputs-bind.logic.test.ts:20 "const LEGACY = /^(max_buildable_|opt_|max_build_|coa_fsi|parcel_cost_menu|cost_|envelope_|imagery_)/;" — the guard bars more names (envelope_, imagery_) than the comment's legacy list — harmless, it only keeps values the person must not see (M-367) off the page.
+
+VERDICT: PASS on the person's experience
+States checked: answered (Yes/No lot facts), unknown lot fact (null column), confidence present, confidence absent, confidence word unknown to the register, not-evaluated with worded reason, not-evaluated with unworded reason, permitted option with no reason; loading, error, offline, back and repeat visit are not drawn by these test files; the face rendering of "—" and of labels cannot be seen in this material.   Dead ends found: 0
+
+---
+⏱  66258ms (66.3s)
+📊 Tokens — total: 14498, input: 5737, output: 8761, reasoning: 7874

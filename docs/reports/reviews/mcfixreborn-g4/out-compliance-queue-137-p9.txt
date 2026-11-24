@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:15:27.854Z file_sha256=6cb6f3c4abd31df569a57b0c3d26484a2085fd0319e74cb08c326dd0c0a0c0ed prompt_sha256=a3f893a78e0df197842d4c454095863dfaa2a6d07633d7541661355a11dd8035
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p9.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 rule 3 note 2026-11-20 (task-366) "scripts/hooks/check-lane-close.mjs refuses the commit that sets BUILT or DONE without them" (them = "one compliance lens output per rule list the task attaches and a GROUNDER.md") — scripts/deepseek-review.js:174-180 "console.log(lensHeader(systemInstruction, userPrompt)); ... if (dryRun) { ... return; } const lensResult = await callDeepSeek(userPrompt, systemInstruction);" — the REVIEW header that carries file_sha256 and prompt_sha256 is printed before any review text exists, so a --dry-run, a prompt-bound refusal (line 62) or the timeout branch (lines 93-96) each leave an artifact whose first line is a valid REVIEW header and whose body holds no compliance finding, and the close gate then has a header to read as proof — print the header only after callDeepSeek returns non-empty text, and never on the dryRun, refusal or timeout paths
+
+DEFER severity=MED — Spec 137 §4 rule 12 note 2026-11-20 (task-410) "when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — scripts/hooks/check-task-files.mjs:70 "const always = (f) => isTask(f) || f.startsWith(`docs/reports/reviews/${id}/`) || f.startsWith('docs/reports/lanes/');" — the pasted allowlist names decision records, which this hook never always-allows, so a closing commit that stages backlog/decisions/ is refused unless the Files line declares it, while the same line allows any lane's report directory instead of "the lane's report directory" — add backlog/decisions/ to always() and scope docs/reports/lanes/ to the lane directory the task names
+
+DEFER severity=MED — RR-0414 "4. changed parts only as per your recommendation" (the oversized files are read as changed parts) — scripts/deepseek-review.js:158 "const context = rawContext && sections.length ? extractSections(rawContext, sections) : rawContext;" — --section cuts only the --context file, the file under review is read whole at line 156, and over the 120000 bound the tool refuses with a remedy that names only the context (line 64), so an oversized file under review cannot be read as changed parts — allow --section to select headings of the file under review, or state that only lens-input chunking may cut it and refuse anything else
+
+DEFER severity=MED — Spec 137 §4 rule 3 note "Built as gate G3, `scripts/hooks/check-backlog-task.mjs`, wired in `.husky/commit-msg`" — scripts/hooks/check-task-files.mjs:2 "// CHK.1 scope check, git mode (task-3; relevancy pass 2 R9; re-use ruling MORNING-DECISIONS.md:750-751, build-in-repo :744): a code commit may change only" — no pasted clause or group task (the list is task-68, 358, 363, 365, 366, 369, 375, 399, 406, 407, 410, 412, 418, 419, 423, 432, 433) names this new hard refusal, and its cited authority is task-3 and a ruling that are not pasted, so its rule cannot be judged here — paste the R9 scope ruling, or home the check under a task in the pasted list
+
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/deepseek-review.js:35 "const MAX_PROMPT_CHARS = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || 120000;" with the refusal at line 61 — the bound is enforced before the request is sent
+MET — RR-0408 "keep the review calls small" — scripts/deepseek-review.js:60-66 — an oversize prompt is refused with a named remedy instead of being sent
+MET — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:77 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — one pass with a function replacer, so no dollar expansion and no re-scan of inserted text
+MET — task-358 "the repo review runs the Spec 08 DeepSeek lens set" — scripts/deepseek-review.js:166-180 — lens mode sends the template's own System persona and User prompt, not the generic review
+MET — Spec 137 §4 rule 12 note 2026-11-20 (task-366) "Which lists a task attaches is decided by scripts/analysis/rule-lists.json from the task's Files line" — scripts/hooks/check-task-files.mjs:64 "const entries = filesEntries(body.stdout) ?? [];" — the Files line is read by the same rule-lists reader the launch uses
+MET — Spec 137 §4 rule 3 note "a commit that changes src/, scripts/, mobile/ or migrations/" — scripts/hooks/check-task-files.mjs:46-49 — the G3 exemptions (no backlog/tasks, merge, no code file staged, no trailer) are applied unchanged
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  169626ms (169.6s)
+📊 Tokens — total: 47270, input: 21187, output: 26083, reasoning: 24860

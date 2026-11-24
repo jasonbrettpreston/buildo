@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:07:01.169Z file_sha256=504076bb70d59179d613969bb8fb37b1b09dfcc371512dd2a1942fdd6da2f3c4 prompt_sha256=946ac50dd4accc0732cbc509ef51a6f30ad05cfbbaabf751f60bc0e6c9d0f33b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p13.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/nav-by-route.logic.test.ts "const { unexplained } = judge(scanTree(ROOT).findings, ALLOW.filter((a) => a !== entry));" — each of the five exception rows (and the stale-entry and duplicate cases) re-walks and re-parses the whole DIRS tree with the TypeScript compiler, with no bound and no per-test timeout set, so on a cold CI runner a scan that exceeds the default 5s fails as a timeout and reads as a rule violation — scan the tree once at module scope or in beforeAll and hand the findings to judge.
+
+DEFER severity=LOW — src/tests/surfaces/page-arm.logic.test.ts "const root = fs.mkdtempSync(path.join(os.tmpdir(), 'page-arm-'));" — four roots per run are created and none is removed (this file has no afterAll, unlike nav-by-route), so repeated runs, and every failing run, accumulate full copies of the table, binding, builder and descriptor under the temp dir — collect the roots and fs.rmSync(root, {recursive:true, force:true}) in afterAll.
+
+DEFER severity=LOW — src/tests/surfaces/nav-by-route.logic.test.ts "afterAll(() => { fs.rmSync(tmpRoot, { recursive: true, force: true }); });" — tmpRoot is '' when the beforeAll mkdtempSync throws, and fs.rmSync('') throws ERR_INVALID_ARG_VALUE even with force:true, so the cleanup error replaces the real beforeAll failure — guard with if (tmpRoot) before the rmSync.
+
+DEFER severity=LOW — src/tests/surfaces/lot-map-help-link.logic.test.ts "const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')[0]!.children as Json[];" — a golden missing the column node throws TypeError reading 'children' of undefined, so the failure names no golden and no missing testID; col.at(-2)! and col[at + 1]! have the same shape — assert the node exists first with a message that carries the golden file name.
+
+DEFER severity=LOW — src/tests/surfaces/lot-map-help-link.logic.test.ts "const start = queue.indexOf('\n**MF-53 ');" — with the row head renamed, start is -1, queue.slice(-1, <index of MF-54>) yields '', and the assertions fail as "expected '' to contain ..." naming neither the missing row nor the queue file — assert start toBeGreaterThan(-1) before slicing, as search-reports-left's row() helper does not.
+
+DEFER severity=LOW — src/tests/surfaces/page-arm.logic.test.ts "expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings).toEqual(missing);" — the test pins a failed context (ok:false) to the identical finding as a missing table, worded "no readable screens ... found 0", so a broken context or binding load is reported against the table path and the fix is sent to the wrong file — require a context-failure finding that names the context when ctx.ok is false.
+
+DEFER severity=LOW — src/tests/surfaces/search-follow-ups.logic.test.ts "const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');" — importing the CLI script runs its top level, and whether its main is behind an import.meta.url guard cannot be seen in the material, so a script that connects or exits at import turns this unit assertion into a DB connection or a suite abort — cannot see, the grounder must confirm the guard in the script.
+
+REJECT — src/tests/surfaces/search-reports-left.logic.test.ts "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-entitlement'] })).toBe(false);" — a repeat run or an app restart could resurface a stale reports-left count — handled, the entitlement key is excluded from dehydration and the screen re-reads the served value on focus, so no count is carried over.
+
+VERDICT: PASS on error-path safety
+Paths walked: repeated full-tree scan and default timeout (nav-by-route), temp-dir creation and cleanup (nav-by-route, page-arm), missing golden node (lot-map-help-link), missing queue row head (lot-map-help-link), failed context vs empty table (page-arm), module import of a CLI script (search-follow-ups), restart/repeat of the entitlement read (search-reports-left), empty and null served fields (reportsLeftShown), dropped testID/attribute plant (parcel-legacy-oracle), missing/empty register and git failure (register-locks-resolve)   Unguarded: 7
+
+---
+⏱  47814ms (47.8s)
+📊 Tokens — total: 44104, input: 35123, output: 8981, reasoning: 7950

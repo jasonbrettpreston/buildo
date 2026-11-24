@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T02:37:35.619Z file_sha256=d39a28bc5b39b664a317ccb76fbd3713e406e822f419a092f1849acca1fe3bab prompt_sha256=0bfcd1ed61c9a585cabfb9e93a9d13e083697844220cfb7f57c6522b97b6a0ee
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 3.1 Zero-Downtime Migration Pattern "CREATE INDEX on large tables should use the CONCURRENTLY keyword when applicable." plus 12.8 "CREATE INDEX (non-CONCURRENT) on tables with >100K rows" — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:156 "expect(text, 'read 6 looks the frontage street up per lot').toContain('CREATE INDEX IF NOT EXISTS idx_parcels_primary_frontage_street_name ON parcels (primary_frontage_street_name) WHERE primary_frontage_street_name IS NOT NULL;');" — the suite pins migration 309's non-CONCURRENT index build on parcels verbatim, so the concurrent form (or the 12.8 confirmation comment) can never land without a red test, and a lock-taking build on the parcel table is exactly what 12.8 exists to stop — pin the CONCURRENTLY form, or an explicit operator-confirmation comment for the >100K-row carve-out, in both the migration and this assertion.
+
+DEFER severity=MED — 12.10 Real-DB Integration Tests "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres." plus 5.5 "A SQL-string assertion does NOT catch these." — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:152 "expect(text).toContain(\"CONSTRAINT parcel_maxbld_scenarios_value_iff_computed CHECK ((status = 'computed') = (value IS NOT NULL) OR (field_id = 'gain_reasons' AND status = 'computed' AND value IS NULL))\");" — migration 309's two CHECKs are proved only by text containment plus a JS re-implementation of the predicates in the same file, and no db replay for 309 is in this chunk (cannot see one) — add src/tests/db/parcel-maxbld-scenarios.db.test.ts that inserts a computed row with a NULL value and an undecided row with a NULL reason against real Postgres.
+
+DEFER severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/surfaces/report-honest-k2b.logic.test.ts:18 "const part = (section: string, role: string): Json => (PAGE.sections as Json[]).find((s) => s.id === section)!.parts.find((p: Json) => p.role === role);" — `find(...)!` over the generated page table is neither prior-validated nor commented (same pattern at the o1 size.badge lookups, and "e.literals[0]!.sql" in src-sql-ledger.logic.test.ts) — replace with an explicit assertion that names the missing section/role, or add the required inline justification.
+
+DEFER severity=MED — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/src-sql-ledger.logic.test.ts:51 "const CATALOG = { permits: ['id', 'status', 'name'], entities: ['id', 'name'] };" — the ledger and catalog fixtures are hand-written inline literals with no typed factory imported anywhere in the file (same for the local `row`/`e` builders in the surface and runtime-loader suites) — move these shapes into typed builders in src/tests/factories.ts and import them.
+
+DEFER severity=MED — 12.12 Property-Based Tests "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant." — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:26 "const TOL: Record<string, number> = { front: 0.0005, footprint: 0.005, gfa: 0.01, height: 1e-9, storeys: 1e-9, units: 1e-9 };" — the gfa/height/units derivations and the ring walk are pinned only by enumerated example rows inside tolerances, no fast-check invariant exists — add a property test (values non-negative and monotone in lot area, ring order invariant under row shuffle).
+
+REJECT — 5.2 Test File Pattern — golden25-harness.ts matching no mandated test-file pattern — the file contains no tests, it is a shared read-only fixture builder imported by runtime-loader.logic.test.ts, so the pattern table does not bind it.
+
+MET — 4.2 Parameterization — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:81 — every value buildSourceSql interpolates as a literal is gated by integer/finite checks (including '1;DROP TABLE parcels') that throw before any SQL is built, so the concatenation is guarded.
+
+MET — 5.2 / 5.5 Parity battery — src/tests/surfaces/engine-inputs-bind.logic.test.ts:38 — the producer constant is compared against scripts/surfaces/_schema/report-presentation.json, which is the seed-JSON to TS drift guard the parity row requires.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  171860ms (171.9s)
+📊 Tokens — total: 57959, input: 32722, output: 25237, reasoning: 24003

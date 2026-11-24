@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:14:05.888Z file_sha256=9d7c222bf7886b571e03ccfef0b46d52fd0e401d3588bc7ac8157c250924273f prompt_sha256=02631e205979b69e4dbc45a41c6abbf1c40a566086b0246a97db01237b115878
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.44 "one toggle covers every area and length and is remembered per user; the default is imperial" — scripts/surfaces/_schema/report-presentation.json:39 "\"default\": \"m²\"," — the units registry ships a metric default, so the report opens in m² where the ruling says imperial — set the default to "ft²" and keep metric as the stored base only.
+
+BUG severity=HIGH — fe.17 "ad slots outside the card list" — scripts/surfaces/_schema/report-presentation.json:236 "\"position\": \"beside each scenario card\"," — the added third placement scenario_card puts one slot beside every scenario card, that is inside the card list, which fe.17 and fe.23 ("outside variants[] and the card list") both forbid — remove the scenario_card placement or move it outside the card list.
+
+DEFER severity=MED — fe.44 "one toggle covers every area and length" — scripts/surfaces/_schema/report-presentation.json:53 "\"formatter\": null," — the length format has no unit pair and a fixed metric pattern (\"{v} m\"), so the remembered toggle never reaches lengths — give length the same two-unit options governed by the same toggle.
+
+DEFER severity=MED — fe.38 "Legacy values are neither sent nor shown on the live app (EI-D1)." — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json:245 "\"parcel.areas.max_buildable_gfa_sqm\"," — the seed proposal keeps the withheld legacy columns (max_buildable_gfa_sqm, opt_aor_gfa_sqm, max_build_stories, max_build_fsi, coa_fsi) as status "live" report rows — mark them withheld/null or drop the section.
+
+DEFER severity=MED — fe.22 "Ad targeting only on declared database keys; never on user-entered facts without consent." — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json:1275 "\"offers[].targeting_context {scenario, building_class, zone_class, has_suite, renovation}\"," — four of the five keys are the retired keys the presentation registry itself says have no database source, so the proposal targets on undeclared keys — limit the context to zone_class, building_type and design_option until rows land.
+
+DEFER severity=MED — fe.35 "plus the pace the server computed from two admin logic_variables" — scripts/surfaces/_schema/report-presentation.json:137 "\"decisions\": \"Decisions to {value}.\"" — states.checked ends with lines, verbs, dates, skip, ready, open and summary and carries neither the title nor a pace template, so the ruled title and server-computed pace cannot render — add the title and a pace line to states.checked.
+
+MET — fe.29 — scripts/surfaces/_schema/report-presentation.json:87 — states.lifecycle is the closed loading, miss, error set.
+MET — fe.06 — scripts/surfaces/_schema/report-presentation.json:19 — not_modelled and every not_evaluated reason carry a shown sentence in the closed status_text map.
+MET — fe.39 — scripts/surfaces/_schema/report-presentation.json:26 — not_in_engine_population maps to "Not yet evaluated", never 0.
+MET — fe.33 — scripts/surfaces/_schema/seed-report-v2.mjs:623 — the two ReportView strings moved into the presentation registry as content templates, so no display text stays in the component.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 6
+Rules met: fe.06, fe.29, fe.33, fe.39
+
+---
+⏱  144065ms (144.1s)
+📊 Tokens — total: 67328, input: 34782, output: 32546, reasoning: 31724

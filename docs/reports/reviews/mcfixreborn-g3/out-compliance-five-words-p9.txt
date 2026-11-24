@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:50:27.544Z file_sha256=3987bff9aa50d661e7f3df5737f4e395229a0ed64fdff4ccc6821db4ac1cdb93 prompt_sha256=ad60499bc056bc28ea19fa66f6c7058236c02c527f88563ebac83eb924ed7147
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p9.txt (model: deepseek-reasoner)
+
+REJECT — Glossary "five words" "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — accused: `scripts/surfaces/surface-validate.mjs` reports GEN, GOLDEN, PARITY, BIND, STATUS, DESC, SCREEN, SBIND, PAGE and never the five words — not a real issue: gate V is the step-validate gate over pipeline steps, the pasted glossary does not put surface gate output under it
+REJECT — Glossary "check: ... a check is a `step-validate` invariant or gate token" — accused: the new `scripts/surfaces/surface-validate.mjs` "The first surface gate, REPORT only. Read-only; writes nothing." sits outside `step-validate` — not a real issue: the glossary defines the step programme's vocabulary, and a surface linter neither claims nor needs to be a step check
+REJECT — Glossary "OWED: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — accused: `scripts/surfaces/surface-validate.mjs` "budget WAITS MF-08 · ..." states a waiting on a different id — not a real issue: OWED is a `#44` step-validate token for reader pins, the surface budget waiting is a separate stated waiting and is printed, never as an `ok`
+REJECT — operator ruling RR-0439 "each rule list reads only the files the rule table names for it" — accused: this chunk carries `src/app/api/permits/[id]/route.ts`, `src/components/permits/BuildingMassing.tsx` and the parcels API routes that no pasted glossary clause names — not a real issue: the chunk is a lens-input slice cut at file boundaries and steps 381/383/390/395 folded per RR-0433; unbound files are out of scope here, not violations
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 0
+Rules met: none
+
+---
+⏱  16816ms (16.8s)
+📊 Tokens — total: 31515, input: 28378, output: 3137, reasoning: 2652

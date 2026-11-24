@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:57:17.893Z file_sha256=fb72e0f40b1b431d4b32ed313fc8fac6aaae426acd1065511778c8daf03baa77 prompt_sha256=d672922b75488806a39d55b47b7d6209e28d72f03480a078c140fa5715d0b21d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-five-words-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-374 title "FIX.FOOTER-Web-report-footer-links-use-the-router-and-meet-the-44-px-target-D7-D8" — src/tests/surfaces/site-footer.ui.test.tsx:85 "expect(linksOf(f)).toEqual(HREFS.map((x, i) => [x, TEXTS[i]]))" — the pasted report test locks only href value, text and order, it asserts nothing that distinguishes a router link from a plain anchor and nothing about the 44 px target — the card's Acceptance Criteria (line 27) are not pasted and the router/44 px locks may sit in the census tests named by task-384 outside this chunk, so this is a coverage note for the grounder, not a defect claim.
+
+MET — lock / lock-db / check / hook, "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/site-footer.logic.test.ts:4 — the file sits under src/tests, names SRCH.FOOTER and asserts it (T1-T5); site-footer.ui.test.tsx:5 does the same for (a)-(d)
+MET — task-332 "SRCH.FOOTER-Shared-web-footer-component" — src/tests/surfaces/site-footer.logic.test.ts:39 — one builder (`footerNode`) in one module, imported by the three bindings, is locked
+MET — operator verbatim "this is a shared component" — src/tests/surfaces/site-footer.ui.test.tsx:102 — the three renders are locked to the same (href, text) list in the same order
+MET — operator verbatim "1. once  -approved" — src/tests/surfaces/site-footer.ui.test.tsx:53 — the legal sentence is counted once in the rendered markup, and the mobile golden is locked to one occurrence with no footer ref
+MET — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — src/tests/surfaces/site-footer.ui.test.tsx:74 — the material is output only, no plan or proposal text is asserted
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  64284ms (64.3s)
+📊 Tokens — total: 23222, input: 9309, output: 13913, reasoning: 13389

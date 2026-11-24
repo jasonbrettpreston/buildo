@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:45:04.995Z file_sha256=c26e798e6c1819a85bbc828ed83be5a42bfe39438571dd9c56a3eb4738a23e73 prompt_sha256=c75ee45a413445545dd8de90cefe9bc971e11b2ee1f0b74c95e9f325eb1c6c62
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — mobile/src/constants/parcelSearch.ts:22 "export const SEARCH_CANDIDATE_LIMIT = 10;" — a candidate cap (and SEARCH_RECENT_MAX = 3 at :28) is a page-size threshold in code with no registered logic variable, no bounds and no on_invalid posture, contrary to "All tunables are data; zero thresholds in src/." — move both into the page slice as registered logic variables and read them through sliceNumber.
+DEFER severity=MED — fe.19 "an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at)" — mobile/src/lib/lotForm.ts:7 "there is no server store" — the semi answer is an entered fact that is neither written to the shared DB nor given provenance for other viewers, it only rides a route param (lotForm.ts:8 "it travels as a route param (OVERRIDE_PARAM) to the report") — store the answer as the lot's user entry with provenance, or record a deviations[] row naming the ruling that keeps it private.
+DEFER severity=LOW — fe.34 "each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws)" — mobile/src/components/surfaces/SurfaceRenderer.tsx:108 "return p && p.role === role ? p.text : fail();" — a numeric part text passes the role check and is handed to React instead of throwing — test `typeof p.text === 'string'` and call fail() otherwise.
+DEFER severity=LOW — fe.45 "Five things may stay client-side (device state, optimistic UI, offline cache, animation, nav position); everything else is server-projected." — mobile/src/lib/lotForm.ts:46 "return override ?? detected;" — the server fact lot_form_effective is recomputed on the device, and no deviations[] row with an adjudicator and date is visible in this material — drop the client mirror or cite the deviations[] row that adjudicates it.
+MET — fe.24 — mobile/src/components/surfaces/SurfaceRenderer.tsx:85 — resolveValue throws on an unresolved contract/derived ref and partText throws on an unknown part, so an unknown field is not rendered silently.
+MET — fe.36 — mobile/src/hooks/useParcelPageHooks.ts:30 — the back control asks router.canGoBack() before router.back(), as the clause requires of mobile expo-router.
+MET — fe.42 — mobile/src/components/surfaces/SurfaceRenderer.tsx:21 — react-native-svg is imported and drawn (Svg, SvgPolygon, SvgLine) with no geometry maths in the renderer, the client only draws.
+MET — fe.31 — mobile/src/components/surfaces/SurfaceRenderer.tsx:23 — library parts are imported only in this binding module, and the renderer has no layout, style or text of its own.
+MET — fe.05 — mobile/src/lib/parcelSearchCore.ts:79 — the reports-left line is shown only when the three server-served fields are present, the count and the date are printed, not derived.
+MET — fe.52 — mobile/src/hooks/useParcelLookup.ts:117 — the detail lookup carries one id, `parcelId`, into the consumer API param, no second id name is blended.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 4
+Rules met: fe.05, fe.24, fe.31, fe.36, fe.42, fe.52
+
+---
+⏱  154805ms (154.8s)
+📊 Tokens — total: 50877, input: 31478, output: 19399, reasoning: 18591

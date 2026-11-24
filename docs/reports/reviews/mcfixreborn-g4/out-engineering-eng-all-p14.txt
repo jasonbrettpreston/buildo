@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:19:38.514Z file_sha256=715e4c9a58edbb9646f42389a7dd6e5a006def397bfbee012e91362b42c5122a prompt_sha256=ea06cd0c8def6d75f93a3c15fc791dc0e06bccad71d0c4d05a06e7edf29de640
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p14.txt (model: deepseek-reasoner)
+
+BUG severity=<none> — none raised at CRIT or HIGH.
+
+DEFER severity=LOW — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/backlog/rule-lists-table.logic.test.ts:1 "SPEC 124 Rule 13 (generated docs) and R-GW (role banner); Spec 128 line 182 (the panel record)" — Spec 128 is pinned by line number ("line 182") and R-GW by no section at all, so the traceability anchor is a line offset in a file that can grow, not a §N — change the Spec 128 anchor to its §N heading and name the section that carries R-GW, keeping the line as a secondary pointer.
+
+DEFER severity=LOW — §12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant" — src/tests/backlog/rule-lists-table.logic.test.ts:90 "export const routeDrift = (rowGlobs: string[], census: Record<string, CensusEntry>) => {" — this exported pure set-comparator has an invariant that holds for all inputs (missing and stale are disjoint, both drawn from want/have; identical sets give both empty) but is only exercised by the three fixed examples at lines 118-120 — add one `fast-check` property (`missing ∩ stale = ∅`, and `routeDrift(want, census).missing = []`) beside the examples, or say in the task record why a set comparator is out of the rule's arithmetic scope.
+
+MET — §12.11 "silent-catch-fallback — bans `try/catch { return [] / null / emptyResult() }`" — src/tests/backlog/rule-lists-table.logic.test.ts:14 "expect(r.status, `${files}: ${r.stderr}`).toBe(0);" — no try/catch in either file; a failing resolve throws with its stderr rather than returning an empty list.
+
+MET — §12.11 "pool-boundary — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`" — no `new Pool(` in either file, and both files sit under src/tests/, which the rule exempts.
+
+MET — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`" — src/tests/backlog/review-templates.logic.test.ts:4 "import * as fs from 'node:fs';" — the only imports are fs/path/crypto/vitest/helpers, no console call and no catch block in the diff.
+
+MET — §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — the diff adds only two `src/tests/backlog/*.logic.test.ts` files, no migration and no constraint, so no db test is owed.
+
+MET — §12.13 "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface" — the diff touches none of the four modules or their siblings, so the mutation gate is not triggered.
+
+MET — §12.1 "Biome MUST pass on all files in `src/features/leads/` before commit" — the changed paths are src/tests/backlog/review-templates.logic.test.ts and src/tests/backlog/rule-lists-table.logic.test.ts, outside the leads-scoped gate.
+
+MET — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/backlog/review-templates.logic.test.ts:1 "SPEC LINK: task-406 (V2.LIST round 2); Spec 08 section 5.1 (08_agents.md)" — spec plus section, satisfied for that file.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 20   Unmet: 2
+
+---
+⏱  23868ms (23.9s)
+📊 Tokens — total: 24514, input: 19400, output: 5114, reasoning: 4197

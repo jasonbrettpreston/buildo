@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T03:25:30.866Z file_sha256=5cc09764c3ae53b0e1138da19deac7bb7b8f7a120b989781fc090a822aaae275 prompt_sha256=9da2bbe3870a29b63ca4a7f9c4fc5220011fbf9299935c175f666c803d4878ee
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-ux-p4.txt (model: deepseek-reasoner)
+
+BUG severity=<none raised> — not used, no CRIT or HIGH is visible in this chunk.
+
+DEFER severity=MED — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:47 "expect(dlg.contains(document.activeElement)).toBe(true);" — every sheet check confirms focus lands somewhere inside the dialog but nothing asserts the sheet has an accessible name, so a screen reader person opening the Add lot size sheet can hear "dialog" and no title, and the test stays green — fix: assert the dialog's aria-labelledby resolves to the sheet title the same file names at line 9 ("the title").
+
+DEFER severity=MED — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:102 "expect(group.getAttribute('aria-labelledby')).toBe('report-sheet-lbl-width report-sheet-lbl-depth');" vs design, same file line 11, "the sq ft / m² selector is a native radio pair" — the unit radios are named only by the two field labels, so a screen reader person hears the group as "Width Depth" and never which unit is being picked — fix: assert a group name that names the unit, design is silent on the exact words.
+
+DEFER severity=LOW — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:71 "expect(cls).toContain('max-h-[100dvh]');" vs design, same file line 9, "at 200 % zoom the title and fields stay reachable" — the 200 % zoom state is proven by a class name only, no rendered box is measured, so the test cannot show the person reaches the title if the sheet is also offset — fix: keep the class check, record in the header that reachability is asserted by class alone.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer.ui.test.tsx:48 "for (const [name, s] of Object.entries(SITUATIONS).filter(([, v]) => Array.isArray((v as Json).recent))) {" vs the same test's own title at line 47, "every state: one <footer>, the legal sentence once in the markup, links in order, copyright last" — the render check silently skips the situations with no result list (loading, redirect, error, rate_limited, unauthorized, schema_drift), so a person on those states has an unverified footer in the live render — fix: filter on the situation being a search state, not on `recent`.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer-route.ui.test.tsx:64 "expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('min-w-11'), cls.includes('items-center'), cls.includes('justify-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true, true, true]);" vs design, same file line 8, "report-themes/pub/B.html:222, \"min-height:44px\", inline-flex, items centred" — the 44 px the person taps is proven by class names only, no measured target, so a shrink applied elsewhere in the class chain is not seen here — fix: none needed now, record the class-level limit so the 44 px stays tied to the mock.
+
+REJECT — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:51 "['Escape', (dlg: HTMLDialogElement) => fireEvent.keyDown(dlg.querySelector('input') as HTMLElement, { key: 'Escape' })]" — looks like Escape is faked where a native dialog cannot close, so the person's Escape may not be the thing under test — harmless here because the assertion that follows (line 62, focus back on the Add lot size button) is the design's own requirement (line 8) and the test fails loudly if Escape does nothing.
+
+REJECT — src/tests/surfaces/rules-acc-notes.logic.test.ts:31 "expect(n).toContain('operator, verbatim: \"1 a\"');" — to a reader of Spec 126 the fragment "1 a" on its own says nothing — harmless because the same note must also carry the date and "MORNING-DECISIONS.md:1399" (line 32), which is what rule 10 asks and lets the reader trace the ruling.
+
+VERDICT: PASS on the person's experience
+States checked: first view of the report page, sheet open, sheet closed by Cancel, by Escape, by the dialog close event, 200 % zoom, entry error announced, unit selection ft and m, search loading/redirect/ambiguous/miss/empty/schema_drift/rate_limited/unauthorized/error/static/hit, static pages, footer links (route, 44 px, order, copyright), missing footer text key   Dead ends found: 0
+
+---
+⏱  77494ms (77.5s)
+📊 Tokens — total: 33653, input: 16427, output: 17226, reasoning: 16169

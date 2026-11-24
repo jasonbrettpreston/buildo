@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:05:31.915Z file_sha256=b7dc2fdd5f6c59dd26786e1c3ea84051c5c8abb5aaa83f56a1446bfbb91912de prompt_sha256=b2963dc38d760c651e1c6a6df788e3da4a7b709ad7ff1c2dc1145d4fa116b465
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 "the-review-template-substitutes-safely" — .claude/review-templates/README.md:151 "passes the text to `String.replace` as a replacement string, so a `$` sequence in a pack or diff expands into other text, and a literal placeholder token inside a diff is substituted again" — clause unmet: the material records the unsafe substitution as still present and puts the fix off ("Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed."), so the deliverable the task names is not in the change — fix: make `substitutePlaceholders` call `text.replace(token, () => value)` and add a test holding `$&`, `$1` and a literal placeholder token, then delete the workaround sentence.
+
+BUG severity=HIGH — task-375 "the-lens-line-passes-the-rule-context" — .claude/review-templates/README.md:159 "node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L" — clause unmet: the default per-list form, which the close gate enforces one output per list for, passes no `--context`, while the same file states at :125 "`lens-input` refuses without `--context`", so the documented command cannot write the file the close reads — fix: add `--context <context-rN.md>` to the per-list and joined commands in item 3, or drop the refusal and say where the prompt hash comes from.
+
+BUG severity=HIGH — task-407 "The brief states where review files go and the close check reads that place" — scripts/analysis/backlog-brief.mjs:183 "the output lens set and its commands are in the lens line of this brief; no plan lens is run" — clause unmet: the emitted brief holds no such lens line (the `out` array emits Ticket, Rule, Scope, Done-condition, max_fix_rounds, Status line, Substrate, Take order, Review, Run by, Context pack sections, Close, End the report, Standing rules), so neither the lens set and its commands nor the place the close check reads (`docs/reports/lanes/<date>/<lane>/out-*.txt`) is stated — fix: emit the resolved list ids with the `lens-input` and review commands and the `out-` directory, or delete the sentence.
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-brief.mjs:62 "const CAP_TOTAL = 120 * 1024;" — clause unmet: the context pack cap is 122,880 bytes and byte-counted, so a brief can emit a pack that already passes the 120,000 character call bound before the lens template, the task sections and the material are added — fix: set the cap from the bound in characters with headroom for the template and one material part.
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it" — .claude/review-templates/README.md:159 "--list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L" — clause unmet as documented: every list is handed the whole material, so a list reads files the table does not name for it; whether `lens-input` cuts the material to the row's globs cannot be seen (the tool is outside this chunk) — fix: cut the material to the list row's globs in `lens-input` and record the cut in the `LIST` header, or state in the README where the cut is made.
+
+MET — task-433 "A rules-checked line the reviewer lists the rule ids it judged met" — .claude/review-templates/lens-compliance.md:73 — "Rules met: <rule ids, comma separated>" is a required last line, with :76 "Write only ids that appear in the pasted list, ids only, on one line."
+
+MET — task-375 "the-security-lens-fires-for-admin-and-PII" — .claude/review-templates/lens-security.md:12 — "You look only at money, authentication, authorisation, PII and admin surfaces in the change".
+
+MET — task-432 "Fresh review context every round" — scripts/analysis/backlog-brief.mjs:54 — "one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten".
+
+MET — task-423 "One compliance review on the plan and one on the output against rules sections" — .claude/review-templates/README.md:159 — "the joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list)".
+
+MET — dated note item 4 "plus its separate grounder" — .claude/review-templates/README.md:110 — "Then ONE tool-bearing Claude grounder adjudicates every finding against the files".
+
+MET — operator ruling, MORNING-DECISIONS.md:1526 "yesThe hook budget: 33.2 seconds (recommended)" — migrations/334_precommit_budget_registry_repin.sql:12 — "SET variable_value = 33.2," brings the registry row to the confirmed value and the description cites both entries.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+Rules met: none
+
+---
+⏱  129407ms (129.4s)
+📊 Tokens — total: 59173, input: 27121, output: 32052, reasoning: 30829

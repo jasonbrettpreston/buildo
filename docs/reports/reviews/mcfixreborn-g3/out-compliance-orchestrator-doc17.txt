@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:28:11.609Z file_sha256=90a57b670f936a5bb971168afa3a13756b68f8073069dbce30083125b6eeb0b1 prompt_sha256=9d78277764f6646c1f3224bd38ae205ab5e14448de49f55135d963d7b1c4a464
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — scripts/analysis/lot-map-data-check.mjs:2 "SRCH.LOTCARD (task-336, RR-0284, AC 1)" — the new file rests its authority on register entry RR-0284, which is not in the pasted list and which the pasted list itself says cannot feed a review as a ruling, so no binding clause in this run stands behind the script's behaviour — fix: cite task-336 AC 1 text (or an operator ruling verbatim) in the header so the next run can judge it
+DEFER severity=LOW — pasted AC list "task-336: backlog/tasks/task-336 - SRCH.LOTCARD-Lot-map-footprint-layer-C.5-and-card-line-C.7-from-two-new-reads-massing-footprint-presence-fronting-street.md, Acceptance Criteria from line 38" — scripts/analysis/lot-map-data-check.mjs:4 "it counts the lots that have" — the AC body for task-336 is named but not pasted, so whether these two reads (footprint presence, fronting street) meet C.5/C.7 and AC 1 cannot be judged — fix: paste task-336 AC from line 38 into the next review run
+DEFER severity=LOW — doc-17 "The material is chunk 1 of 1 of the change" / pasted Description "The material is every hand-written core file of the group (108 files)" — scripts/analysis/lot-map-data-check.mjs:1 "// SRCH.LOTCARD (task-336, RR-0284, AC 1) · READ-ONLY data check for the two lot-map reads." — the pasted material is one file of 108, so cross-file obligations named by the AC list (e.g. task-338 lookup contract fields) cannot be checked here — fix: confirm task-338's contract/registry files are reviewed in their own run before this one is closed
+REJECT — RR-0110 — accused of adding new tooling during the freeze ("Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit") — doc-17 states its readings are not the operator's words as a ruling and never feed a review as a ruling, so this entry cannot be enforced as a clause against this diff
+REJECT — RR-0105 — accused of breaking the all-lot store model ("All-lot store is one headline record per parcel and option") — the script writes nothing and runs "BEGIN READ ONLY" with a rollback, and the entry is a reading, not a ruling
+REJECT — RR-0041 — accused of acting before an image hold lifts ("Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready") — that entry concerns image tasks, the diff is a read-only DB check with no image work, and it is a reading not a ruling
+REJECT — RR-0439 — accused of breaching the rule list scope ("each rule list reads only the files the rule table names for it") — that is a constraint on the harness, not on the diff, and no code line in the material can breach it
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+Rules met: none
+
+---
+⏱  22824ms (22.8s)
+📊 Tokens — total: 20560, input: 16079, output: 4481, reasoning: 3715

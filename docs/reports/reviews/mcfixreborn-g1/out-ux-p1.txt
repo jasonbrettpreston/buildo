@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T03:25:30.865Z file_sha256=af8689c590fb7de09e389b465ac9deb46a9b7e664510cac3f42f67b1828dabd4 prompt_sha256=4d2624e9bceca95739ca9314db8ea9c350b3ddf5c9677159b29b8850ceb4ef4d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/app/(app)/[lead].tsx:256 "const showNotFound = !isLoading && isError && !detail;" with the copy at :135 "This permit is no longer available. Return to the Lead Feed to reload." — every error is shown as a removal: an offline phone, a 500 or a rate limit tells the person the permit is gone, and the state offers no retry — separate the network/server error state from the 404 removal state and put a Retry control on the error one
+BUG severity=HIGH — mobile/app/(app)/[lead].tsx:138 "onPress={() => router.back()}" (same action on the header control at :109) vs mobile/maestro/lead-detail.yaml "Back navigation returns to whatever was below, feed or empty stack on direct deep-link launch." — on the cold-boot push deep link this screen is built for, nothing sits below, so both visible controls on "Lead not found" do nothing and the person is stranded — when there is no history, route to the feed instead of popping
+DEFER severity=MED — mobile/app/(app)/[lead].tsx:113 "accessibilityLabel=\"Back to Lead Feed\"" — the accessible name promises the Feed but the control goes wherever the stack happens to be, so a screen-reader user is told the wrong destination — name what the control does, back, or make it actually go to the Feed
+DEFER severity=MED — mobile/app/(app)/[lead].tsx:256 "Cost not disclosed" vs the same card at :265 "Range {costRangeLow} – {costRangeHigh}" and the approved voice in scripts/surfaces/_schema/report-presentation.json "\"not_modelled\": \"This option is not modelled yet, so no figure is shown.\"" — when the estimate is missing the person is told the cost was withheld while a range is printed right under it — say there is no estimate yet, and drop the withholding wording
+DEFER severity=MED — mobile/app/(app)/[lead].tsx:151 "testID=\"lead-detail-stale-banner\"" (copy: "Showing last loaded, refetch failed.") — the person is shown stale figures and told the refetch failed but is given no way to retry, only to leave and come back — add a retry affordance to the banner
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:204 "{costTierFmt.symbol}" — the tier pill shows a bare "$$$" with no name and a screen reader reads "dollar dollar dollar" — give the pill an accessible label naming the tier
+REJECT — mobile/app/(app)/[lead].tsx:88 "const hasSqft = sqftLabel !== null;" — the Square Footage section silently disappears on a cached response that carries only modeled_gfa_sqm — this matches FIX.AREA-FACTOR and fe.44 "the API serves the converted area; the phone only formats", so no conversion on the phone is correct
+
+VERDICT: FAIL on the person's experience
+States checked: first view (skeleton), answered detail, sections with absent fields, error with no cached detail, stale detail after refetch error, back, repeat visit, offline   Dead ends found: 1
+
+---
+⏱  42036ms (42.0s)
+📊 Tokens — total: 39746, input: 29703, output: 10043, reasoning: 9335

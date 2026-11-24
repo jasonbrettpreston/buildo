@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:03:40.458Z file_sha256=91a7018f4b4543f6cde0505391e84b3030e4e0ed5a7e8da893803d6dae04aeb2 prompt_sha256=14b4e3f4ca259876c0f7ffeaf145a7462cc3691c92d111ea64f29957a8392bc4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p6.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised: no pasted clause is proven unmet by this chunk (tests only; the code they exercise is outside the pasted material, "cannot see")
+
+DEFER severity=MED — A.6 "A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT" — src/tests/surfaces/search-parity.golden.test.ts:88 "expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left']);" — the parity lock makes an eleventh web and mobile golden named reports_left mandatory, so a reports-left line is now required on both targets while the pasted spec still records A.6 as NOT-BOUND and NOT BUILT — record the ruling that binds A.6 in the governing spec (or drop the state from the lock) so spec and lock name the same state.
+
+DEFER severity=LOW — E.2 "E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright" — src/tests/surfaces/site-footer.logic.test.ts:28 "'footer.help': 'Help & Support'" — the label now locked on three surfaces (search, static, report) reads "Help & Support" while the clause names "Help and Support" — confirm the wording with the operator and align the clause wording or the content key.
+
+REJECT — A.10 — the change is accused of taking the search page legal line off the page column and leaving it only in the web footer — E.2 also names the legal line as a web footer item, and src/tests/surfaces/site-footer.logic.test.ts:79 "expect([f, countRef(web, 'search.legal')]).toEqual([f, 1]);" asserts exactly one legal line per web tree and one per mobile golden, so the sentence still appears once on each page.
+
+REJECT — E.2 — the change is accused of putting the shared footer on the web report page, outside E.2's "E Web search pages" scope — the report page is governed by spec 126 (not pasted) and src/tests/surfaces/site-footer.ui.test.tsx:70 "expect(linksOf(f)).toEqual(HREFS.map((x, i) => [x, TEXTS[i]]));" shows the report footer reuses exactly the five items E.2 names and adds none.
+
+MET — E.2 — src/tests/surfaces/site-footer.logic.test.ts:61 — the footer node is asserted last on all eleven web goldens with legal, the three route links in order and the copyright (":64" links map, ":69" copyright).
+
+MET — A.10 — src/tests/surfaces/site-footer.logic.test.ts:79 — search.legal counted exactly once in every web tree and once under the input in every mobile golden.
+
+MET — E.1 — src/tests/surfaces/search-parity.golden.test.ts:90 — every state's web and mobile golden must carry the same refs, action names, block order and situation (the same parts under the web top bar).
+
+MET — F-SEARCH-WEB — src/tests/surfaces/site-footer.ui.test.tsx:55 — with the live switch off the footer anchors carry no disabled/aria-disabled attribute, so the disabled controls of the web page stay the lookup controls.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: A.10, E.1
+
+---
+⏱  92860ms (92.9s)
+📊 Tokens — total: 45830, input: 28216, output: 17614, reasoning: 16781

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:05:31.915Z file_sha256=ba0ba6e8484bb44a2df05cc77a3103b4f775c3b18a93b200110fbe55ea493f78 prompt_sha256=a81f8fbf1ada25a255fa11225fab6e279234c4900115d74a583899a0ffb8afb5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-orchestrator-doc17-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-366 (COMPLY.2) "the close gate refuses a task without the compliance lens output per list" — scripts/deepseek-review.js:175 "console.log(lensHeader(systemInstruction, userPrompt));" — the REVIEW evidence header is printed before the call runs, so --dry-run, a prompt-bound refusal and the timeout path each leave a header with matching file_sha256 and prompt_sha256 and no completed review — print the header only after a successful non-timed-out call, or add status=ok to the header and require it in the close check.
+
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters" — scripts/deepseek-review.js:66 "'or raise DEEPSEEK_REVIEW_MAX_CHARS deliberately.'," — the 120,000 ceiling the ruling sets is overridable by env and the refusal text invites raising it, so the limit is a default and not a ceiling — keep the refusal absolute for lens calls, or record the raised value in the REVIEW header.
+
+DEFER severity=LOW — task-366 (COMPLY.2) "the compliance lens output per list" — scripts/deepseek-review.js:162 "REVIEW template=${path.basename(templatePath)} model=${MODEL}" — the header names the lens but not the rule list or context file that was pasted, so an output cannot be tied to its list without the original file — add the context path and its sha256 to the header.
+
+DEFER severity=LOW — RR-0431 "just the output" — scripts/deepseek-review.js:151 "const result = await callDeepSeek(text, answerSystemPrompt());" — answer mode, cited in code only as MB-77 (c) and named by no pasted clause, sends a file verbatim with no REVIEW header, so its output in a lane looks like a failed review — keep answer mode out of the review subcommand, or emit a distinct non-REVIEW marker.
+
+DEFER severity=NIT — task-433 "A rules-checked line the reviewer lists the rule ids it judged met" — scripts/deepseek-review.js:162 "REVIEW template=${path.basename(templatePath)} model=${MODEL}" — the only machine-read line this tool writes carries no rule ids, and the lens template that would write the rules-checked line is not in this chunk (cannot see) — put the judged rule ids on the header so a script can flag a rule never mentioned.
+
+REJECT — doc-17 header — that the change violates the readings RR-0001 to RR-0111 (status words, theme, storage, suite size, increments) — doc-17 states of its own rows "never feed a review as a ruling", so no reading in the pasted list binds these three tooling files.
+
+MET — RR-0408 — scripts/deepseek-review.js:62 — prompts over MAX_PROMPT_CHARS (default 120000) are refused before any request is made, so review calls stay small.
+MET — task-358 — scripts/deepseek-review.js:167 — lens mode sends the template's own system persona and user prompt, one lens per call.
+MET — task-375 — scripts/lib/review-template.js:77 — substitutePlaceholders does one pass with a function replacer, so values are inserted literally, no dollar-sequence expansion and no re-scan.
+MET — RR-0414 — scripts/deepseek-review.js:65 — the refusal message names --section, so only the changed parts of an oversized context are sent.
+
+VERDICT: PASS
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  143584ms (143.6s)
+📊 Tokens — total: 43964, input: 22451, output: 21513, reasoning: 20733

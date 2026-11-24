@@ -1,0 +1,10 @@
+src/lib/admin/parcel-lookup.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/admin/report-preview-live/stored-page.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/parcels/report-compute.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/parcels/report-page.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/report-projection/format.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/report-projection/pinned-settings.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/report-projection/project.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/report-projection/read-stored.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/report-projection/seed-shas.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/tests/admin-report-preview-live.logic.test.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904

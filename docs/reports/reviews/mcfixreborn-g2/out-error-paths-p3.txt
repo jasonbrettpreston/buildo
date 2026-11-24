@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T02:44:48.759Z file_sha256=90f0c92011adc50ed4562e1f20c5cbdbcc09e65d8e0fd0373fb5416d930acbd0 prompt_sha256=d40a0ff4c2ccf7cbdaaf9acd87c7a0b80acc702765d9c4a5ab1d6ba84dbe991d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-error-paths-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/tests/src-sql-ledger.logic.test.ts "expect(ssl.readRecordedStatements(path.join(dir, 'missing'))).toEqual([]);" — a trace directory that does not exist (mistyped path, or a run that wrote no trace file) is locked to an empty statement list, so `confirmRecorded` sees nothing recorded, returns confirmed 0 with `rows: []` and the runtime confirmation reports green on zero evidence — make the reader throw on ENOENT of the directory and return `[]` only for an existing but empty directory (or return a distinct `{missing:true}` that the caller must fail on).
+
+DEFER severity=MED — src/tests/src-sql-ledger.logic.test.ts "{ text: 'SELECT 3' }," — a recorded statement with no `callers` field is only counted (`untagged: 1` at the expect below it) and produces no entry in `rows`, so a trace line that lost its attribution passes with no violation; cannot see whether the caller of `confirmRecorded` treats `untagged > 0` as failure, so either emit an `untagged:<fingerprint>` row or require `untagged === 0`.
+
+DEFER severity=MED — src/tests/src-sql-ledger.logic.test.ts "expect(Object.keys(built.files).length).toBeGreaterThanOrEqual(70);" — the count is the only backstop on ledger size and `closedSetViolations` flags only interpolated growth/staleness, so a deleted or newly unreadable static file silently leaves the ledger and the suite stays green; assert the exact key set against the committed ledger in both directions.
+
+DEFER severity=MED — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts "expect(out.matched.processed).toBe(0);" — an empty page returns `rows.e1: []` with `closure_violations: 0` as a successful run, so a source read that returns nothing (population ids matching no parcels, a first-page keyset miss) is recorded as a clean 0-record run and every CHECK is vacuous; cannot see whether the runner reconciles `count_sql` with `records_total`, so require the two to agree or fail when the population count is non-zero and the page is empty.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:64 "const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;" — an unmatched parcel id is cast to `Json`, so the mismatch surfaces later as "Cannot read properties of undefined (reading 'case')" with no parcel id; assert non-undefined with the id in the message, and do the same for `lines.find` on the `lots.set` line, whose undefined result makes `parcelInput`'s `line.parcel` throw or yield undefined geometry.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:72 "lots.set(String(e.case).split('_')[0] as string," — two expected rows sharing a case prefix overwrite each other silently, so `goldenLots()` can hold 24 of 25 lots and every consumer test still passes on the short map; throw on a duplicate key or assert `lots.size === 25`.
+
+DEFER severity=LOW — src/tests/src-sql-ledger.logic.test.ts:11 "and filled `CLOSED_INTERPOLATED_SET`; they are red on a fresh worktree by design." — on a clean checkout, or with the committed ledger JSON unreadable, two tests fail instead of reporting "ledger not built", so a missing prerequisite is indistinguishable from a real regression; skip with a named reason when the file is absent and keep the failure for a present-but-stale ledger.
+
+DEFER severity=LOW — src/tests/src-sql-ledger.logic.test.ts "expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_lot_view']);" — exact-list equality turns red on any applied-but-not-recaptured migration, and the comment trail above it shows eight such edits, so a genuine new uncatalogued read and a recapture lag look identical; pin the matview alone and carry the migration-lag names in a separately named, dated list.
+
+VERDICT: FAIL on error-path safety
+Paths walked: extractSql/classifyFile (parse failure, skipped, passthrough, NOT_POSTGRES), closedSetViolations and catalogMembership (empty ledger, uncatalogued table), confirmRecorded (matched, unconfirmed, interpolated caller, unmatched caller, no caller), readRecordedStatements (present trace dir, missing dir, empty result), checkSrcSqlLedger/buildSrcSqlLedger (fresh ledger, stale ledger, ledger growth and removal), buildSourceSql bad settings (non-integer id, non-finite setting, non-list), materializeRows (null parcel, null lot, missing config value, missing zone list, empty page), ringLots (empty edges, non-integer depth), pageBindings/formatTextRule (unknown rule, unknown confidence word, null column)   Unguarded: 4
+
+---
+⏱  64025ms (64.0s)
+📊 Tokens — total: 34457, input: 20659, output: 13798, reasoning: 12662

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:25:03.898Z file_sha256=f550f2dab1b590d4bf331ac015e3d8b67f3b41dd38e52bb6fde8e1824d985fc3 prompt_sha256=72a0a3e6dd8a39db3b30e5e0f942dfd8a7a5c12e887a8f1bee434912db280440
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none
+DEFER severity=MED — task-372 criteria pointer "FIX.PROJ-Report-projection-freshness-compares-the-whole-stamp-the-sq-ft-factor-and-the-lot-size-window-are-settings-a-property-test-on-rounding-D1-D2-D9-D6" — src/tests/admin-report-preview-live.logic.test.ts:544 "stamp: { ...STAMP, table_version: 'newer' }" — the only stamp-drift lock moves table_version (moved equals layer2, catalogue at :546); no test varies evaluator_version although the stamp read and STAMP both carry it, so "compares the whole stamp" has no lock for that component — add one case whose stamp differs only in evaluator_version and assert verdict out_of_date naming the component.
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/property/report-sqft-rounding.property.test.ts:1 "docs/specs/00_engineering_standards.md §12.12" — the rounding lock names a spec section, not a rule id, so under the pasted definition it cannot be cited as a lock by id — cite the rule id (or declared alias) it locks in the header and the describe title.
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/search-parser-guard.logic.test.ts:1 "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §3 (line 33 dated note 2026-11-19, ONE-12 a)" — the search lock names a section and a decision id; A.4 and A.5 are card elements, not rule ids, so no lock id in the pasted vocabulary is cited — name the rule id the A.4 and A.5 behaviours lock.
+DEFER severity=LOW — Glossary "Gate A … K, V" "Gate E is compute purity, Gate F the score floor." — src/tests/admin-report-preview-live.logic.test.ts:7 "//   F   the FE-05 formatter: the v21 golden strings, the pinned grouping, parity with the mobile helpers, honest refusals, its directory and no imports;" — the formatter lock is labelled F, which in the pasted vocabulary is Gate F the score floor, so the label reads as a spec gate it is not — rename the label (for example FMT) so no lock id collides with a pasted gate letter.
+DEFER severity=NIT — Glossary "SCORECARD-G0 … SCORECARD-G9" — src/tests/admin-report-preview-live.logic.test.ts:8 "//   G25 the golden-25 key equals the producer's payload wherever the key states a Layer 3 value the page binds (rows from the step's own compute);" — the scorecard range is closed at G9, so a label G25 reads as a scorecard gate outside the closed set — rename to a card-local id such as KEY25.
+MET — task-69 criteria pointer "1.4-Search-parser-direction-guard-after-the-match-and-unit-token-strip-join-key" — src/tests/search-parser-guard.logic.test.ts:117 — the unit strip and the post-match direction guard are asserted and the exact read still keys on the stripped street, ['100','QUEEN'].
+MET — task-123 criteria pointer "customer-scoped-read-module-behind-MAXBLD_WEB_LIVE" — src/tests/customer-report-read.logic.test.ts:134 — with the gate false the read returns null and the pool is never called.
+MET — task-372 "the-sq-ft-factor-and-the-lot-size-window-are-settings" — src/tests/report-projection-settings.logic.test.ts:52 — both window rows asserted pinned (default equals min equals max, 50 and 5000) and the factor asserted pinned at the seed default.
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — rule-list paths line — the chunk holds exactly the six test paths named, one file each.
+MET — RR-0414 "changed parts only as per your recommendation" — src/tests/control-panel.logic.test.ts changed hunks — the oversized file arrives as two hunks (key list additions), not as a whole file.
+REJECT — Glossary "lock / lock-db / check / hook" — customer-report-read and admin-report-preview-live lock the SQL with a scripted fake rather than a lock-db — the pasted definition asks for a test under src/tests/ run by npm test that names the rule id and asserts it, and no live database is required by those assertions, so no lock-db was owed.
+REJECT — RR-0414 "changed parts only as per your recommendation" — the material shows no src-sql-ledger.mjs or scripts/seeds/logic_variables.json diff — this run is chunk 2 of 3 and its paths line names only the six test files, so those changed parts are reviewed in their own chunks and their absence here is not a compliance gap.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  151393ms (151.4s)
+📊 Tokens — total: 66643, input: 32939, output: 33704, reasoning: 32487

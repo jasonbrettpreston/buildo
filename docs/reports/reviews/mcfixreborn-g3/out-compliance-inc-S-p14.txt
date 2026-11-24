@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:55:43.193Z file_sha256=95c22a8c719deae1b0b2b2713a33bff7d2b519e42b8af43b6f0748d476ad6558 prompt_sha256=f621c4b92de7ea5dcc642f7d612a1b93ce9e3da565c2b1885c3533c266cd68d9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p14.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-395 "Every-page-setting-carries-bounds-and-a-stated-failure-behaviour" — src/tests/parcel-lot-form.logic.test.ts "expect(SEED.semi_detect_zone_classes).toMatchObject({ type: 'list', default: RESIDENTIAL });" — the two new list settings are checked for type, default and on_invalid, but their bounds are never asserted, so the "every page setting carries bounds" clause is unverified for them — add minItems/maxItems (or min/max) assertions for semi_detect_zone_classes and semi_ask_two_parcel_zone_classes.
+
+DEFER severity=LOW — task-396 "The-two-massing-thresholds-become-registered-settings-20-and-60-square-metres" — src/tests/massing.logic.test.ts "compute.classifyStructure(300, [300, 40], 20, 60)" — 20 and 60 are passed as bare literals and the descriptor's config.logic_variables are inspected for the confidence vars but never for massing_shed_threshold_sqm / massing_garage_max_sqm, so registration of the two thresholds is unverified in the file that inspects logic_variables — assert LM_DESCRIPTOR().config.logic_variables names both keys, the same way link_massing_centroid_confidence is asserted.
+
+REJECT — doc-2 D.11 "Evidence columns linked_parcel_count, best_shared_len_m" "STORED-NOT-SERVED" — accused of serving those columns — the test only asserts they exist as server-side view columns used for detection, never that they reach the API response, so they are not served.
+
+REJECT — doc-2 G.6 "Report meter: a hit counts one report" — accused the "1 b" block of contradicting it by counting nothing on a real-assembler hit — the pasted task-334 title "Report-meter-counts-only-when-a-report-is-produced-for-a-found-address-and-lot" authorizes exactly that, so no hit is counted without a produced report.
+
+MET — doc-2 G.6 / task-334 — src/tests/parcel-lookup-gate.infra.test.ts "a new lot at used = limit -> 403 REPORT_LIMIT_REACHED with reportsLimit and resetsOn" — the report limit page when exhausted and one count per produced report.
+
+MET — task-360 — src/tests/parcel-lookup-gate.infra.test.ts "an unsure lot ... is served with NO page and counts nothing, no meter read" — the unsure lot's report page is held at the route, neither read nor computed.
+
+MET — task-319 / task-376 (semi hold, D3) — src/tests/parcel-lot-form.logic.test.ts "a three-parcel footprint lot: semi_half, doubt basis, unsure (L-SEMI b)" and "lotFormEffective('semi_half', 'detached')" — semi detection basis/unsure and the override compute are locked.
+
+MET — task-383 — src/tests/parcel-lot-form.logic.test.ts "readLotFormCalls(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8'))).toBe(1)" — the once-per-hit read lives in the flow file, the route keeps only the log pin.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: task-334, task-360, task-319, task-376, task-383
+
+---
+⏱  82682ms (82.7s)
+📊 Tokens — total: 51770, input: 34324, output: 17446, reasoning: 16659

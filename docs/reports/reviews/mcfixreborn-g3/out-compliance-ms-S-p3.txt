@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:26:07.620Z file_sha256=4302ce4ff261f3aec7cd29d2ea95775848cb0ed002ea9b607c4131033a82cf79 prompt_sha256=e57898c122504e4839d3212a7fa3a56890645f6a53e6fa065d160f4e87325223
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+MET — "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — mobile/app/(app)/parcel-tool/index.tsx:96 "searchProps(situation)" and mobile/app/(app)/parcel-tool/disambiguate.tsx:55 "lotMapProps(situation)" — the search surface and the lot-map surface both exist and both are driven by the one match-type branch, so the pasted order is served (A then B then C).
+
+MET — "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — mobile/src/components/surfaces/SearchBinding.tsx:186 "onPress: route === null ? null : { action: 'push', route }" and mobile/src/components/surfaces/SemiQuestionBinding.tsx:74 "navigate: s.navigate" — the address list, the lot map and the semi question each end in a route the mount pushes or replaces to the report.
+
+MET — "the semi calculation stays in Increment 7 (7.25)" — mobile/app/(app)/parcel-tool/semi-question.tsx:70 "result = await answerLookup(id);" and mobile/src/components/surfaces/SemiQuestionBinding.tsx:88 "derived: { answer: [...s.answers] }" — the page records the owner's answer and re-reads the same server page, it computes no semi value, so the calculation is left to Increment 7.
+
+MET — "What the customer sees: the 65 designed search elements ... D (semi question page)" — mobile/app/(app)/parcel-tool/semi-question.tsx:23 "Surface S-093 `mobile_parcel_semi_question`" — element D is delivered as its own surface with its own binding and content slice.
+
+DEFER severity=LOW — "Five principles, keep it simple, no scope creep" — mobile/src/components/surfaces/PageTableBinding.tsx:9 "PAGE.TABLE (task-390, Increment 1·B) · the phone rows-to-props-tree builder." — a general page-table interpreter (five section kinds, flag and value gates, a forty-line type prelude with styles/filters) is added to draw one pasted customer screen, the semi question page — it is confined to that one page today and task-390 names it, so it can be folded later without breaking an element the pasted clauses name.
+
+DEFER severity=LOW — "The search identifies two-or-more parcels at one address ... and wires each to the report" — mobile/src/components/surfaces/LotMapBinding.tsx:181 "const lot = s.map!.lots[i]!;" — the multi-parcel card list asserts the response's map block is present while only the state builder (not in the pasted material, cannot see mobile/src/lib/lotMap.ts) can guarantee it, so the hand-off from the chosen lot rests on a guard the binding does not itself show — recorded rather than raised because the builder's state rules are outside the pasted material.
+
+DEFER severity=NIT — "keep it simple; no scope creep" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:49 "export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;" — two parallel copies of the same closed names exist (the flag list and the value list plus the choices map), so the page's contract with the table is stated in four places — no pasted element is lost by it, it is a single-page tidy.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  51270ms (51.3s)
+📊 Tokens — total: 43219, input: 33590, output: 9629, reasoning: 8818

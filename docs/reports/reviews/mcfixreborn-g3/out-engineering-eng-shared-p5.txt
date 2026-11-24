@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:03:28.218Z file_sha256=a3a9b5e3cd09b5e3a006262d858df1e92e261b18dc2e4e3d04bf58e63ef5810a prompt_sha256=5c44ddfc51412deda60c49f32ea2c3783a99af1d730ddd88470734adeae16b63
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p5.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none identified — NONE — no clause in the pasted list is broken at CRIT level by a mobile client chunk — n/a
+DEFER severity=LOW — 2.3 Assumption Documentation "If using `!`, you must document why in an inline comment." — mobile/src/hooks/useParcelLookup.ts:105 "queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi))," — the non-null assertion on parcelId has no inline comment naming the `enabled: !!parcelId` guard that makes it safe (vacuously, since the guard is in a sibling option, not a prior validation step) — add one line above the queryFn: `// parcelId is non-null here because enabled (below) is true only when !!parcelId`
+DEFER severity=LOW — 2.3 Assumption Documentation "If using `!`, you must document why in an inline comment." — mobile/src/lib/lotMap.ts:61 "return parts.filter((rings) => rings.length > 0).map(([outer, ...holes]) => ({ coordinates: outer!.map(point)," — outer! is guaranteed by the adjacent length>0 filter but the rule requires that guarantee be written down — add `// outer exists: the filter above drops every ring set of length 0`
+DEFER severity=LOW — 2.3 Assumption Documentation "If using `!`, you must document why in an inline comment." — mobile/src/lib/parcelSearchMatch.ts:162 "const left = m[1]!.trim();" — both capture groups of a successful two-group match are asserted with `!` and no comment states the regex guarantees them — annotate the two lines with the regex-group justification or use `?? ''`
+REJECT — 6.1 logError Mandate "Client-side components (React 'use client') may use console.error since logError imports server-only modules." — bare `console.warn` in mobile/src/lib/maxbldHelp.ts:23 instead of logError — not a real issue: this is React Native client code where the server-only logError is unavailable, and the call is console.warn, not the banned console.error in an API route or server lib module
+MET — 12.2 Server State "All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching." — mobile/src/hooks/useParcelLookup.ts:103-109 — detail lookup, typeahead, entitlement and the semi Continue all go through useQuery/useMutation; the only useEffects (useParcelPageHooks.ts:19-24, 33-38) do navigation and debouncing, not fetching
+MET — 12.2 Cache persistence — mobile/src/lib/persistFilter.ts:26 "const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];" — the dehydrate predicate keeps the PII profile and the stale-sensitive entitlement count out of the persisted cache
+MET — 4.3 Frontend Security — mobile/src/hooks/useParcelLookup.ts:46-51 "const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);" — responses are narrowed through the Zod whitelist before use, no secrets and no dangerouslySetInnerHTML anywhere in the chunk
+MET — 13.2 Error Tracking — mobile/src/hooks/useParcelLookup.ts:48 "Sentry.captureException(parsed.error, { extra: { context: 'useParcelLookup Zod parse' } });" — the drift path is reported to Sentry rather than swallowed
+MET — 10.2 Frontend/Backend Boundary — the whole diff touches only mobile/src/hooks/ and mobile/src/lib/, no file under scripts/, migrations/ or scripts/lib/
+MET — 2.3 Assumption Documentation "Use TypeScript Optional Chaining (`?.`) or explicit type guards." — mobile/src/lib/lotMap.ts:91-93 "const map = !error && data?.map ? data.map : null;" and "(map?.lots ?? []).map(...)" — nested payload access is optional-chained, the null outline is guarded at polygonsOf's first line
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 16   Unmet: 3
+
+---
+⏱  78799ms (78.8s)
+📊 Tokens — total: 44490, input: 28178, output: 16312, reasoning: 15377

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:40:24.465Z file_sha256=963949f428531d19fcf3ec9df941463e45d76c2e4264c11cbf0d3a4c12c330b2 prompt_sha256=0764a3b30902fcba1f275a87f40efa47968270d413561ab6e17b19baa5002d1b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile_parcel_search.descriptor.json guards.entitlement `"product": "parcel_tool"` — the same file's notes state "`guards.entitlement.product` is `lead_gen`" and that "Recording anything else here would make this descriptor lie", and programme.product_questions[0] repeats it, so the field contradicts its own evidence — set the field to `lead_gen` or delete the notes paragraph and the product question's premise.
+
+DEFER severity=LOW — mobile_parcel_search.descriptor.json config.why "The six page settings of the phone search and semi pages are REGISTERED logic variables ... debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max and lookup_stale_ms" — six is claimed but five keys are listed here and config.logic_variables holds five rows, the sixth (maxbld_page_continue_wait_ms) being declared only in the sibling semi descriptor — name the sixth key here or say five.
+
+DEFER severity=MED — mobile_parcel_search.descriptor.json states `"name": "hit", "golden": "reports_left"` — the notes say "hit is renamed redirect (the screen navigates, it renders no hit)", so this entry is a dead state that goldens must still satisfy alongside `"name": "redirect"` — delete the hit entry and keep redirect.
+
+DEFER severity=MED — contract_parcels_entitlement.descriptor.json limitations[0] `"check_id": "contract_parcels_entitlement__auth_class_parity"` — a limitation about `a11y.touch_target_min_px` is pinned to the auth-class parity check, so no check in checks[] actually covers the gap it escalates — cite an a11y or schema_declared check, or omit check_id.
+
+DEFER severity=MED — mobile_parcel_search.descriptor.json emits.evidence "mobile/app/(app)/parcel-tool/index.tsx:1-115" — the no track() call proof is scoped to line 115 while evidence.emits cites ":1-312" and checks cite ":287, :297, :304" in the same file, so the proof does not cover the lines the rest of the descriptor rests on — widen the range to the whole file.
+
+DEFER severity=LOW — mobile_parcel_search.descriptor.json docs.under_126 "both externalised in `mobile/src/constants/parcelSearch.ts`" — config.evidence says the same two values are "SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN read from the slice through sliceNumber" at "SearchBinding.tsx:37-38", so two files are named as the owner of one constant — name a single owner ("cannot see" which is right).
+
+DEFER severity=LOW — mobile_parcel_search.descriptor.json x-draft `"stores": []` — state.answer is "mmkv" and state.fields names "useRecentSearchesStore.add" as the canonical writer with this surface as an authorised reader, so the draft under-declares the one store the surface touches — list recentSearchesStore in stores.
+
+NIT — mobile_parcel_semi_question.descriptor.json x-draft `"loc": 0` — four files are listed for this entry while the sibling search descriptor carries 714, so 0 reads as an unfilled measurement — fill the measured value.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- guards.entitlement.product is `parcel_tool` while the file's own notes and product question assert it is `lead_gen` and that anything else makes the descriptor lie
+- states[] keeps `hit`/`reports_left` although the notes say hit was renamed redirect, leaving a dead state in the vocabulary
+- contract limitation for a11y.touch_target_min_px is pinned to the auth_class_parity check, so the escalated gap has no covering check
+
+---
+⏱  36731ms (36.7s)
+📊 Tokens — total: 32951, input: 25058, output: 7893, reasoning: 7029

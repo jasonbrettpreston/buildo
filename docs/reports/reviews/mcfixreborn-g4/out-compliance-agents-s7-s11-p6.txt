@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:48:01.789Z file_sha256=9705a381c051e0e7b71cd91f93550d3169364c3cfe6120331c1bcd1c9fa34ef3 prompt_sha256=0103889cd5aa1f6fe969e3f0308ca35ba6d963c7dea5148879e945c6375f7162
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p6.txt (model: deepseek-reasoner)
+
+```
+MET — 11.1 "a line citation is read, not remembered" — scripts/analysis/rule-lists.json:127 — the surface-contract-routes why carries its witnesses: the census file "scripts/surfaces/_schema/census/contracts.json", the quoted spec lines "Spec 126:135 scope A parcel_product" and "Spec 128:29: \"The client is just glass\"", and the operator words at "MORNING-DECISIONS.md:1520"
+MET — 11.1 "a claim that COULD be executed but wasn't" — scripts/analysis/rule-lists.json:12 — every exempt golden glob names the check that proves it ("every page golden is rebuilt from its response_fixture by buildPage and compared byte for byte"), so no golden is exempted on paper alone
+MET — 11.5 "Their yield files to `review_followups.md`, never folds into a diff review" — scripts/analysis/rule-lists.json:202 — the review-followups row exists and attaches no list, "the row still lets a lane write the file (before this row a lane could not write the file)", so the CLI-model yield file has a resolvable home
+DEFER severity=LOW — 11.2 "Folds are read as a SET, the worst defects are collisions between corrections adopted separately" — scripts/analysis/rule-lists.json:101 "the engineering standards are attached whole (eng-all), replacing the section lists. task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the back-end lists eng-back and eng-shared replace eng-all on this row" — two separately adopted corrections sit unmerged in one why field and the row's lists are eng-back and eng-shared, so its own sentence "attached whole (eng-all)" is falsified in place — delete the superseded eng-all sentence so the evidence trail matches the lists array
+DEFER severity=LOW — 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — scripts/analysis/rule-lists.json:127 "The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ" and :7 "a test fails a golden glob with no named check" — the two locks this table asserts have no red/green record in the material, the test files are outside this chunk (cannot see) — point the row at the recorded red and green so the lock is proven, not claimed
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: 11.1, 11.5
+```
+
+---
+⏱  65350ms (65.3s)
+📊 Tokens — total: 34830, input: 20564, output: 14266, reasoning: 13669

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:40:24.463Z file_sha256=3abdd85fdbd5ea4ca66b78d4ab6dca33eb1a52a171a71bf943667627d15c8046 prompt_sha256=c1ea88993cb41fe0a30fdb43fd3771e53661a3379dc32d7e0444d844fa5d9aa3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/lot-map-data-check.mjs:70 "await client.query('ROLLBACK');" — the ROLLBACK runs only when the SELECT resolves, so on a query error the BEGIN READ ONLY transaction is left to be discarded by client.end() rather than rolled back as the header at line 12 promises ("BEGIN READ ONLY, one SELECT, rolled back") — fix: issue the ROLLBACK from a catch/finally around the query so both paths roll back.
+DEFER severity=LOW — scripts/surfaces/_schema/census/mobile-product.json:8048 "The six page settings of the phone search and semi pages are REGISTERED logic variables" — the sentence names six settings but enumerates five (debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms) and says they are "declared here in config.logic_variables", where config.logic_variables holds exactly those five; the sixth (maxbld_page_continue_wait_ms) is declared in the semi-question entry, so "here" is wrong for one of the six — fix: say five settings are declared here and point the sixth at the semi-question entry.
+DEFER severity=LOW — scripts/surfaces/_schema/census/contracts.json:23217 "surfaces": [ "mobile/src/hooks/useParcelLookup.ts:162" ] — the sharing surfaces list repeats the same file:line already carried by evidence and consumers_verified, while the sibling surface entry records the consumer as a surface via contract_ref (mobile-product.json "/api/parcels/entitlement"); a hook file path is not the surface the answer "sole" is describing — fix: name the consuming surface (mobile_parcel_search) or empty the list and keep the file:line only in evidence.
+DEFER severity=NIT — scripts/surfaces/_schema/census/contracts.json:22902 "the route sends seven, src/app/api/parcels/entitlement/types.ts:12-18" — the same schema is cited as "src/app/api/parcels/entitlement/types.ts:10-19" in the check why at 23108, so one of the two ranges in this change is stale — fix: confirm the range and use it in both places.
+DEFER severity=NIT — scripts/analysis/lot-map-data-check.mjs:80 "console.error(`error: ${e.message}`)" — the only log of a connect/query failure drops the stack, so a TypeError raised in main (for example the uncaught decodeURIComponent URIError on line 64) prints a bare message with no frame — fix: log the error object or e.stack as well.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none, no CRIT or HIGH finding; the lot-map check's argument parsing, refusal gate, read-only transaction and summary are correct, and the five findings above are LOW/NIT records only.
+
+---
+⏱  113884ms (113.9s)
+📊 Tokens — total: 58033, input: 32769, output: 25264, reasoning: 24624

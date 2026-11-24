@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:22:01.683Z file_sha256=6799714b3181ee4891c62b3737c4872d96a4028e79a5e8dbf42888cfbbb08714 prompt_sha256=fb262e283c79501b3d3971fe057e8c84c7bac69ab38f263547b07833268d0bce
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-front.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 1.3 Mobile Front-End Patterns & UX, Design System Fidelity "font-mono is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text." — mobile/app/(app)/[lead].tsx:118 "<Text className=\"text-amber-400 font-mono text-sm -ml-0.5\">Feed</Text>" — font-mono sits on button text and on headings/labels (:120 "Permit Details", :227, :249, :278, :296, :345 section headings, :286 "Modeled effective area", :145 "← Back to Feed"), so the rule is unmet — drop font-mono from those labels/headings/button texts and keep it only on permit_num, dates, currency and counts.
+BUG severity=HIGH — 1.3 Design System Fidelity "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected." — mobile/app/(app)/[lead].tsx:107 "<SafeAreaView className=\"flex-1 bg-zinc-950\" edges={['top']}>" — the exact forbidden hardcode, repeated at :373 "border-t border-zinc-800 bg-zinc-950 px-4 flex-row" and on every bg-zinc-900/800 card, with no dark: variant anywhere in the file — replace with a base token plus dark: variant (e.g. bg-white dark:bg-zinc-950).
+DEFER severity=MED — 1.1 Responsive Layout "Dense metadata rows MUST use `flex-wrap`." — mobile/app/(app)/[lead].tsx:309 "<View className=\"flex-row items-center justify-between py-1\">" — the three Neighborhood Profile label/value rows (:309, :319, :329) are dense metadata rows with no flex-wrap, so label plus income value cannot wrap — add flex-wrap and let the value fall under the label.
+DEFER severity=LOW — 1.1 Responsive Layout "Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone)." — mobile/app/(app)/[lead].tsx:166 "<View className=\"flex-row items-start gap-4\">" — the hero (ring plus address block) and the CTA row (:373 flex-row) are fixed rows with no stacking or responsive reflow — make the hero flex-col with a md: flex-row enhancement.
+DEFER severity=LOW — 1.3 Micro-animations & Haptics "Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity)." — mobile/app/(app)/[lead].tsx:115 "className=\"mr-2 active:opacity-70 flex-row items-center\"" — the only press feedback in the file is the NativeWind active:opacity-70 class (:115, :141), no Reanimated withSpring, and the primary CTA SaveButton is outside the material (cannot see) — drive press state from a Reanimated shared value with withSpring so the rule does not rest on the non-visible SaveButton.
+MET — 1.1 Touch Targets — mobile/app/(app)/[lead].tsx:111 — "hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}" combined with style minHeight 44 at :112 gives the header back button 44x44.
+MET — 1.3 Touch Targets — mobile/app/(app)/[lead].tsx:140 — the not-found back affordance uses the rule's explicit "hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}" and wraps its label in a Pressable, no bare text CTA.
+MET — 1.1 Responsive Layout — mobile/app/(app)/[lead].tsx:193 — "flex-row flex-wrap gap-2 mt-4" gives the dense signal-pill row the required flex-wrap.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  58636ms (58.6s)
+📊 Tokens — total: 32847, input: 17257, output: 15590, reasoning: 14662

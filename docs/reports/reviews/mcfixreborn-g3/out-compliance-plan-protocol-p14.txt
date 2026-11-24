@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:30:36.419Z file_sha256=d395fda3f842b587a1f872b9eb5fba32f7a4b59115ebb400ae00556969497a98 prompt_sha256=5be2cdad29039e79250511737dcfd6a5b7c359b28a82bb6d77e3f57003fd073a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p14.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-364 "SRCH.HYGIENE-1 stale comments and cites left in built 1·B files" — src/tests/surfaces/search-follow-ups.logic.test.ts:9 "C.5 and C.7 (footprint presence and the primary frontage street name are not in the map field whitelist, pinned below so a field cannot arrive without a ruling)" — the same file later asserts those two fields ARE in the whitelist, src/tests/surfaces/search-follow-ups.logic.test.ts:149 "SRCH.LOTCARD (RR-0284): the map field whitelist is the 14 entries plus exactly the two ruled fields (14 -> 16, both ways)", so the header carries a stale claim that task-364 exists to remove — rewrite the header sentence to record RR-0284 and point at the new assertion, or delete it.
+
+DEFER severity=MED — task-356 "SRCH.A6 search box reads Enter a Toronto address (RR-0313, RR-0314)" — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:25 "'placeholder=Search an address, e.g. 26 Hurlingham Cres': 'the placeholder becomes ... then \"Enter a Toronto address\" (operator 2026-11-19, RR-0313 ... task-356)'" — the ruled text lives only as a comment entry in the skip list, so a regression of the content value is invisible to every lock in this chunk (the old placeholder is exempted, not compared) — assert the new placeholder value in the content file and the generated slice the way the tagline is asserted.
+
+DEFER severity=LOW — task-378 "FIX.TUNE Phone tunables are data not code, lookup and entitlement contract entries corrected (D14, D15)" — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:20 "const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDIDATE_LIMIT: '10' };" — the lock restates two registered tunables as literals instead of reading the settings source, so a ruled change to a tunable surfaces as an unrelated oracle failure — read the two values from the registered settings.
+
+DEFER severity=LOW — FE-09 "a separate decisions spec with a Lock column that resolves" — src/tests/surfaces/register-locks-resolve.infra.test.ts:7 "PROSE-ONLY (D-4): rule 5's third clause, \"a .db.test.ts lock must be named in a CI step (test.yml)\", is not asserted here" — the FE-09 lock resolves only part of the rule its own SPEC LINK names, by admission — either assert the third clause here or narrow the SPEC LINK line so it claims only the two clauses the lock checks.
+
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1 stale comments and cites left in built 1·B files" — src/tests/surfaces/search-reports-left.logic.test.ts:99 "expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:162']);" — the lock freezes a line number as contract content, so any edit above line 162 in the hook turns this red for an unrelated reason — assert the file path only, or let the cite be regenerated rather than asserted.
+
+REJECT — FE-09 "a separate decisions spec with a Lock column that resolves" — src/tests/surfaces/nav-by-route.logic.test.ts:2 "the Spec 135 row for this lock is owed as FE-36 (reserved; its text is in the §0b note until FE-35 is in the register, because the Spec 136 generator refuses a gap in the FE numbering)": accused of landing a lock no register row names — the file states why the row cannot exist yet and reserves FE-36, so no existing row is displaced and no pasted clause is broken.
+
+MET — task-12 "GAP.13 Search follow-ups to the current design, the ruled tagline Lot Intelligence" — src/tests/surfaces/search-follow-ups.logic.test.ts:55 — asserts the tagline value in the content file and the generated mobile slice, and that no "Zoning Intelligence" text is left.
+
+MET — task-351 "SRCH.A6 reset date served as a Toronto time label (RR-0310)" — src/tests/surfaces/search-reports-left.logic.test.ts:88 — asserts the device formatter is gone and the line binds the served resetsOnDisplay ref on both targets.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  85093ms (85.1s)
+📊 Tokens — total: 51753, input: 34497, output: 17256, reasoning: 16221

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:54.473Z file_sha256=d78c6640f39764d24372ef57cce84d2d168453f109a78678c4313698858ff922 prompt_sha256=fc965655624d372b522bc210ca792fbc360a01d8d2bb4d180457bc96f13476dd
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC bullet task-375 "the-lens-line-passes-the-rule-context" — scripts/analysis/backlog-brief.mjs "Review (output only): the output lens set and its commands are in the lens line of this brief; no plan lens is run (plan findings were ruled once, at the plan)." — the emitted brief contains no lens line at all: the `out` array prints a pointer to the lens set, no lens-input command and no review command, so no rule context reaches the lane — the acceptance criteria text of task-375 is not pasted (line 41, cannot see), but the pasted line itself names this deliverable and the fix is one entry in `out` carrying `lens-input --list <id>` plus `deepseek-review.js review ... --template .claude/review-templates/lens-compliance.md`.
+
+DEFER severity=LOW — AC bullet task-407 "The-brief-states-where-review-files-go-and-the-close-check-reads-that-place" — scripts/analysis/backlog-brief.mjs "Context file ${ctxRel} sha256=${ctxSha}." — the brief states where the context file goes and never where the review outputs go, while the close check reads `.claude/review-templates/README.md` "unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list" — bounded because the lane README names that place, but a lane reading only the brief files its `out-*.txt` beside the context file.
+
+DEFER severity=LOW — Glossary "**stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered." — scripts/analysis/backlog-brief.mjs:26 "const stage = a.stage && a.stage !== true ? a.stage : '1';" and "`lane ${lane} · stage ${stage}`" — the brief reuses `stage` for a review round, the word this glossary defines as converted.json pending progress, while the same material calls it a round ("context-r${round}") — no gate reads the word, but the term carries two meanings in the same vocabulary; rename the flag to `--round`.
+
+DEFER severity=LOW — Glossary "**lock / lock-db / check / hook**: ... A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — .husky/pre-commit:11 "# is their only path. Pinned by src/tests/hooks-composition.infra.test.ts." — the hook claims a lock by test name only and names none of the ids its own comments rely on (R-AG, R-DJ, R-BC, MB-67), so the definition's "names the rule id" half cannot be checked from the material — the test file is not in this chunk (cannot see); opening it settles whether an id is named.
+
+DEFER severity=LOW — Glossary "**#NN**: A `step-validate` fast invariant, by number ... Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — migrations/334_precommit_budget_registry_repin.sql:13 "Fast invariant #52 compares that file against it." — this is the only #NN citation in the chunk and `scripts/analysis/step-validate.mjs` is not in it (cannot see), so the citation is unverified — one open of step-validate.mjs settles it; if #52 is not the pre-commit-budget invariant the description is a false witness.
+
+MET — RR-0387 "a separate grounder rules every finding" — .claude/review-templates/README.md "4. **A separate grounder rules on every finding.**" — the lens protocol keeps the grounder a separate seat from the lens that produced the finding.
+MET — RR-0439 "each call is at most 120,000 characters" — .claude/review-templates/README.md "keep a diff part to 38000 characters or less with a 33000 character pack" — the stated part size keeps list plus material inside the pasted bound.
+MET — Glossary "**V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY)." — migrations/334_precommit_budget_registry_repin.sql:13 "McDonald''s Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2))" — the standard sense, not the `guards.schema_drift` rule id.
+
+REJECT — .claude/review-templates/README.md "Known tool limits: the other four lens templates still carry the plan placeholder twice in their own prose" — accused of a doubled-prompt claim contradicted by the four templates, which each carry the token once — why not raised: the substitution and the double send live in `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, neither in this chunk (cannot see), and no pasted clause fixes the placeholder count.
+
+REJECT — pasted Description "Generated files, fixtures, lane records and documents are left out on purpose and are not a finding." — accused of reviewing documents in the six `.claude/review-templates/*.md` files — why not a real issue: they are the hand-written lens tooling of task-358, not generated docs or lane records, and the path list was chosen by lens-input.
+
+```
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 57   Unmet: 1
+Rules met: none
+```
+
+---
+⏱  110121ms (110.1s)
+📊 Tokens — total: 50446, input: 26297, output: 24149, reasoning: 22894

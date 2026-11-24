@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:12.842Z file_sha256=18e6d87cb7b225ee2fdece60e5441eb5266b37366e9003d5023c39cb6608606f prompt_sha256=4a8f699b380812bd4fde2ab00324f61136e32ea4357e607a4f1098f0de9697c0
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none raised; the material is test files, and no pasted clause imposes a step-vocabulary obligation on them.
+
+DEFER severity=MED — task-322 pasted line "task-322: backlog/tasks/task-322 - SRCH.DAYLIGHT-Restyle the built mobile search pages search choose-your-lot candidate list semi question from old dark to the Daylight small-pages-v8 look and remove the elements the v8 design removes A.13 B.8 C.9" — mobile/__tests__/daylightSearchPages.golden.test.ts:42 "it('the three layout tables hold no legacy dark class and no raw hex class'" and :44 "for (const [table, o] of Object.entries({ PARCEL_SEARCH_LAYOUT, LOT_MAP_LAYOUT }) as Array<[string, Record<string, string>]>) {" — the file's own scope, line 7 "Scope of the legacy-class rule: the three layout tables and the render trees", names three layout tables but the sweep reads two, so the semi question page's layout-table Daylight compliance stands on the test title alone, which the walk rules call UNMET — import the third layout table and add it to the Object.entries map, or narrow line 7 and the test title to the two tables actually swept.
+
+DEFER severity=MED — five-words Glossary "lock / lock-db / check / hook", "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — mobile/__tests__/pageTable.logic.test.ts:6 "PAGE.TABLE (task-390, Increment 1·B) · moved from src/tests/surfaces/page-table.logic.test.ts (task conflict (a), grounder 2026-11-20): red and green for these cases come from Mobile CI, not the commit hook" — after the move these cases are not run by `npm test` from `src/tests/` and cannot be the lock the glossary defines, so if a rule-map lock row names PAGE.TABLE it is now unenforced (the rule map is not in this chunk, cannot see) — keep a lock under `src/tests/` naming the PAGE.TABLE alias, or record that PAGE.TABLE carries no lock and the Mobile CI run is its only guard.
+
+DEFER severity=LOW — five-words Glossary "#NN: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — mobile/__tests__/lotMapPage.behaviour.test.tsx:11 "a non-map outcome replaces the route once on settled data and never on a background refetch (PLAN panel regression HIGH-1)" is written as a bare finding id, not a defined id scheme — the glossary defines exactly one scheme for out-of-register rulings, W4A-Rn "their register rows are owed (rule-map `meta.register_rows_owed`)", and neither HIGH-1 nor LOW-8 is in it, so the citation points nowhere a reader can resolve — cite the ruling id or record the register row.
+
+DEFER severity=LOW — task-362 pasted line "task-362: backlog/tasks/task-362 - SRCH.LOTMAP-2-lot-map-page-Help-opens-in-the-in-app-sheet-and-the-pick-hint-line-small-pages-v8" — mobile/__tests__/maxbldHelp.test.ts:9 "each reaches openHelp through the surface action open_help (lotMapPage.behaviour.test.tsx and parcelSearchScreen.behaviour.test.tsx pin the press)" — the search-page half of the clause is pinned in parcelSearchScreen.behaviour.test.tsx, which is not in this chunk, so that half is cannot see — confirm it in the chunk that carries that file before closing task-362.
+
+REJECT — implementation note "Generated files, fixtures, lane records and documents are left out on purpose and are not a finding." — the fixture diffs (frontageStreet and hasFootprint added, unlinked_neighbour_picked and unlinked_stale_pick deleted, reports_left and ask_yes_busy added) — fixtures are excluded from this review by the pasted note, so their content is not a compliance issue here.
+
+MET — task-322 (A.13, B.8, C.9) — mobile/__tests__/daylightSearchPages.golden.test.ts:54 "it('every class in every render tree is free of legacy dark tokens'" — all three pages' render trees are swept and each of the three removed elements has its own assertion block.
+
+MET — task-362 — mobile/__tests__/maxbldHelp.test.ts:26 "it('openHelp opens that URL in the in-app browser sheet and does not leave the app through Linking'" — the sheet, the fragment encoding, and the caught-and-logged rejection with topic only are all asserted.
+
+MET — task-381 — mobile/__tests__/parcelPageHooks.test.tsx:25 "it('replaces once on settled data and a background refetch cannot fire it again'" — the once-only settled redirect, the markRedirected stop, the cold-open replace and the debounce restart are all exercised.
+
+MET — task-390 — mobile/__tests__/pageTable.logic.test.ts:15 "import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';" — every builder rule has a positive case and a planted RED case.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  102279ms (102.3s)
+📊 Tokens — total: 54703, input: 32639, output: 22064, reasoning: 20814

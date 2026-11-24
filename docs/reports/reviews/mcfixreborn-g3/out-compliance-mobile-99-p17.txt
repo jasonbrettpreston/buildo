@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:18:33.048Z file_sha256=d8b761601d536fa13edea8b56598c851d04fbc14078dfab7b22b093c3f44590b prompt_sha256=683cc86ab771dd6c296973ed4250eb7f6c1108f93ca5044a91855bf51b0f06ff
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 99 §6.5 "A render gate condition (`if (X) return <Loading/>`) MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred." / "Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out." — mobile/src/lib/semiQuestion.ts:74 "if (isFetching) state = 'loading';" — the page state (hence the rendered page) is gated on `isFetching`, and the enumerated carve-out list holds only AppLayout's `isFetching && subscription_status === 'expired'`; when `data` is undefined after a settled fetch or during a retry/reconnect, `isFetching` toggles and the gate flips loading↔redirect, so the redirect at line 75 can fire on a non-settled frame — the very shape incident 3 (§1.1) records — gate on a settled signal (`isFetched`/`isLoading`) or pass a `settled` flag so `redirect` requires "the first settled data only" as the file's own SPEC LINK line 3 claims, and drop `isFetching` from the branch.
+
+DEFER severity=LOW — spec 99 §5.1 "Other layouts ... MUST NOT have routing `useEffect`s." / §5.4 "Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body." — mobile/src/lib/semiQuestion.ts:77 "else { state = 'redirect'; navigate = parcelSearchRoute('unique', { parcelId, query: '' }); }" — cannot see the binding that consumes `navigate` (outside this chunk's two paths), so whether the redirect effect lives in the semi page and not a layout, and reads no Zustand field in its deps, is unjudged — confirm the consumer effect's file and deps list in its own chunk.
+
+MET — spec 99 §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — mobile/src/lib/semiQuestion.ts:12-16 — imports only lib helpers and a generated JSON slice, no `createMMKV`/`getString` read, no new blob.
+
+MET — spec 99 §B5 "All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`." — mobile/src/lib/semiQuestion.ts:42-56 — adds no store and no persisted field, so no sign-out reset entry is owed.
+
+MET — spec 99 §6.1 "Components MUST select only the primitives or stable references they need." — mobile/src/lib/sliceConfig.ts:14-27 — the module is a pure reader, it holds and reads no store.
+
+MET — spec 99 §4 B1 "Every server fetch MUST go through TanStack Query" — mobile/src/lib/semiQuestion.ts:10 — the page reads the existing `['parcel-lookup', parcelId]` entry it is handed ("It reads the SAME lookup entry the report reads"), adding no raw fetch.
+
+REJECT — spec 99 §3 "Adding a field to the mobile app requires adding a row here." — the selected semi answer and the `busy` flag are accused of having no matrix row — the answer is carried as a route param (semiQuestion.ts:10, "carried as a route param (O-12: no server store)") and the 2026-09-15 amendment keeps ephemeral UI state client-side without a row, so no row is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  48214ms (48.2s)
+📊 Tokens — total: 29671, input: 19845, output: 9826, reasoning: 9021

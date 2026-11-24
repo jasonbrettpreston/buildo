@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:21:57.606Z file_sha256=7e2f7acb0bf9d2d85ed6721d4927325d4025dd16c1b5f72926dd9722619ffaca prompt_sha256=45176a922670301e5db8de0a21eecde850a6d35f45b1ee7f4e6f99bb818a5928
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p6.txt (model: deepseek-reasoner)
+
+REJECT — 12.8 SQL Linting & Migration Safety — "All NEW migration files must pass `sqlfluff lint --dialect postgres`" — accused of adding a migration with no sqlfluff run and no DOWN block — scripts/analysis/rule-lists.json:1 "{" — the added file is a JSON path-to-rule-list table, not a migration, so no migration gate is engaged
+REJECT — 12.10 Real-DB Integration Tests — "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file" — accused of landing a schema change with no real-DB test — scripts/analysis/rule-lists.json:19 "\"contract_version\": 1," — no DDL, constraint or PostGIS expression is added, so the db-test trigger is absent
+REJECT — 12.12 Property-Based Tests — "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" — accused of shipping an untested pure module — scripts/analysis/rule-lists.json:83 "\"rows\": [" — the material is declarative data with no arithmetic invariant (no scoring, key normalizer, unit conversion or comparator), so 12.12 does not reach it
+REJECT — 13.1 Product Telemetry (PostHog) — "Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`" — accused of adding an uncaptured interactive handler — scripts/analysis/rule-lists.json:22 "\"protected_paths\": [" — the file adds no handler and no `src/features/leads/` path, it is a build-time config table
+REJECT — 13.5 Feature Flags (PostHog Flags) — "Any new user-facing feature MUST be wrapped in a feature flag check at the route level" — accused of shipping an unflagged user-facing feature — scripts/analysis/rule-lists.json:20 "\"base_ref\": \"wf2/board\"," — the change adds lane-tooling data, not a route or user-facing feature, so no flag is owed
+REJECT — 14. The Prevention Loop — "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — accused of a new coupling with no spec-section link — scripts/analysis/rule-lists.json:3 "\"COMPLY.2 (task-366): the path to rule-list table." — that registry row's form is \"*candidate gate*\" (a guideline, not a machine rule) and a JSON data table carries no SPEC LINK; the specs it couples to are named with sections in the same file (e.g. \"Spec 133 R-KP / R-LD, Spec 128 section 4.11\")
+MET — 12.11 Footgun Lint Gate — scripts/analysis/rule-lists.json:1 — the added content contains none of the five banned patterns (no `new Pool(`, no silent-catch fallback, no `process.env.X || 'default'`, no `.filter((x): x is _ => x !== null)`), and the gate's stated scope is `src/features/leads/` and rule-by-rule `src/lib/`
+MET — 13.3 Backend Structured Logging — scripts/analysis/rule-lists.json:1 — no catch block and no `console.error` is added, so the "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`" rule is not violated
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  35638ms (35.6s)
+📊 Tokens — total: 26067, input: 18704, output: 7363, reasoning: 6558

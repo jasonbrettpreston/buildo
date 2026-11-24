@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:15:08.768Z file_sha256=02127adf8b8246c0d3166f5d2832cab050e74317a716b8c6d29af4b8d9cdff20 prompt_sha256=4192ce8483895fa65aea2466f7d4987bcc635896f8a36b21b71527330017e886
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/static-page.logic.test.ts:18 "unset, not an address (a header or query payload included) or a read that throws gives {} (the mail links left out), logged, never thrown." — on the day the one admin setting is empty or mis-typed, a person who opens Help (or reads Privacy looking for a contact route, where any typed address is banned at line 179) finds no way to reach support and no line saying why; the only signal is a console log the person never sees — design silent on the unset state, so record it; the page should show a stated fallback line or omit the whole contact block so the person is never left facing nothing.
+
+DEFER severity=MED — src/tests/surfaces/static-page.logic.test.ts:149 "expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);" — the page table's plain pages carry only three destinations, so a person who has just read the Terms has no link to sign up or log in and must use the browser to get back to the product — design silent on plain-page navigation and cannot see whether the mount adds a header link; the table's own link parts are pinned to these three.
+
+DEFER severity=MED — src/tests/surfaces/static-page.logic.test.ts:184 "for (const w of ['free trial', 'Basic', 'Pro', 'Enterprise', 'continues on the Basic plan', 'plus HST']) if (!terms.includes(w)) out.push(`web_terms: does not say \"${w}\"`);" — the Terms are forced to promise the reader that the trial "continues on the Basic plan" and that prices are "plus HST", a billing promise made to every person who reads the page — design silent on day-15 behaviour and tax presentation and cannot see the app to confirm; record the wording against what the app actually does before the lawyer check the spec link names.
+
+DEFER severity=LOW — src/tests/surfaces/static-page.logic.test.ts:181 "if (/\bone (monthly )?plan\b/i.test(v)) out.push(`${id} ${k}: \"one plan\" (four plans are ruled, L-R4)`);" — the guard catches only that phrasing, so "a single plan", "one flat price" or "one subscription" can still be published on the Terms and tell the person a story the four-plan ruling retired — design silent on the exact words, bounded to copy written later.
+
+REJECT — src/tests/surfaces/surface-conformance.logic.test.ts:897 "min-h-[44px] or another listed size of at least 44 px" — the touch-target rule looks loosened from the ruled 44 px, as if a person could be given a smaller button — 48 px is larger than 44 px and the comment on the same block cites the operator's approval for the semi page (task-319, RR-0309), so no person gets a target under 44 px.
+
+VERDICT: PASS on the person's experience
+States checked: plain page first view (help, terms, privacy), landing, error page, not-found and refused path, phone search results with the report link, Help with the inbox set, Help and Privacy with the inbox unset or the read failing, semi-question screen, report page loading/error/answered via the pinned goldens   Dead ends found: 0
+
+---
+⏱  89628ms (89.6s)
+📊 Tokens — total: 44577, input: 29089, output: 15488, reasoning: 14750

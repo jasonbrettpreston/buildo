@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:30:36.420Z file_sha256=a6e5f5034e312496698e7a805d7b3b26a81ef47b3f70b2795eb52eb9b36f8ad4 prompt_sha256=c23c391458895b6c9737fc55b0efc77e3c30ee610e8df4695105f9d0d2ce1b75
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p15.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — rr-0387 "each built task's output is reviewed, a separate grounder rules every finding, confirmed defects go to fix tasks." — src/tests/surfaces/surface-conformance.logic.test.ts:41 "'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }," — the C-12 pin lifts three production files out of C-2b and C-8 and accepts 106 structural findings as a fixed baseline, and the text that would authorise it (Spec 126 section 11b.1, task-384's acceptance criteria) is not in the pasted list, so nothing pasted names this exemption and its correctness cannot be judged here — paste Spec 126 11b.1 and task-384's criteria, or leave the three files under C-2b and C-8 un-pinned.
+
+DEFER severity=LOW — m-246 item 3 "the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 ... : the board is the plan." — src/tests/surfaces/static-page.logic.test.ts:7 "// MF-46 stage C · the static page contract and the MaxBLD plain pages (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §3.2, §12 folds 16, 18, 19," — the requirements T1 to T8 enforce are sourced to a per-lane plan file that the ruling replaced with the board, so "folds 16, 18, 19, 22" cannot be checked against the plan of record — cite the board row or the owning task ids (e.g. task-12, task-389) instead of the lane plan.
+
+DEFER severity=LOW — plan protocol section 3 "Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task." — src/tests/surfaces/surface-conformance.logic.test.ts:259 "// SRCH.A6 (task-320; dated 2026-11-19; operator RR-0307 ...): 424 -> 425 strings" followed by :260 "// SRCH.C12 (task-321; ...): 422 -> 424 strings" — the before/after chain is written out of order (422 to 424 is recorded after 424 to 425), so the closing count of 426 cannot be reproduced by applying the notes as written — reorder the chain to 417 to 414, 414 to 418, 418 to 422, 422 to 424, 424 to 425, 425 to 426.
+
+DEFER severity=LOW — task-353 "C-9m 44 px" — src/tests/surfaces/surface-conformance.logic.test.ts:905 "// Dated 2026-11-19 (task-353 SUITE.FIX-2): the Button list is min-h-[44px] and min-h-[48px] (the semi page, task-319, RR-0309 :1199; orchestrator decision MORNING-DECISIONS.md:1227)" — the exactly-44 px lock is widened to 44 or 48 px on the strength of a ruling that is not pasted, so the widened list is carried by a comment only — paste RR-0309 or keep Button at min-h-[44px]; the minimum itself is not breached because 48 px is at least 44 px.
+
+MET — plan protocol section 2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — src/tests/surfaces/surface-validate.logic.test.ts:907 "RED: a chip without min-h-[44px], min-h-11, min-h-[44px] with sm:min-h-8, and sizes not on the list (40, 46 px; 48 px on an Input); the listed 48 px Button passes" with the gate spawned as "spawnSync(process.execPath, [path.join(root, GATE), '--check']".
+
+MET — plan protocol section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — src/tests/surfaces/search-web-binding.ui.test.tsx:128 "SRCH.A6 (task-320; RR-0307)" and the same pattern on every new case, so each new block carries a card id plus a ruling id.
+
+MET — operator RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — the chunk holds only test files, no plan, no lane record, so the output-only frame is respected.
+
+MET — operator RR-0414 "4. changed parts only as per your recommendation" — src/tests/surfaces/surface-conformance.logic.test.ts is supplied as a changed part ("index 47b6cb17c04a83fc3bb5dc456da057ab088adc71..dcc9764edc392e19e2d93eca73fa3e25f8ca5ed3"), not a whole-file rewrite.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  81583ms (81.6s)
+📊 Tokens — total: 50886, input: 35367, output: 15519, reasoning: 14322

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:59:19.388Z file_sha256=2945a6e03e1b00cbe7238de59fe28d3e920e48a8bde3d1fa462f1ce03245ec15 prompt_sha256=561265c150209f86e52e8b623a2f348d5897a36bf84a1556df0355dcf3eb3023
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Implementation Notes "Left out of every group: generated files (their generators are checked by the commit hooks), test fixtures and goldens, documents, lane and review records, backlog cards." — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-91-1.json:2 ""$comment": "Pre-registration, task MF-91 (SRCH.FOOTER, task-332: the one shared web footer" — a committed pre-registration golden is in the group's file list although the note excludes goldens from every group — drop that file from the set and let its own prereg commit and scripts judge it, it spends the RR-0439 character budget for no clause coverage.
+
+DEFER severity=LOW — pasted card reference "task-411: backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md, Acceptance Criteria from line 0" — NONE — the pasted context holds only the card pointer and title, no criterion text, so task-411 is judged here on its title line alone and the criteria themselves cannot be judged — grounder step to paste the card text (line 0 onward) and re-rule against it, cannot see.
+
+DEFER severity=LOW — task-411 title "The lead-detail API serves the area already converted" — mobile/__tests__/useLeadDetail.test.ts:98 "it('keeps the served modeled_gfa_sqft and still parses a response without it (optional; FIX.AREA-FACTOR)', async () => {" — the phone half is enforced but the API half has no line in chunk 1 of 6 and the schema treats the field as optional, so nothing in this material requires the server to send converted square feet — confirm against the schema and the detail route in a later chunk, cannot see.
+
+DEFER severity=LOW — Decisions "RR-0414 (operator, verbatim): "4. changed parts only as per your recommendation" (the oversized files are read as changed parts)." — mcbylaws/protected-paths.json:2 "and his words at :1422, verbatim: "approved [the five items pasted] - remember the app is not beign used"" — the frontend addition of src/components/report/** (task-384) rests on operator words quoted inside the file, which are not among the pasted rulings, so the approval itself cannot be judged — check MORNING-DECISIONS.md:1421 and :1422 in the grounder step before ruling that clause unmet, cannot see.
+
+MET — task-411 "the two typed phone copies of the factor are deleted" — mobile/src/lib/leadDetailFormat.ts:14 and mobile/src/lib/parcelCostFormat.ts:84 — both helpers now only format a served square-feet value, the factor appears nowhere in either file and the grep guard in both tests is backed by the source.
+
+MET — RR-0439 "each call is at most 120,000 characters" — chunk header "part 1 of 1 chunk 1 of 6" — the group is cut into six calls at file boundaries, so no single call carries the whole 37-file set.
+
+MET — RR-0433 "the group review is their one output review" — Description "This is one output review of code that is already built and landed" — the material is the landed output only, no plan or re-review of the same files is asked for here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  106855ms (106.9s)
+📊 Tokens — total: 40432, input: 26757, output: 13675, reasoning: 12880

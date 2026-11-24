@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:05:30.362Z file_sha256=04ecbdb45ce4e4e649a0f7c49dd6255127d4d13473cb4f358c11614472e9eb30 prompt_sha256=6346429464017800abd0792d2cacbb24310b184dd6c4cef309a3635e52dcbcfa
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p8.txt (model: deepseek-reasoner)
+
+BUG severity=none
+
+DEFER severity=MED — 10.3 Frontend/Backend Boundary "Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`)." — src/lib/parcels/lot-map.ts:31 "export const CONSUMER_MAP_COLS = ['parcel_id', 'lot_size_sqm', 'frontage_m', 'zoning_zn_string', 'centroid_lat', 'centroid_lng'" — the consumer map contract surfaces raw parcels column names (lot_size_sqm, frontage_m, zoning_zn_string, centroid_lat/lng) rather than stable API field names, so a parcels refactor breaks the client contract — map them to stable names in assembleLotMap or record the exact exemption route-by-route.
+
+DEFER severity=MED — 4.4 API Design for Multi-App Consumption "All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes." — src/lib/parcels/lookup-flow.ts:48 "let response: ConsumerParcelLookupResponse = {" — the body the route sends is an ad-hoc shape (match, candidates, warnings, parcel, resolution, map, page, lotForm) with no data/error/meta — wrap the payload in the envelope at the route, or record this endpoint as a named spec-sanctioned exception.
+
+DEFER severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/lib/parcels/geometry.ts:99 "const last = ring[ring.length - 1]!;" — every `!` in the material is undocumented: geometry.ts "ring[i]![0]", lot-map.ts "SEED_BOUNDS[key]!", lot-size-entry.ts:262 "read.entry!.entered_at.toISOString()" — add the required one-line justification at each assertion, or replace it with a guard.
+
+DEFER severity=LOW — 10.3 API Route Discipline "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route." — src/lib/parcels/lookup-flow.ts:17 "import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';" — the lookup contract types live under src/app/api/parcels/lookup, so a second client must import from a route folder — move them to src/lib/parcels/types.ts, which geometry.ts already imports from.
+
+DEFER severity=LOW — 12.12 Property-Based Tests "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant." — src/lib/parcels/geometry.ts:41 "export function haversineDistance(" — no property test for haversineDistance, shoelaceArea, sqmToSqft or mToFt is visible in this material and src/tests/property is not pasted — add one invariant test per conversion/distance function, or point to the existing file.
+
+DEFER severity=LOW — 11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — src/lib/parcels/geometry.ts:29 "export const SPATIAL_MAX_DISTANCE_M = 100;" — SPATIAL_MAX_DISTANCE_M, IRREGULARITY_THRESHOLD and lot-map.ts:49 "export const OUTLINE_MAX_BYTES = 65536;" are hard-coded literals while the sibling lookup tunables are pinned seed values and `_contracts.json` is not visible here — source them from `_contracts.json` with a contracts.infra.test.ts row, or show the contract row already governs them.
+
+REJECT — 4.2 Parameterization — that the raw `query()` statements in lot-map.ts and lot-size-entry.ts are not Drizzle parameterized queries — every statement binds through placeholders ("WHERE parcel_id = ANY($1::text[])", "LIMIT $4"), so no value is concatenated and there is no injection surface.
+
+MET — 6.1 logError Mandate — src/lib/parcels/lot-map.ts:13 "import { logWarn } from '@/lib/logger';" — the only logging in the five files goes through the logger; no bare console.error appears in the material.
+MET — 4.3 Frontend Security (no SELECT *) — src/lib/parcels/lot-map.ts:113 "SELECT parcel_id, lot_size_sqm, frontage_m, zoning_zn_string, centroid_lat, centroid_lng, ST_AsGeoJSON(geom, 6) AS outline…" — explicit projection, no SELECT *.
+MET — 12.11 Footgun Lint Gate (silent-catch-fallback) — src/lib/parcels/lot-size-entry.ts "if (isUniqueViolation(e)) throw new LotSizeRefusal(409, 'LOT_SIZE_ALREADY_ENTERED'…); throw e;" — the catch converts or rethrows, never returns an empty fallback.
+MET — 2.3 Assumption Documentation (optional chaining) — src/lib/parcels/lookup-flow.ts:62 "const held = lotForm?.unsure === true && semi !== 'answered';" — nullable nested reads use `?.` rather than blind dereference.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 15   Unmet: 0 blocking (6 deferred: MED 3, LOW 3)
+
+---
+⏱  84703ms (84.7s)
+📊 Tokens — total: 46290, input: 29355, output: 16935, reasoning: 15656

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:24:52.378Z file_sha256=4a618be0014d212ba5a863339b3356e9c269936cedb82c77b3c47f47bdc28e2c prompt_sha256=4baeb638a1fc3d80e1d35c6205f7a7043c2c543e4720646e6e7a2dde3e7126a1
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p13.txt (model: deepseek-reasoner)
+
+BUG severity=MED — Principles "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" (task-364 SRCH.HYGIENE-1, "stale comments and cites left in built 1·B files") — search-follow-ups.logic.test.ts:9-10 "C.5 and C.7 (footprint presence and the primary frontage street name are not in the map field whitelist, pinned below so a field cannot arrive without a ruling)" — the same file's SRCH.LOTCARD block (task-336, RR-0284) asserts those two fields ARE in the whitelist, so the header of a built 1·B file tells the reader C.5/C.7 are unbuilt and fenced off while the body locks them as landed — rewrite the header line to state C.5/C.7 landed under task-336/RR-0284 with the whitelist at 16 entries.
+
+BUG severity=MED — Principles "accuracy, understandability; keep it simple" — search-follow-ups.logic.test.ts:98 "describe('GAP.13: fingerprints follow the content files, and no field was added', () => {" — the block's own second test asserts two fields were added ("'map.lots[].frontageStreet', 'map.lots[].hasFootprint'," at line 110), so the block title contradicts its assertion twelve lines below it — retitle the block to "fingerprints follow the content files" and move the whitelist case into its own describe.
+
+DEFER severity=LOW — Objectives "What the customer sees: the 65 designed search elements ... A (search page)" — search-reports-left.logic.test.ts:83 "it('the line sits under the box: right after the pill, before the legal line and the chips', () => {" — the property the title names is not asserted: no pill testID is read, no adjacency is checked, and the legal-line clause is checked for mobile only ("if (target === 'mobile')", line 88), so any index after "parcel-search-input" passes on web.
+
+DEFER severity=LOW — Principles "accuracy, understandability" — search-reports-left.logic.test.ts:14 "(f) the count does not survive an app restart (the query client persists every key but one exclusion)" — the test it heads asserts a second exclusion ("expect(shouldDehydrateQueryFn({ queryKey: ['user-profile'] })).toBe(false);", line ~168), so the header under-counts the exclusions it relies on.
+
+DEFER severity=LOW — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — search-follow-ups.logic.test.ts "expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();" — the GAP.13/search-follow-ups lock also pins a new lot-map data-check script, its port and its host/scheme/query refusal guard, behaviour no pasted clause or pasted task title names; the SRCH.LOTCARD (task-336) block is the place to cite the ruling for it if one exists.
+
+MET — Increment objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — src/tests/surfaces/lot-map-help-link.logic.test.ts:52 — the address-confusion notices (B.7) and the multi-lot prompt/link (C.12) are each asserted per golden against the two v8 strings and the existing open_help action.
+
+MET — Objectives "What the customer sees: the 65 designed search elements ... C (lot confusion, lot map)" — search-follow-ups.logic.test.ts:75 — map.heading carries the v8 text with the derived lot_count and map.rail/map.badge are retired from content file and slice.
+
+MET — Project objectives "Five principles, keep it simple, no scope creep" (accuracy) — parcel-legacy-oracle.logic.test.ts:69 — every INTENTIONALLY_CHANGED entry must name a real legacy literal, so no silent drop can hide behind the ruled-change list.
+
+REJECT — Increment objectives "C (lot confusion, lot map)" — the C.12 help link opens topic lot_match where small-pages-v8 names wrong-lot — the topic names a binding of the built Help page and no pasted clause names any topic, so nothing pasted is unmet.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: none
+
+---
+⏱  74486ms (74.5s)
+📊 Tokens — total: 53174, input: 36001, output: 17173, reasoning: 16178

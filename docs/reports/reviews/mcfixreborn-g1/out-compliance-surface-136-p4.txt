@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:14:05.888Z file_sha256=bccef4c9622bb3ba1fc293c34e33e59c9be7442abbf959ac3b11f5d8cc402805 prompt_sha256=d9df780a5124aad92f11e7f616e3413db2ff43d38b41f8e093d07205a3cd18f4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-surface-136-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — fe.34 "A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only)." — src/components/report/ReportPage.tsx:304 "case 'lot_size':" — Section draws the lot-size box and the report-sheet dialog on every layout row, expanded included, because neither case reads view.layout.details — gate both cases on view.layout.details === 'collapsed' before drawing them
+BUG severity=MED — fe.35 "the title, the citywide and per-lot groups and the data dates" — src/components/report/ReportView.tsx:66 "<section data-block=\"checked\" data-paced={c.paced ? 'true' : 'false'}" — the loading state draws the groups, the dates and the ready line but no title line, and the omission rests only on a comment ("it doesnt need a title") whose operator words are not in the pasted context — render the checked title line as a part, or rest it on a pasted ruling
+BUG severity=MED — fe.24 "the renderer throws on an unknown field or status" — src/components/report/ReportView.tsx:17 "data-field={n.field} data-status={n.status}" — no throw exists for an unknown or missing status (or a field-less node), so an unruled status is drawn as sent — add a closed-status check in Item that throws outside 11a.3 plus none
+BUG severity=MED — fe.07 "mobile, web, admin and PDF render the same declaration; parity compares each target's real output." — src/components/report/ReportPage.tsx:263 "{ role: 'link', content: 'footer.terms', href: '/terms' }, { role: 'link', content: 'footer.privacy', href: '/privacy' }, { role: 'link', content: 'footer.help', href: '/help' }," — the web report footer gains three link parts built in code that the page table does not carry, while the mobile binding "keeps its own footer ... its G4 part is unchanged", so the targets no longer render the same footer declaration — put the three links in the shared page-table footer section or rule the per-target difference
+BUG severity=MED — fe.42 "FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid" — src/components/report/ReportPage.tsx:146 "if (!d?.drawing) return null;" — only a missing drawing is caught; an unknown state is drawn and invalid geometry throws (pts on an absent outline) instead of the part being left out — check state against drawn|outline_shape|outline_edges|outline_unevaluated and the geometry, then leave the part out
+DEFER severity=LOW — fe.36 "a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action" — src/components/report/ReportPage.tsx:288 "<a href={`#${o}`} data-item={o}" — the summary item, See details and Back controls are plain anchors, not the router's Link, although they add history entries (Back closes) — use Link for the in-page option and panel routes
+MET — fe.05 — src/components/report/ReportPage.tsx:143 — "const pts = (ring: number[][]): string => ring.map((p) => p.join(',')).join(' ');" draws the server's coordinates as sent, no geometry maths
+MET — fe.18 — src/components/surfaces/web/footerNode.ts:28 — pickFooterText throws on a missing or non-string footer key, no fallback text typed in code
+MET — fe.23 — src/components/report/ReportView.tsx:136 — ad slots render as asides beside and after the card, never inside the data-block="card" div, with their disclosure
+MET — fe.29 — src/components/report/ReportView.tsx:23 — every node's disclosures render, with the confidence/provenance meta line and badge
+MET — fe.31 — src/components/surfaces/web/footerNode.ts:38 — the web footer is one shared builder (footerNode.ts) used by the report, static and search users
+MET — fe.33 — src/components/report/ReportView.tsx:13 — the fixed labels come from report-presentation.json states.view, not text typed in the component
+MET — fe.41 — src/components/report/ReportPage.tsx:277 — the summary lists option-keyed part references with the server-built heading, no copied value and no count computed here
+MET — fe.43 — src/components/report/ReportView.tsx:96 — "const collapsed = layout.details === 'collapsed';" the existing details reader keeps its meaning, with details_view a second key
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 27   Unmet: 6
+Rules met: fe.01, fe.02, fe.05, fe.06, fe.18, fe.23, fe.29, fe.31, fe.33, fe.37, fe.41, fe.43
+
+---
+⏱  196098ms (196.1s)
+📊 Tokens — total: 78768, input: 34928, output: 43840, reasoning: 42705

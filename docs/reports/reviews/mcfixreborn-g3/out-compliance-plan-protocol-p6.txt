@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:33:03.242Z file_sha256=35773927db35bc8792655822124a9247547a0acff002cc51197933ad6734a0b5 prompt_sha256=179c4484eb36be7794c5f4a5dd2dfdbcb825631519f8177030ecfe4ae9822206
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — plan-protocol, principles line, operator verbatim "Dont make more ungrounded recommendations." — scripts/surfaces/_schema/census/mobile-product.json "range has NO SOURCE (envelope: media_list_cache_seconds 0 to 600 s, in ms)" — five page bounds are registered as contract data with no source (this one, "maximum 5000 has NO SOURCE", "range 0 to 10 has NO SOURCE", the semi page's 1000 to 600000, lookup_stale_ms), so the new logic_variables declare invented numbers — cite a spec line or ruling per bound, or leave the bound unregistered until one exists.
+DEFER severity=MED — plan-protocol, principles line, "accuracy, understandability" — scripts/surfaces/_schema/census/contracts.json "an explicit pick-by-name projection of 24 fields" — the same diff adds two names to that whitelist ("frontageStreet", "hasFootprint" at the field_whitelist hunk), so the stated projection count is stale — restate the count as 26, or drop the number and point at inputs.field_whitelist.
+DEFER severity=MED — plan-protocol, principles line, "accuracy" — scripts/surfaces/_schema/census/contracts.json "It reads 9 tables" against scripts/surfaces/_schema/census/mobile-product.json "\"table\": \"parcel_buildings\"" and "\"chain_position\": \"sources[4]\"" — the lookup contract's read list and count omit the parcel_buildings read its own lot-map block performs, so two census rows disagree on one contract's reads — add parcel_buildings to the contract's table list and count, or state why the map read is not the contract's.
+DEFER severity=LOW — plan-protocol section 5 clause 2 "from the gap register and the launch list only" — scripts/surfaces/_schema/census/web-product.json "Shared rendering infrastructure: the renderer every web REPORT page draws through (owner entry only)." with evidence "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)" — shared work is homed from a spec section, not from the gap register or launch list the clause names — name the gap-register or launch-list row that homes it, or record why this owner entry sits outside that rule.
+MET — plan-protocol section 0 "Every new task carries its SOURCE" — web-product.json "task-384 STD.REPORT-OWN (dated 2026-11-20)" — the new owner entry names its task and its spec source.
+MET — plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — contracts.json ":1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"" — the route-meter ruling is quoted at its file:line.
+MET — plan-protocol section 2 step C "Beyond-research parts GROUNDED / STRIPPED / STILL OPEN" — mobile-product.json "\"adjudicated_by\": \"the separate grounder verdict of 2026-11-20 (task-390 conflict (c))\"" — the semi-flag deviation is adjudicated by the separate grounder the header note requires.
+MET — plan-protocol section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — static-page.json "\"screens\": {" holding only "mobile_parcel_semi_question" — the extension adds one pilot page with task-390 and the operator approval quoted, so the stop rule holds.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: none
+
+---
+⏱  109564ms (109.6s)
+📊 Tokens — total: 53001, input: 33652, output: 19349, reasoning: 18510

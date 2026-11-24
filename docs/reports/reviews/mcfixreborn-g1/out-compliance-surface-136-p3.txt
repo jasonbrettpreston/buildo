@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:14:05.889Z file_sha256=79c1489f09604b43a27c9c082ae005857492a0dc9238f407b2f3455e6699d63d prompt_sha256=945d7e97555e58a3a465cda207f60001b156d5db7736d49c370082dc74ed49cc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.57 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px — binding_web_report.descriptor.json "They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files." and "No 44 px measure exists." — the owned renderer holds the footer links, the page toggles and the detail sheet controls and the entry states none of them is measured, so the clause is unmet and task-384's 44 px half is not delivered — bring src/components/report/** under a 44 px measure (golden nodes for the footer and toggles, or a source measure) and record the counts.
+
+BUG severity=HIGH — fe.31 "descriptor valid with no UNRESEARCHED and no golden: 'none'" — binding_web_report.descriptor.json "deviations": "UNRESEARCHED" (also "touch_target_min_px": "UNRESEARCHED", "labels": "UNRESEARCHED", "dark_mode": "UNRESEARCHED") — a descriptor filed in the conversion registry carries four UNRESEARCHED schema values, and the entry's own dated grounder note is not an operator ruling, so the clause is unmet — measure the values or obtain and record an operator ruling, as binding_web_search does with "deviations": "none".
+
+BUG severity=MED — fe.31 "one props golden per reachable state per declared target, each covers a state or check, every state covered" — binding_web_search.descriptor.json "states": [{"name": "hit", "golden": "none"}] (identical in shared_mobile_surface_binding, binding_mobile_list and binding_web_report) — all four new binding entries declare one state whose golden is the value the clause forbids, so no props golden pins the binding's own reachable state — point each entry at the consumer's props goldens the "versioning.why" already names, or drop a state declaration the consumer owns.
+
+BUG severity=MED — fe.33 "each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo)" — binding_web_report.descriptor.json "A change shows up as a golden or render-smoke failure." with "states": [{"name": "hit", "golden": "none"}] — the REPORT archetype's web renderer names no render smoke and has no golden to render, so the web half of the clause is unproven for the renderer every web REPORT page draws through — name the render-smoke test in versioning.evidence, as binding_web_search does with "search-web-binding.ui.test.tsx".
+
+BUG severity=MED — fe.02 "a screen is a descriptor; the only code is the shared archetype components" — mobile_lead_detail.descriptor.json docs.under_126 "It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down." against "owns": {"components": ["mobile/src/components/feed/OpportunityRing.tsx"]} — the declaration contradicts itself, so the descriptor does not honestly declare what the screen is — correct under_126 to state the one owned component, or drop the component from the field, and record the SaveButton rendered in LeadCard the notes already mention.
+
+MET — fe.45 — binding_mobile_list.descriptor.json — the client-side "flagsOf" computation carries a deviations[] row with "adjudicated_by" and "date": "2026-11-20", exactly what the clause requires.
+MET — fe.36 — binding_web_report.descriptor.json — "the open panels and the detail sheet are page-local UI state toggled by ReportPageToggles.tsx, never persisted", local state is disclosure only.
+MET — fe.18 — web_landing.sample.json — the changed part is "kind": "content", "content": "row.unit_size_basis_value", a content source from the closed set, not a derived value.
+MET — fe.46 — binding_web_search.descriptor.json — the new web SEARCH binding is inside Spec 126 §11b.5 and cites its ruling "P42-D9 a; Spec 126 §11b.5", no new library and no new component kind.
+MET — fe.03 — binding_web_search.descriptor.json — the declaration points at live checks, "admin-media.golden.test.ts — T7" and "search-web-binding.ui.test.tsx".
+
+REJECT — fe.49 — adding a new registry file for the fenced product mobile_lead_detail — the fence bars linkage into the parcel product, and this entry is scope estate_other, phase not_scheduled, "inventoried only", touching no Spec 100 surface.
+REJECT — fe.46 — the hand-built report renderer with 105 and 213 pinned structural findings — Spec 126 §11b.1 keeps the landed renderer, the descriptor records the pin both directions, and the entry claims no library of its own.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 5
+Rules met: fe.01, fe.03, fe.07, fe.13, fe.16, fe.18, fe.29, fe.30, fe.34, fe.36, fe.37, fe.41, fe.43, fe.44, fe.45, fe.46, fe.49, fe.53, fe.54, fe.58
+
+---
+⏱  104018ms (104.0s)
+📊 Tokens — total: 41921, input: 28649, output: 13272, reasoning: 12063

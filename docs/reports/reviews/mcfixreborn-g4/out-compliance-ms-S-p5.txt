@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:02:28.971Z file_sha256=8f594608ee187b34d2da7a22190d124e9533c67709cda447bedb27acdf5e2b9f prompt_sha256=5deebb813374ac7dbb321ed9952679af797000a2b634a018b0a0c586ffc781b0
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-ms-S-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0408 "Approved. You normally make mistakes looking at so many tasks - ensure you do the merge correctly with the right files." — src/tests/backlog/rule-lists-table.logic.test.ts:76 "const EXPECTED_UNROUTED = ['contract_parcels_tracked'];" — the file pins rows and rulings for task-431, task-439, task-448 (RR-0421, RR-0418, RR-0380, RR-0383, decision-165/168), none of which is homed in this group by the pasted Task block ("Tasks homed in this group: task-68, task-358 ... task-433"), so whether those assertions match their cards is cannot see — paste those cards and rulings into this review, or lift those describes into their own group.
+DEFER severity=LOW — RR-0385 "Round rule (RR-0385): CRITICAL, HIGH and MED findings are resolved; LOW and NIT are recorded." — src/tests/backlog/review-templates.logic.test.ts:37 "// task-438 T1 (FINAL.3, RR-0385 item 2, decision-170)" — RR-0385 item 2 and decision-170 are not pasted and task-438 is not in the homed list, so the engineering-template assertions rest on a clause I cannot see — paste RR-0385 item 2 and decision-170, or record the test as out of scope for this run.
+DEFER severity=LOW — "A task that serves neither a designed element nor a supporting function is most likely not relevant" "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/backlog/rule-lists-table.logic.test.ts:46 "expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');" — the test locks in routing for docs/reports/policy/** where the table itself records the governing ruling as still owed, so no pasted clause authorises the pinned behaviour — assert only that the row exists until the operator ruling is pasted.
+MET — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — src/tests/backlog/review-templates.logic.test.ts:14 "expect(text.split('{{PLAN}}').length - 1, `lens-${lens}.md`).toBe(1);" — pins exactly one plan placeholder per lens template so the material is sent once.
+MET — task-433 "A rules-checked line the reviewer lists the rule ids it judged met and a script flags a rule never mentioned" — src/tests/backlog/review-templates.logic.test.ts:27 "expect(b).toBeGreaterThan(a);" — the Rules met line is pinned after Clauses checked in the compliance lens and absent from the other lenses.
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — src/tests/backlog/rule-lists-table.logic.test.ts:14 "const r = script(CLI, ['resolve', '--files', files, '--type', type, '--letter', 'S']);" — resolution goes through the table only; the eng-front/eng-back split narrows what a list reads, it does not widen it.
+REJECT — "One plan only" "we need one plan - we can only execute one plan" — accused of adding a second plan — the material is tests for the rule-list tool, no plan text is added.
+REJECT — "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — accused of doing review-tooling work ahead of the search page — the pasted Task block homes this batch in group G4 (review and lane tooling), so the increment ordering clause does not bind this diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  55541ms (55.5s)
+📊 Tokens — total: 26442, input: 15151, output: 11291, reasoning: 10402

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:35:12.821Z file_sha256=926f877cd6b73c11bd15c5268eed1546c309cea7f4a4b80b44f39e63f8eaf680 prompt_sha256=492b40010a0961b3f42ab8f82236ab8c3ddbf6879557fd7d012940454ea434fe
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/backlog/backlog-lane.logic.test.ts "const ok = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } }); expect(ok.stderr).not.toMatch(/--rule-lists/);" — a spawned CLI whose status and first line are never asserted, so a crash inside the override path passes the test, which contradicts the file's own stated rule at "Every spawned-CLI test first asserts the exit status and the first output line before any absence assertion (R-CP, 124a:296)" — assert expect(ok.status).toBe(0) and an output line before the absence check.
+
+DEFER severity=LOW — src/tests/backlog/check-task-files.logic.test.ts "expect(check(a.d).status, check(a.d).stderr).toBe(0);" — the hook is spawned twice, so the diagnostic message can come from a different run than the status being asserted, and any side effects happen twice — capture one result: const r = check(a.d); expect(r.status, r.stderr).toBe(0).
+
+DEFER severity=LOW — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(section(ctxOf(d, task), 'Document sections')).toMatch(/docs\/missing\.md.*not readable|not found/i);" — the alternation splits the whole pattern, so any occurrence of "not found" anywhere in the section satisfies it and the test does not prove the missing file is named — group the alternatives: /docs\/missing\.md.*(?:not readable|not found)/i.
+
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts "const file = path.join(dir, fs.readdirSync(dir).find((n) => n.startsWith(f.task))!);" — the non-null assertion hides a real null, so a failed match surfaces as path.join(undefined) TypeError far from the cause, and the same line is repeated in the T4 test — assert the found name first or throw with f.task in the message.
+
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts "return { ...f, rev: path.join(f.base, 'rev') };" — the rev field and its PF type member are never read by any test in the file, dead fixture data — delete the field and return Fx.
+
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts "const extra = spec.extra.join('\n') as string;" — the cast is a no-op because join already returns string, and it papers over spec being any from JSON.parse, so a wrong shape only fails later at .join — drop the cast and type the parsed JSON.
+
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts "console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);" — leftover debug print in a test body, it asserts nothing — remove it or fold the text into the refusal assertion message.
+
+DEFER severity=NIT — src/tests/backlog/review-templates.logic.test.ts "expect(a).toBeGreaterThan(0);" — indexOf is used as a presence check, so a match at index 0 would fail the test though the string is present — use toBeGreaterThanOrEqual(0).
+
+VERDICT: PASS on code correctness
+
+---
+⏱  142998ms (143.0s)
+📊 Tokens — total: 58015, input: 37259, output: 20756, reasoning: 19974

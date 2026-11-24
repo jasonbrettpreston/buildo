@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:43:15.916Z file_sha256=dd2353b5e206d7f9b2786ebd4fe3ef656c5c46823d2f7b69fd944135e7364fbc prompt_sha256=799adb8acdf4ec85e39039ca4a980d540bdfaba3163e8d5d67e5478a9ce6bc20
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/surfaces/screen-checks.mjs:258 "if (e.isDirectory() && (path.posix.join(GOLDEN_DIR, e.name) === GOLDEN_DIR || ids.includes(e.name))) continue;" — path.posix.join(parent, child) can never equal parent for a non-empty child name, so this skip clause is dead: if the REPORT goldens dir sits under GOLDEN_ROOT it is reported as a stray and fails the gate, otherwise the clause does nothing — compare the child's full path instead: path.posix.join(GOLDEN_ROOT, e.name) === GOLDEN_DIR.
+DEFER severity=MED — contracts/contract_parcels_lookup.descriptor.json:emits.why "no Sentry breadcrumb, no analytics capture and no ledger INSERT" — stale after STD.ROUTE moved the meter into src/lib/entitlements: the same descriptor's metering block says "writes one usage_events row (property_view" and outputs.tables lists usage_events, so emits.why and ledger_events [] contradict outputs/metering — set emits.answer to the property_view row (or state the route source alone was read, not the flow) so the block agrees with metering.
+DEFER severity=LOW — contracts/contract_parcels_lookup.descriptor.json:inputs.why "It reads 6 table(s) directly" — inputs.tables has 7 entries (address_points, coa_applications, entitlements, parcel_address_points, parcels, user_profiles, logic_variables), and docs.data_story says 9 — correct the count to match the list so the descriptor's own arithmetic holds.
+DEFER severity=LOW — contracts/contract_parcels_lookup.descriptor.json:checks field_whitelist_parity "The response is an explicit pick-by-name of 4 field(s)" and "this check set-equals the projection to inputs.field_whitelist" — inputs.field_whitelist holds about 76 names, so a 4-key projection cannot set-equal it; one of the two statements is false and the check as declared can never pass — state the projection as the flat list of nested wire keys, or drop the set-equality claim.
+DEFER severity=NIT — contracts/contract_parcels_lookup.descriptor.json:inputs.field_whitelist "    \"state\",\n      \"outline\",\n      \"edges\"," — "outline" is already listed higher in the same whitelist (after "centroid"), a dead duplicate entry in a set-like list — remove the second occurrence so the list has one entry per wire field.
+DEFER severity=LOW — scripts/surfaces/search-golden-capture.ts:52 "else if (fs.readFileSync(p, 'utf8') !== fresh) problems.push(`STALE ${path.relative(REPO, p)}`)" — a golden file that does not exist yet throws ENOENT out of main (exit 1 with a stack, no `SV`/finding line), and --write cannot create one either because goldenText reads the same file first; wrap the read and report `MISSING <file>` instead of throwing.
+NIT severity=NIT — scripts/surfaces/surface-validate.mjs:88 "const owed = Number.isInteger(m?.owed_states) && Number.isInteger(m?.owed_files) ? `; owed ${m.owed_states} states / ${m.owed_files} files` : '';" — the optional chaining says the author expects m to possibly be undefined, but the next expression dereferences it unguarded with "m.states.length", turning a missing manifest into a TypeError stack on the success path — guard both or neither and report a SV-GEN finding when manifestOf() returns nothing.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none at CRIT or HIGH; the deferred items above are MED and below.
+
+---
+⏱  116841ms (116.8s)
+📊 Tokens — total: 62215, input: 34940, output: 27275, reasoning: 26430

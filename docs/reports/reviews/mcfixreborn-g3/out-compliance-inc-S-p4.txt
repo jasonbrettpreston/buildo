@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:48.439Z file_sha256=14322cb7a5181ce237e14ac9bbf5626c850f4554915ec9a19ff11a9bcf447468 prompt_sha256=c340a5eb1c3b81d212a7fc6435c963961aedbefa32bf31b8ebb015a272f8e1ed
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — C.3 "Map: each matched lot outlined (amber), neighbours in zinc" — mobile/src/components/surfaces/LotMapBinding.tsx:134 "const lotShapes = s.lots.flatMap((l, i) => l.polygons.map((_, j) => {" — only the matched lots get a polygon, no neighbour parcel outline or neutral stroke is drawn anywhere in the tree — draw the neighbouring parcels with a neutral Daylight stroke under the matched lots.
+
+DEFER severity=LOW — A.7 "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=" — mobile/src/components/surfaces/SearchBinding.tsx:110 "node('View', { key: 'chips', className: L.chipRow }, s.recent.map((q, i) => node('Button', {" — the chip row draws no visible Recent label, only the chips themselves — add a Text with the Recent label key above the row.
+
+DEFER severity=LOW — A.8 "Searching state: query in the box, the word Searching, clear button" — mobile/src/components/surfaces/SearchBinding.tsx:87 "? [node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') })]" — the searching state draws a spinner only, the word Searching is never visible text — render the Searching string as a Text beside the spinner.
+
+DEFER severity=LOW — A.1 "hidden h1 Search a Toronto lot (no Lookup title)" — mobile/src/components/surfaces/SearchBinding.tsx:62 "node('Text', { key: 'wordmark', className: L.wordmark, role: 'header' }, [" — the only header role carries the wordmark, no hidden heading with the ruled text exists in the tree — add a hidden Text with role header and the "Search a Toronto lot" content key.
+
+DEFER severity=LOW — C.2 "Search pill on top (clear returns to search); hidden h1 Choose your lot" — mobile/src/components/surfaces/LotMapBinding.tsx:46 "node('View', { key: 'pill', className: L.pill }, [" — the page starts at the pill and draws no hidden h1 with the ruled page title — add a hidden Text with role header and the "Choose your lot" content key.
+
+MET — A.6 — mobile/src/components/surfaces/SearchBinding.tsx:99 "const reportsLeft = (s: SearchSituation): PropsNode[] =>" — the reports-left line is drawn directly under the box from the served entitlement values and omitted when no read answered.
+MET — A.10 — mobile/src/components/surfaces/SearchBinding.tsx:92 "const legal = (): PropsNode =>" — the legal line is always rendered, as the last block of the page.
+MET — B.1 — mobile/app/(app)/parcel-tool/index.tsx:45 "useEffect(() => { setSelectedParcelId(null); }, [debounced]);" — nothing pre-checked, and the Select button stays disabled until a card is picked.
+MET — C.1 — mobile/src/components/surfaces/LotMapBinding.tsx:236 "node('Text', { key: 'heading', className: L.noticeHeading, role: 'header' }, [{ text: content('map.heading'), vars: { count: derived('lot_count') } }])" — the ruled multi-lot heading with the live count.
+MET — C.4 — mobile/src/components/surfaces/LotMapBinding.tsx:141 "const markers = s.lots.flatMap((l, i) => (l.marker === null ? [] : [node('Marker', {" — lettered markers at the lot and an amber fill on the chosen polygon.
+MET — C.11 — mobile/src/components/surfaces/LotMapBinding.tsx:241 "...(awaitingPick(s) ? [pickHint()] : [])," — the disabled Choose a lot, the Continue with Lot X label and the pick hint line.
+MET — C.12 — mobile/src/components/surfaces/LotMapBinding.tsx:114 "const helpRow = (): PropsNode =>" — the "Not sure which lot?" prompt and the help link rendered under the cards.
+MET — C.13 — mobile/src/components/surfaces/LotMapBinding.tsx:64 "const errorNotices = (s: LotMapSituation): PropsNode[] => [" — loading, error, rate-limit, entitlement and schema-drift states are all drawn.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 34   Unmet: 5
+Rules met: A.6, A.10, B.1, C.1, C.4, C.11, C.12, C.13
+
+---
+⏱  272348ms (272.3s)
+📊 Tokens — total: 73365, input: 34563, output: 38802, reasoning: 37745

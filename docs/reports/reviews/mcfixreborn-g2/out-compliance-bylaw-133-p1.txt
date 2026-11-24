@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:22:19.825Z file_sha256=18341249694895d83232c0c0f3f662cb1c88f764976271c1f135f2b0be0b0018 prompt_sha256=1fa0a603e430156fed89428a4829bf31ae4b8452f890e2c27c25ff4aa467a977
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-bylaw-133-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=NIT — m.360 "accept moves only named lines" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json "$comment": "Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes)" — the parenthetical is contradicted by the file's own path, a new file under scripts/analysis/bylaw-validation/, so a later reader can take it as "nothing in that tree changed" — scope the parenthetical to scorer inputs, seeds and goldens, and name the prereg file as the one permitted addition
+MET — m.322 "Accuracy floors only go up" — prereg-MB-44-1.json "no floor line falls; the floors file is unchanged and the floors check stays OK" (identical line in prereg-MB-44-2.json) — no floor is lowered and the floors file is declared untouched
+MET — m.357 "scored blind first, then folded into one cumulative headline set" — prereg-MB-44-2.json "expected_totals_cumulative" and "expected_before_totals_cumulative" both present and identical, "committed ALONE directly before the red-test and landing commits" — the 172, 4d and cumulative headline sets are pre-declared before the run, no post-hoc figure
+MET — m.431 "a residential building type is permitted only through 10.20.20.10(1) read with 10.20.20.40(1)" — prereg-MB-44-1.json "no by-law reading changes and no literal or zone name enters code (M-61)" — no PERM reading, unit or step appears in either prereg, so the PERM route is not disturbed
+REJECT — m.369 "split RM 253/475, 600.60 units bind only the Sixplex Overlay" — accused of moving the 600.60 or RM rows — the two files carry "expected_moves": [], "expected_moves_4d": [] and "expected_moves_cumulative": [], and no by-law unit or keying file is in this chunk, so no such row can have moved
+REJECT — m.384 "Phase 3 is tables" — the preregs name M-384 as their governing rule via "rules[]: M-384 (Phase 3 is tables: W only reads stored rows, never recomputes)" — M-384 is not among the pasted clauses, so it is not mine to judge, cannot see
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: m.322, m.357, m.431
+
+---
+⏱  45989ms (46.0s)
+📊 Tokens — total: 27820, input: 22094, output: 5726, reasoning: 5129

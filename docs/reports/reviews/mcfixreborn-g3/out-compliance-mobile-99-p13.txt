@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:16:36.968Z file_sha256=eb00fbde630fcaaafd3891eae9a1d169c2bf6198091e41aad86ded879d3d2ebe prompt_sha256=d83546a847a993712eee783a100daa1d5c51a86ae7e157f846487f4ce50aff5d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec99 §4 B1 "`enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously." — mobile/src/hooks/useParcelLookup.ts "enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken" — all three user-scoped queries (search, lookup, entitlement) gate on `accessToken`, which §3.2 does not name (the matrix names `idToken`, "NOT persisted (short-lived)", authorized readers "apiClient `Authorization: Bearer` only") and which §3 requires a matrix row for: "Adding a field to the mobile app requires adding a row here", so both the enabled-gate clause and the field-ownership rule are unmet — gate each query on `!!user` from authStore and drop the token read from these hooks.
+DEFER severity=MED — spec99 §4 B1 registry "the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string)" — mobile/src/hooks/useParcelLookup.ts "queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi))" — the queryFn closes over `semi` while the key stays `['parcel-lookup', parcelId]`, so the registry's declared dependency (parcelId only) and the code disagree and two different requests share one cache entry — either add `semi` to the key and amend the registry row in the same commit, or fetch the answered variant outside the parcelId-keyed query.
+MET — spec99 §4 B1 query-key registry — mobile/src/hooks/useParcelLookup.ts "queryKey: ['parcel-lookup', parcelId]" — every key used here (`parcel-search`, `parcel-lookup`, `parcel-entitlement`) has its own parameterized registry row, no new unregistered query.
+MET — spec99 §4 B1 Zod boundary — mobile/src/hooks/useParcelLookup.ts "const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);" — every response is parsed through a Zod schema before TanStack stores it, entitlement included.
+MET — spec99 §6.1 atomic selectors — mobile/src/hooks/useParcelLookup.ts "useAuthStore((s) => s.accessToken)" — primitive selectors only, no whole-store read and no object-returning selector.
+MET — spec99 §3.4c recent searches — mobile/src/constants/parcelSearch.ts "export const SEARCH_RECENT_MAX = 3;" — the count matches the matrix row's "at most `SEARCH_RECENT_MAX` = 3".
+MET — spec99 §5.4 router effect deps — mobile/src/hooks/useParcelPageHooks.ts "}, [target, isFetching, router]);" — no Zustand field in the redirect effect's dependency array.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  43487ms (43.5s)
+📊 Tokens — total: 42773, input: 33380, output: 9393, reasoning: 8722

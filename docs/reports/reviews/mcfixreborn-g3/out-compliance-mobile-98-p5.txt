@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:13:41.152Z file_sha256=7b9b1f4193f31603cf89bc73f78013f0a1694433740bb69fa8c7adad9a67d234 prompt_sha256=2c1843273d8a771d6b025d6acb58ed6e2ff37294122f6e206781fb8e26b86f61
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-98-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 98 §4.1 "**§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5)" — mobile/src/lib/parcelSearchMatch.ts:351 "showMiss: outcome === 'no_match' && !isFetching && error == null," — the miss line's render gate is expressed through the live fetch flag rather than through a settled state, so its stability rests entirely on the gate-stability test this chunk cannot see, and any refetch of a no_match query blanks the visible miss line — carry a settled flag from the hook (or derive from `data === undefined && !isFetching` at one place) and gate the miss line on that, so no fetch flag sits in a render gate.
+DEFER severity=LOW — Spec 98 §4 dated note 2026-11-10 operator verbatim "the report should still show with the google street view photo if its not available - just the photo space should not show" — mobile/src/lib/schemas.ts:337 "kind: z.enum(['value', 'content', 'pending', 'ref', 'drawing'])" — no member of the closed kind enum can carry an unavailable street-view photo, so the ruled behaviour is reachable only if the server omits the part entirely, and a part sent with an unlisted kind fails the whole page-view parse, taking the report down instead of hiding one photo space — admit a street-view/photo kind (the binding already skips what it cannot place) so an unavailable photo hides its space rather than raising ParcelLookupSchemaError.
+
+MET — Spec 98 §4.1 Parcel Cost Tool "miss (`match:null, parcel:null`) is a valid parse" — mobile/src/lib/schemas.ts:378 "match: ParcelMatchSchema.nullable()," and "parcel: ConsumerParcelSchema.nullable()," — a miss parses cleanly with both fields null.
+MET — Spec 98 §4.1 "absent ≠ `fits:false`" — mobile/src/lib/schemas.ts:196 "fits: z.boolean().optional()," — absence stays undefined and is never coerced to false.
+MET — Spec 98 §4.1 "the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema)" — mobile/src/lib/schemas.ts:365 "parcelId: z.string()," (ParcelMatchSchema and ParcelCandidateSchema alike) with mobile/src/lib/parcelSearchMatch.ts:355 "parcelId: data?.match?.parcelId ?? null," — one string type carries the id from search into the lookup route.
+MET — Spec 98 §4 "Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded" — mobile/src/lib/semiQuestion.ts:57 "export function buildSemiQuestionSituation(args: {" — the semi page is a pure four-state machine returning a situation object, no component and no snapshot.
+MET — Spec 98 §4 dated note 2026-11-10 "No Maestro flow covers parcel-tool today" — mobile/src/lib/parcelSearchMatch.ts:243 "return parcelSearchPath(outcome, args, '/(app)/parcel-tool');" — parcel-tool routing is a pure string helper, so no §3.1 clearState obligation is asserted or dodged here.
+MET — Spec 98 §4.1 "**§8.5** — store-enumeration grep test ... every `create<*Store>(`" — mobile/src/lib/persistFilter.ts:30 "export const shouldDehydrateQueryFn = (query: QueryShape): boolean =>" — no store is created in this chunk, so no new `clearLocalSessionState` reset obligation arises.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  175735ms (175.7s)
+📊 Tokens — total: 45081, input: 20241, output: 24840, reasoning: 23974

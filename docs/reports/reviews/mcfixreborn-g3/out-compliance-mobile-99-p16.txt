@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:18:33.046Z file_sha256=e2adef0b9fe8ac9d180b9faf7e3edaf4971da6bba87b82aec71d6b0c3f5a2050 prompt_sha256=d31b8a9910a2bdd04b925f807d16efbf6e86c189b5ce216946cda0130922b5e6
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p16.txt (model: deepseek-reasoner)
+
+DEFER severity=NIT — §9.18 "Strip `['user-profile']` query from MMKV persister to comply with §2.1 PII layer boundary" — mobile/src/lib/persistFilter.ts:30 "const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];" — the §9.18 deliverable file is extended with a second, non-PII exclusion key that no pasted clause names (SRCH.A6 is not in the pasted rules) — either record the key in the §9 catalog as a named addition or keep the file to the PII exclusion it was created for.
+
+DEFER severity=LOW — §9.18 "bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS" — NONE (mobile/app/_layout.tsx is not in this chunk, so the value is cannot see) — the read-path flush is unverified from the material shown; the dehydrate predicate alone does not satisfy that half of the clause — grounder confirms the buster string in `_layout.tsx` `PersistQueryClientProvider` config before close-out.
+
+MET — §9.18 / §2.1 PII layer boundary — mobile/src/lib/persistFilter.ts:31 "!NOT_PERSISTED.includes(String(query.queryKey[0]))" — the named deliverable exists as its own module and excludes the `user-profile` query from dehydration as the item requires.
+
+MET — §7.2 (no `invalidateQueries` in this chunk) — mobile/src/lib/persistFilter.ts:1-31 — none of the five pasted files issues an invalidation, so the breadcrumb pairing obligation has no site here to satisfy.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: 9.18
+
+---
+⏱  27767ms (27.8s)
+📊 Tokens — total: 30820, input: 25339, output: 5481, reasoning: 5048

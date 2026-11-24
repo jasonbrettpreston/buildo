@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:33:03.240Z file_sha256=a5a1fb06b3be51b718e72e080e41052f64f8755c14b0ec0051cd0274f2d338e6 prompt_sha256=5b37e41cfc8c4a69aa566fd5324094e939e3b7cfc8570792e596c684a9835ede
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p5.txt (model: deepseek-reasoner)
+
+BUG/DEFER lines first, then MET/REJECT, then the verdict block.
+
+DEFER severity=LOW — plan protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — scripts/steps/_schema/programme-items.json:1516 "\"evidence\": \"0 of 1091 scripts/seeds/logic_variables.json keys carry admin.hidden === \\\"unclassified\\\" as of scripts/generate-logic-variable-groups.mjs (WF2 \\\"ADMIN-1 ratchet to zero\\\" batch 5, 2026-09-09)\"" — the moved count (1083 to 1091) keeps the old batch-5 provenance and names no new regeneration, so the new number has no source line of its own — name the regeneration run (npm run logic-var-groups) and its date/commit beside 1091, or leave the number and add the recount note.
+
+DEFER severity=NIT — plan protocol §1 "(9) measured check on the page" — scripts/analysis/lot-map-data-check.mjs:19 "export const SQL = `SELECT p.parcel_id," — the only measured element in the pasted material is a DB-side read of footprint, primary footprint and frontage street; the on-page measure of the lot card is not in these files (cannot see) — record the on-page check for the two lot-card fields in the same task record, or mark part (9) as evidenced elsewhere.
+
+MET — plan protocol §0 bullet 3 (source per task) — mobile/src/lib/persistFilter.ts:27 "// SRCH.A6 (task-320): ['parcel-entitlement'] is the reports-left count" and mobile/src/lib/semiQuestion.ts:1 "// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (dated note 2026-11-13, SEMI-B)" — every new module in this chunk names its spec section and task or ruling id in its header.
+
+MET — plan protocol §1 "(1) engine rows right (answer key)" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-92-1.json:12 "\"expected_totals\": {" — both new preregs register before/after totals and empty move lists, so the answer key is fixed before the code.
+
+MET — plan protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — scripts/surfaces/_schema/bindings.json:2 "the item put to the operator at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421" and "his words at :1422, verbatim: \"approved" — the 48 px entry records the record search, the question, the operator words and the line, and keeps the superseded 2026-11-19 wording.
+
+MET — plan protocol §3 "No new research topics. Only the sources in step A." — scripts/analysis/lot-map-data-check.mjs:3 "// For the multi-lot address of ~/Buildo-scratch/lanes-20261117/avail-search/SAMPLES.md (sample 9, 26 Kenneth Ave: parcels 5112332 and 5427844)" — the check reads the already-named sample, not a new topic.
+
+MET — plan protocol §4 "1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)." — mobile/src/lib/parcelSearchMatch.ts:19 "MF-53 (Spec 100 §2.6 dated note 2026-11-11; D-2 a, operator 2026-11-10): THE SERVER NOW NAMES THE OUTCOME." — the reviewed ruling and the panel outcome it produced are written into the module that obeys it.
+
+REJECT — plan protocol §0 "Nothing is re-written from scratch." — accused of rewriting mobile/src/lib/schemas.ts, persistFilter.ts and parcelSearchMatch.ts from scratch (shown as creation diffs) — not real: the review description states "A whole file comes as a creation diff from the empty tree", and each header cites the prior folds it carries (WF3 #3, WF3 HIGH 1).
+
+REJECT — plan protocol §3 "no scope creep" — accused of adding the web REPORT modules (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) that are not in the group's task list — not real: the context names task-384 among "Files of other tasks are also read here", and bindings.json:2 quotes the operator at MORNING-DECISIONS.md:1422 for that change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: none
+
+---
+⏱  74119ms (74.1s)
+📊 Tokens — total: 45917, input: 31041, output: 14876, reasoning: 13799

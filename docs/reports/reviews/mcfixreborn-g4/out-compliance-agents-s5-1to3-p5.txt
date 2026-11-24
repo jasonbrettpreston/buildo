@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:43:18.215Z file_sha256=5c51380d249acc49ad46167975b1a69f78e4164fad828acf8a94f8a79a37b1df prompt_sha256=e06f1b32378d32c6a66ad7a3db4570bcf6936f942cd0c0c14456f2077747ecd8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s5-1to3-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-366 note (2) "refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named" — scripts/hooks/check-task-files.mjs:8 "Own matcher: package.json has no glob library and" — the launch resolves this same Files line through the rule-list table but this hook re-implements the match privately, so a path the launch accepted can be refused at commit, or the reverse, on the same declaration — export one matcher from scripts/analysis/rule-lists.mjs and reuse it here, as filesEntries already is.
+DEFER severity=LOW — round-3 "a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records" — scripts/hooks/check-task-files.mjs:70 "const always = (f) => isTask(f) || f.startsWith(`docs/reports/reviews/${id}/`) || f.startsWith('docs/reports/lanes/');" — the exemption covers the whole lanes tree, any lane's directory and any file in it, wider than the ruling's "only its lane report directory" — narrow the exemption to docs/reports/lanes/<date>/<lane>/.
+DEFER severity=LOW — round-5 "each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context" — scripts/lib/review-template.js:55 "Supported placeholders are {{PLAN}}, {{SPECS}}, {{DATA_CONTEXT}}" — the module carries the context headings and round count (line 115, CONTEXT_SECTIONS) but no placeholder or export that puts the context into the prompt, so the context half of the recomputed hash is not visible in this file — show where the context enters substitution, or name the hook point in the header (cannot see: the rest of chunk 5 and scripts/deepseek-review.js).
+DEFER severity=NIT — no pasted clause names a commit-time scope hook; the Files-line rulings name "`scripts/analysis/backlog-lane.mjs`" and "`scripts/hooks/check-lane-close.mjs`" only — scripts/hooks/check-task-files.mjs:2 "CHK.1 scope check, git mode (task-3;" — the file adds a gate no pasted clause names, and its wiring at line 12 "Wired as one line in .husky/commit-msg after the G3 line" is not in the pasted material — record the ruling that governs it (cannot see the task-3 card).
+REJECT — task-366 note (2) "refuses a task with no Files line" — that check-task-files.mjs warns and passes a task with no Files line (line 66) — that ruling binds scripts/analysis/backlog-lane.mjs at launch; the commit-msg hook is a second gate and no pasted clause requires it to refuse.
+MET — task-366 note (2) "one reading shared with the launch, task-366" — scripts/hooks/check-task-files.mjs:64 — the entries come from filesEntries imported from ../analysis/rule-lists.mjs, one parse of the line.
+MET — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:77 — one regex pass with function replacers, inserted text is never re-scanned for tokens.
+MET — task-423 note "a list is never trimmed in either form" — scripts/lib/review-template.js:76 "const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };" — the substituted value is copied whole, nothing trims or splits it inside the module.
+MET — round-3 note (4) "`scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves" — scripts/lib/review-template.js:11 "This module owns the parsing + substitution logic" — the file is the single shared implementation both review scripts use, as the clause assumes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+Rules met: none
+
+---
+⏱  82446ms (82.4s)
+📊 Tokens — total: 28619, input: 10404, output: 18215, reasoning: 17312

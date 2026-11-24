@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:34:42.398Z file_sha256=504076bb70d59179d613969bb8fb37b1b09dfcc371512dd2a1942fdd6da2f3c4 prompt_sha256=1e5ee1325fabdf13b49c61689890d51d83e1c8f002726f83f6b37d18dc085da5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p13.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/nav-by-route.logic.test.ts "const jsxBranch = (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && hasJsx(p.right))" — when the state comparison is only an operand of a conjunction (`if (a && view === 'b') return <jsx>` or `if (view === 'b' && a)`), unparen returns the `&&` node whose right is not JSX, so the state is never marked a discriminant and NAV-1 misses a real state-as-route violation, the lock passing it silently — also mark the discriminant when the comparison sits as an operand of a `&&`/`||`/ternary whose other branch carries JSX, or inspect the enclosing statement rather than only the immediate parent.
+
+DEFER severity=LOW — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts "const contentForms = new Set(Object.values(content).map((v) => v.replace(/\{[^}]+\}/g, '{}')));" — fill() substitutes a config key with its value ("3") while contentForms only collapses the placeholder to "{}", so a legacy attribute that references {SEARCH_MIN_QUERY_LEN} can only match if the content file bakes the number rather than the documented placeholder, contradicting the comment "placeholders filled with the config values" — apply fill() (or the same placeholder normalization on both sides) so a config-placeholder content string matches.
+
+DEFER severity=LOW — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts "const goldenTestIDs = [...goldenStrings].filter((s) => s.startsWith('parcel-'));" — this treats every string literal prop beginning with "parcel-" (a route, a label) as a testID, so a dropped/renamed testID can be "found" by an unrelated literal and the oracle passes wrongly — collect testIDs from props whose key is testID rather than from all literal values.
+
+DEFER severity=LOW — src/tests/surfaces/page-arm.logic.test.ts "const sec = (s: Json, id: string): Json => s.sections.find((x: Json) => x.id === id);" — the return type hides that find() can return undefined, so a wrong section id surfaces as a TypeError on the following `.when = v` assignment instead of a clear assertion — return `Json | undefined` or throw with the missing id.
+
+DEFER severity=NIT — src/tests/surfaces/page-arm.logic.test.ts "const root = fs.mkdtempSync(path.join(os.tmpdir(), 'page-arm-'));" — these temp trees are never removed (no afterAll), leaking directories across runs, unlike the neighbour nav-by-route.logic.test.ts which removes its tmpRoot in afterAll — add an afterAll that rm's the created roots.
+
+DEFER severity=NIT — src/tests/surfaces/register-locks-resolve.infra.test.ts "expect(r.status).toBe(0);" — trackedSet() runs this expect at module import via "const TRACKED = trackedSet();", so a missing/failing git turns the whole file into a collection-time error rather than a per-test diagnostic — hoist the git call into a beforeAll and fail the specific test with the git stderr.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  235056ms (235.1s)
+📊 Tokens — total: 67368, input: 35106, output: 32262, reasoning: 31523

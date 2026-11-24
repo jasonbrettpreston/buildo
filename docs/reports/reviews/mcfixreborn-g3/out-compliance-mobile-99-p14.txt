@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:18:33.047Z file_sha256=5cfb64d9cf4d9740b73e8d9091a309ac9f165fa3d78d9b8e9ecbc02aa1913b63 prompt_sha256=9f29d99b314ea490862897640b9e2fbe116251b5ee23defd6d9ace476dfc0c75
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p14.txt (model: deepseek-reasoner)
+
+BUG severity=none-not-available
+
+DEFER severity=MED — task-322 SRCH.DAYLIGHT "SRCH.DAYLIGHT-Restyle the built mobile search pages search choose your lot candidate list semi question from old dark to the Daylight small pages v8 look and remove the elements the v8 design removes A.13 B.8 C.9" — mobile/src/constants/parcelSearch.ts:36 "screenBg: 'bg-[#0e0e10]'," vs mobile/src/constants/parcelSearch.ts:132 "screen: 'flex-1 bg-report-page'," — the Daylight layout and the old dark token tables now coexist in one file, so the same screen has two conflicting grounds and B.8 cannot be shown removed — delete PARCEL_SEARCH_TOKENS, TRACKED_LOTS_HEX, PARCEL_SHELF_HEX and PARCEL_SEARCH_HEX if no binding reads them, or restyle them to the report-* twins, and state which in the comment.
+
+DEFER severity=LOW — task-364 SRCH.HYGIENE-1 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — mobile/src/constants/parcelSearch.ts:43 "Every hex has exactly ONE definition site: here." — false inside the same file: primary '#f59e0b' is defined again at PARCEL_SEARCH_HEX (line 106) and TRACKED_LOTS_HEX (line 82) and a twin at constants/lotMap.ts "primary: '#f59e0b', // report-amber" — drop the one-definition claim or the duplicate literals so a reader is not told a hex has one home when it has four.
+
+DEFER severity=LOW — task-362 SRCH.LOTMAP-2 "SRCH.LOTMAP-2-lot-map-page-Help-opens-in-the-in-app-sheet-and-the-pick-hint-line-small-pages-v8" — mobile/src/components/surfaces/SurfaceRenderer.tsx:97 "open Help & Support in the browser with a topic and a value (mobile/src/lib/maxbldHelp.ts)" — the shared action's only description says browser while the ruling names the in-app sheet for the lot map, so the one home of the action's meaning contradicts the card — reword the comment to say the host decides sheet or browser, or split the action so the lot map cannot be wired to the browser path.
+
+MET — task-381 STD.HOOKS "STD.HOOKS-Three-shared-phone-hooks-replace-the-copied-redirect-back-and-debounce-code-in-the-parcel-tool-pages" — mobile/src/hooks/useParcelPageHooks.ts:19 — the three named concerns (redirect once on settled data, back, debounced value) exist once, in a hooks file, not copied per page.
+
+MET — task-373 FIX.SEMI "Semi-page-Continue-goes-through-the-query-layer-the-entitlement-query-key-is-registered" — mobile/src/hooks/useParcelLookup.ts:145 — Continue goes through useMutation(buildAnswerParcelLookupOptions()) and the entitlement key is a literal at line 165, queryKey: ['parcel-entitlement'].
+
+MET — task-378 FIX.TUNE "Phone-tunables-are-data-not-code" — mobile/src/hooks/useParcelLookup.ts:57 — retry count and both stale times are read from the generated slice via sliceNumber, none hard-coded in the hook.
+
+MET — task-360 SRCH.METER-2 "an-unsure-lots-report-page-is-held-until-the-semi-answer" — mobile/src/hooks/useParcelLookup.ts:113 — semi: 'answered' is sent only on the exact sentinel, a stray param asks rather than skips.
+
+MET — Spec 99 §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" — mobile/src/hooks/useParcelLookup.ts:139 — the only cache write here is queryClient.setQueryData, no invalidateQueries is added, so no breadcrumb pairing is owed by this chunk.
+
+MET — Spec 99 §7.3 "In production, ONLY these four routing events emit telemetry" — mobile/src/hooks/useParcelPageHooks.ts:26 — router.replace(target) emits no track(), so no fifth production routing event is created.
+
+MET — Spec 99 §7.6 "A fixed enumeration of product flow events MUST fire at canonical sites" — mobile/src/hooks/useParcelLookup.ts:44 — the only telemetry call in the chunk is Sentry.captureException, no track() outside the pasted enumeration is added.
+
+MET — task-362 SRCH.LOTMAP-2 pick-hint "the pick-hint line small pages v8" — mobile/src/constants/lotMap.ts:73 "pickHint: 'mt-2 w-full text-center text-xs font-normal text-report-soft'," — the hint line exists as a Daylight key the binding can render.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  48836ms (48.8s)
+📊 Tokens — total: 37932, input: 27547, output: 10385, reasoning: 9254

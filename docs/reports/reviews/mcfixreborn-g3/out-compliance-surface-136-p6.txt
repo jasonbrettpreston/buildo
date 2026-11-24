@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:47:53.344Z file_sha256=b60529e7d43174ec624b1287470aef162e8234b66e1f0d435929a26519bc8b91 prompt_sha256=df9a439a187d2b807ca4ac06f9853346e138be3c996c6f8cdd7c42dc91249913
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.43 "by a second CLOSED layout key details_view (inline or sheet) in report-layout.json" — mobile/src/lib/schemas.ts:337 "layout: z.object({ details: z.string(), details_view: z.string().optional() })" — the client parse accepts any details_view string, so the ruled closed set inline|sheet is not enforced at the schema boundary — confirm the binding rejects an unknown details_view, else tighten to z.enum(['inline','sheet'])
+DEFER severity=LOW — fe.42 "The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated" — mobile/src/lib/schemas.ts:335 "const ReportDrawingSchema = z.object({ state: z.string(), ..." — drawing state is z.string() rather than the closed four states, so fail-closed depends on the unseen binding — confirm ReportBinding leaves out a part with an unknown state (per fe.42), else close the enum
+DEFER severity=LOW — fe.33 "every displayed string, library defaults and form error messages included, comes from content" — mobile/src/lib/parcelSearchMatch.ts:290 "export const PARCEL_TAB_LABEL: Record<ParcelTab, string> = { lookup: 'Lookup', tracked: 'Tracked Lots', account: 'Account' }" — displayed shelf labels are typed in code, not sourced from content — confirm the shelf is exempt/legacy, else move these labels to content per fe.18/fe.33
+DEFER severity=LOW — fe.45 "anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date" — mobile/src/lib/parcelSearchMatch.ts:205 "export function deriveMatchType(" — match-type derivation and the Toronto string check are client-side computations, and no deviations[] row is visible in the material — confirm a deviations[] entry exists or that these count as the five allowed client concerns
+MET — fe.47 — mobile/src/lib/sliceConfig.ts — sliceNumber reads the slice's min/max with on_invalid, clamps or throws naming the key, and throws on missing bounds, so tunables are data with bounds and a posture
+MET — fe.57 — scripts/surfaces/_schema/bindings.json — touch_targets.mobile Button min-h-[48px] and Input min-h-[44px] both reach the 44 px floor
+MET — fe.46 — scripts/surfaces/_schema/bindings.json — libraries lists Mantine for web and @rn-primitives/* for mobile, matching the ruled library sets
+MET — fe.44 — mobile/src/lib/schemas.ts "modeled_gfa_sqft: z.number().nullable().optional() // served already converted by the API (fe.44: no conversion on the phone)" — the client does not convert units
+MET — fe.36 — mobile/src/lib/parcelSearchMatch.ts "export function activeParcelTab(pathname: string)" — the tab and route come from the pathname, not local state
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: fe.05, fe.18, fe.24, fe.31, fe.34, fe.36, fe.38, fe.44, fe.46, fe.47, fe.51, fe.57
+
+---
+⏱  87089ms (87.1s)
+📊 Tokens — total: 48469, input: 31720, output: 16749, reasoning: 16016

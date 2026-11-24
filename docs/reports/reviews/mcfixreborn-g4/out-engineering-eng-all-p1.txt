@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:18:17.571Z file_sha256=8eadfbf876613b8e53c49d60bb0f556a7e8b6ae1c50e98f18baacf64cb08acc9 prompt_sha256=fe09636609779bb0e2935ea1718da8b5faab045dfb7c34e82bf54de33f09b045
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/backlog-brief.mjs:91 "const lr = /^L(\d+)(?:-L?(\d+))?$/.exec(frag);" — the new script adds derivation that later gates a review (fragment range and section selection at :84-103, the 12 KB and 120 KB cap accounting at :99-111, decision matching at :115-119) and this material adds no test of any layer beside it, nor any Red-Green evidence for §5.3 — add a *.logic.test.ts pinning range parsing, section end detection and the cap arithmetic, or name the existing test that covers them; I cannot see the other chunks, so if one holds that test, cite it and this drops.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Before accessing nested object properties, explicitly check for null or undefined." — scripts/analysis/backlog-brief.mjs:32 "const title = String(t.fm.title);" — t itself is checked non-null at :30 but its front-matter object is read two levels deep with no optional chaining (same pattern at :48 "return { title: String(fm.title), body, quote: q, cite };" and :143 "`- ${id} ${x.fm.title} · status: ${x.fm.status}`"), so a file whose front matter parses to no fm puts the literal "undefined" into the brief instead of being refused — read t.fm?.title and die on a missing fm, as the file already does for t.
+
+REJECT — 10. Frontend/Backend Boundary §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the creation of scripts/analysis/backlog-brief.mjs reads as a frontend boundary breach — the rule binds frontend WFs and this material is lane and review tooling (group G4), not a frontend feature, so no frontend workflow owns these paths and the clause does not apply.
+
+REJECT — 9. Pipeline & Script Safety §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — backlog-brief.mjs sits under scripts/ and uses no pipeline.run, withTransaction, emitSummary or emitMeta — its only I/O is file reads and one markdown write, "const readText = (p) => { try { return fs.readFileSync(p, 'utf8'); } catch { return null; } };" (:68), it opens no pool and mutates no DB row, so §9.1 to §9.4 (transactions, parameter cap, upsert, SDK) do not bind it.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  80858ms (80.9s)
+📊 Tokens — total: 48472, input: 30595, output: 17877, reasoning: 17230

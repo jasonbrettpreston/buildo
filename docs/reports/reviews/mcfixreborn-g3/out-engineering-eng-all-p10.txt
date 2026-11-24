@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:51:02.935Z file_sha256=6c30d96407232ea1b54c019b5806379d34859721c78bb7507d53adfa1d96a869 prompt_sha256=676927b68501b82eca61cc539fdaadd1e61c7ff75d459c2d41f5da857e44edc9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**... Force errors in the deepest layer of the call stack... and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`." — src/tests/consumer-parcel-lookup.infra.test.ts:3 "// Always-run infra locks for the CONSUMER parcel lookup route/lib:" — every test in the new .infra.test.ts greps route/flow source text or calls a pure assembler; no test forces a pool or flow throw and asserts a sanitized 500 with no raw message — add an unhappy-path test that makes runLookupFlow (or the pool query) throw and asserts the envelope returns the safe error body plus a logError call, and that err.message is absent.
+
+BUG severity=HIGH — 1.3 "`font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text." — src/components/surfaces/web/SearchBinding.tsx:60 "tagline: 'mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400'," — font-mono is applied to the tagline label (also the rail label at line 79 and the chip button text at line 73), none of which is a data value — use the sans default for tagline, rail and chips, keep font-mono only on the count/amount values.
+
+DEFER severity=MED — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/consumer-parcel-lookup.infra.test.ts:154 "const row: Record<string, unknown> = {" — the row, the map lot and the neighbour objects are untyped inline mocks and no factories module is imported — build the row and map fixtures from typed factories in src/tests/factories.ts and import them.
+
+DEFER severity=MED — 5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — src/components/surfaces/web/SearchBinding.tsx:11 "//                               src/tests/surfaces/search-parity.golden.test.ts holds the two targets equal per state." — the new component's render coverage is pointed at a .golden.test.ts instead of the mandated *.ui.test.tsx and no *.ui.test.tsx is visible in the material, cannot see one elsewhere — add or point to a search binding .ui.test.tsx that renders each state and a click.
+
+DEFER severity=MED — 1.3 "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected." — src/components/surfaces/web/SearchBinding.tsx:55 "screen: 'min-h-screen w-full bg-zinc-950'," — the whole layout table hardcodes zinc-950/zinc-900 with no dark: variant — add dark: variants for the surface and card tokens (the NativeWind wrapper may map to plain Tailwind dark: on web).
+
+DEFER severity=LOW — 2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/consumer-parcel-lookup.infra.test.ts:122 "const args = m![1]!;" — a double non-null assertion with no inline justification, and the pattern recurs at cb[0]! and map.lots[0]! — replace with an explicit local guard so the fixtures need no `!`.
+
+DEFER severity=LOW — 1.1 "Dense metadata rows MUST use `flex-wrap`." — src/components/surfaces/web/SearchBinding.tsx:78 "listHeader: 'mt-4 items-center justify-between'," — the rail plus the count badge is a dense metadata row with no flex-wrap, and the pill at line 61 sets flex-nowrap explicitly — add flex-wrap to listHeader so the rail and count wrap at 375px.
+
+MET — 4.3 — src/components/surfaces/web/SearchBinding.tsx:385 "const href = `${HELP_PATH}#topic=${encodeURIComponent(String(p.onClick.topic))}&q=${encodeURIComponent(String(resolveWebValue(p.onClick.q, ctx)))}`;" — user input is URL-encoded and all displayed text goes through JSX children, with no dangerouslySetInnerHTML in the file.
+
+MET — 2.3 — src/components/surfaces/web/SearchBinding.tsx:303 "export function resolveWebValue(v: unknown, ctx: Pick<Ctx, 'content' | 'data'>): unknown {" — nested access runs through the isObj/walk guards and an unresolved ref throws, so the component carries no `!`.
+
+MET — 8.2 — src/tests/consumer-parcel-lookup.infra.test.ts:120 "/logInfo\(TAG, 'consumer parcel lookup', \{([\s\S]*?)\}\)/" — `[\s\S]` is used where a dotAll `s` flag would need ES2018, matching the ES2017 constraint.
+
+MET — 12.2 — src/components/surfaces/web/SearchBinding.tsx:406 "export function SearchBinding({ tree, content, data, actions = {}, runtime = {} }: {" — the component has no useEffect: the tree and data arrive as props and interaction leaves as callbacks.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  104144ms (104.1s)
+📊 Tokens — total: 54643, input: 29411, output: 25232, reasoning: 23958

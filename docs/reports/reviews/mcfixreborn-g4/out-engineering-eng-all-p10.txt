@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:18:17.571Z file_sha256=d0d6475b36415fa3edee7ee3ff1961f5a2e8737a1874eafface563427ccfdd1f prompt_sha256=c07966657ab9acb5c5658585860caab2113ba3727bd5e95745849ac44851fcd8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 14. The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/lib/review-template.js:14 " * SPEC LINK: .claude/review-templates/README.md (template format + invocation)" — the new source files do not carry a spec+section link: this one points at a README with no §N, and scripts/deepseek-review.js and scripts/hooks/check-task-files.mjs carry no SPEC LINK line at all — add "SPEC LINK: <spec path> §N" to all three files, naming the review-tool and hook sections that govern lens mode and the Files: line.
+
+DEFER severity=MED — 13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces." — scripts/lib/review-template.js:98 "  } catch {" — this catch returns null with no log line, so a malformed sibling .notes.json silently drops the review notes from the prompt, and scripts/deepseek-review.js:98 "console.error('❌ DeepSeek API error:', err.message);" is a bare console.error inside a catch — log the error with tag and context before returning null and route the API catch through the same logger.
+
+DEFER severity=LOW — 12.12 "Pure functions with arithmetic invariants" and "MUST have at least one `fast-check` property test asserting the invariant" — scripts/hooks/check-task-files.mjs:21 "function globToRegex(g) {" — the new pure helpers (globToRegex/matcher, contextRound at review-template.js:137 counting the next round, substitutePlaceholders literal insertion) ship with no fast-check property test in this material — add src/tests/property tests asserting `a/**/b` matches `a/b` for all segments and that contextRound returns a round greater than every existing one; cannot see whether one exists in another chunk.
+
+REJECT — 12.11 rule 3 "any file with `// never throws` / `// always returns` AND a `throw` statement is flagged" — accused: review-template.js:83 "Pure lookup: never throws" while the same file throws at line 124 — rule 3's scope is "`src/features/leads/` and (rule-by-rule) `src/lib/`", and scripts/lib/ is neither, so the heuristic does not bind this file.
+
+REJECT — 12.11 rule 2 "bans `process.env.X || 'default'` inside `src/features/leads/`" — accused: deepseek-review.js:35 "const MAX_PROMPT_CHARS = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || 120000;" — the ban is scoped to src/features/leads/ and scripts/ is outside it, and this default is a deliberate documented bound named in the refusal message.
+
+MET — 12.11 rule 5 "bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`" — scripts/hooks/check-task-files.mjs:7 "import { spawnSync } from 'node:child_process';" — no new file creates a Postgres pool and all three scripts sit under the allowed scripts/ root.
+
+MET — 12.8 "All NEW migration files must pass `sqlfluff lint --dialect postgres`" — scripts/hooks/check-task-files.mjs:1 "#!/usr/bin/env node" — the chunk adds no migration file, so sqlfluff, validate-migration and the DOWN-block rules have nothing to bind.
+
+MET — 14 "Every **privileged mutation + its audit row** commit in ONE `withTransaction`" — scripts/deepseek-review.js:52 "async function callDeepSeek(prompt, systemInstruction = null) {" — no new script performs a DB mutation, so no mutate+audit pair needs one transaction.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 20   Unmet: 3
+
+---
+⏱  71824ms (71.8s)
+📊 Tokens — total: 41064, input: 23913, output: 17151, reasoning: 16266

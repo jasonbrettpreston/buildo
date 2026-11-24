@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:11:03.921Z file_sha256=b42c9dd7920327cd6d521aebe418dbe69b8cab50d0e4238cbc14b9527a4190bd prompt_sha256=0ce65e2457b88bfc4aac62e37023f3c253bc8562c6addfad2486bb375c909fd4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.36 "mobile expo-router with canGoBack() before back()" — mobile/app/(app)/[lead].tsx:110 "onPress={() => router.back()}" — both back controls call router.back() with no canGoBack() guard, so the cold-boot deep link this change adds a Maestro flow for can pop an empty stack — guard both handlers: if (router.canGoBack()) router.back(); else router.replace to the feed route.
+
+BUG severity=HIGH — fe.38 "The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0" — mobile/src/lib/parcelCostFormat.ts:60 "const optAor = areas?.opt_aor_gfa_sqm;" — the max-build basis label is still derived from opt_aor_gfa_sqm, a legacy column the lookup is ruled to send as null, so that slot can never reach the ruled "Not yet evaluated" state — delete the opt_aor_gfa_sqm branch and return the ruled "Not yet evaluated" text, or a basis label the server sends.
+
+DEFER severity=MED — fe.44 "The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths" — mobile/src/lib/leadDetailFormat.ts:18 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the client receives one raw number in one unit, rounds it and appends " sq ft", with no both-units pre-format and no per-user toggle, so the fe.44 authority cited in the file header is not met for this area display — have the API send both pre-formatted strings and render the selected one, or withdraw the fe.44 claim for this screen.
+
+DEFER severity=MED — fe.45 "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date" — mobile/src/lib/leadDetailFormat.ts:60 "if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;" — the client divides the served cost to display $450K, a number the server never sent, with no deviations[] row — send the abbreviated string from the producer, or record the deviations[] row.
+
+DEFER severity=MED — fe.31 "every string from content (listed exempt files only)" — mobile/app/(app)/[lead].tsx:281 "Modeled effective area" — every user-visible string on this touched screen is a hardcoded literal ("Lead not found", "Cost not disclosed", the section headers), none comes from content — move the screen copy into content fields.
+
+DEFER severity=MED — fe.40 "The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status" — mobile/maestro/lead-detail.yaml:36 "- openLink: "maxbld://(app)/lead?id=permit_test_123"" — a new phone journey is written as standalone test code with no owning task and no status row, so McTest cannot mark it WAITS or PASS — add it as a row of tests/e2e/scenarios.json naming its owning task and status.
+
+DEFER severity=MED — fe.54 "An unhandled state is a FAIL, not a blank screen" — mobile/app/(app)/[lead].tsx:398 ") : null}" — when the hook returns no data, no error and is not loading, the body renders nothing below the header, an undeclared blank screen — render the declared not-found or error state in that branch.
+
+MET — fe.57 — mobile/app/(app)/[lead].tsx:112 "style={{ minHeight: 44, justifyContent: 'center' }}" — the header back control meets the 44 px floor and carries accessibilityRole and accessibilityLabel.
+MET — fe.49 — mobile/app/(app)/[lead].tsx:32 "} from '@/lib/leadDetailFormat';" — the lead detail screen imports nothing from the fenced parcel-cost module, so the change adds no Spec 100 to LeadDetail linkage.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 7
+Rules met: fe.49, fe.57
+
+---
+⏱  181883ms (181.9s)
+📊 Tokens — total: 50570, input: 24643, output: 25927, reasoning: 24964

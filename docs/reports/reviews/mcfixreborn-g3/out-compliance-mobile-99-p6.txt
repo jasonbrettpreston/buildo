@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:21:21.607Z file_sha256=d06799c024b2bc6f71a4697ad7fd254faccb2d85dc49c5db648663a1e2e35826 prompt_sha256=d243fd4e0f0dcb7f774b8d9e5c24fff77c7039bb350161b864a2d123b33d61a1
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:32 "it.each<[string, unknown, boolean]>([" — the table drives only the (data, isError) pairs, so the SRCH.METER-2 held lot (settled unsure, page null, which the mount test pins as "a settled unsure lot with page null shows the loading state, not the miss text") is a render branch on this same route that never has isFetching toggled — add a row carrying the unsure hit (page null, unsure true) at isFetching true then false and assert the two trees are equal.
+DEFER severity=LOW — §8.3 "both must produce the same JSX" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:49 "expect(treeFetching).toBe(treeSettled);" — each row asserts only tree equality plus the not-'null' guard, never that the row's intended state (loading, miss, page, error) is the one rendered, so a route frozen on a single wrong state in both renders would pass — assert the row's expected testId or text alongside the equality.
+DEFER severity=LOW — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(false);" — the only isFetching assertion in the material for the search surface codifies a gate flipped by isFetching (showMiss), and no §8.3 stability test for that screen is in this chunk; either add the stability test or state why the search page sits outside §6.5's gates.
+MET — §8.3 — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:31-49 — the report route is rendered twice on identical lookup state (isFetching true then false) and the serialized trees compared, the mandated pattern, with loading, miss, served page, error and error-with-cached-page rows.
+MET — §8.3 — mobile/app/(app)/parcel-tool/[parcelId].tsx is exercised as a real screen ("const Screen = require('../app/(app)/parcel-tool/[parcelId]').default"), so the gate test is against the shipped route, not a stub.
+REJECT — §8.1 — the four files carry no bridge idempotency test — bridges.test.ts is not part of this chunk, so its absence here is not a miss.
+REJECT — §8.5 — no storeReset coverage test in the material — storeReset.coverage.test.ts is outside the pasted files, so nothing is charged here.
+REJECT — §8.6 — no matrix drift script in the material — scripts/check-spec99-matrix.mjs is outside the pasted files.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  84965ms (85.0s)
+📊 Tokens — total: 37525, input: 26595, output: 10930, reasoning: 10201

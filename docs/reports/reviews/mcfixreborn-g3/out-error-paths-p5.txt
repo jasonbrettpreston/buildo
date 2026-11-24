@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:09:23.907Z file_sha256=3abdd85fdbd5ea4ca66b78d4ab6dca33eb1a52a171a71bf943667627d15c8046 prompt_sha256=fb7ca331cc6c9676fe235c1a8f4c29ef8ef60f2c8f5b924c15fa50f269941ea3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p5.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings (max 8), each quoting the line:
+
+DEFER severity=MED — scripts/analysis/lot-map-data-check.mjs:33 "if (p >= 0) o.parcels = [...SAMPLE_PARCELS, ...String(argv[p + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)];" — a trailing --parcels, or --parcels immediately followed by --url, takes the next flag or an empty string as the id list, so the run silently checks only the two sample parcels and prints a summary that reads as if the requested ids were counted — treat a missing or flag-like value as an error (exit 2, print the usage) instead of defaulting.
+
+DEFER severity=LOW — scripts/analysis/lot-map-data-check.mjs:65 "const client = new pg.Client({ host: u.hostname, port: Number(u.port), database: decodeURIComponent(u.pathname.slice(1)), user: decodeURIComponent(u.username), password: decodeURIComponent(u.password) });" — no connectionTimeoutMillis, statement_timeout or query_timeout, so a hung rehearsal stack or a lock wait on parcel_buildings blocks the check forever with no message and no exit — pass connectionTimeoutMillis and set a local statement_timeout in the session so it fails with a message.
+
+DEFER severity=MED — scripts/surfaces/_schema/static-page.json screens.mobile_parcel_semi_question, notice ratelimit: "vars": { "seconds": "errors.429.retryAfterSeconds" } — the 429 notice has one variant and the seconds substitution has no declared default, so a 429 served without Retry-After renders state.ratelimit with a missing or literal-undefined seconds and there is no fallback row to switch to — declare the fallback seconds in the row, or add a second variant without vars.
+
+DEFER severity=MED — scripts/surfaces/_schema/static-page.json pages.web_maxbld_error.error: "role": "retry", "content": "error.retry" — the only error state's retry part names no action and no target, while the screens table's retry button carries "action": "retry" and the push button carries "target": "route", so the retry path of the error page is undefined in this table and an inert retry button would look like a working one — name the action (the boundary reset) in the row or state in the row that the renderer wires it.
+
+DEFER severity=MED — scripts/surfaces/_schema/census/contracts.json, /api/parcels/lookup data_story: "a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot ... it writes nothing ... and a lot with no Layer 2 stamp stays a miss" — the metered path documents missing, stale and no-stamp but not the compute throwing, so the fail-closed outcome for a throw (count nothing, log not_produced) is unstated and a throw that counted would charge for a report never produced — add the thrown-compute case to the data_story and require the route to map it to the not_produced count.
+
+DEFER severity=LOW — scripts/surfaces/_schema/census/contracts.json data_story: "a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45)" — the double path (the held unsure-lot read that counts nothing, then the answered read of the same lot, or a client retry after a timeout on a produced report) is only closed by the word "new", the unique key is nowhere named — name the key (uid, lot, billing month) in the contract so a repeat is provably a no-op.
+
+REJECT — scripts/analysis/lot-map-data-check.mjs:22 "(p.primary_frontage_street_name ~ '[^[:space:]]') AS has_street," — the flag looks unsafe because a NULL street makes the regex NULL rather than false, so the column is tri-state — handled: summarise counts truthy rows only, so NULL and false both read as no street, and the per-row print shows MISSING for both.
+
+REJECT — scripts/analysis/lot-map-data-check.mjs:70 "await client.query('ROLLBACK');" — the ROLLBACK is skipped when the SELECT or BEGIN throws, which looks like a leaked open transaction on the shared rehearsal stack — handled: the finally block's client.end() destroys the connection and Postgres aborts the read-only transaction, and no statement on any path writes.
+
+VERDICT: PASS on error-path safety
+Paths walked: dry-run with no connection, refused URL, connect failure, SELECT failure before ROLLBACK, empty result set (not-found ids), NULL street column, --parcels with missing value, 429 without retryAfterSeconds, semi-page Continue busy guard, held report then answered report on the same lot, compute throw inside the metered lookup   Unguarded: 1
+
+---
+⏱  67358ms (67.4s)
+📊 Tokens — total: 45211, input: 32786, output: 12425, reasoning: 11314

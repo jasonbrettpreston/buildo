@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T03:25:30.868Z file_sha256=215edf0c350a04f949871b3513fcb7831a2d383781e6eecc9c064188dfac7a9c prompt_sha256=9d532e3883ecdcd2ad0eaedbec285ac4c14c8c0c05cdf463b21259bded876650
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-ux-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/components/report/ReportView.tsx:127 "<summary className='cursor-pointer text-sm text-gray-600'>{UI.details}</summary>" vs design "FE-31 (C-8 closed mapping, C-9 44 px)" and the report page's own "<button type='button' data-toggle='panel' ... min-h-11" (src/components/report/ReportPage.tsx:56) — on a collapsed row the only way into the details is a one-line text control about 20 px tall, so a person on a phone taps and misses it — give the summary the same 44 px row (min-h-11, flex, items-center) the rest of the product uses.
+
+BUG severity=HIGH — src/components/report/ReportPage.tsx:393 "<button type='button' disabled data-part='link' ... underline>{one(s, 'link')?.text}</button>" vs design "the closed role link is a text part; no href, no action until the sheet mounts the form (MF-44, MF-48)" (line 392) and "No href: no link at all (never an inert control)" (src/components/report/ReportView.tsx:62) — in the Add lot size sheet the person sees an underlined link that cannot be reached or followed and nothing happens on tap — render it as plain text (no button element, no underline) until the form lands.
+
+DEFER severity=MED — src/components/report/ReportPage.tsx:380 "<div role='radiogroup' aria-labelledby='report-sheet-lbl-width report-sheet-lbl-depth'" — the ft/m unit switch takes its accessible name from the two field labels, so it is announced as "Width Depth" and says nothing about units — give the pair its own label (a unit label part) as the group name — a person on a screen reader cannot tell what the two pills choose.
+
+DEFER severity=MED — src/components/report/ReportPage.tsx:382 "<input type='radio' name='report-sheet-unit' value='ft' defaultChecked className='peer sr-only' />" with the fields at line 376 "<input id={...} readOnly" — switching ft to m moves the checked pill and changes no number, label or placeholder anywhere on the sheet — either state in the sheet's note that the switch does not convert yet, or leave the switch out until the conversion lands — a person who came to add a lot size picks metres and sees no effect, so the control reads as broken (design silent).
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx:115 "<T p={one(s, 'size.panel.h')} as='h4'" — the details panel heading is an h4 while the option title is the h2 and the first h3 on the page comes later (the How? block at line 202), so heading navigation skips a level — make the panel heading an h3 — a screen reader user stepping by heading loses the panel's place.
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx:213 "back={one(s, 'size.panel.hide')}" — the How? sheet's only exit link carries the size panel's hide label, so the person inside the How? sheet reads "Hide details" on a control that returns to the option — use a neutral option/back part for the how sheet — design silent on the how sheet's back wording.
+
+REJECT — src/components/report/ReportPage.tsx:395 "<button type='submit' disabled className='min-h-12 ...'>{one(s, 'submit')?.text}</button>" — the Add lot size sheet's Recalculate looks dead to the person — it matches the pasted ruling ("Recalculate stays inert (input is MF-19)", report-page.ui.test.tsx) and the sheet's own note, so no departure.
+
+REJECT — src/components/report/ReportPage.tsx:60 "{count && !pending(count) ? <span data-part={count.role} ...>{count.text}</span> : null}" — the See details button shows no notes chip where the tile's related count is not yet built — a pending count is not a fact to show, and the chip's omission is the listed fold ("the notes chip is left out while its count is pending (plan fold F2; listed)"), so harmless.
+
+VERDICT: FAIL on the person's experience
+States checked: first server render, pending parts, details collapsed with panel toggles, details expanded, sheet route dialogs (closed, deep link, open, another address, Escape/Back, unknown address), inline panels one at a time, option image empty state, lot view absent/drawn/outline-only, summary anchors, ad between options, footer with pending lines, loading "What we checked" paced and unpaced, reason/unavailable rows, error page on a throw, landing static and degraded, plans boxes, sample region   Dead ends found: 1
+
+---
+⏱  209006ms (209.0s)
+📊 Tokens — total: 66325, input: 35357, output: 30968, reasoning: 29909

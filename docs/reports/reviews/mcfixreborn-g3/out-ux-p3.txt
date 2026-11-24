@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:16:38.482Z file_sha256=5b7637e27d3ab184cfd38668176c0df45a78df525d6de578766d46e09a86bf71 prompt_sha256=d364f881884c0ac7960fb0a6be44cea605605673c535178d8ffbfbaf461988f3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:189 "accessibilityLabel: { text: content('lot.label'), vars: { letter: derived(`letter.${i}`), area, frontage, zoning } }" vs the visible line at :193 "{ text: content(leadKey), vars: { letter: derived(`letter.${i}`)" — the card's spoken name carries letter, area, frontage and zoning but never the house/no-building sentence, which the file itself calls the point of C.7 ("a footprint says \"has the house\", none says \"no building\" (choose-lot.html:306)"), so a screen reader user picks a lot without hearing it — put the lead sentence into the card's accessibilityLabel template so the spoken card matches the visible card.
+
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:217 "accessibilityLabel: content('select.label')," vs the visible label at :208 "{ text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } }" — with a lot picked the button shows the lot-specific label but is announced as the fixed select.label string, so a voice-control user saying what they see cannot activate the primary action — let the accessibilityLabel follow the same select.none / select.label / select.lot choice as the visible text.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:54 "if (!id) return;" — on a route opened without a parcelId (broken deep link, a param that is not a string) Continue is pressed and nothing at all happens, with no message saying why — render the built error state, or disable Continue with a reason, when id is empty.
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx:215 "...(s.showMiss" — the no-match state offers only the input box, while every message state of the lot map carries helpLink('address_match') (:104 "onPress: { action: 'open_help', topic, q: derived('query') }"), so the person whose Toronto address is not found has no report path on the page where they need it most — design silent, either reuse the existing report link in the miss block or record the silence.
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx:169 "node('Text', { key: 'badge', className: L.badge }, [{ text: content('list.badge'), vars: { count: derived('candidate_count') } }])" — results arriving and the miss text are never announced (no status role, unlike PageTableBinding's ":104 role: 'status'"), so a screen reader user gets no signal that the search finished — give the count and the miss text a status role.
+
+DEFER severity=NIT — mobile/src/components/surfaces/LotMapBinding.tsx:228 "accessibilityLabel: content('state.loading') })," next to :229 "node('Text', { key: 'loading-text', className: L.loadingText }, [content('state.loading')])" — a screen reader reads the loading state twice — let the adjacent text carry the label and drop it from the spinner.
+
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx:56 "onPress: { action: 'back' }," on the pill's X — to a person this looks like a clear-the-query control that instead leaves the page with the old query still in the search box — it matches the recorded audit ruling in the same file ("NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route"), so the behaviour is approved and not a departure.
+
+VERDICT: PASS on the person's experience
+States checked: search first view, typing/loading, address list with selection, unique and map redirects, miss, outside Toronto, rate limit (0s), entitlement 403, schema drift, generic error with Retry, recent chips, reports-left line absent on failed read; lot map loading, multi parcel with map/cards/disabled Continue and pick hint, unlinked, unlinked_no_pin, intersection, too_many_lots, error with and without Retry, redirect; semi question ask, nothing selected, busy Continue, answered lookup failure with Try again, redirect; report loading while the question is owed, error with Retry, back   Dead ends found: 1
+
+---
+⏱  128381ms (128.4s)
+📊 Tokens — total: 61510, input: 34782, output: 26728, reasoning: 25738

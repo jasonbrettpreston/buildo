@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:29:15.514Z file_sha256=b0e4faee220308bae6eb31d25ba45d2a86207da8807e863155f841936c8e3620 prompt_sha256=d5648effe7c396ccb42d8db28e8d7b6feb7a46eeb945b5979960dfde6532f904
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/tests/consumer-parcel-lookup.infra.test.ts:33 "/** The miss lock: the dangling-id miss (match null, parcel null, resolution no_match) is built in the flow. */" — the comment sits directly above the importsResolver declaration (:34-35) and names a lock whose helper (flowHoldsMiss) is declared much lower in the file, so one stale comment of the class task-364 names survives in a built file — move the comment above the flowHoldsMiss declaration or delete it — LOW, safe to defer.
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/lib/parcels/lot-size-entry.ts:6 "//   readLotSizeSettings  the five logic variables in one read" — the same file reads seven keys ("The seven keys, spelled out so the variable-effect scan sees them read here", :29, and "The seven settings in ONE read"), so the header count is stale after the v3 width and depth amendment — change "five" to "seven" — LOW, safe to defer.
+DEFER severity=NIT — task-336 "SRCH.LOTCARD-Lot-map-footprint-layer-C.5-and-card-line-C.7-from-two-new-reads-massing-footprint-presence-fronting-street" — src/lib/parcels/lot-map.ts:6 "//   multi_parcel  the matched lots (outline, area, frontage, zoning, marker point) + the pin of the typed house number" — the LotRow type projects no marker point column (centroid_lat/centroid_lng only) and the pin is a separate top-level field, so the header names a field the lot statement does not carry — reword "marker point" to "centroid" — NIT.
+REJECT — plan-protocol §0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch." — that adding three new lib files and four new test files re-writes the plan from scratch — the clause governs sequence.json task entries, this is an output review with no plan, so source-file creation is not its subject.
+REJECT — task-338 "the two new lot map fields declared in the lookup contract and the consumer registry regenerated" — that the contract or the consumer registry is missing the two fields — cannot see scripts/surfaces contracts or the consumer registry in this chunk (chunk 11 of 15), so no finding is raised.
+REJECT — task-378 "Phone tunables are data not code lookup and entitlement contract entries corrected" — that the phone descriptor values are unregistered or the contract entries still wrong — the descriptor JSON and mobile slice files are not in this chunk (cannot see); only the test that reads them is pasted, and a test name is not evidence of the fix.
+MET — task-383 "one shared parcel-tool gate helper for lookup and lot-size" — src/lib/parcels/tool-gate.ts:14 — one helper returns 'parcel_tool' / 'lead_gen_transitional' / null from the single ACTIVE_SUBSCRIPTION_STATUSES set, with a thrown read left to propagate.
+MET — task-336 "two new reads massing footprint presence fronting street" — src/lib/parcels/lot-map.ts:29 — CONSUMER_MAP_COLS carries primary_frontage_street_name and has_footprint and the one lot SELECT projects exactly them.
+MET — task-383 (thin route lock) — src/tests/consumer-parcel-lookup.infra.test.ts:28 "/** The gate lock: the route calls the helper, answers forbiddenSubscription on null, and does so before the flow call" — the gate-before-flow order is locked with a red plant, so the gate claim is not comment-only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  75205ms (75.2s)
+📊 Tokens — total: 50724, input: 34511, output: 16213, reasoning: 15312

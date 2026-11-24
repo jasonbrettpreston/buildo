@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:00:10.924Z file_sha256=eccfe0790b17a5b25cd15e0d11242a724c29e61276129cd569014683f196847d prompt_sha256=c58c7f82a98f6072b2aac136d62754dbfb528ae6cf8540e3a161ffe40754a198
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-front-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 1.3 Mobile Front-End Patterns & UX "All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**." — mobile/__tests__/lotMapPage.behaviour.test.tsx:100 "parts('Polygon')[1]!.props.onPress();" — a lot polygon is wired as a selection target, yet the lot map golden's 44px gate covers only `Button` nodes (lotMapScreens.golden.test.ts:66 "if ((n.component === 'Button') && !String(n.props.className ?? '').split(/\s+/).includes('min-h-[44px]'))"), so no interactive map element is held to 44px — keep the card as the 44px target and either drop the polygon press or assert a hit-slop/minimum size for it in lotMapProblems.
+
+DEFER severity=MED — 1.3 Touch Targets "Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height." — mobile/__tests__/pageTable.logic.test.ts:22 "button: { default: { className: 'b', busyClassName: 'b busy', text: 'bt' }, outline: { className: 'o', busyClassName: 'o busy', text: 'ot' } }," — the page-table builder test pins classes, action and busy state but requires no min-height token on the buttons or choice cards it emits, so the semi question page drawn from table rows has no 44px evidence — have pageProps output carry (and the test assert) a min-h-[44px] token on Buttons and choice cards, or read it from the style/slice table.
+
+DEFER severity=LOW — 1.3 Micro-animations & Haptics "Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic" — mobile/__tests__/lotMapPage.behaviour.test.tsx:119 "fireEvent.press(screen.getByTestId('parcel-lotmap-continue'));" — the Continue submit that opens the metered report is pinned only by the pushed route; nothing in the chunk asserts a haptic on select/Continue or `withSpring` press feedback on the primary card — add a behaviour assertion (and the call) for lightImpact/successNotification on select and Continue, plus a withSpring press style assertion in the golden.
+
+DEFER severity=LOW — 1.3 Design System Fidelity "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950`" — mobile/__tests__/pageTable.logic.test.ts:18 "backIconSize: 3, iconColor: '#000'," — the page-table style contract hardcodes a raw black icon colour with no dark twin, so the back chevron cannot follow the system scheme — type the icon colour as a dark:-paired token or supply it from the slice instead of a literal hex.
+
+MET — 1.3 Touch Targets — mobile/__tests__/parcelScreens.golden.test.ts:63 "if (!touch[n.component].some((x) => tk.includes(x)) || mins.length !== 1) out.push(" — every mapped touch component must carry exactly one min-h token from touch_targets.mobile, and the planted `sm:min-h-8` case is made to fail.
+
+MET — 1.3 Touch Targets — mobile/__tests__/lotMapScreens.golden.test.ts:66 "if ((n.component === 'Button') && !String(n.props.className ?? '').split(/\s+/).includes('min-h-[44px]'))" — every Button on every golden and named case is held to min-h-[44px].
+
+MET — 1.3 Design System Fidelity — mobile/__tests__/parcelScreens.golden.test.ts:65 "const chains = n.component === 'Input' ? darkChains.input : n.component === 'Button' && n.props.variant === 'outline' ? darkChains.outline : [];" — each dark: chain of the vendored variants in use must have a twin with the same chain, and the missing-twin RED case fails.
+
+MET — 1.3 Design System Fidelity — mobile/__tests__/daylightSearchPages.golden.test.ts:40 "const LEGACY = /(\[#[0-9a-fA-F]{3,8}\]|zinc-\d+|red-\d+|bg-feed|text-primary$)/;" — hardcoded dark grounds and raw hex classes are rejected across the layout tables and every search, lot map and semi render tree.
+
+REJECT — 1.3 Design System Fidelity — that the LEGACY regex outlaws any `zinc-*`, `red-*` or `text-primary` class the pasted rule does not mention — not a real issue: the rule only forbids hardcoded dark grounds without a `dark:` variant, and a strictly stronger golden check does not breach it.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  88079ms (88.1s)
+📊 Tokens — total: 49393, input: 31807, output: 17586, reasoning: 16457

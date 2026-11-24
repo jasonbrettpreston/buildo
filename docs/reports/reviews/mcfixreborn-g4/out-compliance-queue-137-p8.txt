@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:15:27.853Z file_sha256=c16518e70c9f2851e1d113eed5ec3b7d119d70d564365d5f5d6034d6e79e4e70 prompt_sha256=9615d9d1b5d9dc7612a4525e27a3464a3bf090163ad9b05a7c1ae6ef7f8580de
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p8.txt (model: deepseek-reasoner)
+
+REJECT — Rule 13 "The board is a view; the row is the record ... Nobody edits the board." — the change is accused of editing a status on the board — not a real issue: the file writes no board file and no `Status:` line, its writes are review evidence under `docs/reports/reviews/<task>/` and a generated report page.
+REJECT — §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now." — the commit phase of plan-prep is accused of building that deferred gate — not a real issue: it stages only the evidence folder, runs the repo's own hooks (no `--no-verify`), and its only refusals are a dirty tree outside `backlog/` and the index lock.
+REJECT — §6 "Also deferred: Backlog.md as the source of truth (\"part 2\"). Not adopted." — the gates in this file are accused of making the backlog cards the system of record — not a real issue: it reads task bodies and status to attach rule lists, and `backlog task edit` is called only with `--append-plan` and `--add-ref`, never a status move.
+REJECT — §6 "the generated index is built now as a read-only board outside the repo (§5a)" — the `page` command's in-repo generated file is accused of being that index — not a real issue: the clause names an index across all queues, this page lists rule documents per kind of work and touches no queue row.
+MET — §6 "a generated index across all queues is infra work: carded for the freeze lift, not built now" — scripts/analysis/rule-lists.mjs:10 "the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts" — the only view added is over rule lists, no index across the queues.
+MET — Rule 13 "The board shows every `Status:` line of the repo queue files and of the cards" — scripts/analysis/rule-lists.mjs:3 "Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close) and this file's own CLI" — the new file is a reader of rule documents for review calls, it neither shows nor ranks queue statuses.
+MET — Rule 14 "reads the board before giving any queue status or next step" — scripts/analysis/rule-lists.mjs:9 "check-tasks [--table f] [--root dir]" — the one queue-shaped output is an advisory resolve/not-yet list for the orchestrator, which still owes the board read, so the clause is neither met nor broken here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  53427ms (53.4s)
+📊 Tokens — total: 38200, input: 26913, output: 11287, reasoning: 10657

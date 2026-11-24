@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:59:19.386Z file_sha256=2cae0137ff2404cf2826314d428d3bd974dae9af899295649ca06182a152b24a prompt_sha256=c0b78adc82922ef2445832d78fee080edc96cd923e625478d302e1a1cd8de83d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — LC-49 / P5.10a "CoA not applicable to the rear suite" — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json "CONFLICTS with RULED LC-49 / P5.10a (\"CoA not applicable to the rear suite\")" — the change ships suite_coa_gfa_sqm, suite_coa_increment_sqm and suite_coa_status as status "new" while the ruled decision that forbids them is amended nowhere in this chunk, the claimed gap 2 approval being carried only by a row note ("needs an LC-49 amendment + lineage rows") — either drop the three rear-suite CoA rows or land the LC-49 / P5.10a amendment row in the same change.
+DEFER severity=MED — Q-8 "Q-8 (decided): two slots" — scripts/surfaces/_schema/report-presentation.json "key": "scenario_card", "declared_on": null — the placements list carries three slots where the ruling quoted in the same block names two, and the third has no declaring descriptor (declared_on null) although the note says the placement home is the placements table — cite the MF-20 ui.ad_slots descriptor that declares scenario_card, or remove the third placement.
+DEFER severity=LOW — report-presentation.json $comment "every reference resolves" — scripts/surfaces/_schema/report-presentation.json "by_code": {} — the label map that card titles resolve through (display_label, per the proposal's card title row) is empty, so the completeness claim holds only vacuously for display_label — record the label row as owed rather than shipping an empty map that reads as complete.
+DEFER severity=LOW — report-presentation.json status_text / states "This lot looks like half of a semi-detached house. Enter your house details to see renovation options." — scripts/surfaces/_schema/report-presentation.json "semi_needs_input": "This lot looks like half of a semi-detached house. Tell us about your house to see what you can add." — two different prompts are shipped for the same semi_half condition, one under status_text and one under states — pin one wording and cross-reference the other key.
+REJECT — D.9 "Input: distance from your wall to the shared line, with an assumed default and an assumption line" — the registry carries no wall-to-shared-line input or assumption line — the element is recorded NOT BUILT and D.9 names no report v2 field, so its absence from this registry is not a gap.
+MET — A.10 "Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." — scripts/surfaces/_schema/report-presentation.json "legal.line" — the legal line is carried verbatim in the page labels.
+MET — G.3 "The Building Possibilities Report for {address} is ready." and "web View report button" — scripts/surfaces/_schema/report-presentation.json "ready": "The Building Possibilities Report for {address} is ready." and "open": "View report" — both the ready line and the web button wording match.
+MET — G.4 "Skip control during the animation" — scripts/surfaces/_schema/report-presentation.json "skip": "Skip" — the skip control label is present in the checked block.
+MET — G.2 "each check resolves into its ruled fact (What we checked)" — scripts/surfaces/_schema/report-presentation.json states.checked.lines and states.checked.verbs — every citywide and lot check has its resolved line and its present-participle verb.
+MET — RR-0414 "changed parts only as per your recommendation" — scripts/surfaces/_schema/seed-report-v2.mjs @@ -603 and @@ -619 — the oversized generator arrives as two hunks, not a whole-file rewrite.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+Rules met: A.10, G.2, G.3, G.4
+
+---
+⏱  108469ms (108.5s)
+📊 Tokens — total: 46180, input: 32892, output: 13288, reasoning: 12398

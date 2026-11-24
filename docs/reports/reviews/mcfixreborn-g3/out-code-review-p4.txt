@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:40:24.464Z file_sha256=8b3a6d7203956290a8472b3939b3cd211be380e05c80e4bd192cbfc8fd6b8c75 prompt_sha256=760a9a7210600d0a111358b9ef45bd2e65cbf2ddca96d492746a53a02cdc9ac3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/lib/schemas.ts:427 "  .strict();" — the new lotForm block is strict while the file's own rule two screens up says "the map objects are plain (not .strict()), so a server-added field never raises ParcelLookupSchemaError on an installed build", so any additive key the server puts on lotForm now throws on the report page and lands it on the ErrorBoundary, which is the LOW-9 class this file says it fixed — fix: drop .strict() and leave the object plain like ParcelLotMapSchema and ParcelToolEntitlementSchema
+DEFER severity=LOW — mobile/src/lib/lotForm.ts:46 "export function lotFormEffective(detected: LotForm, override: LotForm | null | undefined): LotForm {" — no caller exists, the module header at line 9 states "nothing outside this file reads the param or calls `lotFormEffective` (P5.7)", so the diff adds an exported dead function — fix: drop it until 7.25 wires it, or keep it only with a unit test that pins it
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts:105 "queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi))," — the non-null assertion only holds while `enabled` blocks automatic fetching, a manual refetch on the disabled query runs this line with `parcelId` undefined and sends `parcelId=undefined` to the route — fix: make queryFn throw on a missing id, or type the key so the undefined case cannot reach the template
+DEFER severity=NIT — mobile/src/lib/lotMap.ts:120 "errors: error != null ? errors : { ...errors, unexpected: false }," — the else branch is dead, `classifyParcelSearchError(null, ...)` at line 87 already returns `unexpected: false` because it is computed as `error != null && ...`, so the copy changes nothing (same line copied in semiQuestion.ts) — fix: return `errors,` directly in both files
+DEFER severity=NIT — mobile/src/constants/lotMap.ts:86 "export const LOT_MAP_BOTTOM_PADDING = PARCEL_SHELF_HEIGHT + 24;" — the comment says "as the search page" but this re-derives SEARCH_BOTTOM_PADDING with a second copy of the literal 24 that PARCEL_SHELF_MIN_BOTTOM_PAD already names, so the two flow pages' bottom padding can drift silently — fix: import SEARCH_BOTTOM_PADDING from parcelSearch.ts
+DEFER severity=NIT — mobile/src/hooks/useParcelLookup.ts:74 " * Debounced typeahead search. Fires when the trimmed query is ≥ 3 chars (the server min)." — the minimum is now read from the slice at line 83 (LOOKUP_MIN_QUERY_LEN), so the "3" in the doc is a second unchecked copy of a config value — fix: say "the slice's min_query_len"
+
+VERDICT: PASS on code correctness
+
+---
+⏱  171369ms (171.4s)
+📊 Tokens — total: 74690, input: 34250, output: 40440, reasoning: 39762

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:53:30.158Z file_sha256=a46a14f3cb50b2f2419df06b29766e242cbfde00d85b7ce6e73a9aaaa3cb17ca prompt_sha256=9d251b0ef298417789664832ea773beb3ab563520c9fc416fc01046bcdda4666
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-five-words-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-358 (REVIEW.LENSES) "The repo review runs the Spec 08 DeepSeek lens set compliance, code review, user experience, error paths, security, not one generic round" — src/tests/backlog/review-templates.logic.test.ts:37 "// task-438 T1 (FINAL.3, RR-0385 item 2, decision-170): the engineering seat has its own template, separate from compliance." — a sixth lens seat is asserted and locked inside a G4 file, and no pasted card or ruling names an engineering lens (task-438 is not in the pasted homed task list, whose only foreign task is task-384), and "RR-0385 item 2" cites an item the pasted RR-0385 line does not carry — fix: bring the task-438 card or the RR/decision id into the pasted ruling set, or move this lock to the task that owns it.
+
+DEFER severity=MED — task-406 (V2.LIST) "The definitive compliance list every kind of work and every increment task resolves to its rule documents" — src/tests/backlog/rule-lists-table.logic.test.ts:46 "expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');" — two work kinds (docs/reports/policy/**, docs/reference/**) are pinned as having no governing spec, so "every kind of work resolves to its rule documents" is not yet true and the test freezes the gap instead of closing it — fix: land the owed operator ruling and point both rows at a named spec, or carry them in one owed-rulings record with an owner.
+
+DEFER severity=LOW — SCORECARD-G0 … SCORECARD-G9 "Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids G0…G9 carry these aliases" — src/tests/backlog/check-task-files.logic.test.ts:4 "the whole .husky/commit-msg chain has the line wired after G3." — a bare G3 in a hand-written part reads as scorecard gate G3 / rule id G3, which this commit-msg hook line is not — fix: name the line by its script, "after the check-backlog-task.mjs line".
+
+DEFER severity=LOW — "Decisions naming this task" (RR-0387, RR-0408, RR-0414, RR-0431, RR-0433, RR-0439) — src/tests/backlog/rule-lists-table.logic.test.ts:71 "operator, 2026-11-20, \"yes, ground it and resolve it. don't makr the task complete until it actually works.\", MORNING-DECISIONS.md:1517" — the tests pin list-table behaviour to operator words that are absent from the pasted decisions, so those two rulings cannot be judged here (cannot see MORNING-DECISIONS.md:1517 and :1520) — fix: attach the RR ids for those entries so each pin traces to the register.
+
+MET — five words — src/tests/backlog/rule-lists-table.logic.test.ts:30 — "const four = ['five-words', 'plan-protocol', 'inc-S', 'ms-S'];" the gate V list is attached by its own id five-words to panels, generated reports, policy reports, docs/reference and review_followups, so the gate is not renamed or redefined per row.
+
+MET — lock / lock-db / check / hook — src/tests/backlog/check-task-files.logic.test.ts:4 — the new enforcement is asserted against .husky/commit-msg, i.e. registered as the hook kind the glossary defines, not sold as a check or a lock-db.
+
+MET — #NN — src/tests/backlog/rule-lists-table.logic.test.ts:1 — no bare #NN step-validate invariant number is cited in the three hand-written files (only RR-, task-, decision-, Spec-line and fe.NN register numbers), so the invariant numbering is not misused.
+
+REJECT — slug, archetype vs shape, phase, compute hook, RE-FREEZE #N, stage, bracket, OWED, class-A, LDG-10/EP-PIN-D17, W4A-Rn, Intent Ledger, G-2, §R Reflection, seam, sources chain, P0 … P3, †, PURITY-G0 … PURITY-G13 — accused: the three new test files satisfy none of these step-vocabulary clauses — why not a real issue: they define no step, descriptor field, phase, capture, ledger entry or seam, so the clauses have no subject in this material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 34   Unmet: 0
+Rules met: none
+
+---
+⏱  110375ms (110.4s)
+📊 Tokens — total: 45080, input: 19427, output: 25653, reasoning: 24584

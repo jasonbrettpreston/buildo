@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:52:54.274Z file_sha256=be2a73056c3425566e3add5b0ac39781faf3994d4ac1488dd8f5cd3ed01ce26f prompt_sha256=0d8d657f44adfc909da5cd40128f55b07fdeefdcd3709f603b26351c5c175fbc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p13.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 C.5 "Building footprint on each lot (or none), drawn on the map" with status "NOT TRACED · MISSED by the sweep" and built "NOT BUILT", and the Built state line "Not built: ... building footprints and street names on the map" — src/tests/consumer-parcel-lookup.infra.test.ts:267 "expect([...CONSUMER_MAP_COLS].slice(-2)).toEqual(['primary_frontage_street_name', 'has_footprint']);" — the material locks the footprint read (`parcel_buildings`, line 269 "expect(lotStatement(src)).toContain('parcel_buildings');") and the map lot's `hasFootprint` as present while the pasted clause records C.5 not built, a status conflict on a clause the material asserts is satisfied — fix: have doc-2 C.5 and its Built state paragraph updated to BUILT with task-336 SRCH.LOTCARD as deliverer, or hold the two reads out of CONSUMER_MAP_COLS until C.5 is in the increment.
+
+DEFER severity=LOW — doc-2 C.7 "Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back" with status "UNDESIGNED-DATA · MISSED by the sweep" and built "NOT BUILT" — src/tests/consumer-parcel-lookup.infra.test.ts:287 "expect([map.lots[0]!.frontageStreet, map.lots[0]!.hasFootprint]).toEqual(['Dunmore Lane', true]);" — the card line data is locked as served although the clause records the data undesigned and the element not built — fix: update the C.7 row with the task-336 outcome, or keep frontageStreet and hasFootprint undesigned until the card line is ruled.
+
+MET — C.3 "Map: each matched lot outlined (amber), neighbours in zinc" — src/tests/consumer-parcel-lookup.infra.test.ts:323 "expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);" — neighbours stay on the map with a drawable outline only, nothing beyond parcelId and outline asserted.
+
+MET — C.8 "Lot card size line: 1,614 sq ft · 150 m²" — src/tests/consumer-parcel-lookup.infra.test.ts:286 "expect(map.lots[0]!.area).toBe('3,052 sq ft · 284 m²');" — the ruled number format (thousands comma, middot, sq ft then m²) is locked.
+
+MET — C.13 "Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE" — src/tests/consumer-parcel-lookup.infra.test.ts:285 "expect(map.lots[0]!.outline).toBeNull(); // a crs passthrough fails the strict outline schema: no polygon, never a leak" — schema drift degrades to a null outline rather than a throw or a leak.
+
+MET — C.14 "Routing: one printed address over two or more lots opens this page (shown only then)" — src/tests/consumer-parcel-lookup.infra.test.ts:295 "expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'unique', map }).success).toBe(false);" — a map is carried only on the multi-parcel outcome, never on unique.
+
+MET — D.8 "Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED" — src/tests/fix-tune.logic.test.ts:77 "expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);" — the semi answer is locked as a request parameter only, no storage claim is made.
+
+MET — G.1 "Unique match goes straight to the report (no extra page)" — src/tests/consumer-parcel-lookup.infra.test.ts:293 "expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'multi_parcel', map }).success).toBe(true);" — the hand-off shape keeps the report path free of an intermediate page on a unique hit.
+
+REJECT — C.9 "Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE · REMOVED by the design" — accused of keeping the removed frontage and zoning on the map lot, line 284 "expect(Object.keys(map.lots[0]!).sort()).toEqual(['area', 'centroid', 'frontage', 'frontageStreet', 'hasFootprint', 'outline', 'parcelId', 'zoning']);" — not a real issue: C.9 is a display string removed from the phone card, and this test locks only the API projection which no page renders as that string.
+
+REJECT — G.6 "Report meter: a hit counts one report; report limit page when exhausted" — accused of contradicting the meter by asserting "the route turns it into its existing 500 with no page and no meter" — not a real issue: a failed compute is not a hit, so no report is produced and no meter may move.
+
+REJECT — B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice" — accused of not asserting the help link anywhere in the material — not a real issue: the link is served by the pages, and this chunk contains four test files only, no notice component to judge.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  119254ms (119.3s)
+📊 Tokens — total: 46507, input: 28024, output: 18483, reasoning: 17213

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:17:22.069Z file_sha256=7d021a163dc6c9f58d358fc6030a57a45ede815de7c570e62608a64cc85f210f prompt_sha256=3ea5c83d5b88c3b636159c45726f9b064ea41367c86feef3376e406390f90928
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §1.1 Mobile-First UI Mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — src/app/admin/report-preview/page.tsx:68 "<a key={i} href={href({ [name]: i })} aria-current={i === current ? 'true' : undefined} className={i === current ? 'underline font-semibold' : 'text-blue-700'}>{i}</a>" — The preview target, state and scenario links have no min-h-[44px], min-w-[44px] or equivalent padding, so the 44px touch target rule is unmet. — Add min-h-[44px] min-w-[44px] or adequate padding to every link in the target nav, state nav and scenario nav.
+
+BUG severity=HIGH — §10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:2 "\"kind\": \"SURFACE\"" — The change adds four surface descriptor files under scripts/surfaces while also adding a frontend page, so the frontend boundary is crossed. — Move the descriptor additions to the owning pipeline or backend change, or to an allowed non-scripts location.
+
+DEFER severity=MED — §2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for `null` or `undefined`." — src/app/admin/report-preview/page.tsx:22 "const TARGETS = Object.keys((reportCtx.layout as { targets: object }).targets);" — The page directly dereferences reportCtx.layout.targets and later pg.response_fixture and golden.response_fixture without a guard, relying on casts. — Add explicit shape guards or safe fallbacks for layout, PAGE_GOLDENS[target] and GOLDENS[state].
+
+DEFER severity=MED — §1.1 Mobile-First UI Mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json:203 "They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files." — The owner entry explicitly places the three report renderer files outside the 44px check, so the rule is not enforced for their interactive elements. — Bring the three files under a 44px source check or record measured compliance.
+
+DEFER severity=MED — §1.3 Mobile Front-End Patterns & UX "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected." — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:199 "\"dark_mode\": \"hardcoded\"" — The mobile binding entry declares dark mode is hardcoded, which is the opposite of the required NativeWind dark variants. — Replace hardcoded colours in the owned mobile binding with NativeWind dark variants and update the entry to the measured state.
+
+DEFER severity=LOW — §13.5 Feature Flags "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — src/app/admin/report-preview/page.tsx:34 "await requireAdminPage();" — The new admin preview page has an auth guard but no feature flag check at the route level. — Add the appropriate feature flag check or document why this internal preview is outside the feature-flag rule.
+
+MET — §4.3 Frontend Security — src/app/admin/report-preview/page.tsx:34 — await requireAdminPage() is the first statement of the server component, so admin authorization is server-side before query-string reads.
+
+MET — §1.1 Mobile-First UI Mandate — src/app/admin/report-preview/page.tsx:74 — base p-4 with md:p-6 keeps the mobile base and only enhances at the desktop breakpoint.
+
+MET — §4.3 Frontend Security — src/app/admin/report-preview/page.tsx:31 — pick allowlists query values against STATES, TARGETS and SCENARIOS, so untrusted search params are not reflected raw.
+
+REJECT — §5.2 Test File Pattern — missing UI test for ReportPreviewPage — cannot see the test file in the pasted material, so this is not a finding.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 7   Unmet: 5
+
+---
+⏱  155347ms (155.3s)
+📊 Tokens — total: 51115, input: 27450, output: 23665, reasoning: 22641

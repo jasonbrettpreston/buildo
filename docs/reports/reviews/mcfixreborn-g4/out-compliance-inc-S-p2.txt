@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:56:18.513Z file_sha256=b3ba913f5d6987ede77cc3d96de7b115b38a6ade79a3e5810dc10d2ebd866d9f prompt_sha256=e0b978a1a8ad580aa1da64b5e6246e833a07cb82187a91686e10f0a3340760f9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-363 "PROOF.S-2 proof-slice.mjs ... exit 2 on an unwritable out-dir" — scripts/analysis/proof-slice.mjs "try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} ...`); return 2; }" with "writeFile: (f, t) => fs.writeFileSync(f, t)," — an --out that already exists but is not writable passes mkdirSync(recursive) without error and the first evidence write throws outside any handler, so the run exits 1 (a row FAIL) instead of 2 — probe writability in main by writing and deleting a probe file, or wrap every io.writeFile in the same catch and return 2
+
+DEFER severity=MED — task-375 "proof-slice reads its limits from settings (D11, D10)" — scripts/analysis/proof-slice.mjs "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: ... until then this typed value stays" and "timeoutMs: row.timeoutMs ?? DEFAULT_TIMEOUT_MS" — D11 is read from settings (gateVariable) but D10 is a typed constant, so the timeout limit is not read from settings — read the row timeout from the registered variable and refuse when it is absent, as timeoutMsFromVariable already does
+
+DEFER severity=MED — doc-2 G.2 "Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA" — scripts/analysis/proof-slices.json "loading-from-pick", "notbuilt": { "blockedBy": ["task-266", "task-267"] } — the slice records the hand-off processing screen as not built behind deliverers the spec does not name (1.3, MF-62) and against the spec's BUILT-NO-DATA, so S proof understates a built element — recode the row against 1.3/MF-62, or drop it and let G.2 stand as BUILT-NO-DATA
+
+DEFER severity=LOW — doc-2 A.6 "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT" — scripts/analysis/proof-slices.json has no A.6 row; the nearest claim is "Search, lot map and semi pages: every declared state has its golden, no drift (S-gen, S-golden, S-parity, binding, S-desc, S-screen, S-sbind)" — the element the spec calls NOT BOUND with deliverer SRCH.A6 is neither proven nor recorded not built in the S slice — add a row for A.6 with blockedBy SRCH.A6, or a reason why it sits outside the S slice
+
+DEFER severity=LOW — task-366 "the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path)" — scripts/analysis/backlog-lane.mjs "process.env.RULE_LISTS_ALLOW_OVERRIDE !== '1' ... refuse(...)" — the deciding table can still be swapped by an environment variable, so "data decides" is not absolute at launch — remove the env hatch and give the tests an explicit test-only entry so no lane call can point at another table
+
+REJECT — doc-2 "Not built: direction and unit parsing (plan 1.4)" — the slice row "The suite also covers the address routing, parser guard, lookup resolution and no-client-maths checks listed here" is accused of claiming a built parser — a guard test can pin the refusal of direction and unit input while parsing stays not built; the earlier finding's fix (name the guard's subject) does not change the verdict on compliance — no contradiction with the pasted clause is shown
+
+REJECT — doc-2 G.5 "Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA" — the row "report-opens", "blockedBy": ["task-287"] is accused of naming the wrong blocker — the pasted text gives order codes, not task numbers, and task-363 itself rules the report-opens blocker was corrected; nothing pasted lets task-287 be read as anything but that correction — cannot see task-287, so no finding stands
+
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-lane.mjs — "parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound" with the chunk-by-file rule stated in the same line
+
+MET — task-423 "One compliance review on the plan and one on the output against rules sections, no review of paperwork" — scripts/analysis/backlog-lane.mjs — "The plan was ruled once, at the plan: the lane runs no plan lens."
+
+MET — task-410 "The compliance review covers the whole change and the close check proves it" — scripts/analysis/backlog-lane.mjs — "The compliance lens reviews the WHOLE change ... (never trimmed to core files; the base is the task's launch commit on the board"
+
+MET — task-407 "The brief states where review files go and the close check reads that place" — scripts/analysis/backlog-lane.mjs — "REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders ...); named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> ... plus the file TASK"
+
+MET — task-432 "Fresh review context every round" — scripts/analysis/backlog-lane.mjs — "writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then ... use the highest-numbered context-rN.md instead in every --context of that round"
+
+MET — task-406 "every kind of work and every increment task resolves to its rule documents" — scripts/analysis/backlog-lane.mjs — "resolveTask({ table: ruleTable, root: board, body: t.body, type: ... })" then "verifyResolved(ruleTable, resolved, letterOf, ...)" refusing an incomplete list set before any write
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 5
+Rules met: none
+
+---
+⏱  86722ms (86.7s)
+📊 Tokens — total: 38980, input: 27207, output: 11773, reasoning: 10267

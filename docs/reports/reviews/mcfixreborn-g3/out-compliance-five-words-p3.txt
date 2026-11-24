@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:02.525Z file_sha256=c950f651690194fb405e7e36602935a95f804d262513d071b0d01bd65687dbb5 prompt_sha256=943e21545411dd341e6ac556d0d2ac17a620c7b170f973269cf28d8a2c2fe70f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — mobile/app/(app)/parcel-tool/index.tsx:112 "// The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open." — the reserved #NN form is used for NAV-AUDIT item numbers ("#64" here, "NAV-AUDIT-20261111 #64" at mobile/app/(app)/parcel-tool/disambiguate.tsx:48, "NAV-AUDIT #3" at mobile/app/(app)/parcel-tool/[parcelId].tsx:10), so the cited numbers are not step-validate invariants and cannot exist in step-validate.mjs (that file is not pasted, cannot see), the clause is unmet on its face — Fix: write them as register ids (NAV-AUDIT-20261111-64, NAV-AUDIT-3) and keep #NN for step-validate invariants only.
+
+DEFER severity=MED — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — mobile/__tests__/useParcelLookup.test.ts:5 "// React renderer (the useLeadDetail precedent). Includes the CROSS-CONTRACT LOCK: a server-emitted" — the case is under mobile/__tests__ (not src/tests, not run by npm test's src/tests scope) and names "the Spec 91 seam class" rather than a rule id, so by the pasted definition no lock exists for that seam — Fix: put the case (or a copy naming the rule id) under src/tests/ so npm test runs it, or drop the LOCK label and the lock claim from the header.
+
+REJECT — five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — that the change evidences no PASS/FAIL from the mapped gates — gate V scores pipeline steps via scripts/analysis/step-validate.mjs and this chunk adds mobile surface files only, no step.
+
+REJECT — G-2 and Intent Ledger and §R Reflection — that no Intent Ledger row or §R Reflection exists — those bind a step's assessment report and this chunk converts no step (no scripts/steps file pasted).
+
+REJECT — SCORECARD-G0 … SCORECARD-G9 "G7 test adequacy, G8 differential" — that no scorecard or differential evidence is present — the scorecard grades step conversions, not phone pages.
+
+REJECT — the SPEC LINK clauses the comments cite (126 §11b.2, 135 FE-31, 100 §4, 128 Rule 3) — that the diff breaches them — those clauses are not pasted in this context, cannot see, so not mine to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 2
+Rules met: none
+
+---
+⏱  61065ms (61.1s)
+📊 Tokens — total: 45467, input: 31390, output: 14077, reasoning: 13388

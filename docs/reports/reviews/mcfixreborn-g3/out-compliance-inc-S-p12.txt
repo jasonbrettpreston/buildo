@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:52:54.274Z file_sha256=a63c7b961e488db4fcf2d29070bac495076e8614dde7b3fc36ca0ea43c9d753e prompt_sha256=8e555c4b350c5627b8ce3c96df7975ee1483d27232986eed7570820fd3f5fe98
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — G.6 "Report meter: a hit counts one report; report limit page when exhausted" (and pasted task-334 "Report-meter-counts-only-when-a-report-is-produced-for-a-found-address-and-lot") — src/lib/parcels/consumer-lookup.ts:78 "Today the legacy menu is withheld (EI-D1), so no lookup counts" — hasEvaluatedOption gates the meter on parcel.costMenu.menu, which assembleConsumerPayload always returns as null (consumer-lookup.ts:175 "costMenu: { menu: null, scalars: null },"), so no hit can ever count a report even though lookup-flow.ts does produce a page for a found lot, leaving G.6's charge and the limit page unreachable — key the meter to the report actually produced for the found lot (page !== null), not to a cost-menu number, and keep that decision in the route as the same comment states.
+
+DEFER severity=MED — no pasted clause; G.5 "Report page for the lot on a hit" is recorded NOT-BUILT and the EI-D1 / "1 b 2 a" rulings are quoted only inside the code, not in the pasted rule list — src/lib/parcels/consumer-lookup.ts:175 "costMenu: { menu: null, scalars: null }," — the entire cost menu and twelve whitelisted headline figures are withheld on the authority of rulings this review cannot see, so every installed app renders its null branch and nothing pasted names that behaviour — paste the EI-D1 and "1 b 2 a" rulings into the rule list or empty CONSUMER_WITHHELD_LEGACY_COLS.
+
+DEFER severity=MED — F-LOOKUP-RESOLVER "Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification" — src/lib/parcels/geometry.ts:29 "export const SPATIAL_MAX_DISTANCE_M = 100;" and geometry.ts:32 "export const SPATIAL_CONFIDENCE = 0.65;" — a nearest-centroid spatial matcher (findNearestParcel, 100 m cap, 0.65 confidence) ships in this chunk and no pasted clause names a spatial match mode in the resolver — confirm the caller (cannot see src/lib/admin/parcel-lookup.ts here); if the resolver falls back to it, raise F-LOOKUP-RESOLVER to name the spatial arm, otherwise it is unmatched behaviour.
+
+DEFER severity=MED — G.6 "a hit counts one report" — src/lib/parcels/tool-gate.ts:17 "if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) return 'lead_gen_transitional';" — an active lead_gen status is given the parcel tool over a path the file's own header calls "unmetered until MF-50 removes it", so those hits never reach G.6's one-report count — meter the transitional path as 'parcel_tool' is metered, or cite a pasted ruling exempting it.
+
+REJECT — D.8 — the change is accused of not storing the semi answer because lookup-flow.ts releases the hold on a request flag "const held = lotForm?.unsure === true && semi !== 'answered';" — D.8 is registered BOUND-NOT-STORED with deliverer GAP.12 and pasted task-360 names exactly this hold keyed on the semi answer at the route, so storage is not this change's clause.
+
+MET — G.1 — src/lib/parcels/lookup-flow.ts — a unique match builds the page in the same response, no extra page.
+MET — C.8 — src/lib/parcels/consumer-lookup.ts — assembleLotMap sends the card size line through areaSqftM2Dot, server-formatted.
+MET — C.13 — src/lib/parcels/lot-map.ts — parseOutline drops a drifted or over-cap outline to null with one logWarn, never a blank response.
+MET — C.14 — src/lib/parcels/lookup-flow.ts — the map is assembled only from the resolver's own lotMap seed, never on the parcelId path.
+MET — B.9 — src/lib/parcels/lookup-flow.ts — an unknown parcelId is a 200 no_match miss, matching the no-parcel-found state.
+MET — D.1 — src/lib/parcels/lookup-flow.ts — the report page stays null while the lot is unsure and unanswered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 1
+Rules met: C.8, C.13, C.14, B.9, D.1, G.1
+
+---
+⏱  97865ms (97.9s)
+📊 Tokens — total: 50612, input: 29732, output: 20880, reasoning: 19849

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:16:36.968Z file_sha256=533eb3a7c3e6b4cdcb05ccd1754e0cc4d0b091538b9df93481e989dd890113be prompt_sha256=d189ce0ab8d459b0c8f50db824114f0d0b89cbd3fd09f7a6ac705cb705b8bbaa
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99 amendment 2026-09-15 "the server owns section order, labels, formatting decisions and which lines render" — mobile/src/components/surfaces/SearchBinding.tsx:225 "Block order is the legacy one (must-survive row 17)." — the search page fixes block order and block presence in code (lines 233-240) and LotMapBinding picks blocks with a code `switch (s.state)`, not with page-table rows, while only the semi page is table-driven; no structural `deviations[]` row is in the pasted context (cannot see) — cite the dated structural deviation, or move these blocks into `scripts/surfaces/_schema/static-page.json` as task-390 did for the semi page
+DEFER severity=MED — Spec 99 amendment 2026-09-15 "Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row." — mobile/src/components/surfaces/SearchBinding.tsx:160 "return c ? diffCandidateAddress(s.query, c.address || c.parcelId) : [];" — address segmentation plus the differs flag, `candidate_count`, and the lot letters (`letter.${i}`) are formatting and labeling decisions computed in the binding, and the cited P35-D14 a row is not pasted (cannot see) — show the dated row for each closed-list derived name, or serve the segments and letters from the projection
+MET — Spec 99 §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware" — mobile/src/components/surfaces/LotMapBinding.tsx:15 — the four files import only the generated slice, constants tables, lib types and sibling binding types; no MMKV or storage read anywhere in the diff
+MET — Spec 99 §6.1 "Components MUST select only the primitives or stable references they need" — mobile/src/components/surfaces/SearchBinding.tsx:28 — all input arrives as a function argument (`SearchSituation`); no Zustand store, hook or selector is read in any of the four files
+MET — Spec 99 §B1 "Every server fetch MUST go through TanStack Query, never raw `fetch()` in components" — mobile/src/components/surfaces/LotMapBinding.tsx:37 — no fetch call in the diff; contract values are emitted as ref paths
+MET — Spec 99 §B1 `['parcel-entitlement']` row "a display, never a gate" — mobile/src/components/surfaces/SearchBinding.tsx:99 — the entitlement read only draws the reports-left line and an entitlement notice, it gates no navigation
+MET — Spec 99 §5.1 "Other layouts (… ) MUST NOT have routing `useEffect`s" — mobile/src/components/surfaces/SearchBinding.tsx:227 — the binding emits the target as data (`...(s.route ? { navigate: s.route } : {})`) and adds no effect
+MET — Spec 99 §B5 "All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:30 — no store is created or written in the diff, so no reset entry is owed
+REJECT — Spec 99 §6.5 "BANNED, isFetching toggles on every refetch" — accused of gating on `isFetching` at SearchBinding.tsx:86 ("...(s.isFetching") — it adds one `ActivityIndicator` child inside a stable pill while the screen tree, ScrollView and card blocks stay mounted, so the guard-swap flicker the clause targets cannot occur
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  115995ms (116.0s)
+📊 Tokens — total: 49902, input: 32146, output: 17756, reasoning: 16925

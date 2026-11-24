@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:38:18.804Z file_sha256=b3d509b2f43fb449584effe4b2b0e0f24ff8c037d0db7d2499db2adc2e5fceed prompt_sha256=898a3c1e8a0033b88016d7558282c07dce2e1ec246769cea938a017006ea6706
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/proof-slice.db.test.ts:20 "afterAll(async () => { await pool.end().catch(() => undefined); });" — the close error is swallowed with no log, and `pool` is dereferenced even when `beforeAll` (line 19) threw before assigning it, so a setup failure is reported as `Cannot read properties of undefined (reading 'end')` instead of its real cause — guard with `if (pool) await pool.end().catch((e) => console.error('proof-slice db: pool.end failed', e))` so the original beforeAll error is not masked.
+
+DEFER severity=LOW — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — unlike the first `it` (line 24 "expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1)"), this case never asserts the row count, so a missing row throws a TypeError on `rows[0].variable_value` rather than naming the unregistered variable — add the same `toHaveLength(1)` guard before indexing.
+
+DEFER severity=LOW — src/tests/review-template.logic.test.ts:153 "return fs.mkdtempSync(path.join(os.tmpdir(), 'review-notes-'));" — every test in this describe creates a temp dir and nothing removes it, unlike the sibling review-lens-template.infra.test.ts which pushes to `tmpDirs` and pops it in `afterEach` — collect the dirs and remove them in an `afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))`.
+
+DEFER severity=LOW — src/tests/review-lens-template.infra.test.ts:28 "env: { PATH: process.env.PATH, DEEPSEEK_API_KEY: 'test-key-not-real' } as unknown as NodeJS.ProcessEnv," — the double cast is unnecessary (ProcessEnv's index signature already accepts `string | undefined`) and it silences the fact that `process.env.PATH` can be undefined, so the spawned CLI then fails with an ENOENT that reads like a product defect — drop the cast and use `PATH: process.env.PATH ?? ''` (or spread `...process.env`).
+
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:6 "The core is pure: `run` and `readFile` are injected, so no test below spawns a process." — the D10 case in the same file does spawn one: "mod.realIo().run(['node', '-e', \"process.stdout.write('x'.repeat(20 * 1024 * 1024))\"], { timeoutMs: 60000 })", so the header claim is stale and a 20 MiB child process now runs inside a `.logic.test.ts` whose name promises no process — update the header or move that case to an infra suite.
+
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:12 "const REPO = process.cwd();" — resolves the repo from the cwd while the neighbouring src/tests/hooks-composition.infra.test.ts:21 uses "const REPO_ROOT = path.resolve(__dirname, '../../');", so the data-file and task-file assertions silently read the wrong tree when the suite is started from another directory (`vitest --root`, a package-scoped run) — use `path.resolve(__dirname, '../..')` like the neighbour.
+
+REJECT — src/tests/hooks-composition.infra.test.ts "const first = fs.readFileSync(path.join(REPO_ROOT, '.husky', name), 'utf8').split('\\n', 1)[0];" — looks like an off-by-one misuse of the split limit — correct: the second argument is a result-length limit, so `[0]` is the first line.
+
+REJECT — src/tests/hooks-composition.infra.test.ts "step() { echo \"$1\" >> \"$CALLS\"; [ \"$1\" != \"$FAIL_AT\" ]; }" — looks like an unset-variable comparison that would abort under `set -u` — correct: the shell is spawned without `-u`, an unset FAIL_AT expands to empty, the test is true and the chain runs to the last step.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  100985ms (101.0s)
+📊 Tokens — total: 52010, input: 26565, output: 25445, reasoning: 24485

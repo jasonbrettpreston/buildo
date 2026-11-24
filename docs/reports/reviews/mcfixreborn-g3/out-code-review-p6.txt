@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:40:24.462Z file_sha256=4041e7a342c131fa17cf16734383763a7fe312178cf1ebef6d8e53c357693635 prompt_sha256=582a3cb70befa6f3b17a494c3130fad5d541b4313303782a7d54a4222435f5c4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs `if (!(entry.on_invalid === 'fail' || entry.on_invalid === 'clamp')) { problems.push(...)` — the function doc promises a problem line for "an entry whose min, max or on_invalid differs from the row", but the code only checks fail|clamp and never reads `row.on_invalid`, so a descriptor can flip a seed row's stated failure behaviour from fail to clamp and still generate — compare `entry.on_invalid !== row.on_invalid` and push that mismatch like min and max.
+
+DEFER severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs `lines.push(\`GEN-STRAY ${dir}/${f}\`);` — `--check` reports stray generated files but the write branch `fs.writeFileSync(path.join(REPO, rel), t);` only writes, never deletes, so after a surface is renamed or dropped the check stays red with no in-tool remedy — have `--write` unlink files under SLICE_DIR and GOLDEN_COPY_DIR that `buildOutputs` no longer produces.
+
+DEFER severity=LOW — scripts/surfaces/emit-mobile-surfaces.mjs `if (v < row.min || v > row.max) { problems.push(...)` — the line above already forces `v === row.default`, so this range check can only fire from a seed row whose default sits outside its own bounds, yet the message blames the descriptor value "is outside its bounds" — validate the row default against min/max when the row is read and drop this duplicate check, or reword the message.
+
+DEFER severity=MED — scripts/surfaces/_schema/static-page.schema.json screen_choices `"content": { "$ref": "#/$defs/id" }` — every sibling section types content as `#/$defs/contentKey` and every pasted content key is dotted (`map.clear.label`, `select.lot`), so a bare name here passes AJV and can never resolve to a leaf: the build-time leaf check the $comment promises cannot catch it — use `#/$defs/contentKey`.
+
+DEFER severity=MED — scripts/surfaces/_schema/static-page.schema.json `"A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1))."` — `plans.parts` is a flat array with no box grouping and no sequence constraint, so a box with a price and no tax, or per before price, validates cleanly — either encode the per-box rule or state in the comment that ordering is the binding's job and not checked here.
+
+DEFER severity=LOW — scripts/surfaces/emit-mobile-surfaces.mjs `const life = rj(root, PRESENTATION).states.lifecycle;` — `lifecycle` is dereferenced with no check, so a rename of that key in report-presentation.json throws "Cannot convert undefined or null to object" from `Object.entries`, naming no file — guard it and throw `emit-mobile-surfaces: report-presentation.json states.lifecycle is missing`.
+
+DEFER severity=LOW — scripts/surfaces/emit-mobile-surfaces.mjs report loop `const slice = { surface: id, config: {}, content };` then `out.set(\`${SLICE_DIR}/${id}.json\`, ...)` — nothing keeps the manifest's `converted` and `report` lists disjoint, so an id in both silently replaces the converted slice (config, bounds, page) and leaves an orphan goldens copy — assert the two lists do not intersect before building.
+
+DEFER severity=NIT — scripts/surfaces/_schema/static-page.schema.json screen_bar `"platforms": { "type": "array", "minItems": 1, "uniqueItems": true, ... "enum": ["web","mobile"] }` — the identical array schema is repeated in screen, screen_bar, screen_status, screen_text, screen_notice, screen_choices and screen_button while flag, icon, action and contentKey already live in `$defs` — add one `$defs/platforms` and reference it.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  104278ms (104.3s)
+📊 Tokens — total: 46195, input: 24416, output: 21779, reasoning: 20871

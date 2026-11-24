@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:17:22.071Z file_sha256=5ddcfbe4c46f00059d6538567b5885caf8c5573474a690a37d53456e570fca22 prompt_sha256=c699c45ebd6a7ef9cc30703dfab9123b69c5289f0abb1ff4fafc17dc071528db
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/components/report/ReportPage.tsx:155 "x1={e.line[0]![0]} y1={e.line[0]![1]} x2={e.line[1]![0]} y2={e.line[1]![1]}" — five non-null assertions read unvalidated server JSON ring coordinates (`e.line` is `number[][]`), no prior length/shape guard and no inline justification comment, so a malformed edge throws during render of the whole page — guard the ring (`e.line.length === 2` and each point length 2) before the map or skip the bad edge, and otherwise add the required inline comment.
+
+DEFER severity=MED — 1.1 Mobile-First UI Mandate "Dense metadata rows MUST use `flex-wrap`." — src/components/report/ReportPage.tsx:40 "flex justify-between gap-3 border-b border-report-line py-2" — every label/value metadata row (size/cost panel `Rows`, `lot_facts` rows at "flex justify-between gap-3 border-t border-report-line py-3", the `nbr.recent`/`nbr.swipe` row at "mt-1 flex items-center justify-between border-t") is a no-wrap flex row that cannot reflow at 375px, so long server text collides with the value — add `flex-wrap` (plus `min-w-0`/`break-words` on the value side) to those rows.
+
+DEFER severity=LOW — 1.3 Design System Fidelity "`font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text." — src/components/report/ReportView.tsx:24 "<dd data-meta-line className=\"font-mono text-xs text-gray-500\">{metaLine(n)}</dd>" — the mono font is applied to the composed sentence from `UI.meta.replace('{confidence}', ...)`, a human-readable meta label rather than a bare data value — restrict `font-mono` to the interpolated confidence/provenance values and set the surrounding text in the system font.
+
+DEFER severity=LOW — 1.3 Design System Fidelity "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected." — src/components/report/ReportView.tsx:18 "<dt className=\"text-sm text-gray-600\">" — this component paints hardcoded light-only grey tokens (`text-gray-600` here, `text-gray-700` on disclosures, `text-gray-500` on the meta line) with no `dark:` variant anywhere in the file, so the system colour scheme is ignored — pair each grey with a `dark:` variant or read the named theme tokens the report surface already defines.
+
+MET — 1.1 Mobile-First UI Mandate — src/components/report/ReportView.tsx:118 "<div data-block=\"card-row\" className=\"flex flex-col gap-4 md:flex-row\">" — base classes stack the card and its sibling slot vertically, `md:` is the only enhancement, and the block grid uses "grid grid-cols-1 gap-x-6 md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]".
+
+MET — 1.1 Mobile-First UI Mandate (touch targets) — src/components/report/ReportPage.tsx:57 "className=\"mt-[10px] inline-flex min-h-11 items-center justify-center gap-1 self-end justify-self-stretch ...\"" — the toggle, link, hide, submit, cancel and radio controls all carry `min-h-11`/`min-h-12`/`min-w-14` (44px, 48px, 56px), so the 44px minimum is met on every interactive element in the pasted files.
+
+MET — 4.3 Frontend Security — src/components/report/ReportPage.tsx:10 "import Link from 'next/link';" — the two files hold no API key, admin SDK credential or connection string, no `use client` boundary, and never call `dangerouslySetInnerHTML`; every server text is rendered as a JSX child at "src/components/report/ReportPage.tsx:29 "{p.text}", which React escapes.
+
+MET — 2.3 Assumption Documentation (optional chaining side) — src/components/report/ReportPage.tsx:146 "if (!d?.drawing) return null;" — the nested drawing access is optional-chained and guarded before `const g = d.drawing`, as are `s.ad`, `s.scenario !== undefined ? images?.[s.scenario]`, `see?.text` and `back?.text`.
+
+MET — 8.2 TypeScript Target Gotchas — src/components/report/ReportView.tsx:14 "const metaLine = (n: ViewNode): string => UI.meta.replace('{confidence}', n.confidence).replace('{provenance}', n.provenance);" — neither file uses a dotAll `/s` regex, assigns `process.env.NODE_ENV`, or touches `globalThis.google`.
+
+MET — 12.7 Toast Notifications (Sonner) — src/components/report/ReportPage.tsx:206 "<div id=\"report-sheet-err\" role=\"alert\" hidden>" — no `alert()`, `confirm()` or `prompt()` anywhere; the refusal line is an inline announced field error, not a custom banner standing in for a toast.
+
+REJECT — 12.5 UI Primitives (Shadcn UI + Mobile-First) — the detail sheets and the lot-size sheet are native "<dialog ... className=\"mx-auto mb-0 mt-auto max-h-[100dvh] ... rounded-t-[20px]\">" bottom sheets rather than Shadcn `<Drawer>` — the dated note 2026-11-22 in §12 supersedes §12.3/§12.5 for the front end by Spec 126 §11b.4, and the pasted rule itself only bans centered dialogs on mobile, which these are not.
+
+REJECT — 12.3 Form Management (React Hook Form + Zod) — the sheet's inputs are native readOnly fields with no RHF/Zod — the same dated note 2026-11-22 supersedes §12.3, and the inputs are explicit placeholders ("readOnly ... placeholder={all(s, 'input.placeholder')[i]?.text}") pending MF-44/MF-48, not a shipped form.
+
+REJECT — 5.2 Test File Pattern "Any new/changed component" mandates `*.ui.test.tsx` — no test file appears for these two components — the tests are outside this chunk of the 37-file group, so it is cannot see, not an unmet rule.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 19   Unmet: 4
+
+---
+⏱  115106ms (115.1s)
+📊 Tokens — total: 44988, input: 27582, output: 17406, reasoning: 15834

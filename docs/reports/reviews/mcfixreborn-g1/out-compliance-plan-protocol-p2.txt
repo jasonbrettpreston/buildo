@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:09:22.831Z file_sha256=4919ea423183a61563ed2080f5996222a32635e25167cbf09e4e6926fe5423d0 prompt_sha256=221c272c6cc0aef33399d9493529df878211c5bf23dccbc5b90fe48d4262e646
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Section 3 "No new research topics. Only the sources in step A." — scripts/surfaces/_schema/report-presentation.json "re-check Google Maps Platform current pricing and terms before a spec cites them" — the registry records a Google pricing/terms re-check that is not among the step A sources (gap-register, resolve-design/items.json, SCENARIO-SLICES.md, CoA regression, storage-outcome), introducing a research topic in output — move the owed re-check to the gap register as a sourced task, or drop the note until a source exists.
+
+DEFER severity=LOW — plan-protocol header operator verbatim "Dont make more ungrounded recommendations" — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json "approved 2026-10-20 (gap 2)" — the suite CoA rows are marked approved yet their own note states "CONFLICTS with RULED LC-49 / P5.10a", an approval that contradicts an existing ruled line — set those rows to proposed, blocked pending the LC-49 amendment, instead of approved.
+
+MET — Section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json — each added "new" row (renovation_envelope_expansion, renovation_basement_finish, suite_coa_*) carries a source note ("gap 3", "gap 4", "gap 2"), so no item is added without a source.
+
+MET — Section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — scripts/surfaces/_schema/report-presentation.json — the added content is presentation for existing scenarios (D, 2, H, RA/RE/RI/RB/RF) with ruling refs Q-1 through Q-10, filling the slice display parts rather than opening new scenario scope.
+
+MET — Section 1 "(4) display text" — scripts/surfaces/_schema/report-presentation.json — the file is a text registry (page.*, row.*, status_text, checked, view) for the detached-house first slice rather than free copy in components.
+
+REJECT — Section 1 "(9) measured check on the page" — the registry is accused of not carrying a measured check — it is not claimed done in this chunk; the $comment cites scripts/analysis/report-schema.mjs RS-4 as the check, and page-level check pass belongs to another chunk.
+
+VERDICT: PASS
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  79487ms (79.5s)
+📊 Tokens — total: 51088, input: 36114, output: 14974, reasoning: 14373

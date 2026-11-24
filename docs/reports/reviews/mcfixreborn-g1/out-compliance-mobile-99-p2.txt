@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:05:13.401Z file_sha256=443bd0d8831907dae60c71a455c0c513759635f22f4a4fc300a8cdf1c24c837b prompt_sha256=a6d76ab0f3b24e3bcb20ea85ea506d80f0539cbe9cc6813dae1450aa19c2af85
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+```
+MET — §7.6 lead_detail_viewed — mobile/app/(app)/[lead].tsx:59 "useEffect(() => { if (!detail?.lead_id) return; track('lead_detail_viewed', { lead_id: detail.lead_id, lead_type: detail.lead_type });" — canonical site/trigger/payload satisfied: effect gated on detail.lead_id resolve, fires once per navigation (deps on lead_id/lead_type, not per-render), payload is exactly { lead_id, lead_type }
+MET — §7.6 PII boundary — mobile/app/(app)/[lead].tsx:62 "track('lead_detail_viewed', { lead_id: detail.lead_id, lead_type: detail.lead_type })" — only the whitelisted lead_id and categorical lead_type reach track(); no email/phone/displayName passed
+REJECT — §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" — accused of unpaired invalidation — no queryClient.invalidateQueries appears anywhere in the 8 pasted files (invalidation lives in useSaveLead.ts, which is not in this material)
+REJECT — §7.3 "every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision'…`" — accused of missing route_decision telemetry — [lead].tsx only calls router.back() (mobile/app/(app)/[lead].tsx "onPress={() => router.back()}"), which is neither replace/push nor from AuthGate/AppLayout, so §7.3 does not reach it
+REJECT — §8 test mandates "Each bridge in §4 MUST have a Jest test" — accused of a §8 violation from the new lead tests — useLeadDetail/fetchLeadDetail/parcelCost/leadDetailFormat are not §4 bridges (B1-B6), none of §8.1-§8.6 names them; the new tests target Spec 91/100, not pasted here
+REJECT — §10 "All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here" — accused of editing out-of-scope files — the change only touches mobile/src/lib/*, mobile/app/(app)/[lead].tsx, mobile/__tests__, mobile/maestro; no store, _layout, useUserProfile, or stateDebug file is modified
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  75937ms (75.9s)
+📊 Tokens — total: 33757, input: 24801, output: 8956, reasoning: 8396

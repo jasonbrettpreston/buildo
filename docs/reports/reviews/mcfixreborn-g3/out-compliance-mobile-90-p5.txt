@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:54.819Z file_sha256=4d5153bcf40fe2fd48f33733970ff564f5a5d318519fe2cbd737841d33f60168 prompt_sha256=2f11861a52292c0075a18981473d94d5098d7e3ed02984cd817b4876e0e42cb0
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-90-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift." — mobile/src/lib/schemas.ts "  .strict();" — ParcelLotFormSchema is the only object in this lookup response parsed strict, while its siblings are deliberately plain so "a server-added field never raises ParcelLookupSchemaError on an installed build", so a field added inside lotForm becomes the fatal parse crash §13 exists to prevent — parse the three known keys with a plain object like ParcelLotMapSchema and drop .strict().
+DEFER severity=MED — Spec 90 §3 "This prohibits server-authoritative computed state." — mobile/src/lib/parcelSearchMatch.ts "  if (data.candidates.length > 0) return 'text_candidates';" — when `resolution` is absent the client computes the match outcome the server is authoritative for, from a candidate count, which the §3 clarification forbids, and the file itself labels this a TODO(contract) shim — require the server resolution and delete the derivation block, or fail visibly rather than guess.
+DEFER severity=LOW — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift." — mobile/src/lib/schemas.ts "  resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional()," — a closed enum on a contract the same file declares additive_only means a sixth server resolution value crashes an installed build at parse time, the drift crash §13 aims to prevent — widen resolution to z.string() and narrow in the client with isParcelMatchType.
+REJECT — Spec 90 §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync." — the change is accused of hand-transcribing mobile/src/lib/schemas.ts instead of sharing it — the §4 amendment measures that no such workspace exists and delegates the fix to Spec 126 §5.2 (not pasted), so this change cannot satisfy it and it is not this change's defect.
+MET — Spec 90 §13 Zod Boundary — mobile/src/lib/schemas.ts "export const ConsumerParcelLookupResultSchema = z.object({" — the parcel lookup response has a declared schema for the hook to parse before the UI.
+MET — Spec 90 §5 NO DOM APIs — mobile/src/lib/sliceConfig.ts "    console.warn(`surface config \"${key}\" is ${v}, outside its bounds ${b.min} to ${b.max}; clamped to ${clamped}`);" — the five files touch no window, document, localStorage or navigator API; the only host call is console.warn.
+MET — Spec 90 §3 Dumb Glass (no PostGIS math) — mobile/src/lib/parcelSearchMatch.ts "export function isOutsideToronto(query: string): boolean {" — the geography refusal is string shaped and does no coordinate or PostGIS computation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+Rules met: none
+
+---
+⏱  99668ms (99.7s)
+📊 Tokens — total: 34371, input: 20910, output: 13461, reasoning: 12757

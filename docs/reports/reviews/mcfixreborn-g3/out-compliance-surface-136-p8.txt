@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:47:53.340Z file_sha256=4c026611c64789042abf16b4c9b0c971a97789a2dd0765716c5b2a30cd8a95bd prompt_sha256=f7d9b8db05e84779d42107064215b1a4417445587f5ec6f25fcb58a211bafc2f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json ""stale_time_ms": 60000" — the 60 s stale time (and gc_time_ms 86400000) is a typed literal in the descriptor with no registered variable, since config.logic_variables names only parcel_map_neighbour_radius_m and parcel_map_neighbour_limit, while this same diff adds lookup_stale_ms and maxbld_page_lookup_stale_ms for exactly this number — register maxbld_page_lookup_stale_ms with the seed bounds, resolve the slice number from that row in emit-mobile-surfaces PAGE_SETTINGS, and delete the stale_time_ms and gc_time_ms literals
+
+DEFER severity=MED — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — same descriptor ""rate_bucket": "parcels-search:{uid}, 60/min, 60s window"" — the rate limit is stated as a literal and no logic_variables entry for it appears anywhere in the descriptor, so the rate has no registered bounds or on_invalid posture in the declaration — add the registered rate-limit variable to config.logic_variables (name, min, max, on_invalid) and cite it from rate_bucket
+
+MET — fe.54 — mobile_parcel_disambiguation_map.descriptor.json "classes": 403, 429, 500, schema_drift plus states error, schema_drift, rate_limited, unauthorized — every failure class the page can hit has a declared visible state and copy
+MET — fe.45 — descriptor "deviations": "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13", "date": "2026-11-11" — the client-derived map values (lot count, letters, region, pin, polygons) carry a deviations[] row with an adjudicator and a date
+MET — fe.57 — descriptor "touch_target_min_px": 44 — the 44 px floor is declared on the converted surface
+MET — fe.27 — descriptor inputs.tables "parcels" columns "lot_size_sqm", "frontage_m", "geom" with owner_spec, and field_whitelist "map.lots[].outline" — every parcels-bound field names a column and a whitelisted path
+MET — fe.37 — scripts/surfaces/_schema/static-page.schema.json "value": {"type": "string", "pattern": "^[a-z0-9_]+$"} and mailto "value": {"const": "support_inbox"} — a STATIC page part can only name a declared server read, never an address or an href in the data
+MET — fe.31 — scripts/surfaces/emit-mobile-surfaces.mjs "prints GEN-STALE / GEN-HAND-EDIT / GEN-STRAY lines and exits 1" with a per-file input_sha — the generated slices and golden copies pass a mechanical check rather than being hand-edited
+
+REJECT — fe.21 — the base map tiles are coded through react-native-maps and declared in a deviation instead of the external_embed file — operator 2026-11-11 MF-53 item 3 adjudicated this exact fallback ("c as long as this is the simple and best in class solution here") and fe.53 lets the later operator ruling govern
+REJECT — fe.18 — the {"derived": name} binding is outside the six-source closed set — the page carries the operator-adjudicated P35-D14 (a) deviation with its date, so the derivation is a ruled deviation and not an undeclared seventh source
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 1
+Rules met: fe.18, fe.27, fe.31, fe.36, fe.37, fe.45, fe.54, fe.57
+
+---
+⏱  169829ms (169.8s)
+📊 Tokens — total: 64508, input: 32655, output: 31853, reasoning: 30956

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:02.525Z file_sha256=d96a5c42041e2c77be11f0af4084d659ee890f229d1de8deb8498eed51cd1335 prompt_sha256=ac4f1b7c9c0d4652f214981d58158f9c61677430d8ad23faa340382042911d64
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — lock / lock-db / check / hook "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — mobile/src/constants/parcelSearch.ts:132 "Rules pinned by mobile/__tests__/parcelScreens.golden.test.ts" — the pin claimed for the MF-35 layout table is a test outside `src/tests/`, so under the pasted definition it is not a lock — restate the line as a mobile golden, or add a `src/tests/` lock that names the rule and asserts it.
+DEFER severity=NIT — Acceptance criteria (pasted block) "task-361: backlog/tasks/task-361 - SRCH.SEMI-3 ... , Acceptance Criteria from line 41" — NONE — no criteria body is pasted (task-381, 383, 390, 395, 396 read "from line 0"), so those clauses are "cannot see" — paste the AC bodies for task-319/320/322/361/362/373/390/395 to make them checkable.
+REJECT — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE" — accused of carrying no gate-V verdict — gate V scores converted steps against mapped gates, and the material is mobile surface code with no step file pasted, so it cannot apply here.
+REJECT — Intent Ledger "The table in a step's assessment report listing each behaviour of the legacy step" — accused of missing an Intent Ledger — no step assessment report is in the material, so the clause binds nothing here.
+REJECT — archetype vs shape "`identity.archetype` ... is what the step is; it selects required and forbidden descriptor fields and is checked against the census" — accused of descriptor or census drift — the material holds no step descriptor, manifest key or census row; surface descriptors and slices are generated and excluded.
+REJECT — Implementation Notes "Left out of every group: generated files (their generators are checked by the commit hooks), test fixtures and goldens" — the change reads generated slices, mobile/src/components/surfaces/SearchBinding.tsx:18 "import slice from '@/generated/surfaces/mobile_parcel_search.json';" — generated file, excluded on purpose, so its absence from the material is not a finding.
+MET — lock / lock-db / check / hook — mobile/src/lib/maxbldHelp.ts:9 — the enforcement the file claims is a test under `src/tests/` naming its check ("src/tests/surfaces/static-page.logic.test.ts T8 pins the two equal"), which matches the pasted definition.
+REJECT — RR-0439 "each rule list reads only the files the rule table names for it" — accused of breaching a rule list — the pasted list is the step handbook Glossary (slug, archetype, phase, gate V, Intent Ledger) and names no mobile file, so no clause in it can be unmet by these files.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 35   Unmet: 0
+Rules met: none
+
+---
+⏱  53269ms (53.3s)
+📊 Tokens — total: 41978, input: 29651, output: 12327, reasoning: 11615

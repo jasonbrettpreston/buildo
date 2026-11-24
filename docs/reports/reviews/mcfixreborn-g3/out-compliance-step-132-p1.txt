@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:36:55.105Z file_sha256=c0028d3a243659a031bf3b2ef59e749ad58224ae2ba42b3cc6319777f8a417fd prompt_sha256=ef4488ca8fdb54a51b42286969ac8e03bb4e3872d098046fd3bd61d249e0377f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-step-132-p1.txt (model: deepseek-reasoner)
+
+BUG severity=none is not used; findings below are DEFER only.
+
+DEFER severity=MED — x-tooling.3 "Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count." — scripts/steps/_schema/programme-items.json:1516 "0 of 1091 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09)" — the denominator was retyped 1083 to 1091 while the run it is attributed to stays the batch 5 / 2026-09-09 measurement, so the evidence now dates a later seed to an older run — regenerate the string through the generator that owns it, or restate the date and the run that actually produced 1091.
+
+DEFER severity=MED — x-rulings.4 "every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one." — pasted diff, mobile_parcel_disambiguation_map.descriptor.json deviations[0] "+      \"adjudicated_by\": \"operator 2026-11-09, Wave 1 decision batch item 13 (\\\"P35-D14 (a) deviation\\\"), applied to this page by MF-53 plan v4 ...\"" and deviations[1]/[2] the same shape — all three rulings cite a date plus a batch item and none carries a `<log stem>#<decision id>` that `--check` can resolve, so condition-9 style resolvability does not hold for these entries — append the decision-log id to each of the three `adjudicated_by` values.
+
+DEFER severity=LOW — core.14 "Declared equals witnessed." — pasted diff, limitations[0] "+      \"check_id\": \"parceldisambig_nothing_preselected\"" — that limitation is about the report route still drawing the hand-built screen until MF-48, and the named check only asserts nothing is preselected, so the limitation is tied to a row that cannot witness it — point the limitation at a check that observes the route, or record it with no `check_id`.
+
+MET — core.2 — mobile_parcel_disambiguation_map.descriptor.json, outputs/state/invariants/plausibility/emits/offers/metering/interpretation blocks "outputs": {"answer": "none", ...} — every category is answered with "none" plus a why and three check rows are declared, so no field is omitted.
+MET — core.4 — mobile_parcel_disambiguation_map.descriptor.json notes "Archetype is LIST, not a new \"MAP\" archetype, because Spec 126 §3.1 defines a map as a `render.projection`" — the label is taken from the declared projection rather than invented.
+MET — core.6 — mobile_parcel_disambiguation_map.descriptor.json checks[2] "\"severity\": \"WARN\", ... the corner-lot map is MF-60 (queue row)" — the never-zero state is a WARN row with a stated retighten condition, not a hidden PASS or an INFO.
+MET — core.11 — mobile_parcel_disambiguation_map.descriptor.json "emits": { "answer": "none", "analytics": [] } with evidence "no track() call" matches docs.data_story "It emits **no analytics event**." — the flat emit declaration is witnessed by the page.
+
+REJECT — core.8 "Step variables are named `<slug>_<name>`" — accused: `parcel_map_neighbour_radius_m` and `parcel_map_neighbour_limit` are not prefixed with this surface's id — not a real issue, the descriptor's own config.why states they are read by the lookup contract ("DECISIONS-v3 item 2 b, migration 307") and the page itself has no tunable, so the contract is the single register owner and both carry min, max and `on_invalid: "fail"`.
+REJECT — core.8 "Every number ... is a registered logic variable or an exact zero" — accused: "rate_bucket": "parcels-search:{uid}, 60/min, 60s window" and "stale_time_ms": 60000 are literals — not a real issue, both are schema-owned descriptor fields mirroring a server-side bucket and the hook's cache window, and the enforcing value lives outside this material (cannot see).
+REJECT — core.2 "All 20 categories are present and every field is answered" — accused: the measured state `unlinked_no_pin` has no entry in `states[]` — not a real issue, `states[]` is the closed state vocabulary (`miss` covers the unlinked case) and the extra golden is a case of it, fixed by surface.schema.json which is not pasted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: core.2, core.4, core.6, core.11
+
+---
+⏱  64232ms (64.2s)
+📊 Tokens — total: 37343, input: 25473, output: 11870, reasoning: 10713

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:52:54.273Z file_sha256=3eb3024f76603b0889f86e653f15509305c206cb5f177d69ed84ab0d37162ef1 prompt_sha256=fa4ee062e764c0ba5983576a4632e29b5e3fa5877ce8664203cab02a0b4c8d58
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-2 A.6 "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026" — src/app/api/parcels/entitlement/types.ts:14 "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date, \"9 Dec 2026\" (RR-0310); the page prints it" — the "until 9 Dec 2026" label is asserted only by this comment; the formatter (readParcelToolUsage, src/lib/entitlements) is not in the pasted material, cannot see it — read that file or a page golden and confirm the served label before A.6's text is called met
+DEFER severity=LOW — doc-2 has no clause naming a lot-size entry surface (its nearest user-input element, D.9, is "distance from your wall to the shared line", NOT-BUILT) — src/app/api/parcels/lot-size/route.ts:46 "return err('ENTRY_OFF', 'Lot size entry is not open yet', 403);" — POST /api/parcels/lot-size adds a user-input write route no pasted clause or ruling names; blast radius is bounded because the switch is OFF — keep the route, but say in the next spec pass which clause (task card) owns it, or it stays an unnamed surface
+REJECT — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — accused of not counting every hit, because the route has not_evaluated, semi_pending and not_produced escapes — src/app/api/parcels/lookup/route.ts:104 "body.lotForm?.unsure === true && semi !== 'answered') meter = 'semi_pending'" — not a real issue: doc-2 is a built-state census swept 2026-11-17, and the 2026-11-19 operator ruling quoted at the top of the same file (RR-0278, "it shouldnt count the report unless the report is produced") is later and governs the meter
+REJECT — doc-2 C.9 "Lot card frontage and zoning string (7.6m • CR 2.5 style)" status "AVAILABLE · REMOVED by the design" — accused of still serving an element the v8 design removes — src/app/api/parcels/lookup/types.ts:119 "frontage: z.string().nullable(), // parcels.frontage_m, rule len1" — not a real issue: a contract field that a reader exists for is not the building of a removed card line, and removing it would break the whitelist the contract freezes; the UI chunks carry the removal
+
+MET — doc-2 G.6 — src/app/api/parcels/lookup/route.ts:110 — "const m = await withTransaction((client) => openReport(client, ctx.uid, ref));" with "if (m.kind === 'limit_reached') refusal = reportLimitReached(m.reportsLimit, m.resetsOn);" — the produced hit counts one report under the lock and the exhausted month is refused with its reset instant
+MET — doc-2 C.14 — src/app/api/parcels/lookup/types.ts:201 — "map is present exactly when resolution is multi_parcel or unlinked" — the lot-map payload exists only for the two-or-more-lots resolutions
+MET — doc-2 D.1 — src/app/api/parcels/lookup/route.ts:103 — "body.lotForm?.unsure === true && semi !== 'answered'" — the report page is withheld for an unsure lot, so the question page comes before the report
+MET — doc-2 D.8 — src/app/api/parcels/lookup/types.ts:47 — "semi: z.literal('answered').optional()," — the answer travels as a request flag only, nothing is stored, matching the element's BOUND-NOT-STORED status
+MET — doc-2 D.11 — src/app/api/parcels/lookup/types.ts:150 — "// The evidence columns of the view are not sent." — linked_parcel_count and best_shared_len_m stay stored-not-served
+MET — doc-2 A.6 — src/app/api/parcels/entitlement/types.ts:10 — "reportsLeft: z.number().int().nonnegative().nullable()," — the left count, allowance and reset instant are server-computed in one read contract
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  72810ms (72.8s)
+📊 Tokens — total: 42417, input: 32711, output: 9706, reasoning: 8693

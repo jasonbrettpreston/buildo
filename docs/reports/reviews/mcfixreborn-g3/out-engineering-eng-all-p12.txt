@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:51:02.938Z file_sha256=363e1b180c78dda5873af933e52e000b9bcaa2e575de5a26cd1f131e2b172f21 prompt_sha256=61fe0c4f3bd4423572ecee8f3c3b5f411948df69fdeb98d2990fe6f6e80b245e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/massing.logic.test.ts "expect(meta.writes.parcel_buildings!.sort()).toEqual(" — at least eight non-null assertions (`parcel_buildings!`, `postgis!.on_missing`, `gist!.on_missing`, `area!`, `seed.link_massing_centroid_confidence!.default`, `requires().find((r) => r.name === n)!.on_missing`) carry no inline justification, and a prior `expect(...).toBeDefined()` is neither a type guard nor the required comment — add a one-line comment at each `!` explaining the guaranteed-existence step, or replace them with a narrowing `assertDefined()` helper that fails with a message — fix
+
+DEFER severity=MED — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/massing.logic.test.ts "const config = { massing_shed_threshold_sqm: 20, massing_garage_max_sqm: 60, link_massing_centroid_confidence: 0.95, link_massing_nearest_confidence: 0.6 };" — untyped inline config objects and permit-shaped literals ("{ building_type: 'Warehouse', structure_type: null, proposed_use: null }") are written in the test instead of imported from factories.ts — add typed `massingConfig()` / `massingPermitFields()` builders to `src/tests/factories.ts` and import them — bounded blast radius, test-only data shape
+
+DEFER severity=MED — 12.12 Property-Based Tests "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant." — src/tests/massing.logic.test.ts "expect(computeBuildingCoverage(1500, 1000)).toBe(100);" — `estimateStories`, `computeFootprintArea`, `computeBuildingCoverage` and `formatHeight` (M_TO_FT conversion) are exercised by examples only; no `src/tests/property/*.property.test.ts` for massing is visible in this material — add a property test asserting `computeBuildingCoverage(a,b) <= 100`, `computeFootprintArea(ring) >= 0` and the m/ft conversion invariant — cannot see a property file, so raised on the material at hand
+
+DEFER severity=MED — 5.5 Test-Layer Map "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." (with 5.2 "`*.logic.test.ts` | Pure functions, scoring, classification" vs "`*.infra.test.ts` | API routes, DB queries, external calls") — src/tests/massing.logic.test.ts "expect(sql).toMatch(/p\.id = ANY\(\$1::int\[\]\)/);" — generated-SQL and query-shape assertions plus `require('../../scripts/lib/step/index.js')` / the CJS compute sit in a `.logic.test.ts`, the layer §5.2 assigns to pure functions — move the SQL-shape and descriptor blocks to `link-massing.infra.test.ts` (and give that file its §2.1 unhappy-path case) — layer misplacement, tests still run
+
+DEFER severity=MED — 5.2 Test File Pattern "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — src/tests/massing.logic.test.ts "Fence b16c036d, verbatim." — B13, WF3-13 and the predicate-flip lock are past-bug fences re-homed (A-8 override retires the grid) yet live only inside a `.logic.test.ts`, with no `*.regression.test.ts` naming them — mirror the fence assertions into `src/tests/massing.regression.test.ts` so the mandated regression layer carries them
+
+MET — 8.2 TypeScript Target Gotchas "Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead." — src/tests/massing.logic.test.ts "expect(sql).toMatch(/FROM parcels p[\s\S]*JOIN building_footprints bf/);" — multiline match uses `[\s\S]`, not the dotAll flag
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — the file is accused of forcing no deepest-layer error or silent failure — the clause names `.infra.test.ts` only and this is a `.logic.test.ts`, so the mandate does not bind this file
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  41702ms (41.7s)
+📊 Tokens — total: 32064, input: 24184, output: 7880, reasoning: 6766

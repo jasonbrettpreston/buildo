@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:07:01.169Z file_sha256=b6264f3439f30aa3b8c6b0169d9b7e8c7b9596a468759bbc36d173396af69c71 prompt_sha256=a1e8a6f2287f1e52c7c0933ade8d443b829a8de3bf36f4993db4aa00754c1a01
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: true, schemaDrift: false });" — a 429 that carries no (or a zero) Retry-After is pinned as rateLimited AND unexpected at the same time, so any consumer that branches on `unexpected` before `rateLimited` shows the generic failure and loses the wait advice — split the zero-header 429 into its own shape (rateLimited true, unexpected false, retryAfterSeconds null) and re-pin the case.
+
+DEFER severity=MED — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "it('an empty parcel id never calls the lookup and never navigates', async () => {" — the missing-parcelId path is pinned only as no fetch and no navigation; nothing asserts Continue leaves busy or that a notice replaces the dead end, so a guard that returns early without clearing `submitting` passes — assert `parcel-semi-continue` busy is undefined and that a visible notice or the error state is shown after that press.
+
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });" — the in-app browser call is only ever mocked as resolving, so a rejected openBrowserAsync (no browser, OS refusal, bad URL) has no case and no expected outcome and an unhandled rejection would go unseen — add a rejection case asserting the list stays put and a fallback message (or a caught no-op) appears.
+
+DEFER severity=MED — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, input: '100 City Centre Dr, Mississauga', debounced: '100 City Centre Dr, Mississauga', recent })).toEqual(S.empty);" — the outside-Toronto outcome is only built from a base with `data: undefined`, so the case where a previous in-Toronto result is still held when the typed query flips outside Toronto is never pinned and the notice could sit over stale candidates — add a case with `data: lookup(cands)` plus an outside-Toronto input and assert candidates is empty.
+
+DEFER severity=LOW — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "expect(mockHook.refetch).toHaveBeenCalledTimes(1);" — Retry is exercised for one press only; a second press while the refetch is in flight is never sent and nothing asserts the control is disabled or that two presses give one refetch — add a double-press case, and an assertion on the retry tree while isFetching is true.
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "it('unique navigates once and records once; a re-render with the same route does not re-push (Back)')" — the case named for Back rerenders the same instance, which is not a remount, so an instance-scoped guard is never tested against a real Back return; the test proves rerender idempotency only — unmount and mount a fresh Screen with the hook still holding the hit, then assert no second push and no second record.
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "expect(mockPush).toHaveBeenCalledTimes(2);" — after edit and retype the same query is pushed and recorded a second time and the test never asserts the recent list stayed single, so a duplicate chip on retype is unpinned (name the dedup key or the store's add semantics in the test) — add `expect(useRecentSearchesStore.getState().recent).toEqual(['26 Hurlingham Cres'])` after the second push.
+
+REJECT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(mockSetQueryData.mock.calls).toEqual([[['parcel-lookup', 'PCL-S1'], data(form(true))]]);" — the answered-lookup write looks like an unguarded store write on a retried Continue; it is keyed by ['parcel-lookup', parcelId] so a repeat overwrites the same entry, and the unmount case asserts no write happens at all.
+
+REJECT — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "it('offline: an error with a cached page still shows the page, never the error')" — an isError mount could take over the screen and discard the cached page; it degrades to the served page with the error text and Retry suppressed, so the failure fails safe rather than to an error wall.
+
+VERDICT: PASS on error-path safety
+Paths walked: search error and Retry, empty and whitespace query, empty response as no_match, outside Toronto before the network, candidate cap boundary, unique push and record once, edit and retype push twice, recent-search dedup, report loading/miss/served/error, offline cached page, report Retry, unsure hold and redirect once, semi Continue single and double press, semi bounded wait expiry, semi failed fetch and Try again, semi unmount during fetch, semi empty parcelId, in-app browser open, sliceNumber clamp/fail/non-finite   Unguarded: 4
+
+---
+⏱  66067ms (66.1s)
+📊 Tokens — total: 47439, input: 35231, output: 12208, reasoning: 11031

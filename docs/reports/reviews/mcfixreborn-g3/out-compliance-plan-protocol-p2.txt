@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:30:36.418Z file_sha256=4e0e9f149995dbb5834d14257742b41826910ff356ebea915eee78e30bf95271 prompt_sha256=bd3ad3eedec46720c22c882f259cf19b365278c6bc519418be62ca25f8070bfc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — mobile/__tests__/parcelSearchMatch.test.ts:445 "it('RED (planted): a client that ignores resolution would guess no_match for a server unlinked', () => {" — the case labelled RED strips `resolution` before asserting, so it passes on the unfixed path and the red-first claim rests on the test name only — assert the unresolved shape fails, or drop the RED label and keep it as a documentation case.
+DEFER severity=LOW — task-395 "FIX.CONFIG-BOUNDS-Every-page-setting-carries-bounds-and-a-stated-failure-behaviour-Spec-128-Rule-3" — mobile/__tests__/parcelSearchMatch.test.ts:59 "expect(searchSlice.config.debounce_ms).toBe(400);" — only min_query_len has bounds asserted here; debounce_ms and the candidate cap are locked by value and no case in the material states a failure behaviour — add the bounds and stated failure behaviour assertion for each of the three settings.
+MET — task-373 (D12) "the report screen gate has its stability test" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:32 — five route states each rendered with isFetching true then false, the two trees compared equal, with a non-null guard against a vacuous render.
+MET — task-360 (SRCH.METER-2) — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:118 — the settled unsure lot shows loading not miss and redirects once, an answered lot and a clear lot do not redirect.
+MET — task-361 (SRCH.SEMI-3) — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:118 — busy state, unmount guard, empty-id guard and the bounded wait are each exercised.
+MET — task-362 AC5 (in-app sheet) — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:141 — the report link opens the in-app browser sheet with the topic and the typed address, and does not push.
+MET — RR-0414 "changed parts only as per your recommendation" — mobile/__tests__/parcelSearchMatch.test.ts:1 — all six paths arrive as "new file mode 100644", so nothing oversized is judged from a partial.
+MET — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:1 — the material is tests only, no plan, lane record or backlog card is judged.
+REJECT — task-12 "Acceptance Criteria from line 73" (and every "Acceptance Criteria from line N" entry in the same block) — the change is accused of not meeting the per-task acceptance criteria — the acceptance text is not pasted, so cannot see, and no clause can be ruled on.
+REJECT — Implementation Notes "generated files, test fixtures and goldens, documents, lane and review records, backlog cards" are left out — the golden test's dependence on src/tests/fixtures/report-page/props/*.mobile.json and scripts/surfaces/_schema/bindings.json — those files are outside the material by ruling, so the dependence is not a finding.
+REJECT — plan-protocol dated note 2026-11-20 (item 4) "a single lane task takes the Spec 08 section 7 lens set" — the change is accused of not having been through the nine-seat roster — that roster binds the whole-increment plan review, and this is one output review of a lane group.
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  68421ms (68.4s)
+📊 Tokens — total: 45424, input: 32776, output: 12648, reasoning: 11798

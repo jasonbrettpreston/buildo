@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:45:04.995Z file_sha256=dd4175b114ca7c14cc251dc35d48483e936c9664028f4f7560ee705279333318 prompt_sha256=2fc906b5fbec32bd36ff3494a8271707ec87b9f5ec88a66da4abba3d5a614614
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.47 "All tunables are data; zero thresholds in src/." and "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — mobile/src/components/surfaces/SearchBinding.tsx:35 "the cap (not a descriptor config value) from the constants file, all through the binding" plus :40 "export { SEARCH_CANDIDATE_LIMIT };" — the candidate cap stays a typed threshold in mobile/src/constants/parcelSearch.ts, the one number of this screen not a registered logic variable with bounds and an on_invalid posture — read the cap from SEARCH_SLICE through sliceNumber like debounce_ms and min_query_len, and delete the re-export.
+
+DEFER severity=MED — fe.38 "It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm." and "compStats.neighbourhoodCostPremium are also sent as null" — mobile/__tests__/useParcelLookup.test.ts:46 "areas: { lot_size_sqm: 400, opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 500, max_build_fsi: 1.25 }" and :49 "neighbourhoodCostPremium: 1.1" — the hand-written server double called "A server-shaped whitelist payload" carries three withheld columns with numbers, so the boundary test would pass a server that stopped withholding them — set max_buildable_gfa_sqm, max_build_fsi and compStats.neighbourhoodCostPremium to null in the double, as the stopgap does.
+
+DEFER severity=MED — fe.18 "Labels, help text and legal copy are content fields, not an exception." — mobile/src/components/surfaces/SearchBinding.tsx:167 "accessibilityLabel: derived(`label.${i}`)" — the candidate card's accessible name is raw address text assembled on the client and no content key, while the sibling lot card at LotMapBinding uses the template form — bind it to a content template with the address as a var, as LotMapBinding.tsx does with content('lot.label').
+
+DEFER severity=MED — fe.19 "User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at)." — mobile/app/(app)/parcel-tool/semi-question.tsx:9-10 "The answer is the owner's lot_form_user_override, carried to the report as a route param (lotForm.ts; O-12: the pipeline never reads it, no server store)" — the only user entry this chunk adds is per-viewer, shared with nobody and carrying no stored provenance, so a second viewer is asked again and the lot's confidence never moves — have the server store the answer with source user and entered_at under the shared lot, or record a dated operator ruling that this input stays private.
+
+MET — fe.02 — mobile/app/(app)/parcel-tool/[parcelId].tsx:7 "Everything it shows comes from the binding (ReportBinding.tsx), the shared renderer and the generated content slice" — the mount files hold hooks, effects and callbacks only.
+MET — fe.24 — mobile/src/components/surfaces/PageTableBinding.tsx:52 "throw new Error(`page table: the flag ${name} is not supplied`)" — an unknown flag or value throws by name, never a blank page.
+MET — fe.32 — mobile/src/components/surfaces/SearchBinding.tsx:56 "const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` })" — every contract path is prefixed by a declared descriptor name.
+MET — fe.34 — mobile/__tests__/useParcelLookup.test.ts:143 "RED (planted): a part without text, an unknown part kind and sections that are not a list are schema drift" — the page part contract is enforced at the boundary.
+MET — fe.36 — mobile/app/(app)/parcel-tool/semi-question.tsx:72 "router.replace(route)" — moving the user is a route change, not a local-state view swap.
+MET — fe.54 — mobile/src/components/surfaces/SearchBinding.tsx:129 "notice('outside-toronto', 'parcel-search-outside-toronto', 'Ban', L.noticeIcon, L.noticeText, content('search.outside_toronto'), [], L.noticeError)" — rate limit, entitlement, schema drift and out-of-Toronto each draw a declared state.
+MET — fe.57 — mobile/src/components/surfaces/LotMapBinding.tsx:13 "screen readers (the cards below are the accessible list of the same lots)" with content() labels on the clear and continue buttons.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 4
+Rules met: fe.02, fe.24, fe.32, fe.34, fe.36, fe.54, fe.57
+
+---
+⏱  168255ms (168.3s)
+📊 Tokens — total: 70629, input: 34170, output: 36459, reasoning: 35295

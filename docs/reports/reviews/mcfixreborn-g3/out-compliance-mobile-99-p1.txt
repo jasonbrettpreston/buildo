@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:13:41.151Z file_sha256=c0c871464d10e7307177046d1b41171dab2f76a2622b74529de9cd7fa6dbdcc4 prompt_sha256=ff77ee45ad2d9dbe93586fafe6b8e68752bba3eb20c4bde7d0ec45351e922ecc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — mobile/__tests__/lotMapPage.behaviour.test.tsx:141 "a non-map outcome replaces the route once on settled data, never while fetching" — the map page ships a routing effect that replaces the route outside the two §5.1 boundaries and no clause in the pasted part authorizes a navigation effect for this surface (part 2 of the spec is not pasted) — name the authorizing amendment or move the redirect onto a §5 pattern before the surface counts as compliant.
+
+REJECT — spec 99 §3.4c "`add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page)" — the change is accused of opening the lot report from the map page without recording a recent search — not a real issue: the spec names `parcel-tool/index.tsx` as the sole writer, so mobile/__tests__/lotMapScreens.golden.test.ts:178 "not.toMatch(/addRecent|useRecentSearchesStore/)" on disambiguate.tsx is the required shape, and whether index.tsx records on a navigation to the map page is cannot see in this chunk.
+
+REJECT — spec 99 §5.1 "Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s." — the change is accused of a routing effect at a non-gate boundary — not a real issue: the asserted effect sits in a page (disambiguate.tsx), not in one of the named layouts; §5.1 governs layouts and this surface is not one.
+
+MET — spec 99 §6.5 "A render gate condition (`if (X) return <Loading/>`) MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred." — mobile/__tests__/lotMapScreens.golden.test.ts:222 — "a background refetch keeps the drawn page (no loading flash, no redirect)" pins the stable-signal shape: isFetching with prior data leaves the drawn tree in place.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  124607ms (124.6s)
+📊 Tokens — total: 51993, input: 32973, output: 19020, reasoning: 18460

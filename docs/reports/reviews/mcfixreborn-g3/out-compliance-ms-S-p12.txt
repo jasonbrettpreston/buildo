@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:24:52.377Z file_sha256=a55fba3d2701be4e342ff2bf447c3859f8f8884151e3a39f0ea05ecd51c4a2a0 prompt_sha256=de79e2f5627520249a23bd3379be09ec5c34f67b6cfebfbb3b5e8c3ba63383e2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — five principles "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/parcels-entitlement.infra.test.ts:82 "expect(r.body.data).toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, ..." — the entitlement contract lock fixes a Basic allowance of 20 while the same change pins the ruled seed defaults 10/10/25 (src/tests/parcel-tool-meter.logic.test.ts:78 "the ruled defaults (MF-47 RULED 2026-11-14: trial 10, Basic 10, Pro 25)"), so the FE-05 count lock serves an inaccurate number and a drift back to 20 would still pass — read the allowance from SEED (10/10/25) and expect reportsLimit 10, reportsLeft 5.
+DEFER severity=MED — increment objective "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — src/tests/parcels-lookup-page.logic.test.ts:82 "expect(r.body.data?.page).toBeNull();" — no customer hit carries a page, so a found parcel, a two-parcel address and a semi lot are identified but never wired to the report in the material — assert a produced page for a hit, or record the deferral under a pasted operator ruling (none is pasted).
+DEFER severity=MED — task relevance "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/spec-notes-1b.logic.test.ts "const WORDS_444 = ['run on Opus', 'every grounder run on Sonnet', ..." — the FINAL.1b block locks model-seat and lane wording in .cursor/MCBYLAWS-QUEUE.md and 69a M-506, which serves neither the designed search page, the details page nor the report — move that block to its own task and drop it from this change.
+DEFER severity=LOW — "keep it simple; no scope creep" — src/tests/surfaces/admin-media.golden.test.ts:39 "expect(fresh.size).toBe(70);" — the file pins the admin media list, help, terms, privacy, landing and a global 70 golden count, none of which is the designed search page — keep this change's goldens to the search, disambiguation and semi question surfaces.
+MET — increment objective "or a possible semi lot" — src/tests/semi-question-design.logic.test.ts — the semi question page is pinned state by state (ask, answered, loading, error, unauthorized, rate_limited) against committed props goldens.
+MET — increment objective "two-or-more parcels at one address" — src/tests/parcels-lookup-page.logic.test.ts — the text-candidate resolution answers two candidates and never asks the page producer.
+MET — objective "the database is created to service the existing report and details ... search page" — src/tests/parcel-tool-meter.logic.test.ts — the report meter, allowance and window are read from logic_variables and fail closed, with no literal fallback.
+MET — objective "What the customer sees: the 65 designed search elements ... D (semi question page)" — src/tests/parcel-lot-form.logic.test.ts — the lot form view row and the lookup block (detected, basis, unsure) are locked to a single read.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  56543ms (56.5s)
+📊 Tokens — total: 48309, input: 36179, output: 12130, reasoning: 11322

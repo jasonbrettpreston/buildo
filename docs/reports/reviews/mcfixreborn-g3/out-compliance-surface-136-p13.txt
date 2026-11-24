@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:42:23.267Z file_sha256=18abc8c256d24f727240696115610d3bad0e77fe768bcca80dc26ca79124bbad prompt_sha256=861dbf04f88387f4651147a5c01b69aac43923c550fd97195cc764e253893ebd
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.36 "a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name" — src/tests/surfaces/nav-by-route.logic.test.ts:299 "{ file: SIGN_IN, rule: 'NAV-1', component: 'Pressable#email-button', handler: \"setMode('email')\", count: 1, kind: 'exception', audit: 15," — the lock goes green while five live controls still swap the view by local state or navigate with no role, each excused by an owed row (line 300 "why: \"owed: MF-49 ...\""; line 303 "handler: \"router.replace('/(auth)/sign-in') (no role)\", ... kind: 'exception'"), so fe.36 is satisfied only by a TODO on the tree — land MF-49/MF-50 (route params, role and name) and delete the exception entries so the lock enforces fe.36 with no allow-list.
+
+BUG severity=HIGH — fe.36 "local state is disclosure only" — src/tests/surfaces/nav-by-route.logic.test.ts:315 "{ file: SIGN_IN, rule: 'NAV-1', component: 'Pressable#phone-button', handler: \"setMode('phone-input')\", count: 1, kind: 'disclosure', audit: 17," — the same `mode` setter that entries #15/#16 concede is a view swap is relabelled disclosure, and judge() keys only on file/rule/component/handler (line 341 "const allowed = new Set(allow.map(keyOf));"), so `kind` is never checked and a NAV-1 violation passes under the word disclosure — assert in the lock that a disclosure/ok entry's state is not a JSX branch discriminant, and reclassify setMode('phone-input') and setPhoneStage('otp') as exceptions owed a row.
+
+DEFER severity=MED — fe.36 "a view is never swapped by local state" — src/tests/surfaces/nav-by-route.logic.test.ts:22 "Boolean toggles never match, so disclosure stays legal by construction." — NAV-1 only fires on a setter called with a string literal whose state is a same-file JSX branch, so `open ? <Panel/> : <Other/>` or `setView(route)` swaps the view with no finding — flag any state read in a JSX branch position and prove it red with a boolean view-swap plant.
+
+DEFER severity=MED — fe.51 "The navigation rule reaches 'every MaxBLD screen, web and mobile' (126:82)" — src/tests/surfaces/nav-by-route.logic.test.ts:41 "'src/app/(maxbld)', 'src/app/login', 'src/app/subscribe', 'src/app/admin/report-preview'," — DIRS is a closed list that omits every admin screen but report-preview and every mobile app screen outside parcel-tool and (auth), so a new screen there is never scanned and the coverage guard cannot notice — derive the roots from the converted manifest and platform app dirs, or add each admin and (app) screen directory with the same "new file is covered" guard.
+
+DEFER severity=MED — fe.25 "The 25 golden lots render end to end ... Runs as a db-type test in a named CI step." — src/tests/surfaces/register-locks-resolve.infra.test.ts:8 "(test.yml)\", is not asserted here: `npm run test` excludes every *.db.test.ts and no workflow step names a surface test file today; it is MF-25's." — the named-CI-step clause is unmet in the tree and its only treatment is prose inside a lock file — name the db test in a workflow step (MF-25) or keep fe.25's gap as an owed row the register must show, not a PROSE-ONLY carve-out.
+
+DEFER severity=LOW — fe.47 "All tunables are data; zero thresholds in src/." — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:20 "const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDIDATE_LIMIT: '10' };" — the oracle carries its own copy of two page settings under src/ instead of reading the registered values, so a settings change reddens the legacy oracle for no real content change — read the values from the settings source (or a committed settings fixture) and template from them.
+
+MET — fe.09 — src/tests/surfaces/register-locks-resolve.infra.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-09 (a separate decisions spec with a Lock column that resolves)" — the Lock column is parsed by the gate's own parser, every RULED path must be git-tracked and every OWED path a valid, not-yet-existing src/tests/surfaces test, with planted reds.
+
+MET — fe.56 — src/tests/surfaces/nav-by-route.logic.test.ts:399 "expect(unexplained).toHaveLength(entry.count);" — removing any exception entry turns the real tree red and a stale entry is red against the defect it names.
+
+MET — fe.13 — src/tests/surfaces/page-arm.logic.test.ts:4 "the S-page arm of scripts/surfaces/surface-validate.mjs (implemented in screen-checks.mjs beside the other arms)" — the page-name check is an arm of the single surface-validate gate, not a second gate.
+
+REJECT — fe.57 — the nav lock does not check the 44 px touch target — fe.57 places that check on converted web and mobile goldens under FE-31, not on the navigation lock, and the rest is stated PROSE-ONLY.
+
+REJECT — fe.58 — no mobile RSC assertion in the four files — mobile-no-rsc.logic.test.ts is the owed fe.58 lock and none of these four files claims to be it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: fe.09, fe.13, fe.56
+
+---
+⏱  147013ms (147.0s)
+📊 Tokens — total: 62047, input: 31913, output: 30134, reasoning: 28760

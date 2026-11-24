@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T02:41:36.257Z file_sha256=b3f90d3e6872e4b3e18fbc87f6c4985b495b83284d4a7ce05dbb740719f976dd prompt_sha256=964e2c14173156607be3de0baae3d00b3af367e9874d46e8ebb72f811fe7460d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-engineering-eng-shared-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §2.3 "If using `!`, you must document why in an inline comment." — src/lib/admin/parcel-lookup.ts:175 "return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s;" — the file's non-null assertions (also text.split(',')[0]!, m[2]!, exact[0]!, unlinked[0]!) carry no inline comment stating why the value must exist, so the documentation half of the rule is unmet — add the one-line inline justification at each `!`, or replace it with narrowing/optional chaining.
+
+DEFER severity=MED — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/seeds/logic_variables.json:8192 "+  \"maxbld_report_lot_size_implausible_min_sqm\": {" — this frontend group's diff adds nine registry rows under scripts/, a path both §10.2 and the §11 Frontend Boundary Check bar — land the registry rows in a pipeline-side commit, or record the operator exemption in the task card.
+
+DEFER severity=MED — §11 "UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)" — scripts/seeds/logic_variables.json:8193 "The DB mirror row (a migration, number to be claimed) is owed for admin visibility; nothing reads it." — the two new pinned report variables are registered in the seed with the DB side admitted as owed, so the registry seed and the logic_variables table disagree from the first commit — claim the migration number and land the mirror rows in the same commit as the seed change.
+
+DEFER severity=LOW — §11 "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — scripts/seeds/logic_variables.json:10843 "the server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42, min(3) and max(120)); a parity test holds both ends to that line" — the 3/120 pair now exists as a literal in both the seed and the Zod schema with only a parity test between them and no contracts row — add the key to src/tests/contracts.infra.test.ts (or cite the existing row) so drift fails CI.
+
+DEFER severity=LOW — §10.3 "Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`)." — src/lib/admin/parcel-lookup.ts:36 "  'cost_fb_total', 'cost_coa_total', 'cost_solar_total', 'cost_garden_suite_total'," — these strings are used verbatim as the payload keys (`scalars[c] = num(row[c])`, and the same pattern for areas and the tier-3 buckets), so the response contract is the parcels schema — map the tier-1/tier-3 keys to stable API names, as fetchCoaProjects already does with `application_number AS "applicationNumber"`.
+
+DEFER severity=NIT — §10.3 "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route." — src/lib/admin/parcel-lookup.ts:28 "} from '@/app/api/admin/parcels/lookup/types';" — the lookup request/response contract sits under app/api, so the named location is unmet even though it is outside route.ts — move or re-export the contract from src/lib/parcel-lookup/types.ts.
+
+MET — §4.2 — src/lib/admin/parcel-lookup.ts:126 "if (!/^[a-z_][a-z0-9_]*$/.test(col)) throw new Error(`illegal column identifier: ${col}`);" — every interpolated SQL fragment comes from static const column lists behind this guard and all user input is a $1/$2 bind, which is the static-whitelist exception the rule allows.
+
+MET — §6.1 — src/lib/admin/report-preview-live/stored-page.ts:85 "logError(TAG, cause, { stage: 'stored-page-read', parcelId, uid: opts.uid ?? null });" — every catch block in the material logs through logError and no file uses a bare console.error.
+
+MET — §4.3 — src/lib/report-projection/read-stored.ts:29 "const PARCEL_SQL = `SELECT id, parcel_id, zoning_zn_string, lot_size_sqm, is_corner_lot," — the reads project explicit columns (PARCEL_SQL, STAMP_SQL, ROWS_SQL, UNITS_SQL, TEXTS_SQL), never SELECT *.
+
+REJECT — §10.1 — src/lib/parcels/report-compute.ts runs the step's batch SQL from a request path, accused of reversing the pipeline-to-frontend flow — the statement is a read only, it is reached through the lookup route (the one bridge), and it writes nothing, so no data flows from the frontend into a pipeline.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 21   Unmet: 6
+
+---
+⏱  192419ms (192.4s)
+📊 Tokens — total: 58727, input: 33882, output: 24845, reasoning: 23680

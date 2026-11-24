@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:17:22.070Z file_sha256=2ce161d040ec3e7fda0668f2e840f386c5a007e6678f16aa70cbad1a3e2ed872 prompt_sha256=eb4e96cb2ae9f01dcbd8be31596a21c128006adb89ac30adcd3fa093c5f7227e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 4. Security and API Contracts §4.4 "Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic." — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:349 "the lead-detail route calls no withRateLimit" — the contract this material documents for a public, session-guarded route records no throttle while two clients (web and Expo) already consume it, so the clause is unproven here (the route file itself is not in this chunk, cannot see) — add middleware-level throttling for /api/leads/* and update rate_bucket plus a check row.
+
+DEFER severity=LOW — 10. Frontend/Backend Boundary §10.3 "Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`)." — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:91 "is_saved" — the documented response serves raw column names (is_saved for lead_views.saved, permit_num, and line 104 neighbourhood.avg_household_income), not stable API names — map at the next contract version the descriptor freezes ("answer": "frozen"), so this cannot be repaired in this commit without a client release.
+
+DEFER severity=LOW — 1. Architecture & UI Standards §1.3 "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950`" — mobile_lead_detail.descriptor.json:512 "dark_mode": "hardcoded" — the surface's own registry records hardcoded dark-mode colours, so the rule is unmet by the screen, which is not in this chunk (mobile/app/(app)/[lead].tsx, cannot see) — file a fix task against the screen and keep the descriptor truthful.
+
+DEFER severity=LOW — 5. Testing Standards §5.2 "Parity battery ... Any dual-surface or generated artifact (drift guard)" — scripts/surfaces/_schema/seed-report-v2.mjs "view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' }" — the two fixed labels moved out of ReportView.tsx into the seed with no parity lock visible in the material tying the component back to this registry entry (src/tests not in this chunk, cannot see) — add an assertion that ReportView renders pres.view.details and pres.view.meta so the label move cannot drift.
+
+MET — 4. Security and API Contracts §4.3 "Never `SELECT *` — always project specific columns" — mobile_lead_detail.descriptor.json inputs.tables — every table entry lists named columns (permits 13, cost_estimates 7, neighbourhoods 5, trade_forecasts 10, lead_views 7, coa_applications 7), a projection not a star select.
+
+MET — 1. Architecture & UI Standards §1.1 "The base (unprefixed) utility classes must dictate the layout for mobile screens" and "minimum tappable area of 44px x 44px" — mobile_lead_detail.descriptor.json "breakpoints": "mobile_first" and "touch_target_min_px": 44 — the surface declares mobile-first layout and the 44px floor.
+
+MET — 4. Security and API Contracts §4.3 "All authorization must be enforced server-side in API routes or middleware" — mobile_lead_detail.descriptor.json guards.session "answer": "authenticated" citing src/lib/auth/route-guard.ts:120-132 and route.ts:23 — the session gate is declared server-side, not as client route hiding.
+
+REJECT — 9. Pipeline & Script Safety §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — scripts/surfaces/_schema/seed-report-v2.mjs not using pipeline.run — not a real issue: it writes seed JSON for the surfaces registry, it never opens a pool or touches the database, which is the subject of §9.1 to §9.4.
+
+REJECT — 3. Database Management & Scaling §3.3 "Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries" — descriptor lists permits and coa_applications — not a real issue: the lead-detail route resolves one lead by id with explicit columns, and no unbounded list read is described in this material.
+
+REJECT — 10. Frontend/Backend Boundary §10.2 "Frontend WFs must NOT modify files in `scripts/`" — this change edits scripts/surfaces/_schema/seed-report-v2.mjs — not a real issue: no chain script, migration, or scripts/lib/ file is touched, only the surface descriptor store the registry is built from.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  83762ms (83.8s)
+📊 Tokens — total: 50597, input: 32402, output: 18195, reasoning: 17088

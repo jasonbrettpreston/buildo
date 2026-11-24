@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:03:43.884Z file_sha256=100d8edc9db48830c3b278cd03dc443cea2d1036ad224d14fd6065b3b1fc0257 prompt_sha256=f0975916d10b8673d5f51971b78ad8de83b50986674686a0ebeb44ba5fb459d8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling ... The operator's rulings are the decisions." — scripts/analysis/gates/generated-docs.mjs:7 "This is the closed list the gate owns; the orchestrator decides per doc whether to WIRE it (`--check`) or RETIRE it, and records that decision here." — the gate's GREEN for six docs rests on a retire answer supplied by the orchestrator ("orchestrator ruling, gate J closing commit"), not on an operator ruling, so a PASS verdict is bought with a decision the pasted clause says is not a decision at all — fix: hold each retire row as a pending orchestrator decision (RED until an operator ruling id is cited in the row), and make `isRetired` require that id.
+DEFER severity=MED — doc-17 "never feed a review as a ruling" — scripts/analysis/backlog-lane.mjs:11 "print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call)" and scripts/analysis/backlog-lane.mjs:2 "the take on the board is RR-0240, :947-951" — the launcher binds its behaviour and the whole brief/lens machinery to RR ids (RR-0240, RR-0242, RR-0374, RR-0378, RR-0385) that are absent from the pasted register slice, so the material cannot show any of them is an operator ruling rather than a reading — fix: resolve every cited RR against its register kind at launch and refuse (exit 3) when a reading is cited as authority.
+REJECT — doc-17 "Readings and register entries of the rulings register." — scripts/analysis/proof-slices.json:12 "RR-0306: printed as not built" is accused of citing a reading as a ruling — RR-0306 is not in the pasted list, so whether it is a reading cannot see, and the pasted clause does not reach it.
+MET — doc-17 "They are NOT the operator's words as a ruling" — scripts/analysis/proof-slice.mjs:2 "SPEC LINK: docs/specs/02-web-admin/127_surface_conversion_procedure.md (the S-gate table whose rows this runner calls)" — the runner grounds each proof row in a spec clause and a task id, not in a register reading.
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/backlog-lane.mjs:12 "the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path)" — lists are resolved from the table rather than hand-picked per launch.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+Rules met: none
+
+---
+⏱  46140ms (46.1s)
+📊 Tokens — total: 40701, input: 31960, output: 8741, reasoning: 8096

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:59:07.315Z file_sha256=d712a1863f7918909fe57dbb870b0365a55eeb7d84e988208c7d024efa3c2e70 prompt_sha256=7288e00fede5a2f4ca78d0c8a24d90d71eee3fc7e456d58bb05cf94b31c66ffb
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-back-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 3.3 "Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden." — src/app/api/permits/[id]/route.ts:298-302 "`SELECT permit_num, revision_num, permit_type, work, status, est_const_cost FROM permits WHERE TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) = $1 AND NOT (permit_num = $2 AND revision_num = $3) ORDER BY permit_num`" — this route reads `permits` twice with no LIMIT (also :114-115 "`FROM permits WHERE permit_num = $1 AND revision_num = $2`"), so the named growing table is read without a pagination boundary while the sibling coa/parcel reads carry LIMIT 1 — add LIMIT 1 to the detail read and a LIMIT (or paging) to the base-permit linked read
+MET — 3.3 — src/app/api/permits/[id]/route.ts:73-75 "FROM coa_applications WHERE application_number = $1 LIMIT 1" — the coa_applications read is bounded
+MET — 3.3 — src/app/api/permits/[id]/route.ts:172-178 "FROM permit_parcels pp JOIN parcels pa ON pa.id = pp.parcel_id ... LIMIT 1" — the parcel join is bounded
+MET — 9.1 — src/app/api/parcels/lookup/route.ts:124-126 "await withTransaction((client) => openReport(client, ctx.uid, ref))" — the meter's multi-statement write runs inside one transaction boundary
+REJECT — 9.4 — "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — src/lib/entitlements/index.ts is application code under src/lib, not scripts/*.js, and the only scripts path in the material is scripts/steps/_schema/programme-items.json, a schema evidence string, so the inlining/Pool/log rules do not bind it
+REJECT — 3.1, 3.2 — migration pattern and UP/DOWN blocks — no migration file is in this chunk; the migrations the code cites (229, 303, 320, 322) are outside the pasted material, so this cannot be checked here and no accusation is made
+REJECT — 9.3 — pipeline scripts must be re-runnable via upsert — the writes shown (src/lib/entitlements/index.ts:249-... "ON CONFLICT (user_id, product) DO UPDATE") are already upserts and are not pipeline scripts
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  43029ms (43.0s)
+📊 Tokens — total: 40168, input: 31101, output: 9067, reasoning: 8428

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:55.584Z file_sha256=b87bd93a9465f97ed56e6214b36e851a2b2146fe8c5bfbb95fe9691e00a4c527 prompt_sha256=323f941ec48728d77ef2eff1b3da83526771cbc04d1d5ac21102c3b638969cab
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p3.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found.
+
+DEFER severity=MED — RR-0408 "As you suggested keep the review calls small." — scripts/analysis/rule-lists.mjs "for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-${seatOf(l)}-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: `lens-${seatOf(l)}.md`, file: `${ev}/${f}` });" — the same plan context is packaged once per resolved list and all of those calls are fired at once (jobs.push, then Promise.all), so a build task with four lists sends the identical text four times at up to the 120,000 bound, and call count grows with the number of lists rather than with the size of the change — plan-prep should use the joined list (joinLists,task-423 already gives "one compliance call set covers all of them") or cap the number of parallel calls.
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/deepseek-review.js:35 "const MAX_PROMPT_CHARS = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || 120000;" — the ruled cap is only a default: the same variable raises this refusal and lens-input's bound (scripts/analysis/rule-lists.mjs "max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND"), so a call above 120,000 characters is one environment variable away — clamp DEEPSEEK_REVIEW_MAX_CHARS at 120000 or refuse a value above it.
+
+DEFER severity=LOW — plan-protocol section 0 "keep it simple; no scope creep" — scripts/hooks/check-task-files.mjs "function matcher(entry) {" — the Files grammar is now read once (filesEntries) but matched twice, this hook's own globToRegex and rule-lists.mjs "export const coveredBy = (entries, p) =>", so one declaration can pass the commit scope check and read differently at the launch — have the hook call coveredBy/globToRegExp so scope and rule resolution cannot disagree.
+
+REJECT — plan-protocol section 0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — that this tooling does not treat sequence.json as the plan — superseded by the operator note of 2026-11-20 (Spec 137, the board is the plan), so the bullet does not bind.
+
+MET — M-246 note 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — scripts/analysis/rule-lists.mjs "export function lensSet({ type, files })" plus planPrep "GROUNDER-PLAN.md is absent (the separate grounder writes it before post)" — one shared lens set and a separate grounder file demanded before post.
+
+MET — RR-0387 "a separate grounder rules every finding, confirmed defects go to fix tasks" — scripts/analysis/rule-lists.mjs "if (problems.length) refuse(problems.join('; '));" — post refuses unless every CONFIRMED/CONFLICT verdict has its TRIAGE line, so the prep cannot manufacture a ruling.
+
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/rule-lists.mjs "refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json" — a Files path with no row is refused, not given an empty rule set.
+
+MET — RR-0414 "changed parts only as per your recommendation" — scripts/analysis/rule-lists.mjs "cannot be split inside a file" — the material is the diff cut at file boundaries and a file that does not fit is refused, never trimmed.
+
+MET — plan-protocol section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — scripts/analysis/rule-lists.mjs "task-423 (PROTOCOL.SIMPLE, adjustment 1)" and "task-418 (LAUNCH.PREP)" — every added surface names the task and ruling it comes from.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  93295ms (93.3s)
+📊 Tokens — total: 54659, input: 34790, output: 19869, reasoning: 18876

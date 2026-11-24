@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:03:40.460Z file_sha256=15d643ecea0d28e9423b1c4c03f91f6c5b63946df3b4ff166206aec6ee6c554a prompt_sha256=9b2271f01e6059b7fd9e95954fee2872d3345139c4186df99ef81933b4043c7e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — F.3 "Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates" — src/lib/surfaces/maxbld-landing.ts:113 "return viewOf(tree, { target: TARGET, reportHref: SAMPLE_HREF }, reportCtx) as ReportView;" — clause unmet: the landing demo carries a report href, and the file itself says "Skip and View report lead to /#sample" (maxbld-landing.ts:17), so the frame offers a View report control that navigates, which F.3 forbids — drop reportHref from the landing demo view so Skip alone closes the demo and the report stays inside the sample frame.
+
+DEFER severity=MED — walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding" — src/lib/surfaces/maxbld-landing.ts:50 "export const LANDING_READS = ['scenario_list', 'scenarios', 'cost_sources', 'trial_reports', 'plan_reports'] as const;" — the pasted F section names only the hero CTA (F.1), how it works step 1 (F.2), the sample frame (F.3), the landing legal line (F.4) and the post-login target (F.5), so the scenario list, the scenario and cost-source counts and the two allowance strings are unnamed additions — cite the governing section for each read in the review record or drop the reads.
+
+DEFER severity=LOW — G.4 "Skip control during the animation" — src/lib/surfaces/maxbld-landing.ts:109 "if (pace.skipAfterMs > 0) { logWarn(TAG, 'Skip does not show from the start; the demo is left out', { skipAfterMs: pace.skipAfterMs }); return undefined; }" — the rule the code applies (MF-76 OUTPUT F3 (a), WCAG 2.2.2) is not in the pasted list, and a stored pace setting silently removes the very region G.4 says carries a Skip control — either render Skip from the first paint as G.4 requires or land the omission as a dated operator ruling.
+
+DEFER severity=LOW — walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding" — src/lib/surfaces/maxbld-landing.ts:149 "const state = lines.length ? 'static' : 'degraded';" — the pasted list names page states only for the map page (C.13) and the question page (D.7), so a landing 'degraded' variant and its per-part omission rule are unnamed — name the section that rules the degraded landing or fall back to the one declared page.
+
+DEFER severity=LOW — F.1 "Hero call to action: Start free trial (to /signup); no search box on the landing page" — cannot see — the hero CTA, its /signup target and the absence of a search box live in the committed page table the file reads ("pages.pages as Record<string, Record<string, StaticPage>>", maxbld-landing.ts:128), which is not in the pasted material — confirm the CTA and the no-search-box clause against that page table before this task closes.
+
+MET — F.4 "Landing legal line" — src/lib/surfaces/maxbld-landing.ts:148 "footer: pickFooterText(SEARCH_CONTENT)" — the landing footer text comes from the one committed footer home rather than a second copy, so the legal line has a single source (its wording is not visible here).
+
+REJECT — E.2 "Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright" — the landing footer reuse is accused of not building the web footer's ToS, Privacy and Help links — E.2 is scoped to the E Web search pages and this file is the F landing, whose own footer clause is F.4, so the accusation is outside the clause.
+
+REJECT — F-ADMIN-LOOKUP "Admin Parcel Cost Model Tool (admin search over the same resolver)" — the lead detail files are accused of adding an unnamed CoA detail envelope and uuid casts — the pasted list governs the Increment S search pages and names no lead detail clause, so that material is cannot see here and is judged under Spec 91 §4.3, not this list.
+
+VERDICT: FAIL
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  74962ms (75.0s)
+📊 Tokens — total: 45143, input: 30169, output: 14974, reasoning: 13988

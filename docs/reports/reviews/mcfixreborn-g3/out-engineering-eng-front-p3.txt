@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:00:10.924Z file_sha256=0011d8e5f6b764dbe716628f8dd70bb26accd4aa9d50b033fc38fffedabaa2a0 prompt_sha256=9c7f154c3c9ed368ffe7a510ebcb9bbf4a0d1f07f46ce3c2360bae7b5c8156d9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-front-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 1.1 Mobile-First UI Mandate "Dense metadata rows MUST use `flex-wrap`." — mobile/src/constants/parcelSearch.ts:150 "cardRow: 'w-full flex-row items-center justify-between gap-2'," — the candidate/lot metadata row is a fixed horizontal row with no flex-wrap, so a long address plus its area/segment badge cannot reflow on a narrow phone — add `flex-wrap` (lotMap.ts cardRow: S.cardRow inherits the fix).
+DEFER severity=LOW — 1.1 Mobile-First UI Mandate "All interactive elements ... MUST have a minimum tappable area of 44px x 44px." — mobile/src/constants/lotMap.ts:44 "marker: 'min-w-[24px] items-center rounded-full bg-report-card px-2 py-1 border border-report-amber-ink'," — the map marker declares a 24px minimum width, far below 44px if the marker is the tap target for picking a lot — add min-h-[44px] min-w-[44px] or hitSlop on the marker.
+DEFER severity=LOW — 1.3 Mobile Front-End Patterns & UX "Dark-mode colour tokens must use NativeWind `dark:` variants ... rather than hardcoded" — mobile/src/constants/parcelSearch.ts:53 "screenBg: 'bg-[#0e0e10]'," — a hardcoded dark background with no `dark:` twin (same for searchSurface/chipBg), so the system light scheme cannot be honoured where applied — switch to a report-* token with a `dark:` twin, or drop the legacy block if task-322 retired it.
+MET — 1.1 Mobile-First UI Mandate — mobile/src/constants/parcelSearch.ts:124 "input: 'flex-1 min-h-[44px] ..." — every interactive class (input, chip, retry, card, select, report) carries a base `min-h-[44px]`, satisfying the touch-target floor.
+MET — 1.3 Design System Fidelity — mobile/src/constants/parcelSearch.ts:118 "cardTitle: 'text-[12px] font-semibold uppercase ... text-report-amber-ink'," — no class string in the material uses `font-mono`; labels/headings use weight + `text-report-*` tokens only.
+MET — 1.1 Mobile-First UI Mandate — mobile/src/constants/parcelSearch.ts:153 "card: '... min-h-[44px] ... dark:bg-report-card ... dark:active:bg-report-sky'," — layout strings are written base-first with `sm:`/`dark:` only enhancing, and colour tokens carry their `dark:` twins.
+REJECT — 1.1 "Use `flex flex-col md:flex-row` (not `flex` alone)." — that cards use `flex-col` without `md:flex-row` — these are native phone surfaces where md: breakpoints do not fire; stacking with `flex-col` is the correct mobile-first base, not a defect.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  65604ms (65.6s)
+📊 Tokens — total: 46098, input: 33589, output: 12509, reasoning: 11813

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:43:15.916Z file_sha256=73536439be5c3fd8734b3749e668de862f3b9abd3891c4990310db0168410205 prompt_sha256=2376ce65da2a88a91996567c3a56cc97a4d30b7a2267aa3b8f3f6016a212db5d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG none raised at gating severity.
+
+DEFER severity=LOW — task-364 (pasted group list) "task-364 - SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — scripts/analysis/lot-map-data-check.mjs:3 "// For the multi-lot address of ~/Buildo-scratch/lanes-20261117/avail-search/SAMPLES.md (sample 9, 26 Kenneth Ave: parcels 5112332 and 5427844)" — the two sample parcels are grounded in a lane scratch directory that is not in the repo, so the provenance of the ids cannot be checked from the tree, the class of cite task-364 exists to sweep — cite the task card or inline the sample address text as the record.
+
+DEFER severity=LOW — scripts/analysis/lot-map-data-check.mjs:7 "//   - a populated frontage street (primary_frontage_street_name not null and not blank)." — scripts/analysis/lot-map-data-check.mjs:22 "       (p.primary_frontage_street_name ~ '[^[:space:]]') AS has_street," — the exported SQL returns NULL for a NULL street, not false, so the "not null" half of the stated check rests on three-valued logic and any reuse of the exported SQL comparing has_street = false silently drops those rows — wrap the expression in COALESCE(..., false) so the column is boolean.
+
+DEFER severity=LOW — scripts/analysis/lot-map-data-check.mjs:5 "//   - a footprint (the massing join the lookup uses: a parcel_buildings row for the lot)," — scripts/analysis/lot-map-data-check.mjs:20 "       EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id) AS has_footprint," — the check restates the lookup's massing join instead of reading it, so a later change to the lookup join leaves this check green while the read it is meant to ground-truth has moved — name the source line the join is copied from, or import the lookup's predicate.
+
+MET — 5.2 Ground-truth — scripts/analysis/lot-map-data-check.mjs:68-70 "await client.query('BEGIN READ ONLY'); const { rows } = await client.query(SQL, [o.parcels]); await client.query('ROLLBACK');" — the script reads the live rehearsal database inside a read-only transaction, refuses any host other than 127.0.0.1 or localhost and any port other than 55322 (:42-45), and never prints the URL (:12,:64), which is the reality-against-live-DB instrument 5.2 asks for.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+Rules met: none
+
+---
+⏱  49519ms (49.5s)
+📊 Tokens — total: 19179, input: 9063, output: 10116, reasoning: 9495

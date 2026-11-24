@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:55:43.195Z file_sha256=19cdaa4f6f03d2087b0e795b9dc6cafeab3b85495770e20ccd914597d7b7cf80 prompt_sha256=5f2d9dadd2cac5791ee1e466740bd99afd3168d02f429fec7245240838e4bd1d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p16.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message" — src/tests/surfaces/lot-map-help-link.logic.test.ts:100 "expect(link.props.onPress).toEqual(openHelp('address_match'));" — all three notice goldens are locked to topic address_match while the pasted clause names wrong-lot, and the file's own line 40 note ("v8 names wrong-lot, which the Help page lacks") records the swap with no pasted ruling authorizing it — either lock the topic to wrong-lot, or add a dated note naming the operator ruling that supersedes the clause.
+DEFER severity=LOW — doc-2 B.7 "under every notice; report it inside the no-lot message" — src/tests/surfaces/lot-map-help-link.logic.test.ts:102 "expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);" — the unlinked golden is asserted to carry exactly one help node and nothing asserts the report-it target the clause places inside the no-lot message — add one assertion on the unlinked golden for the report-it link the clause names.
+MET — doc-2 C.12 "Link: Not sure which lot? Get help with an address" — src/tests/surfaces/lot-map-help-link.logic.test.ts:46 — content and generated slice are asserted to carry exactly 'Not sure which lot?' and 'Get help with an address'.
+MET — doc-2 C.11 "hint Pick a lot on the map or in the list." — src/tests/surfaces/lot-map-help-link.logic.test.ts:62 — the exact clause text is asserted and the hint is pinned between the continue button and the help row.
+MET — doc-2 A.1 "MaxBLD wordmark with the tagline Lot Intelligence" — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:23 — the tagline change is recorded as a ruled change with its operator cite, matching the clause.
+REJECT — doc-2 built state "the help link on the map page" (not built) — the lock asserts the map-page help link built — the built-state list is a snapshot as of origin 154e7b13f and the pasted task list names task-321 "SRCH.C12-C.12-Not-sure-which-lot-Get-help-with-an-address-link-on-the-lot-map", so building it is the named work.
+REJECT — doc-2 A.2 "Search box: one pill, placeholder Enter lot address" — the oracle records the placeholder as "Enter a Toronto address" — the pasted task list names task-356 "SRCH.A6-search-box-reads-Enter-a-Toronto-address-RR-0313-RR-0314", so the newer ruling is named and the A.2 row is the stale side.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: A.1, C.11, C.12
+
+---
+⏱  77917ms (77.9s)
+📊 Tokens — total: 50885, input: 33147, output: 17738, reasoning: 17051

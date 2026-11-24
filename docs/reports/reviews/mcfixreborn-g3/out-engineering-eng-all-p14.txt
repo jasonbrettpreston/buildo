@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:53:00.673Z file_sha256=bc4b131680f6eb308d0cfd783bebf20931c24e67a3bb57ab55216d6d6c842824 prompt_sha256=5a56de9cde93b8f378e336098aa3688c88a7950d474cc2ef36c1834811952ed5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/parcels-lookup-page.logic.test.ts:55 "const ROW = { parcel_id: 'P-48', lot_size_sqm: 400, neighbourhood_id: null, __display_address: '5 Elm St' };" — an untyped inline parcel row (same pattern at parcel-tool-gate.logic.test.ts:12 "const DB = {} as never;" and parcel-tool-meter.logic.test.ts:74) and no file in this chunk imports from src/tests/factories.ts — build every row/context through an imported typed factory, extending factories.ts where no parcel or entitlement factory exists.
+
+BUG severity=MED — §5.2 "| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) |" — src/tests/parcels-lookup-page.logic.test.ts:48 "import { GET } from '@/app/api/parcels/lookup/route';" — route-envelope, mocked pool/tx and fail-closed 500 cases sit in a `.logic.test.ts`, and parcel-tool-meter.logic.test.ts:146 "describe('MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5)'" runs DB-write query-shape coverage in a logic file, which the §5.5 map assigns to infra — move route and query-shape cases to `.infra.test.ts` and leave only the pure derivation in `.logic.test.ts`.
+
+BUG severity=MED — §12.12 "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test asserting the invariant." — src/tests/parcel-tool-meter.logic.test.ts:59 "it('every window holds now and spans one stepped month (property sweep)', () => {" — reportPeriod's month-step and day-clamp invariants are swept by a hand-rolled "for (let d = 0; d < 800; d += 7)" loop, and no src/tests/property/*.property.test.ts exists in this chunk — add a fast-check property asserting start <= now < end and the one-month span, with shrinking.
+
+BUG severity=MED — §2.1 "explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`." — src/tests/parcels-entitlement.infra.test.ts:95 "expect(r.body.data).toBeNull();" — the 500 case asserts the status and a null data field but never asserts the thrown text is absent from the response, though "if (o.throws) throw new Error('db down');" at :39 produces exactly the leak the rule names — add expect(JSON.stringify(r.body)).not.toContain('db down') here and to the lookup-page 500 cases.
+
+DEFER severity=MED — §11 "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — src/tests/parcels-entitlement.infra.test.ts:43 "if (/FROM logic_variables/.test(text)) return { rows: [{ variable_key: REPORT_LIMIT_KEYS.plan, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' }] };" — the allowances are hand-copied literals in the fake, its plan/trial 20 contradicts the seed default asserted at parcel-tool-meter.logic.test.ts:83 "expect(SEED[REPORT_LIMIT_KEYS.trial]).toMatchObject({ default: 10, min: 1, max: 1000 });", so the 200-count assertions prove a state the seed cannot produce — derive the fake rows from the seed keys and add the contracts.infra.test.ts mapping for the limit keys.
+
+DEFER severity=LOW — §1.1 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px. Use `min-h-[44px] min-w-[44px]` or equivalent padding." — src/tests/semi-question-design.logic.test.ts:78 "expect(byKey(ask, 'back')!.props.accessibilityLabel).toEqual({ content: 'back.label' });" — the pins prove 48px for Continue and 56px for the bar, but the back control and the three answer cards carry no min-height or hitSlop assertion, so the 44px floor is unproven for them — pin min-h-[44px]/hitSlop on the back control and each answer card.
+
+DEFER severity=LOW — §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)." — src/tests/semi-question-design.logic.test.ts:21 "const golden = (n: string): { props: Node } => JSON.parse(fs.readFileSync(path.join(DIR, `${n}.mobile.json`), 'utf8'));" — the goldens are only read back, so a hand-edited props golden passes and the "written by scripts/surfaces/semi-question-golden-capture.ts, never by hand" assurance exists only as the header comment at :6 — add a parity case that runs the capture script to a buffer and diffs the committed goldens.
+
+MET — §2.1 — src/tests/parcels-entitlement.infra.test.ts:39 — the deepest layer (pool query) is forced to throw, and the top layer is asserted to answer 500 with a null payload.
+
+MET — §4.1 — src/tests/parcels-entitlement.infra.test.ts:58 "it('no session -> 401, nothing read'" — the externally reachable route is proven guarded, with no read before the 401.
+
+MET — §5.2 — src/tests/parcels-entitlement.infra.test.ts:27 "import { GET } from '@/app/api/parcels/entitlement/route';" — the new route is exercised through an `.infra.test.ts` with 401, 429, no-row 200, 500 and a read-only assertion.
+
+MET — §5.2 — src/tests/parcel-tool-meter.logic.test.ts:36 "describe('T6 reportPeriod (billing-date window, D-2 a)'" — pure derivation pinned on happy, boundary, leap-year and year-end inputs in a `.logic.test.ts`.
+
+REJECT — §4.1 — the entitlement route carries no verifyAdminAuth guard — it is not under `/api/admin/**`, so the admin gate does not apply, and the test pins its own user-auth 401.
+
+REJECT — §12.11 silent-catch-fallback — parcel-tool-meter.logic.test.ts:103 "try { return await readReportLimits(db); } catch { return { plan: 10, trial: 10, pro: 25 }; }" — that ban is scoped to `src/features/leads/` and `src/lib/`, and this line is an in-memory RED plant inside a test, not shipped code.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 24   Unmet: 7
+
+---
+⏱  143385ms (143.4s)
+📊 Tokens — total: 55526, input: 33526, output: 22000, reasoning: 20314

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:07:01.169Z file_sha256=dc62f35574447d26474ce14e4213abc910918b25aadd4b17ea09740c69b99cee prompt_sha256=d763fbff1b2a7531106074fda664a3df6d93927614692fec6aaaa98b3ec64086
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/parcel-tool-meter.logic.test.ts:159 "if (/FROM usage_events/.test(text)) return { rows: [{ used, already: false }], rowCount: 1 };" — the meter query returns an `already` dedup flag and both fakes (159 and 289) hard-code it false, so no case asserts that a re-submit of the same parcel in the same window is a no-op, and a regression that inserts a second usage_events row would still pass — add one case with `already: true` asserting the returned kind and that no "INSERT INTO usage_events" call is made.
+
+DEFER severity=MED — src/tests/parcel-tool-meter.logic.test.ts:174 "expect(db.calls[iSet]!.values).toEqual(['5000ms']);" — the 5 s transaction-local limit is pinned as set but no case pins the 57014 outcome, so a second tab that blocks on the same user's FOR UPDATE row past the bound has an unpinned result, and the route mapping of that failure cannot see — add a fake that throws 57014 on the lock query and pin the returned kind or thrown error the route must map.
+
+DEFER severity=MED — src/tests/parcels-lookup-page.logic.test.ts:181 "expect([log.access, log.meter, log.page]).toEqual(['parcel_tool', 'not_evaluated', true]);" — a served page is deliberately left uncounted, so once a producer returns a page the same hit shows a report and charges none (fail open on the count), with only a prose owner in the comment as the guard — count when `page` is non-null (or hold the page) in the MB-44 change and flip this pin in the same commit.
+
+DEFER severity=LOW — src/tests/parcel-lot-form.logic.test.ts:54 "await expect(readLotForm('P7')).rejects.toThrow('connection lost');" — only 42P01 degrades (line 49) while a transient 08006 and a drifted row (line 58 "await expect(readLotForm('P4')).rejects.toThrow();") both propagate out of readLotForm, and the catch in src/lib/parcels/lookup-flow.ts cannot see, so one blip could turn a serveable hit into a 500 — pin the flow's handling of a readLotForm throw (serve without the block) or widen the degrade list to connection class 08.
+
+DEFER severity=LOW — src/tests/parcel-tool-meter.logic.test.ts:318 "it('limits unreadable -> the status with null counts (degrades; the meter itself stays fail-closed)', async () => {" — one unreadable limit row serves `status: 'active'` with null counts while openReport refuses the same user, so the read degrades and the write fails closed and the client cannot tell "no plan" from "meter broken" until the next tap errors — pin a distinguishable degrade (a warning field or a raised error) and assert the entitlement route renders it.
+
+REJECT — src/tests/parcel-lot-form.logic.test.ts:49 "expect(await readLotForm('P6')).toBeNull();" — a missing view reading null looks like a silent wrong answer (no semi block for every lot) — handled: only SQLSTATE 42P01 degrades, it warns once (line 50) and every other error still throws (line 54), so an unapplied migration yields an absent block, never a guessed 'detached'.
+
+VERDICT: PASS on error-path safety
+
+Paths walked: src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-reset-label.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts, src/tests/parcel-tool-meter.logic.test.ts, src/tests/parcels-entitlement.infra.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/semi-question-design.logic.test.ts, src/tests/spec-notes-1b.logic.test.ts, src/tests/surfaces/admin-media.golden.test.ts   Unguarded: 3
+
+---
+⏱  85014ms (85.0s)
+📊 Tokens — total: 53600, input: 35301, output: 18299, reasoning: 17381

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T03:22:01.684Z file_sha256=3252799992505d1062cca391d343e67af32c75004ecfe48fa5f88f7206748e1e prompt_sha256=19a57936b59c1dcfccf66d53fd3b1ac1d071b5ce1e3c840e3dd75808f916081b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/app/(app)/[lead].tsx:104 "const showNotFound = !isLoading && isError && !detail;" — every failure (offline, 500, deploy-skew schema error, token expiry) collapses into the not-found branch that says "This permit is no longer available" with only a back action and no retry, so a transient error reads as permanent and there is no path to a second attempt from this screen — distinguish 404 from other errors and give the non-404 case a retry (expose refetch from useLeadDetail).
+BUG severity=MED — mobile/app/(app)/[lead].tsx:148 ") : detail ? (" — the ternary has no final empty branch, so any state with isLoading false, isError false and data undefined (for example the Spec 99 §B4 accessToken gate skipping the query, cannot see useLeadDetail) renders a bare header over an empty body with no message and no button — add an explicit else empty state with a retry or back action.
+DEFER severity=MED — mobile/app/(app)/[lead].tsx:167 "<OpportunityRing score={detail.opportunity_score ?? 0} />" — an absent or null score is rendered as 0, a real and meaningful value, so the empty path shows a wrong number instead of nothing or a dash — pass null and let the ring render its own empty state.
+DEFER severity=MED — mobile/src/lib/leadDetailFormat.ts:17 "if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;" — a numeric string served for modeled_gfa_sqft is dropped and the whole Square Footage section silently disappears, while the sibling formatServedSqft in parcelCostFormat.ts coerces strings, so the two readers of the same field disagree — coerce with Number() as parcelCostFormat does before the finite check.
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:70 "saveLead({ leadId, leadType: 'permit', saved });" — there is no in-flight guard and no dedup key in this file, so two taps in the request window re-send the same payload computed from the unchanged detail.is_saved prop, and whether a repeat is a no-op or a second toggle depends on useSaveLead (cannot see) — disable the CTA while the mutation is pending and let the hook key the write on leadId.
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:63 "}, [detail?.lead_id, detail?.lead_type]);" — the only dedup for the counted lead_detail_viewed event is the effect deps, so leaving and re-entering the same lead, or re-opening it from a push notification cold boot, fires the event again for the same lead — put a per-lead key in the analytics call so a repeat is a no-op.
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:88 "(costEstimated !== null || cost.tier !== null || costRangeLow !== null || costRangeHigh !== null);" — the guard tests each leaf against null only, so a response that omits tier (undefined) passes it and renders an empty "Cost Estimate" card reading "Cost not disclosed", which the comment above says this guard exists to prevent — use != null per leaf.
+REJECT — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — an absent field looks like it could fall through into a rendered section — the ?? null plus the finite check make an old or cached response omit the section instead of converting modeled_gfa_sqm, which is the intended degrade-safe path.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (fetch/parse/stale), empty (absent cost, absent sqft, absent score, no-data body), retry (3-attempt bound asserted in useLeadDetail.test.ts, exhausted then no in-screen retry), double-submit (save CTA), counted event (lead_detail_viewed), degrade-safe (absent sqft, envelope fallback label)
+Unguarded: 2
+
+---
+⏱  74224ms (74.2s)
+📊 Tokens — total: 44738, input: 33712, output: 11026, reasoning: 10123

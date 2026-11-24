@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:16:36.972Z file_sha256=fd4a451d3f91ab3f30aa3752b654e761ab332dd2c902b7f9bc6f87c59ce2d5e4 prompt_sha256=5bc8081439b0577b1bcf8277dc0e422e783a94299d8059acf410c5565ffc0ae6
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p10.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised; see DEFER lines below.
+
+DEFER severity=MED — spec99 §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with: - `Sentry.addBreadcrumb({ category: 'query', message: 'invalidate', data: { key } })` for non-trivial invalidations" — NONE — no implementation evidence anywhere in this chunk, and §9.21 records the gap in the spec's own words: "that case is `it.skip` with `pendingReason` until a follow-up WF3 wires the telemetry" — wire the breadcrumb plus the DEV-only `track('query_invalidate', { key })` in one query-client wrapper and flip the skipped mandate case on.
+
+DEFER severity=LOW — spec99 §8.2 "Each branch in §5.3 (5 + 4.5 manufacturer = 6 branches) MUST have a Jest test verifying its specific (segments + profile + error) input combination produces the correct `router.replace` call." — NONE — no `mobile/__tests__/authGate.test.ts` exists at HEAD and §9.6 is still listed as P1 "Add AuthGate router branch tests (9 arms per §5.3)", so §8.2 is unmet spec-wide — land §9.6 and reconcile the 6-branch vs 9-arm count in the same amendment.
+
+DEFER severity=LOW — spec99 §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/app/(app)/parcel-tool/[parcelId].tsx:31 "const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });" — this report-screen gate is the incident-#3 class gate named by task-373 acceptance, and none of this chunk's four test files toggles `isFetching` against it (the rest of the change, other chunks, cannot see) — add the gate-stability test beside the report screen tests and quote `reportScreenState` output for isFetching true and false.
+
+DEFER severity=NIT — spec99 §8.5 "assert that `signOut()` in `mobile/src/store/authStore.ts` calls `use<Name>Store.getState().reset()` for every discovered store (or that the store is explicitly excluded with a `// signOut-exempt: <reason>` comment)" — mobile/app/(app)/parcel-tool/index.tsx:36 "const recent = useRecentSearchesStore((s) => s.recent);" — a store read enters this screen while neither `recentSearchesStore` nor `storeReset.coverage.test.ts` is in the pasted material, so reset coverage cannot be seen — verify the store has a reset call or a `signOut-exempt` comment before close-out.
+
+REJECT — spec99 §7.3 — that the parcel-tool screens `router.push` / `router.replace` with no `track('route_decision', ...)` — the clause scopes DEV route telemetry to "every `router.replace` / `router.push` from AuthGate or AppLayout" and forbids production telemetry on high-frequency arms, so silence on the Lookup, map, report and semi pages is the correct reading.
+
+REJECT — spec99 §7.6 — that no funnel event fires from these screens — the canonical sites enumerated are `[lead].tsx`, `[flight-job].tsx`, `useSaveLead.ts`, `PaywallScreen.tsx` and `flight-board.tsx`, none in this chunk, and index.tsx:12 records the MaxBLD pages as a separate product with "nothing here may reference a lead-gen concept".
+
+MET — spec99 §7.6 (PII boundary) — mobile/app/(app)/parcel-tool/index.tsx:12 — the screen states the query "is never logged or tracked", and no `track(` call exists in any of the eight reviewed files, so no non-whitelisted key can reach PostHog.
+
+MET — spec99 §7.3 (production frequency split) — mobile/app/(app)/parcel-tool/disambiguate.tsx:37 — the map page's push helper adds no production telemetry, consistent with the rule that only the four listed low-frequency routing events emit in production.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+Rules met: none
+
+---
+⏱  71956ms (72.0s)
+📊 Tokens — total: 42725, input: 26562, output: 16163, reasoning: 15178

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T02:41:36.257Z file_sha256=a586d4d552066d95624997506ade1b3f45c74e932027d4fba766bfe57431a502 prompt_sha256=8c250446b26a306486d62188be82a3f6f21df15364a1ae6ddb74eb8eb0803390
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/lib/parcels/report-compute.ts:66 "switches: (typeof r.switches === 'string' ? JSON.parse(r.switches) : r.switches ?? null)" — one core row whose switches text is not valid JSON throws out of computeCustomerPageResponse and the whole customer page becomes a 500, whereas the stored path (project.ts: Array.isArray(r.switches) ? r.switches : []) treats the same value as no readings and shows the dash, so the computed path is the less safe of the two — wrap the parse in try/catch, fall back to null, so one bad row costs a dash, not the page.
+
+BUG severity=MED — src/lib/parcels/report-compute.ts:33 "const UNITS_SQL = 'SELECT unit_key, unit_id FROM bylaw_resolution_units';" — each miss re-reads both whole role tables plus resolveConfig because there is no cache (the same file: config and lookups are read per request), so a phone re-sending a failed lookup up to maxbld_page_lookup_retry_max (3, scripts/seeds/logic_variables.json) triples that load on an already-degraded DB and no per-attempt bound exists — memoize config, units and texts per process, or add a statement timeout, so a retry is a repeat read, not a third full scan.
+
+BUG severity=MED — src/lib/admin/parcel-lookup.ts:283 "WHERE ap.linear_name_normalized LIKE $1" — the bind is streetName + '%' with no escape, so a query whose street token holds % or _ (the unlinked read below guards exactly this case with the /[%_]/ test on streetName) matches up to 10 arbitrary address points and returns them as candidates for the typed address — escape % and _ in the bind, or apply the same guard, before the LIKE.
+
+DEFER severity=LOW — src/lib/parcels/report-page.ts:61 "logWarn(TAG, 'scenario table absent: every lot is a miss', { reason: not_stored_reason })" — the warn fires on every customer request while parcel_maxbld_scenarios is absent, with no once-per-process flag or dedup key, so a sustained absence writes one line per lookup — log once per process (or once per interval).
+
+DEFER severity=LOW — src/lib/parcels/report-page.ts:58 "const stored = await readStoredPage(pool, parcelRef);" — there is no try/catch here, so a thrown query leaves the customer 500 with no stage or parcel log from this module, while the admin twin (src/lib/admin/report-preview-live/stored-page.ts) calls logError before rethrowing — catch, logError with the parcel ref, rethrow.
+
+DEFER severity=NIT — src/lib/parcels/report-page.ts:41 "switch (stored.lineage.freshness.verdict) {" — the switch has no default, so a verdict that is not one of the four literals falls out and the function returns undefined while declared Json | null, and a caller testing only !== null would pass undefined on to buildPage — add default: return null.
+
+REJECT — src/lib/parcels/report-compute.ts:9 "Nothing is written (the record write is ST.P1, task-265)." — two taps, two tabs or a re-sent request look like a double-submit risk — there is no write and no counted event on either the stored read or the compute, so a repeat is a pure re-read and there is no key to dedup.
+
+REJECT — src/lib/admin/report-preview-live/stored-page.ts:47 "return false;" — a failed switch read could be taken as on and read lot data — the surrounding catch logs the error and returns off, so a failure on logic_variables fails the preview closed and reads no lot data.
+
+VERDICT: PASS on error-path safety
+Paths walked: switch read error (off), invalid lookup id, missing parcel, absent scenario table, no rows, null Layer 2 stamp, verdict mapping (current, gated, out_of_date, not_stored), compute gate off, no batch row, wrong lot returned, unparseable switches, formatter refusals (non-finite, negative, non-integer int, unknown rule), pinned-setting throws at load, resolver empty street, exact miss, typeahead miss, wildcard input, unlinked pin with null lat/lng, fuzzy variable missing, null neighbourhood for CoA, phone retry and double-submit.   Unguarded: 2 (the customer read module and the compute entry carry no local catch or logError; the route's catch is not in the material)
+
+---
+⏱  118406ms (118.4s)
+📊 Tokens — total: 57770, input: 32803, output: 24967, reasoning: 23947

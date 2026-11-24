@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:18:33.048Z file_sha256=4a2186cf07d2a24187e41d97b79e2471a9f8c4d728b2bb5ff0cc2de81beb84f3 prompt_sha256=e4da328f26f380238a954bb1fc2f49dc14fd94154b07a872e0931bc213b1c236
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p15.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §6.5 "Gate conditions MUST be stable signals ... never gate on `isFetching`" and "Implicit / grandfathered carve-outs are BANNED, reviewers MUST reject any unenumerated carve-out" — parcelSearchMatch.ts:351 "showMiss: outcome === 'no_match' && !isFetching && error == null," — the miss block is a render branch controlled by isFetching, a signal that toggles on every background refetch, and no carve-out for this file is enumerated in §6.5, so the not-found state can be removed and re-shown with no intentional state transition; compute showMiss from outcome and error only, or from a stable per-query resolved flag, so a refetch cannot unrender the miss.
+
+MET — §2.1 "The `['user-profile']` TanStack query is excluded from MMKV persistence" — persistFilter.ts:28 — `const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];` keeps the PII query out of Layer 4a and adds the count query as §4 B1's registry row requires.
+MET — §4 B1 registry "not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)" — persistFilter.ts:30-31 — `!NOT_PERSISTED.includes(String(query.queryKey[0]))` implements exactly the predicate the registry entry names.
+MET — §4 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it" — schemas.ts:448 — `ParcelToolEntitlementSchema` mirrors the entitlement contract, every field nullable, so the new read has a declared parse boundary.
+MET — §4 B1 "a display, never a gate" — parcelSearchMatch.ts:357 — `...(args.entitlement ? { entitlement: {...} } : {})` carries the served count as display data only, no condition branches on it.
+MET — §3.4c "`recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3)" — parcelSearchMatch.ts:353 — `recent: [...args.recent]` reads the declared reader field and copies it without writing to the store.
+
+REJECT — §5.1 "Other layouts ... MUST NOT have routing `useEffect`s" — that parcelSearchMatch.ts decides navigation via `parcelSearchRoute` and `route` — §5.1 governs the two gate boundaries (AuthGate, AppLayout) and layout-level effects; this helper returns a route string for in-stack result navigation and adds no layout effect.
+REJECT — §3 "Adding a field to the mobile app requires adding a row here" — that the new `resolution`, `map`, `page`, `lotForm` and entitlement fields have no §3.1 row — §3.1 is the Server-Authoritative Profile matrix (Spec 95 §6), and §4 B1's `['parcel-entitlement']` registry row already declares this read as a display that is not persisted.
+REJECT — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — the retained pre-MF-53 description in the parcelSearchMatch.ts header — parcelSearchMatch.ts:24 states "The text below describes the payload BEFORE MF-53 ... Prior text kept", so it is a dated record of the old payload, not an unlabelled stale claim.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+Rules met: none
+
+---
+⏱  90618ms (90.6s)
+📊 Tokens — total: 50562, input: 31172, output: 19390, reasoning: 18607

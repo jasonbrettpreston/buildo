@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:12.841Z file_sha256=ea9e129f20ddf4adfdc48bb3ca52e49a9cda3daaa5872b2a8b6ecff65001a254 prompt_sha256=823ae4835651054123eaa6d1fb0b114a67f67059076fee87066f760112b60120
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — SCORECARD-G0..G9 "rule ids `G0`…`G9` carry these aliases." — src/tests/parcel-tool-gate.logic.test.ts:53 "it('G7 RED plant: a route that writes its own status test again is caught', () => {" — the file borrows rule ids G1..G7 as case labels for the tool-gate helper, so a lock counted under G7 credits scorecard G7 (test adequacy) and G1..G6 credit gates they never assert — rename the labels (for example PT-G1..PT-G7) so no scorecard rule id is reused.
+
+DEFER severity=MED — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/massing.logic.test.ts:396 "it('B13: the per-batch work is ONE indexed spatial join, never a query per parcel', () => {" — the re-homed lock names B13, an incident id, and no rule id or declared alias, and no pasted clause declares B13 an alias (the rule map is not in the material, cannot see) — name the declared rule id in the lock title or register B13 as an alias before merge.
+
+DEFER severity=MED — Intent Ledger "one of the closed `DISPOSITION_VOCAB` ... knowingly-retired. Scored by scorecard G3; G-2 reads it." — src/tests/massing.logic.test.ts:419 "it('B13: the in-memory grid and its haversine are KNOWINGLY RETIRED and may not return (A-8 override)', () => {" — the retirement disposition is carried by a test name and an "A-8 override" that appears in no pasted clause, while the glossary puts that disposition in the Intent Ledger (ledger not in the material, cannot see) — cite the pasted ruling id in the title and add the knowingly-retired ledger row that scorecard G3 reads.
+
+REJECT — five words (gate V) — the five files never print STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE — gate V derives each word from the mapped gates in step-validate, not from a line a lock must carry.
+
+REJECT — RE-FREEZE #N — the tests read descriptor fields guards.requires, write_discipline.class and outputs.writes[].retract, which look like vocabulary additions — this chunk adds no field to step.schema.json or template-freeze.json, it reads fields already in the frozen vocabulary.
+
+REJECT — lock definition ("run by `npm test`") — the parcel-lookup-gate file mocks the DB and is named .infra.test.ts, which the glossary does not define — the glossary names lock and lock-db only, so an infra-suffixed mocked test is outside neither definition and owes no rename from the pasted text.
+
+MET — task-334 (meter counts only when a report is produced) — src/tests/parcel-lookup-gate.infra.test.ts:1 — the SRCH.METER block asserts no report produced means no meter read, no insert and no 500 on both the q and the parcelId entrance, and one produced report counts once with "one row keyed on the lot, log meter counted".
+
+MET — task-360 (unsure lot's page held until the semi answer) — src/tests/parcel-lookup-gate.infra.test.ts:1 — an unsure lot is served with page null, neither the stored read nor compute runs, meter log reads semi_pending, and a clear lot still reaches the compute.
+
+MET — task-351 (Toronto-time reset label) — src/tests/parcel-reset-label.logic.test.ts:1 — asserts the 02:00Z and 05:00Z edges, the December and February month ends, all twelve month abbreviations including Sep, and identical output under TZ=UTC and TZ=Pacific/Auckland child processes.
+
+MET — task-383 (one shared parcel-tool gate helper for lookup and lot-size) — src/tests/parcel-tool-gate.logic.test.ts:52 — "lookup and lot-size call parcelToolAccess and hold no ACTIVE_SUBSCRIPTION_STATUSES test; the helper holds it", plus the G5 assertion that a thrown read propagates.
+
+MET — task-319 (semi answer wiring) — src/tests/parcel-lookup-gate.infra.test.ts:1 — semi=answered on an unsure lot counts once with a produced report, counts nothing without one, is already_counted on re-open, and is 400 for any other value.
+
+MET — lock ("a test under `src/tests/` ... that asserts it") — src/tests/massing.logic.test.ts:410 — the re-homed blocks assert by expectation over generated SQL and the compute module rather than resting on the title text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+Rules met: none
+
+---
+⏱  93817ms (93.8s)
+📊 Tokens — total: 55684, input: 32932, output: 22752, reasoning: 21655

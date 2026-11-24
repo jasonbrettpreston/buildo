@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:22:57.689Z file_sha256=4e44829296a79a25cf9b1d4b99a7f1876ab415c990a712bfdf7e7db77927bbe4 prompt_sha256=1943aaf1aec7a21be373794ef421b81a2984d828bbc106ef977499166218cdd9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/backlog-brief.logic.test.ts:5 "import { backlog, makeProject, mk, script } from './helpers';" — fixtures are built through ./helpers, not the `src/tests/factories.ts` module the clause names, and cannot see whether helpers re-exports it — confirm helpers re-exports the typed factories, or import from src/tests/factories.ts directly, so the named factory source is the one used.
+
+MET — 2.3 Assumption Documentation — scripts/deepseek-review.js:81 "const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;" — stream chunk fields are guarded, usage access uses optional chaining (`usage.completion_tokens_details?.reasoning_tokens`), instruction split uses `??`, and no new file uses a non-null assertion.
+
+MET — 8.2 TypeScript Target Gotchas — src/tests/backlog/backlog-brief.logic.test.ts:40 "expect(r.stdout).toMatch(/^Rule:/m);" — no regex `s` flag appears in the new files, multiline matching uses `[\s\S]` (backlog-brief-context.logic.test.ts), and no `process.env.NODE_ENV = 'test'` assignment.
+
+MET — 4.3 Frontend Security — scripts/deepseek-review.js:48 "apiKey: process.env.DEEPSEEK_API_KEY," — the key is read from the environment in a Node CLI script, not embedded in a `use client` component.
+
+REJECT — 9.4 Pipeline SDK Mandate — accused of not using pipeline.run/withTransaction/emitSummary and of bare console.error in scripts/*.js — the clause's SDK duties are DB infrastructure (createPool, transactions, reads/writes/meta), this CLI does no DB I/O, so it is not a pipeline script despite its path.
+
+REJECT — 6.1 logError Mandate — accused of bare console.error — the clause bans it "in API routes or lib modules"; scripts/deepseek-review.js is a terminal CLI, not an API route or src/lib module.
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — accused of omitting infra unhappy-path tests — the mandate binds `.infra.test.ts`; these are `.logic.test.ts`, and they do exercise error exits (backlog-brief-context.logic.test.ts "T2 plant: a board with no backlog/decisions exits 1").
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  130290ms (130.3s)
+📊 Tokens — total: 55627, input: 25792, output: 29835, reasoning: 29219

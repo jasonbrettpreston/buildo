@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:57:49.797Z file_sha256=4a71c2aec7b6af94f9be57defdeeac0c0713dab4d13eecb455d9454d880fbca7 prompt_sha256=f7aa8e75352504a55aee0a6120c3cff34841352206a02f6d94e30860049002a1
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 13.5 Feature Flags "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "flag": "none" — a newly built user-facing page declares no feature flag and the material records no operator ruling exempting it — declare the flag in guards/measured_gate or paste the operator ruling that exempts mobile pages.
+DEFER severity=MED — 1.3 Mobile Front-End Patterns & UX "Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "dark_mode": "hardcoded" — the page declares a hardcoded colour scheme, matching the recorded DARK_MAP_STYLE deviation, so the system scheme is not respected — bind the map style to the system scheme token instead of the hardcoded constant, or record why the map is exempt.
+DEFER severity=LOW — 11 Plan Compliance Checklist, Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "min": 5, "max": 100 — the two neighbour limits restate bounds as literals while citing scripts/seeds/logic_variables.json as their source, so drift is unguarded — cite the contracts.json key for both bounds instead of repeating the numbers.
+DEFER severity=LOW — 4.3 Frontend Security "User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "search.chip.label": "Search {query}" — the raw search term is interpolated into a rendered label and nothing pasted shows an escaping path — state in the descriptor that {query} binds as a React text node (never HTML), so the untrusted-input rule is visibly met.
+MET — 1.1 Mobile-First UI Mandate — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "touch_target_min_px": 44 — the 44px touch target floor is declared for the page.
+MET — 12.2 Server State (TanStack Query) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "staleTime: 60_000" — reads go through useParcelSearch with a declared query key, no useEffect fetch.
+MET — 12.6 List Virtualization — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "recycling": "none — at most 10 lots by the contract" — the list is bounded below the 50-item virtualization threshold.
+MET — 4.3 Frontend Security — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "map.lots[].parcelId" — the consumed field set is an explicit 16-field whitelist, not a whole-row projection.
+REJECT — 10.2 Boundary Rules During Frontend Phase — modifying files under scripts/ — the two files are the surface-catalogue records for this page, not pipeline scripts or migrations, and the descriptors are the programme's declared storage for surfaces.
+REJECT — 13.1 Product Telemetry (PostHog) — a page with interactive handlers emitting no captureEvent — the mandatory-coverage rule is scoped to `src/features/leads/`, which this mobile surface is not.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  45618ms (45.6s)
+📊 Tokens — total: 28098, input: 22736, output: 5362, reasoning: 4457

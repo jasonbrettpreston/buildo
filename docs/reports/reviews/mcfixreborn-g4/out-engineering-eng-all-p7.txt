@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:22:57.687Z file_sha256=28603954f4b7589be978d9944dfd7c0a259fc085ccf8e6f25408d73d2ad0bfb0 prompt_sha256=1bc5d11d5ee251463b115def3ce0fe5943acabb782d811c0bd9c2ef3ba6d70d3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for `null` or `undefined`." — scripts/analysis/rule-lists.mjs:134 "if (typeof l.generated_by !== 'string' || !l.generated_by) bad.push(...)" — the loop at :132 "for (const [id, l] of Object.entries(table.lists ?? {}))" dereferences each JSON value with no null guard, and :140 "for (const row of table.rows ?? []) {" does the same for rows, so a single `null` entry in a hand-edited rule-lists.json makes validateTable throw a TypeError and print a stack instead of the problem list it exists to print — add "if (!l || typeof l !== 'object') { bad.push(`list ${id}: not an object`); continue; }" before the reads, and the same guard for each row.
+
+DEFER severity=LOW — 11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — scripts/analysis/rule-lists.mjs:29 "const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS" — the 120,000 character call bound (RR-0439) is held in step with the review tool by a comment only, so a change to the tool's own limit silently leaves lens-input packing to a stale bound with no failure — read the limit from the tool's module (or one shared constant) instead of re-declaring the literal.
+
+DEFER severity=LOW — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/rule-lists.mjs:38 "export function splitDiff(text) {" — splitDiff, splitUnits/splitFlat and the partsFor packing are pure derivation logic and no logic test is in this chunk (cannot see whether scripts/analysis/rule-lists.logic.test.ts exists) — confirm a logic test pins diff header parsing, the chunk packing and the split-flat refusal.
+
+MET — 8.2 TypeScript Target Gotchas — scripts/analysis/rule-lists.mjs:222 — the comment stripper uses "[\s\S]" in "/\/\*[\s\S]*?\*\//g" rather than the ES2018 dotAll `s` flag, as the clause requires.
+
+MET — 5.5 Test-Layer Map — scripts/analysis/rule-lists.mjs:856 — "if (have !== want) die(1," regenerates the page into a string and fails when the committed docs/reports/generated/rule-lists-by-kind.md differs, the generated-doc drift guard the parity battery names.
+
+REJECT — 9.4 Pipeline SDK Mandate — the new script calls no pipeline.run/withTransaction/emitSummary and instantiates no Pool — the clause binds pipeline scripts (scripts/*.js) that write to the database; this is an analysis CLI under scripts/analysis that touches no database and only spawns git and node.
+
+REJECT — 4.4 API Design for Multi-App Consumption — the resolve command prints an ad-hoc JSON object rather than a {data, error, meta} envelope — the clause binds API routes under src/app/api; this is a CLI whose consumers are backlog-lane.mjs and check-lane-close.mjs, not an HTTP client.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  159731ms (159.7s)
+📊 Tokens — total: 56704, input: 32555, output: 24149, reasoning: 23370

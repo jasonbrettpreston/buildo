@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:55.584Z file_sha256=ec8327766baada71e071dbfbfde07329a61535d1f76b5abe0757b42123e7f0e1 prompt_sha256=508be07367807aa574100e40dc8545abfc6cee2757860ccc92104f09ff162a92
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it." — src/tests/backlog/backlog-brief-context.logic.test.ts:95 "expect(Buffer.byteLength(s)).toBeLessThanOrEqual(120 * 1024 + 4096);" — the "Document sections" block alone is allowed 126,976 bytes and is printed as "Cap: 120 KB in total, 12 KB per block" (:94), i.e. the pack on its own spends the whole 120,000-character call budget before the persona, the rule list, the task sections, the decisions and the review notes are added, so the call cap is not met at that pack size — set the pack cap in characters well under 120,000 and assert the assembled prompt length, not one section, against 120,000.
+
+DEFER severity=MED — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:76 "const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };" — a caller that omits plan or specs has the literal text "undefined" inserted into the prompt, while the same file states at :60 "Missing values are NOT silently substituted", so safe substitution holds only for values that are present — default PLAN and SPECS to the caller's literal fallback or throw before substituting.
+
+DEFER severity=LOW — task-432 "INPUTS.4-Fresh-review-context-every-round-the-reviewer-sees-the-rulings-and-task-state-as-they-are-at-that-round" — scripts/lib/review-template.js:138 "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — count plus one recomputes a round name that already exists whenever the numbering has a gap (r1 and r3 present yields r3 again), so a kept round file is overwritten, against backlog-brief-context.logic.test.ts:185 "a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)" — take max(N) + 1 over the file names, not the count.
+
+DEFER severity=LOW — task-432 "Fresh-review-context-every-round-the-reviewer-sees-the-rulings-and-task-state-as-they-are-at-that-round" — src/tests/backlog/backlog-brief-context.logic.test.ts:212 "const r = brief(d, task, ['--board', b]); expect(r.status, r.stderr).toBe(0);" — the fresh-rulings path is evidenced in this chunk only by test assertions; scripts/analysis/backlog-brief.mjs is not pasted, cannot see its --board handling, so the clause is proven by a test here and not by the code under review — confirm the board-only decision and the exit-1-on-empty-board paths in the chunk that holds backlog-brief.mjs.
+
+MET — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:77 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — one pass with a function replacer, so an inserted value is literal and is never re-scanned for tokens.
+
+MET — task-375 A2, the reviewer's context is the task — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the five headings are exactly the headings of the pasted review context block, in order.
+
+MET — plan-protocol dated note 1 (operator "yes to all"), "the board is the plan" — src/tests/backlog/backlog-brief-context.logic.test.ts:227 "expect(inForce(d, task)).not.toContain('RR-0501');" — with --board a ruling held only in the root checkout is excluded, so the rulings come from the board.
+
+REJECT — plan-protocol dated note 2 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — the change is accused of removing the plan lens from a lane — the note puts the nine-seat panel on the whole-increment plan review and the Spec 08 section 7 set on the lane, and backlog-brief.logic.test.ts:74 keeps the lane's output lens and its separate GROUNDER.md while removing only the plan lens.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+Rules met: none
+
+---
+⏱  144585ms (144.6s)
+📊 Tokens — total: 49772, input: 14530, output: 35242, reasoning: 34203

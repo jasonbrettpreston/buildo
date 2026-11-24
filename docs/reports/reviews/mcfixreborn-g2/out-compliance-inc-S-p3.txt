@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:27:35.343Z file_sha256=b80423332a1cb3f11e4b268269f5989ed6bf518137ead7892669393654d616e9 prompt_sha256=16743b782bea858554668839f79438e714c76777f91ae87451c1f98c88014149
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — A.4 "A Search page · Typed street direction (E/W/N/S) kept in the match" — src/tests/search-parser-guard.logic.test.ts "it('two lots on the other side only (no row on the typed side): unchanged, the map as today'" with "expect(out.resolution).toBe('multi_parcel');" — with no row on the typed side the guard never fires, so '482 Richmond St E' serves the two W lots, while the same file's label-1 test treats the other side as a candidates list, so the direction is kept on one path and dropped on the other — run the other-side check before returning multi_parcel, returning the candidates list or a typed-side notice instead.
+DEFER severity=LOW — A.5 "A Search page · Unit number typed after the address" — src/tests/search-parser-guard.logic.test.ts "expect(parseFreeTextAddress('5 Unit 4')).toEqual({ num: '5', streetName: 'UNIT 4' });" — a unit token typed after a house number is not stripped and becomes the street name — the clause names unit input after the address, so strip the trailing unit token when a house number precedes it, or say in the test why this shape is out of scope.
+DEFER severity=LOW — D.1 "D Semi question page · Page shown only when the lot is unsure (before the report)" — src/tests/search-routing.logic.test.ts "expect(mount).toContain('needsSemiQuestion(data');" plus the test-local copy "const asksSemi = (d: Data): boolean => d.lotForm?.unsure === true;" — the clause is locked by a substring in the mount source and a re-typed copy of the decision, not by the route actually taken — assert the redirect target for unsure and non-unsure lots, or import the real needsSemiQuestion so a divergence fails.
+MET — C.14 — src/tests/search-routing.logic.test.ts "expect(route).toBe(`${BASE}/disambiguate?q=${encodeURIComponent('26 Kenneth Ave')}&kind=multi_parcel`);" — one printed address over two lots opens the lot map, and the two-different-addresses case returns the candidates list with route null.
+MET — G.1 — src/tests/search-routing.logic.test.ts "expect(route).toBe(`${BASE}/5293897`);" — the plain one-lot case goes straight to the report route with no intermediate page.
+MET — B.1 — src/tests/search-routing.logic.test.ts "expect(route).toBeNull(); // the list renders on the search page itself" — the unclear street-only address stays a candidates list in place.
+MET — B.6 — src/tests/search-routing.logic.test.ts "expect(route).toBe(`${BASE}/disambiguate?q=${encodeURIComponent('76R Abbott Ave')}&kind=unlinked`);" — the no-lot-linked address reaches the unlinked state rather than a unique match.
+MET — D.1 — src/tests/search-routing.logic.test.ts "expect(asksSemi(data)).toBe(false);" on the clear semi and the absent lot form — the semi question is asked only for an unsure lot.
+MET — D.2 — src/tests/search-routing.logic.test.ts "expect(data.lotForm).toEqual({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });" — detected, basis and unsure ride on the lookup hit.
+
+VERDICT: PASS
+Clauses checked: 10   Unmet: 0
+Rules met: A.4, A.5, B.1, B.6, D.1, D.2, G.1, C.14
+
+---
+⏱  216725ms (216.7s)
+📊 Tokens — total: 59039, input: 33445, output: 25594, reasoning: 24767

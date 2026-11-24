@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:20:44.330Z file_sha256=425b0ccd31828916696e51e18d5d33a5701450455c5fd05fc619c47c69ae1784 prompt_sha256=34188a2370fdfbeb8a5e204e6a95f8af332dae7c2764629847e48848538c13d7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p16.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 12.12 Property-Based Tests "MUST have at least one `fast-check` property test asserting the invariant" — src/tests/backlog/rule-lists.logic.test.ts:327 "const max = 12000;" (with line 333 "for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);") — the size-budget arithmetic of `rule-lists.mjs` (chunk room, part packing, `2 * t.length + 80` bound, part counts) is a pure numeric invariant that is only asserted over fixed fixtures (5 named files, 300/141 generated paths), never by a `fast-check` property, and no `src/tests/property/rule-lists.property.test.ts` is in view — add a property test that generates arbitrary file lists and materials and asserts every part is within `--max` and that the joined parts equal the input, shrinking on failure.
+
+MET — 14. The Prevention Loop — src/tests/backlog/rule-lists.logic.test.ts:1 — the SPEC LINK names the spec AND the section ("Spec 08 section 7 rule 4 and section 5.3 (08_agents.md); 00_engineering_standards.md section 14").
+MET — 12.12 Property-Based Tests — src/tests/backlog/rule-lists.logic.test.ts:110 "expect(ids(a).sort()).toEqual(['first', 'inc-F']);" — explicit edge-case and happy-path example tests are present as the clause requires alongside the property test.
+MET — 13.3 Backend Structured Logging — src/tests/backlog/rule-lists.logic.test.ts:75 "console.log(`ATTACK 12: RESOLVES: ...`)" — the file has no catch blocks and no bare `console.error`, so the `logError` mandate and the console.error ban are not tripped.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 20   Unmet: 1 (deferred, MED)
+
+---
+⏱  29128ms (29.1s)
+📊 Tokens — total: 38690, input: 32989, output: 5701, reasoning: 5256

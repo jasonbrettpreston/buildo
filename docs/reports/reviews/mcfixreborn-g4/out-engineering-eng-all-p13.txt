@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:19:38.512Z file_sha256=991fd11ffbda51f170f1d4af3751add03d284d7e5e00042c37a4e141f66327ee prompt_sha256=a28c679539865e86e85971ce8cfd3443d57ad947baf76aaadec5d8fe09dae591
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists-table.logic.test.ts:25 "expect(table().rows.find((r) => r.id === 'mobile')!.lists, 'mobile').toEqual(expect.arrayContaining(['eng-front', 'eng-shared']));" — six non-null assertions on unchecked lookups with no inline justification, same pattern at :38 "const t = table().lists['policy-124-s2-s5']!;", :44 and :49 "const row = table().rows.find(...)!;", and later "rows[0]!.lists" and "(l)!.sections!", so a missing row throws a TypeError instead of failing the pin with a message — replace each ! with an explicit toBeDefined() guard carrying a message, or add the required inline comment stating the prior validation
+DEFER severity=LOW — 5.2 Test File Pattern "| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic |" vs "| `*.infra.test.ts` | API routes, DB queries, external calls |" — src/tests/backlog/rule-lists-table.logic.test.ts:14 "const r = script(CLI, ['resolve', '--files', files, '--type', type, '--letter', 'S']);" — both files are named logic tests but the bulk of their assertions spawn the rule-lists CLI and run git in temp trees, which the layer table assigns to .infra.test.ts — low blast radius because both layers run under `npm run test`, file the CLI and git cases under the infra layer
+DEFER severity=LOW — 5.1 Typed Factories Only "You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/rule-lists-table.logic.test.ts:97 "const entry = (scope: string, file: string, id = file): CensusEntry => ({ identity: { id }, programme: { scope }, evidence: { files: [`${file}:1`] } });" — the census fixture builder is defined locally in the test instead of imported from the shared factories module — it is typed and used only as CLI input, so the injection risk the rule targets is absent, move it behind src/tests/factories.ts when the module next grows
+MET — 2.3 — src/tests/backlog/rule-lists-table.logic.test.ts:80 — census scope access is guarded with "e.programme?.scope ?? ''" and evidence with "e.evidence?.files ?? []" before use
+MET — 5.5 — src/tests/backlog/rule-lists-table.logic.test.ts:105 — "expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missing: [], stale: [] });" is the row-to-census parity guard the layer map requires for a dual surface
+MET — 5.3 — src/tests/backlog/rule-lists-table.logic.test.ts:109 — each pin ships a planted-defect RED case ("control, PLANTED DEFECTS: a census entry in scope with its route missing from the row fails")
+MET — 8.2 — src/tests/backlog/rule-lists-table.logic.test.ts:81 — no regex dotAll flag is used, the matcher is written as "/^src\\/app\\/api\\/.+\\/route\\.ts$/" per the ES2017 constraint
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  65735ms (65.7s)
+📊 Tokens — total: 37199, input: 21279, output: 15920, reasoning: 15094

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:26:07.621Z file_sha256=5d26b4292ab13cf6b7f206f9987dbbe5741c199b0289ae11dc0290b7c3599247 prompt_sha256=4f124db2b799ef49d955ccbd75b5c21f1e765fa7212f77b540abd4d53d1abc17
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p5.txt (model: deepseek-reasoner)
+
+BUG severity=none, see DEFER lines below.
+
+DEFER severity=MED — Project objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/census/contracts.json:22003 "It reads 9 tables" and scripts/surfaces/_schema/census/mobile-product.json @@ -6772,6 +6777,20 @@ "table": "parcel_buildings", "columns": ["parcel_id"], "producing_steps": ["link_massing"] — the lookup contract's data_story still enumerates 9 tables without parcel_buildings while the same change declares parcel_buildings a read behind the new map.lots[].hasFootprint field, so the two census mirrors of one read path disagree, accuracy unmet — add parcel_buildings (with the SRCH.LOTCARD note) to the lookup contract's data_story and reads, or state there that the footprint read belongs to the lot-map lib only.
+
+DEFER severity=MED — Project objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/census/contracts.json:22003 "Its response is an explicit pick-by-name projection of 24 fields" and @@ -22126,6 +22126,8 @@ "frontageStreet", "hasFootprint" — the count sentence is left untouched in the same hunk that adds two names to that entry's field_whitelist, so the stated field count is stale (the full whitelist is not visible to me, cannot see) and the record's accuracy clause is unmet — recount the whitelist and update the number, or delete the fixed count.
+
+DEFER severity=LOW — Project objectives "accuracy" — mobile/src/lib/semiQuestion.ts:14 "It reads the SAME lookup entry the report reads (['parcel-lookup', parcelId]), so no extra request." and scripts/analysis/bylaw-validation/coa-expected/prereg-MF-93-1.json "$comment": "one optional lookup flag semi=answered declared in the lookup contract, read by the route and sent by the semi page at Continue" — Continue re-reads the lookup with semi=answered, so "no extra request" is true only at open and the comment overstates as written — narrow it to "no extra request at open; Continue re-reads with semi=answered".
+
+MET — Increment objectives "the semi calculation stays in Increment 7 (7.25)" — mobile/src/lib/semiQuestion.ts:80 "route: selected === null ? null : reportRouteAfterAnswer(parcelId, selected)" — the page asks and routes only, no semi maths is added.
+
+MET — Increment objectives "the search identifies ... a possible semi lot, and wires each to the report" — mobile/src/lib/semiQuestion.ts:73 "} else if (data.lotForm?.unsure === true) state = 'ask';" — the unsure lot is caught on the one question page and wired to the report through the answer.
+
+MET — Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built" — scripts/surfaces/_schema/bindings.json "@@ ... "surface": "mobile_parcel_semi_question", "path": "mobile/app/(app)/parcel-tool/semi-question.tsx"" — the search and semi pages are listed as mounts and modules against existing pages, not rebuilt.
+
+MET — Project objectives "keep it simple; no scope creep" — mobile/src/lib/sliceConfig.ts:19 "export function sliceNumber(slice: SliceNumbers, key: string): number {" — one 27 line reader applies the declared bounds for every page setting, no per-page duplicate.
+
+REJECT — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — scripts/analysis/lot-map-data-check.mjs is accused of being outside the designed elements — its own header cites the card (SRCH.LOTCARD, task-336, AC 1) and it is read only, rehearsal-stack only, so it supports designed element C (lot confusion, lot map).
+
+REJECT — Project objectives "we need one plan - we can only execute one plan" — the two coa-expected prereg files plus the census edits are accused of being several plans — each prereg is a pre-registration of expected scorer moves tied to one named card (MF-92, MF-93), not a competing execution plan.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+Rules met: none
+
+---
+⏱  48953ms (49.0s)
+📊 Tokens — total: 38946, input: 29226, output: 9720, reasoning: 8708

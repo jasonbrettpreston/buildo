@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:35.203Z file_sha256=cee749f81daa3129a6d601fd339c38496a2ac90a7e4d2c8ed2418c792160449e prompt_sha256=aff0505112cfedaa15b932e9b27b6a7ceb2606aef03429f63df2c752d0d3cdc5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — TKT-1 dated note 2026-11-21 "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS ... and the close check recomputes each output's prompt hash with the committed context" — scripts/deepseek-review.js:275 "const result = await callDeepSeek(prompt, systemInstruction);" (cmdReviewPlan template mode; lensHeader is a local const at :161 inside cmdReviewFile and `plan` never reads --context, :382) — a plan-altitude lens run on the documented `plan --template` route (help, :325 and :341) emits no REVIEW header and takes no committed context, so that output's prompt hash cannot be recomputed by the close check — hoist lensHeader to module scope, print it in cmdReviewPlan before the call, and accept --context/--section on `plan`.
+
+BUG severity=MED — TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question." — scripts/deepseek-review.js:181 "console.log(lensResult.text);" — no exit path of this seat prints a STATUS line, and the timeout path (:92-96) returns the partial text which the caller prints as the answer — every reply made through this tool is non-conforming on reply status — print `STATUS: ready` after a complete answer and `STATUS: failed` on empty text or timedOut.
+
+BUG severity=MED — TKT-4 "An empty or truncated reply is `failed`, never a verdict and never a pass." — scripts/deepseek-review.js:150 "const result = await callDeepSeek(text, answerSystemPrompt());" — in McProof answer mode a timed-out stream still prints its truncated answer table (:151 "console.log(result.text);") with no failed marker, and an empty stream prints nothing and leaves exit 0 — treat empty or timedOut as failed, suppress the partial table, and mark the run failed.
+
+BUG severity=MED — TKT-1 "The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` ... `Rule:` ... `Scope:` ... `Done-condition:` ... `max_fix_rounds:`" — scripts/deepseek-review.js:194 "let prompt = `## File: ${filePath}" — the non-template review, the spec prompt (:231) and the legacy plan prompt (:293) open with a file/spec/plan heading, and the pasted lens context opens "## Task" with none of the header lines, so no prompt this tool sends carries the mandated header — build the five header lines from the task and prepend them to every prompt, refusing to send without them.
+
+DEFER severity=LOW — TKT-1 dated note 2026-11-21 (lens persona "Judge the material under review against the rules in this part") "the close check recomputes each output's prompt hash with the committed context" — review-template.js:43 "return { systemInstruction: null, userTemplate: template };" with deepseek-review.js:168 "split.systemInstruction ?? 'You are a focused reviewer. Follow the prompt\'s output format strictly.'" — a lens template whose headings do not match exactly runs under a generic persona while still printing a REVIEW header and a valid prompt hash, so the gate cannot see the swap — throw in lens mode when the split yields a null persona.
+
+DEFER severity=LOW — Spec 137 §4 rule 3 (as pasted in the TKT-1 note) "A code commit names its task by the trailer `Task: task-N`" — scripts/hooks/check-task-files.mjs:51 "/^Task:\s*((?:task|draft)-\d+)\s*$/im" — the hook also reads draft-N trailers and resolves backlog/drafts/, a trailer form the pasted clause does not name — restrict the matcher to task-N or cite the ruling that adds drafts.
+
+MET — TKT-1 dated note 2026-11-21, CONTEXT_SECTIONS — scripts/lib/review-template.js:115 — the five entry names match the note verbatim.
+MET — TKT-1 dated note 2026-11-21, context round number — scripts/lib/review-template.js:140 — N is the count of context-r*.md already present plus one.
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/deepseek-review.js:35 — MAX_PROMPT_CHARS defaults to 120000 and :61 refuses over it.
+MET — task-366 COMPLY.2 REVIEW header — scripts/deepseek-review.js:161, printed at :174 before the lens call — template name, model, timestamp, file_sha256 and prompt_sha256 as the first output line.
+MET — task-366 "the review template substitutes safely" — scripts/lib/review-template.js:79 — one pass with a function replacer, values inserted literally.
+MET — §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators" — scripts/deepseek-review.js:156 "const code = readFileOrFail(filePath);" — whole-file review only, no diff mode.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+Rules met: none
+
+---
+⏱  124918ms (124.9s)
+📊 Tokens — total: 49419, input: 18353, output: 31066, reasoning: 29890

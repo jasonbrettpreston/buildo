@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:48:01.788Z file_sha256=fcc39c60ef9d67adb3b93643e771010f7ab7961cb70ef511259d2c340703fe88 prompt_sha256=7a82a2ab1bd63e160fc2d66cac98494b5d4116f2de6986a7fee5279bd14875dc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 s7 rule 4, task-448 note "A front-end task is reviewed against Spec 136 section 2, its engineering lists, the four lenses and the four every-task lists" — scripts/analysis/rule-lists.json:108 "lists": ["eng-all"], — a front-end task whose Files are src/components/**, src/app/** but not src/app/api/** or src/features/** receives no surface-136, so Spec 136 section 2 reaches a web front-end task only through the surfaces row's protected frontend paths, not through the row that names UI components and app pages — add surface-136 to the ui-app row, or record in its why that the operator's front-end means the protected frontend paths only
+
+DEFER severity=LOW — Spec 08 s7 rule 4, task-448 note "the four lenses and the four every-task lists" — scripts/analysis/rule-lists.json:236 "every_task": ["five-words", "plan-protocol"], — the table carries two every-task lists where the ruling names four, and no other key is declared as every-task, so two lists the ruling counts are sent to no review at all — name the missing two and add them, or record that two is the count the ruling was describing
+
+MET — Spec 08 s7 rule 4, task-448 note "Off on every row: Specs 126, 127, 128 and 135 ..., Specs 100 and 96, the four Airtight lists, doc-16 ... the Spec 124 list is attached to no row" — scripts/analysis/rule-lists.json:165 "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"], — no row attaches surface-126, surface-127, surface-128, surface-135, mobile-100, mobile-96, airtight-124a/v2/v3-122/122a, storage-doc16 or policy-124-s2-s5, and Spec 08 s5.1 to 5.3, s7 and s11, Spec 137 and doc-17 appear on lane-tools only
+
+MET — Spec 08 s7 rule 4, task-431 note "The phone row gets `eng-front` and `eng-shared`; the pipeline-step and library rows and the API routes (ui-app no longer matches src/app/api) get `eng-back` and `eng-shared`; every other row that had `eng-all` keeps it" — scripts/analysis/rule-lists.json:152 "lists": ["mobile-90", "mobile-98", "mobile-99", "surface-136", "eng-front", "eng-shared"], — mobile has eng-front+eng-shared, step-pipeline and api-lib have eng-back+eng-shared, ui-app carries "not": ["src/app/api/**"] and keeps eng-all, as do surfaces, middleware-config, lane-tools, tests and specs-docs
+
+MET — Spec 08 s7 rule 4, task-431 note "`eng-front` (section 1), `eng-back` (sections 3 and 9) and `eng-shared` (sections 2, 4 to 8 and 10 to 14 ...)" — scripts/analysis/rule-lists.json:33 "sections": ["3. Database Management & Scaling", "9. Pipeline & Script Safety"], — eng-front is section 1, eng-back is 3 and 9, eng-shared is 2, 4 to 8 and 10 to 14, each file docs/specs/00_engineering_standards.md
+
+MET — Spec 08 s7 rule 4, task-439 note "the surfaces and mobile rows ... attach `surface-136` with their engineering lists" and task-448 "the Spec 124 list is attached to no row" — scripts/analysis/rule-lists.json:146 "lists": ["surface-136", "eng-all"], — surfaces and mobile attach surface-136 and no longer the four surface specs, and the specs-web-admin row now carries surface-136 only, as RR-0421 item 1 a orders
+
+MET — Spec 08 s7 rule 4, task-448 note "This supersedes '(a record-only task gets the queue lists)'" — scripts/analysis/rule-lists.json:158 "lists": [], — the queue-records row and the no_files_default record type resolve to no list
+
+REJECT — Spec 08 s7 rule 4, task-431 operator words ":1865 drop the full engineering when arts can be sent" — the change is accused of leaving ui-app and surfaces on the whole eng-all instead of side lists — the same note's operative sentence is "every other row that had `eng-all` keeps it", so the whole list on those rows is what the ruling orders
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: none
+
+---
+⏱  81244ms (81.2s)
+📊 Tokens — total: 38617, input: 19573, output: 19044, reasoning: 17954

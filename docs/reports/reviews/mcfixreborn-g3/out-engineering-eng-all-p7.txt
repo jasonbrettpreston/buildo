@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:59:07.314Z file_sha256=dd6478058b06eb85cd538350f633c450ddd84b7ba05c68ac82f028729116653a prompt_sha256=bdd838571a6ee6bd9507f25bd5b3c1cf226ee1c520efa956f3d5202ce4941c8f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.2 "Auth-guarded / externally-reachable surfaces" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:370 "locking_tests": ["src/tests/parcels-entitlement.infra.test.ts"] — the only lock declared for an auth-guarded, externally reachable mobile route is an infra test, no *.security.test.ts is named, and the test tree is outside this chunk (cannot see) — declare or add a security test for a missing token and a foreign uid, and list it in locking_tests.
+DEFER severity=LOW — 13. Observability Standards §13.3 "API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability." — contract_parcels_entitlement.descriptor.json:276 "answer": "none" (emits, "why": "A read with no analytics, breadcrumb or ledger write") — no per-request logInfo is recorded and route.ts is outside this chunk so the log line is unevidenced — cite the route's logInfo call in emits.evidence or add one.
+DEFER severity=LOW — §11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — contract_parcels_entitlement.descriptor.json:310 "min": 1, line 311 "max": 1000 — the same two bounds are written twice in this file and again in the seed file the descriptor itself cites at line 305, so the literal is duplicated rather than sourced — reference the one owning key instead of restating 1 and 1000.
+MET — 4.1 Route Guarding "All endpoints within `src/app/api/` must be analyzed for protection." — contract_parcels_entitlement.descriptor.json:161-169 — the endpoint is analyzed: session "authenticated", in-handler getCurrentUserContext as the FIRST await (route.ts:28) and the 401 (route.ts:29) are declared.
+MET — 4.4 API Design "All API routes must return a consistent envelope: `{ data, error, meta }`." — contract_parcels_entitlement.descriptor.json:252-259 — errors.answer "envelope" with withApiEnvelope at with-api-envelope.ts:27-52, applied to all three declared error classes.
+MET — 10.3 API Route Discipline "Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`)." — contract_parcels_entitlement.descriptor.json:77-85 — the response whitelist carries stable names and the raw column current_period_end stays confined to inputs.tables.
+REJECT — 10.2 Boundary Rules "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — accused of a frontend task adding a file under scripts/ — the added file is a contract descriptor with outputs.answer "none" that writes nothing, so it does not change how data enters the database.
+REJECT — 3.3 Pagination Enforcement "Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries." — accused of an unbounded read of usage_events — the rule names permits and coa_applications, and this read is one uid's distinct subjects inside one billing period.
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  63520ms (63.5s)
+📊 Tokens — total: 33435, input: 20515, output: 12920, reasoning: 12110

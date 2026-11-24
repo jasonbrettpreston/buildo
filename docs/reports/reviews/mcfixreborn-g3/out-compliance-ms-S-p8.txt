@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:28:11.611Z file_sha256=159b3a3cb3d2428e541736b48d7608354dd1f89a604976e5b5e818a147944458 prompt_sha256=74dd1587f92c203248c115efaf74e62aba2fdd2c8328b52e9a4f02a7b38e42fc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — objective "The database exists to service the designed report, details and search page", "a database that works and is ready" — contract_parcels_lookup.descriptor.json (emits.why) "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT" — the same descriptor declares the opposite in three other places: data_story "writes one: a `usage_events` row (`property_view`)", metering.why "writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock", outputs.why "it writes 2 table(s) synchronously inside the request" and under_126 "`outputs.writes` is forced to `\"none\"`", so the record of what the database does contradicts itself — reconcile emits.answer/emits.why and outputs.tables to one statement of the ledger INSERT.
+
+DEFER severity=MED — objective "a database that works and is ready", principle "accuracy" — contract_parcels_lookup.descriptor.json (data_story) "It reads 9 tables ... and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps`" — inputs.why says "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps", inputs.tables declares 7 tables, and neither `parcel_maxbld_scenarios` nor `bylaw_resolution_lot_stamps` appears in that array, so two reads the file itself names are undeclared — declare both in inputs.tables and make the one count (9, or 6 plus the two behind the switch) agree everywhere.
+
+DEFER severity=MED — objective "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot" — contract_parcels_lookup.descriptor.json (notes) "MATCH-TYPE ENUM (declared, not yet emitted) ... Measured today: matchType is ['exact','typeahead','direct'] ... Serving the type (and, for the map surface S-071, parcel geometry) is the outstanding API change" — the same file's dated 2026-11-11 note states "the contract now emits `resolution` (unique | text_candidates | multi_parcel | unlinked | no_match ... multi_parcel and unlinked are now derivable", so the descriptor tells a reader that the two-or-more-parcels result is unreachable when it is not — delete the superseded paragraph or stamp it superseded with the date that retired it.
+
+DEFER severity=LOW — objective "a database that works and is ready" (the guards record) — contract_parcels_lookup.descriptor.json (data_story) "only while the web live switch is on; it is off" versus guards.flag "none" — reads and the one-lot compute are gated by a live switch, yet no flag guard is recorded, so the gate section cannot show the switch a reader needs to know about — set guards.flag to that switch with its current off state.
+
+DEFER severity=LOW — principle "accuracy, understandability" — contract_parcels_lookup.descriptor.json (data_story) "Its response is an explicit pick-by-name projection of 24 fields" versus checks.contract_parcels_lookup__field_whitelist_parity "The response is an explicit pick-by-name of 4 field(s)" against an inputs.field_whitelist listing dozens of nested names — one projection is given three different sizes in one file — state the size once (the top-level picked keys) and derive the other sentences from it.
+
+DEFER severity=LOW — objective "Search comes before increment 1: the search page ... most of it is already built" (the goldens that verify it) — scripts/surfaces/search-golden-capture.ts "const files = [CONTENT, DESCRIPTOR].sort();" versus scripts/surfaces/screen-checks.mjs "if (typeof ref === 'string') files.push(ref.split('#')[0]);" — the writer and the gate compute the fingerprint input set by two rules, so a golden this script writes is refused by SV-SCREEN "fingerprint files differ" for any surface whose descriptor carries a render.form schema_ref — export one fingerprint file-set helper and have both call it.
+
+DEFER severity=NIT — principle "accuracy" — contract_parcels_lookup.descriptor.json (limitations[0]) "check_id": "contract_parcels_lookup__auth_class_parity" — an a11y UNRESEARCHED limitation is filed against the auth parity check, so the escalation points at the wrong check — name the check that would surface the missing value, or state that none does.
+
+MET — objective "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot" — contract_parcels_lookup.descriptor.json (checks.parcelslookup_match_type_enum) — dated note 2026-11-11 records `resolution` (unique, text_candidates, multi_parcel, unlinked, no_match) computed by resolveAddress with one rule on both paths, with the concrete ambiguity in resolveAddress (src/lib/admin/parcel-lookup.ts) surfaced.
+
+MET — objective "The database exists to service the designed report, details and search page ... This includes the search page" — src/app/api/parcels/entitlement/route.ts:5-6 — "Read by the app search page's reports-left line (the left count, the allowance and the served reset label) and the Account page", read-only with no lock and no write.
+
+MET — objective "Five principles ... keep it simple; no scope creep" — src/app/api/parcels/entitlement/route.ts:32-43 — a 44 line handler that authenticates first, rate-limits, returns server-computed values (FE-05) and adds no behaviour beyond the entitlement read.
+
+MET — objective "Search comes before increment 1 ... most of it is already built" — scripts/surfaces/search-golden-capture.ts:5-6 — "GAP.13 (task-12) · writes or checks the mobile props goldens of S-002 `mobile_parcel_search`", so the built search page has a generated golden path rather than hand-edited fixtures.
+
+REJECT — objective "A task that serves neither a designed element nor a supporting function is most likely not relevant" — accused: screen-checks.mjs, surface-validate.mjs and search-golden-capture.ts are tooling, not the search page — because each serves the built search page (its golden writer and its gate), which the pasted increment objective names as the first thing to finish.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  59010ms (59.0s)
+📊 Tokens — total: 44295, input: 32647, output: 11648, reasoning: 10089

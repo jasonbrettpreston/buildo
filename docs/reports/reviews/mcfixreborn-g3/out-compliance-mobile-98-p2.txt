@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:54.819Z file_sha256=33a669870b015a57ecc8fda24bcf6dd1f67749294d76a599c781d3fc1968f45f prompt_sha256=935518b9eb379b105ace96d30e35139bd82c45d62cf48f45556d8cb9a151b2b4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-98-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 98 §4.1 §8.3 "gate-stability tests (no `isFetching` in render gates per §6.5)" — mobile/__tests__/parcelSearchMatch.test.ts:~399 "expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(false);" — the search screen's miss branch is derived from `isFetching`, so toggling it flips a rendered state, which §8.3 forbids, and the only test pins the flip ("a miss needs !isFetching and no error") instead of asserting stability — derive `showMiss` from settled data (`data !== undefined`) and hold the last rendered situation across a refetch, then add a no-flip assertion.
+DEFER severity=MED — spec 98 §4.1 §8.3 "gate-stability tests (no `isFetching` in render gates per §6.5)" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:14 "For each state the route can show, the route is rendered twice on the same lookup state, isFetching true then false" — the five `it.each` rows omit the SRCH.METER-2 held state (unsure lot, page null) that reportScreen.mount.behaviour.test.tsx:110 proves is a rendered branch ("a settled unsure lot with page null shows the loading state"), so that gate has no isFetching-flip test — add a row with `lotForm` unsure and page null and require equal trees.
+DEFER severity=LOW — spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — mobile/__tests__/reportScreens.golden.test.ts:~99 "expect(reportProps(viewOf(n))).toStrictEqual(g.props);" — pinning the complete rendered props tree to committed goldens is UI snapshotting under another name, which the operator carve-out lists only as render smoke / behaviour / host props — confirm props goldens are inside the MF-35 carve-out or reduce to the mandated checks.
+DEFER severity=LOW — spec 98 §4.1 §8.5 "store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — NONE (cannot see: this chunk 2 of 5 does not contain storeReset.coverage.test.ts or recentSearchesStore.test.ts) — the §8.5 mandate and the recentSearchesStore.reset() fan-out clause cannot be judged from this chunk — read the chunk that holds those two files.
+MET — spec 98 §4 "Tool: Jest + jest-expo; Location: `mobile/__tests__/`" — all six files sit under mobile/__tests__/ and run as Jest suites.
+MET — spec 98 §4.1 §8.3, report route — reportScreen.gateStability.behaviour.test.tsx "mockHook = { data, isError, isFetching: true, refetch: jest.fn() }" then "isFetching: false" with "expect(treeFetching).toBe(treeSettled)" is the mandated double-render pattern for the five report states.
+MET — spec 98 §4 dated note "React Native Testing Library is the tool ... extends its use to the mobile binding and the parcel search screen" — parcelSearchScreen.behaviour.test.tsx:59 "const Screen = require('../app/(app)/parcel-tool/index').default as React.ComponentType;" plus render/fireEvent is RNTL on exactly those two surfaces.
+MET — spec 98 §4.1 §8.1, mutation idempotency shown — semiQuestionPage.behaviour.test.tsx:135 "it('a double press while the fetch runs sends one fetch and one replace'" pins one fetch and one navigation for two presses.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  97984ms (98.0s)
+📊 Tokens — total: 54800, input: 33421, output: 21379, reasoning: 20506

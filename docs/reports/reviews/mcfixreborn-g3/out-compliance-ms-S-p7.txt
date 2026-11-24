@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:28:11.610Z file_sha256=089a8e0a8eb6c607d81abe468ffb9cfdf3f637aebb4c1e73b7cc65a46090a229 prompt_sha256=a60359d53f9d9394a6bf79927ad7468cf9019329b7eac7c0a295b39799a5a24d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — increment objectives 2 "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — mobile_parcel_search.descriptor.json limitations "multi_parcel and unlinked cannot be reached from the current contract" vs the same block "Closed 2026-11-11 (MF-53, prior text kept): the contract now emits `resolution`; deriveMatchType takes the server value first, so multi_parcel and unlinked reach the map page", with notes "the other two are recorded in limitations as blocked on the API" and product_questions "two of its five branches are unreachable" — the artifact both closes and denies the two-or-more-parcels branch, so whether the clause is met cannot be confirmed — reconcile limitations, notes and product_questions to one state and, if the branch is unreachable, record the clause deferred
+
+DEFER severity=MED — project objectives, accuracy "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — mobile_parcel_search.descriptor.json metering "the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits)" vs contract_parcels_entitlement.descriptor.json "entitlements, logic_variables and usage_events are present in the introspected drizzle schema" and "the lookup meters reports (contract_parcels_lookup)" — two descriptors in the same change disagree whether the metering ledger exists, so the reports-left data story is self-contradictory — update the search metering block to the post-migration-303 reality or mark it stale
+
+DEFER severity=MED — project objectives, accuracy "standardization, observability, scalability, accuracy, understandability" — mobile_parcel_search.descriptor.json guards.entitlement "product": "parcel_tool" vs its notes "guards.entitlement.product is lead_gen" and "migration 228's chk_entitlements_product permits only lead_gen and flight_center" — the same descriptor declares two different entitlement products, one of which the cited CHECK constraint rejects — state one measured product value
+
+DEFER severity=LOW — project objectives, no scope creep "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — mobile_parcel_search.content.json "list.report": "Report incorrect address match" while the notes say "the Report incorrect address match link waits for MF-46, P35-D18 a" — a content string ships ahead of the element it serves — drop the key until MF-46 or mark it reserved
+
+DEFER severity=LOW — project objectives, accuracy "standardization, observability, scalability, accuracy, understandability" — mobile_parcel_search.descriptor.json offers evidence "mobile/src/components/parcel/SponsorSlot.tsx:16-20" beside its own bracket "SponsorSlot.tsx is deleted with the old lot screen" — the evidence cites a file the same line declares deleted — point the evidence at the current tree or mark it historical
+
+MET — increment objectives 2, mis-typed address wired to report — mobile_parcel_search.descriptor.json "list.select.label": "Open the selected lot" and "mobile/app/(app)/parcel-tool/index.tsx:94-101 — const goToParcel = useCallback" — text_candidates renders a list that opens the detail route
+MET — increment objectives 2, semi lot wired to report and calculation deferred — mobile_parcel_semi_question.descriptor.json "mobile/src/lib/lotForm.ts — reportRouteAfterAnswer, answerToOverride" — the answer is carried to the report as a route param and detection lives in the view parcel_lot_form, not on the page
+MET — project objectives 2, database serves the designed search page — contract_parcels_entitlement.descriptor.json "so the search page can say N of 20 reports left" — the entitlement contract serves the designed reports-left line
+MET — objectives, search page built before increment 1 — mobile_parcel_search.descriptor.json identity.route "mobile/app/(app)/parcel-tool/index.tsx" — the search page surface exists as a generated SEARCH surface
+
+REJECT — project objectives, no scope creep — adding contract_parcels_entitlement — it serves the designed reports-left line SRCH.A6, a designed element, so it is in scope
+REJECT — project objectives, one plan only "we need one plan - we can only execute one plan" — four descriptors across F01 and F02 — they sit within the single parcel_product plan ms-S, so no second plan is introduced
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  63821ms (63.8s)
+📊 Tokens — total: 40567, input: 26613, output: 13954, reasoning: 12904

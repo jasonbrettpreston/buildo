@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T03:23:18.260Z file_sha256=2f61fa8bb6f422c67a05488e01e15ebd12e3e8d3d9eba60d1bc25dae9b91107a prompt_sha256=5015fcee86fe5f3a02edbc40a66331e4b73d9fcd15522efe30743e43fa41c0ba
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-error-paths-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/site-footer.ui.test.tsx:48 "for (const [name, s] of Object.entries(SITUATIONS).filter(([, v]) => Array.isArray((v as Json).recent))) {" — the empty path: if no situation carries a `recent` array the loop body never runs and test (a), the only search-footer proof, passes green with zero renders and zero assertions — add a seen counter and `expect(seen).toBeGreaterThan(0)` (or assert the filtered entry count first) so an empty or reshaped fixture fails instead of silently passing.
+
+DEFER severity=MED — src/tests/surfaces/site-footer.ui.test.tsx:91 "expect(() => mount(rest as never)).toThrow('footer text: missing key \"footer.help\"');" — the missing-key retry/error path is proven only for the report renderer, while search and static mount the same `C` with no missing-key case, so a binding that swallows or defaults the throw leaves the legal sentence absent with no failing test (pickFooterText and the bindings are not in this chunk, cannot see) — add the same toThrow case against mountSearch and mountStatic.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer.ui.test.tsx:79 "const sec = (view('web').sections as Json[]).find((s) => s.kind === 'footer') as Json;" — an absent footer section yields undefined and the next line throws a raw "Cannot read properties of undefined (reading 'parts')" instead of naming the missing section — assert `expect(sec).toBeDefined()` and that the G2/G3 finds are non-undefined before using `.text`.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer.ui.test.tsx:67 "const f = container.querySelector('footer[data-testid=\"static-footer\"]') as HTMLElement;" — the null case is cast away, so a missing or renamed static footer fails as "Cannot read properties of null (reading 'querySelectorAll')" inside linksOf rather than as a named absence — assert `expect(f).not.toBeNull()` on its own line first.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer.ui.test.tsx:97 "const a = linksOf(mountSearch(WEB_STATIC_SITUATION).container.querySelector('footer') as Element);" — same swallowed null in the cross-user equality test, and because it is one expression the failure does not say which of the three surfaces lacked a footer (97, 99 and 101) — split each into query, assert non-null, then linksOf.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer.ui.test.tsx:29 "const SITUATIONS: Record<string, WebSituation> = JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/__tests__/fixtures/parcelSearch.situations.json'), 'utf8'));" — a missing fixture ENOENT or a truncated JSON throws at import and fails all four describes as one unresolvable module error, and an empty `{}` fixture degrades into the vacuous pass above — read it in `beforeAll` with a named expect on the parsed key count.
+
+DEFER severity=NIT — src/tests/surfaces/site-footer.ui.test.tsx:86 "expect((text.match(/© MaxBLD/g) ?? []).length).toBe(1);" — the dedup check counts one literal string, so a second copyright rendered with a different entity name or spacing is not counted and the "once" claim is proven only for that exact literal — count the footer's copyright element instead of the substring.
+
+REJECT — src/tests/surfaces/site-footer.ui.test.tsx:59 "cleanup();" — a cleanup skipped when an assertion throws mid-loop looks like it leaks a mounted tree into the next iteration — `afterEach(cleanup)` at line 41 unmounts after the test regardless, so no cross-test state survives.
+
+VERDICT: PASS on error-path safety
+Paths walked: empty situation list (line 48), missing fixture file and empty fixture object (line 29), missing footer section (line 79), missing G2/G3 part (lines 80-81), missing static footer node (line 67), missing search/report footer node in equality test (lines 97-101), missing footer text key on the report path (line 91), duplicate copyright count (line 86), repeated cleanup (line 59)   Unguarded: 5
+
+---
+⏱  32182ms (32.2s)
+📊 Tokens — total: 11365, input: 4228, output: 7137, reasoning: 6145

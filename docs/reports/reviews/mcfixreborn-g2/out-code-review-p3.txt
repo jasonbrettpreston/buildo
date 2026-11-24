@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:18:10.331Z file_sha256=90f0c92011adc50ed4562e1f20c5cbdbcc09e65d8e0fd0373fb5416d930acbd0 prompt_sha256=3b1ccaeaf907da514754a2ab65d7c0a3bc489693516ff2cae45645d778313ca3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:48 "for (const d of D.config.logic_variables as Json[]) out[d.name] = lv[d.name].default;" — a descriptor variable absent from logic_variables.json throws "Cannot read properties of undefined (reading 'default')" inside beforeAll, failing the whole file without naming the variable — read `const v = lv[d.name]; if (!v) throw new Error(`${d.name} is missing from logic_variables.json`);` then `v.default`.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:64 "const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;" — the `as Json` cast hides a possible undefined, so a lot with no expected line dies later at `String(e.case).split('_')[0]` with an unnamed TypeError — throw naming `lot.parcel_id` before using `e`.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:129 "const row = house.get(field) as Json;" — a field with no emitted row yields undefined and `row.status` throws a TypeError instead of failing with the `${e.case}/${key}` message the call already carries — add `expect(row, `${e.case}/${key}`).toBeDefined()` before the cast.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:134 "expect(row.status, `${e.case}/${key}`).toBe('not_evaluated');" — every non-number golden cell is asserted to be exactly not_evaluated, while test (c) in the same file lists not_modelled, not_permitted, unlimited, unregulated, not_applicable, not_buildable as legal statuses, so a legitimately not_permitted cell would fail with a misleading message — assert the cell's own status word instead of a hardcoded one.
+
+DEFER severity=LOW — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:152 "expect(text).toContain(\"CONSTRAINT parcel_maxbld_scenarios_value_iff_computed CHECK ((status = 'computed') = (value IS NOT NULL) OR (field_id = 'gain_reasons' AND status = 'computed' AND value IS NULL))\");" — pins migration 309's DDL text character for character, so a pure reformat of the migration reddens a test whose subject is emitted row values — match the constraint name with a tolerant regex and leave the semantics to the "every golden row passes both predicates" test.
+
+DEFER severity=LOW — src/tests/surfaces/report-honest-k2b.logic.test.ts:18 "const part = (section: string, role: string): Json => (PAGE.sections as Json[]).find((s) => s.id === section)!.parts.find((p: Json) => p.role === role);" — the non-null assertion on `find` means a renamed section fails as "Cannot read properties of undefined (reading 'parts')" inside a helper, not as an assertion naming the id — return `Json | undefined` and assert defined at the call site with `section`/`role` in the message.
+
+DEFER severity=NIT — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:17 "export const META = { layer2_table_version: 'g25', settings_sha: 'g25' };" — no file in the material references META, since the runtime test takes its stamp from the producer, so unless a consumer outside this chunk imports it, it is a dead export — delete it or use it where the g25 stamp is set; the other importers are cannot see.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  96169ms (96.2s)
+📊 Tokens — total: 41260, input: 20642, output: 20618, reasoning: 19751

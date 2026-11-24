@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:26:07.618Z file_sha256=0ba6632ac503cc464392894ea6cd93080b431b94cd977cf8450a1432fb91fb20 prompt_sha256=bf0fd71cdd3938b2e6c009398050562a605a9b50bda4345e29610086e0384552
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files.md, Acceptance Criteria from line 41" — mobile/src/lib/parcelSearchMatch.ts:24 "Prior text kept." — the file still presents as current that "WHAT THE SERVER ACTUALLY SENDS TODAY, measured" carries only `matchType` and that "the API is NOT changed in this pass" / "Widening ParcelMatchSchema.matchType ... is the one further change needed", while mobile/src/lib/schemas.ts:449 already carries "resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional()," and map/page/lotForm, so the hygiene clause is not met in this file — replace the pre-MF-53 block with the shipped contract (resolution present, derivation only as fallback for an older server) or delete it.
+
+DEFER severity=LOW — task-322 "SRCH.DAYLIGHT-Restyle the built mobile search pages search choose your lot candidate list semi question from old dark to the Daylight small pages v8 look and remove the elements the v8 design removes A.13 B.8 C.9.md, Acceptance Criteria from line 50" — mobile/src/constants/parcelSearch.ts:45 "export const PARCEL_SEARCH_TOKENS = {" — the search pages' own constants file still exports the old dark token tables (PARCEL_SEARCH_TOKENS with #0e0e10 / #18181b, TRACKED_LOTS_HEX, PARCEL_SHELF_HEX) beside the Daylight report-* layout table, and no reader is visible in this chunk, so the "remove the elements the v8 design removes" clause cannot be shown met here — show the reader that consumes them or delete the dark token objects.
+
+REJECT — "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — SurfaceRenderer.tsx imports react-native-maps and react-native-svg and renders LIST and REPORT trees as well as SEARCH, accused of exceeding the search increment — the pasted increment names C (lot confusion, lot map) and G (hand-off to the report), and one components table is what renders those named elements, so this is not scope the ruling did not name.
+
+REJECT — "the semi calculation stays in Increment 7 (7.25)" — mobile/src/lib/lotForm.ts writes OVERRIDE_PARAM and lotFormEffective while nothing reads them, accused of shipping dead rules — the clause explicitly defers the effect to 7.25 and only requires the answer to travel to the report, which the route param does ("the effect is the semi calculation of 7.25 (task-209)").
+
+MET — "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25)" — mobile/src/lib/lotMap.ts:127 — the picked lot's Continue goes through parcelSearchRoute('unique'), the one report route the search page's unique case uses.
+
+MET — "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — mobile/src/hooks/useParcelPageHooks.ts:6 — three shared hooks replace the copied per-page redirect/back/debounce code, no new capability.
+
+MET — "A task that serves neither a designed element nor a supporting function is most likely not relevant or feeds old code" — mobile/src/lib/maxbldHelp.ts:1 — the only new outbound surface is the Help page behind the lot map's help link, and every other module here serves one of the named elements (search, lot map, semi question, reports-left line).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+
+---
+⏱  77293ms (77.3s)
+📊 Tokens — total: 50417, input: 33601, output: 16816, reasoning: 15958

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:00:10.924Z file_sha256=3aa37046cd7fe35d8d868189fb87ee3bb20253aa3207fa12b6556d006b2d9f5e prompt_sha256=0636a4ad5f8b5b0831d868cffd378c4796d415712e06eaf451e5b83f1de0dd05
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-back-p2.txt (model: deepseek-reasoner)
+
+REJECT — 3.1 Zero-Downtime Migration Pattern — no migration file appears in the material to be accused — none of the six pasted files is under `migrations/` (305 and 307 are only named in comments), so the migration SQL is cannot see
+REJECT — 3.2 Migration Rollback Safety — the change is accused of nothing — no `NNN_[feature].sql` file is pasted; the UP/DOWN blocks for `parcel_user_inputs` / `logic_variables` are cannot see
+REJECT — 3.3 Pagination Enforcement — the reads are accused of being unbounded — the material is `src/lib` modules, not an API route, and it never reads `permits` or `coa_applications`; the closest reads are bounded (see MET)
+REJECT — 9.1 Transaction Boundaries / 9.3 Idempotent Scripts — the change is accused of bare multi-row writes — all six files are `src/lib/parcels/*.ts`; a pasted rule binds only "Pipeline scripts (`scripts/*.js`)", and no `scripts/*.js` file is pasted
+REJECT — 9.2 PostgreSQL Parameter Limit — the change is accused of oversized batch inserts — no batch INSERT exists in the material; `insertLotSizeEntry` writes a single row per call
+REJECT — 9.4 Pipeline SDK Mandate / 9.5 Streaming Ingestion / 9.6 Pipeline Manifest / 9.7 Pipeline Observability — the change is accused of skipping the SDK, streaming, manifest and tracing — no pipeline script, manifest or orchestrator is in the pasted material; cannot see
+MET — 3.3 Pagination Enforcement — src/lib/parcels/lot-map.ts:135-141 — every projection is explicit (no `SELECT *`) and the growing-table-style reads are capped: "LIMIT $4" on neighbours, "WHERE parcel_id = ANY($1::text[])" on matched lots
+MET — 9.2 PostgreSQL Parameter Limit — src/lib/parcels/lot-map.ts:104-110 — array binding "WHERE parcel_id = ANY($1::text[])" keeps one bound parameter per statement, so no 65,535-parameter exposure arises from the added `primary_frontage_street_name` / `has_footprint` columns
+MET — 9.1 Transaction Boundaries — src/lib/parcels/lot-size-entry.ts:250-300 — the entry and revert writes take the caller's client "client: PoolClient" and run inside the caller's transaction, never a free-standing mutation
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  27668ms (27.7s)
+📊 Tokens — total: 30525, input: 24843, output: 5682, reasoning: 5097

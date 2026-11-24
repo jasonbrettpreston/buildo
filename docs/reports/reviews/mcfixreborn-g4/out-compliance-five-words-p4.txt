@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:53:30.157Z file_sha256=7a6a6f1f8a6c6408d202bba87ca9f4bee33bbff47ffd4af1289484252e351501 prompt_sha256=6ca7bee8ded327becafd8ba1f70b0a9ea42d2c2a71432bc5fadb41c6e9e1cab2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-five-words-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — src/tests/backlog/backlog-brief-context.logic.test.ts:95 "expect(Buffer.byteLength(s)).toBeLessThanOrEqual(120 * 1024 + 4096);" — the only pinned ceiling is 126,976 bytes (line 94 "Cap: 120 KB in total, 12 KB per block"), which is not the operator's 120,000-character figure and is never checked against it — rationale: today only the five CONTEXT_SECTIONS extracts reach a lens call (src/tests/backlog/backlog-lane.logic.test.ts "--section Task" commands), so the overrun cannot enter a call until a caller passes the context whole; state the cap in characters and assert s.length against 120,000.
+REJECT — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — that the brief orders one compliance run per resolved rule list, which reads the same diff many times — RR-0439 says "each rule list reads only the files the rule table names for it", so the per-list split is the operator's own instruction, not a second review of the set.
+MET — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:77 — one replace pass with a function replacer, so an inserted value is never re-scanned for tokens.
+MET — task-432 "Fresh review context every round the reviewer sees the rulings and task state as they are at that round" — scripts/lib/review-template.js:138 — contextRound derives the next context-rN from the files present, and the brief test (line 192) pins that context-r1.md stays byte-identical when r2 is written.
+MET — task-423 "One compliance review on the plan and one on the output against rules sections, no review of paperwork" — src/tests/backlog/backlog-brief.logic.test.ts:75 — the brief states the plan findings were ruled once at the plan and the lane runs no plan lens, its grounder ruling the output findings only.
+
+VERDICT: PASS
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  168274ms (168.3s)
+📊 Tokens — total: 60969, input: 36208, output: 24761, reasoning: 24257

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:21:57.605Z file_sha256=8e4acb7662135d5a9a4044be8e447297d2b8d5dcff66bf406a074c7e005c7891 prompt_sha256=9eeece98375d594537f2567575726791bf2ec205775675c5a4a90e36d335b343
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces." — scripts/analysis/proof-slice.mjs:158 "try { spec = JSON.parse(io.readFile(DATA)); } catch (e) { console.error(`proof-slices.json unreadable or malformed: ${e.message}`); return 2; }" — a new file ships the explicitly banned call in its catch blocks (also :155, :156, :160, :162) and logs nothing structured, while the same clause's third bullet sends scripts to `pipeline.log`; the §12.1 note keeps ESLint on `scripts/`, so the rule is enforced there — route each failure through `logError(tag, err, {slice, out})` (or `pipeline.log.error`) before returning the exit code.
+
+DEFER severity=LOW — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/analysis/backlog-lane.mjs:2 "// One-command lane launch (task-310, R8e; RR-0242, MORNING-DECISIONS.md:953-955; the take on the board is RR-0240, :947-951)." — the new file carries no `SPEC LINK:` line at all, so the registry's traceability row is unmet — add a first-line `// SPEC LINK:` naming the governing spec with its `§N` beside the existing 08_agents.md:339 pointer.
+
+DEFER severity=NIT — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/analysis/proof-slice.mjs:2 "// SPEC LINK: docs/specs/02-web-admin/127_surface_conversion_procedure.md (the S-gate table whose rows this runner calls)," — the link names no section for 127 or 126 and uses a line number (08_agents.md:490) instead of `§N` for the third spec — append the section for each cited spec.
+
+MET — §13.3 — scripts/analysis/gates/generated-docs.mjs:99 "} catch (e) { throw new Error(`generated-docs: unreadable dir ${GENERATED_DIR_REL}: ${e.message}`);" — the one catch that could hide a read failure rethrows a named Error carrying the cause, so no error is swallowed and no bare console call appears.
+
+MET — §12.11 — scripts/analysis/proof-slice.mjs:144 "return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });" — no `new Pool(` anywhere in the change and the only process spawn is argv-form with no shell; `scripts/` is the pool-boundary bullet's allowed location.
+
+MET — §12.8 — scripts/analysis/proof-slices.json:1 "{" — the chunk adds no migration file, so `sqlfluff lint --dialect postgres`, `scripts/validate-migration.js` and the DOWN-block rule have nothing to gate.
+
+REJECT — §12.1 — that Biome does not run over these files — the clause scopes Biome to "all files in `src/features/leads/`" and keeps ESLint on `scripts/`, which is the whole of this chunk.
+
+REJECT — §12.2, §12.3, §12.4, §12.5, §12.6, §12.7, §12.9, §12.12, §12.13 — that the change uses no `useQuery`, no RHF/Zod, no Zustand, no Shadcn `<Drawer>`, no `useVirtualizer`, no Sonner, no Motion, no `fast-check` property test and no Stryker target — every one of those clauses is scoped to `src/features/leads/` frontend code, a NEW migration, or the four named mutation-target modules, and this chunk is four Node scripts under `scripts/analysis/`.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 37   Unmet: 3
+
+---
+⏱  59999ms (60.0s)
+📊 Tokens — total: 41460, input: 26002, output: 15458, reasoning: 14506

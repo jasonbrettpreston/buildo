@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:55:24.142Z file_sha256=c139390858d303b4397bfc8389e567a30623c8d633d12c6f8239bd9af12698f5 prompt_sha256=b81d0ef2206ed9e7830c855c473442fed0e6678471add605f162f798b63793de
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (!) unless the value's existence is mathematically guaranteed by a prior validation step. If using !, you must document why in an inline comment." — src/tests/surfaces/register-locks-resolve.infra.test.ts:102 "const rowLine = (text: string, id: string) => text.split('\n').find((l) => l.startsWith(`| ${id} |`))!;" — clause unmet: find() can return undefined, the ! is undocumented, and the same unguarded ! recurs at "const lock = row.locks[0]!;" and in search-follow-ups.logic.test.ts "const card = byTestId(...)!;" and "key: refs[0]!" — remove each ! and assert the lookup (or add the required inline justification comment).
+
+BUG severity=MED — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/search-web-binding.ui.test.tsx:22 "type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON" — clause unmet: all four files declare Record<string, any> and build inline fixtures (search-web-binding "const tree = { component: 'Card', props: { key: 'x' }, children: [] };", search-reports-left "const full = { reportsLeft: 6, reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' };") with no factories import — add typed builders to src/tests/factories.ts and import them.
+
+DEFER severity=MED — 5.5 Test-Layer Map "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." — src/tests/surfaces/search-reports-left.logic.test.ts:146 "expect(t, f).toContain('resetsOnDisplay');" — a binding's runtime branch is proven by grepping component source (also search-follow-ups.logic.test.ts "expect(binding).toContain(\"const known = lot.hasFootprint !== undefined;\");"), which no executed layer runs — move those branch claims to a .ui.test.tsx render or the mobile renderer case.
+
+DEFER severity=NIT — 14 The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — src/tests/surfaces/register-locks-resolve.infra.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-09 (a separate decisions spec with a Lock column that resolves) and" — the link cites row FE-09 plus rules 2/3/5 but no §N anchor, unlike the other three new files which carry §11b.2/§11b.5 — add the section number of the Spec 135 register rules.
+
+MET — 5.2 Test File Pattern — src/tests/surfaces/search-web-binding.ui.test.tsx:1 — component rendering and interaction live in a .ui.test.tsx with the jsdom environment, matching the mandated pattern.
+
+MET — 5.5 Test-Layer Map (parity battery) — src/tests/surfaces/search-reports-left.logic.test.ts:52 — generated mobile slice is diffed against its content-file source, the drift guard the parity row asks for.
+
+MET — 10.2 Boundary Rules During Frontend Phase — src/tests/surfaces/register-locks-resolve.infra.test.ts:15 — the new files only import a scripts/ module, no file under scripts/, migrations/ or scripts/lib/ is modified in this chunk.
+
+REJECT — 4.1 Route Guarding — that the change adds an unguarded /api/ surface — the chunk adds four files under src/tests only and no route handler, so there is nothing to guard here.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 22   Unmet: 3
+
+---
+⏱  145571ms (145.6s)
+📊 Tokens — total: 63381, input: 32055, output: 31326, reasoning: 30420

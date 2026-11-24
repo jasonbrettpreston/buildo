@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T05:12:47.790Z file_sha256=959f328a55a0557c55ae4369236236ff55df5b797e82a6523f8343c740ab6fb4 prompt_sha256=0c5a4c8c8d86e1c65d58a23e96f49feea03efd179220c22d972e4ba904de7ac9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-security-p1.txt (model: deepseek-reasoner)
+
+Touches: auth, entitlements, money (the metered report) and PII (the unauthenticated permit detail).
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts:70 "on the transitional App A path, unmetered until MF-50 removes it" — a lead_gen-only subscriber requests /api/parcels/lookup?parcelId=X and gets the full paid report page (cost menu, areas, page) with meter 'unmetered' and no decrement, so the paid payload is free to anyone holding the other product — declared deviation; confirm MF-50 or a parcel_tool-only arm lands before the app flip so the free arm cannot outlive it.
+
+DEFER severity=MED — src/app/api/parcels/lot-size/route.ts:5 "The entry is its own record (parcel_user_inputs, D-1 a) that wins over the City value for every reader" — any signed-in parcel_tool user POSTs {parcel_id: <a lot they do not own>, lot_area_value} and that value then overrides the City record in other users' reports, with 409 making the first writer permanent for that lot — cannot see any ownership check in insertLotSizeEntry, the City-record range test and 5/day bound it; scope the entry to its author's reads or verify the parcel came from the caller's own lookup.
+
+DEFER severity=LOW — src/app/api/parcels/lot-size/route.ts:16 "409 LOT_SIZE_ALREADY_ENTERED (with the stored entry)" — a signed-in user who guesses parcel_id both learns which lots already carry a user entry and reads that entry back — cannot see LotSizeEntryResponseSchema (that file is not in this chunk) to know whether the author uid is in the payload; return existence only.
+
+DEFER severity=LOW — src/app/api/permits/[id]/route.ts:64 "applicant," — the detail route has no getCurrentUserContext and no in-handler rate limit and returns the CoA applicant name, address and cost fields to an unauthenticated caller iterating permit ids — permit records look like public record, but cannot see route-guard.ts coverage or the applicant classification, so get the classification confirmed rather than assumed.
+
+REJECT — src/app/api/parcels/lookup/route.ts:105 "!hasEvaluatedOption(body.parcel)" — looks like a client-selectable path to a free, uncounted report page — the predicate reads the server-built parcel body, not a request field, and the ruled page reads "Not yet evaluated", so no costed report is delivered unmetered.
+
+REJECT — src/app/api/parcels/lookup/route.ts:110 "const m = await withTransaction((client) => openReport(client, ctx.uid, ref));" — looks replayable to skip the meter or be charged twice — uid is the session's and usageFor's bool_or(subject_key = $4) returns already_counted inside the billing window, so a replay neither charges twice nor yields a second page.
+
+REJECT — src/app/api/parcels/entitlement/route.ts:28 "const ctx = await getCurrentUserContext(request, pool);" — looks like an IDOR read of another user's plan and usage — the row is selected by ctx.uid only and the route takes no id or user parameter, so there is nothing to swap.
+
+VERDICT: PASS on exploitability
+Surfaces touched: auth, entitlements, money, PII
+
+---
+⏱  86890ms (86.9s)
+📊 Tokens — total: 51585, input: 33840, output: 17745, reasoning: 16992

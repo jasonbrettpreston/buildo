@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:43:15.914Z file_sha256=a74cd9bf49f80b56a39884f30d6459714a21a2104e02441aadef923bba433e6f prompt_sha256=497abb2fc404ecc655d2d9b958d8d6af23f32a35ab90322372b64fddcd90e703
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p9.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/app/api/permits/[id]/route.ts:185 "} catch { // parcels/permit_parcels tables may not exist yet }" — seven catch blocks on this route swallow every failure (parcel join, neighbourhoods, inspections, massing, classification, linkedPermits, CoA) with no log line, so a real DB error returns 200 with parcel: null and leaves no trace; only the two outer catches call logError — log a debug/warn with the handler tag and the cause in each fallback, or narrow the catch to the missing-table error code (42P01).
+DEFER severity=MED — src/app/api/permits/[id]/route.ts:28 "const { id } = await (context as { params: Promise<{ id: string }> }).params;" — an unchecked cast of an optional parameter that throws a TypeError before the handler's try block begins, so the failure never reaches logError and the 500 carries no handler context — type the second argument as `{ params: Promise<{ id: string }> }` and guard `context?.params` with a 400 return.
+DEFER severity=MED — src/components/surfaces/web/SearchBinding.tsx "const defined = (o: Record<string, unknown>): Record<string, never> =>" — the declared return type says every value is `never` while it returns strings, numbers and callbacks, so every `{...defined({...})}` spread is unchecked and a renamed or mistyped prop (size, variant, component) compiles silently — declare it as `Record<string, unknown>` or, better, type the per-part prop objects.
+DEFER severity=MED — src/lib/entitlements/index.ts "if (!s || typeof s.min !== 'number' || typeof s.max !== 'number') throw new Error(`logic_variables seed has no bounds for ${k}`);" — this runs at module scope inside Object.fromEntries, so one missing seed key throws on import and takes down every route that imports the module, while the sibling check in readMeterStatementTimeoutMs fails per call; move the bounds check into readReportLimits (same per-call behaviour as its sibling).
+DEFER severity=LOW — src/app/api/permits/[id]/route.ts "coveragePct = Math.min(Math.round((totalBuildingAreaSqft / lotSizeSqft) * 1000) / 10, 100);" — the route re-implements computeBuildingCoverage, which lives in the very module it imports resolveStories from (src/lib/massing/geometry.ts "return Math.min(Math.round(pct * 10) / 10, 100);"), so the two can drift and the helper appears unused by its own consumer — call computeBuildingCoverage(totalBuildingAreaSqft, lotSizeSqft).
+DEFER severity=LOW — src/lib/massing/geometry.ts "if (meters == null || !Number.isFinite(feetPerMetre)) return 'N/A';" — the factor is guarded for NaN but the value is not, so a NaN max_height_m renders "NaN m (NaN ft)" into the page — add `|| !Number.isFinite(meters)` to the same guard.
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx "return () => (f as WebActions['push'])(String(a.route));" — every other action resolves its argument through resolveWebValue (set_input, select) but push stringifies it raw, so a ref-typed route would be pushed as "[object Object]" instead of throwing — use resolveWebValue(a.route, ctx) like the other cases.
+NIT — src/app/api/parcels/lookup/types.ts "export const MAP_RESOLUTIONS: readonly string[] = ['multi_parcel', 'unlinked'];" — widening to `readonly string[]` throws away the union that RESOLUTIONS keeps with `as const`, so the map refine cannot catch a renamed resolution at compile time — declare it `as const` and compare against that tuple.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Seven silent catch blocks on the permit detail route hide DB failures with no logging, returning a 200 with null sections
+- Unchecked `context as { params: Promise<...> }` cast throws before the try block, so the error is never logged
+- `defined()` is typed `Record<string, never>` while returning real values, disabling prop-type checking for every rendered Mantine part
+
+---
+⏱  70104ms (70.1s)
+📊 Tokens — total: 47247, input: 32344, output: 14903, reasoning: 13937

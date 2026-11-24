@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:56:18.516Z file_sha256=b9e57fa3db874ce1eab58eb9475ec4dae8a94d22a6c0b79a3b0d893dafcf4001 prompt_sha256=712ee97fae50136a25760d946957b672514625bea9d21a3b3f0850419fea3e54
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+REJECT — inc-S (doc-2, whole file) "paths: [\"scripts/analysis/rule-lists.json\"]" — the chunk is accused of adding a 262-line rule-list table, golden-file exempts and increment/milestone maps that no Increment S clause names — not a real issue: doc-2 holds no clause naming scripts/analysis/rule-lists.json or any tooling path, so the pasted spec neither binds nor is breached by this file, and the lists that do govern it are not pasted and not mine to invent
+
+DEFER severity=LOW — pasted review scope "Files of other tasks are also read here: task-384." and RR-0431 "We only want to review the same set of files once" — NONE — chunks 1-2 and 4-9 of 9 and the other 30 files of the group cannot see, so nothing is asserted about them — they are reviewed in their own runs per the pasted header, no action
+
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/rule-lists.json:83 "\"rows\": [" — every list is resolved only through literal globs, globs_from, imports_from, not and exempt, so no list reaches a path no row names
+
+MET — inc-S attachment line "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file)" — scripts/analysis/rule-lists.json:52 "\"inc-S\": { \"file\": \"backlog/docs/increments/doc-2 - Increment-S-requirements.md\", \"whole\": true," — the diff names the increment S requirements document exactly as the pasted list names it, and attaches it whole
+
+MET — inc-S built state "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button" — NONE — the diff changes no search page, lot-map page, resolver or report route, so every BUILT, BUILT-NO-DATA and NOT BUILT status in doc-2 stands as pasted
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  33377ms (33.4s)
+📊 Tokens — total: 26972, input: 19909, output: 7063, reasoning: 6568

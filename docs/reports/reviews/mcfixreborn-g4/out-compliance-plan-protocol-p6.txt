@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:55.585Z file_sha256=fd4db5ba001285ae4a2ac2545145906468fe465745cf204e7e5b1462e6224b0f prompt_sha256=1abab43fb3754319bd1d236c7855760421260f2e9e87a315c5a4e97f97e1b187
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — plan-protocol section 5.2 "lives in increment \"1-2 shared\" or the Launch gate, from the gap register and the launch list only" — src/tests/backlog/rule-lists-table.logic.test.ts:105 "expect(row.why).toContain('left out for Increment 1·B');" — the deferral target pinned here is "Increment 1·B", which none of the pasted increment names defines (section 4: 1-2, 3, 4, 5, 6, 6c, 7, 8, 9, 10, Launch gate L), so the row's stated home does not resolve to a plan increment and the section 0 source rule cannot be traced for those routes — rename the deferral to increment "1-2 shared" or the Launch gate and cite the gap-register or launch-list line it comes from.
+
+DEFER severity=MED — plan-protocol dated note "the first bullet of section 0 below ... is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan" — src/tests/backlog/rule-lists-table.logic.test.ts:66 "const body = text.slice(text.indexOf('\n\n') + 2);" — slicing at the first blank line starts the hash at "# Plan protocol:", so the two dated operator notes above it are outside the hash while the test at :63 claims "the copy cannot drift silently", meaning removal or drift of the Supersession note (the only thing that voids section 0's "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json" bullet) goes undetected — hash from just after the single role-banner line so the notes are inside the pinned bytes, or pin the note block separately.
+
+MET — plan-protocol section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)" — src/tests/backlog/rule-lists-table.logic.test.ts:1 "// SPEC LINK: task-406 (V2.LIST round 2); 08_agents.md section 7 rules 3 and 4; Spec 124 Rule 13 (generated docs) and R-GW (role banner); Spec 128 line 182 (the panel record)." — the file header names its task and rule sources and each describe block names the task and ruling id it pins.
+
+MET — plan-protocol section 2 step D "red-first tests named" — src/tests/backlog/rule-lists-table.logic.test.ts:110 "it('control, PLANTED DEFECTS: a census entry in scope with its route missing from the row fails; a row route the census no longer names fails; an estate_other or platform_shared route is not required'" — each pinned behaviour is paired with a red-first planted-defect control against the real table.
+
+REJECT — Spec 08 section 7 rules 5 and 7 "plus its separate grounder (Spec 08 section 7 rules 5 and 7" — the change is accused of omitting the grounder rules from its SPEC LINK — the pasted ruling binds the lens set and grounder of a single lane task's review, not a unit test file for the rule table.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  76650ms (76.7s)
+📊 Tokens — total: 32631, input: 15531, output: 17100, reasoning: 16339

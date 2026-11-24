@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:55:24.142Z file_sha256=d0c681dae155aed000db96b150bf6d4d2f300c7193dec852fbf339389150bbd8 prompt_sha256=5f9761ef1b555ff837b96c76e5ad618c9edfe98d9ee1244039470201186caff9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 10.3 "Business logic belongs in `src/lib/`, not in route handlers." — scripts/surfaces/_schema/census/contracts.json:22825 "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets" — the change records the thin-route rule as unmet in the landed lookup handler instead of building to it, a declared deviation with operator adjudication (RR-0331), bounded to one metered route — move the meter chain and its transaction into src/lib/parcels/meter.ts and leave the handler validating input, calling it and returning the result.
+DEFER severity=LOW — 9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK ... no bare `console.error()` for error handling." — scripts/analysis/lot-map-data-check.mjs:80 "main().catch((e) => { console.error(`error: ${e.message}`); process.exitCode = 1; })" — the new CLI under scripts/ builds its own client (line 65, "const client = new pg.Client({") and reports failure with bare console.error, never pipeline.run or pipeline.log, and the rule's glob says scripts/*.js while this file is .mjs and read-only — run it through pipeline.run with pipeline.log.error, or if a read-only rehearsal check is deliberately outside the SDK, state that scope decision in the standards text, a file comment alone does not satisfy the rule.
+MET — 4.2 — scripts/analysis/lot-map-data-check.mjs:25 — the SQL binds $1 and concatenates nothing, so no dynamic query string is assembled.
+MET — 4.3 — scripts/analysis/lot-map-data-check.mjs:19 — the read projects named columns and EXISTS predicates, no SELECT *.
+MET — 9.1 — scripts/analysis/lot-map-data-check.mjs:68 — the single read runs inside "BEGIN READ ONLY" and then "ROLLBACK", and the script writes nothing.
+MET — 2.3 — scripts/analysis/lot-map-data-check.mjs:41 — the URL parse is guarded with "catch { return 'not a URL'; }" and the client is built from validated parts, no non-null assertion anywhere.
+MET — 1.1 — scripts/surfaces/_schema/bindings.json "Button": ["min-h-[44px]", "min-h-[48px]"] — 48 px sits at or above the 44 px touch floor the rule sets.
+MET — 12.11 — scripts/analysis/lot-map-data-check.mjs:41 — the catch returns a refusal reason string, not [] or null or an empty result, so the silent-catch-fallback ban is not tripped.
+REJECT — 10.2 — frontend tasks adding scripts/surfaces/_schema/bindings.json and editing census/contracts.json and census/mobile-product.json count as modifying files under scripts/ — these are the surface programme's machine-read schema registry, not pipeline ingestion, and 10.2's stated concern is how data enters the database.
+REJECT — 4.2 — the analysis script issues raw pg SQL instead of a Drizzle query — no fragment is concatenated and every value is a bound parameter, so the injection risk the clause names is absent.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  73528ms (73.5s)
+📊 Tokens — total: 46041, input: 31519, output: 14522, reasoning: 13767

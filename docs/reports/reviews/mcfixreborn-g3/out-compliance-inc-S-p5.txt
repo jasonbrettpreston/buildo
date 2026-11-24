@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:02:20.868Z file_sha256=6c36c682bbbe29a9842b9b8aa7a351d91d3c6fbaaa9eeb75e72041d7ed7c1e34 prompt_sha256=2a0be36404114a352804f3715d2b7d153dfa1306e66709ce235637474908494a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message" — mobile/src/lib/maxbldHelp.ts:15 "export const helpUrl = (topic: string, q: string): string => `${MAXBLD_HELP_URL}#topic=${encodeURIComponent(topic)}&q=${encodeURIComponent(q)}`" — the built link is /help with topic in the FRAGMENT plus an extra q param, not the pasted ?topic=wrong-lot query target, and no wrong-lot topic literal appears in this chunk; the fragment form is supported only by a code comment citing an unpasted MF-46 fold 8 — either emit /help?topic=<topic> as the clause states or paste the ruling that moves it to the fragment
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" against task-389 "SRCH.LEGAL-The-legal-line-on-the-phone-search-page-moves-to-the-bottom-C3-ruled-b" — mobile/src/constants/parcelSearch.ts:145 "legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted'," whose comment reads "MF-58: the legal line under the address input" — the only anchor for the legal line in this chunk still documents the pre-ruling placement under the input, so neither the move-to-bottom nor the clean-comment state is shown here — restate the placement anchor for the ruled bottom position, or drop the stale placement claim, when the binding is touched
+MET — doc-2 A.3 "Typeahead resolution of the typed text (street-prefix, up to 10)" — mobile/src/constants/parcelSearch.ts "export const SEARCH_CANDIDATE_LIMIT = 10;" — the cap is a single named constant read by the situation builder
+MET — doc-2 A.7 "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=" — mobile/src/constants/parcelSearch.ts "export const SEARCH_RECENT_MAX = 3;" — the chip count is declared once and read by the recent-searches store
+MET — doc-2 A.9 "Outside Toronto state: Lots are only available in Toronto." — mobile/src/lib/parcelSearchMatch.ts "export function isOutsideToronto(query: string): boolean" plus "export function searchQueryArg(debounced: string): string" returning '' — the refusal is decided before the network and the query is not sent
+MET — doc-2 B.1 "radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick" — mobile/src/lib/parcelSearchMatch.ts "const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;" and mobile/src/lib/lotMap.ts "selectedParcelId: null" at open — nothing is pre-selected
+MET — doc-2 C.11 "Button: Choose a lot (disabled) then Continue with Lot A" — mobile/src/lib/lotMap.ts "route: selectedParcelId ? parcelSearchRoute('unique', { parcelId: selectedParcelId, query }) : null," — Continue has no route until a lot is picked
+REJECT — doc-2 A.6 "| A.6 | ... 6 of 10 reports left until 9 Dec 2026 | ... | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |" — accused of building an element the spec lists as NOT BUILT — task-320 in the pasted task list is exactly "SRCH.A6-A.6-reports-left-line-on-the-app-search-page", so building it is the named scope, not an unrequested addition
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 0
+Rules met: A.3, A.7, A.9, B.1, C.11
+
+---
+⏱  77028ms (77.0s)
+📊 Tokens — total: 49115, input: 33695, output: 15420, reasoning: 14501

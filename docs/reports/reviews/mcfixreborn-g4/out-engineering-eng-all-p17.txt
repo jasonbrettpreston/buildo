@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:20:44.332Z file_sha256=552bf640afb83ca674c694cb64e64346e360467dbe43156e6cb4cae659a6b088 prompt_sha256=e8e80e6e364bcbdd68467b0e94c83fc2cc211fcafbbcc08834254dda1c1995e8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p17.txt (model: deepseek-reasoner)
+
+BUG severity=MED — §2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures." — src/tests/review-lens-template.infra.test.ts:53 "it('system message is the lens persona, not the generic adversarial prompt; file fills {{PLAN}}, context fills {{SPECS}}', () => {" — every case in this .infra.test.ts drives a successful `--dry-run`, so the silent failure the CLI introduces (a template missing `## User prompt` falling back to the generic persona prompt, or an unreadable material file) is never forced through the real CLI at the infra layer — add RED cases: a nonexistent `--template` path, an unreadable file under review, and a template with no headings, each asserting a non-zero exit and a named message.
+
+DEFER severity=MED — §5.5 "Run before pushing any schema change." — src/tests/proof-slice.db.test.ts:6 "// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the DB-replay layer the new `logic_variables` row needs is committed unrun and silently skips wherever `dbAvailable()` is false — run `BUILDO_TEST_DB=1 npm run test:db` against the rehearsal stack and record the pass before push.
+
+DEFER severity=LOW — §2.3 "If using `!`, you must document why in an inline comment." — src/tests/proof-slice.db.test.ts:31 "expect(entry!.min).toBe(entry!.default);" — three non-null assertions stand on a bare `expect(entry).toBeDefined()` with no inline justification, and the same undocumented pattern appears at src/tests/review-lens-template.infra.test.ts:56 "expect(m[0]!.role).toBe('system');" — either add the inline comment naming the guard or bind a local after an explicit `if (entry === undefined) throw`.
+
+DEFER severity=LOW — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/proof-slice.logic.test.ts:19 "const cmd = (id: string, extra: Record<string, unknown> = {}) => ({ id, proof: `proof ${id}`, argv: ['node', `${id}.mjs`], ...extra });" — row fixtures are hand-built inline (a `Record<string, unknown>` spread, plus literal `nb`/`suiteRow` objects) instead of a typed factory — export a typed `proofRow()` from `src/tests/factories.ts` and build the fixtures through it.
+
+DEFER severity=LOW — §8.2 "The project `tsconfig.json` targets **ES2017**." — src/tests/hooks-composition.infra.test.ts:97 "const preCommitCaps = [...stripComments(PRE_COMMIT).matchAll(/\bVITEST_MIN_FORKS=(\d+) VITEST_MAX_FORKS=(\d+)\b/g)];" — `String.prototype.matchAll` is an ES2020 method, the same above-target class of gotcha the clause calls out for the dotAll flag — use an ES2017-safe `RegExp#exec` loop, or confirm the tsconfig lib (cannot see `tsconfig.json`).
+
+DEFER severity=LOW — §5.5 "The pure function computes the right value on happy + edge inputs." — src/tests/proof-slice.logic.test.ts:271 "const r = mod.realIo().run(['node', '-e', \"process.stdout.write('x'.repeat(20 * 1024 * 1024))\"], { timeoutMs: 60000 });" — a real 20 MiB child process is spawned inside the logic layer, which the layer map reserves for pure functions and which runs in the default `npm run test` — move the `realIo`/maxBuffer case to a `*.infra.test.ts`.
+
+MET — §4.2 — src/tests/proof-slice.db.test.ts:23 — the query binds `$1` ("SELECT variable_value FROM logic_variables WHERE variable_key = $1", [TIMEOUT_VARIABLE]) with no string concatenation.
+MET — §4.3 — src/tests/proof-slice.db.test.ts:23 — only `variable_value` is projected, no `SELECT *`.
+MET — §5.2 — src/tests/proof-slice.db.test.ts:17 — "describe.skipIf(!dbAvailable())" keeps the DB replay a `*.db.test.ts` run only by the test:db stack.
+MET — §2.1 — src/tests/hooks-composition.infra.test.ts:127 — "RED — a tampered pre-commit that reintroduces `npm run test` is caught by invokesFullSuite" forces the gate failure and asserts it is caught, alongside the other planted-tamper cases.
+
+REJECT — §4.3 "Never place API keys, admin SDK credentials, or database connection strings in `use client` components." — the test passing "DEEPSEEK_API_KEY: 'test-key-not-real'" — it is a fake value in a scrubbed child env with no real secret and no client component, so nothing is exposed.
+REJECT — §5.2 "*.logic.test.ts | Pure functions" — proof-slice.logic.test.ts reading `scripts/analysis/proof-slices.json` — the parity-battery row of the same table permits `*.infra.test.ts` / `*.logic.test.ts` for a data-file-to-consumer drift guard, so that layer choice is the mandated one.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  73191ms (73.2s)
+📊 Tokens — total: 51295, input: 33588, output: 17707, reasoning: 16441

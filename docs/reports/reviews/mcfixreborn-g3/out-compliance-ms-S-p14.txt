@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:24:52.377Z file_sha256=810c5fd0353e94400a40a081ad847be1ce6c1929aa41b84a4027392056f6d3f1 prompt_sha256=a0d98cf18d8b900004e6d08f9bcbbddfc83ef8583b4991ef667ec848629b6738
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p14.txt (model: deepseek-reasoner)
+
+MET — Project objectives "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — src/tests/surfaces/search-web-binding.ui.test.tsx:1 — the web SEARCH render smoke exercises the committed web goldens of mobile_parcel_search through the one provider.
+
+MET — Increment objectives "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — src/tests/surfaces/search-web-binding.ui.test.tsx:107 — the ambiguous (two-or-more parcels) situation renders and its card selection pushes the lot route; the miss/error states are in the 11-golden sweep.
+
+MET — Objectives "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — src/tests/surfaces/static-page.logic.test.ts:112 — T9 draws the semi question page (D) from page-table rows, and T2 names the converted STATIC surfaces (web_landing, web_help, web_terms, web_privacy, web_maxbld_error) for E/F.
+
+MET — Increment objectives "the semi calculation stays in Increment 7 (7.25)" — src/tests/surfaces/static-page.logic.test.ts:113 — the semi screen test asserts rows, kinds, actions and choices only, no semi computation.
+
+MET — Objectives "G (hand-off to the report)" — src/tests/surfaces/surface-conformance.logic.test.ts:37 — C-12 pins the web report renderer files to owner binding_web_report and judges them by C-2b and C-8 with display text 0.
+
+MET — Project objectives "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/surfaces/surface-validate.logic.test.ts:37 — the gate lock tests a supporting function that enforces the surface standard the search and report elements rely on, not old code.
+
+DEFER severity=LOW — Project objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/surfaces/surface-validate.logic.test.ts:37 "// MF-15 · McFrontend queue · lane G. The lock for scripts/surfaces/surface-validate.mjs (`--check`, the only flag)." — a 406-line new lock for the generic surface-validate gate, which none of the pasted acceptance-criteria tasks (task-12..task-396) names — rationale: the gate enforces the surface standard the search page and report need, so it is a supporting function under the second objective rather than scope creep; record only.
+
+DEFER severity=LOW — Project objectives "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — src/tests/surfaces/static-page.logic.test.ts:100 "describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling'" — Terms/Privacy legal parity and the support-inbox read serve neither the report, the details nor the search page named by this clause — rationale: these are the designed small pages (E web pages / F landing entry, L-R3 legal line) and the inbox ruling is a launch gate, so they are designed elements under the same objective; record only.
+
+REJECT — Project objectives "we need one plan - we can only execute one plan" — the change is accused of spanning many MF plans (MF-15, MF-44, MF-91, MF-92, MF-46, task-384, task-390, task-395) — this is a review of already-landed output; the clause governs execution sequencing, not the landed test artifacts, and the count-lock comments record history rather than adding scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  58772ms (58.8s)
+📊 Tokens — total: 46205, input: 33753, output: 12452, reasoning: 11538

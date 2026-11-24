@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:33:43.513Z file_sha256=a62084c472936d5e262b584d787767d979ccd612f5c8f40163ad0bb829b486f9 prompt_sha256=dbe28db6cee3e7ab6ea868866ef812ff2b5f611b2bd40a4e4db8930046130cfb
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — assert.2 "assert_schema checks at chain start that every declared logic variable has a DB row." — scripts/seeds/logic_variables.json:8204 "The DB mirror row (a migration, number to be claimed) is owed for admin visibility; nothing reads it." — both new lot-size variables are declared in the seed with no DB row and no claimed migration number, so the chain-start variable check goes red before any step reads them — land the mirror migration with a claimed number in this commit, or hold the two seed rows until it exists.
+
+BUG severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/lib/parcels/report-compute.ts:93 "const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" — batch_size is the code literal 1 instead of the step's configured batch size — resolve the declared batch-size setting through resolveConfig (already imported and called) and bind it, as the runner does.
+
+BUG severity=MED — core.9 "The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict." — src/lib/parcels/report-compute.ts:88 "if (plan.batch_binds.join() !== 'last_key,batch_size') throw new Error('report-compute: the core batch statement no longer binds last_key and batch_size');" — the read set-up and its bind contract for the step's own batch statement are re-derived in this file rather than taken from a declared read, so a descriptor bind change surfaces only as a thrown 500 per request — expose the one-lot read as a declared, runner-owned (or library-owned) read that owns the binds, and drop the string-join bind check from this file.
+
+DEFER severity=LOW — core.1 "Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code (Rule 1)." — src/lib/parcels/report-compute.ts:33 "const UNITS_SQL = 'SELECT unit_key, unit_id FROM bylaw_resolution_units';" — the two role-lookup statements and the 14-column stored-row mapping are a second copy of what the step descriptor already declares, drift caught only by a test named in a comment — read the lookup SQL from the descriptor's declared lookups so the second copy does not exist.
+
+MET — core.8 — scripts/seeds/logic_variables.json:8195 — the lot-size window is declared as a definitional window pinned both ends ("min": 50, "max": 50; 5000/5000), the min = max form.
+MET — x-tooling.1 — scripts/seeds/logic_variables.json:9782 — tooling_precommit_budget_registry_s is re-pinned with evidence, min = max = 33.2 against the fresh measured "registry_s 33.19 s (docs/reports/generated/precommit-budget.json)" and the operator confirmation, not a bare bump.
+MET — core.8 — scripts/seeds/logic_variables.json:9784 — the re-pinned number stays a tooling_* variable read file-only, "never tunable from admin", and no variable is deleted (retirement not triggered).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+Rules met: x-tooling.1
+
+---
+⏱  115547ms (115.5s)
+📊 Tokens — total: 37653, input: 22770, output: 14883, reasoning: 14083

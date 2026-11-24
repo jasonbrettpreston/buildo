@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:59:12.171Z file_sha256=e73784306a090d862db8622983f141a86b37b46b89627e69e63feaeaa6d73d4f prompt_sha256=07e4700411c1d6cb8588b15b3cb225763581481b5bc491e64a1f190b47296415
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" with the group line "Tasks homed in this group: task-68, ..., task-433. Files of other tasks are also read here: task-384." — src/tests/backlog/rule-lists.logic.test.ts:758 "// task-445 (FINAL.8, RR-0391): the security lens also runs when a Files entry is under src/app/api/ or src/lib/" — the chunk pins assertions for tasks 445, 438, 431, 448 and 376 which the pasted group neither homes nor names as read here, so no pasted clause can judge those describes — name those tasks in the group read list, or move each describe to the card's own test file.
+
+MET — RR-0408 "As you suggested keep the review calls small." — src/tests/backlog/rule-lists.logic.test.ts:1 — this input is one file, chunk 8 of 9 of the change, an order of magnitude under the 120,000 character bound.
+MET — RR-0414 "the oversized files are read as changed parts" — src/tests/backlog/rule-lists.logic.test.ts:1 — the file is delivered whole as a creation diff from the empty tree, which is exactly its changed part.
+MET — RR-0431 — src/tests/backlog/rule-lists.logic.test.ts:5 — the file is read once in this pass and nothing of it is re-opened under another chunk.
+MET — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — src/tests/backlog/rule-lists.logic.test.ts:11 "const CLI = 'scripts/analysis/rule-lists.mjs';" — the single list attached to this input is inc-S, read from its named file, and no rule list in the material reads a file outside the table.
+MET — RR-0387 "each built task's output is reviewed, a separate grounder rules every finding" — src/tests/backlog/rule-lists.logic.test.ts:1 — the file is judged here on its output alone, with no plan block, so findings go to the grounder as the ruling requires.
+MET — group line "Generated files, fixtures, lane records and documents are left out on purpose and are not a finding" — src/tests/backlog/rule-lists.logic.test.ts:1088 "const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as Table;" — the chunk reads generated and fixture artefacts at run time but raises nothing against them, as the group instructs.
+MET — group line "There is no plan in this review: judge the output only" — src/tests/backlog/rule-lists.logic.test.ts:1 — the material is a creation diff only, so no plan step is judged.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  77520ms (77.5s)
+📊 Tokens — total: 51102, input: 34194, output: 16908, reasoning: 16214

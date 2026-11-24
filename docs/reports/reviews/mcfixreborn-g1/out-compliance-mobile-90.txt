@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:03:40.458Z file_sha256=f0237eb653ae3826b8639f2f7ba5a8c39d9ab54ddc613d142b026ab27f4de840 prompt_sha256=b13e006c03e8852b0ca9e658e019be51bf955ad33933a92f817020e7671a312d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none, no clause in the pasted list is broken at CRIT — NONE — no CRIT finding — none required
+
+DEFER severity=MED — Spec 90 §2 Theme Constraint "NativeWind `dark:` variants are required for all UI components." — mobile/app/(app)/[lead].tsx:107 "<SafeAreaView className="flex-1 bg-zinc-950" edges={['top']}>" — the new 401-line screen carries only zinc/amber palette classes and not one `dark:` variant, so the required System Dark Mode support is absent on this surface — add `dark:` values (or token-driven dark values) to every surface in this screen.
+
+DEFER severity=MED — Spec 90 §2 Tablet "UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts." — mobile/app/(app)/[lead].tsx:107 — the new detail screen contains no `md:` breakpoint class anywhere, it is a fixed single-column stack on iPad and Android tablet — add `md:` variants for the hero row and the section cards.
+
+DEFER severity=MED — Spec 90 §10 "Offline Resilience Test: Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing." — mobile/maestro/lead-detail.yaml:82 "- assertVisible: \"Feed\"" — the new Maestro flow never issues `toggleAirplaneMode` and asserts no offline or empty state, so the mandated step is missing from this flow — add a `toggleAirplaneMode` step plus the offline/empty-state assertion.
+
+DEFER severity=MED — Spec 90 §13 "The Zod Boundary: Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift." — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the new `modeled_gfa_sqft` leaf is consumed here but the schema that must gate it is not in the material, so the required parse of the new field cannot be seen — show `mobile/src/lib/schemas.ts` LeadDetail cost schema declaring `modeled_gfa_sqft` so this field is provably behind the Zod boundary.
+
+DEFER severity=LOW — Spec 90 §9 "Use the established design system tokens from **Spec 74** (e.g., `bg-bg-feed`, `text-amber-hardhat`)." — mobile/app/(app)/[lead].tsx:118 "<Text className=\"text-amber-400 font-mono text-sm -ml-0.5\">Feed</Text>" — the screen uses raw Tailwind palette classes (`bg-zinc-950`, `text-amber-400`, `text-zinc-100`) rather than the named design tokens — swap them for the Spec 74 tokens.
+
+MET — Spec 90 §9 (Safe Areas) — mobile/app/(app)/[lead].tsx "style={{ paddingBottom: insets.bottom + 12, paddingTop: 12 }}" — top edge via SafeAreaView and bottom via `useSafeAreaInsets` are both accommodated.
+
+MET — Spec 90 §5 (NO `useEffect` for Fetching) — mobile/app/(app)/[lead].tsx:52 "const { data: detail, isLoading, isError } = useLeadDetail(id);" — the fetch runs through TanStack Query, and the sole `useEffect` (line 57) only fires telemetry.
+
+MET — Spec 90 §3 (Dumb Glass) — mobile/src/lib/leadDetailFormat.ts:17 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the phone formats the served square feet and types no conversion factor (grep test at leadDetailFormat.test.ts:44 backs this).
+
+MET — Spec 90 §9 (44px touch target) — mobile/app/(app)/[lead].tsx:112 "style={{ minHeight: 44, justifyContent: 'center' }}" — the header back control meets the 44px minimum.
+
+MET — Spec 90 §5 (NO HTML/DOM) — mobile/app/(app)/[lead].tsx:18 "import { View, Text, Pressable, ScrollView } from 'react-native';" — no `div`/`span`/`a`/`p`/`button` and no DOM APIs in the screen.
+
+REJECT — Spec 90 §5 NO Web Libraries — importing "ChevronLeft" from `lucide-react-native` — the clause names the web package `lucide-react`; the native icon package is not the named import.
+
+REJECT — Spec 90 §14 Empty States — the detail not-found state renders "Lead not found" with "← Back to Feed" and no "Expand radius" CTA — that clause names the low-permit-area feed empty state, a different surface from a single-permit 404.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 5
+Rules met: none
+
+---
+⏱  66035ms (66.0s)
+📊 Tokens — total: 33606, input: 20227, output: 13379, reasoning: 12253

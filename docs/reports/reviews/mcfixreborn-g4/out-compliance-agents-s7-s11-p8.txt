@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:54.473Z file_sha256=8b25ca8d27dbdac187a067775d2cf567958d0a5025fa6d0562c8787dc4deab2b prompt_sha256=7c485005cbd4f6f79f442c00f4f56442cf693cbabe997307324a036822d5dd52
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §11.2 dated note 2026-11-21 "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it" — scripts/analysis/rule-lists.mjs:764 "if (!fs.existsSync(path.join(evAbs, 'GROUNDER-PLAN.md'))) refuse(`${ev}/GROUNDER-PLAN.md is absent: nothing to commit yet`)" — the plan-prep commit gates only on GROUNDER-PLAN.md, so an evidence folder with no FOLD-CHECK.md is committed (postPhase and wantRefs never name it either); the record the clause puts on the plan-prep commit can be absent — have commitPhase (and postPhase's wantRefs/problems) refuse when `docs/reports/reviews/<task>/FOLD-CHECK.md` is absent, exactly as it does for GROUNDER-PLAN.md.
+
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/rule-lists.mjs:831 "if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, ...)" and :26 "const BOUND = 120000" — `--max` and `DEEPSEEK_REVIEW_MAX_CHARS` accept any positive value with no ceiling, so a caller can order an input larger than the ruling's 120,000 while asking the bound to be "enforced" — reject any max above BOUND and keep the seam for smaller values only.
+
+DEFER severity=LOW — Spec 08 §11.1 "a census grep runs at the full scope its conclusion covers" — scripts/analysis/rule-lists.mjs:541 "try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }" — the generated page's parts column is measured with no context, so it counts the 28-character placeholder instead of the task context file that sits in the same prompt; a real context can push a list over into another part and the page still prints the smaller count — pass a stated nominal context size (or print the column as excluding context) so the page's part claim covers the input it describes.
+
+MET — TKT-1 dated note 2026-11-21 "rule-lists.mjs lens-input refuses without --context" — scripts/analysis/rule-lists.mjs:823 "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ...')" — the refusal exists and names the file.
+MET — TKT-1 dated note 2026-11-21 "Every lens command passes it with --context and one --section per entry of CONTEXT_SECTIONS" — scripts/analysis/rule-lists.mjs:576 "'--context', ctxRel, ...rt.CONTEXT_SECTIONS.flatMap((s) => ['--section', s])" — brief-generated context file plus one section flag per entry.
+MET — TKT-1 dated note 2026-11-21 "the tool-having seats ... run on the PLAN only ... Regression when the Files line names a path tracked at the board head" — scripts/analysis/rule-lists.mjs:718 "const need = [...clc.PLAN_SEATS.always, ...(entries.some((e) => git('ls-files', '--', e).stdout.trim() !== '') ? clc.PLAN_SEATS.conditional : [])]" — seats required in GROUNDER-PLAN.md on the plan only, conditional set keyed to a tracked Files path.
+MET — TKT-4 "An empty or truncated reply is failed, never a verdict and never a pass" — scripts/analysis/rule-lists.mjs:645 "if (bad.length) fail(...)" — an output lacking the REVIEW header in its first 15 lines or the VERDICT line fails the phase and nothing is kept.
+MET — Spec 08 §11.1 "no silent \"no rules apply\"" — scripts/analysis/rule-lists.mjs:236 "refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json" — an unmatched Files entry refuses resolution instead of attaching nothing.
+REJECT — Spec 08 §11.2 "the lists are packed by size ... nothing cut" — accused of trimming a rule list to fit the 120,000 bound — not a real issue: only the material is chunked (at file boundaries) while a list part that cannot fit is refused naming the file, and the parts are re-read and checked against the whole list text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  90009ms (90.0s)
+📊 Tokens — total: 52050, input: 32536, output: 19514, reasoning: 18432

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:51:02.936Z file_sha256=85e2ffedf561683af7bf8fc03620095bdc3596de17156374440271fb7a47908a prompt_sha256=c4895e80c209bd929c040047dd94d9358c919084fe42b84ed48c4c1a8e1a47da
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/customer-report-compute.logic.test.ts:80 "const parcelRow = (row: Json): Json => ({" — the scripted pool's row, stamp and slice fixtures are hand-built inline literals (`parcelRow`, `asStored`, the `sl()` fake at fix-tune:65) and none of the three new test files imports a typed factory — every fixture is `Record<string, any>`, so a rename in the real row or slice shape cannot break these tests at compile time.
+
+DEFER severity=MED — 5. Testing Standards §5.2 "`*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation" — src/tests/link-massing.infra.test.ts:3 "// Regression lock: scripts/link-massing.js must read its building-classification" — the file self-declares a regression fence but is filed under the infra pattern, while §5.2 mandates `*.regression.test.ts` to pin a behavior a diff must not retire, and it makes no API, DB or external call — a fence named infra is the wrong-layer false confidence §5.5 warns about, and it can be dropped as unrelated to infra coverage.
+
+DEFER severity=MED — 5. Testing Standards §5.5 "API envelope / query shape / error paths (§5.3 unhappy-path-first)" — src/tests/customer-report-compute.logic.test.ts:155 "expect(b.binds).toEqual([LOT_ID - 1, 1]);" — the query-shape and error-propagation claims for `computeCustomerPageResponse` are proven in a `.logic.test.ts`, the layer §5.2 reserves for pure functions, while §5.5 assigns query shape to the no-DB infra layer — a logic-named suite carrying DB-query claims hides an infra regression from whoever runs the infra layer.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/link-massing.infra.test.ts:81 "expect(declared[name]!.min, `${name} declares no lower bound`).toBe(SEED[name]!.min);" — four non-null assertions carry no inline comment justifying them — the `toBeDefined()` two lines up is a prior validation step, but the rule's documentation half is unconditional, so a later edit that moves that guard leaves the `!` unchecked.
+
+DEFER severity=LOW — 5. Testing Standards §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — src/tests/fix-tune.logic.test.ts:5 "// FIX.TUNE (task-378; grounder D14, D15 and the length factor owed from task-372): written FIRST, red before the fixes." — red-first rests only on the header comment, no failing-run artifact is in the material — a rule satisfied only by a comment is unmet by this output, so the red lock is a claim rather than evidence.
+
+REJECT — 4. Security & API Contracts §4.1 — the compute entry deliberately has no session or admin gate, and C1 locks "the gate is the web live switch alone" — `/api/parcels/lookup` is not an `/api/admin/**` route, so the `verifyAdminAuth` first-statement rule does not bind it and decision D-1 rules the gate.
+
+REJECT — 2. Error Handling & Stability §2.2 — the entry has no try-catch, and the test locks that ("expect(src).not.toMatch(/\bcatch\b/)") — §2.2 binds handler exports inside `src/app/api/`, not `src/lib/parcels/report-compute.ts`, which is a lib module by the §10.3 thin-route rule.
+
+MET — 5. Testing Standards §5.2 — src/tests/fix-tune.logic.test.ts:36 — "expect(json(SEMI_SLICE).config.continue_wait_ms).toBe(60000);" pins descriptor against its generated slice as the mandated parity battery.
+
+MET — 5. Testing Standards §5.5 — src/tests/customer-report-compute.logic.test.ts:195 — "await expect(computeCustomerPageResponse(REF)).rejects.toThrow('db down');" pins error propagation, not only happy paths.
+
+MET — 8. Next.js & TypeScript Constraints §8.2 — src/tests/fix-tune.logic.test.ts:21 — "const code = (p: string): string => src(p).replace(/\/\*[\s\S]*?\*\//g, '')" uses `[\s\S]`, not the ES2018 dotAll `s` flag.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  117651ms (117.7s)
+📊 Tokens — total: 52108, input: 26858, output: 25250, reasoning: 24112

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:10:27.659Z file_sha256=6741f4dd903a82c020721ccbc76611eabc7ef82ad0403c678e18f8e82b2de711 prompt_sha256=a0ea079e3ab74ae7df43cb44ee459522577b0c6fa60cbbefcf4e62f9b14e579f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Rule 3 dated note "Rule 3 is amended for lane build and fix tasks. The work lands first; the status moves in a separate closing commit that carries only the lane's records" — scripts/analysis/backlog-brief.mjs:176 "Status line (Spec 137 rule 3, docs/specs/00-architecture/137_mcqueue.md:84): \"The status line changes in the same commit as the work.\"" — the brief every lane reads prints the unamended Rule 3 as standing instruction and its "Close:" step (same file, "backlog task edit ${taskId} --check-ac <n> ... -s BUILT") never states the two-commit close or that the closing commit may stage only the lane report dir, the review context dir, task files and decision records, so a build or fix lane is told the opposite of the rule that governs it — emit the amended text for build and fix tasks (and the original only for other types), and add the closing-commit path restriction to the Close block.
+
+DEFER severity=MED — Rule 12 dated note "one compliance lens output per rule list the task attaches" — scripts/analysis/backlog-brief.mjs:183 "Review (output only): the output lens set and its commands are in the lens line of this brief; no plan lens is run (plan findings were ruled once, at the plan)." — the out array prints no lens line, no resolved list ids and no review command, though this same change's README states "The brief names each list (\"Rule lists that govern this task\": READ each whole before planning)", so the lane gets no route to the per-list outputs the close refuses it without — print the resolved list ids and the exact lens-input and review commands for each.
+
+DEFER severity=LOW — §2 note "Line numbers in this page are dated by the commit they were read at (`827ea5acc`) and are a hint; the section or note name is the pointer" — scripts/analysis/backlog-brief.mjs:176 "docs/specs/00-architecture/137_mcqueue.md:84" — the only pointer the brief gives is a bare line at an old commit, not the section or the amending dated note, so the citation cannot track the rule — cite "Spec 137 §4 Rule 3" and name the 2026-11-20 note.
+
+MET — Rule 3, §1 note "Built as gate G3, `scripts/hooks/check-backlog-task.mjs`, wired in `.husky/commit-msg`" — .husky/commit-msg:5 "node scripts/hooks/check-backlog-task.mjs \"$1\"" — the G3 gate is in the commit-msg chain.
+
+MET — Rule 12 dated note "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — .husky/commit-msg:8 "node scripts/hooks/check-lane-close.mjs \"$1\"" — the close check runs on every commit message.
+
+MET — Rule 12 dated note "`--board` reads `<board>/backlog/decisions`; a bare `--board` or a board without that directory is refused" — scripts/analysis/backlog-brief.mjs:20 "if (a.board === true || a.board === '') die('backlog-brief: --board needs a directory (the board checkout whose backlog/decisions is read)');" — bare and directory-less boards are refused, no silent fallback.
+
+MET — Rule 12 dated note "`docs/reports/reviews/<task>/context-rN.md`, one per review round and never overwritten" — scripts/analysis/backlog-brief.mjs:56 "const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);" — the round is derived from the files present and the path is written at context-r<N>.md.
+
+MET — Rule 4 "A ruling is kept as a verbatim dated note on its row" — scripts/analysis/backlog-brief.mjs:44 "const q = /verbatim, [^:]*: \"([^\"]+)\"/.exec(body)?.[1];" — the operator's words are carried into the brief and the context pack rather than paraphrased.
+
+REJECT — Rule 12 note "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — accused: the brief neither reads rule-lists.json nor checks the Files line — the launch script (scripts/analysis/backlog-lane.mjs) is the named enforcement point and it is not in this chunk, so this is cannot see, not a defect in the brief.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+Rules met: none
+
+---
+⏱  73345ms (73.3s)
+📊 Tokens — total: 49039, input: 33410, output: 15629, reasoning: 14566

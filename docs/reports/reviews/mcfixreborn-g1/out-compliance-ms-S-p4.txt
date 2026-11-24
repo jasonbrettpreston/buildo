@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:07:49.377Z file_sha256=68790b8eda8d4a2d50b4d8fa015d208d31f031f78e2c774d4307c215515cb6cd prompt_sha256=2e2c4a9defe3f5fc598c5207f36352d57731b293e7b93d05bb3bf05d15a47bcd
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-ms-S-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Objective, task relevance "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 "SPEC LINK: docs/specs/00-architecture/137_mcqueue.md rule 10 ... a dated note ... the operator's words are copied exactly" — this suite locks prose dated-notes in spec markdown and serves no report/detail/search data path; its relevance rests on task-387, which is not homed in this group — keep it but record it as a supporting-function exemption to be justified in its own group review, not a customer-feature clause.
+
+REJECT — Objective, principles "keep it simple; no scope creep" — surface-registry.infra.test.ts accused of scope creep — it is task-384's named deliverable (the web report renderer's census owner), homed in this group, so locking it is in scope, not creep.
+
+REJECT — Increment objective "the semi calculation stays in Increment 7 (7.25)" — the search suites accused of omitting semi-lot handling — the clause itself defers semi to Increment 7, so its absence in G1 tests is correct, not a gap.
+
+MET — Increment objective "The search identifies two-or-more parcels at one address..." — src/tests/surfaces/search-parity.golden.test.ts "toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', ...])" — the suite locks the 'ambiguous' (two-or-more parcels) state plus ten others across web and mobile.
+
+MET — Objective "database is created to service the existing report and details... This includes the search page" — src/tests/leads-detail.infra.test.ts "returns the composed LeadDetail envelope for a valid permit id" — the detail-page API envelope is locked, servicing the designed details page.
+
+MET — Objective "a database that works and is ready" — src/tests/lead-detail-query.coa.infra.test.ts "reads only columns that exist (witness catalog)" — the suite forbids detail SQL from reading columns the committed catalog lacks.
+
+MET — Increment objective "wires each to the report" (element G) — src/tests/surfaces/report-page.ui.test.tsx "sections render in the page-table order, and every part text is on the page" — the report page structure and hand-off surface are locked.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  51968ms (52.0s)
+📊 Tokens — total: 43827, input: 34388, output: 9439, reasoning: 8876

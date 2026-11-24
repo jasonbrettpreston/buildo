@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:26:07.620Z file_sha256=7823fbf60a155b28df31925aa7cff593e46f99ab0f9a2cd9bae08d8f34eb4cc5 prompt_sha256=5c957c576d08954a0f081d1603e83e746d70d70bbce138b9035ac03dac8cf663
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p6.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found; no pasted clause is outright failed by the material.
+
+DEFER severity=MED — Project objectives, "Five principles ... no scope creep" "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/static-page.json:79 "web_terms": { — the file created under task-390 (title: "Page table extended for interactive pages, pilot the semi question page") also lands the full static web set web_help, web_terms, web_privacy, web_maxbld_error and web_landing, and no pasted task or ruling names terms, privacy, help or error pages, the only pasted designed elements being A to G (F is the landing entry) — cite the ruling that adds those four pages in the header, or move them to their own task so the page-table task carries only the interactive pilot.
+
+DEFER severity=LOW — Project objectives, "accuracy ... understandability" "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/static-page.schema.json:4 "may name `targets` for the whole screen" — the same $comment later records the rename ("the field `targets` is renamed `platforms`"), yet the round-2 sentence still tells a writer to use `targets`, which `additionalProperties: false` rejects, so the stored contract contradicts itself — delete or mark the round-2 `targets` sentence as superseded.
+
+DEFER severity=LOW — Increment objectives, "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot" "Maybe the search portion done now with the page." — mobile_parcel_disambiguation_map.descriptor.json checks[0].why "the unlinked and unlinked_no_pin goldens (miss, empty)" vs the same file's states "name": "empty" mapped to "golden": "too_many_lots" — the check claims the `empty` state renders the no-lot-linked message, the states block binds `empty` to too_many_lots and names no state with an unlinked_no_pin golden, so the blocking check's stated evidence does not match the declared state table — align one of the two so the blocking no_silent_fallback check points at goldens that exist in `states`.
+
+REJECT — Project objectives, "One plan only" "we need one plan - we can only execute one plan" — the accusation that one file cites MF-46 plan v3, MF-53 plan v4 and MF-35 plan v2/v3 as its authority and so breaks the one-plan ruling — this is per-surface plan citation, not the execution sequencing the ruling governs, and the ruling is not a clause about headers.
+
+MET — task-395 "Every page setting carries bounds and a stated failure behaviour" — scripts/surfaces/emit-mobile-surfaces.mjs "const SEED = 'scripts/seeds/logic_variables.json';" with PAGE_SETTINGS mapping all six keys, pageSettingBounds rejecting on_invalid outside fail or clamp, and surface.schema.json adding the six matching allOf branches.
+MET — task-378 "Phone tunables are data not code" — surface.schema.json "continue_wait_ms", "entitlement_stale_ms", "lookup_retry_max", "lookup_stale_ms" are x-draft-optional config entries with an UNRESEARCHED alternative, not literals.
+MET — task-390 "pilot the semi question page drawn from table rows" — static-page.json screens.mobile_parcel_semi_question "binding": "mobile/src/components/surfaces/SemiQuestionBinding.tsx" with rows, and emit-mobile-surfaces.mjs "page: screens[id]" putting the rows in the phone slice.
+MET — Increment objectives, "the semi calculation stays in Increment 7 (7.25)" — static-page.json continue row "action": "push", "target": "route" selects a parcel and pushes, no semi arithmetic appears in the table, schema or generator.
+MET — task-336 "lot-map footprint layer (C.5) and card line (C.7) from two new reads" — descriptor field_whitelist "map.lots[].frontageStreet", "map.lots[].hasFootprint" and content "lot.lead.house_faces" carry both reads into the card line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+Rules met: none
+
+---
+⏱  123908ms (123.9s)
+📊 Tokens — total: 58605, input: 33920, output: 24685, reasoning: 23692

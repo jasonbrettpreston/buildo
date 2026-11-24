@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:55:43.193Z file_sha256=2c50e4c4f634b2648c3c3e810d76358de64a6f855aef2d23f7a7dfbbb1195cdd prompt_sha256=7950e63ef4ede7607e6d2a38875118d964fcd31b6cb0388050941f3552fbf891
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p15.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — G.6 "Report meter: a hit counts one report; report limit page when exhausted" — src/tests/parcels-lookup-page.logic.test.ts:171 "a parcel_tool hit with a served page and no evaluated legacy option is served and not counted" — a hit that serves a report page does not decrement the meter, so G.6's "a hit counts one report" is unmet on the page path; bounded today because T-B3 (1) shows no customer producer serves a page until MB-44 — count the served page (the MB-94 c / MB-44 change this test awaits) or record the pre-MB-44 gap explicitly against G.6.
+DEFER severity=LOW — A.6 "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026" (limit 10) — src/tests/parcel-tool-meter.logic.test.ts:2 "§11b.7 rules 5-6 (dated note 2026-11-11: 20 a month, plan and trial, D-2..D-6 a)" — the header cites 20 a month, contradicting the pasted 10 and the same file's "expect(SEED[REPORT_LIMIT_KEYS.plan]).toMatchObject({ default: 10, min: 1, max: 1000 })" — update the citation to the MF-47 ruled 10.
+DEFER severity=LOW — A.6 "6 of 10 reports left until 9 Dec 2026" (limit 10) — src/tests/parcels-entitlement.infra.test.ts:72 "reportsLimit: 20, reportsLeft: 15" (fake db plan/trial '20') — the route fixture pins a 20 limit the spec no longer holds; as a mock it only checks passthrough and can mask a seed regression to 20 — use the seeded 10 values or read the bounds.
+DEFER severity=LOW — D.7 "Question-page states: loading, error, rate limit, entitlement, schema drift" — src/tests/semi-question-design.logic.test.ts "const e = all(golden('unauthorized').props).find((n) => n.component === 'Alert')!" — the design test carries cases for loading, error, unauthorized and rate_limited only; D.7 names a schema-drift state with no case here (cannot see a schema_drift golden) — add a schema-drift golden/case reading the committed file.
+MET — A.6 "6 of 10 reports left until 9 Dec 2026" — src/tests/parcel-reset-label.logic.test.ts "expect(at('2026-12-09T05:00:00Z')).toBe('9 Dec 2026')" — the served resetsOnDisplay renders the Toronto date in the v8 "9 Dec 2026" shape.
+MET — A.6 (limit 10) — src/tests/parcel-tool-meter.logic.test.ts "expect(SEED[REPORT_LIMIT_KEYS.plan]).toMatchObject({ default: 10, min: 1, max: 1000 })" — the ten-report allowance is a seeded, bounded setting.
+MET — G.6 "a hit counts one report; report limit page when exhausted" — src/tests/parcel-tool-meter.logic.test.ts "resolves.toMatchObject({ kind: 'limit_reached', reportsLimit: 10 })" — a hit is counted and refused at the limit.
+MET — D.4 "Three answers: Yes, it is one half of a semi; No, it is detached; Not sure" — src/tests/semi-question-design.logic.test.ts "expect(cards(ask)).toHaveLength(3)" — three answer radios are pinned.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  89495ms (89.5s)
+📊 Tokens — total: 56035, input: 35934, output: 20101, reasoning: 19236

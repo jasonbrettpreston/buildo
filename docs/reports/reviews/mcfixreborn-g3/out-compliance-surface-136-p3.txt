@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:45:04.993Z file_sha256=a5d4abadbfff20a2b4cabef35b670572189f6544c07ce62ad80ffd656b5913c3 prompt_sha256=c6985fb6cbd3305798f31aa5a5efb39259c2cd95d0ff3eb8ac4c5a1341bfc21c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks" — mobile/__tests__/semiQuestionScreens.golden.test.ts "expect(byTestID(t, 'parcel-semi-continue')!.props.onPress).toEqual({ action: 'push', route });" and mobile/__tests__/semiQuestionPage.behaviour.test.tsx "await waitFor(() => expect(mockReplace.mock.calls).toEqual([[route]]));" with "expect(mockPush).not.toHaveBeenCalled();" — the props golden declares Continue as a push while the built page replaces and never pushes, so the declaration is not proven against the built page — reconcile the golden's Continue action with the page's replace call (or vice versa) so the golden describes the page.
+DEFER severity=LOW — fe.31 "one props golden per reachable state per declared target, each covers a state or check, every state covered" — mobile/__tests__/reportScreens.golden.test.ts "const PAGE_STATES = ['page_all_null', 'page_no_ad', 'page_not_evaluated', 'page_option_hidden', 'page_v21'];" together with "expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES].sort());" — REPORT mobile states are a hard-coded literal, not read from a declared state set (unlike semiQuestionScreens which reads descriptor.states), so "every state covered" is checked against a copy, not the declaration — read the REPORT descriptor's mobile states and compare, as the semi question golden does.
+DEFER severity=LOW — fe.56 "a lock never red against the defect it names is not a lock" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx "replacing `useMutation(buildAnswerParcelLookupOptions())` with `useMutation({ mutationFn })` (dropping retry 0 or networkMode 'always') turns it red." — the case only asserts the positive options and its red claim is prose with no executed planted-defect — add a planted variant that drops retry 0 and prove the case fails.
+MET — fe.24 — mobile/__tests__/surfaceRenderer.smoke.test.tsx "an unmapped component, an unknown icon, an unknown content key, an unknown action all throw" — the renderer throws on unknown inputs rather than skipping.
+MET — fe.33 — mobile/__tests__/surfaceRenderer.smoke.test.tsx "it.each(GOLDEN_SITUATIONS)('%s renders non-empty with the header and the field, and no account button (A.13)')" — each SEARCH golden situation renders through SurfaceRenderer on mobile.
+MET — fe.36 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "the back button goes back with history, else to the Lookup route" — navigation goes through expo-router with canGoBack before back and router.replace on the answer.
+MET — fe.42 — mobile/__tests__/reportScreens.golden.test.ts "a lot view in the view is drawn as Svg nodes from the sent coordinates (strings only, refs for texts); with no drawing nothing is drawn" — the client draws only the sent coordinates, no geometry maths.
+MET — fe.43 — mobile/__tests__/reportScreens.golden.test.ts "the open panel or How? is the `detail` tree, never in the page; closed is null; the close action is close_detail" — details_view sheet yields a separate detail tree and an unknown value throws.
+MET — fe.47 — mobile/__tests__/sliceConfig.test.ts "sliceNumber applies the declared bounds" — bounds and on_invalid posture are read from the slice data, not typed thresholds.
+
+VERDICT: PASS
+Clauses checked: 13   Unmet: 0
+Rules met: fe.24, fe.33, fe.36, fe.42, fe.43, fe.47
+
+---
+⏱  117655ms (117.7s)
+📊 Tokens — total: 54785, input: 32183, output: 22602, reasoning: 21725

@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:54.818Z file_sha256=484311e9a704e69477fa117b3810b3077348e343c2a727c8406f2215661c279a prompt_sha256=ee0a4f7a398d7123e8452dedb304035a9b029f36c4a7e7fcd02dc9e8c4b921ea
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-90-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec90 §2 Theme Constraint "The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components." — mobile/src/constants/parcelSearch.ts:135 "so light-mode and dark-mode phones look the same;" with mobile/src/constants/parcelSearch.ts:139 "screen: 'flex-1 bg-report-page'," — the layout table pins the dark variants to the light Daylight values and the screen, pill, notice, legal, select and report classes carry no dark: twin at all, so every page built on this table renders light under system dark mode — give each report-* surface a real dark twin, or land an operator ruling that supersedes §2's dark-mode clause for the Daylight pages before merge.
+
+DEFER severity=MED — spec90 §7 "Offline Mutation Queue: Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection." — mobile/src/hooks/useParcelLookup.ts:139 "return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;" — the one mutation in the material opts out of the online gate, so an offline Continue fails at once and nothing is ever queued or flushed by the MMKV-backed cache — either carry the semi answer through the offline mutation cache under the default 'online' network mode, or record an operator ruling that the answered lookup sits outside the queue's scope.
+
+DEFER severity=LOW — spec90 §2 "UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts." — mobile/src/constants/parcelSearch.ts:171 "sm:h-auto min-h-[44px] w-full flex-col items-start justify-start" — the only breakpoint class in the table is a height reset, no md: rule turns the candidate cards into side-by-side or grid on a tablet and the column stays one 448px stack — add a breakpoint row or grid rule to cardRow and column, or record that the centred 448px column is the ruled tablet layout.
+
+DEFER severity=LOW — spec90 §14 "Pull-to-Refresh: Standard mobile expectation. Use `RefreshControl` combined with `queryClient.invalidateQueries()`." — mobile/src/components/surfaces/SearchBinding.tsx:231 "keyboardShouldPersistTaps: 'handled'," — the network-backed results ScrollView carries no refreshControl and SurfaceRenderer's ACTION_PROPS admits only onPress and onChangeText, so the search page cannot pull to refresh — expose a refresh action and wire RefreshControl to invalidate the ['parcel-search', q] key.
+
+DEFER severity=LOW — spec90 §9 "Use the established design system tokens from Spec 74 (e.g., `bg-bg-feed`, `text-amber-hardhat`)." — mobile/src/constants/parcelSearch.ts:47 "screenBg: 'bg-[#0e0e10]'," — the surface's colour tokens are literal hex arbitrary values, and the file records the bypass at line 39 "arbitrary-value classes rather than new entries in `mobile/tailwind.config.js`" — move the shades into tailwind.config.js as named tokens, or delete the unused set so the layout's report-* tokens are the only colour source.
+
+MET — spec90 §13 Zod Boundary — mobile/src/hooks/useParcelLookup.ts:46 — both lookup fetches and the entitlement fetch safeParse raw.data before the result reaches a query or a setQueryData.
+
+MET — spec90 §5 NO useEffect for Fetching — mobile/src/hooks/useParcelLookup.ts:79 — every server read is a useQuery or useMutation queryFn, nothing fetches inside an effect.
+
+MET — spec90 §6 React Native Reusables in-repo — mobile/src/components/surfaces/SurfaceRenderer.tsx:23 — parts import from the vendored @/vendor/rnr path, no npm UI package.
+
+MET — spec90 §9 Safe Areas — mobile/src/components/surfaces/SurfaceRenderer.tsx:19 — SafeAreaView comes from react-native-safe-area-context and the tree root sets edges.
+
+MET — spec90 §9 44px touch targets — mobile/src/constants/parcelSearch.ts:169 — retry, chip, input, card, select and report carry min-h-[44px], and lotMap.ts clear and semiBack carry min-h and min-w 44.
+
+MET — spec90 §11 Strip all PII — mobile/src/lib/maxbldHelp.ts:26 — the failure log carries the topic only, never the typed address.
+
+MET — spec90 §3 Dumb Glass, server-computed display — mobile/src/lib/parcelSearchCore.ts:78 — reports-left is a presence test over served fields, no count or date is derived on the device.
+
+MET — spec90 §13 Sentry — mobile/src/hooks/useParcelLookup.ts:14 — schema drift and parse failures are captured through @sentry/react-native.
+
+REJECT — spec90 §5 "NO Web Libraries: Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`." — importing lucide-react-native at mobile/src/components/surfaces/SurfaceRenderer.tsx:22 — the ban names the web package lucide-react, lucide-react-native is the native SVG icon package and not a web paradigm, so the anti-pattern is not triggered.
+
+REJECT — spec90 §7 "Validation (Monorepo): Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync." — the per-tree transcription behind "@/lib/schemas" in mobile/src/hooks/useParcelLookup.ts:21 — the pasted amendment to §4 records that no monorepo exists and that the generated mirror is Spec 126 §5.2's work, so this diff is not the site of that fix.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 5
+Rules met: none
+
+---
+⏱  346248ms (346.2s)
+📊 Tokens — total: 86885, input: 31789, output: 55096, reasoning: 53751

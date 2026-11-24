@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:43:15.915Z file_sha256=974888402db25b30bf5f55ff7a2cca96f7c9c477a079f69e462c44aaf3fa0c0b prompt_sha256=a276f7ffddc5c83cd7dfb9b68ed1bead1e3d3f3a04dc603e95ef2dd4d4030e4f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.1 "a data claim carries its query **run** (host + `current_database()` printed — lessons `:83`)" — scripts/analysis/lot-map-data-check.mjs:71 "for (const r of rows) console.log(`${r.parcel_id}  footprint=${r.has_footprint}  primary=${r.has_primary_footprint}  street=${r.has_street ? JSON.stringify(r.street) : 'MISSING'}`);" — the run prints rows and the summary at line 74 but never prints the host or `current_database()`, so the lot counts this tool exists to produce carry no DB provenance and cannot be tied to the rehearsal database — add one `SELECT current_database(), inet_server_addr(), inet_server_port()` before the rows (and echo the client host/port) and keep it in the run output.
+
+DEFER severity=MED — 08_agents.md §7 rule 10 dated note 2026-11-19 "the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo)" — scripts/analysis/lot-map-data-check.mjs:3 "// For the multi-lot address of ~/Buildo-scratch/lanes-20261117/avail-search/SAMPLES.md (sample 9, 26 Kenneth Ave: parcels 5112332 and 5427844)," — the only provenance for the hard-coded `SAMPLE_PARCELS` at line 16 is a path under ~/Buildo-scratch, so a board reader cannot resolve the sample the check is built on — copy the sample-9 excerpt into the repo (docs/reports/reviews/task-336/ or a fixture) and cite that repo path from line 3.
+
+DEFER severity=LOW — task-336 card line "SRCH.LOTCARD-Lot-map-footprint-layer-C.5-and-card-line-C.7-from-two-new-reads-massing-footprint-presence-fronting-street" — scripts/analysis/lot-map-data-check.mjs:21 "EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id AND pb.is_primary) AS has_primary_footprint," — a third measure (is_primary, and the line-6 comment's "any building vs the house" reading) is added on top of the two reads the card names — drop `has_primary_footprint` or cite the card line that asks for it.
+
+MET — MCINC-7 — scripts/analysis/lot-map-data-check.mjs:42-45 — `refuse()` admits only 127.0.0.1/localhost and only port 55322, so the dev target 127.0.0.1:54322 that MCINC-7 names is refused before any connection.
+
+MET — 11.1 "a census grep runs at the **full scope its conclusion covers**" — scripts/analysis/lot-map-data-check.mjs:69-74 — the summary counts exactly the rows for the requested parcels and ids with no row are printed as "not found" instead of being silently dropped.
+
+REJECT — MCINC-7 — accused of not sourcing ~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh — the file is one read-only SELECT (line 68 "await client.query('BEGIN READ ONLY');", line 70 ROLLBACK) whose own guard admits only the rehearsal stack, so the operator-go rehearsal gate does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: MCINC-7
+
+---
+⏱  48365ms (48.4s)
+📊 Tokens — total: 28642, input: 17769, output: 10873, reasoning: 10046

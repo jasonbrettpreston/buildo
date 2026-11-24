@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:48:01.789Z file_sha256=f23a69aa233cb5dd935c7b58a31283e12dd88008d16a42b73ef851d8200857ed prompt_sha256=a0cc8bb3fb263283f79f4f595c88c243c9c2b25dc95610b9c0ce9e4228af900a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — scripts/analysis/gates/generated-docs.mjs:83 "if (row && typeof row.generator === 'string' && row.generator.trim() && row.has_check === true) return null;" — the gate's GREEN rests entirely on a hand-written "has_check: true": no code reads the generator path or runs its --check, so a renamed/deleted generator or a --check arm that stopped exiting 1 keeps GREEN forever, and selfTest's own known-good fixture (line 144 "generator: 'scripts/g.mjs'") names a path that does not exist in the tree — make rowViolation refuse a row whose generator path is absent from the tree, and have --report re-run each generator's --check (or record the run line) instead of trusting the 2026-09-26 read.
+
+DEFER severity=MED — §11.1 "a census grep runs at the full scope its conclusion covers" — scripts/analysis/gates/generated-docs.mjs:104 "entries.filter((e) => e.isFile() && e.name.endsWith('.md'))" against its own claim at line 3 "every committed artifact under `docs/reports/generated/` is" — the listing reads one directory level, so a .md in any subfolder is neither owned nor RED while the gate prints "all owned" — walk the directory recursively, or restate the claim as top-level "*.md" only.
+
+DEFER severity=MED — §11.2 dated note 2026-11-23 "for a plan launch, the plan grounder itself writes FOLD-CHECK.md, once, after the last fold of the plan" — scripts/analysis/backlog-lane.mjs:88 "(context, plan compliance outputs per list, GROUNDER-PLAN.md of a separate grounder, the required seat reports, outcomes, the round block and references on the task, the Plan hash line)" — FOLD-CHECK.md is missing from the evidence the launch gate enumerates and I cannot see planGateErrors to confirm it is required there — add FOLD-CHECK.md to the launch evidence list and to the set planGateErrors requires.
+
+DEFER severity=MED — §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — scripts/analysis/proof-slices.json:8 "\"reason\": \"not run by this tool: duration unmeasured, and the lane rule refuses the test-runner call; the PLAN gives no other way to measure it\"" — the seven mobile jest files can be run and their duration measured, so the row ships NOT BUILT on an unexecuted measurement and pins the tool's exit at 3 permanently — measure the run once and convert the row to an argv row with its timeoutMs, or name the ruling that forbids the run and cite it in the row.
+
+DEFER severity=MED — §11.9 dated note 2026-11-19 "the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`" — scripts/analysis/backlog-lane.mjs:193 "`Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`" — when the G1 ticket carries no Ticket: line the brief is handed a literal placeholder where the MB/MF/plan id belongs instead of the launch refusing — refuse (exit 3, naming the G1 file) when g1r.stdout has no Ticket: line.
+
+DEFER severity=LOW — §11.1 "a line citation is read, not remembered" — scripts/analysis/proof-slice.mjs:24 "the registered tooling variable the row timeout is read from" against proof-slice.mjs:75 "const res = run(row.argv, { timeoutMs: row.timeoutMs ?? DEFAULT_TIMEOUT_MS });" — timeoutMsFromVariable has no caller, so the row timeout is still the typed 120000 at line 22 and the doc comment asserts a fact the code does not implement — reword to "will be read from once registered (D10b OPEN)" or wire the function into commandRow.
+
+MET — §11.2 dated note 2026-11-21 "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — scripts/analysis/backlog-lane.mjs:176 "const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section \"${x}\"`).join(' ');" — every lens command in the brief carries --context plus one --section per CONTEXT_SECTIONS entry.
+
+MET — §11.2 dated note 2026-11-21 "Integration and Reality-Check on every build or fix launch" — scripts/analysis/backlog-lane.mjs:91 "if (gateType === 'build' || gateType === 'fix') {" — the seat gate runs exactly on build and fix launches, and planGateErrors is handed the tracked() test for the Regression condition.
+
+MET — §11.2 dated note 2026-11-21 "the review context file of a task is docs/reports/reviews/<task>/context-rN.md" — scripts/analysis/backlog-lane.mjs:192 "const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(...)}.md`;" — the lens commands name the round file, not the replaced context-<date>.md name.
+
+MET — §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new)" — scripts/analysis/gates/generated-docs.mjs:144-145 "const good = checkGeneratedDocs(dirOf('a.md', 'b.md'), rows);" and "const bad = checkGeneratedDocs(dirOf('a.md', 'b.md', 'extra.md'), rows);" — the gate's self-test asserts the clean tree GREEN and the unowned file RED.
+
+REJECT — §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators ... never folds into a diff review" — accused: backlog-lane.mjs:181 runs scripts/deepseek-review.js review on a diff file per lens and folds the findings — the 2026-11-21 dated note in this same list keeps "the DeepSeek lens set per rule list and the separate grounder", so the demotion does not reach the lane lens set.
+
+REJECT — §11.2 "one cross-read adversary checks the folded decisions PAIRWISE" — accused: the launch gate requires only GROUNDER-PLAN.md and no cross-read pass — the 2026-11-21 dated note rules the cross-read adversary pass "is no longer required after a fold" and keeps the agent available on request.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 6
+Rules met: none
+
+---
+⏱  104918ms (104.9s)
+📊 Tokens — total: 52706, input: 27862, output: 24844, reasoning: 23319

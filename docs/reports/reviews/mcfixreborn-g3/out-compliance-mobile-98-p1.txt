@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:07:54.819Z file_sha256=a86917e7fa9fa1d8fe9de490bebb128c032ac4b6d0f7e69114501c81ea37feaf prompt_sha256=f93d51f2868e87a6cf254b9b57de51bc21c8e6463502878c1c33c1fbee57b2a7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-98-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — spec98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — mobile/__tests__/parcelScreens.golden.test.ts:97 "expect(searchProps(situations[g.situation] as SearchSituation)).toStrictEqual(g.props);" — a whole-tree equality against a committed golden file (same shape at mobile/__tests__/lotMapScreens.golden.test.ts:89 "expect(lotMapProps(situation(g.situation))).toStrictEqual(g.props);" and the props goldens of daylightSearchPages.golden.test.ts) is not one of the two forms the pasted dated note 2026-11-10 excepts from the snapshot exclusion (render smoke, screen-behaviour test), so a snapshot-style UI golden now sits under mobile/__tests__ — obtain and record the operator ruling that props goldens count as goldens and not snapshots, or move these comparisons out of mobile/__tests__ into the surface conformance suite the header names.
+
+DEFER severity=LOW — spec98 §4 "Unit tests focus strictly on business logic, state machines, and Expo Router guards." — mobile/__tests__/parcelScreens.golden.test.ts:117 "expect(webGoldenFiles().map((f) => f.slice(0, -'.web.json'.length))).toEqual(Object.keys(goldens).sort());" — the mobile suite now fails whenever the WEB target's golden set drifts, a cross-target requirement no pasted clause or ruling names, added on top of the business-logic remit — assert only what the pasted clauses name, or cite the ruling that binds the two targets in the test header.
+
+DEFER severity=LOW — spec98 §4 "Unit tests focus strictly on business logic, state machines, and Expo Router guards." — mobile/__tests__/daylightSearchPages.golden.test.ts:93 "for (const f of ['src/components/surfaces/LotMapBinding.tsx', 'src/lib/lotMap.ts', 'src/constants/lotMap.ts']) expect([f, /neighbour/i.test(read(f))]).toEqual([f, false]);" — the case turns a rendering rule into a case-insensitive word ban over three source files, wider than the removed polygons and reachable by a comment or a still-carried contract field, and the pasted fixtures still carry "neighbours": [] — scope the assertion to the tree (no neighbour-keyed nodes) and leave source text alone.
+
+MET — spec98 §4 "**Location:** `mobile/__tests__/`" — all ten pasted files — every file under review sits in mobile/__tests__/.
+
+MET — spec98 §4 dated note 2026-11-10 "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots" — mobile/__tests__/lotMapPage.behaviour.test.tsx:72 "expect(screen.getByTestId('parcel-lotmap-screen')).toBeTruthy();" — render smoke finding test ids, labels and host props, the exact form the note authorises.
+
+MET — spec98 §4.1 "**§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5)." — mobile/__tests__/parcelPageHooks.test.tsx:25 "it('replaces once on settled data and a background refetch cannot fire it again', () => {" — useSettledRedirect is pinned to wait on isFetching false and fire once.
+
+REJECT — spec98 §4 "UI component snapshot testing is deliberately excluded" — the accusation that mobile/__tests__/lotMapPage.behaviour.test.tsx is an excluded UI snapshot — the pasted dated note 2026-11-10 says a render smoke and a screen-behaviour test are not snapshots, and this file only renders, finds test ids, labels and host props.
+
+REJECT — spec98 §4.1 "**§8.1** ... **§8.2** ... **§8.5** ..." — the accusation that the idempotency, router-branch and store-enumeration mandates are unmet — the files those clauses name (useParcelLookup.test.ts, subscriptionGate.test.ts, storeReset.coverage.test.ts, recentSearchesStore.test.ts) are not in this pasted chunk of 5, so the accusation cannot be supported from the material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  100933ms (100.9s)
+📊 Tokens — total: 58239, input: 34108, output: 24131, reasoning: 23132

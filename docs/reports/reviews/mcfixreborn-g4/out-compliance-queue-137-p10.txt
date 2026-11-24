@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:10:27.658Z file_sha256=1364364b081fe001a81ea9a361ecb2c031696fb4b79ef5a08862861ea5ded743 prompt_sha256=d63938e80f030120d6699ff5826d25ef1ef76221c46060bc3269ee3ba1c6ee6c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-366 "the-close-gate-refuses-a-task-without-the-compliance-lens-output-per-list-and-a-separate-grounder-verdict" — scripts/deepseek-review.js:174 "console.log(lensHeader(systemInstruction, userPrompt));" — the REVIEW header prints before the dryRun return and before the model call, so a dry run, over-cap refusal or failed call leaves the exact first line the close check treats as lens proof — print the header only after a successful model call, or make the close check reject DRY-RUN and non-zero exits.
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/deepseek-review.js:65 "or raise DEEPSEEK_REVIEW_MAX_CHARS deliberately." — the error path tells callers to raise the cap, so a review call can exceed the operator's 120,000-character bound — remove the override or clamp DEEPSEEK_REVIEW_MAX_CHARS to 120000.
+DEFER severity=MED — Task "Files of other tasks are also read here: task-384." — scripts/hooks/check-task-files.mjs:2 "CHK.1 scope check, git mode (task-3; relevancy pass 2 R9; re-use ruling MORNING-DECISIONS.md:750-751, build-in-repo :744)" — the diff adds a task-3/CHK.1 commit hook while task-3 is not in the pasted homed task list and only task-384 is named as other-task material — remove this file from the group review or paste task-3's governing ruling.
+MET — task-375 "the-review-template-substitutes-safely" — scripts/lib/review-template.js:77 — one regex pass with a function replacer inserts values literally, so no dollar-sequence expansion or token re-scan.
+MET — section 6 "The commit check above stays deferred." — scripts/hooks/check-task-files.mjs:2 — the new hook checks Files scope, not the deferred missing status, expiry or DROPPED check.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+Rules met: none
+
+---
+⏱  136517ms (136.5s)
+📊 Tokens — total: 45199, input: 12730, output: 32469, reasoning: 31987

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:38:18.804Z file_sha256=bcad82a819f32adaacf8b908d8b31fce8883f9f80381fc744a682a60fc5f37d3 prompt_sha256=909bfe3b75767d517ce3d2efeddf401d0936dc35ea9a9db206e6ebae6efe50a4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p5.txt (model: deepseek-reasoner)
+
+BUG none confirmed.
+
+DEFER severity=MED — src/tests/backlog/rule-lists-table.logic.test.ts:359 "for (const f of [...SPECS, 'mobile/x.ts, docs/specs/02-web-admin/128_surface_standard_policy.md']) handbookOnly(lists(f), f);" — two paths are glued into one `--files` argument (everywhere else `lists()` takes one path), so either resolve splits on comma and this entry only duplicates checks already made on line 342 ('mobile/x.ts') and on SPECS (which already contains 128), or it does not split and the test dies at the `expect(r.status).toBe(0)` in the `lists` helper (line 15) — split it into two array entries, or drop it, it adds no coverage either way.
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts:193-195 "run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });" — the three git calls' exit status is discarded, so a failed init/add/commit leaves the temp tree uncommitted with no error logged and the failure surfaces later as a confusing resolve result — assert `run(...).status === 0` and include its stderr in the message.
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts:172 "const text = t.$comment.join('\\n');" — `$comment` is an unchecked `as` cast to `string[]`, so if the JSON carries a string `$comment` this throws a TypeError instead of failing an assertion, and the "proved by" check silently disappears — guard with `expect(Array.isArray(t.$comment)).toBe(true)` or normalise with `[].concat(t.$comment)`.
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts:271 "fs.mkdirSync(path.join(d, 'mcbylaws'));" — non-recursive mkdir inside a helper called many times in one test run (S1 alone calls it three times), which only works if `tmp('eng')` returns a fresh directory per call; cannot see helpers.ts, so if `tmp` is stable per key the second call throws EEXIST — pass `{ recursive: true }`.
+DEFER severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts:117 "const four = ['surface-126', 'surface-128', 'surface-135', 'surface-136'];" then ":120" "for (const l of four.slice(0, 3))" — the variable called `four` holds the positive id (surface-136) in its last slot, so the negative loop must be sliced; anyone extending the loop to `four` breaks the `toContain('surface-136')` assertion two lines above — name the negatives (NOT_ATTACHED) and keep surface-136 in its own const.
+DEFER severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts:11 "type Res = { lists: { id: string; rows: string[] }[] };" — `rows` is declared on the resolve result type and never read by any assertion, a cast field with no consumer — drop it so the type matches what the tests actually use (id only, plus `exempt` where needed).
+
+REJECT — src/tests/backlog/rule-lists-table.logic.test.ts:217 "const ids = new Set(text.match(/\\bfe\\.\\d\\d\\b/g));" — `String.match` may return null and the result is passed straight to `Set` — correct: `new Set(null)` is an empty set, and the following `toEqual(range(n))` fails loudly if nothing matched.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- comma-joined `--files` argument on line 359 is either vacuous or fails the test outright
+- git init/add/commit exit statuses discarded in the three temp-tree helpers
+- `$comment` cast to `string[]` then `.join` without an Array.isArray guard
+
+---
+⏱  138385ms (138.4s)
+📊 Tokens — total: 34858, input: 13022, output: 21836, reasoning: 20909

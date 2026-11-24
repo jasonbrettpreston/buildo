@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:29:58.448Z file_sha256=34895e64d335e02acd24fb3f6fb40885d110bdfc644f375c853b4ead5bfcf45c prompt_sha256=fc8c98f0d2320340ac66a67427924b8efe03be18a407061030c6a1e137e71a2e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/parcels/consumer-lookup.ts "  if (v == null) return null;" — `Number('')` is 0, so a blank numeric value (for example a comparable `build_ratio` or `permit_fsi`) is emitted as 0 rather than null, while the sibling `lot-map.ts` `num` returns null for `''` (see `(v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))`) — add `|| v === ''` to the guard so blank values stay null.
+
+DEFER severity=LOW — src/lib/parcels/lot-map.ts "  if (outline !== null && outline.length > OUTLINE_MAX_BYTES) {" — `.length` is UTF-16 code units, not bytes, so the constant named `OUTLINE_MAX_BYTES` is compared against a character count; a multi-byte GeoJSON body can exceed the intended byte cap unnoticed — rename to `OUTLINE_MAX_CHARS` or compute `Buffer.byteLength(outline)`.
+
+DEFER severity=LOW — src/lib/parcels/geometry.ts "  const n = ring.length - 1; // exclude closing point" — `shoelaceArea` and `minimumBoundingRect` always drop the final vertex without checking `last === first`, whereas `computeCentroid` explicitly handles an unclosed ring, so a ring that is not closed silently loses one real vertex here — mirror the `computeCentroid` check (`last[0] === first[0] && last[1] === first[1] ? n-1 : n`) in both functions.
+
+DEFER severity=LOW — src/lib/parcels/lot-size-entry.ts "export const VERIFIED_LOT_AREA_SOURCES: readonly string[] = [];" — because the array is empty, the `effectiveLotSize` verified branch (`VERIFIED_LOT_AREA_SOURCES.includes(read.city_source)`) can never be true, so that precedence step is dead code until a source is added — remove the branch or add a test/lint lock that fails once a source is declared so the branch is exercised.
+
+DEFER severity=NIT — src/lib/parcels/lot-size-entry.ts "resultsInputStamp === read.entry!.entered_at.toISOString()" — the non-null assertion hides `read.entry` nullability, and it is only safe because of the preceding `entered` boolean, not because TypeScript narrowed it — narrow inline (`read.entry !== null && ... read.entry.entered_at.toISOString()`) instead of asserting.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none blocking; all findings are DEFER (MED/LOW/NIT) recorded for the fix pass
+
+---
+⏱  131357ms (131.4s)
+📊 Tokens — total: 60900, input: 30277, output: 30623, reasoning: 30022

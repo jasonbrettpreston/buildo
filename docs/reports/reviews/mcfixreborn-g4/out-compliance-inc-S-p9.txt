@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:59:12.171Z file_sha256=3235a322d933cefe8c8f40012985d55bd879a424c6374d812844128ada978d28 prompt_sha256=47a5783fbb5f17ca43b65cc1683ce49884c4e5468a047a0930f0c4c3738c71dc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0439 "each rule list reads only the files the rule table names for it" — src/tests/proof-slice.logic.test.ts:1 "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md (surface standard: the S gate table)," — the Increment S rule table names no src/tests file, its where column only names page locations, so this chunk is judged against a list that does not name it — record the review/proof tooling rule list named in the files' own SPEC LINK lines as this chunk's basis, or exclude these files.
+
+DEFER severity=LOW — Task "Files of other tasks are also read here: task-384" — src/tests/hooks-composition.infra.test.ts:25 "// task-424 (RR-0370 option C): the ONE list of the non-interactive pre-push checks, sourced by .husky/pre-push and the push station." — the file pins task-424 and RR-0370, neither in the pasted group task list nor the named other-task task-384, so the card authorising this behaviour is not pasted and cannot be judged — paste task-424's card and RR-0370, or record the file as out of scope.
+
+DEFER severity=LOW — Task "task-68 ... Acceptance Criteria from line 66" — NONE — the seventeen tasks' acceptance criteria are pasted only as line references into unpasted cards, so AC-level compliance is cannot see — paste the acceptance criteria text so each task's output can be judged against it.
+
+REJECT — inc-S A.6 "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026" — the change does not build or test the reports-left line — the material is review and proof tooling tests, not the search page, so the element does not bind it.
+
+MET — RR-0408 "keep the review calls small" — src/tests/proof-slice.logic.test.ts:1 — the change arrives as chunk 9 of 9, keeping each review call small.
+
+MET — RR-0433 "the group review is their one output review" — src/tests/proof-slice.logic.test.ts:1 — the suites of built tasks 68, 358, 363, 366, 375 are presented once, as their one output review.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  140705ms (140.7s)
+📊 Tokens — total: 51075, input: 32914, output: 18161, reasoning: 17616

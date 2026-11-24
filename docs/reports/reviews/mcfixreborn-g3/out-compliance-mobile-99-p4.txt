@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:20:03.751Z file_sha256=03e852930c810dac9adee33e8bb83b23390b7bc333bec937723de3a4dbb30c9a prompt_sha256=2d1b59b1011f7fbcfc9cd610a2a86766a8c7d61ad6d7b209ac79d54860d1e929
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §8.3 "Pattern: render the layout twice (once with isFetching=true, once with =false) — both must produce the same JSX." — mobile/__tests__/parcelPageHooks.test.tsx:34 "expect(mockRouter.replace.mock.calls).toEqual([['/x']]);" — the only gate-stability case added counts replace calls on a hook rerender and never compares two renders' output, so the pasted "same JSX" pattern is only half covered — add a layout-level case that renders the gate with isFetching true and false and asserts identical output.
+DEFER severity=LOW — §7.2 "A `track('query_invalidate', { key })` PostHog event in DEV only" — mobile/__tests__/parcelScreens.golden.test.ts:221 "expect([f, /\btrack\(|console\./.test(t), /useFilterStore|@\/lib\/onboarding|useLeadFeed|useFlightBoard/.test(t)]).toEqual([f, false, false]);" — this shape lock bars any `track(` in app/(app)/parcel-tool/index.tsx, SearchBinding.tsx and SurfaceRenderer.tsx, so a DEV invalidation event landing in one of those modules would fail this test — scope the ban to production-path analytics or exempt the `query_invalidate` call by name.
+REJECT — §7.3 "every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', ...)`" — accused of firing router.replace in useSettledRedirect without route telemetry — the clause binds only AuthGate/AppLayout, and the hook under test belongs to the parcel-tool pages, so no route_decision is owed.
+REJECT — §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice ... produces zero observable mutations" — accused of adding no bridge idempotency test — §9.7 records "Idempotency tests for all bridges per §8.1" in `mobile/__tests__/bridges.test.ts` as a P1 that "depends on 9.8", outside this chunk's four files.
+REJECT — §7.6 "A fixed enumeration of product flow events MUST fire at canonical sites" — accused of adding no funnel-event coverage — §7.6's canonical sites are the lead, flight-job, paywall and flight-board screens and §8.7 places that grep in `spec99.mandates.lint.test.ts`, none of which is a file here.
+REJECT — §7.5 "`mobile/__tests__/useAuth.test.ts` asserts `Sentry.setUser` calls match the auth state machine" — accused of no Sentry.setUser assertion in this chunk — the clause names `useAuth.test.ts` specifically, and none of the four files under review is that file.
+MET — §8.3 — mobile/__tests__/parcelPageHooks.test.tsx:30-34 — rerendering with isFetching true then false after the first redirect leaves "expect(mockRouter.replace.mock.calls).toEqual([['/x']]);" unchanged, so toggling isFetching does not flip the §6.5 redirect gate.
+MET — RR-0439 "each call is at most 120,000 characters" — the material under review is four test files (44 + 120 + 87 + 268 lines), well inside the per-call cap.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  66313ms (66.3s)
+📊 Tokens — total: 40085, input: 23996, output: 16089, reasoning: 15304

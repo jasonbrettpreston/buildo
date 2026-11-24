@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:36:55.107Z file_sha256=f65378d3ebe296573f77e0b81bee6f447505f3639485888e4eb05cc7fb7fe23c prompt_sha256=6af91057ff85506c3b8dd63fd5d34faf62083da675ef38546d290a3e936b069e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-step-132-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — core.14 "Declared equals witnessed." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json emits.why "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT." — the same file declares that ledger write twice (data_story "writes one: a `usage_events` row (`property_view`)", metering.ledger_event "property_view" with evidence src/lib/entitlements/index.ts:494-514), so emits.answer "none" is a stale pre-MF-45 reading of a route that now meters — set emits.ledger_events to ["property_view"] (insert path src/lib/entitlements/index.ts:508-512), or state in why why the meter is not an emit.
+
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — descriptor config.why "The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings." — five numbers the route applies (candidate cap 11/10, 60/min, 30/min, and SLOW_QUERY_MS=500 quoted at states.degraded "route.ts:41") are unregistered literals and no deviations[] entry declares the deferral — register them in config.logic_variables with min/max and on_invalid "fail", or add a dated adjudicated deviation.
+
+DEFER severity=MED — core.14 "the cross-step ledger is only true if it is measured, never re-typed" — descriptor inputs.why "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps" against the seven objects in inputs.tables, and the check why "The response is an explicit pick-by-name of 4 field(s)" against data_story "an explicit pick-by-name projection of 24 fields" and the 80-name inputs.field_whitelist — three typed counts in one file disagree with the arrays they describe — derive each count from its array at generation time and stop retyping them.
+
+DEFER severity=MED — core.15 "A field that looks enforced but has no executor is a promise nobody keeps." — descriptor limitations[0] "check_id": "contract_parcels_lookup__auth_class_parity" — the a11y touch-target limitation (a11y.touch_target_min_px "UNRESEARCHED") is wired to the auth-class parity check, so no check ever reads the a11y value — point check_id at a check that asserts the a11y value or record it as descriptive with the Spec 128 section 4 escalation named.
+
+DEFER severity=MED — x-v3.2 "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it" — descriptor deviations[0].adjudicated_by "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45" — its only authority is a scratch path outside the repo plus a queue row, not a committed decision-log entry or register row, while the sibling deviation cites "RR-0331 (backlog/decisions/decision-116)" correctly — cite the committed log id for MF-45 D-4 (a), or record the register row before this deviation cites it.
+
+DEFER severity=MED — core.6 "A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page." — descriptor contract_parcels_lookup__field_whitelist_parity "severity": "FAIL", "blocking": false (four of the six FAIL rows are blocking:false) — the row the notes call the guarantee that "the proprietary Tier-3 diagnostic 'groups' data never reaches the consumer app" cannot fail a run, and no warn_limit or retighten condition is declared — make the whitelist-parity and auth-parity rows blocking, or declare each non-blocking FAIL row as WARN with a stated retighten condition.
+
+DEFER severity=LOW — core.14 "Declared equals witnessed." — descriptor outputs.tables lists user_profiles as a synchronous write target "It writes 2 table(s) synchronously inside the request", while notes (3) says the INSERT runs "ONLY under isDevMode() && uid==='dev-user' ... so it is unreachable in production" — the declared production write set overstates the contract's writes — drop the dev-only INSERT from outputs.tables (keep it in notes) or say in the target's why that it is dev-only.
+
+MET — core.2 — descriptor checks[] (six rows), invariants "none", plausibility "none", interpretation "none", emits/offers answered as objects with a why — every category is present and empty ones are declared, and at least one check exists.
+
+MET — core.8 — descriptor config.logic_variables "parcel_map_neighbour_radius_m" min 5 max 100 and "parcel_map_neighbour_limit" min 1 max 50, both "on_invalid": "fail" — the declared map settings are pinned bounds with a failing validation behaviour.
+
+MET — x-rulings.4 — descriptor deviations[1].adjudicated_by "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116) ... verbatim at :1432 \"2. y 1 a\"" — the second deviation cites the committed decision log with the operator's own words.
+
+REJECT — core.12 — outputs.tables declares no mechanic/guard/scope/retract discipline per write target — core.12 governs a pipeline step's write targets, and this surface file's own under_126 text says a CONTRACT's "outputs.writes is forced to \"none\""; not a real issue here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+Rules met: core.2, x-rulings.4
+
+---
+⏱  97206ms (97.2s)
+📊 Tokens — total: 49346, input: 31761, output: 17585, reasoning: 16197

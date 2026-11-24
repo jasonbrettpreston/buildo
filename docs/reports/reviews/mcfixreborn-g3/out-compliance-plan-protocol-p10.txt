@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:29:15.515Z file_sha256=6f12b0fb58f65ef92dfcf2adc8a2fec08bde7df1317b9807efb0cc7a25adb381 prompt_sha256=4712838bffb89ccc8afff2bd905300bf3e6226e99cb2d47c191501e2453fce7c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p10.txt (model: deepseek-reasoner)
+
+BUG/DEFER/MET lines:
+
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/lib/entitlements/index.ts:85 "// Plain uuid = uuid compare: migration 229 converted `up.user_id` to UUID" — the same file states at line 8 "columns (dropped by migration 229, the wave AFTER this wave; until then the columns exist", so the header and the JOIN comment give opposite states for migration 229 and one of the two is stale — restate one status of 229 in the header and the JOIN comment.
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/components/surfaces/web/SearchBinding.tsx:96 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the binding now emits a second contract family that the file's own declared ref list at line 9 still limits to "contract_parcels_lookup", so the declaration is stale against the code it introduces — add contract_parcels_entitlement to the declared ref list.
+DEFER severity=LOW — FE-31 "C-9 44 px" (SearchBinding.tsx:4) — src/components/surfaces/web/SearchBinding.tsx:66 "  footerLink: 'rounded-xl text-zinc-300'," — the only buttons in the file that carry no size are the footer link buttons (the tree's controls all pass size lg), and neither the part nor the class sets a 44 px minimum, so the declared C-9 touch size is unenforced on that path (footerNode not pasted, cannot see) — give the footer link class or part an explicit 44 px minimum.
+REJECT — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — the diff is accused of adding tasks with no source — the material is built code, not a seq-patch, so no task is added here and the clause does not bind this chunk.
+
+MET — task-360 — src/lib/parcels/lookup-flow.ts:78 — an unsure lot short-circuits before both the stored read and the compute and returns page null until semi=answered.
+MET — task-383 — src/lib/parcels/lookup-flow.ts:1 — the flow lives in src/lib/parcels and its import list (lines 13-20) names no meter, entitlement or usage module, matching the thin-route split.
+MET — task-320 — src/components/surfaces/web/SearchBinding.tsx:152 — the reports-left line is drawn only through reportsLeftShown(s.entitlement) and the same gate guards the entitlement block in searchWebData, so no line renders without the served fields.
+MET — task-389 — src/components/surfaces/web/SearchBinding.tsx:136 — the legal sentence appears once, as a footer part, and the footer is the last child of the screen.
+MET — task-395 — src/lib/entitlements/index.ts:405 — readReportLimits and readMeterStatementTimeoutMs check every key against the seed min/max and throw ReportLimitsMissingError instead of falling back to a literal.
+MET — task-378 — src/lib/massing/geometry.ts:118 — formatHeight takes feetPerMetre as an argument and reads N/A for a missing factor, and types.ts serves feet_per_metre rather than a literal.
+MET — task-351 — src/lib/entitlements/index.ts:632 — resetsOnDisplay is computed server-side from resetsOn and served as a label; the device derives no date.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+Rules met: none
+
+---
+⏱  80819ms (80.8s)
+📊 Tokens — total: 50767, input: 34540, output: 16227, reasoning: 15370

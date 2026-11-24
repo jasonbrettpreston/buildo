@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:27:35.340Z file_sha256=e72137922756b589aa4bbc38063837b8645a939ffea80bb7b3e759d06db0889e prompt_sha256=bf4a24f67752fd967501b277c56190c12896d94b6305b7fd413a08b29cecb3bb
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-372 "Acceptance Criteria from line 32" — NONE — the paste carries only a line pointer, so D1/D2/D9/D6 cannot be confirmed from the context — paste the card's acceptance criteria text (line 32 on) so the settings and property tests can be judged.
+MET — "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot" — src/tests/search-parser-guard.logic.test.ts "expect(out.lotMap).toEqual({ kind: 'multi_parcel', parcelIds: ['R1', 'R2'], num: '482', truncated: false })" — the two-or-more-parcels lot map case is exercised by the guard.
+MET — "Search comes before increment 1: the search page, then (1) address confusion" — src/tests/search-parser-guard.logic.test.ts "expect(out.match?.parcelId).toBe('W1')" — A.4 direction guard and A.5 unit strip run on the real search path.
+MET — "the semi calculation stays in Increment 7 (7.25)" — src/tests/admin-report-preview-live.logic.test.ts "expect(lineage.unbound_types).toEqual(['house_with_secondary_suite'])" — the suite is listed as unbound and not calculated, deferring semi maths.
+MET — "The database exists to service the designed report, details and search page" — src/tests/customer-report-read.logic.test.ts "expect(await readCustomerPageResponse(REF)).toEqual(EXPECTED_CURRENT)" — the report hand-off (G) reads the stored page for the report surface.
+REJECT — "Five principles, keep it simple; no scope creep" — accused the source-walk and temp-tree meta-tests (T10 importers walk, L1 import fence) of adding scope — they are the guard/fence checks the named cards (task-123 T6/T10, task-411 L1) require, not extra product behaviour.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  53355ms (53.4s)
+📊 Tokens — total: 42793, input: 32149, output: 10644, reasoning: 10174

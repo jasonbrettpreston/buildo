@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:56:18.514Z file_sha256=4baffd17bd6532931ac2dd1f8a36b0abbcbc5ae2845e469d4759303bd1ad29d7 prompt_sha256=9f8c99c0d1626652ea48f5befe7e57e2cece44df83753c1d73c8f612703e9387
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-brief.mjs:62 "const CAP_TOTAL = 120 * 1024; const CAP_BLOCK = 12 * 1024; const CAP_SUMMARY = 4000;" — the document-section cap alone is 122,880 bytes and the written context file adds the Task, Acceptance criteria, Decisions, Milestone, Prior reviews and Dependencies sections on top of it, so the brief can hand a review call a context file well past the operator's 120,000-character cap with no refusal — assemble the whole context string first, cut it to 120,000 characters minus the diff part before writing, and name the blocks it shortened.
+
+DEFER severity=LOW — RR-0439 "each rule list reads only the files the rule table names for it" — "LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file)" — the attached list governs the Increment S search surfaces (A.1 to G.6) and names none of this chunk's paths (.claude/review-templates, .husky/commit-msg, .husky/pre-commit, migrations/334, scripts/analysis/backlog-brief.mjs), so the verdict below rests on the pasted rulings alone — attach the list the rule table resolves for these paths, or record the mismatch in the lane so the next round does not repeat it.
+
+REJECT — RR-0414 "the oversized files are read as changed parts" — that the review reads whole files where the ruling asks for changed parts — every path in this chunk is new ("new file mode 100644"), so the whole file is the changed part and no unchanged line is judged.
+
+MET — RR-0431 — scripts/analysis/backlog-brief.mjs:183 — the brief prints "no plan lens is run (plan findings were ruled once, at the plan)", so the lane reviews the output only.
+
+MET — RR-0387 — .claude/review-templates/README.md:160 — "A separate grounder rules on every finding" is required for every finding, with the grounder barred from being the lane or an assignee of the task.
+
+MET — RR-0408 — .claude/review-templates/README.md:151 — calls are kept small by rule: "keep a diff part to 38000 characters or less with a 33000 character pack", with at most 8 findings per lens run.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+Rules met: none
+
+---
+⏱  82089ms (82.1s)
+📊 Tokens — total: 49149, input: 30961, output: 18188, reasoning: 17617

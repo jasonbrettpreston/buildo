@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:02:20.870Z file_sha256=d251a053c3ad9e0d7133774e14ba92d6413131e12b3a2a4e52bbf8c3b11d68c1 prompt_sha256=d46ed103646ab23236614a5ebf7f97a2e75b1104d92f1f1797fe3db6d9c6ffb2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — scripts/surfaces/_schema/census/contracts.json:22003 "a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing" — the pasted clause counts one report for a hit, the diff makes a hit with no produced page count nothing and rests on RR-0278, which is not in the pasted rule list, so on the pasted clauses the meter rule is unmet — add the report-produced meter ruling (RR-0278) to the pasted rule list, or restore G.6's text, before merge.
+DEFER severity=MED — doc-2 D.8 "Owner answer stored (a reopened lot does not ask again)" — mobile/src/lib/semiQuestion.ts:10 "the answer is lot_form_user_override, carried as a route param (O-12: no server store)" — the answer is never stored, so a reopened unsure lot asks again and D.8 is not delivered by this code — the pasted row already marks D.8 BOUND-NOT-STORED with deliverer GAP.12, so record the gap against GAP.12, not this diff.
+DEFER severity=LOW — task-338 card "the two new lot-map fields declared in the lookup contract and the consumer registry regenerated" — scripts/surfaces/_schema/census/contracts.json:22002 "an explicit pick-by-name projection of 24 fields" — the same rewritten paragraph adds frontageStreet and hasFootprint to the response whitelist but still says 24 fields, so the declared count and the whitelist disagree — update the count in that string after confirming no other hunk of this file removes two fields.
+REJECT — doc-2 C.5 "Building footprint on each lot (or none), drawn on the map" — that the presence-only hasFootprint read fails C.5 — the pasted row assigns C.5 to GAP.13 and marks it NOT BUILT, so the drawn footprint is outside this diff and the read is the data step the card names.
+MET — doc-2 D.1 — mobile/src/lib/semiQuestion.ts:75 — "else if (data.lotForm?.unsure === true) state = 'ask';" enters ask only for an unsure lot, while a settled sure lot and an empty lookup navigate away.
+MET — doc-2 D.5 — mobile/src/lib/semiQuestion.ts:85 — "route: selected === null ? null : reportRouteAfterAnswer(parcelId, selected)" disables Continue until an answer is chosen and then opens the report with that answer.
+MET — doc-2 D.7 — mobile/src/lib/semiQuestion.ts:38 — "export const SEMI_QUESTION_STATES = ['loading', 'ask', 'error', 'redirect'] as const" carries loading and error, with the rate-limit, entitlement and schema-drift classes taken from classifyParcelSearchError(error, args.schemaDrift).
+MET — doc-2 A.6 — scripts/surfaces/_schema/census/contracts.json:22896 — "One caller today: the app search page line" names SRCH.A6 through mobile/src/hooks/useParcelLookup.ts, and the entitlement whitelist adds resetsOnDisplay, so the line's left, limit and reset label are served.
+MET — doc-2 G.1 — mobile/src/lib/semiQuestion.ts:76 — "else { state = 'redirect'; navigate = parcelSearchRoute('unique', { parcelId, query: '' }); }" sends a unique match straight to the report with no extra page.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+Rules met: none
+
+---
+⏱  236531ms (236.5s)
+📊 Tokens — total: 85174, input: 34680, output: 50494, reasoning: 49635

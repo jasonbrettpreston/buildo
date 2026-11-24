@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:05:13.401Z file_sha256=7e30050e6f2f12f77006b4cb99ba4a5d1445f8190e8b5aa83967a8819b628b8a prompt_sha256=669251fc1ababa75b531570745848f571a7b799110697aa59b75fdb1a8d24797
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-384 backlog/tasks/task-384 "STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks" — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json "They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files." and "measured": "No 44 px measure exists." — the renderer is declared outside C-9 with no 44 px measure, so the 44 px half of the pasted task title is not verified — run C-9 over the renderer's golden output or paste acceptance line 32 that waives it (cannot see line 32).
+DEFER severity=LOW — project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json "Spec 88 per-scenario line (NOT built; §6.10 puts cost out of Phase 3 scope; M-67 lines unchanged)" — the proposal carries a per-scenario cost row the file itself places outside Phase 3 scope — keep it status proposed and out of any built schema, or drop it.
+MET — task-411 — src/app/api/leads/detail/[id]/types.ts — modeled_gfa_sqft declared with "modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft (fe.44: the client never converts)", and seed-report-v2.mjs alt_formatter_input "square feet as served by the API (never square metres; the factor is the pinned setting parcels_sqm_to_sqft)".
+MET — task-384 census owner — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json — owns.components lists ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx plus check binding_web_report_components_owned.
+MET — task-384 text and component checks — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json — limitation "judged by the FE-31 text check C-2b and the component check C-8 ... C-2b 105 and C-8 213 structural findings pinned".
+MET — project objective "the database is created to service the existing report and details ... This includes the search page" — scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json "the first web consumer of SEARCH; MF-44" and binding_mobile_list.descriptor.json "the mobile LIST binding (MF-53)" — the binding entries serve the search and report surfaces.
+REJECT — task-374 "FIX.FOOTER-Web-report-footer-links-use-the-router-and-meet-the-44-px-target-D7-D8" — that src/app/admin/report-preview/page.tsx uses raw <a href> navigation — the footer drawing component (ReportPage.tsx) is not in chunk 2 (cannot see) and the preview's pickers are admin navigation, not the web report footer.
+REJECT — project objective "A task that serves neither a designed element nor a supporting function is most likely not relevant" — that scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json is out of scope for the search increment — it proposes report and detail rows that serve designed element G (hand-off to the report), so relevance is met.
+REJECT — project objective "keep it simple; no scope creep" — that scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json changes the copy to "the basement, not shared stairs and halls" — the landing entry is designed element F and the change clarifies the unit size basis, a supporting accuracy fix.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  155890ms (155.9s)
+📊 Tokens — total: 54711, input: 35636, output: 19075, reasoning: 18201

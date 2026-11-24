@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:07:49.376Z file_sha256=c762d49fe72684067aeff82defa78bd553d66e13bfa4a1c740d82e5c3d8ee321 prompt_sha256=10d45aaebc0910dfaa47b29407bcbd197f867344b6530d67943da10d0e180e95
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-ms-S-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-332 Acceptance Criteria "Acceptance Criteria from line 65" — src/tests/surfaces/site-footer.ui.test.tsx:3 "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 (one tree, a render per binding), §0b item 11 (navigation is a route)," — the clauses the file binds itself to (§11b.2, §0b item 11, FE-18, FE-33) and the task-332 AC text are not pasted, so whether these assertions meet them cannot be seen — paste task-332 AC from line 65 and the 126 §11b.2, FE-18, FE-33 text in the next run.
+DEFER severity=LOW — Project objectives "keep it simple; no scope creep" — src/tests/surfaces/site-footer.ui.test.tsx:69 "expect(f.querySelector('[data-pending=\"true\"]')?.textContent).toBe(g2);" — the test fixes a pending-state attribute contract on G2 that no pasted clause names — name the clause that pins the pending marker or restrict the assertion to the ordering the pasted objectives support.
+MET — Project objectives "The database exists to service the designed report, details and search page" — src/tests/surfaces/site-footer.ui.test.tsx:34 "const mountSearch = (s: WebSituation, disabled = false) => render(provided(h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), runtime: { disabled } })));" — the shared footer is asserted on the designed search page from the real search tree, not a stub.
+MET — Increment objectives "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — src/tests/surfaces/site-footer.ui.test.tsx:66 "const mount = (footer = FOOTER) => render(h(ReportPage, { view: view('web'), footer }));" — the same footer text and hrefs are asserted on the report render, which is the hand-off surface G.
+MET — Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built" — src/tests/surfaces/site-footer.ui.test.tsx:38 "for (const [name, s] of Object.entries(SITUATIONS).filter(([, v]) => Array.isArray((v as Json).recent)))" — the footer is exercised across every search situation rather than one, so the search-page work is not narrowed.
+REJECT — Increment objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — that a footer test is not one of the named designed elements A to G — the footer is asserted on the search page (a) and the report hand-off (c), so it is a supporting function of two named designed elements, not an off-scope task.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: none
+
+---
+⏱  23911ms (23.9s)
+📊 Tokens — total: 9419, input: 5106, output: 4313, reasoning: 3591

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:12:47.789Z file_sha256=dd2353b5e206d7f9b2786ebd4fe3ef656c5c46823d2f7b69fd944135e7364fbc prompt_sha256=eb17fdde4bc61824d304277ba1003a34914078358ffb2a358a061deaed3bfc60
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts:108 "else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.page === null) meter = 'not_produced';" — the one test that keeps an unproduced report from being charged fails open: an omitted `page` key is `undefined`, not `null`, so it skips this branch and falls into openReport and a report that was never produced is counted (the exact charge RR-0278 forbids) — use a nullish test (`body.page == null`) so an absent key degrades to not_produced.
+
+DEFER severity=MED — src/app/api/parcels/entitlement/types.ts:15 "reportsLeft: z.number().int().nonnegative().nullable()," — the strict parse is the whole error path of this display read: a mid-month downgrade (used > limit makes reportsLeft negative) or a 0 allowance (reportsLimit is `.positive()`, types.ts:14) rejects the object inside the route try and the endpoint answers 500, so the reports-left line vanishes instead of showing 0 — clamp used/left server-side or widen the bounds and keep 200 with the clamped values.
+
+DEFER severity=MED — scripts/surfaces/screen-checks.mjs "if (ids.length === 0 && expected > 0)" — the page arm's only "must not pass on nothing" floor is `expected`, which is derived from the same best-effort reads it guards (callsBuilder swallows a read error as `false`, pageStrays swallows a missing dir as `[]`), so a corrupt or renamed static-page.json plus binding pair reports "S-page ok (0 of 0 screens)" and the gate exits 0 — take the floor from bindings.json's module count and make an unreadable page table or surfaces dir a finding on its own.
+
+DEFER severity=MED — scripts/surfaces/search-golden-capture.ts "const situation = rj(path.join(DIR, `${s.golden}.mobile.json`)).situation as string;" — the writer reads the very file it is about to write, so a deleted golden (or a first capture of a new state) throws ENOENT and aborts the loop mid-write, and --check has the same hole at "else if (fs.readFileSync(p, 'utf8') !== fresh)" so a missing golden is a crash, never a STALE line — source the situation from a committed state-to-situation map and report a missing file as a finding.
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts:73 "const access = await parcelToolAccess(pool, ctx);" — the entitlement gate (and the rate-limit call at :90, and `withRateLimit` in the entitlement route) sit outside the `try` that starts at :94, so a DB failure there leaves through withApiEnvelope instead of the route's own `internalError(cause, { route: 'GET /api/parcels/lookup' })`, against the stated "500 logged+sanitized" path — move the gate and the rate-limit await inside the try so every failure is logged with route context. (cannot see with-api-envelope.ts to confirm whether its fallback logs.)
+
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts:90 "const rateLimit = await withRateLimit(request, { key: rl.key, limit: rl.limit, windowSec: RATE_WINDOW_SEC });" — the bucket is taken after auth, the gate and the schema parse (:83), so a client looping on a malformed query or a lapsed session is never throttled and every retry still costs an auth read plus a gate query — consume the rate bucket before the gate, or key a cheap pre-auth bucket.
+
+REJECT — src/app/api/parcels/lookup/route.ts:111 "const m = await withTransaction((client) => openReport(client, ctx.uid, ref));" — two taps or two tabs on the same lot look like a double charge — handled: the count is serialised on the (user, parcel_tool) entitlement row and keyed by the lot in the billing month ("a re-open in the month is free", descriptor metering.why), so the second call returns already_counted and writes nothing.
+
+REJECT — src/app/api/parcels/lookup/route.ts:142 "return ok(body);" — a throw after the meter (a log failure, an unserialisable body) looks like a charged report with no payload — handled: the row is already committed, the catch answers 500, and the same-month retry returns already_counted with the payload, so the report is delivered and never charged twice.
+
+VERDICT: PASS on error-path safety
+Paths walked: hit with page (counted), hit with no page, not_evaluated, semi_pending, candidates, miss, dangling parcelId, no-plan all-null entitlement, 400, 401, 403 subscription, 403 limit_reached, 429, flow throw, meter throw, throw after meter, concurrent double-submit on one lot, retry in a later month, retry of a 400/401, manifest and bindings unreadable, validator module missing, descriptor read throw, generator hang at 120s, missing golden, stale fingerprint, missing content key, missing binding source, page table unreadable   Unguarded: 3
+
+---
+⏱  140891ms (140.9s)
+📊 Tokens — total: 62645, input: 34957, output: 27688, reasoning: 26500

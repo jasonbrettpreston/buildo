@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:38:18.803Z file_sha256=69cc9f033ab703c9ab9db5b43b714521481e5b45b58f6520ab7740329dbd2105 prompt_sha256=5e19a24f9c76fa8bc05a56401b94f19b3f303901f50381c9239a1afd6d40086a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts "expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);" — the file's own declared type says parseLensInput returns '{ listPart: string; id: string } | null', so this line reads a field that type does not have and the 'as unknown as' casts past the null case — add 'ok: boolean' to the declared result (or assert the call returns null on a shortened part) and drop the double cast.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:50 "const res = JSON.parse(r.stdout) as Res;" — the status is not checked before parsing, so a refused resolve (exit 3) surfaces as a JSON SyntaxError and the real stderr is discarded — put 'expect(r.status, r.stderr).toBe(0)' first, as every neighbouring resolve test does.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "?.[1] as string; (const filesLineOf = (n: number) => /^Files: (.*)$/m.exec(...)" — the 'as string' hides that the match can be undefined and that a wrapped Files line is cut at its first line, so resolvedIds receives 'undefined' or a partial path and the failure lands far from the cause — match, assert the capture, and throw naming the task id.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:269 "it('a big list is split by its own headings: every part carries the material, parts together hold every list line, none over the bound'" — the body never asserts the bound, while the V2.WHOLE tests do 'expect(t.length).toBeLessThanOrEqual(max)' — add the per-part length assertion so the stated claim is enforced.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:280 "it('a split of a long single heading list falls to its deeper headings, and a section that cannot fit is refused naming list and section'" — only the refusal half runs (status 1 on list 'big' at 2600), the fall-to-deeper-headings half has no assertion — assert a successful split of a long single-heading section at a bound that fits, or rename the test.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "it('control: with no GIT_* set, a directory that is not a repository is refused (git ls-files failed), not answered from another repo'" — the premise in the name is never established: nothing unsets GIT_DIR, GIT_INDEX_FILE, GIT_WORK_TREE and nothing proves tmp('norepo') sits outside a work tree — delete the three variables for the duration and restore them in a finally.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js'));" — require() yields any, so rt.extractSections, rt.CONTEXT_SECTIONS and rt.substitutePlaceholders are unchecked and a rename in that module leaves 'sel' undefined while the room assertion can still pass — type the module shape with an 'as' like the other dynamic imports in this file.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists.logic.test.ts:73 "expect(pipe).not.toContain('mobile-100');" — this cannot fail once line 72's exact toEqual pins the whole array — drop it.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  257304ms (257.3s)
+📊 Tokens — total: 66785, input: 27845, output: 38940, reasoning: 38122

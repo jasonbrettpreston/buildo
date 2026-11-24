@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:46:55.205Z file_sha256=5f5ebd34272d0fdcbe9c0ad4972ea8977d47f070b266da039754c306b2b2d2db prompt_sha256=996b44882d8269f22ad11db7e98bb6a42fe8d1bd2c39e32d8e94addfb85ade17
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/nav-by-route.logic.test.ts:2 "the Spec 135 row for this lock is owed as FE-36 (reserved;" — the lock names a row that by its own words is not in the register, so it names neither a rule id nor a declared alias, and nothing in this chunk checks the lock-to-row direction (register-locks-resolve iterates register rows only, never lock files) — land FE-36 in the register, or declare the alias in the rule map, before the lock ships, or re-cite the §0b note under a registered id — land FE-36 or declare its alias
+DEFER severity=MED — † "An id or code pointer that lands with another branch (rule-map `meta.pending_integration`)." — src/tests/surfaces/nav-by-route.logic.test.ts:3 "its text is in the §0b note until FE-35 is in the register" — this is a pointer that lands with another branch (FE-35) and it carries no †, so meta.pending_integration does not list it and it can expire unowned — mark FE-36† at the SPEC LINK and add the pending_integration entry
+DEFER severity=MED — Intent Ledger "listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, ... knowingly-retired" — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:2 "(the Intent Ledger: CONTRACT / INCIDENTAL / DEFECT)" — the artefact is named as an Intent Ledger with a vocabulary outside the closed set, so a G3 or G-2 reader cannot resolve a single row to a disposition — keep the name only if each INTENTIONALLY_CHANGED row also carries its DISPOSITION_VOCAB value, else rename it to the surface procedure's own term
+DEFER severity=LOW — lock "names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/search-follow-ups.logic.test.ts:8 "C.5 and C.7 (footprint presence and the" — the header declares C.5 and C.7 unbuilt while the SRCH.LOTCARD block asserts the whitelist went 14 to 16 with exactly map.lots[].hasFootprint and map.lots[].frontageStreet, so which ruling this lock enforces is contradictory — move C.5 and C.7 out of the "Not built here" list
+DEFER severity=LOW — lock "names the rule id (or a declared alias) and asserts it" — src/tests/surfaces/nav-by-route.logic.test.ts:6 "landing it now with the six known violations as NAMED EXCEPTIONS, each tied to the task that will fix it (MF-46, MF-48/MF-74, MF-49)" — the shipped list holds five exceptions (`EXCEPTION_AUDIT_ROWS = [15, 16, 22, 29, 30]`) and re-owns #29 and #30 to MF-50, so the header names two tasks that own nothing and omits the one that does — restate the header as five exceptions owned by MF-49 and MF-50
+MET — lock — src/tests/surfaces/register-locks-resolve.infra.test.ts:1 — names FE-09 and asserts rules 2, 3 and 5 against the git-tracked tree in trackedSet
+MET — lock — src/tests/surfaces/search-reports-left.logic.test.ts:1 — names SRCH.A6 and asserts cases (a) to (f) against committed content, goldens and the persisted query client
+REJECT — class-A "its behaviours need a both-directions lock" — accused of shipping one-directional locks — no step in the material claims risk class A and the clause governs a step's behaviours, not surface locks
+REJECT — OWED "Printed by #44 (h) when a reader's pin is due but its producer still awaits captures" — accused of using OWED as a general status for register rows and named exceptions — the clause names one #44 print site and does not reserve the word for the decisions register's status column
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 1
+Rules met: none
+
+---
+⏱  77349ms (77.3s)
+📊 Tokens — total: 50265, input: 33673, output: 16592, reasoning: 15584

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:21:13.429Z file_sha256=026ec529e9c766902517ced1c0dfd3306ccb6a249c416fb4547682014ab7b556 prompt_sha256=dbbaa33e3f320ba77d2377449bdb9bea0c5e3ba7cc1c5f9b9ee63f4dc76780d8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/components/permits/BuildingMassing.tsx:30 "{massing && massing.primary ? (" — a lot whose footprints have no primary row shows "Building footprint data not available for this property" even though the route sent accessory structures and coverage, so the person loses massing data that exists — gate on massing alone and render the accessory and coverage blocks when primary is null.
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx:263 "if (s.candidates.length === 0) return [];" — when the typed Toronto address matches nothing (showMiss) the person gets only the miss line, no "Report incorrect address match" link, which is exactly the state where a bad match needs reporting — design silent on the miss state, add the help link there.
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx:286 "disabled: route === null," — with candidates listed and none picked the primary Select button is greyed with no hint telling the person to pick a card (mobile draws a pick-hint line), so the action is not obvious — design silent for the web search, add a hint or an enabled state.
+DEFER severity=NIT — src/components/surfaces/web/SearchBinding.tsx:205 "s.errors.schemaDrift ? [] : [node('Button', {" — the schema-drift notice carries no Retry button while every other error does, so that error state has no in-place way forward — design silent, editing the input still works, so bounded.
+REJECT — src/app/api/permits/[id]/route.ts:40 "{ error: 'Invalid permit ID format. Use: permitNum--revisionNum' }," — reads as developer copy to the eye, but it is only the JSON body of a malformed-path 400 and the page renders its own wording, so it does not mislead the person — design silent and it never reaches the screen.
+REJECT — src/components/surfaces/web/SearchBinding.tsx:382 "if (isObj(p.onClick) && p.onClick.action === 'open_help') {" — the report link stays live when the live switch (`disabled`) is off, which looks like a miss against "turns off the input and every button" — but it only opens the Help page, the footer links are intentionally left live, so it is harmless and matches the design note.
+
+VERDICT: PASS on the person's experience
+States checked: first view, loading spinner, candidates answered, candidate selected, miss (empty), unexpected error with retry, schema drift, rate limited, entitlement, outside Toronto, live switch off, footer links, massing present, massing absent, accessory only, pre-permit detail, permit not found, invalid id   Dead ends found: 1
+
+---
+⏱  71269ms (71.3s)
+📊 Tokens — total: 39454, input: 26471, output: 12983, reasoning: 12388

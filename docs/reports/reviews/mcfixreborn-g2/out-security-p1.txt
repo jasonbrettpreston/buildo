@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T02:44:48.760Z file_sha256=0e47d184888e6ed820efab64531e0ac9611680319ab9acb26668c4ccb7af6b76 prompt_sha256=25da35c8515202a1ff1e9db250e39559a7881049d1d7f0f643cf218d49cd79c4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-security-p1.txt (model: deepseek-reasoner)
+
+Touches: admin guards (parcel lookup, internal preview), entitlements (customer report producer), PII (lot addresses and coordinates). No user-owned row appears in the diff, so there is no IDOR path; every id in the read SQL is a bind parameter.
+
+DEFER severity=MED — src/lib/parcels/report-compute.ts:75 "if (!MAXBLD_WEB_LIVE) return null;" — the customer report producer's only gate is a compile-time constant with no session, entitlement or meter inside, so any caller that reaches this entry after the flag flips receives the full computed page (values, options) with nothing checking that the caller earned it — bounded today because the flag is reported pinned false and the entry returns before any read, and the lookup route's own gates are outside the pasted material (cannot see).
+
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts:300 "[streetName + '%', num || null]," — a typed "%" or "_" reaches the typeahead LIKE pattern unescaped, so a consumer request "100 %" returns any ten parcels numbered 100 instead of the typed street, widening the candidate set beyond the parsed name — capped at LIMIT 10, returns only address plus parcel_id (the same data the exact path already shows), and the file already refuses this in the unlinked read at :319, so the escape is a follow-up card not a breach.
+
+REJECT — src/lib/admin/parcel-lookup.ts:127 "if (!/^[a-z_][a-z0-9_]*$/.test(col)) throw new Error(`illegal column identifier: ${col}`);" — looks like SQL assembled from strings in the SELECT projection — every column comes from the static T1/T2/T3 lists and the guard rejects anything outside [a-z_] before quoting, and parcelId is bound as $1.
+
+REJECT — src/lib/parcels/report-compute.ts:94 "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" — looks like the config-built batch SQL could hand one lot's customer another lot's row — the returned row is re-verified against the integer id read from parcels for the requested parcel_id and any other row becomes a miss, so no cross-lot read.
+
+REJECT — src/lib/admin/report-preview-live/stored-page.ts:43 "return v !== null && v !== undefined && v !== '' && Number(v) === SWITCH_ON;" — looks like a loose truthiness read of the internal-preview switch — only a sett
+
+---
+⏱  165057ms (165.1s)
+📊 Tokens — total: 48553, input: 25234, output: 23319, reasoning: 22764

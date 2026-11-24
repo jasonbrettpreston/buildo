@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:56:18.513Z file_sha256=ff65a6e81033c67a21938fc844b3b57c9276824de59b309fc6dbfe81b36eecbf prompt_sha256=440fed0e134d2ed5bcbd030e3fe465440a2cd1296c27ba58a1c630bb79fe001d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-five-words-p7.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings
+
+DEFER severity=LOW — Description "Files of other tasks are also read here: task-384." — src/tests/hooks-composition.infra.test.ts:23 "// task-424 (RR-0370 option C): the ONE list of the non-interactive pre-push checks, sourced by .husky/pre-push and the push station." — the station tests (T1 to T5) rest on task-424 and RR-0370, neither of which the pasted card names, so no pasted clause can judge them — name task-424 in a later group card or split the station block so the reviewed set matches the pasted scope.
+
+DEFER severity=LOW — Glossary lock, "a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`" — src/tests/proof-slice.db.test.ts:6 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the lock-db has never executed, so the variable's registration is asserted only by an unrun test, the comment-or-test-name pattern the walk rejects — record the missing run in the round ledger and execute it at the operator GO before the lock counts as met.
+
+DEFER severity=LOW — Glossary lock, "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/review-template.logic.test.ts:1 "SPEC LINK: .claude/review-templates/README.md (template format + invocation)" — if the rule map files this suite as a lock, it names a README and task ids, never a rule id or declared alias (cannot see the rule map) — add the governing rule id or its declared alias to the SPEC LINK line.
+
+DEFER severity=NIT — Glossary lock, "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/review-lens-template.infra.test.ts:1 "SPEC LINK: task-358 (REVIEW.LENSES); Spec 08 section 7 rule 4" — a task id and a document section stand where a rule id or declared alias is required (cannot see the rule map) — name the rule id or alias.
+
+DEFER severity=NIT — Glossary #NN, "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — NONE — cannot see: step-validate.mjs is not in this chunk, so the #39 and #52 citations in the hooks suite are unverified — confirm both numbers exist in step-validate.mjs or its gates before the chunk is ruled clean.
+
+MET lines
+
+MET — Glossary lock, "a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`" — src/tests/proof-slice.db.test.ts:1 — the DB assertion is in the correctly suffixed suite, so npm test never selects it and test:db is its only runner.
+
+MET — Glossary Gate A ... K, V, "gates H, K and V live there" — src/tests/hooks-composition.infra.test.ts:1 — the only gates the material names are G, J, J1, J2 and J2b, all inside A to K, and the gate file it asserts sits under scripts/analysis/gates/.
+
+MET — RR-0431 "We only want to review the same set of files once" — material header "chunk 7 of 7" — each of the five paths appears once and no file repeats inside the chunk.
+
+MET — RR-0439 "each call is at most 120,000 characters" — material header "part 1 of 1 chunk 7 of 7" — the change arrives pre-cut at file boundaries, so no single call carries the whole change.
+
+MET — Implementation Notes "test fixtures and goldens, documents, lane and review records, backlog cards" left out — the five pasted paths — all five are hand-written src/tests suites, none is a generated artifact, fixture, golden, document, lane record or card.
+
+REJECT — Description "A file outside the pasted material is not a finding either, write 'cannot see' instead." — that the suites assert on .husky/pre-commit, .claude/review-templates/lens-*.md and scripts/analysis/proof-slice.mjs which are not pasted — not a real issue, those files are outside the pasted material and are written as cannot see.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  100222ms (100.2s)
+📊 Tokens — total: 50206, input: 28250, output: 21956, reasoning: 20928

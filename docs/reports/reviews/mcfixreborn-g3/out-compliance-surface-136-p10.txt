@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:38:32.363Z file_sha256=5730f5cf657749f0943c4d1ab80a80e443086928495e96a2981b1fe66ee873ff prompt_sha256=ada26365be8e8eaa109a7ab630b958997e8a83d4d2f881d6165ece691b71d48d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — contract_parcels_lookup.descriptor.json config.why "The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings." — the contract declares four unregistered literals as its own configuration, so "All tunables are data; zero thresholds in src/" is unmet by the very file that should register them — add the two rate limits and the two page caps to config.logic_variables with min, max and on_invalid, cite the migration, and drop the "not yet registered" admission.
+
+BUG severity=HIGH — fe.38 "a hit with no evaluated option is not counted against the monthly allowance" — contract_parcels_lookup.descriptor.json metering.why "Each new lot a parcel_tool holder opens in the billing month writes one usage_events row" — the declared meter still charges per opened lot, while the same file records the ruled meter ("a parcel_tool hit counts one report only when its `page` is produced ... counts nothing"), so metering declares the superseded rule — restate metering.why and unit to the report-produced rule and declare the not_produced, semi_pending and not_evaluated log outcomes.
+
+BUG severity=HIGH — fe.03 "declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside" — contract_parcels_lookup.descriptor.json emits.why "no Sentry breadcrumb, no analytics capture and no ledger INSERT" — emits.answer "none", ledger_events [] and x-draft.writes_audit_row false contradict metering.why plus metering.evidence "src/lib/entitlements/index.ts:494-514 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)", so one file declares the same write twice in opposite directions — set emits.answer, ledger_events and writes_audit_row to the property_view usage_events write at src/lib/entitlements/index.ts:494-514.
+
+BUG severity=HIGH — fe.03 "declarations checked against live contracts and the catalogue" — contract_parcels_lookup.descriptor.json data_story "the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps`" — inputs.tables names only address_points, coa_applications, entitlements, parcel_address_points, parcels, user_profiles and logic_variables, omitting both stored tables the dated notes read and the LOAD.1 tables (bylaw_resolution_results, bylaw_resolution_option_results, bylaw_resolution_units, bylaw_resolution_texts, parcel_abutments, parcel_maxbld_population), and inputs.why says "It reads 6 table(s) directly" while seven are listed — add every named read with its columns to inputs.tables and correct the count.
+
+DEFER severity=MED — fe.32 "the member must exist in that descriptor; any other value fails" — contract_parcels_lookup.descriptor.json inputs.field_whitelist "class", "line", "edges", "unsure" beside the check "an explicit pick-by-name of 4 field(s)" — the projection list mixes nested page and drawing keys with top-level members, and the parity check counts 4 where the whitelist names about 80, so a binding to a nested name can never be failed by the existence rule — declare top-level members separately from a nested key list per member and make field_whitelist_parity count the real top-level set.
+
+DEFER severity=MED — fe.31 "descriptor valid with no UNRESEARCHED and no golden: "none"" — contract_parcels_lookup.descriptor.json a11y "touch_target_min_px": "UNRESEARCHED" and the eight states "golden": "none" — the descriptor carries both forbidden forms on all eight states and on a11y — whether a CONTRACT route is inside fe.31's converted-surface scope is not visible from this chunk, so the escalation the file records needs an operator ruling rather than an invented value.
+
+MET — fe.42 — contract_parcels_lookup.descriptor.json inputs.field_whitelist — the drawing keys state, outline, edges, class, line, envelope and footprint are declared as the server-built drawing the client only draws.
+MET — fe.43 — contract_parcels_lookup.descriptor.json inputs.field_whitelist "details_view" — the second closed layout key is declared beside details.
+MET — fe.41 — contract_parcels_lookup.descriptor.json inputs.field_whitelist "summary" — the summary section kind is declared with ref and parts, no copied value.
+MET — fe.52 — contract_parcels_lookup.descriptor.json metering.subject_kind "parcel_ref" — the ledger row names the municipal parcel id and outputs.tables usage_events declares subject_kind and subject_key.
+MET — fe.23 — contract_parcels_lookup.descriptor.json inputs.field_whitelist "ad", "slot", "disclosure" — the ad section is its own slot outside the part list.
+MET — fe.54 — contract_parcels_lookup.descriptor.json errors.classes — each of 400, 401, 403, 429 and 500 declares the exact envelope the user sees, matching the eight declared states.
+
+REJECT — fe.27 — that the parcels read list names columns outside the Spec 100 §3.2 consumer whitelist — fe.38 keeps those keys "for installed apps and declarations", and fe.27 binds displayed fields to whitelisted columns; a declared read is not a send, the response is the pick-by-name projection.
+
+VERDICT: FAIL
+Clauses checked: 26   Unmet: 6
+Rules met: fe.02, fe.23, fe.41, fe.42, fe.43, fe.52, fe.54
+
+---
+⏱  88471ms (88.5s)
+📊 Tokens — total: 42182, input: 25385, output: 16797, reasoning: 15465

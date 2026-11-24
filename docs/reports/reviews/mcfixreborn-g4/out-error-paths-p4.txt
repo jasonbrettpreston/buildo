@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T04:29:10.487Z file_sha256=926f877cd6b73c11bd15c5268eed1546c309cea7f4a4b80b44f39e63f8eaf680 prompt_sha256=c6eea679f9dc0d47d85d5bf76fc8990783c42b33e484503989ef24207d93ee7b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-error-paths-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/tests/backlog/backlog-lane.logic.test.ts "refused(r, /board commit did not land within 1500 ms.*backlog task edit task-\d+ -s LATER -a ''/);" — the launch-timeout path is asserted only as exit 3 plus an absent worktree, so a run that dies after the take (task set RUNNING, compliance refs appended, then worktree add, brief.mjs or task.json fails) leaves the board mutated with no lane and no test would see it, and recovery is only a printed human command — after the refusal assert statusOf(f) and `git status --porcelain` on the board, and add a case where panel-tools/brief.mjs exits 1 after the worktree exists.
+
+DEFER severity=MED — src/tests/backlog/backlog-lane.logic.test.ts "expect(names(f, /^(in-)?plan-/)).toEqual([]);" — the failed-review cleanup assertion covers only plan-* and in-plan-* names, so a FINDINGS-PLAN.md or context-rN.md left by the failed run is never checked and the succeeding retry runs over that leftover — assert the review folder is empty after the failure, or exactly the set the failed run is allowed to leave.
+
+DEFER severity=MED — src/tests/backlog/backlog-lane.logic.test.ts "if (process.env.STUB_FAIL && path.basename(file).includes(process.env.STUB_FAIL)) { console.error('stub: failing on ' + file); process.exit(1); }" — the stub can only fail fast, never hang, so no test bounds a slow or hung deepseek-review.js call and the time-out path of plan-prep review is unexercised — add a stub mode that sleeps and assert plan-prep exits naming the file when the bound expires.
+
+DEFER severity=LOW — src/tests/backlog/check-task-files.logic.test.ts "expect(check(a.d).status, check(a.d).stderr).toBe(0);" — the hook is executed twice, the second run only to build the failure message, so a hook touching index or MSG state runs twice and the reported stderr comes from a different run than the status — capture one result object and assert on both fields.
+
+DEFER severity=LOW — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before);" — every re-run adds the next context-rN.md and the lens line takes the highest-numbered, so an interrupted write leaves a short rN that the following review reads as fresh context, and no test covers the interrupted write — write to a temp name and rename, and assert a failing write leaves no context-rN.md.
+
+REJECT — src/tests/backlog/backlog-lane.logic.test.ts "expect(planText(f).split('Plan review round 1').length - 1).toBe(1);" — a second post run looks like it could append a second round line — handled: the repeat prints "nothing to post" and the round line stays one.
+
+REJECT — src/tests/backlog/backlog-lane.logic.test.ts "expect(t2).not.toContain(`'compliance:${lists[0]!.id} '`);" — a re-run of the take looks like it could double-add the compliance references — handled: a list the task already references is skipped, typed by its id.
+
+REJECT — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(s).toContain('docs/empty.md (empty file)');" — an empty linked document or a range past the end could silently shorten the context — handled: both are stated in the section and the run still exits 0.
+
+VERDICT: FAIL on error-path safety
+Paths walked: launcher refusals, take plus wait timeout, post-take failures (worktree, brief, task.json), brief missing/empty/oversize documents, plan-prep review failure cleanup, plan-prep post repeat, plan-prep commit hook and index.lock, check-task-files hook, compliance ref dedup   Unguarded: 4
+
+---
+⏱  42128ms (42.1s)
+📊 Tokens — total: 45039, input: 37276, output: 7763, reasoning: 6853

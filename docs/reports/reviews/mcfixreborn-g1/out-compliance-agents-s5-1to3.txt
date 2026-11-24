@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:54:30.070Z file_sha256=4e8fd3fa37b35f54f05e1a55da9cdf322d779dde4ae1e9e7350443633e5dc3c4 prompt_sha256=7ef69fcc86a66a95ce0b58ab60ec5164b8a56cfcb2d062e4e205d8027e057f80
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — dated note 2026-11-20, task-410 correction round 3 "`base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board`" — mcbylaws/protected-paths.json:2 "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it." — the file's own header states a read source (base copy) that the pasted ruling has since replaced with the board ref for `protected_paths`, so the record now misdescribes which copy of these maps governs — reword the header to name the board ref as the source for the four deciding keys and keep "base copy" only for the parts read from the range base — LOW, comment only, no behaviour, recorded per RR-0385.
+
+DEFER severity=LOW — dated note 2026-11-13 "scripts/analysis/bylaw-validation/** joins the literal scan" — mcbylaws/protected-paths.json:94-95 "scripts/analysis/bylaw-validation/**/*.mjs", "scripts/analysis/bylaw-validation/**/*.cjs" — the ruling names the whole subtree while the scope admits only two extensions, so a `.json` or `.js` literal file under that directory is not scanned even though sibling JSON literals are in scope and explicitly exempted one by one (literal_exempt names scripts/analysis/bylaw/_schema/bylaw-rule-map.json) — add `**/*.json` (and `**/*.js`) under bylaw-validation, or name each intentional exclusion in literal_exempt — LOW, bounded to files nobody has written yet.
+
+MET — dated note 2026-11-10 "mobile/src/vendor/rnr/** and mobile/components.json leave pending_globs ... both stay in frontend, and the vendor dir stays protected." — mcbylaws/protected-paths.json:27,:28 frontend, :72 protected — all three placements present.
+
+MET — dated note 2026-11-09 "src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs ... both stay in frontend." — mcbylaws/protected-paths.json:25,:29 — both remain in frontend.
+
+MET — dated note 2026-11-13 "pending_globs is empty so a zero-match glob fails the gate (L10)" — mcbylaws/protected-paths.json:3 "pending_globs": [], — empty list, so no zero-match glob can survive.
+
+MET — dated note 2026-11-11 "src/middleware.ts, src/lib/auth/host-policy.ts ... and src/lib/auth/safe-redirect.ts ... join protected" — mcbylaws/protected-paths.json:76-78 — all three entries present.
+
+MET — dated note 2026-11-20, task-384 "src/components/report/** joins frontend" — mcbylaws/protected-paths.json:30 — the path is in the frontend map, so the surface arms reach the report renderer.
+
+MET — dated note 2026-11-20, task-366 "(1) ... reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`)" — mcbylaws/protected-paths.json:4,:20 — both keys exist as path maps for the rule-list table to reuse.
+
+MET — dated note 2026-11-20, task-410 correction round 6 "The gate reads the BASE copy of this file" (self-protection) — mcbylaws/protected-paths.json:49 "mcbylaws/protected-paths.json", — the file lists itself as protected, so an edit needs the owner y at push.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  69949ms (69.9s)
+📊 Tokens — total: 18233, input: 8673, output: 9560, reasoning: 8692

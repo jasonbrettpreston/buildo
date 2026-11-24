@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:22:57.688Z file_sha256=79cd9e5656876997464f3d2adeab7c3b90a36c72b6a69b92e2c59d0b84a69d0c prompt_sha256=b09085f861b7d588d6bac9236f14194cf8f08b120e5370eeeabaa3e9fe736e1a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-back.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 3.2 "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback." — migrations/334_precommit_budget_registry_repin.sql:17 "-- UPDATE logic_variables SET variable_value = 27.5 WHERE variable_key = 'tooling_precommit_budget_registry_s';" — the DOWN block exists only as a commented-out statement (line 16 self-describes it as "manual rollback only"), so no single automated rollback can reverse this migration — fix: make the DOWN an executable revert statement in the same file.
+
+DEFER severity=MED — 3.2 "so any schema change can be reversed with a single rollback" — migrations/334_precommit_budget_registry_repin.sql:17 "-- UPDATE logic_variables SET variable_value = 27.5 WHERE variable_key = 'tooling_precommit_budget_registry_s';" — even if run, the revert restores only variable_value and leaves the description at the 33.2 text, so the row is not returned to its pre-migration state — fix: restore both variable_value and description in the DOWN.
+
+MET — 3.2 — migrations/334_precommit_budget_registry_repin.sql:10 — the file is a real `NNN_[feature].sql` deliverable with `-- UP` and `-- DOWN` section markers in one file, not a skipped migration.
+
+MET — 3.1 — migrations/334_precommit_budget_registry_repin.sql:11 — no `ALTER TABLE ... ALTER COLUMN` and no `CREATE INDEX`; the change is a data-only single-row UPDATE on the small logic_variables registry, so the add-backfill-drop pattern is not triggered.
+
+MET — 9.2 — migrations/334_precommit_budget_registry_repin.sql:14 — no batch INSERT and no bound parameters beyond the single literal WHERE key, so the 65,535 parameter limit is not in play.
+
+MET — 9.3 — migrations/334_precommit_budget_registry_repin.sql:12 — the UPDATE sets fixed literals against one key, so re-running it converges to the same row state and cannot fail on duplicate keys.
+
+REJECT — 3.3 — the change is accused of unbounded reads from growing tables — this file reads no table at all, it writes one row of logic_variables, and 3.3 binds API routes over `permits` and `coa_applications`.
+
+REJECT — 9.1 — the change is accused of missing BEGIN/COMMIT around a multi-row mutation — 9.1 binds `scripts/*.js` only and this is a single-statement SQL migration touching exactly one row.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  17097ms (17.1s)
+📊 Tokens — total: 8538, input: 5119, output: 3419, reasoning: 2802

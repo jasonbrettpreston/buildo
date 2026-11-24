@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:21:13.429Z file_sha256=6ab28b7f2a427572331a32e8ec02d553b4c48c2e903aacc3ecc5e4c48c00f532 prompt_sha256=f4a9b5dd752c2118ce6894779437cbe4a89a8b57968c226b1d2f45af6cec43ca
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts:29 "is read and sent ONLY for multi_parcel / unlinked on the q path" vs design "intersection stays a client query-shape check on no_match" — a person who types a real intersection can only receive no_match with no map block, so the choose-your-lot map has no geometry to draw and the client's query-shape test has nothing to render — ask the operator to confirm which source supplies map geometry for an intersection query, this route sends none.
+
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts:112 "refusal = reportLimitReached(m.reportsLimit, m.resetsOn);" vs the read at src/app/api/parcels/entitlement/types.ts:18 "the same instant as the Toronto date, "9 Dec 2026" (RR-0310); the page prints it" — a limit screen drawn from the refusal alone prints a machine ISO instant, while the served Toronto label exists on a different read — rationale: the search page also holds the entitlement read, so a client that prints resetsOnDisplay is unaffected.
+
+DEFER severity=LOW — src/app/api/parcels/entitlement/types.ts:12 "status: z.enum(ENTITLEMENT_STATUSES).nullable()" vs the lookup's served set (only trial, active, past_due, admin_managed reach the report) — a person whose parcel_tool row is canceled, expired or incomplete can be shown a reports-left count for searches that all return 403 SUBSCRIPTION_REQUIRED — rationale: readParcelToolUsage is not in this chunk, so this holds only if it returns numbers for a status the lookup refuses; the read carries no field that mirrors the gate.
+
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts:19 "the request carries semi=answered, so a page that is sent is a page that is counted" — the answer to the semi question lives only in that one request, so any later open of the same lot that does not repeat the flag holds the page again and asks the person the same question for a lot they already answered — rationale: nothing in the response or the lot state remembers the answer, and the client is not in this chunk.
+
+REJECT — src/app/api/parcels/lookup/route.ts:30 "A map-read failure is a 500 through the catch below, never a silent fallback to the list." — a person on the unlinked branch can land on a generic 500 with no candidate list and no way to their lot — declared in the contract itself as fail-closed behaviour fed by operator settings, not a copy or state departure.
+
+VERDICT: PASS on the person's experience
+States checked: hit with page, hit with page null (not produced), candidates, miss (no_match), multi_parcel map, unlinked map, dangling parcelId, semi-held lot, repeat open (already counted), 400, 401, 403 subscription, 403 limit reached, 429, 500, slow query, entitlement read with a plan, entitlement read all-null   Dead ends found: 0
+
+---
+⏱  275930ms (275.9s)
+📊 Tokens — total: 69226, input: 34956, output: 34270, reasoning: 33587

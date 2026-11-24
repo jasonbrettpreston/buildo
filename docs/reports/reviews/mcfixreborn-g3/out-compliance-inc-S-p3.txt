@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:48.440Z file_sha256=d10610c7e80d061b280428e29df498b1f6384f1c266f40056d0ad36d3135c403 prompt_sha256=99e4f27df4b2fb18d4e57dd52ad8dc2a3bba47abccf4c4a76be602828e7fc48b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 D.4 "Three answers: Yes, it is one half of a semi; No, it is detached; Not sure" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:69 "expect(screen.getByText(\"Yes, it's one half of a semi\")).toBeTruthy();" — the pinned answer copy is a contraction, not the clause's wording (line 70 pins "No, it's detached"), so the built page does not carry the ruled answer text — set the content keys to the clause's exact words, or record the ruling that supersedes D.4.
+
+DEFER severity=MED — doc-2 B.1 "radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick" — mobile/__tests__/surfaceRenderer.smoke.test.tsx:96 "expect(screen.getByTestId('parcel-candidate-100102').props.accessibilityState).toMatchObject({ checked: true });" — the ambiguous address list is pinned with one candidate checked before any press, and Select is pressable at open (line 101 pushes a lot), which is the opposite of "nothing pre-checked, Select disabled until a pick" — start the case with nothing checked and no Select until a tap, or name the case for the post-pick state.
+
+DEFER severity=LOW — doc-2 G.5 "Report page for the lot on a hit" (no pasted clause names a sponsored ad) — mobile/__tests__/reportScreens.golden.test.ts:137 "expect(resolveValue({ part: 'ad_o2.ad.disclosure' }, c)).toBe('Sponsored');" against mobile/app/(app)/parcel-tool/[parcelId].tsx:10 "its sponsor slot and its phone formatting are retired (MF-74 Q2 i)" — the report the change mounts still binds an ad section with a Sponsored disclosure while its own mount comment says the sponsor slot is retired — remove the ad section or record the ruling that keeps it and correct the comment.
+
+MET — doc-2 D.3 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:68 — the ruled question "Is this house one half of a semi-detached pair?" is rendered verbatim.
+
+MET — doc-2 D.5 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:73 — Continue is disabled with nothing picked and a press does not navigate, and each answer opens the report with its own route.
+
+MET — doc-2 D.1 — mobile/app/(app)/parcel-tool/[parcelId].tsx:28 "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — the question page is entered only for an unsure lot, once, on settled data.
+
+MET — doc-2 G.1 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:190 "expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1']]);" — a clear lot goes straight to the report with no extra page.
+
+MET — doc-2 A.13 — mobile/__tests__/surfaceRenderer.smoke.test.tsx:55 "expect(screen.queryByLabelText('Account')).toBeNull();" — the in-bar Account button the design removes is absent.
+
+MET — doc-2 D.7 — mobile/__tests__/semiQuestionScreens.golden.test.ts:39 "kind === 'rate_limited' ? new RateLimitError(30) : kind === 'entitlement' ? new ApiError(403, 'forbidden')" — rate-limit, entitlement and schema-drift states are driven through the committed goldens.
+
+MET — doc-2 A.3 — mobile/__tests__/surfaceRenderer.smoke.test.tsx:95 "expect(radios).toHaveLength(10);" — the typeahead list is held at the ruled ten.
+
+MET — doc-2 D.6 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:207 "expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);" — back returns to the Lookup route when there is no history.
+
+REJECT — doc-2 D.8 "Owner answer stored (a reopened lot does not ask again)" — that only a `semi` route param suppresses the question — D.8 is pasted as BOUND-NOT-STORED (GAP.12), a recorded unbuilt item, so this chunk is not the clause's deliverer.
+
+REJECT — doc-2 G.6 "a hit counts one report" — that the answered lookup is fetched at Continue and again by the report screen's own query — the meter and the query key are outside this chunk, "cannot see", so no double count can be shown here.
+
+REJECT — doc-2 B.7 "Get help with an address (to /help?topic=wrong-lot)" — that open_help('address_match', ...) breaks the topic — the host that maps the argument to the /help topic is outside this chunk, "cannot see", and the pasted clause does not name the argument form.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+Rules met: none
+
+---
+⏱  140709ms (140.7s)
+📊 Tokens — total: 67453, input: 35375, output: 32078, reasoning: 30912

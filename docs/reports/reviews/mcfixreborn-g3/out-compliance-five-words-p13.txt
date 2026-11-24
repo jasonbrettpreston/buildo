@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:46:55.206Z file_sha256=58efbea3a6eca4f0406ff16bd7818ee7ef4789af4dcfdfe74e2e89e619c00e8f prompt_sha256=27031c49c2ccf7b9d95b49907a1343e556ac2175efe63b80bae36ee5fa91be69
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-334 "task-334: backlog/tasks/task-334 - SRCH.METER-Report-meter-counts-only-when-a-report-is-produced-for-a-found-address-and-lot.md, Acceptance Criteria from line 36" — src/tests/parcels-lookup-page.logic.test.ts "it('a parcel_tool hit with a served page and no evaluated legacy option is served and not counted'" — a metered hit that found the address and lot and produced a page is pinned as not counted, so the pasted meter clause is met only by a comment deferring to MB-94 c / MB-44 — make the T-B3 (7) hit count (txQuery called, log.meter 'counted') and keep any deferral out of the test body.
+
+DEFER severity=MED — task-12 "task-12: backlog/tasks/task-12 - GAP.13-Search-follow-ups-to-the-current-design-the-ruled-tagline-Lot-Intelligence....md, Acceptance Criteria from line 73" — NONE — every task's acceptance criteria text is cited by file and line only and never pasted, so no AC sentence can be quoted or judged; only task titles are visible — cannot see; judge titles only or paste the AC text.
+
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/semi-question-design.logic.test.ts "mobile/__tests__ (not run by the commit hook: UNVERIFIED unless run by hand)" — the page's mobile golden assertions live in a suite npm test does not run, so by the pasted definition they are not locks — mirror those assertions into a src/tests file or add the mobile suite to the hook.
+
+DEFER severity=LOW — task-364 "task-364: backlog/tasks/task-364 - SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files.md, Acceptance Criteria from line 41" — src/tests/parcel-tool-meter.logic.test.ts "§11b.7 rules 5-6 (dated note 2026-11-11: 20 a month, plan and trial, D-2..D-6 a)" — the SPEC LINK still states 20 for plan and trial while the same file pins trial 10 and Basic 10 under "MF-47 RULED 2026-11-14" and usageDb defaults plan to '20' — restate the SPEC LINK as the MF-47 ruling dated 2026-11-14 and set usageDb's plan default to the seed default 10.
+
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/tests/parcels-lookup-page.logic.test.ts "// (5) the route imports the producer from src/lib/parcels/report-page.ts only" — the body now pins lookup-flow.ts and records "the exact import-line pin on the route is dropped", so claim (5) rests on a comment, not an assertion — reword claim (5) to the flow module and assert the route's own import list.
+
+DEFER severity=LOW — task-376 "task-376: backlog/tasks/task-376 - FIX.SPECS-Specs-and-contracts-brought-up-to-the-1·B-rulings-the-entitlement-contract-Spec-100-meter-rule-the-semi-hold-D3.md, Acceptance Criteria from line 30" — src/tests/spec-notes-1b.logic.test.ts "const at = text.indexOf(MARK);" — the note is located anywhere in the whole spec file, so the Spec 126 11a.7 and Spec 100 placements the cases name are never asserted — slice the cited section (between its headings) before asserting the note text.
+
+REJECT — Glossary "archetype vs shape" "identity.archetype (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER)" — src/tests/parcel-tool-meter.logic.test.ts pins "archetype: 'QUERY'" on a surface contract descriptor — the pasted closed list governs step descriptors under scripts/manifest.json, not surface contract descriptors, so QUERY does not breach it.
+
+MET — RR-0414 "changed parts only as per your recommendation" — src/tests/parcel-tool-meter.logic.test.ts:1 — all seven files arrive as creation diffs from the empty tree, no partial bodies.
+MET — RR-0408 "keep the review calls small" and RR-0439 "each call is at most 120,000 characters" — src/tests/parcel-tool-meter.logic.test.ts:1 "chunk 13 of 15" — the material is delimited to one bounded chunk at file boundaries.
+MET — Glossary "lock / lock-db / check / hook" — src/tests/parcels-entitlement.infra.test.ts:10 "MF-45 · T11, the entitlement read contract GET /api/parcels/entitlement" — a test under src/tests that names its rule and asserts it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 5
+Rules met: none
+
+---
+⏱  81971ms (82.0s)
+📊 Tokens — total: 48916, input: 31119, output: 17797, reasoning: 16598

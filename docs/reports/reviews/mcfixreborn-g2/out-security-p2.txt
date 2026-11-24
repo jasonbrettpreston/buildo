@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T02:44:48.760Z file_sha256=18bbe3bfba25ae7fe914c07069239a2b146a7af4babf9a987fdaa5a6fca8c1d8 prompt_sha256=fb25920acb748aae9debe98342217c999e47df690cc403f01586133a8097e674
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-security-p2.txt (model: deepseek-reasoner)
+
+Surfaces touched: admin
+
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "const IMPORTS_PRODUCER = /report-preview-live/;" — an import fence built on a filename substring; a consumer route that imports a barrel (`@/lib/admin`) which re-exports stored-page never contains the string, so the fence passes while a customer-reachable route calls the admin-only producer with any parcel_id — replace the substring scan with a resolved import graph walk from every non-admin entry point.
+
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "for (const c of calls) expect(c.sql).not.toContain('DROP');" — the injection regression assertion only checks the payload word is absent, so a real interpolation (`'... parcel_id = ' + id`) passes; the parameterised shape is pinned only for the four queries this test drives — assert per call that every sql literal is value-free (placeholder count equals values length, no template expansion) and that new queries cannot be added without the check.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "expect(vi.mocked(logInfo)).toHaveBeenCalledWith('[admin/report-preview]', 'maxbld_internal_preview_view', expect.objectContaining({ uid: 'u1', outcome: 'ok', parcelId: String(P0.parcel_id) }));" — the caller identity is asserted only as a log field, no test asserts an admin gate before the lot read; if the route's role check is dropped or bypassed, any caller holding a parcel_id reads stored Layer 3 rows and lot size — add a route-level assertion that a non-admin session never reaches storedPageResponse (route not in this chunk, cannot see).
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "expect(src, f).not.toMatch(/\b(INSERT|UPDATE|DELETE|TRUNCATE)\s/);" — the "producer writes nothing" fence is case-sensitive and misses require(), dynamic import and query-builder writes, so a lowercase update or a helper write passes the L1 fence — make it case-insensitive and include require/import and the db handle methods the producer is given.
+
+REJECT — src/tests/admin-report-preview-live.logic.test.ts "expect([response.values['entered.value'], response.values['entered.date']]).toEqual([undefined, undefined]);" — user-input-sourced fields look like client data reaching the page — they are projected as not evaluated even when a parcels column of that name exists, and an unknown source kind throws, so the path fails closed.
+
+VERDICT: PASS on exploitability
+Surfaces touched: admin
+
+---
+⏱  23759ms (23.8s)
+📊 Tokens — total: 19519, input: 15577, output: 3942, reasoning: 3355

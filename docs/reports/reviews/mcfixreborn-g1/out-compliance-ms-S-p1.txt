@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:05:13.403Z file_sha256=554d0114aba95b717ae174b5a1d87712536e98fa19b32075ff3ac64cd284037b prompt_sha256=8ecafc380c9ec8ed35cd0373e83ffa3da7874e47c91e74db96b9686f42275038
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT/HIGH: none.
+
+DEFER severity=MED — clause "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/report-presentation.json:44 ""note": "today the screen mixes formatSqm (lot, square metres in) and formatServedSqft (GFA, served square feet in), [parcelId].tsx:128-130"" — the registry that now owns the report's unit choice records two units on one screen, leaves "default": "m²" while the page strings price area in sq ft, so the delivered report can show a lot in m² and a priced area in ft² side by side — fix: settle one unit per figure in area_unit (and its page strings) and regenerate the registry before the report page ships.
+
+DEFER severity=LOW — clause "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — scripts/surfaces/_schema/report-presentation.json:6 ""by_code": {}" under :5 ""note": "card titles by scenario code; {dwelling_units} filled from the card (H is 4 or 6, gap 1)"" — the registry declares scenario card titles come from this map and ships it empty, so no scenario card carries a title from it — fix: fill by_code for the shipped scenario codes or remove the key and title cards from a named source.
+
+DEFER severity=LOW — clause "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/surfaces/_schema/report-presentation.json:30 ""note": "per-field trust is not generated yet: the catalogue rows carry no trust tier (McBylaws catalogue, row owed); never hand-listed"" — the report ships with five trust_label tiers but no per-field trust, so a card headline carries a trust word with nothing behind it per field — fix: land the catalogue trust-tier row and generate field_trust rather than shipping the key as a note.
+
+MET — task-411 "the lead detail API serves the area already converted, the two typed phone copies of the factor are deleted" — mobile/src/lib/leadDetailFormat.ts:17 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the two phone area helpers format served values and type no conversion factor (parcelCostFormat.ts formatServedSqft takes square feet as served).
+
+MET — task-384 "The web report renderer gets a census owner and comes under the existing text-component and 44 px checks" — mcbylaws/protected-paths.json:30 ""src/components/report/**"" — the report component path joins the frontend list the surface arms read, which is the mechanism the file names for bringing it under those checks.
+
+MET — clause "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:58 "expect(screen.getByText('1,534 sq ft')).toBeTruthy();" — the detail page renders the served detail values it is given, section by section, with no locally computed figure.
+
+MET — clause "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built" — scripts/analysis/bylaw-validation/coa-expected/prereg-MF-91-1.json:2 ""schema": "coa-round-prereg-v1"" and "no rule is newly ruled by the code commit" — the search/footer work is pre-registered with zero expected scorer moves, totals unchanged, so search presentation does not move by-law numbers.
+
+REJECT — clause "the semi calculation stays in Increment 7 (7.25)" — the change is accused of pulling semi work forward — the registry only shows or hides cards and routes a correction to lot_form_effective, and it carries no semi area or by-law calculation, which stays with the pipeline.
+
+REJECT — clause "the database is created to service the existing report and details as clairfied in the McFrontend" — the change is accused of adding report surface the design does not name — ad placements, illustrations and cost-basis labels are all keyed to named rulings (Q-1 to Q-10, Spec 100 sections, MF-20) inside the file, and a file outside the pasted material is not a finding.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  142062ms (142.1s)
+📊 Tokens — total: 52350, input: 34590, output: 17760, reasoning: 16749

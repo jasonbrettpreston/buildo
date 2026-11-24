@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:09:23.908Z file_sha256=d73648acbde37453abb075628fcb6212df6dcd4c82c6a7bdaa7c5f28bac30e02 prompt_sha256=f66fa2c5d8719b097c459011d0d03205d5232f3608299ec0866e395cce6bc1ef
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/app/(app)/parcel-tool/[parcelId].tsx:23 "const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);" with the route param `semi=answered` this is the request that lets the server count the report, yet the same query re-sends it on every transient failure (useParcelLookup.test.ts, "retries a transient error up to 3 attempts") and on every Retry tap (line 28, "const onRetry = useCallback(() => void refetch(), [refetch]);"), so one report can be counted up to four times; no dedup key is visible in the material; fix: force retry 0 when semiParam is "answered" and have the server key the count by (parcelId, report) so a repeat is a no-op
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:59 "      result = await answerLookup(id);" the bounded wait rejects at SEMI_CONTINUE_WAIT_MS without cancelling the in-flight answered lookup (no AbortSignal reaches it, the promise is simply abandoned), so the server may still produce and count a report the user never saw, and the `finally` clears submittingRef so the next Continue sends a second counting lookup; fix: abort the request on timeout or carry a request id the server dedupes on
+
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:38 "const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));" treats only null as absent, so a lot whose `area`, `frontage` or `zoning` is undefined (the older or cached response this file explicitly allows for at "const known = lot.hasFootprint !== undefined;") emits a contract ref that SurfaceRenderer.resolveValue throws on ("unresolved ref"), crashing the whole choose-lot page instead of showing the "—" value; fix: test `value == null`
+
+DEFER severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx:106 "          onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }," writes the choices argument under the row's `arg` name while SurfaceRenderer.tsx:118 "      return () => act.select(String(resolveValue(a.parcelId, ctx)));" reads only the hard-coded key `parcelId`, so any row whose arg is not `parcelId` resolves to undefined and select receives the literal string "undefined", which semi-question.tsx's guard (`SEMI_ANSWERS.includes(answer)`) drops silently with no error raised; fix: resolve the arg key the row names and throw when it is absent
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx:160 "    const lot = s.map!.lots[i]!;" asserts both the map block and the per-lot entry while the same file tolerates their absence at line 131 "const plain = s.map?.lots[i]?.hasFootprint === true ? H.lotFillBuilt : H.lotFill;", so a map block that is null or shorter than the derived lots throws a TypeError inside render and sends the whole page to the ErrorBoundary; fix: use the optional form and skip the extra facts
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx:248 "      [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } }," writes the 429 key even when retryAfterSeconds is undefined, and resolveValue throws on undefined, so a 429 carrying no retry-after crashes the search page instead of drawing the rate-limit notice; fix: default the seconds to a bounded number or let the notice text degrade when it is absent
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/index.tsx:102 "      push: (to: string) => navigate(to)," has no in-flight latch (unlike semi-question's submittingRef), so a double tap on parcel-search-select pushes two report routes and calls addRecent twice in navigate; whether the second record is deduped is not visible (recentSearchesStore is not in this material); fix: latch navigate or make the recent add idempotent by query
+
+REJECT — mobile/app/(app)/parcel-tool/index.tsx:63 "  const entitlement = entitlementFailed ? null : entitlementData;" looks like throwing away a served count on a failed refetch, but it is the deliberate no-wrong-number degrade, the line is simply not drawn, and the focus effect re-reads it, so nothing stale or wrong is shown
+
+VERDICT: FAIL on error-path safety
+Paths walked: report route answered lookup (error + retry + manual Retry), semi Continue (double-submit, timeout, unmount), lot map binding (missing map block, missing lot fields, 429 detail), page-table choices action arg, search page entitlement refetch failure, search navigation/push double tap, renderer unresolved refs and unknown actions   Unguarded: 3
+
+---
+⏱  110687ms (110.7s)
+📊 Tokens — total: 56217, input: 34783, output: 21434, reasoning: 20286

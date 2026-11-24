@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:38:18.803Z file_sha256=ff0035f3ecf946cd58eecabe764b52029ee3fc3dc8c4517e9f544c42aa0406b8 prompt_sha256=62d06c0510ee00890f651560b1b3f2c0334ccca397de626d9bd96ab12e59a1db
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 task-366 note 2 "puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — scripts/analysis/backlog-brief.mjs:183 "the output lens set and its commands are in the lens line of this brief" — the brief this script emits holds no lens line and no rule-list line (the out array, lines 168 to 191, carries neither, and sectionFlags built at line 16 is never used), so a lane following this brief is handed no compliance command and no governing list — the file's own header at lines 4 to 5 promises it prints "the review command", and the brief points at a section it does not contain; fix: print the per-list rule-lists.mjs lens-input and deepseek-review.js review commands, with the CONTEXT_SECTIONS --section flags taken from sectionFlags, before the Close step
+
+DEFER severity=LOW — Spec 08 5.1 "Item-by-item, spec-clause → code-line, PASS/FAIL." — .claude/review-templates/lens-compliance.md:62 "at most 8 MET lines, only for clauses the change is most likely to break" — the format records an Unmet count and the met rule ids but no PASS/FAIL line per clause, so a binding clause that falls beyond the eight findings lines has no item-by-item outcome — on a list longer than eight binding clauses the seat's item-by-item record is incomplete; fix: reconcile Clauses checked and Unmet with the MET ids plus the BUG and DEFER lines so every clause has exactly one outcome
+
+MET — Spec 08 task-433 "the compliance lens output ends with a line `Rules met: <rule ids>`" — .claude/review-templates/lens-compliance.md:73 "Rules met: <rule ids, comma separated>" — the template makes the Rules met line the last line of its End block, after VERDICT and Clauses checked.
+
+MET — Spec 08 task-410 note "With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security" — .claude/review-templates/lens-code-review.md:1 "# Lens: Code Review (DeepSeek)" — the four split templates exist as lens-code-review.md, lens-error-paths.md, lens-ux.md and lens-security.md, one narrow prompt each.
+
+MET — Spec 08 task-366 note 3 "`scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE" — .husky/commit-msg:7 "node scripts/hooks/check-lane-close.mjs" — the close check runs in the commit-msg chain before check-integrate-verification and the mcbylaws gate.
+
+REJECT — Spec 08 task-423 "the joined run is an accepted form of the compliance lens output set and is NOT the default" — the change is accused of ordering the joined form over the per-list default — the README states the per-list form is the default and the joined form is accepted and not ordered, which matches the ruling and leaves the join unordered.
+
+REJECT — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — the lens templates are accused of reviewing the same files several times — the lenses are one pass with disjoint axes over one material, and the Description fixes one read per file (31 files, each read once), so no file is re-reviewed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+Rules met: none
+
+---
+⏱  299330ms (299.3s)
+📊 Tokens — total: 70847, input: 27658, output: 43189, reasoning: 42376

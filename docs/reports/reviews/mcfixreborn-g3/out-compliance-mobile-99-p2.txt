@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:20:03.750Z file_sha256=974e6e52ad63a4bf77d4fecae5b9a8ce6dc297babab347a2578463cb7c0a0a4f prompt_sha256=751118120886d2c6d0e73418c18d1898b0fddf4f7808a0cc3e6534abfb571e98
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §9.4a "Strip `isFetching` from AppLayout loading gate (§6.5 violation; root cause of incident #3 emulator flicker loop)" — mobile/app/(app)/_layout.tsx:202 NONE — the P0 item carries no ✅ DONE in the §9 table and no file in this chunk touches the AppLayout gate, cannot see whether it landed — check that file at HEAD before this group is closed.
+DEFER severity=LOW — §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call" — NONE, "9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1" — the §8.1 MUST is still carried as an open P1 in the §9 table, cannot see `mobile/__tests__/bridges.test.ts` from this chunk — confirm the file exists at HEAD.
+REJECT — §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" — the material is accused of missing invalidation telemetry — it is test and fixture files with a mocked `useParcelSearch` and mocked expo-router, it contains no `invalidateQueries` call and no production call site.
+MET — §8.3 — mobile/__tests__/lotMapPage.behaviour.test.tsx "mockHook = { data: input('redirect_unique').data, isFetching: true" (then rerender with isFetching false) and lotMapScreens.golden.test.ts "expect([situation('refetching_multi_parcel').state, situation('refetching_multi_parcel').navigate]).toEqual(['multi_parcel', null])" — the lot-map gate is exercised with isFetching toggled and neither the route nor the drawn state flips.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+
+---
+⏱  37838ms (37.8s)
+📊 Tokens — total: 34871, input: 27140, output: 7731, reasoning: 7284

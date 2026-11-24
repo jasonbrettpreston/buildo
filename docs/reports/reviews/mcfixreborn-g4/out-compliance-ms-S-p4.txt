@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:02:28.968Z file_sha256=b7de79824c899e666c4241a276e13c0ac44b34f5e9743d60d590ec3e14e8959f prompt_sha256=cab22db9d932cd505c0f7dfc454b76f889d137c3397d34fd4dd32f17fe223b7e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-ms-S-p4.txt (model: deepseek-reasoner)
+
+MET — Project objectives, relevance — src/tests/backlog/backlog-lane.logic.test.ts:1 "the whole lane launch from the task file, on a temp board (a git repo with a Backlog project, helpers.ts)" — the file exercises the lane launch, a supporting function the pasted cards name (task-418, task-423, task-432), so it is not the class of task the clause calls irrelevant.
+MET — Project objectives, "keep it simple; no scope creep" — src/tests/backlog/check-task-files.logic.test.ts:1 "scripts/hooks/check-task-files.mjs <commit-msg-file> (cwd = a repo with staged files)" — the tests assert only the hook's existing Files: check, exemptions, prefix and glob forms; this chunk adds no product surface beyond what the hook already owns.
+MET — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — src/tests/backlog/backlog-brief-context.logic.test.ts:85 "the 120 KB cap is stated and holds" — the test pins the total and per-block caps and the omission line, matching the ruling.
+REJECT — Increment objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — the material is accused of working outside the search-first order — the pasted cards home these files in group G4 (task-418, task-423, task-432) and RR-0387 approves the review and lane workflow, so this is the named supporting function, not a competing workstream.
+REJECT — Project objectives "we need one plan - we can only execute one plan" — accused of adding a second plan through the plan-prep phase exercised in backlog-lane.logic.test.ts — plan-prep is a phase of the existing lane launch that pasted card task-418 names, and this chunk adds test files only, no second plan document.
+REJECT — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — accused of reading the same files again across review runs — this chunk holds four test files only and the other chunks are reviewed in their own runs, so no file is read twice.
+DEFER severity=LOW — task-418 "Acceptance Criteria from line 48" — NONE — the acceptance criteria text itself is not pasted, only its line reference, so whether these tests prove each AC cannot be seen — no code change; the AC text belongs to its own chunk and run.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  30711ms (30.7s)
+📊 Tokens — total: 42826, input: 36932, output: 5894, reasoning: 5301

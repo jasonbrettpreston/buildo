@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:36:55.104Z file_sha256=a19fa398cf86961ffecc7e65978e92f43523e914218f291bd8cb4f1278e85e03 prompt_sha256=2b77c83c8db4f24096fded2a66ed8ea7a32e12c4bfe1c1c9a346ada329efa12d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-step-132-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — core.14 "Declared equals witnessed." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json `"product": "parcel_tool"` vs same file notes "`guards.entitlement.product` is `lead_gen`" and x-draft "`"entitlement": "subscription_status"`" — the one measured gate is declared three different ways inside one descriptor, so at least two of the three declarations are false — declare the measured value once in `guards.entitlement` (lead_gen per migration 228) and keep the parcel_tool target only inside the adjudicated deviation entry.
+
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — mobile_parcel_search.descriptor.json docs.purpose "past ten it asks for a house number instead" and config.why "The six page settings of the phone search and semi pages are REGISTERED logic variables" — the candidate cap of 10 is a number the screen branches on, held in mobile/src/constants/parcelSearch.ts and absent from `config.logic_variables` (which lists only debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms, plus continue_wait_ms on the semi page) — register `maxbld_page_candidate_cap` with min/max/on_invalid and declare it in config.logic_variables.
+
+DEFER severity=MED — core.3 "Use the closed vocabulary" — mobile_parcel_semi_question.descriptor.json `"projection": "none"` while the same block declares `"list": { "item_archetype": "answer card"` and docs.under_126 says "LIST (three radio cards and a Continue button)" — the declared projection contradicts the rendered projection and the search sibling uses "list" for the same form — set `render.projection` to "list" or delete the populated `render.list` block if none is truly correct.
+
+DEFER severity=MED — x-v3.2 "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it" — mobile_parcel_search.descriptor.json deviations[2].adjudicated_by "record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md" and deviations[1] "operator 2026-11-09, Wave 1 decision batch item 13" — the decisions behind both deviations are cited from a batch item and a scratch path, with no register row id and no docs/reports/decisions log stem, so the citation cannot resolve in the repo — cite each as `<log stem>#<decision id>` per x-rulings.4 or land the register row before the citation.
+
+DEFER severity=MED — core.14 "Declared equals witnessed." — mobile_parcel_search.descriptor.json docs.data_story "It holds no client store at all" vs the same file `"answer": "mmkv"` with state.fields `recent` in MMKV (recentSearchesStore) — the prose and the state block disagree on whether the surface holds a client store, and under_126 repeats the "only client state left is the query text and its debounce" claim — amend data_story and under_126 to name the Layer 4a recentSearchesStore.
+
+DEFER severity=LOW — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — mobile_parcel_search.descriptor.json maxbld_page_debounce_ms.why "maximum 5000 has NO SOURCE (envelope of report_check_ready_hold_ms)" and the same "NO SOURCE" admissions on entitlement_stale_ms max 600000 and lookup_retry_max range 0 to 10 — a bound borrowed from an unrelated variable's envelope is a number no ruling names, presented as an enforced ceiling — pin each such bound to a ruled value, or to min = max so no unsourced ceiling exists.
+
+DEFER severity=LOW — core.14 "Declared equals witnessed." — mobile_parcel_semi_question.descriptor.json inputs.tables[0] `"producing_steps": "none"` for table parcel_lot_form while config.why says the cuts are read by "the view parcel_lot_form (migration 320)" — the page's only table is declared with no producing step, so which step keeps the view true is unrecorded (migration 320 is not in this material, cannot see) — name the producing step or the migration that defines the view.
+
+MET — core.2 — mobile_parcel_semi_question.descriptor.json — every category is present and the empty ones are answered "none" ("invariants": "none", "plausibility": "none", "interpretation": "none", outputs.answer "none" with a why).
+MET — core.5 — mobile_parcel_search.descriptor.json config.why — the page settings are machine-derived, "the generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves each slice number from its row and refuses a mismatch", not trusted from the author.
+MET — core.11 — mobile_parcel_search.descriptor.json checks — a surface that can refuse before the network declares `"when": "pre"` rows (parcelsearch_toronto_only, parcelsearch_log_hygiene) rather than reporting after the fact.
+
+REJECT — core.1 — accused that the two files are not a step's descriptor, compute module and shell — these are SURFACE descriptors under scripts/surfaces, and the pasted clause's three-file and step.schema.json shape governs steps, whose schema is not the one named here.
+REJECT — core.12 — accused that no per-write-target discipline (mechanic, guard, scope, retract) is declared — outputs.answer is "none" with `"tables": []`, so there is no write target to carry a discipline.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: core.2, core.5, core.6, core.11
+
+---
+⏱  87361ms (87.4s)
+📊 Tokens — total: 51272, input: 34623, output: 16649, reasoning: 15276

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:49:15.794Z file_sha256=55bb54414c447f580b178c4d5a9c11597a43983270dcd3626a404b329d81703f prompt_sha256=033882cc504178311ee48935db2b4dcd304605544860c14e970ec620d64afdc5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/search-parity.golden.test.ts:26 "if (keys.length === 1 && KINDS.includes(keys[0] as string)) return [`${keys[0]}:${String(o[keys[0] as string])}`];" — a node that carries a ref key plus any second key returns no ref at all (the fallback recursion over its string values returns []), so a ref difference inside such a node is invisible to parityProblems, and the helper's own doc says "Every binding ref under `v`" — emit a ref for every KINDS key present (loop KINDS) instead of requiring a single-key object, before this lock is trusted.
+
+DEFER severity=LOW — src/tests/surface-registry.infra.test.ts:368 "const orphans = contracts.filter((c) => Array.isArray(c['x-draft']?.consumers) && c['x-draft']!.consumers!.length === 0);" — the test is titled "every CONTRACT declares consumers" but nothing asserts that; a contract with no x-draft, or with consumers absent/null, is silently skipped rather than reported as an orphan — assert every CONTRACT row has an array at x-draft.consumers first, then filter for the empty ones.
+
+DEFER severity=LOW — src/tests/surface-registry.infra.test.ts:135 "const other = ['QUERY', 'MUTATION', 'WEBHOOK', 'COMMAND', 'EXPORT', 'TRANSLATION', 'SCHEDULED', 'DISPATCH'];" — the SURFACE archetypes are read from the schema while the CONTRACT/JOB ones are a hand-copied list, so a new contract archetype in the schema fails a valid census row and a removed one still passes — read the contract/job archetypes from the schema too, as the file header itself demands no hand-maintained tables.
+
+DEFER severity=LOW — src/tests/leads-detail.infra.test.ts:296 "expect(mockedPool.query).toHaveBeenCalled();" — the title claims "(Phase G, CoA branch active)" but a permit-branch query satisfies this assertion, so the branch is not proven in this test — assert the first argument contains 'FROM coa_applications ca', the way src/tests/lead-detail-query.coa.infra.test.ts does.
+
+DEFER severity=LOW — src/tests/surfaces/report-page.ui.test.tsx:92 "const src = ['ReportPage.tsx', 'ReportPageToggles.tsx'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');" — the "holds no field name, no target literal and no hex colour" lock skips ReportView.tsx, the third owned renderer file and the one drawng the figure/caption, so a literal or hex colour there goes unchecked under a title that says "the component source" — add ReportView.tsx to the list.
+
+DEFER severity=LOW — src/tests/lead-detail-query.coa.infra.test.ts:67 "updated_at: '2026-05-01T12:00:00.000Z'," — the fixture hands updated_at to toCoaLeadDetail while the witness comment below (line 279) records that coa_applications has only first_seen_at/last_seen_at, and no CoA assertion covers data.updated_at, so whichever the mapper or the SQL alias does there is unobserved — assert updated_at on the CoA envelope (or drop the field from the fixture) so the mapper/SQL contract this file was written to catch is actually locked.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  294755ms (294.8s)
+📊 Tokens — total: 75246, input: 33493, output: 41753, reasoning: 40957

@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:19:57.499Z file_sha256=c87f2e1d821dbd138907c23285854ebdd46643ca10270c3ed09aa91368961497 prompt_sha256=2c36e7e52d58bbe7b9df72f99587ea4b9163a2601bd6c42c18eb15f368f1d323
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-back.txt (model: deepseek-reasoner)
+
+MET — 3.3 Pagination Enforcement — src/lib/leads/lead-detail-query.ts:104-133 — the permit branch reads `permits` with an explicit column list and a bounded single-row predicate, "WHERE p.permit_num = $1" / "AND p.revision_num = $2" / "LIMIT 1", so no unbounded `SELECT *` is present on a growing table.
+MET — 3.3 Pagination Enforcement — src/lib/leads/lead-detail-query.ts:285 "export const COA_LEAD_DETAIL_SQL = `" — the CoA branch reads `coa_applications` with explicit columns ("ca.application_number,") and closes on "WHERE ca.application_number = $1" / "LIMIT 1", satisfying the boundary rule on the second named growing table.
+REJECT — 3.3 Pagination Enforcement — the detail queries read `permits` and `coa_applications` with no page/offset window — not a real issue: both statements are single-row lookups terminated by "LIMIT 1" with an enumerated projection, and the clause forbids only "Unbounded `SELECT *` without `LIMIT`".
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  16704ms (16.7s)
+📊 Tokens — total: 13325, input: 9024, output: 4301, reasoning: 4016

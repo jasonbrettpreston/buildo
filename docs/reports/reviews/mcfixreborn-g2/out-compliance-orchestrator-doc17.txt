@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:31:12.155Z file_sha256=82279fc920dbd437deb77dfc169828d5216da2c5f0a07a1a94c8171346baf005 prompt_sha256=8bafa293ab045f4bad3948cdeb90ef703ca9fe619657ccb8cd51127ebf71d134
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — prereg-MB-44-1.json:2 "\"1. it has to happen now - read the objectives\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789, RR-0178)" — the sole authority quoted for this prereg is a register entry cited by RR id, and RR-0178 is not in the pasted list (the pasted entries jump RR-0177 :788 to RR-0181 :795), so whether it is a ruling or a reading cannot be seen — add the kind line for RR-0178 beside the quote, or re-cite an entry whose kind is in the pasted list.
+DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — prereg-MB-44-2.json:2 "\"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1061, RR-0271)" and "\"task 341 approved\" (:1160, RR-0301)" — both cited authorisations sit past the last pasted register line (:870), and task-341 is not among the six tasks the pasted Task block homes in G2, so the approval cannot be seen — quote :1061 and :1160 verbatim or rest the prereg on a ruling that is pasted.
+DEFER severity=LOW — Implementation Notes "Left out of every group: generated files..., documents, lane and review records, backlog cards." — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "\"schema\": \"coa-round-prereg-v1\"" — the material cut for this list is two coa-expected prereg records plus src-sql-ledger.mjs, none of which is a hand-written core file of the lookup library, report projection or settings group the Task block names, so no pasted clause can be shown met or unmet by them — record the two preregs as reviewed-out rather than as judged output.
+MET — RR-0414 "changed parts only as per your recommendation" — scripts/analysis/src-sql-ledger.mjs:75 — the ledger arrives as a two-hunk changed-part diff with context, not as a whole file.
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/src-sql-ledger.mjs:111 — the only code change in the diff is inside a file this material names, nothing outside the listed paths is touched.
+MET — RR-0431 "that is the objective and just the output" — scripts/analysis/src-sql-ledger.mjs:111 — the added line is one counted-set entry plus its dated note, no plan text, no new executable logic.
+MET — doc-17 "They are NOT the operator's words as a ruling" — scripts/analysis/src-sql-ledger.mjs:111 "LOAD.1 (task-266, dated note 2026-11-19)" — the ledger entry is dated and cites the task, no reading is quoted as its ground.
+REJECT — file docstring (not pasted) "it may not grow (`grew:`)" — accused of growing the closed interpolated set by one entry — not a real issue under this lens: that bar lives in the script's own comment, not in a pasted clause, and the added path is a new interpolation site.
+REJECT — RR-0431 "We only want to review the same set of files once" — accused of a second review of the two prereg records — not a real issue beyond the cited-id findings: the preregs are the chunk lens-input cut, and their prose is out of scope as records.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  48571ms (48.6s)
+📊 Tokens — total: 25777, input: 16858, output: 8919, reasoning: 8050

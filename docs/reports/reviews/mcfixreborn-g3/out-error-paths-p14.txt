@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:07:01.168Z file_sha256=79833660fcd11422942372c3282d2939e66bf1cbe09bc4838013387a0c2d93d9 prompt_sha256=6f051a831b4ab9ddb2e89da46cfc2d43f8d71ed5c3a77f1cc67ee06c15a9b03d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p14.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx:41 "vi.spyOn(console, 'error').mockImplementation((...a: unknown[]) => { const m = a.map(String).join(' '); if (!CONSOLE_ALLOW.some((r) => r.test(m))) errors.push(m); });" — the spy replaces console.error for every case in the file, but `errors` is only asserted inside describe (a) (lines 66, 75, 85); a React error logged during a (b), (c) or (e) render or click is collected, never asserted and never printed — assert expect(errors).toEqual([]) at the end of (b), (c) and (e), excluding the (d) throw cases.
+
+DEFER severity=MED — src/tests/surfaces/surface-validate.logic.test.ts:68 "const r = spawnSync(process.execPath, [path.join(REPO, GATE), '--check'], { cwd: os.tmpdir(), encoding: 'utf8' });" — no timeout is passed here or in the run() helper at line 58, so a generator that hangs or waits on stdin blocks the worker thread and the test timer cannot fire, leaving the real-tree run unbounded — pass { timeout: 120000 } and assert r.error is undefined and r.signal is null.
+
+DEFER severity=MED — src/tests/surfaces/surface-validate.logic.test.ts:387 "const files = fs.readdirSync(path.join(REPO, SCHEMA)).filter((n) => n.endsWith('.json')).map((n) => path.join(REPO, SCHEMA, n))" — the "no input file changes" assertion hashes only _schema *.json and the goldens, so a --check that rewrote the theme generator output mobile/global.css (named in the MT_GEN case) or mobile/src/generated/surfaces/*.json would still pass — add the four generators' output paths to `files`.
+
+DEFER severity=MED — src/tests/surfaces/static-page.logic.test.ts:160 "const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));" — the (static) inventory lists only .tsx files, so a new page.ts or helper .ts under the mount tree is neither equality-checked nor scanned for the gate import, and the "public, no gate" guard fails open — filter on .ts and .tsx and add the expected names.
+
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx:107 "const set_input = vi.fn(); const select = vi.fn(); const push = vi.fn();" — (c) exercises set_input, select and push only; change_input (declared at line 91) and retry are never fired, so a binding that drops the input change handler or the error-state Retry callback stays green — fire a change on parcel-search-input and a click on the retry control and expect both callbacks.
+
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx:118 "fireEvent.click(screen.getByTestId('parcel-search-select'));" — SELECT is clicked once and push is asserted with toHaveBeenCalledWith, so a second click pushing the route twice is unpinned (toHaveBeenCalledWith stays true) — click twice and pin push toHaveBeenCalledTimes(1).
+
+DEFER severity=LOW — src/tests/surfaces/surface-validate.logic.test.ts:384 "expect(run(root, [])).toEqual(run(root, ['--check']));" — the two runs are compared only to each other, so a temp tree where both invocations exit 1 with identical stderr passes — also assert [code, err] equals [0, ''] for the no-flag and the --check run.
+
+REJECT — src/tests/surfaces/static-page.logic.test.ts:221 "expect(await readSupportInbox({ query: async () => { throw new Error('down'); } } as never)).toEqual({});" — a throwing settings read looks like it could break the page render — handled: the read degrades to {} with the mail links left out, is logged (the err count at line 222 is 1) and never throws.
+
+VERDICT: PASS on error-path safety
+Paths walked: search render smoke (unknown component, missing content key, unresolved ref, unknown action, each throws), live-switch-off disabled controls, chip/select/push wiring, reports-left present and absent cases, support-inbox read (unset, empty, non-string, header, query payload, comma list, throwing read), plain-page table plants, plain-page mount inventory, gate spawn (missing module, missing generator, malformed goldens, null golden, empty state list, unreadable golden reported once), duplicate-run determinism and read-only check, C-10 settings bounds (missing entry, absent seed row, mismatched min/max, non-default value, out-of-bounds, null entry, UNRESEARCHED), C-12 pin both directions, C-9m planted sizes.
+Unguarded: 3
+
+---
+⏱  142651ms (142.7s)
+📊 Tokens — total: 66396, input: 32875, output: 33521, reasoning: 32376

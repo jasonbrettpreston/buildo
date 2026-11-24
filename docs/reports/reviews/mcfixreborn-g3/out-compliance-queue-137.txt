@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:34:52.890Z file_sha256=7cfd44b7cbdbccc86356827c4d0a1b9733e6bab3aef015ee276b766bb801134c prompt_sha256=05068d944370f33486af3cb1b819c06121289a121714834311f2dcb224da5541
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG: none. No pasted Spec 137 clause is contradicted by the change.
+
+DEFER: none. Every clause that could bind either does not reach a read-only data-check script or is met; see the MET lines.
+
+REJECT — Spec 137 Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — accused of landing `scripts/analysis/lot-map-data-check.mjs` with no `Task:` trailer and no task-336 file beside it — the material is a whole-file creation diff of one path with no commit message, and task files are excluded from the group by design ("backlog cards ... left out on purpose"), so the commit set cannot be seen here, not judged; cannot see
+REJECT — Spec 137 Rule 4 "The orchestrator writes each ruling into the row's status line the same day. The scratch decision logs are logs only." — accused of keeping ruling RR-0284 in a code comment instead of a verbatim dated note on the row — rules 4 and 10 govern where a ruling is kept (on its row), nothing forbids code citing a decision id, and task-336's row is not pasted; cannot see
+REJECT — Spec 137 §5 "A procedure. No tool and no code." — accused of turning the weekly snapshot into a tool — the clause is scoped to the §5 snapshot (Rule 6) of the §2 homes, and this script reads two lot-map selects over parcels, it never reads a queue home, a card or the id ledger
+
+MET — Spec 137 §1 item 1 "Tasks stay in their homes (§2). McQueue does not move them, copy them or keep an index of them." — scripts/analysis/lot-map-data-check.mjs:2 "// SRCH.LOTCARD (task-336, RR-0284, AC 1) · READ-ONLY data check for the two lot-map reads." — no row, index or copy of any task is added, moved or duplicated
+MET — Spec 137 Rule 3, dated note 2026-11-20 "The work lands first; the status moves in a separate closing commit that carries only the lane's records" — scripts/analysis/lot-map-data-check.mjs:80 "if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main()" — the diff is code only and edits no status line, the work-first half of the two-commit close for a lane task
+MET — Spec 137 Rule 9 "Every DB job is rehearsed on the local test stack first" and "The DB writer is ONE lane" — scripts/analysis/lot-map-data-check.mjs:42 "if (!['127.0.0.1', 'localhost'].includes(u.hostname)) return `host ${u.hostname} is not the rehearsal stack`;" with line 45 "if (u.port !== REHEARSAL_PORT)" — the only reachable database is the rehearsal stack and the session only reads, so no DB writer, lock or production job is created
+MET — Spec 137 Rule 13 "The board is a view; the row is the record." — scripts/analysis/lot-map-data-check.mjs:68 "await client.query('BEGIN READ ONLY');" and line 70 "await client.query('ROLLBACK');" — nothing is written back to any board, row or record
+
+VERDICT: PASS
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  64505ms (64.5s)
+📊 Tokens — total: 27885, input: 15987, output: 11898, reasoning: 11114

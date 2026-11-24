@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:14:05.889Z file_sha256=3f7ff2df0bd9a1231c9616c11b93c9a003e589ac5772fcdfde0a139c6028aa35 prompt_sha256=ff3b9a6671ac1a94fcbb3a1e3335a6637c21ee2648277ceac9185a69c0fc8a93
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-surface-136-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.35 "the by-law rules count never beside \"checked\"." — src/lib/surfaces/maxbld-landing.ts:76 "const lines = citywideLines(row, Number((universe as { rows: number }).rows));" — the landing injects the by-law rules count taken from universe.lock.json into the checked.citywide group, so the by-law rules count sits beside "checked" and the citywide figure is not drawn from the stored dated row. — pass only the stored data_quality_snapshots counts into citywideLines and keep universe.rows out of the checked lines.
+
+REJECT — fe.07 — the search parity check is a separate golden lock for a non-REPORT surface where the reading says it is checked inside the conformance lock (FE-31) — parityProblems is exported from search-parity.golden.test.ts so the FE-31 conformance lock can import it; the file holding the definition is not a compliance break, and FE-31 itself is not in the pasted material (cannot see).
+
+MET — fe.31 — src/tests/surfaces/site-footer.logic.test.ts:44 — footerNode is defined in one module only and imported by StaticBinding, SearchBinding and ReportPage, one shared footer.
+MET — fe.36 — src/tests/surfaces/site-footer-route.ui.test.tsx:50 — the three report footer links route through next/link, the web platform router.
+MET — fe.57 — src/tests/surfaces/site-footer-route.ui.test.tsx:66 — footer links carry min-h-11 and min-w-11, the 44x44 floor.
+MET — fe.43 — src/tests/surfaces/report-page.ui.test.tsx:120 — each details panel is a dialog at #<option>/size|cost|how, Back closes it, focus returns to the opener.
+MET — fe.34 — src/tests/surfaces/report-page.ui.test.tsx:150 — D-J the size number and unit are two parts, D-K the lot-size box and sheet are on collapsed rows only.
+MET — fe.41 — src/tests/surfaces/report-page.ui.test.tsx:185 — summary items link to the option anchors and the heading is the item count.
+MET — fe.42 — src/tests/surfaces/report-page.ui.test.tsx:170 — no lot view when data is absent and the caption "Not from a survey. Illustrative." shows on every state.
+MET — fe.37 — src/lib/surfaces/maxbld-landing.ts:79 — readCitywide, readAllowances and readDemo catch and return empty, so a failed read leaves its part out and is logged, never a 500.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 1
+Rules met: fe.19, fe.23, fe.31, fe.34, fe.36, fe.37, fe.41, fe.42, fe.43, fe.46, fe.54, fe.57
+
+---
+⏱  184108ms (184.1s)
+📊 Tokens — total: 72728, input: 33301, output: 39427, reasoning: 38763

@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:24:52.379Z file_sha256=ee839ffbdca713fa77cbfd8da5b1f4150351983c6c590382a90d30c8a86a3108 prompt_sha256=0ee0885910ddb9879e4511bdcfeb7776e29f2ff8164fa80cfdc4f181a1f60a6b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Increment objectives, two-or-more parcels at one address "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — mobile/__tests__/parcelSearchMatch.test.ts "one address point linked to 2+ parcels is indistinguishable from N separate text matches" — the multi_parcel outcome is only reached through a forced cast, so on today's contract a two-or-more-at-one-address result renders as text_candidates and not the map, and the server resolution field cannot be seen in this chunk — name the server contract change that must emit resolution multi_parcel as the owner and keep the client fallback.
+
+MET — Increment objectives, a mis-typed address wires to the report — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "SELECT pushes the selected lot and records the query" — the candidate list is exercised and the chosen lot is pushed.
+MET — Increment objectives, a possible semi lot wires to the report and the semi calculation stays in Increment 7 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "then opens the report once" — the question page opens the report and no semi calculation appears.
+MET — Objectives, search page then address confusion then lot confusion — mobile/__tests__/parcelSearchMatch.test.ts "several text matches render a list, not a map" — search page and address confusion are exercised.
+MET — Project objectives, the task serves a designed element — mobile/__tests__/reportScreens.golden.test.ts "MF-48 mobile REPORT props goldens" — the hand-off to the report (element G) is covered.
+REJECT — Project objectives "keep it simple; no scope creep" — the change is accused of adding tests for the three-tab shelf and the hidden five-tab bar that elements A-G do not name — the shelf and bar are navigation, a supporting function under the same objectives, so they are in scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  75154ms (75.2s)
+📊 Tokens — total: 49846, input: 34901, output: 14945, reasoning: 14483

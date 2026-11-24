@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:33:43.511Z file_sha256=c6f202c4f7cedbb3a652b97f7951235cecb9ebab6a23a1df7b922e082dbefbb3 prompt_sha256=242bbd99651c4ec99183869bc86bf78f791492ba30c229219a569bf5149f6d73
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §1 Rule 3 (G3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff; docs, spec, queue-row, backlog-only and merge commits are exempt" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "prereg 1, committed ALONE directly before the share-out and W commits" — the prereg sits under scripts/, so its commit needs the trailer plus task-123's task file in the same diff, but the material says it is committed alone and the three pasted paths hold no backlog task file; no pasted exemption covers a prereg file, and the same holds for prereg-MB-44-2.json:2 "committed ALONE" and task-266 — land the task file in the same commit as its prereg, or have the operator add prereg files to Rule 3's exemption list and write that into Spec 137.
+DEFER severity=MED — Spec 137 §4 Rule 2 (source, ID ledger) "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "In-file round 197, claimed in the ID ledger (~/Buildo-scratch/ids/round-197)" — rounds 197 and 198 are new claimed ids and the only evidence of the claim is the preregs' own comment; the ledger is LOCAL and not in the material, cannot see it — cite the ids/check.mjs result (or the ledger path) in the lane report so the claim does not rest on a comment.
+DEFER severity=LOW — Spec 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — scripts/analysis/src-sql-ledger.mjs:111 "// LOAD.1 (task-266, dated note 2026-11-19): the batch statement text is built by the Layer 3 step's own core" — the 30th closed-set entry is justified by a code comment naming a dated note that is not in the pasted material, and the operator words pasted with this task ("2. y", "task 341 approved") name no SQL-ledger change — put the note on task-266's row in M-246 form and keep the code comment as a pointer only.
+REJECT — no pasted clause on the src-sql-ledger counts — the header keeps "SQL-bearing files: 41 static, 29 interpolated, 2 not_postgres" (scripts/analysis/src-sql-ledger.mjs:78) while a 30th interpolated file is added — Spec 137 pastes no clause on the ledger's totals or measured date, so this is not mine to raise here.
+MET — Spec 137 §4 Rule 13 "The board is a view; the row is the record" — scripts/analysis/src-sql-ledger.mjs:111 — nothing in the material reads or writes a board edit into a row, so the board/row rule is untouched by this change.
+MET — Spec 137 §4 Rule 2 "A queue-row task: the queue row stays the record and the Backlog task mirrors it by hand" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-2.json:5 "\"task\": \"MB-44\"" — both preregs key on the queue row MB-44 and create no queue row or second home, so one-row-one-home is untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  93387ms (93.4s)
+📊 Tokens — total: 35118, input: 16766, output: 18352, reasoning: 17498

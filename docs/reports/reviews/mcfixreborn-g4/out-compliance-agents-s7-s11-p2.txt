@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:35.202Z file_sha256=b1ed0045a8dfb53b27fc37b8f1eecbccfee55aec4118a013a052b976195ffd84 prompt_sha256=4c7722b43679cd015b6719e8fa91f4c07e627799d69e818711cf86c504cc1e75
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 dated note (2026-11-21) point 1, "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — scripts/analysis/backlog-brief.mjs:16 "const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js').CONTEXT_SECTIONS" — the five --section flags are computed and never printed, and the brief's only review line says "the output lens set and its commands are in the lens line of this brief" while the brief emits no lens line and no --context, so the command a lane copies from the brief cannot carry the context and section flags the note requires — add a lens line to the `out` array that interpolates `${sectionFlags} --context ${ctxRel}` instead of pointing at a line that is not emitted.
+
+BUG severity=HIGH — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it." — scripts/analysis/backlog-brief.mjs:62 "const CAP_TOTAL = 120 * 1024; const CAP_BLOCK = 12 * 1024; const CAP_SUMMARY = 4000;" — 120 KiB is 122,880 characters for the document blocks alone, and the task, decisions, prior-review and dependency sections are appended on top, so the brief can write a context-rN.md that no 120,000-character call can carry — set the whole-context cap below 120,000 characters measured on the exact prompt, not 120 KiB on one section group.
+
+BUG severity=MED — Spec 08 11.1 "a census grep runs at the full scope its conclusion covers" — .claude/review-templates/README.md:165 "the other four lens templates still carry the plan placeholder twice in their own prose (the material is sent twice there; `lens-compliance.md` is fixed)" — each of the four named templates carries the placeholder once (lens-code-review.md:34 "{{PLAN}}", lens-ux.md:34 "{{PLAN}}", lens-error-paths.md:34 "{{PLAN}}", lens-security.md:34 "{{PLAN}}"), so the stated count is false and the "$"-doubling workaround it prescribes distorts a caller's diffs for nothing — re-cut the sentence from an actual count of the placeholder in the four files.
+
+BUG severity=MED — TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question." — .claude/review-templates/lens-compliance.md:71 "VERDICT: PASS or FAIL on compliance with the pasted clauses" — the lens reply contract ends at the VERDICT, Clauses checked and Rules met lines and carries no STATUS line, so no DeepSeek panel seat reply can satisfy TKT-2 and TKT-4's empty-or-truncated word has no carrier — add "STATUS: ready|blocked|failed" to the End-with block of every lens template.
+
+BUG severity=MED — task-375 dated note (2026-11-21) point 2, "Reality-Check is required at every build or fix launch for now (his :1625)" — .claude/review-templates/README.md:111 "3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens." — the README keeps the older subject-matter trigger and drops the ruling that makes the seat mandatory at every build or fix launch, so a lane that reads the standard can omit the seat the launch gate requires — restate item 3 as required on the plan at every build or fix launch, and mark the subject-matter trigger as the superseded reading.
+
+BUG severity=MED — TKT-1 dated note, "the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`" — scripts/analysis/backlog-brief.mjs:36 "const label = asList(t.fm.labels).includes('queue-row') && rowId ? rowId : (planId ?? rowId ?? 'no plan id');" — a task with no plan label and no ROW id prints "Ticket: task-N (no plan id)", a header the ruling does not allow, while the same file dies on every other malformed input — die with the task id named when no MB, MF or plan id resolves, as the --board and --task checks already do.
+
+DEFER severity=LOW — Spec 08 11.2 "walks every checklist line for staleness" — .claude/review-templates/README.md:87 "- **Add `--template` flag to both review scripts** so templates can be invoked end-to-end without paste." — the same file states at line 136 "`review --template` is the one runner change of task-358 (a lens cannot reach the model in strict form through `--context`); `plan --template` already existed.", so the future-improvement item is a leftover from before the flag existed — delete the two stale future items or date them.
+
+MET — TKT-1 dated note (header form) — scripts/analysis/backlog-brief.mjs:169 "Ticket: ${taskId} (${label}) · lane ${lane} · stage ${stage}" — the brief's first line is the ruled header in the ruled field order (subject only to the label fallback above).
+
+MET — task-375 dated note (2026-11-21) point 1, "one per review round and never overwritten" — scripts/analysis/backlog-brief.mjs:57 "docs/reports/reviews/${taskId}/context-r${round}.md" — the round number comes from contextRound(ctxDir) and the file name is the required context-rN.md.
+
+MET — TKT-2 (lane report) — scripts/analysis/backlog-brief.mjs:188 "End the report with one line: STATUS: ready|blocked|failed|dropped" — the generated lane brief closes the report on the ruled word.
+
+MET — task-375 dated note (2026-11-21) point 1, "the close check recomputes each output's prompt hash with the committed context" — .husky/commit-msg:7 "node scripts/hooks/check-lane-close.mjs \"$1\"" — the close gate runs in the commit-msg hook on every commit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 7
+Rules met: none
+
+---
+⏱  146502ms (146.5s)
+📊 Tokens — total: 65794, input: 30576, output: 35218, reasoning: 33773

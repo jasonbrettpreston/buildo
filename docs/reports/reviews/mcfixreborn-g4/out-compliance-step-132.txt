@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:18:17.571Z file_sha256=5c56d6ac8c1de07852e4607b1e553d3eb0ea98220f6f644d0c112f727259b312 prompt_sha256=71af50c98a029ed52faccd506d875b5dcc23f440603d1693fb222129a3e4a196
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — core.8 "Unit constants and definitional windows are pinned (min = max)." — migrations/334_precommit_budget_registry_repin.sql:12 "SET variable_value = 33.2," or NONE for any pin bound — the UPDATE moves the value and writes a description that asserts "Pinned min = max = 33.2 (R-CV form)" but sets no pin bound, and the seed said to carry min = max is not in the pasted material, so the pin is satisfied only by prose in a description string (cannot see the seed) — attach the seed diff or set the pin columns in the same migration so the declared pin is witnessed, not asserted.
+DEFER severity=MED — x-rulings.4 "every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`" — migrations/334_precommit_budget_registry_repin.sql:2 "the operator then confirmed 33.2 s (MORNING-DECISIONS.md:1526" — the ruling that authorises a pinned variable change is cited by markdown line number, not as a decision-log stem plus id, and no 33.2 decision appears in the pasted decisions list, so the citation does not resolve under the pasted form — commit the 2026-11-20 ruling verbatim under docs/reports/decisions/, run decision-log.mjs --write, and cite the resulting register row id in the migration header.
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it." — scripts/lib/review-template.js:77 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — the shared substitution that assembles the reviewer prompt applies no character cap and names no tooling_ variable for the 120,000 limit; the enforcing caller is outside this chunk (cannot see) — confirm where the cap is applied and that it is a registered tooling_ variable rather than a literal.
+DEFER severity=LOW — task-375 "backlog/tasks/task-375 - FIX.TOOLS-Review-and-proof-tooling-the-lens-line-passes-the-rule-context-the-security-lens-fires-for-admin-and-PII-the-review-template-substitutes-safely... Acceptance Criteria from line 41" — scripts/lib/review-template.js:90 "function loadReviewNotesBlock(filePath) {" — a new prompt-time behaviour (auto-appended `review_notes` block) whose only stated authority is Spec 120 §3.4, which is not pasted, and the card's acceptance criteria are pasted as a line pointer only, so the addition matches no visible named criterion (cannot see) — paste the task-375 acceptance criteria text or the Spec 120 §3.4 clause in a later run.
+MET — x-tooling.1 — migrations/334_precommit_budget_registry_repin.sql:4 — the re-pin rests on a fresh scripts/analysis/precommit-budget.mjs --measure reading recorded in docs/reports/generated/precommit-budget.json, matching the pinned time budget clause.
+MET — core.8 — migrations/334_precommit_budget_registry_repin.sql:11 — the pre-commit budget is changed through the registered `tooling_precommit_budget_registry_s` row, not a code literal.
+REJECT — x-verify.2 "ceilings are never raised (resize instead)" — raising the pinned pre-commit budget from 27.5 s to 33.2 s — that clause binds cloud acceptance ceilings, not the hook time budget.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+Rules met: x-tooling.1
+
+---
+⏱  71427ms (71.4s)
+📊 Tokens — total: 36204, input: 20254, output: 15950, reasoning: 15099

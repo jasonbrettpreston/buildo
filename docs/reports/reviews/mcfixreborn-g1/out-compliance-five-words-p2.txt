@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:57:17.892Z file_sha256=5be5485a75cba7c0e4e65757f276911b2abee5ad473b2270fbc22fa1dcd99759 prompt_sha256=53c494e7dfbfe1f0b8a99d33738746b89f533be40a0178520243a86f5fe8d000
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-384 "...STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks.md, Acceptance Criteria from line 32" — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json "Outside C-9 (it judges golden nodes, not files)" — the 44 px half of the clause is not demonstrated on the material: the descriptor both claims the files are under the existing checks and records them outside C-9 with "No 44 px measure exists" — fix: add a 44 px measure that covers the report renderer's interactive nodes (or extend C-9 to the report goldens), or cite the amended AC line that scopes it out
+DEFER severity=MED — RR-0385 "CRITICAL, HIGH and MED findings are resolved; LOW and NIT are recorded." — scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json "approved 2026-10-20 (gap 2) — CONFLICTS with RULED LC-49 / P5.10a (\"CoA not applicable to the rear suite\"); needs an LC-49 amendment + lineage rows" — three suite_coa rows ship with status "new" while the file itself records that they contradict a RULED item that has not been amended; a conflict is recorded, not resolved — fix: keep those three rows at status "proposed" (and out of the approved set) until the LC-49 amendment and the lineage rows land
+DEFER severity=NIT — task-411 "the lead-detail API serves the area already converted the two typed phone copies of the factor are deleted" — NONE — the phone-side deletions are not in this chunk, cannot see them, so that half is unverified here — fix: confirm in the chunk that holds the phone files
+MET — task-411 — src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft (fe.44: the client never converts)" — the contract documents the area as served already converted
+MET — task-411 — scripts/surfaces/_schema/seed-report-v2.mjs "alt_formatter: 'formatServedSqft', alt_formatter_input: 'square feet as served by the API (never square metres; the factor is the pinned setting parcels_sqm_to_sqft)'" — the presentation registry no longer implies client-side conversion
+MET — task-384 — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json "a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them" — a census owner entry exists and its components_owned check is blocking true
+MET — task-332 — src/app/admin/report-preview/page.tsx "footer={pickFooterText(SEARCH_CONTENT)}" — the preview consumes the shared web footer helper instead of its own footer markup
+REJECT — Glossary "archetype vs shape" "it selects required and forbidden descriptor fields and is checked against the census" — the change is accused of carrying DETAIL/LIST/SEARCH/REPORT archetypes — that bullet defines step descriptors only and no surface archetype vocabulary is pasted here
+REJECT — Glossary "five words" "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — the change is accused of not producing a five-words verdict — gate V scores converted steps under step-validate and no step file is in this chunk
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  100518ms (100.5s)
+📊 Tokens — total: 48262, input: 36426, output: 11836, reasoning: 11008

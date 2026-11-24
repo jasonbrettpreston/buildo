@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:49:15.793Z file_sha256=3252799992505d1062cca391d343e67af32c75004ecfe48fa5f88f7206748e1e prompt_sha256=a875249723a364e8a9fec69d158999101c32e7a96a9b2c838fb1dd44aedf24ee
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/app/(app)/[lead].tsx:45 "const { id } = useLocalSearchParams<{ id: string }>();" — the route file's dynamic segment is `[lead]`, so the router param is `lead`; the cast asserts `id: string` while at runtime it is commonly undefined, and the jest test mocks `{ id: '24-101234--01' }` so it cannot catch the mismatch — fix: read `lead` (or guard `id` as `string | undefined`) and check against the feed's navigation call, cannot see the feed here.
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:88 "(costEstimated !== null || cost.tier !== null || costRangeLow !== null || costRangeHigh !== null);" — `!== null` is true for `undefined`, so a present-but-empty `cost`/`neighbourhood` (e.g. `{}`) passes the gate and renders an empty shell (same at :93 `"neighbourhood.name !== null ||"`), contradicting the comment at :83 about avoiding empty shells while the row guards at :x do check `undefined` — fix: use `!= null` or test the leaf fields directly.
+DEFER severity=NIT — mobile/src/lib/parcelCostFormat.ts:82 "return (n as number).toFixed(2);" — after the `typeof v === 'string' ? Number(v) : v` narrow, `n` is already `number`, so the `as number` cast is redundant (same in `formatServedSqft` and `formatSqm`) and hides nothing — fix: drop the cast.
+DEFER severity=NIT — mobile/__tests__/leadDetailFormat.test.ts:77 "expect(formatCostTier('giga' as never))" — `formatCostTier` accepts `string | null`, so `'giga' as never` is an unnecessary unsafe cast in the unknown-tier test — fix: pass `'giga'` directly.
+DEFER severity=NIT — mobile/__tests__/parcelCostFormat.test.ts:79 "// so its test leaves. Prior text: describe('SponsorSlot renders null while flag-off (Spec 100 §6.8)') asserted SponsorSlot({placement:" — commented-out prior test body is dead text carried in the file — fix: keep only the dated one-line removal note if the record is needed, drop the old assert body.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- (none blocking; the `id`/`[lead]` param read is the one to verify against the feed's navigation)
+- (deferred) `!== null` gates let `undefined` render an empty Cost/Neighborhood shell
+- (deferred) redundant `as number` casts in parcelCostFormat.ts
+
+---
+⏱  109429ms (109.4s)
+📊 Tokens — total: 55714, input: 33695, output: 22019, reasoning: 21397

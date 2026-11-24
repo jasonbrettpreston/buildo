@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:03:43.886Z file_sha256=e8184dbc92d2d78e30f2f78bdb443566794376f494c4564c2bedac10c29f3e79 prompt_sha256=fb1c5ece855345a55f2c6ffd875fcacf31ca537f8a21b7691bee85c6d3633757
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-orchestrator-doc17-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — scripts/analysis/rule-lists.json:49 "\"orchestrator-doc17\": { \"file\": \"backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md\", \"whole\": true, \"generated_by\": \"hand-written\" }" — the readings file is registered as a governing list on the lane-tools row (\"lists\": [... \"orchestrator-doc17\"]), so every review of scripts/analysis/** and scripts/hooks/** receives the readings as rule text, which is the feed the clause forbids — remove orchestrator-doc17 from every row's \"lists\" and keep doc-17 only as a named non-ruling note in the row's \"why\".
+
+DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — scripts/analysis/rule-lists.json:3 "Operator, verbatim, 2026-11-20: \"Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort.\" (record ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, the 2026-11-20 entries)." — the table's stated authority is a quoted log line with no decision id and no line, the register-entry class this same file says is not a ruling, so the table's provenance does not resolve to a decision — cite the decision id and line for the 2026-11-20 answer, the way other rows cite decision-165, decision-170, decision-203, decision-205.
+
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — that the new table breaches RR-0110 "no new infra tasks; a gap is fixed only if it blocks a project commit" and RR-0001 "Infra freeze lifted for the named list only" — these are readings, and by this very clause they carry no force in a review, so no finding rests on them.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 2
+Rules met: none
+
+---
+⏱  43899ms (43.9s)
+📊 Tokens — total: 33189, input: 24662, output: 8527, reasoning: 8004

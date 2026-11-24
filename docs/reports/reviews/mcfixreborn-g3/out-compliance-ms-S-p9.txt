@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:28:11.612Z file_sha256=5c711ca74a86b1e464a551df364f2e71fe146fab46a7f023fb6040099cbf3090 prompt_sha256=6bc01de6227be3bb59152b0c831d70ba34cf696c397e0b783d695339290f7a02
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Increment objectives "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — src/app/api/parcels/lookup/route.ts:25 "null for every lot until MB-44 serves one" — the report hand-off this route carries (`page`) is null for every lot and the meter counts nothing on every hit, so element G (hand-off to the report) is not delivered by this chunk — record element G as not delivered in the group output, or land MB-44's producer before counting it met.
+
+DEFER severity=LOW — Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — src/app/api/parcels/lot-size/route.ts:10 "It is OFF today (seed bounds 0-0): this route cannot write until the flip (MB-42 and the one-lot re-evaluation row, D-8)" — a disabled write endpoint with its own entitlement gate, daily rate bucket and refusal codes serves none of the three named first objectives, none of the pasted elements A to G — bounded because it refuses with ENTRY_OFF before any read or write, so the fix can be a recorded deferral rather than a removal.
+
+DEFER severity=LOW — Increment objectives "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — src/components/surfaces/web/SearchBinding.tsx:45 "Inert on the web until MAXBLD_WEB_LIVE flips (LS.12, task-287)" — element E exists as a props tree but no customer sees a web search page while the mount is off and every control renders disabled — record E as built and inert in the group output so the element count is not read as served.
+
+REJECT — "A task that serves neither a designed element nor a supporting function is most likely not relevant" — src/lib/entitlements/index.ts is accused of carrying Stripe price mapping, trial bootstrap, admin plan writes and deletion fan-out that the search does not call — those helpers are the same entitlement surface the lookup gate and the report meter consume, and that gate is the search page's supporting function, so the module is not out of scope.
+
+REJECT — "the database is created to service the existing report and details as clarified in the McFrontend" — src/components/permits/BuildingMassing.tsx and src/app/api/permits/[id]/route.ts are accused of being outside the search-first increment — the pasted objective names "report and details" alongside the search page, and these render and serve the permit detail page's massing fields, so they are a designed element.
+
+MET — Project objectives "the database is created to service the existing report and details as clarified in the McFrontend. This includes the search page" — src/app/api/parcels/lookup/route.ts:4 "GET /api/parcels/lookup — CONSUMER (mobile) read-only lookup for the Parcel Cost Tool." — the search page's read surface is built and read-only.
+
+MET — Increment objectives "two-or-more parcels at one address, a mis-typed address, or a possible semi lot" — src/app/api/parcels/lookup/types.ts:137 "RESOLUTIONS = ['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']" — all three situations plus a possible semi lot (lotForm.unsure) are named outcomes of the response contract.
+
+MET — Increment objectives "the semi calculation stays in Increment 7 (7.25)" — src/app/api/parcels/lookup/types.ts:129 "ConsumerLotFormSchema" detected/basis/unsure only — no semi area calculation is added here, the lot form is detected and asked, not split.
+
+MET — Increment objectives "C (lot confusion, lot map)" — src/app/api/parcels/lookup/types.ts:121 "ConsumerLotMapSchema" — outlines, pin, start view, faint neighbours and the frontage street card line are carried for multi_parcel and unlinked.
+
+Thanks — PASS on compliance with the pasted clauses.
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  50881ms (50.9s)
+📊 Tokens — total: 43767, input: 33604, output: 10163, reasoning: 9205

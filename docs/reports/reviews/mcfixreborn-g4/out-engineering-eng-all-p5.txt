@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:21:57.606Z file_sha256=47e843bb79971effa9a3f0a313c3eec1ac0e4cf13e1e6db6c80f534b9cd9159c prompt_sha256=c95b9cf396ccb658c3b94fec54028aeb3a70a7c52bae9e424e6fc3a4c89c2175
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p5.txt (model: deepseek-reasoner)
+
+BUG
+NONE
+
+DEFER
+NONE
+
+MET — 5. Testing Standards §5.5 "Two surfaces that MUST agree stay in lockstep" — scripts/analysis/rule-lists.json:1 — "The list is the census-derived set; a drift test (rule-lists-table.logic.test.ts) fails when they differ" pins the one duplicated surface (census contracts ↔ this row) with the parity battery the rule demands
+MET — 9. Pipeline & Script Safety §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — scripts/analysis/rule-lists.json:1 — "the path to rule-list table. DATA, not code" — the file is a JSON table read by a resolver, not a `scripts/*.js` script, so pipeline.run/withTransaction/emitSummary are not owed
+MET — 9. Pipeline & Script Safety §9.6 "Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth" — scripts/analysis/rule-lists.json:1 — the table declares "`imports_from` makes the row fire only for a file that imports from that path", which is rule-list metadata, no chain, script path, table read/write or feature flag is duplicated out of manifest.json
+MET — 2. Error Handling & Stability §2.2 "Every newly created API route ... MUST have an overarching `try-catch`" — scripts/analysis/rule-lists.json:1 — "new file mode 100644" over a data file — no handler export is added, so the try-catch boundary clause has no subject
+MET — 3. Database Management & Scaling §3.2 "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks" — scripts/analysis/rule-lists.json:1 — no `migrations/` path appears in the added file's own paths and none is created, so no UP/DOWN pair is owed
+MET — 4. Security & API Contracts §4.3 "Never place API keys, admin SDK credentials, or database connection strings in `use client` components" — scripts/analysis/rule-lists.json:1 — "`globs_from`: { `file`: `mcbylaws/protected-paths.json`, `key`: `layer23` }" — the file names other repo paths and keys only, no secret value is embedded
+MET — 10. Frontend/Backend Boundary §10.3 "API routes must be thin - validate input, call a lib function, return the result" — scripts/analysis/rule-lists.json:1 — the change touches no route under `src/app/api/**`, so no business logic is placed in a handler
+
+REJECT — 9. Pipeline & Script Safety §9.4 "no bare `console.error()` for error handling" — the table is accused of not using `pipeline.log.error` — it emits no log line at all and is data consumed by a Node resolver, so the logging clause has nothing to bind
+REJECT — 11. Plan Compliance Checklist "New API routes must define Request/Response TypeScript interfaces in a shared types file" — the diff is accused of omitting a types file — no API route is created or modified by this chunk, so the checklist item is not triggered
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  29288ms (29.3s)
+📊 Tokens — total: 26645, input: 20583, output: 6062, reasoning: 5312

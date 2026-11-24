@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:05:30.362Z file_sha256=34895e64d335e02acd24fb3f6fb40885d110bdfc644f375c853b4ead5bfcf45c prompt_sha256=24f35ca27d5cf123ecac45c10df42fb5115f0fb05b7921c07fb68674190089f7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/parcels/consumer-lookup.ts "const [south, north] = widen(Math.min(...lats), Math.max(...lats));" — every coordinate of every outline is spread into Math.min/max, and with outlines capped at 65,536 bytes (measured max 61,910) times the neighbour limit the argument count can pass the engine limit, so fitOf throws a RangeError and the whole lookup 500s (no page, no meter) instead of degrading — reduce with a loop, the schema already allows fit:null so the drift paths have somewhere to degrade to.
+
+DEFER severity=MED — src/lib/parcels/lot-size-entry.ts "variable_value === null ? NaN : Number(r.variable_value)" — an empty-string logic variable reads as 0, which passes any seed bound whose min is 0 (user_lot_size_min_sqm, user_lot_size_entries_per_day, the side bounds) and the settings fail open with a real-looking 0, while lot-map.ts reads the same column as "variable_value === null || variable_value === '' ? Number.NaN" — same table, two readings; treat '' as missing here as lot-map does.
+
+DEFER severity=MED — src/lib/parcels/lot-size-entry.ts "if (isUniqueViolation(e)) throw new LotSizeRefusal(409, 'LOT_SIZE_ALREADY_ENTERED', 'A lot size is already entered for this lot');" — every 23505 is reported as already entered, so if migration 305's index on (parcel_id, input_key) is not partial on status='active', the first entry after an admin revert collides with the reverted row (read.entry is null, the read check passes) and 409s forever — the index predicate is not in this chunk (cannot see migration 305); confirm it is partial on status='active' or the re-entry-after-revert path is dead.
+
+DEFER severity=MED — src/lib/parcels/lot-map.ts "area: areaSqftM2Dot(l.lot_size_sqm)," — lot_size_sqm and frontage_m are typed unknown and handed straight to the formatters with no null or non-numeric guard, unlike zoning, centroid, frontageStreet and hasFootprint on the adjacent lines, so the common empty case (a lot with no size) reaches the display rule raw — if areaSqftM2Dot or len1 (not in this chunk, cannot see) does not null-handle, a lot card shows a NaN area; run both through the file's own num first.
+
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts "const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);" — a non-numeric neighbourhood_id becomes NaN, which is not null, so the "NULL-neighbourhood → []" guarantee does not cover it and NaN enters the fetchCoaProjects parameter instead of the empty-list path — guard with Number.isFinite so a bad id degrades to an empty CoA list rather than depending on how the unseen query treats NaN.
+
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts "pageResponse = await computeCustomerPageResponse(parcelRef);" — the one-lot compute has no timeout or single-flight here, and the header itself says it can take many seconds, so a client that gives up and retries starts a second compute while the first is still running, and whether the route then meters twice cannot be seen in this chunk — bound the compute or key the meter to parcelRef so a repeat lookup is a no-op; openReport and its subject_key live in the route (cannot see).
+
+REJECT — src/lib/parcels/lot-map.ts "if (missing.length > 0) throw new LotMapLimitsMissingError(missing);" — a missing or out-of-bounds neighbour setting 500s the whole unlinked lookup — handled: the response schema forbids map:null on an unlinked resolution, so there is no degrade that keeps the wire shape; failing closed shows no wrong number, charges no meter and leaves nothing half-written.
+
+REJECT — src/lib/parcels/lot-size-entry.ts "if (upd.rowCount !== 1) throw new LotSizeRefusal(409, 'STALE_ENTRY', 'The entry changed; reload and try again');" — two admins reverting at once, or one re-sending — handled: the UPDATE re-checks "status = 'active'" under the row lock, so the loser flips nothing, gets 409, and the audit row is written once in the same transaction.
+
+VERDICT: PASS on error-path safety
+Paths walked: resolve and fetch errors, dangling-id miss, CoA drift, comparable and outline drift, empty pin/fit/neighbours, map-limits missing, stored miss then compute, slow compute, boundary parse before the meter, double-submit insert, entry after revert, double revert, entitlement read error, empty settings read   Unguarded: 4
+
+---
+⏱  90718ms (90.7s)
+📊 Tokens — total: 46360, input: 30294, output: 16066, reasoning: 14977

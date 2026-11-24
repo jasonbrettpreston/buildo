@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:33:43.511Z file_sha256=fdb9a313184110350335028425709a32f95f501effbfe4959f2860ba6f327aac prompt_sha256=ddb196ebb49af6c93e7abd0152ebe7ff2b59735aa103cc37b6b5c0179e2275d3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.06 "always shown; closed status list; oracle = catalogue flags." — src/tests/surfaces/report-honest-k2b.logic.test.ts:67 "expect(withSw([sw(null)])[key]).toBeUndefined();" — the lock freezes hiding the confidence badge when a reading carries a null or unknown confidence (also line 68 for no switches, line 100 for an unknown word), so "confidence ... always shown" is not met even though FE-29's closed confidence set has `none` for exactly that case — fix: send the ruled `none` confidence text for a null or unknown confidence and assert it is shown, never omitted.
+BUG severity=MED — fe.18 "the schema references the field only (no old engine names, no older-rule text, no code)" — src/tests/surfaces/engine-inputs-bind.logic.test.ts:20 "const LEGACY = /^(max_buildable_|opt_|max_build_|coa_fsi|parcel_cost_menu|cost_|envelope_|imagery_)/;" — no alternative matches `max_newbuild_coa_gfa_sqm`, which fe.38 names among the ruled legacy size headlines, so a catalogue field_id or other page-bound name carrying it passes the no-legacy check — fix: add `max_newbuild_` (or `max_`) to LEGACY and a case naming that column.
+DEFER severity=LOW — fe.27 "A column that is not in the migrations, or a path not on the whitelist, fails." — src/tests/surfaces/engine-inputs-bind.logic.test.ts:19 "const FACT_COLUMNS = ['lot_size_sqm', 'is_heritage_designated', 'is_in_ravine_protection_area', 'is_corner_lot'];" — the parcels allow-list is a local copy, so a listed column dropped from the migrations still passes this lock (fail-open) until the fe.27 lock catches it — fix: read the allowed columns from the migrations or the Spec 100 §3.2 whitelist rather than a list in the test.
+MET — fe.39 — src/tests/surfaces/engine-inputs-bind.logic.test.ts:38 — the ruled sentence for `not_in_engine_population` is asserted from the producer constant, so an empty field reads "Not yet evaluated", never 0.
+MET — fe.39 — src/tests/surfaces/engine-inputs-bind.logic.test.ts:30 — asserts no page-bound parcels column or catalogue field_id carries a legacy size, cost or CoA prefix.
+MET — fe.06 — src/tests/surfaces/report-honest-k2b.logic.test.ts:79 — a not-evaluated option sends its stored reason sentence to See details and no number reaches the face.
+MET — fe.29 — src/tests/surfaces/report-honest-k2b.logic.test.ts:36 — confidence text is resolved through the closed word set, an unknown word yields nothing rather than a guess.
+MET — fe.34 — src/tests/surfaces/report-honest-k2b.logic.test.ts:75 — the reason part is a declared bound part on the permitted field with a closed rule, not a pending text.
+MET — fe.16 — src/tests/surfaces/engine-inputs-bind.logic.test.ts:1 — SPEC LINK cites docs/specs/02-web-admin/135 and 126, keeping McFrontend specs in the ruled folder.
+REJECT — fe.39 — the new lock does not bind the per-option cost from the Spec 88 `scenario:*` lines (EI-D8) — the file states it at line 10 and fe.39's current reading records that the cost sentence waits for doc-16 section 7 open point 3, so it is out of this lock by ruling.
+REJECT — fe.35 — the page now shows heritage as Yes/No while the rule says heritage reads "designated" — that sentence governs the loading "What we checked" object lines, a different object from the page lot-fact parts this file locks.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: fe.05, fe.16, fe.24, fe.29, fe.34, fe.39
+
+---
+⏱  232021ms (232.0s)
+📊 Tokens — total: 44505, input: 13960, output: 30545, reasoning: 29593

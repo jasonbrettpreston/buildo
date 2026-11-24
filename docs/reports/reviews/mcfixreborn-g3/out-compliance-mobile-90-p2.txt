@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:06:17.485Z file_sha256=a00d368b314ffd724ca692a734eb56c095682580c211193cfc59ad493025d561 prompt_sha256=82eadbe707b457e5f9637765993001acb3049675d5268be9dd94c688566b6a7a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-90-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 90 §2 "NativeWind `dark:` variants are required for all UI components." — mobile/__tests__/reportScreens.golden.test.ts:80 "x.startsWith('text-') && REPORT_COLOURS.includes(x.slice('text-'.length))" — a compliant dark token (`dark:text-report-ink`) does not start with `text-`, so T4 reports "Text without a report colour" and the gate blocks the §2 requirement it should protect — strip variant prefixes (take the segment after the last ':') before the size/weight/colour membership tests
+DEFER severity=MED — Spec 90 §3 "MUST NOT perform complex data mutation, geographic PostGIS math, or algorithmic sorting." — mobile/__tests__/parcelSearchMatch.test.ts:134 "expect(deriveMatchType('Queen & Spadina', response())).toBe('intersection');" — the client owns the geographic decision (intersection shape, Toronto municipality deny-list, postal FSA) because the server cannot, and this file locks that as intended behaviour — have the lookup endpoint return the classified outcome and let the screen render it
+DEFER severity=LOW — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — mobile/__tests__/reportScreens.golden.test.ts:83 "const mins = tk.filter((x) => /(^|:)min-h-/.test(x));" — only the height dimension is gated (the planted expectation lists min-h-[44px]|min-h-[48px]); no min-w token is asserted anywhere in the material, so the second 44px is unverified — require a matching min-w token, or assert both dimensions in the same rule
+DEFER severity=LOW — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — mobile/__tests__/parcelSearchMatch.test.ts:56 "`ParcelMatchSchema.matchType` is the narrow 'exact'|'typeahead'|'direct'" — the multi_parcel and unlinked assertions are driven by a double cast the Zod boundary rejects, so no test proves those outcomes are reachable through a schema-valid response — widen the schema first, or mark those cases as contract-pending rather than reached
+DEFER severity=LOW — Spec 90 §10 "Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing." — NONE — the material is six Jest files, so the mandated offline Maestro step cannot be seen — point the reviewer at the Maestro flow that carries the toggleAirplaneMode step, or write "cannot see"
+MET — Spec 90 §9 — mobile/__tests__/reportScreens.golden.test.ts:83 — every mapped touch component must carry exactly one min-h-[44px]|min-h-[48px] token, locking the 44px height the clause requires
+MET — Spec 90 §10 — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:11 — the real search screen is rendered through @testing-library/react-native, satisfying the Jest + RNTL unit mandate
+MET — Spec 90 §5 — mobile/__tests__/parcelSearchMatch.test.ts:1 — the pure-logic suite runs under @jest-environment node and none of the six files names window, document, localStorage or navigator
+REJECT — Spec 90 §5 "NO `useEffect` for Fetching" — the diff fetches inside an effect — the only useEffect is the jest.mock useFocusEffect shim at mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:23 and useParcelSearch is mocked, so no data is fetched in an effect
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  84436ms (84.4s)
+📊 Tokens — total: 53551, input: 34090, output: 19461, reasoning: 18605

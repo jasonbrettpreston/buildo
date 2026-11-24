@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:33:03.240Z file_sha256=3b6e67d5eb200d7395d516aafc7f10537111ea70dfbcd3c7511c61329a43e03c prompt_sha256=44fef23e32250a276ba1b959ca5a466172382f418023e379b751c4c94c2c51b9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p3.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none — This chunk's material is code, and the pasted rule list is the plan protocol, which binds sequence.json, the board, panels and sittings, not these files. No CRIT BUG is raised against code the pasted clauses do not govern. — N/A
+DEFER severity=LOW — RR-0439 "each rule list reads only the files the rule table names for it" — NONE — this run pairs the plan-protocol list, which names sequence.json, the board and the nine seats, with eleven mobile source files it never names, so no clause of it can be adjudicated against this diff — record the mismatch and re-run the group output review against the task-card criteria (task-319, -320, -321, -322, -361, -362, -373, -390, -395) that the paste names at a line but does not quote
+DEFER severity=LOW — plan-protocol §1 "(9) measured check on the page" — mobile/__tests__/semiQuestionScreens.golden.test.ts:59 "one committed golden per declared state, each equal to semiQuestionProps(situation) exactly" — the only check visible for the semi slice is jest golden equality, the "on a real lot on the real page" run is cannot see in this chunk — record, do not block, the page run is not in the pasted material
+DEFER severity=NIT — plan-protocol §1 "(3) page section + binding" — mobile/app/(app)/parcel-tool/semi-question.tsx:22 "export default function SemiQuestionScreen()" — the page is a mount file over SemiQuestionBinding; whether task-390's pilot actually moved that binding onto PageTableBinding rows is cannot see (SemiQuestionBinding.tsx is outside this chunk) — record for the task-390 output read, not a finding here
+MET — plan-protocol §1 "(3) page section + binding" — mobile/src/components/surfaces/LotMapBinding.tsx:1 — the choose-your-lot page's whole props tree is a pure binding module consumed by disambiguate.tsx through the shared SurfaceRenderer
+MET — plan-protocol §1 "(5) public route" — mobile/app/(app)/parcel-tool/disambiguate.tsx:23 — the map page is an expo-router route file reading its query param
+MET — plan-protocol §1 "(4) display text" — mobile/src/components/surfaces/PageTableBinding.tsx:1 — every text in the built tree is a content ref, never a literal
+MET — plan-protocol §1 "(9) measured check on the page" — mobile/__tests__/sliceConfig.test.ts:1 — the config-bounds behaviour has a named red-first check with the failure key named
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  41242ms (41.2s)
+📊 Tokens — total: 39998, input: 32214, output: 7784, reasoning: 7154

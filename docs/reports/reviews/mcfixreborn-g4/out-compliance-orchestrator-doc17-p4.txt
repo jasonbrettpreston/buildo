@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:05:31.913Z file_sha256=256376dc06aaa69acc037169c74e42baa61bfbab88ac363ebd549c6aa0829502 prompt_sha256=f79d3f49148a67f4cb49eaa893d61f18fb9116f268e38ca5c4cb48eaeea96aff
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-orchestrator-doc17-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-17 preamble "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — scripts/analysis/rule-lists.mjs:367 "const what = list ? `RULE LIST ${id} (${where}), part ${i} of ${n}. Judge the material under review against the rules in this part; ..." — clause unmet, every resolved list is framed to the lens as a rule list with no non-ruling marker (the resolved shape at line 246 is only "id, file, whole|sections, generated_by, status"), so the readings document doc-17 is attached and judged as rulings in this very run, as the material's first line shows ("RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file)") — fix: give a table list a kind field, have validateTable refuse a list whose own text declares its entries readings or register entries, and never attach such a list through rows, every_task, increment_docs, milestone_docs or joinLists.
+DEFER severity=MED — doc-17 preamble "never feed a review as a ruling" — scripts/analysis/rule-lists.mjs:115 "the given lists joined WHOLE, in table order, nothing cut" — the joined list admits any id in the table (the only guard, line 120, tests existence), so "lens-input --list rules --lists ..." packs a readings document whole into the single compliance pass, a second site of the same defect — rationale: bounded to one call set and removed by the same exclusion as the finding above, keep the joined form but skip non-ruling lists.
+DEFER severity=MED — RR-0414 "4. changed parts only as per your recommendation" "(the oversized files are read as changed parts)" — scripts/analysis/rule-lists.mjs:427 "file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file ... report it to the orchestrator" — the tool cuts material only at file boundaries and exits 1 on a single oversized file, so that task's review never runs, while the ruling says an oversized file is read as its changed parts — rationale: rare and bounded, and splitUnits already knows how to cut text, so a changed-part cut can share that path.
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/rule-lists.mjs:29 — BOUND is 120000 and every rendered input is measured against max before it is written.
+MET — RR-0431 "We only want to review the same set of files once" — scripts/analysis/rule-lists.mjs:434 — splitDiff segments are packed once, each file lands in exactly one chunk, stamped "chunk c of m" with its path list.
+MET — RR-0387 "a separate grounder rules every finding" — scripts/analysis/rule-lists.mjs:15 — plan-prep is stated and built as mechanical only, "It NEVER writes a ruling, a seat report, a grounder file, an outcome line or the Plan line".
+REJECT — RR-0408 "keep the review calls small" — the change is accused of adding new subcommands beyond the review path (page, check-tasks, unmentioned) — these are named by the pasted tasks task-406 and task-433 and run no review call, so they do not enlarge a review call.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+Rules met: none
+
+---
+⏱  68847ms (68.8s)
+📊 Tokens — total: 54347, input: 36634, output: 17713, reasoning: 16919

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:46:55.206Z file_sha256=afa51840ba46453129a9274aa8d89a8d755e62a43fd8b14283331f378cbd8794 prompt_sha256=73431752e4cfe95ebcc28b28c1c8febf94a3ed645fd77bf956df004b73a7d1d5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p15.txt (model: deepseek-reasoner)
+
+BUG and DEFER findings first, then the rejections of the accusations the pasted list cannot support.
+
+DEFER severity=NIT — governing list "LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary)" — src/tests/surfaces/surface-validate.logic.test.ts:1 "SPEC LINK: docs/specs/02-web-admin/127_surface_conversion_procedure.md (gate table rows S-gen, S-golden, S-parity" — no pasted Glossary clause binds any of the four files, the files themselves declare Spec 126/127/128/135 which are not pasted, so their compliance is unjudgeable here: cannot see — route these four files to the Spec 127/128/135 rule list so the grounder judges them against the clauses they cite.
+DEFER severity=NIT — task-384 acceptance criteria (not pasted, task-384 is absent from the pasted acceptance criteria list) — src/tests/surfaces/surface-conformance.logic.test.ts:39 "export const REPORT_RENDERER_PIN: Readonly<Record<string, { 'C-2b': number; 'C-8': number }>> = {" — the C-12 change exempts three renderer files from C-2b and C-8 and freezes 92/171, 13/41 and 0/1 structural findings permanently, whether task-384 authorises that is cannot see — record it for the grounder to check the task-384 card.
+REJECT — "**lock / lock-db / check / hook**: A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — that the four files name surface gate codes (C-10, C-12, T1 to T9) instead of a rule-map rule id, so they are not locks — the bullet only defines the term, it imposes no requirement that every src/tests file be a lock, and the surface gate ids belong to Spec 127/128/135, which are not pasted.
+REJECT — "**#NN**: A `step-validate` fast invariant, by number ... Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — that the tests cite C-2b, C-8, C-12, T1, RR-0284, RR-0307 and task ids that are not step-validate invariants — the clause scopes #NN numbers inside the step programme's hand-written parts, not surface gate codes or review-register ids.
+REJECT — "**Intent Ledger** ... **G-2** ... **§R Reflection**" — that the diff carries no Intent Ledger, no G-2 pointer and no §R Reflection — those clauses govern a step's assessment report, and the material is four surface test files, not a step assessment.
+REJECT — "**bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38)." — that the tests read committed goldens and situation fixtures directly, never inside a bracket — the clause governs captures of guarded write paths in step conversion, and there is no write path in a render golden.
+REJECT — "Generated files, fixtures, lane records and documents are left out on purpose and are not a finding." — that the tests read files absent from the material (mobile/__tests__/fixtures/parcelSearch.situations.json, src/tests/fixtures/surfaces/mobile_parcel_search/*.web.json, src/components/report/ReportPage.tsx) — the pasted ruling excludes fixtures and generated files from the material and states plainly that their absence is not a finding.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  38548ms (38.5s)
+📊 Tokens — total: 42590, input: 34543, output: 8047, reasoning: 7186

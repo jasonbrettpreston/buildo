@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:07:49.377Z file_sha256=00058ed72390ea2e16de78c8202c9d09b635a15306dfa0c6275715d2f3d741dc prompt_sha256=721eb82c0922f347310b3815fa00ba0bd2c128aa42fd61622d7e0fb58ab3785f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-384 card "STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks" — src/components/report/ReportView.tsx:129 "<summary className=\"cursor-pointer text-sm text-gray-600\">{UI.details}</summary>" — the renderer's one interactive control (the collapsed details toggle) has no 44 px minimum and a raw text scale, while every sibling control in ReportPage carries min-h-11/min-h-12, so the "44 px checks" the card names are not visibly applied to this renderer — give the summary a min-h-11 inline-flex target and the shared text treatment; the criterion body (backlog line 32) is not pasted, cannot see.
+
+DEFER severity=LOW — Increment objective "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — src/lib/surfaces/maxbld-landing.ts:20 "Owed (not in the page until their readers land; no typed value, no setting created here): the plan prices and the post-trial line" — element F ships without its plan prices, post-trial line, process scene image and report pictures, a bounded risk that the landing entry is not the completed element the objective lists — keep the omission recorded and land the MF-47/MF-45/MF-44 readers that fill those parts.
+
+MET — Project objective "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — src/lib/leads/lead-detail-query.ts:1 — the detail query serves the details screen from stored tables (permits, cost_estimates, neighbourhoods, trade_forecasts, lead_views) and the header states the forecast fields are read, not recomputed in JS.
+
+MET — Increment objective "What the customer sees: the 65 designed search elements ... F (landing entry), G (hand-off to the report)" — src/lib/surfaces/maxbld-landing.ts:1 — the landing is built from committed page trees and the two report regions are the shared ReportView/ReportPage renderers, not re-drawn.
+
+MET — task-332 card "SRCH.FOOTER-Shared-web-footer-component" — src/components/surfaces/web/footerNode.ts:5 — one tree builder shared by StaticBinding, the search binding and ReportPage (ReportPage imports footerNode and pickFooterText).
+
+MET — task-374 card "FIX.FOOTER-Web-report-footer-links-use-the-router-and-meet-the-44-px-target-D7-D8" — src/components/report/ReportPage.tsx:275 "link: 'inline-flex min-h-11 min-w-11 items-center justify-center text-report-soft underline ...'" — the report footer link carries the 44 px target and renderFooter draws Button as the Next Link router.
+
+MET — task-411 card "FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted" — src/lib/leads/lead-detail-query.ts:213 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))" — the API converts with the single pinned SQM_TO_SQFT from src/lib/parcels/geometry; the phone-side deletion is outside this chunk, cannot see.
+
+REJECT — Project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — accused of scope creep by carrying the CoA lead-detail branch ("// Phase G (Spec 42 §6.11): CoA lead-detail branch.") in the area-factor file — the same pasted objective says the database exists to service "the existing report and details", and CoA leads are detail pages, so the branch serves a named element rather than new scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  93369ms (93.4s)
+📊 Tokens — total: 53458, input: 35573, output: 17885, reasoning: 16945

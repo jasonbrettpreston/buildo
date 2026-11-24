@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:22:19.823Z file_sha256=16632e71c7bc17ee82eeb293dd0b6d65ba0195253e3be6dbb1d6da3e35c024c4 prompt_sha256=4be3c55fc203e189145d613a1f7f7cb1d6e8712b627f59b5e279aa11f8b7ae15
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §11.1 "a data claim carries its query run (host + `current_database()` printed" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:83 "no floor line falls; the floors file is unchanged and the floors check stays OK" — the floors result, the before and after totals at :12 and :23 and the "every row of the 172, 4d and cumulative sets: class and City figure" census at :84 are executable claims carried with no run at this round's base, only "totals and floors copied from prereg-MF-91-1.json (round 195)" (:2), and prereg-MB-44-2.json:83 repeats the same set — record the scorer and floors invocations with the printed host and current_database() and the base sha in each prereg, or cite the round-195 run lines by sha.
+
+DEFER severity=MED — §11.1 "a SQL shape is parse-tested against a real DB before any reviewer approves it" — scripts/analysis/src-sql-ledger.mjs:111 "'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19): the batch statement text is built by the Layer 3 step's own core (buildSourceSql: checked-literal settings and the one lot id read from the database as an integer; the binds are last_key and batch_size), passed as a variable" — the change admits a 30th interpolated SQL site to the closed set and the entry records no parse test, and the file it describes is outside the pasted material (cannot see) — record the parse-test invocation and its result in the ledger entry or point the entry at the lane record that holds them.
+
+DEFER severity=MED — §11.8 MCINC-8 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-2.json:2 "In-file round 198, claimed in the ID ledger (~/Buildo-scratch/ids/round-198)" — the round claim is satisfied only by the artifact's own $comment (round 197 likewise at prereg-MB-44-1.json:4), and the ledger is outside the repo (cannot see), so claim-before-use is asserted, not shown — cite the ledger owner file (path and contents or digest) or the ids/check.mjs output in the round record.
+
+DEFER severity=LOW — §11.4 "cases, fixtures, red/green expectations, invocation mode" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-2.json:2 "tests: one new file customer-report-compute.logic.test.ts, customer-report-read.logic.test.ts re-pinned (T7 stale lot, T10 importers)" — the pre-registered test moves name files and two case tags only, with no cases, fixtures, red/green expectations or invocation mode, and PLAN.md is outside the pasted material (cannot see) — carry the failing-case list in the prereg or cite the PLAN.md section that holds it.
+
+DEFER severity=NIT — §7.10 dated note 2026-11-06 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:7 ""M-384"" — the rule that licenses the change is cited by id alone, no anchor and no dated line hint; C2 is written for operator recommendations and a prereg is a lane artifact, so this is a nit — add the anchor and a line-at-sha hint beside M-384.
+
+MET — §7.1 two altitudes "both mandatory per WF (§6.4)" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "Plan: docs/reports/lanes/2026-11-19/BL-W/PLAN.md with IMPACT.md and TRIAGE.md" — a plan-altitude record for the same files is cited, so this output review is the second altitude, not the only one.
+
+MET — §11.8 MCINC-2 impact map named by the prereg — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-2.json:2 "Plan: docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md with IMPACT.md and TRIAGE.md (stage 1)" — the prereg names its impact-map file, which the owed prereg checker keys on.
+
+MET — §11.8 MCINC-7 DB-job rehearsal — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-2.json:2 "No write, no new switch, table, migration or DB job." — no DB job is added, so the test-stack rehearsal and its OPERATOR-GO do not apply.
+
+MET — §11.7 MCPROOF-3 answer-key independence — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:11 ""expected_moves": []," with :34 ""expected_figure_changes": []," — no worked example or key row moves, so no McProof stage is triggered.
+
+REJECT — §11.1 "a line citation is read, not remembered" — the ledger header still reads 72 SQL-bearing files while a 30th interpolated file is added — the header is a dated measurement ("measured 2026-10-03") and the added lines date the growth (LOAD.1, 2026-11-19), so 41 static plus 30 interpolated plus 2 not_postgres is consistent.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+Rules met: none
+
+---
+⏱  110937ms (110.9s)
+📊 Tokens — total: 42173, input: 18548, output: 23625, reasoning: 22301

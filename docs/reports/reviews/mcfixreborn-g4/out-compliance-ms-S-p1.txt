@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:59:12.171Z file_sha256=643255dd90ce45f090cf0e3faadc545d53dd35dc98644d87a794e2a7c698117a prompt_sha256=226df265a4ea63076f5f684da81d991ddd49e11e070030fceeee7e3aad9beb26
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Principle "keep it simple; no scope creep" (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — .claude/review-templates/README.md:87 "Add `--template` flag to both review scripts so templates can be invoked end-to-end without paste." — accuracy risk: the same document states at README.md:34 that both scripts already 'support a `--template <path>` flag', and the lane brief invokes it, so a reader is told a shipped capability is still missing — delete the bullet or move it to a "done" note.
+
+DEFER severity=MED — Principle "the 120000 bound is on the doubled prompt" (.claude/review-templates/README.md:143) "the lens template carries `{{PLAN}}` twice, so the file under review is sent twice and the 120000 bound is on the doubled prompt (keep a diff part to 38000 characters or less with a 33000 character pack)" — .claude/review-templates/lens-code-review.md:29 "**Plan file (plan mode only; in review mode this block holds the material under review, the file named on the command line):**" with a single `{{PLAN}}` fence, and one `{{PLAN}}` only in each of lens-error-paths.md, lens-security.md, lens-ux.md — the doubling premise on which the 38000-character diff-part rule rests is not present in any lens file pasted here, so every diff part is cut to under a third of the 120000 bound and the call count rises against RR-0408 "keep the review calls small" — recount `{{PLAN}}` per template, then correct line 143, the closing "Known tool limits" line and the 38000 figure.
+
+DEFER severity=LOW — Project objective (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — migrations/334_precommit_budget_registry_repin.sql:13 "'the time budget (seconds) for the file-only stages of .husky/pre-commit'" — the only database write in this chunk re-pins a hook-time variable, and no file here serves the designed report, details or search page; the clause allows a "supporting function", so the chunk needs that ruling recorded rather than assumed — record the RR that classes review and lane tooling as a supporting function, or attach these files to a card that names the objective they serve.
+
+DEFER severity=LOW — Principle "standardization, observability, scalability, accuracy, understandability" (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "keep it simple; no scope creep" — .claude/review-templates/README.md:107 "| `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output |" vs scripts/analysis/backlog-lane.mjs:177 "The plan was ruled once, at the plan: the lane runs no plan lens." — the altitude column tells the operator a plan pass still runs for every lens while the launcher and the brief ("the lane runs no plan lens and its GROUNDER.md rules the output findings only") say it does not — change the altitude cells to output only, or state where the plan pass still fires.
+
+REJECT — Principle "keep it simple; no scope creep" — the change raises the pre-commit budget 27.5 to 33.2 seconds and adds a gate to a 30-command chain — the operator approved that figure verbatim and the material records it: migrations/334_precommit_budget_registry_repin.sql:2 "the operator then confirmed 33.2 s (MORNING-DECISIONS.md:1526: \"yesThe hook budget: 33.2 seconds (recommended)\")".
+
+REJECT — Ruling "we need one plan - we can only execute one plan" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan" — backlog-brief.mjs writes a new docs/reports/reviews/<task>/context-rN.md each review round, so the change multiplies plan documents — not a real issue: scripts/analysis/backlog-brief.mjs:51 "one context file per review round, context-rN.md, N = the context-r*.md files already there + 1" is a review context, and the plan stays single: "If the task's Implementation Plan field already holds a plan ... build that plan and do NOT run --plan" (backlog-brief.mjs:181).
+
+MET — Ruling RR-0387 "each built task's output is reviewed, a separate grounder rules every finding" — .claude/review-templates/README.md:111 "Then ONE tool-bearing Claude grounder adjudicates every finding against the files" — the five lens templates and the separate-grounder step ship in this chunk; the lane does not rule its own findings.
+
+MET — Ruling RR-0408 "keep the review calls small" — .claude/review-templates/lens-compliance.md:62 "At most 8 findings, one line each" — every lens caps its output at 8 findings, so a run cannot return an unbounded report.
+
+MET — Ruling RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-lane.mjs:177 "parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound" — the bound is enforced by splitting the lens input instead of trimming the list.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  76833ms (76.8s)
+📊 Tokens — total: 51688, input: 34819, output: 16869, reasoning: 15534

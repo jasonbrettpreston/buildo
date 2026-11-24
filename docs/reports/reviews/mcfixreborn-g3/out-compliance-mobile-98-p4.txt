@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:13:41.154Z file_sha256=fb22ac78eee7f64b9ca1c49fccd6894dd17ae3fc1ade5c20186a2f0fdadd1f89 prompt_sha256=be38f91dae53b7abae0020db60bf5fc8e1424f2f2af92c52e3d024ac29a22a2c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-98-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — spec 98 §4.1 "Parcel Cost Tool (Spec 100) ... `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`)" — NONE (mobile/__tests__/useParcelLookup.test.ts is not in this chunk) — the mandated test file for this module is outside the pasted material, cannot see — verify it in the chunk that carries mobile/__tests__ before ruling the clause met
+DEFER severity=LOW — spec 98 §4.1 "§8.3 — gate-stability tests (no `isFetching` in render gates per §6.5)" — NONE (the gate-stability test file is not in this chunk) — the test that pins the redirect gate is not visible, cannot see — confirm it exists in the mobile/__tests__ chunk
+DEFER severity=LOW — spec 98 §4 dated note "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0)" — NONE (mobile/package.json is not in this chunk) — the dev-dependency pin is outside the pasted material, cannot see — confirm versions in the chunk carrying package.json
+MET — spec 98 §4.1 Parcel Cost Tool "`fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`)" — mobile/src/hooks/useParcelLookup.ts "const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);" — the parse is on raw.data as required
+MET — spec 98 §4.1 Parcel Cost Tool "`shouldRetryParcelLookup` skips 400/403/429/drift" — mobile/src/hooks/useParcelLookup.ts "!(err instanceof RateLimitError) && ... !(err instanceof ApiError && (err.status === 400 || err.status === 403)) && !(err instanceof ParcelLookupSchemaError)" — 429 (RateLimitError), 400/403 (ApiError) and drift are skipped
+MET — spec 98 §4.1 Parcel Cost Tool "drift → `ParcelLookupSchemaError`" — mobile/src/hooks/useParcelLookup.ts "throw new ParcelLookupSchemaError('Parcel lookup response failed schema validation');" — drift raises the named sentinel
+MET — spec 98 §4.1 "§8.3 ... the redirect waits on isFetching being false and fires once" — mobile/src/hooks/useParcelPageHooks.ts "if (isFetching || target === null || redirectedRef.current) return;" — the gate waits on isFetching and a ref makes it fire once, per §6.5
+REJECT — spec 98 §4.1 §8.1 "idempotency tests for every bridge" — that useParcelLookup.ts ships without visible idempotency tests — the tests live in mobile/__tests__ which is outside this chunk, cannot see, not the code's defect
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  35067ms (35.1s)
+📊 Tokens — total: 38643, input: 31120, output: 7523, reasoning: 6817

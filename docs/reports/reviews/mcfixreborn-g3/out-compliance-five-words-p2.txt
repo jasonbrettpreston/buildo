@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:46:55.210Z file_sha256=e6fe6639b0bb7ad2c63f5abe03aa255e44ab3aa831af045329fe3720c6b2e773 prompt_sha256=85e53217ac96f16b09752ad8916c6dc608b712feaa06bf1777a568397c9b5c29
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+REJECT — Glossary "lock" "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — the mobile test headers that say "THE LOCK THIS FILE EXISTS FOR" are accused of not being rule-map locks — the pasted Glossary defines the rule-map enforcement kind, not a requirement that mobile regression tests be `src/tests/` locks, so no binding clause is unmet.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  127233ms (127.2s)
+📊 Tokens — total: 48908, input: 31952, output: 16956, reasoning: 16825

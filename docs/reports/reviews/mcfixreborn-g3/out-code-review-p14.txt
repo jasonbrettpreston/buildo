@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:34:42.397Z file_sha256=79833660fcd11422942372c3282d2939e66bf1cbe09bc4838013387a0c2d93d9 prompt_sha256=cefa4a621a54e148c35ac24f5ba676da310699e725f30572dc0d1cbb90fe054e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p14.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx:46 "const textsOf = (n: unknown, s: WebSituation): string[] => {" — the second parameter `s` is threaded through both recursive calls and never read anywhere in the body, so it is a dead parameter — drop it and pass only the node at the two call sites.
+
+DEFER severity=MED — src/tests/surfaces/static-page.logic.test.ts:151 "filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l))" — the guard only sees an import whose module path or named binding sits on the same line as `import`, so a wrapped `import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';` is invisible and T5 passes with the gate present — match the identifier over the whole file text (comments stripped) instead of line by line.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts:1052 "JSON.stringify(p).includes('\"integer\"')" — a config property declared `\"number\"` is filtered out of `numberKeys`, so the check titled "every number-typed property a config may hold has its rule" silently skips it — accept both `\"integer\"` and `\"number\"` in the filter.
+
+DEFER severity=LOW — src/tests/surfaces/surface-validate.logic.test.ts:352 "expect(r.lines.every((l) => l.startsWith('SV-'))).toBe(true);" — `every` on an empty array is true, so a run that exits 1 while printing nothing to stderr satisfies the "no stack trace, only SV lines" assertion vacuously — also assert the line list is non-empty.
+
+DEFER severity=NIT — src/tests/surfaces/surface-conformance.logic.test.ts:1017 "expect([k, r.default, r.min, r.max, r.type]).toEqual([k, ...(want[k] as [number, number, number]), 'number'].flat());" — `.flat()` on an already flat array literal is a no-op that reads as if it did something — delete it.
+
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx:41 "if (!CONSOLE_ALLOW.some((r) => r.test(m))) errors.push(m);" — the collected `errors` array is asserted only inside describe (a); a console error raised by the interaction renders in (b), (c) and (e) is swallowed with no assertion at all — assert `errors` is empty in the `afterEach` so every case is covered.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none at CRIT or HIGH
+- guard blind spot: single-line-only gate import scan in static-page T5
+- vacuous `every` assertion in surface-validate, plus a dead parameter in textsOf
+
+---
+⏱  172299ms (172.3s)
+📊 Tokens — total: 73122, input: 32858, output: 40264, reasoning: 39605

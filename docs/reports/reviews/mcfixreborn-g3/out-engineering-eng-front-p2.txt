@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:00:10.923Z file_sha256=a8cfe20233f6665695b130c31efce288dd1a6c7f9ac86c579ebff4221d7fff79 prompt_sha256=90541042ee3232987af894a3e2dd2505107752e895fbdecfa1048700625c429a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-front-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 1.3 Mobile Front-End Patterns & UX "Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity)." — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:145 "fireEvent.press(back);" — none of the seven files mocks expo-haptics or asserts a spring press state, so the Continue confirm, the Retry error path and this Back control are pressed with no press-feedback or haptic evidence — add a withSpring press-state and haptics assertion (or mock) for Continue, SELECT, Retry and Back.
+DEFER severity=LOW — 1.1 Mobile-First UI Mandate "Use `min-h-[44px] min-w-[44px]` or equivalent padding." — mobile/__tests__/semiQuestionScreens.golden.test.ts:60 "c === 'min-h-[44px]' || c === 'min-h-[48px]'" — the locks assert the height token only, never min-w or an equivalent width or hitSlop, so a narrow icon control passes every golden — add a min-w or hitSlop assertion to both layout checkers.
+DEFER severity=LOW — 1.1 Mobile-First UI Mandate "Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`." — mobile/__tests__/reportScreens.golden.test.ts:82 "const tk = String(n.props.className ?? '').split(/\s+/).filter(Boolean);" — the className tokens are parsed but only colour, Text size/weight and min-h are checked, so a row left as bare `flex` passes every REPORT golden — extend reportLayoutProblems and semiQuestionProblems with a base-stacking and flex-wrap rule.
+DEFER severity=LOW — 1.3 Mobile Front-End Patterns & UX "Safe MMKV hydration: `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`." — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:30 "getString: () => null" — the stub always returns null so no case here exercises a corrupt or schema-mismatched cache being discarded with a warning, and the persister is not in this chunk — cannot see, add a corrupt-cache discard case at the persister module.
+DEFER severity=LOW — 1.3 Mobile Front-End Patterns & UX "401 interceptor: When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once" — NONE — nothing in the pasted material exercises the refresh-and-retry-once path, cannot see fetchWithAuth here — confirm the interceptor carries its own test at its module; this chunk cannot show it.
+MET — 1.1 Touch Targets — mobile/__tests__/reportScreens.golden.test.ts:90 "if (!touch[n.component]!.some((x) => tk.includes(x)) || mins.length !== 1)" — every touch component in every committed REPORT golden and UI variant must carry exactly one registered min-h token.
+MET — 1.1 Touch Targets — mobile/__tests__/semiQuestionScreens.golden.test.ts:60 "out.push(`${at}: Button without min-h-[44px] or min-h-[48px]`)" — Continue and Try again are locked at 44 px or above on every golden and named case.
+MET — 1.3 Design System Fidelity — mobile/__tests__/reportScreens.golden.test.ts:86 "if (!tk.some((x) => x.startsWith('text-') && REPORT_COLOURS.includes(x.slice('text-'.length)))) out.push(`${at}: Text without a report colour`)" — an unregistered colour token fails the lock, proved by the planted "text-zinc-100" case.
+REJECT — 1.1 Touch Targets "minimum tappable area of 44px x 44px" — the semi question buttons using min-h-[48px] accused of breaching the 44 px minimum — 48 px is larger than 44 px, so that token is compliant.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  74371ms (74.4s)
+📊 Tokens — total: 51180, input: 34859, output: 16321, reasoning: 15366

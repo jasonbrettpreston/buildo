@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:58.819Z file_sha256=3f8bd88a4d3b207c8e3b48b13c7da07df47a34bc2359fd7e01a1c1f4bf6ab9dd prompt_sha256=216e366cba436970e3d2965e34fd44e9f6417efec53e219f78d50b91e59b0e6d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p5.txt (model: deepseek-reasoner)
+
+MET — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — scripts/deepseek-review.js:60 "const promptChars = (systemInstruction || '').length + prompt.length;" — the bound counts system plus user text and the call throws instead of sending when over 120000, so every API call from this tool honours the cap — none
+
+MET — task-375 "the review template substitutes safely" — scripts/lib/review-template.js:78 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — one pass with a function replacer, so an inserted value is literal and is never re-scanned for tokens — none
+
+MET — task-375 "the lens line passes the rule context" — scripts/deepseek-review.js:171 "specs: context ?? '(no pasted context provided)'," — the --context file, sliced by --section when given, is substituted into {{SPECS}} for the lens call — none
+
+MET — task-358 "the repo review runs the Spec 08 DeepSeek lens set compliance, code review, user experience, error paths, security, not one generic round" — scripts/deepseek-review.js:168 "const systemInstruction = split.systemInstruction ?? 'You are a focused reviewer. Follow the prompt's output format strictly.';" — each lens template's own persona becomes the system message, not the hardcoded adversarial one — none
+
+DEFER severity=MED — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — scripts/deepseek-review.js:242 "const planPath = '.cursor/active_task.md';" — the tool still ships and advertises a plan-review path (cmdReviewPlan plus the plan --template help example), while the same chunk's brief test asserts lanes must not run a plan review — fix: remove cmdReviewPlan and the plan --template help lines, or gate them behind an explicit flag the lane protocol never passes
+
+DEFER severity=LOW — RR-0414 "changed parts only as per your recommendation" — scripts/deepseek-review.js:156 "const code = readFileOrFail(filePath);" — the file under review is always read whole and --section slices only the context file, so an oversized file under review is refused by the cap, never read as its changed parts — fix: let a section or changed-range selector apply to the file under review as well
+
+DEFER severity=LOW — task-366 "Acceptance Criteria from line 33" (pasted only as a pointer, the AC text is not pasted) — NONE — the close-gate and REVIEW-header clauses and the task-433 rules-checked clause cannot be judged against the pasted context, cannot see — fix: paste the AC lines for task-366, task-433 and task-432 instead of their file offsets
+
+REJECT — doc-2 F-SEARCH-MOBILE "Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN" — the change is accused of not meeting the search page elements — the material under review is the review and lane tooling (deepseek-review.js, check-task-files.mjs, review-template.js and two backlog tests), and no pasted element of doc-2 names any of those files
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+
+---
+⏱  73047ms (73.0s)
+📊 Tokens — total: 42047, input: 25118, output: 16929, reasoning: 16165

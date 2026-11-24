@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:05:30.369Z file_sha256=c16307c59ef3364d18e0a74a483328ec4d7879f27f5e75290d137eecf4f622a9 prompt_sha256=7e38963b2b4ef3698f8bc3deb9c860ad6e18a148ff18b4894148c569b386880f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/parcel-lookup-gate.infra.test.ts "if (/FROM usage_events/.test(text)) return { rows: [{ used: o.used ?? 0, already: o.already ?? false }], rowCount: 1 };" — the once-per-lot guarantee is proven only by a fake that is *told* already:true, so a wrong or absent dedup key in the meter's window read passes every case in T9 — pin the window read's SQL text the way the INSERT regex is pinned (product, event, subject_kind, subject_key in the predicate) and make one case fail if any of those four is missing.
+
+DEFER severity=MED — src/tests/parcel-lookup-gate.infra.test.ts "if (/FROM entitlements[\s\S]*FOR UPDATE/.test(text)) {" — every double-submit case is sequential and this lock is a fake that always grants, so two tabs both reading already:false and both inserting is exercised nowhere; the serialisation rests on the real FOR UPDATE scope, which this file cannot show — have the grounder confirm the lock is taken before the window read and held through the INSERT, or add a stated case for the concurrent pair.
+
+DEFER severity=MED — src/tests/parcel-lookup-gate.infra.test.ts "vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));" — the compute is only ever mocked to resolve (null or the golden fixture), so the route's handling of a core error is untested here even though src/tests/customer-report-compute.logic.test.ts C4 proves the error propagates out of it; whether that becomes a 500 with no page and no charge is cannot see — add a case where computeCustomerPageResponse rejects and assert 500, data null, zero INSERT INTO usage_events.
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "return { rows: [{ variable_value: '5000' }], rowCount: 1 };" — the statement timeout is set but never allowed to fire; the "insert throws" case stands in for it, so the lock-wait expiry (57014 on the FOR UPDATE read under a second tab) has no case — reject the FOR UPDATE query in one case and assert 500, data null, no insert, so the time-out path is pinned rather than inferred.
+
+DEFER severity=LOW — src/tests/customer-report-compute.logic.test.ts "it('contains no write verb', () => { expect(src()).not.toMatch(/\b(INSERT|UPDATE|DELETE|TRUNCATE)\s/); });" — the fence is case sensitive and needs a trailing space, so a lowercase "insert into" or a verb at end of line passes the lock, and C2 reuses the same regex on live query text — use /\b(insert|update|delete|truncate)\b/i in both places.
+
+DEFER severity=LOW — src/tests/fix-tune.logic.test.ts "expect(() => sliceNumber(sl({}), 'continue_wait_ms')).toThrow(/continue_wait_ms/);" — the reader fails loud by design and this pins the throw, but nothing states what the hook or the Continue handler does when it throws mid-render on a stale generated slice, so the phone page's degrade path on a corrupt slice is unpinned — add one case that runs the call site with the key absent and asserts the bounded outcome, not an unhandled throw.
+
+NIT — src/tests/link-massing.infra.test.ts "expect(declared[name]!.min, `${name} declares no lower bound`).toBe(SEED[name]!.min);" — SEED[name] is not guarded in this block (the earlier blocks guard it), so a missing seed entry fails as a TypeError rather than the intended message, and both describes read their files at module scope so a missing file kills the file at import — throw a named Error on the missing seed entry and on the readFileSync.
+
+REJECT — src/tests/customer-report-compute.logic.test.ts "['no parcels row', (): Scenario => ({ parcel: null, batch: [] })]," — a missing parcels row looks like it could throw deep inside the batch read — it is handled: the scripted pool returns zero rows and the case asserts a null page, not a throw, alongside zero batch rows, a missing Layer 2 stamp, a foreign id and a vanished stamp.
+
+VERDICT: PASS on error-path safety
+Paths walked: switch off before any query, missing parcel, zero batch rows, missing Layer 2 stamp, foreign id, thrown batch query, missing config value, gated lot, already-counted reopen, limit reached, limits read failure, insert failure, semi-held lot, map read failure, dedup on reopen, fail-loud slice reader
+Unguarded: 3
+
+---
+⏱  42180ms (42.2s)
+📊 Tokens — total: 40953, input: 33681, output: 7272, reasoning: 6210

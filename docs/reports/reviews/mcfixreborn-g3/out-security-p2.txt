@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T05:15:08.764Z file_sha256=ff461af9ee5cabc40be890e4773c1667666072e7d0877146eff6172218c02a5e prompt_sha256=bbf9ee1cf2d89817a20c4348ff70f76453d206d84df94e122ab0a36f83cbbc5a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-security-p2.txt (model: deepseek-reasoner)
+
+Touches: entitlements, admin, money (meter interplay, read only), PII (City permit addresses).
+
+DEFER severity=MED — src/lib/parcels/lot-size-entry.ts "const read = await readLotSizeRead(client, body.parcel_id);" — an authenticated parcel_tool user picks any public parcel_id and enters width/depth inside the allowed band; the row becomes effectiveLotSize for every user of that lot and the real owner is 409'd until an admin revert, so one user can poison and lock another lot's area — require an ownership or occupancy assertion for the parcel before the insert, or key the active entry per account rather than one shared row per lot.
+
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — an entitled client sends semi=answered on every unsure lot to skip the hold and trigger the many-second one-lot compute without ever answering, and under the current MF-45 rule no lookup is metered, so the compute is free and bounded only by the route's rate bucket (cannot see) — make the answered state a stored reply rather than a query flag, or count the compute against the route's bucket.
+
+DEFER severity=LOW — src/lib/parcels/lot-size-entry.ts "per_day: num(LOT_SIZE_SETTING_KEYS.per_day)," — the daily entry cap is read and range-checked but insertLotSizeEntry never counts today's rows, so the helper itself permits unlimited writes per caller per day; whether the lot-size route enforces the count cannot be seen — take the count inside the insert transaction or assert it from the route before calling the helper.
+
+DEFER severity=LOW — src/lib/parcels/lot-size-entry.ts "export async function revertLotSizeEntry(client: PoolClient, parcelRef: string, adminUid: string)" — the helper trusts any adminUid passed in and performs no privilege check, so if the calling route is reachable by a non-admin any entitled user can flip another user's active entry to reverted; the route is not in the pasted material (cannot see) — assert admin from a checked context inside or immediately before the UPDATE.
+
+REJECT — src/lib/parcels/tool-gate.ts "if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) return 'lead_gen_transitional';" — looks like any active subscription buys unmetered parcel-tool access — ctx.subscription_status is the lead_gen join status, not client supplied, and the arm is an operator-ruled transitional shelf removed by MF-50.
+
+REJECT — src/lib/parcels/consumer-lookup.ts "candidate[f] = f === 'work_type' || f === 'address' || f === 'coa_decision' || f === 'structure_family'" — looks like permit addresses exposed to any entitled user — these are public City permit records, explicitly whitelisted in Spec 100 §3.2, capped at 12, returned only to the caller who searched that neighbourhood.
+
+REJECT — src/lib/parcels/lot-map.ts "LIMIT $4" — the neighbour read looks driven by request-derived radius and limit — both arrive as parameters, are accepted only as integers inside the seed bounds or the read throws closed, and the pin is a numeric parameter, so no text reaches SQL.
+
+REJECT — src/lib/parcels/lookup-flow.ts "? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }" — looks like an IDOR where any entitled user fetches any parcel by id — parcel_id addresses public City parcel rows, the direct path skips the map and neighbour read, an unknown id is a 200 miss, and the entitlement gate runs in the route before this (cannot see the route).
+
+VERDICT: PASS on exploitability (no CRIT or HIGH; four deferred records for the grounder)
+Surfaces touched: entitlements, admin, money, PII
+
+---
+⏱  53656ms (53.7s)
+📊 Tokens — total: 38073, input: 28606, output: 9467, reasoning: 8591

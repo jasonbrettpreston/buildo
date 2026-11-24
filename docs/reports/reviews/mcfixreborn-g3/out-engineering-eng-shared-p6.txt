@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:03:28.218Z file_sha256=e16d94944852013cab85475384a94f241e4946aa046b93da2ab47a45d19019dc prompt_sha256=42bea4469355db85eb621e9d192cac30641404dc253603c54e2dce4b0c09c5ad
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2. Error Handling & Stability "MUST have an **overarching** `try-catch` block wrapping the entire handler body" — src/app/api/parcels/lookup/route.ts:65 "const ctx = await getCurrentUserContext(request, pool);" (same shape at entitlement/route.ts:28 and lot-size/route.ts:45) — the route's own `try` opens only at lookup/route.ts:94, so the auth, gate, query-parse and rate-limit awaits live outside it and their throws never reach the route's catch — move `try {` to the first statement of the handler and wrap every await, or extract a `withParcelApi` wrapper that owns the catch.
+
+DEFER severity=MED — 13. Observability Standards "API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}`" — src/app/api/parcels/entitlement/route.ts:40 "return ok(ParcelToolEntitlementResponseSchema.parse(usage));" — the entitlement success path emits no logInfo at all (the sibling routes do) — emit `logInfo(TAG, 'parcel entitlement', { uid, duration_ms, reportsLeft })` before the return.
+
+DEFER severity=MED — 10.3 API Route Discipline "API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`" — src/app/api/parcels/lookup/route.ts:118 "else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.page === null) meter = 'not_produced';" — the eight-branch meter decision plus refusal selection is business logic held in the handler; the "(RR-0331)" comment does not satisfy the pasted rule — move the meter/refusal decision into `src/lib/parcels/` (e.g. `meterDecision(access, body, parcelRef, semi)`) and log its result.
+
+DEFER severity=MED — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — scripts/steps/_schema/programme-items.json:1516 "0 of 1091 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\"" — this phone/mobile change edits a file under `scripts/` — regenerate that evidence from its generator in a pipeline-owned commit, or record the count bump outside the frontend WF.
+
+DEFER severity=LOW — 4.4 API Design for Multi-App Consumption "Use middleware-level throttling, not per-route logic" — src/app/api/parcels/lookup/route.ts:90 "const rateLimit = await withRateLimit(request, { key: rl.key, limit: rl.limit, windowSec: RATE_WINDOW_SEC });" — throttling is implemented per route (and duplicated in entitlement and lot-size) instead of at the middleware layer — hoist the parcel-route throttle into `src/middleware.ts` or one shared wrapper.
+
+DEFER severity=LOW — 10.3 API Route Discipline "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route" — src/app/api/parcels/entitlement/types.ts:1 "Response contract for the parcel_tool entitlement read (MF-45)." — the contract lives in a route-local `types.ts`, not `src/lib/entitlements/types.ts` as the rule names — re-export the schema from `src/lib/` so the next client imports a shared contract.
+
+REJECT — 6.1 logError Mandate — mobile/src/lib/sliceConfig.ts:26 "console.warn(`surface config \"${key}\" is ${v}, outside its bounds...`)" is server-side logging — it is phone (client) lib code, not an API route or a server-only lib module, so the `logError` mandate does not reach it.
+REJECT — 2.2 Try-Catch Boundary Rule "Never expose `err.message` to clients" — src/app/api/parcels/lot-size/route.ts:93 "return err(cause.code, cause.message, cause.status, cause.details);" leaks raw error text — `LotSizeRefusal.message` is an authored, server-formatted D-2/D-3 user message, not a caught raw error.
+
+MET — 2.3 Assumption Documentation — src/app/api/parcels/lookup/route.ts:124 "const ref = parcelRef;" — narrowed into a local instead of a `!`, and no non-null assertion appears in any of the nine files.
+MET — 4.3 Frontend Security — src/app/api/parcels/lookup/types.ts:100 ".strict()" — the response is an explicit whitelist with Tier-3 `groups` excluded by construction.
+MET — 8.1 API Route Export Rule — src/app/api/parcels/entitlement/route.ts:27 "export const GET = withApiEnvelope(async function GET(request: NextRequest) {" — the handler is the file's only export; constants stay unexported and types live in ./types.
+MET — 10.3 API Route Discipline — src/app/api/parcels/lot-size/route.ts:87 "const lot_size = await withTransaction((client) => insertLotSizeEntry(client, body, ctx.uid, settings));" — persistence and refusal mapping delegate to `src/lib/parcels/lot-size-entry`.
+MET — 13.3 Backend Structured Logging — src/app/api/parcels/lot-size/route.ts:59 "logInfo(TAG, 'lot size entry', { uid: ctx.uid, outcome, parcel_id, duration_ms: Date.now() - t0 })" — one logInfo per request with duration and key params.
+MET — 4.1 Route Guarding — src/app/api/parcels/lookup/route.ts:65 — session resolved before any parcel DB work and entitlement checked server-side; no `/api/admin/**` route in this chunk.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 18   Unmet: 6
+
+---
+⏱  62543ms (62.5s)
+📊 Tokens — total: 42911, input: 31480, output: 11431, reasoning: 10061

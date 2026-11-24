@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:54:30.065Z file_sha256=00ef4dfa8d08e1f430704bc54295c116ee2adce0d578f361c1427f05e5c3562c prompt_sha256=497a346d5bb180a4f1be853ddd8dceca9955b6f38463b607f3d07d7129381df0
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §7 rule 10 dated note 2026-11-19 (RR-0232 (c), RR-0235) "the lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board" — mcbylaws/protected-paths.json:2 "record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md" — every provenance reference older than the ruling resolves only outside the repo (open-questions.md, DECISIONS-v2.md, MORNING-DECISIONS.md:1421, and the bare "review-20261113 HOLISTIC-RECOMMENDATION K3 + Q3" with no path at all), so a reader at the board cannot read the ruling this protected file was edited under — add one dated line per scratch-path record that carries the repo copy under docs/reports/lanes/<date>/<lane>/, or the line as a hint dated by a commit sha.
+REJECT — §7 rule 4 dated note 2026-11-23 (task-448) "Off on every row: Specs 126, 127, 128 and 135 (RR-0421 item 1 a reverses RR-0383)" — that the 2026-11-20 note's clause "the McFrontend lists reach their reviewers (scripts/analysis/rule-lists.json row surfaces)" is falsified by the turn-off — the surfaces row still attaches surface-136 (Spec 136 section 2, the handbook) with its engineering lists, so McFrontend content still reaches a front-end review; only the four spec lists are off.
+MET — §7 rule 11.1 "a census grep runs at the full scope its conclusion covers" — mcbylaws/protected-paths.json:3 — '"pending_globs": []' matches the 2026-11-13 note's claim that no glob is pending and a zero-match glob now fails the gate (L10).
+MET — §7 rule 11.1 "a line citation is read, not remembered" — mcbylaws/protected-paths.json:76 — "src/middleware.ts", with :77 "src/lib/auth/host-policy.ts" and :78 "src/lib/auth/safe-redirect.ts", all three joins the 2026-11-11 note records.
+MET — §7 rule 11.1, 2026-11-13 note claim that the two zero-match globs are replaced by real by-law paths in layer23 and literal_scope — mcbylaws/protected-paths.json:5 — "scripts/analysis/bylaw/**", with "scripts/lib/maxbld-*.js" and "scripts/lib/compute/resolve-bylaws.js" in both lists.
+MET — pasted Task, task-384 title "The web report renderer gets a census owner and comes under the existing text component and 44 px checks" — mcbylaws/protected-paths.json:30 — '"src/components/report/**"' is in frontend, so the surface checks and the front-end rule rows reach the renderer.
+MET — §7 rule 10 dated note 2026-11-19, lane reports join the reviews in the repo — mcbylaws/protected-paths.json:2 — "record docs/reports/lanes/2026-11-20/BL-REPORTOWN2", the newest provenance entry points at the repo copy.
+
+VERDICT: PASS
+Clauses checked: 10   Unmet: 1
+Rules met: M-246
+
+---
+⏱  105605ms (105.6s)
+📊 Tokens — total: 38940, input: 17379, output: 21561, reasoning: 20736

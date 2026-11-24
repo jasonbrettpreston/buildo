@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:59:12.171Z file_sha256=c39a033ec91950e20802c7eacedc7630e1a320772390da476718499dc52126bf prompt_sha256=90e06be3c912cc9b36ad53d5ed6343aed47947c53951d76b2e4bbadff3ea221e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 "proof-slice-reads-its-limits-from-settings" — proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays" — the row timeout is still a typed 120000 and the exported timeoutMsFromVariable (line 29) is never called by runSlice, main or realIo, so the limit is not read from settings and the clause rests on an OPEN comment — read the timeout through the registered variable (gateVariable(TIMEOUT_VARIABLE) fed to timeoutMsFromVariable) and fail closed with exit 2 when it is not registered, or mark the task not built.
+
+DEFER severity=MED — task-363 "exit-2-on-an-unwritable-out-dir" — proof-slice.mjs:160 "try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }" — mkdirSync with recursive returns without error when --out already exists but is read-only, so the first row's writeFile (proof-slice.mjs:147) throws uncaught after the check has already run and the process exits 1, not 2 — probe writability of an existing --out (accessSync W_OK or a temp write) before runSlice and return 2 when it fails.
+
+DEFER severity=MED — ms-S "our objective is to finish a completed project ie a database that works and is ready" — proof-slices.json:8 "notbuilt": { "blockedBy": [], "reason": "not run by this tool: duration unmeasured, and the lane rule refuses the test-runner call; the PLAN gives no other way to measure it" } — a permanently NOT BUILT row with no blocker and no named removal task means the S slice acceptance command can never return exit 0 (proof-slice.mjs:11 "exit 0 every row PASS ... 3 no FAIL but a row is NOT BUILT or GAP"), so the search increment it proves can never be shown ready — name the task that removes or replaces the mobile-jest row.
+
+DEFER severity=MED — ms-S "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — proof-slices.json:5 "Search page goldens equal what the binding renders (10 states)" — no row in the S slice names address confusion (B), web search pages (E) or the landing entry (F), not even as NOT BUILT; the proof rows are surface-validate, three golden captures, two policy checks, the station pass file, design fit, loading, load failure, report open, screenshots, key match and storage — add a row (built or blocked) for each of B, E and F or state in the row why it is out of the slice.
+
+DEFER severity=MED — task-412 "FOLLOWUPS.ROW-review_followups.md-gets-a-rule-list-row-so-a-deferral-has-its-Spec-08-home" — rule-lists.json "id": "review-followups", "globs": ["docs/reports/review_followups.md"], "lists": [] — the row exists but attaches no list, so a deferral written there is reviewed with no Spec 08 sections 7 and 11 list, and the card's stated purpose (a Spec 08 home for a deferral) is unmet — attach agents-s7-s11 to the row or record on task-412 that the list was revoked.
+
+DEFER severity=LOW — ms-S "Five principles, keep it simple, no scope creep" — rule-lists.json "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"] — the table's own contract enumerates globs, globs_from, imports_from, exempt, no_files_default, increment_docs, every_task, milestone_docs and kinds, and no pasted line names protected_paths, so this key is behaviour nothing pasted asks for — document and consume it in rule-lists.mjs validate, or drop the key.
+
+MET — task-363 "reject-a-null-suite-and-bad-timeout" — proof-slice.mjs:59-61 — a null or array suite and a non-positive-integer timeoutMs are both refused by checkSpec and exit 2.
+MET — ms-S "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — proof-slices.json:5-7 — the first three command rows of the S slice are the search, lot map and semi question golden checks.
+MET — ms-S "the semi calculation stays in Increment 7 (7.25)" — proof-slices.json:7 — the semi row proves the semi question page goldens only, no semi calculation row exists.
+MET — task-406 "The definitive compliance list every kind of work and every increment task resolves to its rule documents" — rule-lists.json "every_task": ["five-words", "plan-protocol"] with all 15 increment_docs and milestone_docs letters present — every task gets the five words, the plan protocol, its increment requirements and its milestone objectives.
+MET — RR-0387 "each built task's output is reviewed, a separate grounder rules every finding, confirmed defects go to fix tasks" — proof-slices.json:19 — rows carry blockedBy task ids (design-fit task-345/task-67, report-opens task-287), so a known defect names the fix task.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 6
+Rules met: none
+
+---
+⏱  196711ms (196.7s)
+📊 Tokens — total: 51995, input: 23397, output: 28598, reasoning: 27266

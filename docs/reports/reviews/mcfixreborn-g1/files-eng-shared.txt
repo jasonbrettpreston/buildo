@@ -1,0 +1,10 @@
+mobile/__tests__/leadDetailFormat.test.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/__tests__/parcelCostFormat.test.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/__tests__/useLeadDetail.test.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/app/(app)/[lead].tsx|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/maestro/lead-detail.yaml|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/src/lib/leadDetailFormat.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+mobile/src/lib/parcelCostFormat.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/app/api/leads/detail/[id]/types.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904
+src/lib/leads/lead-detail-query.ts|4b825dc642cb6eb9a060e54bf8d69288fbee4904

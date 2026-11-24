@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:35.204Z file_sha256=72d94ff8e68f2b2a9d4bf75d1669aab1109e1cabc0853f72cfec7ef4dcfeccc8 prompt_sha256=5e8cb44f64ef8ec3a7fdc11c755a9faf03592c08785f30aa45d450164be2ed05
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 08 section 7 rule 4, dated note 2026-11-23 (task-448 FINAL.11) "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — scripts/analysis/backlog-lane.mjs:12 "// COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path)" — the re-make sentence reaches the brief (layout text: "round 2 re-makes ALL of them under the SAME names") but no comment in the launch script itself carries it, so one of the three surfaces the ruling names is absent — add the sentence as a comment above the layout string in backlog-lane.mjs and record the commit on the card.
+
+DEFER severity=LOW — pasted AC line for task-375 "task-375 - FIX.TOOLS-Review-and-proof-tooling-...-proof-slice-reads-its-limits-from-settings-D11-D10-two-review-tool-defects.md, Acceptance Criteria from line 41" — scripts/analysis/proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — `timeoutMsFromVariable` (proof-slice.mjs:29) has no caller and commandRow (proof-slice.mjs:75 "timeoutMs: row.timeoutMs ?? DEFAULT_TIMEOUT_MS") runs every row on the typed constant, so the settings read the card names is declared but not wired — wire TIMEOUT_VARIABLE to the settings read at D10b registration and keep the deferral named on the card until then.
+
+DEFER severity=LOW — Spec 08 section 7 rule 4, dated note 2026-11-22 (task-431) "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — scripts/analysis/backlog-lane.mjs:186 "one set out-compliance-rules[-pN].txt for all the compliance lists" — the brief names the joined set for the compliance seat only, so a lane that chooses the join for the engineering seat has no file name to write and the close check's per-seat joined form is unreachable from the brief — add "or the joined out-engineering-rules[-pN].txt" beside the engineering per-list files in the same line.
+
+DEFER severity=LOW — Spec 08 section 7 rule 6, dated note 2026-11-20 (task-399) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — scripts/analysis/backlog-lane.mjs:189 "the round-1 grounder and outcome files are kept outside the folder and named by one line "Review round 1: <counts>; grounder <path>; triage <path>"" — the brief names a triage path but never TRIAGE.md nor rule 6's five outcome forms (fixed:<sha> <path>, task:task-N, ruling:RR-NNNN, wontfix:, pile:), so a lane fixing a round-1 CRITICAL is told to fix it and not how the close records it — name TRIAGE.md and the five forms in the grounder text of the brief.
+
+MET — Spec 08 section 7 rule 9, dated note 2026-11-22 (task-436) — scripts/analysis/backlog-lane.mjs:233 "console.log(AGENT_MODEL);" immediately before scripts/analysis/backlog-lane.mjs:234 "console.log(`BRIEF-FILE: ${briefOut} sha256=...`)" — "prints `AGENT-MODEL: opus` on the line before its BRIEF-FILE line" is satisfied, and MODEL_LINE is merged into the brief (extra array, model line once).
+
+MET — Spec 08 section 7 rule 4, dated note 2026-11-19 — scripts/analysis/backlog-lane.mjs:181 "DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review" — the lenses are run through the named script with --template and --context per the ruling, not a generic pass.
+
+MET — Spec 08 section 7 rule 4, dated note 2026-11-21 (task-423) — scripts/analysis/backlog-lane.mjs:186 "The joined run (`lens-input --list rules --lists <the compliance list ids>` ...) is an accepted form that is not the default ... a stage holding both forms is refused" — the joined form is offered exactly as the ruling leaves it (accepted, not default) and the both-forms refusal is stated.
+
+MET — Spec 08 section 7 rule 4, dated note 2026-11-22 (task-438) — scripts/analysis/backlog-lane.mjs:183 "const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);" and :186 "the same commands with `--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md`" — the seat split is made by `seatOf` and each seat gets its own template and output name, no alias.
+
+MET — Spec 08 section 7 rule 4, dated note 2026-11-22 (task-437) — scripts/analysis/backlog-lane.mjs:189 "round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385`" — the brief states the two-round rule and the round-2 MED ruling exactly as the note leaves it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  127004ms (127.0s)
+📊 Tokens — total: 55933, input: 26871, output: 29062, reasoning: 27679

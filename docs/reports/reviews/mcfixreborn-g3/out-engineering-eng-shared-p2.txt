@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:01:39.090Z file_sha256=d32a7c7fd373d66ab17f5bddc378964f3eeace6216561211affbac11abddd09d prompt_sha256=c947947d176db9f13e36b2455a51dea12911272552df22c6e4691d6d5cda97f5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:47 "const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null });" — no typed factory anywhere in the four new suites: `hit`, `list`, `mockHook` and reportScreen's `hit(page: unknown)` are untyped literals assigned to `data: unknown`, so a payload that no longer matches `ConsumerParcelLookupResult` (it already omits `resolution`, `map`, `schemaDrift`) stays green — type the builders against `ConsumerParcelLookupResult` in one shared module and reuse them in both `.tsx` suites
+
+DEFER severity=MED — 5. Testing Standards §5.2 "*.ui.test.tsx | React component rendering, interactions | Any new/changed component" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:61 "describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {" — the two component-render suites land as `.behaviour.test.tsx` and the pure-helper suite as `parcelSearchMatch.test.ts`, not the mandated `*.ui.test.tsx` / `*.logic.test.ts`, so pattern-keyed layer tooling cannot see them — rename to the mandated patterns (the jest testMatch cannot be seen in this material, so CI impact is unverified)
+
+DEFER severity=MED — 2. Error Handling & Stability §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`. Use TypeScript Optional Chaining (`?.`) or explicit type guards." — mobile/__tests__/parcelScreens.golden.test.ts:134 "const col = (t.children[0] as PropsNode).children[0] as PropsNode;" — nested children are reached through `as` casts that assert existence instead of checking it, repeated at :151 "const sel = byTestID(none, 'parcel-search-select') as PropsNode;" — have the helpers return `PropsNode | undefined` and assert presence before indexing
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "If using `!`, you must document why in an inline comment." — mobile/__tests__/parcelScreens.golden.test.ts:62 "(need exactly one of ${touch[n.component]!.join('|')})" — the file's `!` uses (`goldens[n]!.situation`, `files[0]!`, `m[1]!`) carry no inline justification even though most are guaranteed by a preceding assertion — add the one-line reason or drop the operator
+
+DEFER severity=LOW — 11. Plan Compliance Checklist, Cross-Layer Contracts "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — mobile/__tests__/parcelSearchMatch.test.ts:75 "const SERVER_MIN = 3;" — the server floor is hand-copied from the Zod schema into a second file, so the `toBeLessThanOrEqual(SERVER_MIN)` assertion cannot fail when the server minimum moves — read the floor from the registered contract or the slice bounds instead of a literal
+
+MET — 14. The Prevention Loop, "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — mobile/__tests__/parcelSearchMatch.test.ts:2 "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6" — all four heads name spec plus section (126 §11b.2, 100 §4, 99 §3.4c/§8.3)
+
+MET — 5. Testing Standards §5.2 parity-battery row "Two parallel implementations stay in sync" — mobile/__tests__/parcelScreens.golden.test.ts:97 "expect(searchProps(situations[g.situation] as SearchSituation)).toStrictEqual(g.props);" — committed goldens are diffed against the live binding, the drift guard the row requires
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — the suites do not force a deep-layer failure (DB rollback, network timeout) and assert top-layer recovery — §2.1 binds `.infra.test.ts` integration tests, and §5.2 assigns these component and pure-helper suites a different layer
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  96794ms (96.8s)
+📊 Tokens — total: 51734, input: 31770, output: 19964, reasoning: 18900

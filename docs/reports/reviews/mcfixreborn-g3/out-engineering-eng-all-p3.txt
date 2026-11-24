@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:57:49.798Z file_sha256=854db7a5bcf1030161924b647b9023c8211758dba611746aa52333e0121ebe74 prompt_sha256=4b0d769a2c4dc135069c5b8dd6abf8a0e7f8b9afef799f8f8c6dbb0c7bec2ff7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 1.1 Mobile-First UI Mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**." — web-product.json binding_web_report limitations "No 44 px measure exists." and "They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files." — the new owner entry claims ownership of ReportPage.tsx, ReportView.tsx and the client toggle script ReportPageToggles.tsx, records touch_target_min_px as "UNRESEARCHED", and puts those files outside the only size check, so the 44px mandate is unmet with no gate — add a 44px assertion over the interactive elements of the three owned files (or extend C-9/golden sizes to cover them) and record the measured value in touch_target_min_px.
+
+DEFER severity=MED — 1.1 Mobile-First UI Mandate "Touch Targets: All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — static-page.json web_landing hero "role": "cta", "content": "hero.cta", "href": "/signup" and screens "kind": "button", "id": "continue" — the new page table declares every interactive element of four static pages and the pilot semi page, yet it carries no touch-target field and the only pin the file names is footer equality, so nothing binds these ctas, links, retry and continue buttons to 44px — add a touch-target rule for interactive roles to static-page.schema.json and pin the rendered size in static-page.logic.test.ts.
+
+DEFER severity=MED — 13.5 Feature Flags (PostHog Flags) "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — web-product.json guards "flag": "none" on the entry whose status is "new" — a user-facing surface enters the census in phase B2 with no flag and no recorded exemption — declare the flag key in guards.flag or record the exemption and its reason in the same entry.
+
+DEFER severity=LOW — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json — the change writes two files under scripts/ while the task group is frontend page work — bounded risk: both are surface census and page-table registries consumed by src/lib/surfaces/maxbld-static.ts, not pipeline data-ingress code, so the clause's stated concern (changing how data enters the database) does not arise.
+
+REJECT — 9.4 Pipeline SDK Mandate — the change is accused of adding files under scripts/ without pipeline.run, withTransaction or emitSummary — these are JSON schema and census data files, not scripts/*.js pipeline scripts that open a pool or write rows, so the SDK mandate does not reach them.
+
+REJECT — 5.3 Red-Green Test Cycle — the change is accused of landing a new page table with no failing test first — the governing test src/tests/surfaces/static-page.logic.test.ts is outside this chunk of the material, cannot see, so it is not a finding here.
+
+MET — 5.2 Test File Pattern (parity battery row) — static-page.json $comment — the duplicated footer is "pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts", a declared drift guard for a dual-surface artifact.
+
+MET — 1.1 Mobile-First UI Mandate (breakpoints) — web-product.json render — "breakpoints": "mobile_first" with target "screen", not a desktop-first layout retrofitted.
+
+MET — 10.1 Data Flow Direction — web-product.json outputs — "The renderer writes nothing." with inputs "props", so the change opens no frontend write path into a pipeline table.
+
+MET — 11 Cross-Layer Contracts Check — static-page.json — figures and terms name their readers ("value": "trial_reports", "value": "support_inbox") and the comment states "The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist", so no threshold literal is duplicated into the page table.
+
+MET — 4.1 Route Guarding — web-product.json guards.session — the entry adds no /api route and ties itself to the consumer's gate ("Its consumer is the MaxBLD report page behind the parcel_tool gate"), so no unguarded admin endpoint is introduced.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 15   Unmet: 4
+
+---
+⏱  56532ms (56.5s)
+📊 Tokens — total: 38582, input: 27936, output: 10646, reasoning: 9595

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:19:38.512Z file_sha256=342dee7891522fa9295a1901a4d5aa3bf59b91be0a2ef4437f5a634e4cb4a709 prompt_sha256=88934e47bd311d539afd9c986459f82a680e45d12b00e47a2197b344be58c992
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p15.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none at that level; the four findings below are MED/LOW.
+
+DEFER severity=MED — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" and "`*.infra.test.ts` | API routes, DB queries, external calls" — src/tests/backlog/rule-lists.logic.test.ts:124 "g('init', '-q', '.'); g('add', '-A'); g('commit', '-qm', 'x');" — the suite is named `.logic.test.ts` yet every case spawns the CLI and `git`, writes trees and asserts exit codes/stderr, which §5.2 assigns to the external-call layer; per §5.5 "a green suite in the wrong layer is false confidence" — rename/move the subprocess cases to `*.infra.test.ts` (or a tooling suite) and keep only the in-process derivation cases (`joinLists`, `seatOf`, `parseLensInput`, `verifyResolved`) in the logic file.
+
+DEFER severity=MED — 2.3 Assumption Documentation "If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists.logic.test.ts:36 "t.rows.find((x) => x.id === row)!.lists" — `!` is used on `find()`/index results with no prior guard and no justifying comment (same at :44 "t.lists['eng-all']!.file", in `want[0]!.id`, `st[0]!.chunks`), so the rule's exception is not met anywhere in the file — replace with an asserted lookup (`expect(found).toBeDefined()` plus a narrowing helper) or add the inline comment each `!` requires.
+
+DEFER severity=LOW — 5.2 Test File Pattern "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard)" — src/tests/backlog/rule-lists.logic.test.ts:39 "// task-431 D2 (survive-the-fix): the phone row sends eng-front + eng-shared and the tests row eng-all" — explicit survive-the-fix fence pins (also "S4 (survive-the-fix, green both ways") live inside a `.logic.test.ts` rather than a `*.regression.test.ts` as §5.2 mandates for a behaviour the diff must not retire — lift those plant-a-defect cases into a `rule-lists.regression.test.ts` so the fence is filed under the layer that owns it.
+
+DEFER severity=LOW — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/rule-lists.logic.test.ts:100 "const table = {" — the fixture rule table and its rows are written as inline, unannotated literals inside every test file that needs one, with no factory import, so the data shape each test depends on is restated per case — declare a `RuleTable` fixture type and build it through one helper (or `src/tests/factories.ts`) so a table-shape change breaks one place.
+
+MET — 8.2 TypeScript Target Gotchas — src/tests/backlog/rule-lists.logic.test.ts: (V2.LIST page case) "toMatch(/kind one[\s\S]*queue/)" — the dotAll-adjacent match uses `[\s\S]` as ES2017 requires, no `s` flag anywhere in the file.
+
+MET — 2.1 The "Unhappy Path" Test Mandate — src/tests/backlog/rule-lists.logic.test.ts:76 "expect(r.status).toBe(3);" with "expect(r.stderr).toContain('zzz-unknown/dir/file.txt')" — refusals are forced and asserted (unmatched path, no Files line, missing milestone, oversized material), not only success states.
+
+MET — 5.2 Parity battery (generated doc ↔ generator) — src/tests/backlog/rule-lists.logic.test.ts "expect(c.status, c.stdout + c.stderr).toBe(0);" after "script(CLI, ['page', '--check'])" plus "run('node', ['scripts/analysis/gates/generated-docs.mjs'])" — the committed page is drift-checked against its generator rather than hand-verified.
+
+REJECT — 11 Cross-Layer Contracts Check — hardcoded bounds such as "const max = 3200;" and "'--max', '40000'" — these are per-case CLI room bounds for the fixture, not a numeric threshold crossing spec ↔ SQL ↔ Zod ↔ migration, so `docs/specs/_contracts.json` does not apply.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 22   Unmet: 4
+
+---
+⏱  45218ms (45.2s)
+📊 Tokens — total: 45447, input: 34868, output: 10579, reasoning: 9475

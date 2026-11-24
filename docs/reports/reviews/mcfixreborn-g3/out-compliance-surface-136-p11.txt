@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:38:32.367Z file_sha256=dbc299f1b319d0f422d84e78ec5181f9f55f11f52f71a59ffe34a99eba64c82b prompt_sha256=27bc72be58c4ae5a81987ed2f4d467c90c1ca6d53f62d0f4848c156cddc3d72b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.47 "All tunables are data; zero thresholds in src/" — src/app/api/parcels/lookup/route.ts:59 "const SEARCH_LIMIT_PER_MIN = 60;" (also src/app/api/parcels/entitlement/route.ts:25 "const ENTITLEMENT_LIMIT_PER_MIN = 30;", lookup/route.ts:57 "const SLOW_QUERY_MS = 500;", lot-size/route.ts:36 "const RATE_WINDOW_SEC = 86_400;") — the new routes type rate limits and a slow-query threshold into src/ instead of reading a registered logic variable with bounds and an on_invalid posture, which lot-size already does via readLotSizeSettings — read each limit and window from a registered setting and emit a finding when a route literals one.
+
+DEFER severity=MED — fe.18 "The set is in a protected file" — scripts/surfaces/screen-checks.mjs:25 "export const BINDINGS = `${SCHEMA_DIR}/bindings.json`;" — the gate takes its binding kinds from bindings.json (ctx.bindings.ref_kinds, ctx.bindings.non_display_keys) while FE-18's current reading puts the closed set in scripts/surfaces/_schema/binding-sources.json, so a kind added to bindings.json is accepted with no operator ruling and fe.31's "a new binding is an operator ruling first" is unchecked — read the closed set from binding-sources.json and fail any ref kind used in a golden that is not in it.
+
+DEFER severity=MED — fe.27 "A column that is not in the migrations, or a path not on the whitelist, fails" — scripts/surfaces/screen-checks.mjs:9 "SV-SBIND  per converted surface: content keys exist and are used, columns on the whitelist, golden props carry no display text (only binding refs)." — inputs.field_whitelist is enforced only for render.list columns and contract refs, so a golden prop of kind parcels (or catalogue, user_input, ad_slot) naming a key absent from the descriptor whitelist, or a column not in the migrations, passes the arm — in propsProblems check every non-content, non-contract binding ref's key against the surface's inputs.field_whitelist and fail closed.
+
+DEFER severity=LOW — fe.57 "It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31" — scripts/surfaces/screen-checks.mjs:8 "SV-SCREEN per converted surface: one golden per state per declared target, covers resolve, every state covered, nothing stray, fingerprints fresh" — the arm requires coverage of states only, so a descriptor's declared a11y check C-9 or C-9m can be named in no covers list and the gate stays green, contradicting the clause's claim that the 44 px floor is checked under FE-31 — require the C-9/C-9m check of each declared target to be named in a covers list of that target's goldens.
+
+REJECT — fe.01 — that this build of Phase 1/2 surfaces and the gate contradicts "McFrontend is documents only now" — the rule's current reading opens Phase 1 (2026-11-06) and Phase 2 (2026-11-09) and lifts the 2026-11-02 freeze by name, so building inside Phase 1/2 is what the clause now permits.
+
+MET — fe.04 — scripts/surfaces/surface-validate.mjs:87 — the summary prints the budget as waiting for MF-08, never as a pass, so the OWED budget is not faked.
+MET — fe.13 — scripts/surfaces/surface-validate.mjs:5 — the file is the MF-15 first gate, read-only, with exit 0/1/2 and one SV-arm finding per line.
+MET — fe.19 — src/app/api/parcels/lot-size/route.ts:5 — width and depth are the entry and the lot area is the link's alternative, matching the 2026-11-15 reading.
+MET — fe.20 — src/app/api/parcels/lot-size/route.ts:88 — a LotSizeRefusal is returned with its own status, so a second entry on the lot is a 409 rather than an overwrite.
+MET — fe.31 — scripts/surfaces/screen-checks.mjs:288 — screenArm requires one golden per declared state per declared target, every state covered, and nothing stray.
+MET — fe.32 — scripts/surfaces/screen-checks.mjs:392 — contractRefProblems resolves a `contract` ref against a declared CONTRACT descriptor and its field_whitelist, failing an unknown contract or member.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 58   Unmet: 4
+Rules met: fe.04, fe.13, fe.19, fe.20, fe.31, fe.32
+
+---
+⏱  230816ms (230.8s)
+📊 Tokens — total: 60817, input: 30823, output: 29994, reasoning: 28890

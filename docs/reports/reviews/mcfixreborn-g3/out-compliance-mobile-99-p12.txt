@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:16:36.970Z file_sha256=5349a7b5c14b0ac703112f79192cca9d178a21dbb43bffe53599f0cfa2ae0572 prompt_sha256=e4787b01768cd1610e7dcf8fced0d3566e38482d34ff79a1bfb9b8b7ce05365e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p12.txt (model: deepseek-reasoner)
+
+BUG severity=none not applicable: no defect found against the pasted clauses.
+
+MET — §7.1 "Subscribe to every Zustand store and log every mutation with field-level diffs" — mobile/src/components/surfaces/SearchBinding.tsx:7 "Pure: no React, no JSX." — none of the four files touches a Zustand store or `stateDebug`, so the hub mandate is untouched by this chunk.
+MET — §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" — mobile/src/components/surfaces/LotMapBinding.tsx:1 "Pure: no React, no JSX. `lotMapProps(situation)` maps one render situation" — no `invalidateQueries` occurs in the material, so no breadcrumb pair is owed here.
+MET — §7.3 "every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', ...)`" — mobile/src/components/surfaces/SearchBinding.tsx:7 "Pure: no React, no JSX." — the bindings emit pushes as data (`{ action: 'push', route }`), not router calls, and they are not AuthGate or AppLayout, so no route_decision event is owed in these files.
+MET — §7.6 "A fixed enumeration of product flow events MUST fire at canonical sites" — mobile/src/components/surfaces/PageTableBinding.tsx:1 "the page structure is DATA rows of the page table, drawn by shared section-kind builders" — no canonical site of the §7.6 table is inside `mobile/src/components/surfaces/` (the only component site listed is `PaywallScreen.tsx`), so no funnel `track()` is missing from this chunk; the enforcement grep targets other files.
+MET — §7.7 "every auth method MUST emit at least one outcome event" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:1 "SEMI-B · the mobile LIST binding of S-093" — no auth code in the material; the mandate's verified site is `mobile/app/(auth)/sign-in.tsx`, not pasted.
+MET — §9.15 "atomic-selector mandate, globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read" — mobile/src/components/surfaces/LotMapBinding.tsx:1 "Pure: no React, no JSX." — the four files call no `useXStore(` hook, so the lint cannot flag them.
+MET — §10 "Out-of-Scope Files" — mobile/src/components/surfaces/PageTableBinding.tsx:1 "the phone rows-to-props-tree builder" — the four files are new surface bindings; none of the listed out-of-scope files (`mobile/src/store/*`, `_layout.tsx`, onboarding screens, `useUserProfile.ts`, `stateDebug.ts`) is modified in this chunk.
+REJECT — §9.4a "Strip `isFetching` from AppLayout loading gate" — that this chunk leaves `isFetching` in a gate — the gate is in `mobile/app/(app)/_layout.tsx`, which is not in the material; `s.isFetching` in SearchBinding is the in-field search spinner, a different condition.
+REJECT — §7.4 "`stateDebug.trackRender(tag)` MUST count Strict Mode double-fires" — that these bindings owe a trackRender call — the bindings are pure props builders with no render, so the counter mandate rests on the components that draw them, not on this chunk.
+REJECT — §9.20 "Dead-code sweep across cumulative §9 + WF3 changes" — that new exports here (`LOT_MAP_SLICE`, `SEMI_QUESTION_CHOICES`, `SEARCH_SLICE`) breach the sweep — §9.20 is a completed one-off sweep of §9/WF3 state files, not a standing ban on new exports, and their consumers are outside the material ("cannot see").
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 40   Unmet: 0
+Rules met: none
+
+---
+⏱  29404ms (29.4s)
+📊 Tokens — total: 32605, input: 26313, output: 6292, reasoning: 5386

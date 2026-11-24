@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:50:27.543Z file_sha256=81dda144264daeda6e270902b1b59239ca3514eda00ead1ca05ad32974c13338 prompt_sha256=c1dde1daedde3c203745d00a2eb2a55a83796fc1ad323e3de41e923d1e253731
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-378 pasted title "FIX.TUNE Phone tunables are data not code, lookup and entitlement contract entries corrected (D14, D15)" — contract_parcels_lookup.descriptor.json inputs/config "the lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings" and contract_parcels_entitlement.descriptor.json guards "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)" — the phone tunables the task names are still code literals in both contracts while only four logic variables are registered, so "data not code" is recorded as deferred, not met — register the two rate caps and the LIMIT 11/10 caps as logic variables with bounds and on_invalid, or paste the AC line (line 29 onward) that defers them, which is not pasted and I cannot see.
+
+DEFER severity=LOW — task-378 pasted title "lookup and entitlement contract entries corrected (D14, D15)" — contract_parcels_lookup.descriptor.json inputs.why "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses)" against seven entries in inputs.tables and docs.data_story "It reads 9 tables" plus "the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps`" — three table counts disagree and the two switch-gated read tables are declared nowhere in inputs.tables, so the entry is not corrected — make data_story, inputs.why and inputs.tables agree and declare parcel_maxbld_scenarios and bylaw_resolution_lot_stamps.
+
+DEFER severity=NIT — task-376 pasted title "FIX.SPECS Specs and contracts brought up to the 1·B rulings the entitlement contract" — contract_parcels_entitlement.descriptor.json limitations "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT" carrying "check_id": "contract_parcels_entitlement__auth_class_parity" (contract_parcels_lookup.descriptor.json repeats the same mislink) — the escalated a11y exception is bound to the auth-class check, so no check records the exception it claims to escalate — point the limitation at an a11y check or drop check_id.
+
+DEFER severity=NIT — screen-checks.mjs SV-SCREEN header "per converted surface: one golden per state per declared target, covers resolve, every state covered, nothing stray, fingerprints fresh" — search-golden-capture.ts:34 "const files = [CONTENT, DESCRIPTOR].sort();" against screen-checks.mjs fingerprintFiles, which appends the render.form schema_ref file — the capture script's fingerprint set is a strict subset whenever the search descriptor declares a form schema_ref, so goldens it writes are reported fingerprints-differ — build the list through the same fingerprintFiles helper; cannot see mobile_parcel_search.descriptor.json (F01), so whether it bites is cannot see.
+
+MET — task-338 pasted title "the two new lot-map fields declared in the lookup contract and the consumer registry regenerated" — contract_parcels_lookup.descriptor.json inputs.field_whitelist — both "frontageStreet" and "hasFootprint" are declared as wire fields.
+
+MET — task-351 pasted title "SRCH.A6 reset date served as a Toronto time label (RR-0310)" — contract_parcels_entitlement.descriptor.json inputs.field_whitelist — "resetsOnDisplay" is declared as the seventh field, matching the file's own line "the seventh, `resetsOnDisplay`, was added with the reset-date label, RR-0310".
+
+REJECT — glossary "archetype vs shape" "`identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is" — accused of using "archetype": "QUERY" outside the pasted closed list — the pasted list is the vocabulary of step descriptors keyed in scripts/manifest.json, and these are surface CONTRACT descriptors under scripts/surfaces/, so it does not reach them.
+
+REJECT — glossary "class-A" "Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock" — accused of conflating class-A with "rls_class": "A" and "entitlements, usage_events: Class A, select own" — the field is guards.rls_class citing "docs/specs/00-architecture/114_rls_policy_catalog.md §2", a separately named vocabulary the pasted entry does not claim.
+
+REJECT — glossary "lock / lock-db / check / hook" "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — accused of labelling non-locks, "Locked by src/tests/parcels-entitlement.infra.test.ts" — whether npm test runs *.infra.test.ts is outside the pasted material (cannot see), and the suffix contradicts neither the lock nor the lock-db definition.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  73227ms (73.2s)
+📊 Tokens — total: 51617, input: 35383, output: 16234, reasoning: 14998

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:59:19.385Z file_sha256=9a9865b892bd9f5dcbe8c1c243bc1d15c6a46bf4c604f08ef3e77e6d41d1fe12 prompt_sha256=d076b45a303262548f05c452f19a21a2a152cdb9c3da3aeb4a5b1afedc7f54f6
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — E.5 "W6 web report route /parcel-tool/{lot}" (same row: NOT-BUILT) — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json:91 "Its consumer is the MaxBLD report page behind the parcel_tool gate; each consumer declares its own guard." — the blocking auth_class_parity check rests on a consumer the pasted spec marks NOT-BUILT, and its evidence line 93 names a mobile file "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json" for a web renderer — cite the web report page mount or record the consumer as not built, do not cite a mobile surface for a web guard.
+
+DEFER severity=MED — F-LOTMAP "LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings)" — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:34 "mobile/src/components/surfaces/SemiQuestionBinding.tsx", "mobile/src/components/surfaces/PageTableBinding.tsx" — the LIST entry's owns.components claims two modules outside the LIST map binding its own purpose names, so the registry assigns the semi question and page table modules to an archetype that cannot describe them — move those two modules to their own entries or narrow owns.components to LotMapBinding.tsx.
+
+DEFER severity=MED — Description "McFixReborn group G1 (web report page, surface registry and lead detail)" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:7 "It owns no component of its own, so its `owns.components[]` is an empty array" against :43 "mobile/src/components/feed/OpportunityRing.tsx" — one surface files two ownership answers, and notes repeat a third time "This is the only mobile surface that renders OpportunityRing, so it owns it." — make docs.under_126 agree with identity.owns and with notes.
+
+DEFER severity=LOW — F.3 "Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1555 "\"text\": \"the basement, not shared stairs and halls\"" — the change rewrites a report size-row copy string and bumps two schema hashes; no pasted landing clause names that copy, so the reason is not visible in this chunk — record it, and confirm the new copy against the report content source (not pasted).
+
+DEFER severity=LOW — task-411 title "FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted" — src/app/api/leads/detail/[id]/types.ts:15 "modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft" — the API half is visible here, but the two typed phone copies the card deletes are not in this chunk, cannot see — verify the deletion in the mobile chunk that owns mobile/src/lib/schemas.ts.
+
+MET — F-LANDING "MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 — both hunks stay inside report copy and the schema hash pin; the landing legal line and post-login target are untouched.
+MET — F-LOOKUP-RESOLVER "address parse, exact match on parcels normalized keys, typeahead on address_points" — scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json:113 "It renders lookup data the consumer reads through GET /api/parcels/lookup" — the binding reads nothing itself, so the resolver clause is neither changed nor contradicted.
+MET — G.6 "Report meter: a hit counts one report; report limit page when exhausted" — scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json:187 "Rendering is not a metered product action." — the new web REPORT owner entry adds no metering, so the one-report-per-hit meter is untouched.
+MET — F-ADMIN-LOOKUP "Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:420 "overlay_search_permits_sheet" — the shared save contract keeps the permits sheet listed and restates no status for it.
+
+REJECT — F.3 "no View report button, nothing navigates" — accused: the admin preview passes a live reportHref so the synthetic sample navigates — the file is src/app/admin/report-preview/page.tsx:35 "await requireAdminPage();", an admin page over goldens, not the landing sample frame F.3 governs.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: F-SEARCH-MOBILE, F-SEARCH-WEB, F-SHELL, F-LANDING, F-LOOKUP-RESOLVER, F-ADMIN-LOOKUP
+
+---
+⏱  124054ms (124.1s)
+📊 Tokens — total: 54566, input: 29701, output: 24865, reasoning: 23657

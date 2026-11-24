@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:03:43.883Z file_sha256=21d0b9c17583552e08df777e3fa9de3796141bf98f4d603689072bfe6b21dd7d prompt_sha256=e0a71a3114e8008663a2b12ce9cdcf71b2437a4b68318740c6647e4a7c1fa9b0
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0387 "a separate grounder rules every finding" — .claude/review-templates/README.md "outputs `r1-<lens>.txt`" vs "A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output" — the run recipe in "The standard" step 1 and in "How to run a lens" writes r1-<lens>.txt, a name the findings tool reads never (out-*.txt only) and the close check accepts never (it wants out-compliance-<list id>.txt, out-code-review.txt), so a lane that follows the recipe is refused at close and its findings reach no grounder — reprint the recipe with the out-<phase>-<seat>-<list> names, keeping rN only as a round marker.
+
+DEFER severity=MED — RR-0387 "confirmed defects go to fix tasks" — .claude/review-templates/README.md "one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`" — a CONFIRMED defect may be closed `wontfix` or `pile` and the close check still accepts the outcome line, so a confirmed defect can end with no fix and no fix task — restrict `wontfix` and `pile` to CONFLICT lines, or require an operator ruling before a CONFIRMED line may carry `wontfix`.
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/backlog-brief.mjs "Review (output only): the output lens set and its commands are in the lens line of this brief" — the brief prints no lens line and no "Rule lists that govern this task" line (the README says that line names each resolved list), so neither the fired lens set nor the table-resolved lists reach the lane from the brief — print the fired lens set with each command and each resolved rule list id in the brief.
+
+DEFER severity=LOW — RR-0385 "CRITICAL, HIGH and MED findings are resolved" (Implementation Notes) — .claude/review-templates/lens-compliance.md "BUG severity=<CRIT|HIGH>" — the lens token is CRIT where the ruling and the close step say CRITICAL, so a triage keyed on the ruling's word drops every CRIT line — use one token, CRITICAL, in the ruling, the five lens formats and the close step.
+
+MET — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — .claude/review-templates/README.md "Operator, verbatim, 2026-11-19" — the material cites the operator's own words for the review protocol and no register reading is used as a rule.
+
+MET — RR-0439 "each call is at most 120,000 characters" — .claude/review-templates/lens-compliance.md carries "{{PLAN}}" once in its user prompt, and the README fixes the budget "keep a diff part to 38000 characters or less with a 33000 character pack".
+
+MET — RR-0408 "keep the review calls small" — .claude/review-templates/README.md "the lens returns at most 8 findings per run, so cut a diff into parts rather than sending one large one".
+
+MET — RR-0431 "just the output" — scripts/analysis/backlog-brief.mjs "the lane runs no plan lens and its GROUNDER.md rules the output findings only".
+
+MET — RR-0433 "the group review is their one output review" — the material presents each file once, chunk 1 of 5 cut at file boundaries, every file as a new-file diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+
+Clauses checked: 12   Unmet: 4
+
+Rules met: none
+
+---
+⏱  107947ms (107.9s)
+📊 Tokens — total: 57921, input: 34674, output: 23247, reasoning: 22387

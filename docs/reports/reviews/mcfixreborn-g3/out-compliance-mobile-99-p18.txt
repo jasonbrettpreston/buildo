@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:20:03.748Z file_sha256=a0cb7047990ca9fccb694700ca6ff0be5e354ecc8053e95f4317ae32220be3d3 prompt_sha256=cfb1eb09cff72ef829b146f7777e7f46f65e630bb94a44a11cde59749ed6b154
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p18.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/src/lib/semiQuestion.ts:74-75 "if (isFetching) state = 'loading'; else { state = 'redirect'; navigate = PARCEL_TAB_ROUTE.lookup; }" — with data absent and no error the situation flips between loading and redirect on isFetching alone, and the file itself cites §6.5 as its governing rule, so a stability case attaches to this gate; the test file is not in this chunk (cannot see mobile/__tests__) — confirm the situations test toggles isFetching for the no-data arm, add the case if it does not.
+
+MET — §7.3 — mobile/src/lib/semiQuestion.ts:50-55 — the file only returns `route` and `navigate` strings; it adds no `router.replace`/`router.push` in AuthGate or AppLayout, so the four-event production allowlist is untouched.
+
+MET — §7.6 — mobile/src/lib/semiQuestion.ts:12-16 — the imports are slice, schema and route helpers only; no `track()` call and no event outside the fixed enumeration is added, and no listed canonical site is removed.
+
+MET — §8.5 — mobile/src/lib/sliceConfig.ts:1-27 — no Zustand store is created or altered by either new file, so the store-enumeration reset set is unchanged.
+
+MET — §10 — mobile/src/lib/sliceConfig.ts:1-27 — neither new path is on the Out-of-Scope list (`mobile/src/store/*.ts`, `mobile/app/**/_layout.tsx`, `mobile/src/lib/debug/stateDebug.ts`), and `stateDebug.ts` is not touched, so the §9.5b-only modification boundary holds.
+
+REJECT — §8.1 — adding a bridge without an idempotency test — `boundedWait` (semiQuestion.ts:29-37) and `buildSemiQuestionSituation` (semiQuestion.ts:58) are pure helpers that mutate no store, query cache or server state, so they are not a §4 bridge and the "second call with same input produces no notify" contract does not attach.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  52505ms (52.5s)
+📊 Tokens — total: 24832, input: 14012, output: 10820, reasoning: 10289

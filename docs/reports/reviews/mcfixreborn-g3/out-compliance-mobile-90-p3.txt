@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:06:17.485Z file_sha256=337718b37ac994d27ac30efaa87fe390554adf7ab907d86bd6a8c057e930057d prompt_sha256=35c39a08088755b0e3f7cd95502b2e73cdf61429906ad0cd05928c3c42e2c4e3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-90-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §7 "Offline Mutation Queue: Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection." — mobile/__tests__/useParcelLookup.test.ts "networkMode 'always': TanStack's default would pause a mutation offline, so the bounded wait would never start and the page would stay busy" — the Continue answered lookup is a useMutation run with networkMode 'always' and retry 0, so an answer tapped while offline is never queued in the offline mutation cache and never flushes on reconnect, the MUST clause is unmet — route the answered lookup through the persisted offline mutation cache or record an operator ruling in Spec 90 §7 exempting it as a read-that-counts.
+
+REJECT — §5 "NO useEffect for Fetching: Never fetch API data inside a useEffect. Always use TanStack Query." — the index.tsx useEffect is accused of fetching — it only calls navigate(route) once on settled data and fetches nothing, data comes from useParcelSearch / useParcelEntitlement — not a violation.
+
+REJECT — §2 "Tablet (iPad/Android): UI must be responsive. Use NativeWind breakpoints" — the fixed 448 single column with alignItems center is accused of not being tablet-responsive — the file header of mobile/app/(app)/parcel-tool/index.tsx cites Spec 117 §6.1 and its dated note 2026-11-10 ruling this small-page column, so the fixed width is design-ruled, not a §2 breach.
+
+MET — §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — mobile/__tests__/useParcelLookup.test.ts "throws ParcelLookupSchemaError on a drifted server shape" — every lookup and answered-lookup response is parsed through ConsumerParcelLookupResultSchema, drift becomes ParcelLookupSchemaError before the UI.
+
+MET — §8.3 "Do not fire a TanStack Query refetch on every millimeter of map movement; wait for a 500ms pause." — mobile/src/components/surfaces/LotMapBinding.tsx "initialRegion: derived('region')" — the MapView uses initialRegion only with no onRegionChange handler, so no per-movement refetch fires.
+
+MET — §3 "MUST NOT perform complex data mutation, geographic PostGIS math, or algorithmic sorting." — mobile/src/components/surfaces/LotMapBinding.tsx "Pure: no React, no JSX." with lotMapData reshaping refs only — no PostGIS math or sorting on the client.
+
+MET — §9 "Accommodate device Safe Areas using react-native-safe-area-context." — mobile/src/components/surfaces/PageTableBinding.tsx "return node('SafeAreaView', { className: styles.screen, edges: { top: 'additive' }" — safe-area handling via SafeAreaView (mocked from react-native-safe-area-context in surfaceRenderer.smoke.test.tsx).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  86755ms (86.8s)
+📊 Tokens — total: 51040, input: 33528, output: 17512, reasoning: 16819

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:58.819Z file_sha256=3252ca7e2fdfb52c7e4cc9a177333e730641deaa1b96f31008a5811c19b7b46f prompt_sha256=95d815ac19a74f905f9213937df2e67944fb4441f246dd8ed9c4ae9873b1f702
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/rule-lists.mjs "const max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND" and "(a.max ? { max: Number(a.max) } : {})" — the 120,000 cap the ruling names is only a default, and the CLI accepts any positive "a.max" ("if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0))"), so an input over 120,000 characters can be written — refuse an env value or "--max" above 120,000 instead of accepting any positive number — an over-cap input is either rejected by the review tool or cut inside a rule list, which the file's own promise ("a list is never trimmed") forbids.
+
+DEFER severity=LOW — task-366 "Acceptance Criteria from line 33" — NONE — the card's criteria text is not pasted, so whether the file adds behaviour the card did not name is cannot see — paste the criteria lines with the card so the "nothing added that the card did not name" test can be run.
+
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — "const hit = rows.filter(({ row, globs }) => cands.some((c) => matchesAny(globs, c) && !matchesAny(row.not ?? [], c) && (!row.imports_from || importsFrom(root, c, row.imports_from))))" — a list is attached only through a table row whose globs (and optional imports_from) match a Files entry; no row, no list.
+
+MET — RR-0439 "each call is at most 120,000 characters" — "const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS" with "if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`)" — by default the bound equals the review tool's cap and each rendered input is measured after the stamp and head are built and refused, not trimmed, when over it.
+
+MET — RR-0431 "We only want to review the same set of files once" — "if (last && promptOf([...last.paths, s.path], last.text + s.text) <= max) { last.text += s.text; last.paths.push(s.path); continue; }" — the material is cut once at its file headers by splitDiff and, across the chunk loop, each file segment lands in exactly one chunk, in diff order, with no file sent twice in one chunk set.
+
+MET — RR-0387 "a separate grounder rules every finding, confirmed defects go to fix tasks" — "It NEVER writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch." — the pre-launch command stops at the launch dry run and the grounder's POST.G2 file is read, never authored, so the ruling stays with the separate grounder.
+
+VERDICT: PASS
+Clauses checked: 5   Unmet: 0
+Rules met: none
+
+---
+⏱  52445ms (52.4s)
+📊 Tokens — total: 42517, input: 31881, output: 10636, reasoning: 9924

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:15:27.854Z file_sha256=fc6b9cf66863c949dafeddc796f35a8ef0bba6cb19e0bb1e91e1e2bbf5ab48b8 prompt_sha256=34e9eea742e82de8e03ffa248d22cdb3cd53be5d394c707a8bee91c9ff85b8e8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p6.txt (model: deepseek-reasoner)
+
+BUG none.
+
+DEFER severity=LOW — Rule 13 "The board is a view; the row is the record. The board shows every `Status:` line of the repo queue files and of the cards" — scripts/analysis/rule-lists.json:158 "      \"lists\": []," (the queue-records row over "backlog/**", ".cursor/*QUEUE*", "docs/specs/00-architecture/**") — a change that edits the queue rows, the cards or Spec 137 itself resolves to no rule list, so the row and status clauses travel with nothing (the row `why` rests on task-448, RR-0418, decision-203, none pasted, cannot see) — attach queue-137 to the queue-records row, or quote the exempting ruling inside that row so a reviewer can check it.
+DEFER severity=NIT — §6 "It is carded for the infra-freeze lift and is not built now" — scripts/analysis/rule-lists.json:21 "  \"finished_statuses\": [\"BUILT\", \"DONE\", \"MERGED\"]," — the table names terminal statuses but records nothing about the deferred status line, expiry or DROPPED check, nor the card it sits on — add a `$comment` line beside `finished_statuses` naming the deferred card, so a later reader does not grow the deferred check here.
+REJECT — §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling" — accused of building the deferred check through `protected_paths` and `finished_statuses` — not a real issue: the file is data and contains no status line, expiry or DROPPED refusal, only the statuses that mean finished for the close gate.
+REJECT — §5a "Source: `origin/wf1/mb-rulings`" — accused that "  \"base_ref\": \"wf2/board\"," (scripts/analysis/rule-lists.json:20) moves the board off origin — not a real issue: `base_ref` is the lane diff base for this table, the board stays local and rebuilds from origin, so no board source changes here.
+REJECT — §6 "Also deferred: Backlog.md as the source of truth (\"part 2\"). Not adopted." — accused that the queue-records glob "backlog/**" and the `increment_docs` and `milestone_docs` maps adopt Backlog.md as truth — not a real issue: those entries name documents and cards as review material only, no row id is re-keyed, and no status or expiry is read from Backlog.md.
+MET — §5a Rule 14 — scripts/analysis/rule-lists.json:163 "      \"globs\": [\"scripts/analysis/**\", \"scripts/hooks/**\", \"scripts/deepseek-review.js\", \"scripts/lib/review-template.js\", \".husky/**\", \".claude/**\", \"scripts/board/**\", \"CLAUDE.md\", \"mcbylaws/*.json\"]," — the board scripts and lane tools resolve to the lane-tools row whose list set includes `queue-137` whole, so the board-reading rule is attached where it is implemented.
+MET — §5a dated note 2026-11-19 "`scripts/analysis/backlog-next.mjs` lists OPERATOR tasks and flags the ones lacking either line" — scripts/analysis/rule-lists.json:163 "      \"globs\": [\"scripts/analysis/**\", ..." — the file that clause names resolves to the lane-tools row and is reviewed against Spec 137 whole.
+MET — §6 "the generated index is built now as a read-only board outside the repo (§5a). The commit check above stays deferred." — scripts/analysis/rule-lists.json:21 "  \"finished_statuses\": [\"BUILT\", \"DONE\", \"MERGED\"]," — nothing in the table refuses a missing status line, a missing expiry or an unquoted DROPPED, so the deferred commit check is still unbuilt.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: Rule 14
+
+---
+⏱  83877ms (83.9s)
+📊 Tokens — total: 34073, input: 14941, output: 19132, reasoning: 18218

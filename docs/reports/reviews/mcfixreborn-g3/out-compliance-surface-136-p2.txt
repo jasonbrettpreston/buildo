@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:45:04.993Z file_sha256=21f6bc541dc63abd417119b02d8f0dcec5b4cabb03a558ccd69d2a0beb67f76d prompt_sha256=80200a5007b8a358b385da747833c94a1472ce2dc4eb61a176037bf0199fa040
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.38 "a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0." — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "const noLegacy = (): void => expect(screen.queryAllByText(LEGACY)).toEqual([]);" — the file proves the legacy labels/values are absent but never asserts that a withheld slot renders the mandated "Not yet evaluated" text, so the replacement half of fe.38 is not locked here — add an assertion that a withheld slot shows the FE-06 "Not yet evaluated" text, or cite the lock that owns it.
+
+MET — fe.05 — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "expect(within(screen.getByTestId('report-o1-size-tile')).getByText('2,670')).toBeTruthy();" — the displayed size number is read pre-formatted from the page view fixture, not computed in the UI.
+MET — fe.18 — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);" — displayed strings bind to content keys rather than literals.
+MET — fe.31 — mobile/__tests__/parcelScreens.golden.test.ts "expect(webGoldenFiles().map((f) => f.slice(0, -'.web.json'.length))).toEqual(Object.keys(goldens).sort());" — one props golden per state for both declared targets, content refs checked in both directions.
+MET — fe.36 — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "expect([mockBack.mock.calls.length, mockReplace.mock.calls.length]).toEqual([1, 0]);" — back uses the canGoBack branch, replace on cold open, and the control carries a button role and a content name.
+MET — fe.43 — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx "jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...jest.requireActual('@gorhom/bottom-sheet/mock') }));" — the mobile details sheet uses the existing vendored bottom-sheet per the ruling.
+
+REJECT — fe.45 — deriveMatchType computing the match type client-side — the server resolution wins ("server unique is the outcome"), the derivation is a documented fallback for an older server that sends no resolution, not a Rule 2 violation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+Rules met: fe.05, fe.18, fe.31, fe.36, fe.43
+
+---
+⏱  68640ms (68.6s)
+📊 Tokens — total: 46962, input: 33356, output: 13606, reasoning: 12998

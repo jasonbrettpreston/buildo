@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:07:49.378Z file_sha256=9925e0ec81684f237c29ae2e5112f85d71d2742423621c900972bdb63c0d2aa6 prompt_sha256=d41a4fe94cafa38738e972287b43928e6dca00ce1df7de7065d4138e5647f0fc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-17 opening clause "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — mcbylaws/protected-paths.json:3 "$comment": "the item put to the operator at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 ... and his words at :1422 ... resolved by a separate grounder under the delegation at :1476" — the frontend-list addition for src/components/report/** rests on operator words at :1421/:1422 and a grounder delegation at :1476 that are not in the pasted context, so the ruling behind the edit cannot be checked here — record it; paste :1421 to :1476 or the operator verbatim into a later rule list if the edit is ever re-judged.
+
+DEFER severity=LOW — task-384 acceptance criteria reference "task-384: backlog/tasks/task-384 - STD.REPORT-OWN-The web report renderer gets a census owner and comes under the existing text-component and 44 px checks, Acceptance Criteria from line 32" — mcbylaws/protected-paths.json:3 "src/components/report/** joins frontend, so the three web report renderer files come under the surface checks (the bindings.json modules list: FE-31 C-2b and C-8)" — no acceptance criterion text is pasted, so whether frontend-list membership discharges STD.REPORT-OWN cannot be judged, the criteria may name checks this file does not evidence — cannot see the AC text; paste line 32 onward of task-384 in a later call.
+
+DEFER severity=LOW — task block "Files of other tasks are also read here: task-320, task-353, task-387, task-390, task-395" — mcbylaws/protected-paths.json:3 "Dated note 2026-11-20 (MB-67 owner commit, built in lane BL-REPORTOWN2, task-384 STD.REPORT-OWN ...)" — the only task named by this file is task-384; whether the other four homed tasks require or forbid any entry in this policy cannot be determined from the pasted clauses — cannot see their criteria; if task-320, task-353, task-387, task-390 or task-395 own a protected-path change, paste that criterion with this file.
+
+REJECT — doc-17 readings RR-0001 to RR-0218 — the change is not accused of anything by those lines: doc-17 states readings "never feed a review as a ruling", and the material is a gate policy JSON that names none of the storage, theme or report readings.
+
+MET — doc-17 opening clause — mcbylaws/protected-paths.json:3 — the new dated note attributes the edit to the operator's own words ("approved [the five items pasted] - remember the app is not beign used - we are in development"), not to a register reading, so no reading is fed as a ruling.
+
+MET — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — mcbylaws/protected-paths.json:1-129 — the file is read once, whole, as one creation diff from the empty tree, with no plan text judged.
+
+MET — Implementation Notes "Generated files, fixtures, lane records and documents are left out on purpose and are not a finding" — mcbylaws/protected-paths.json:2-4 ""pending_globs": []" — the material is hand-written policy content (globs, lists, limits), not a generated file, fixture, lane record or document, so its presence in the chunk is legitimate.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  52282ms (52.3s)
+📊 Tokens — total: 21672, input: 15689, output: 5983, reasoning: 5131

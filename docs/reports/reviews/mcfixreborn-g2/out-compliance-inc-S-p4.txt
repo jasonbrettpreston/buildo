@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:27:35.339Z file_sha256=da31757f3cda55cb2f37a75a9abe1e58a3f291b59e7c25b06600348c1198eb85 prompt_sha256=b85f527a7e8848fbb3070852ebadbc436301ed37324446671052494218ff504e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-inc-S-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it" — LIST line "paths: ["src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts","src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts","src/tests/surfaces/engine-inputs-bind.logic.test.ts","src/tests/surfaces/report-honest-k2b.logic.test.ts"]" — none of the four paths is a search-surface file the pasted Increment S list names, and every spec the files themselves cite (78, 69a, 135, 126, 124a) is absent from the pasted list, so the clauses that would bind them cannot be seen and their compliance cannot be certified here — re-pair this chunk with the rule list of the specs its SPEC LINK headers cite before any ruling is made on it.
+
+DEFER severity=MED — task-372 "task-372: backlog/tasks/task-372 - FIX.PROJ-Report-projection-freshness-compares-the-whole-stamp-the-sq-ft-factor-and-the-lot-size-window-are-settings-a-property-test-on-rounding-D1-D2-D9-D6.md, Acceptance Criteria from line 32" — report-honest-k2b.logic.test.ts:24 "settings_sha: null, layer2_table_version: 'tv', switches: [], ...over," — every projection row in this file carries a null settings_sha yet is expected to emit values (report-honest-k2b.logic.test.ts:52 "expect(v[byCol.is_heritage_designated as string]).toBe('Yes');"), so the settings_sha member of the whole-stamp comparison is never exercised on these rows, and project.ts is not in the pasted material (cannot see) — add a row with a stale settings_sha and assert its values are withheld.
+
+DEFER severity=MED — doc-2 "| G.5 | G Hand-off to the report · Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |" — report-honest-k2b.logic.test.ts:4 "// K2 honesty bundle, code part (operator 2026-11-13: "approved - ... a new yes/no page rule ... reuses the existing formatter pattern, with no new component")." — the heritage, ravine and corner yes/no report parts are new page behaviour whose only stated authority is this source comment, no pasted clause or ruling names them, and a comment is not a ruling — paste the 2026-11-13 operator ruling into the rule list or move this test to the task that ruling homed.
+
+DEFER severity=LOW — Implementation Notes "test fixtures and goldens ... are left out on purpose and are not a finding" — golden25-harness.ts:5 "// the suite house with the detached house. Read-only: fixtures and seeds only." — the helper is golden-25 fixture and seed plumbing, material that ruling leaves out of every group, and the pasted task list names no task that owns it — name the owning task in the pasted context or drop the helper from the group's material.
+
+REJECT — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — accused of reviewing the LOAD.1 loader twice — golden25-harness.ts:127 "// LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." shows the helper now lives in the harness and runtime-loader.logic.test.ts:21 only imports it, so no file is read twice.
+
+REJECT — task-372 "compares the whole stamp" — accused of fabricating a settings sha that would defeat the stamp comparison — golden25-harness.ts:17 "export const META = { layer2_table_version: 'g25', settings_sha: 'g25' };" is read by none of the four pasted files, and the loader test pins the real shape (runtime-loader.logic.test.ts "(rows.every((r) => /^[0-9a-f]{64}$/.test(r.settings_sha))).toBe(true)"), so it cannot reach a freshness decision.
+
+MET — RR-0414 "changed parts only as per your recommendation" — the four paths — all four arrive as full creation diffs ("new file mode 100644"), which is the only possible form for a file with no base, and no oversized file is re-pasted as a whole here.
+MET — Implementation Notes "Generated files, fixtures, lane records and documents are left out on purpose" — the paths line — no generated file, golden fixture, document or lane record is among the four paths.
+MET — RR-0433 "tasks 381, 383, 390, 395 and 411 were folded as they stood; this group review is their one output review" — engine-inputs-bind.logic.test.ts:1 and report-honest-k2b.logic.test.ts:1 — one test file each, presented once in this review.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  74937ms (74.9s)
+📊 Tokens — total: 36474, input: 21695, output: 14779, reasoning: 13619

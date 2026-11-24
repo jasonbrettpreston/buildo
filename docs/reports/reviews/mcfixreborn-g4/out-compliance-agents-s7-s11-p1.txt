@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:45:35.204Z file_sha256=3e3fd0012fe36a5d9a91d44cb98e4cb362a932b6bd675ead76ab3a3a0206c5a4 prompt_sha256=9eeceadc81243b194b4d26def1d55a71cae7680af6007c16b57643f6dc576927
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §7.1 "both mandatory per WF (§6.4)" — .claude/review-templates/README.md:28 "One-line fixes don't need a plan review." — the file frames the plan altitude as optional and tells lanes to skip it for WF3 ("Usually skip") and for WF2 refactors (":27 "Skip if pure refactor / no behavior change."), where rule 1 makes both altitudes mandatory and gives WF3 a lean plan roster ("WF3 runs a LEAN plan roster (premise-verifiers only); it is no longer output-only") — fix: replace those two cells with the WF3 premise-verifier plan roster and the WF2 plan-review requirement, or delete the "recommended?" column.
+
+DEFER severity=MED — Spec 08 §7.6 note 2026-11-22 "round 2, the second review round (not the grounder's 5.3 round-2 pass), resolves CRITICAL and HIGH only" — .claude/review-templates/README.md:110 "adjudicates every finding against the files (round 2, Spec 08 section 5.3" — the file calls the grounder pass "round 2", the pass the ruling says it is not, so a lane reads the grounder as its second round and runs no round-2 re-review of CRITICAL and HIGH — fix: label the grounder pass the fold check and state round 2 as the second review round, CRITICAL and HIGH only.
+
+DEFER severity=MED — Spec 08 §7.4 note 2026-11-23 (task-448) "The launch brief, the close check's refusal clause and one launch-script comment now say that a fix round re-makes every review file under the same names." — scripts/analysis/backlog-brief.mjs:183 "Review (output only): the output lens set and its commands are in the lens line of this brief" — the brief this script emits carries no sentence saying a fix round re-makes every review file under the same names, and its Close line (:187) speaks only of --append-final-summary for round 2, so a fix round files rN outputs the close refuses — fix: add that sentence to the Review/Close block the script prints.
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-brief.mjs:62 "const CAP_TOTAL = 120 * 1024;" — the context pack is capped at 122,880, above the operator's 120,000-character bound, and is accumulated with Buffer.byteLength (bytes) rather than characters, so a multi-byte document passes while already over the bound — fix: set the total to 120000 characters and count with str.length.
+
+DEFER severity=LOW — Spec 08 §7.4 note 2026-11-23 (task-448) "This supersedes "(a record-only task gets the queue lists)"" — .claude/review-templates/README.md:158 "No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named." — the file restates the superseded parenthetical as current launch behaviour, so a reader expects queue lists on a record-only task after every row's lists were turned off — fix: drop the parenthetical and state what the launch does now.
+
+DEFER severity=LOW — Spec 08 §7.7 "Security fires only on money/auth/PII/admin" — .claude/review-templates/README.md:105 "or a Files entry is under src/app/api/ or src/lib/ (task-445)" — the file makes the security lens fire on any API or library path, a firing rule the pasted "only" excludes and no pasted ruling names — fix: keep the firing rule to money, auth, PII and admin, or paste the task-445 ruling that widened it.
+
+DEFER severity=LOW — Spec 08 §7.4 note 2026-11-21 (task-423) "one output set per stage, `out-compliance-rules[-pN].txt`" — .claude/review-templates/README.md:122 "> r1-<lens>.txt" — the file's lane-review example (and the "standard" at :109) names the output r1-<lens>.txt, a name the close refuses since it reads out-compliance-<list id>.txt and out-<lens>.txt, so a lane following this page fails the close — fix: name the outputs out-<seat>-<list>.txt and out-<lens>.txt in the standard and in both examples.
+
+DEFER severity=LOW — Spec 08 §7.10 note 2026-11-19 (task-308 R8c) "The lane close step copies the lane's REPORT.md (and its TRIAGE.md and the review output, when they exist) into docs/reports/lanes/<date>/<lane>/ in the lane's last commit" — scripts/analysis/backlog-brief.mjs:186 "Close:" — the brief's Close block gives one backlog task edit command and no copy of REPORT.md, TRIAGE.md and the review output into the repo, and no line repointing the task references at that copy — fix: add the copy and the reference line to the Close block.
+
+REJECT — Spec 08 §7.9 note 2026-11-22 "the review lenses are DeepSeek" — accused: scripts/analysis/backlog-brief.mjs:184 runs the lens set with "provider claude" — not a real issue, §7.10 (b) says a check not runnable through bash_allow goes to provider claude with the reason logged and that line logs the reason (deepseek-review.js not in exec-policy.json bash_allow).
+
+MET — Spec 08 §7.4 note 2026-11-22 (task-438) — .claude/review-templates/README.md:101 — the lens-engineering row names "today `eng-all`, `eng-front`, `eng-back` and `eng-shared`", matching the four engineering lists.
+MET — Spec 08 §7.4 note 2026-11-21 (task-423) — .claude/review-templates/README.md:159 — the joined form is stated as accepted and not the default with the RR-0374 measurement (10 of 15 against 14 of 15).
+MET — Spec 08 §7.6 note 2026-11-20 (task-399) — .claude/review-templates/README.md:110 — one tool-bearing grounder, GROUNDER.md verdicts, one TRIAGE.md outcome line per CONFIRMED or CONFLICT finding and the --outcomes check.
+MET — Spec 08 §7.4 note 2026-11-22 (task-432) — scripts/analysis/backlog-brief.mjs:20 — a bare --board and a board without backlog/decisions are refused as the note requires.
+MET — Spec 08 §7.6 note 2026-11-22 (task-437) — scripts/analysis/backlog-brief.mjs:174 — "max_fix_rounds: 2" matches "two rounds at most".
+MET — Spec 08 §7.4 note 2026-11-22 (task-433) — .claude/review-templates/lens-compliance.md:82 — the output ends with "Rules met: <rule ids, comma separated>" and defines the id shape name.N.
+MET — Spec 08 §7.7 — .claude/review-templates/README.md:97 — the lens table carries a "When it fires" column per lens, a menu and not a checklist.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+Rules met: none
+
+---
+⏱  130412ms (130.4s)
+📊 Tokens — total: 60172, input: 29585, output: 30587, reasoning: 28867

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:12:44.257Z file_sha256=e12dbf32c5b9f7f51e025fc0d268f8c8396a89fe68197948028f086cc8d18e4e prompt_sha256=4d9ae568dfabd27a8f9e88d5a4da4af4524e67c5380c7e4ad972e885a7845aba
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 acceptance (pasted) "proof-slice-reads-its-limits-from-settings-D11-D10" — scripts/analysis/proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN" — the row timeout is a typed constant; timeoutMsFromVariable is exported and never called in the file, so the settings value has no effect on any row (commandRow uses "row.timeoutMs ?? DEFAULT_TIMEOUT_MS") — pass the registered value as the limit, run(row.argv, { timeoutMs: row.timeoutMs ?? timeoutMsFromVariable(gateVariable(TIMEOUT_VARIABLE)) }), and seed the variable at the operator's DB GO.
+
+BUG severity=HIGH — task-375 FIX.TOOLS note "the LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD" — scripts/analysis/backlog-lane.mjs:97 "taskText: fs.readFileSync(t.file, 'utf8')" — the task text handed to the gate is the working-tree copy while every other gate input comes from HEAD (showHead), and the preflight deliberately lets backlog/ be dirty (line 84 "filter((p) => !p.startsWith('backlog/')"), so an uncommitted plan edit is what the Plan hash checks — read the task through showHead for taskText (as folder, headTasks and facts.taskOf already do) and refuse when the working tree differs from HEAD.
+
+DEFER severity=MED — task-375 FIX.TOOLS note "refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md" — scripts/analysis/backlog-lane.mjs:189 "copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/" with REPORT.md placed only in the scratch dir at line 208 "path.join(laneDir, 'REPORT.md')" — the brief never tells the lane to put REPORT.md or TRIAGE.md in the repo lane dir or ref them, so a lane that follows the brief fails its own close — add REPORT.md and TRIAGE.md to the copy instruction with the backlog task edit --add-ref line.
+
+DEFER severity=MED — Spec 137 Rule 7 "Each open row carries an opened date and an expiry 7 days later" with §3 "for a Backlog task the status line is its front matter: `status` is the word; the due date is `expires`" — scripts/analysis/backlog-lane.mjs:130 "step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note, ...addRefs]);" — every launched task goes RUNNING with no expires field, so rule 7 resurfacing never fires and §5 step 6 lists each one as "no expiry" — set expires in the same take edit, 7 days out or `when <event>` under rule 12.
+
+DEFER severity=LOW — task-448 pasted note "a record-only task with no Files line, no longer attaches Spec 137 or Spec 08" — scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448) or a Files path no row matches is refused before any write" — the header still says a task with no Files line is refused; the amended rule allows it, and whether the code allows it depends on rule-lists.mjs which is outside this chunk (cannot see) — reword the header to "a Files path no row matches is refused; a task with no Files line gets the fallback lists".
+
+MET — task-375 FIX.TOOLS note (planGateErrors at launch) — scripts/analysis/backlog-lane.mjs:91 — the gate block runs for type build or fix and sits before the take step, with no flag to turn it off.
+MET — task-423 PROTOCOL.SIMPLE note ("a joined output set per stage is an accepted form ... and is NOT the default") — scripts/analysis/backlog-lane.mjs:186 — the brief names the joined run as accepted, not the default, and says a stage holding both forms is refused.
+MET — Rule 3 dated note 2026-11-20 ("the closing commit carries only the lane's records") — scripts/analysis/backlog-lane.mjs:188 — the brief states the two-commit close and lists what the closing commit may carry.
+MET — Spec 137 §5a "com.maxbld.board-commit (commits board edits)" — scripts/analysis/backlog-lane.mjs:133 — the launch kickstarts that job and waits for backlog/ to be clean and HEAD to advance.
+MET — task-366 note "one compliance lens output per rule list the task attaches" — scripts/analysis/backlog-lane.mjs:186 — the brief names one out-compliance-<list id>.txt per resolved list and states the close is refused without them.
+MET — Rule 9 "Every DB job is rehearsed on the local test stack first ... then runs under the operator's go" — scripts/analysis/proof-slice.mjs:10 "Commits nothing; reads and writes no database." — the proof tool touches no DB, and the timeout variable's seed is held for the operator's DB GO.
+MET — task-419 note "only -pN outputs as tool-made inputs" — scripts/analysis/backlog-lane.mjs:188 — the code-review, error-paths, ux and security lenses are filed out-<lens>-pN.txt with their in- files, the unsuffixed name kept for rule-list inputs.
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-lane.mjs:186 — the brief splits list plus material only when the pair would pass the 120000 character bound.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: Rule 3, Rule 9, Rule 13
+
+---
+⏱  163512ms (163.5s)
+📊 Tokens — total: 55121, input: 30696, output: 24425, reasoning: 23043

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:38:32.362Z file_sha256=7f7a0e383e5115a23bfb89c48539820199dda1926ebd439012330cda18404a49 prompt_sha256=ebcd2d7bc879e58dc8b31f5b87b94bc8fc83868f8a0702696132a386505a962b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-step-132-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero ... A missing `logic_variables` row fails the run" — src/tests/massing.logic.test.ts "const config = { massing_shed_threshold_sqm: 20, massing_garage_max_sqm: 60, link_massing_centroid_confidence: 0.95, link_massing_nearest_confidence: 0.6 };" — the two thresholds are supplied as test literals and never checked against `logic_variables`, so this lock passes with their seed rows absent (the two confidences are seed-checked, the thresholds are not), and task-396's "become registered settings 20 and 60" is therefore not locked — add the same seed assertion already used for the confidences, `expect(seed.<threshold>.default).toBe(20)` and `.toBe(60)`.
+
+DEFER severity=MED — core.10 "its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers" — src/tests/massing.logic.test.ts "const plan = compute.buildMatchSql(LM_DESCRIPTOR(), null, 'full');" — the lock feeds a hand-built plain config object (and `null` where the confidence lives) straight into the compute, so a change in the ctx the runner's dispatch for `link_massing` actually builds would leave every case green — build the ctx through the dispatch (as the coa dispatch lock does) and stub only pool and network.
+
+DEFER severity=MED — core.7 "as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment" — src/tests/massing.logic.test.ts "CODE, not prose: the compute's header NAMES the retired identifiers in order to record why they are gone, and a lock that could be tripped by its own explanation would push the explanation out of the file." — the reason the grid path is retired lives in a compute header comment, and the lock strips comments (`src = LM_COMPUTE().replace(...)`) by design, so no check `why` and no Intent Ledger row carries it where a machine can read it — put the retirement reason in a check `why` or an Intent Ledger row and have the lock cite that, not a stripped comment.
+
+DEFER severity=LOW — x-v3.1 "every exception naming the step cites a register id" — src/tests/massing.logic.test.ts "The A-8 override retires it outright." — an operator override is cited twice in the lock (here and "(A-8 override)") with no dated register row id, and no such id is visible in the material — cite the register row that records A-8, or record it per x-v3.2 before the lock cites it.
+
+DEFER severity=LOW — link.2 "counter names come from the match plan" — src/tests/massing.logic.test.ts "expect(compute.buildMatchSql(LM_DESCRIPTOR(), config, 'full').primary_counter).toBe('centroid_in_parcel');" — the lock asserts the counter names as literals inside the test rather than that they are read from the descriptor's declared match plan, so a name hard-coded in the compute would still pass — assert the two names equal the descriptor's match-plan counter declarations, and that they are members of the closed counter set.
+
+MET — core.9 — src/tests/massing.logic.test.ts "expect(LM_COMPUTE()).not.toMatch(/\.query\s*\(|streamQuery\s*\(|withTransaction\s*\(/)" — the compute is locked to hold SQL text only, with no read, write or transaction of its own.
+MET — core.12 — src/tests/massing.logic.test.ts "expect(d.outputs.writes[1]!.retract, 'the mass retraction on the upsert target is retired').toBe('none');" — write discipline is asserted per write target, with the retract declared on the target and retired on the upsert.
+MET — core.14 — src/tests/massing.logic.test.ts "const meta = deriveMeta(LM_DESCRIPTOR()) as { reads: Record<string, string[]>; writes: Record<string, string[]> };" — the reads and writes ledger is derived from the descriptor and then asserted, not re-typed.
+MET — link.1 — src/tests/massing.logic.test.ts "expect(write.retractionFires(upsertPlan, 'incremental'), 'an incremental run must never retract').toBe(false);" — a destructive retraction cannot fire on an incremental run.
+MET — x-tooling.1 — src/tests/massing.logic.test.ts "describe('link_massing query shape, the B13 guarantee, re-homed to the compute'" — the file is a `*.logic.test.ts` with no Postgres client, so it does not need the `*.db.test.ts` lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 5
+Rules met: core.9, core.12, core.14, link.1, x-tooling.1
+
+---
+⏱  86721ms (86.7s)
+📊 Tokens — total: 43400, input: 26719, output: 16681, reasoning: 15551

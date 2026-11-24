@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:34:42.395Z file_sha256=b6264f3439f30aa3b8c6b0169d9b7e8c7b9596a468759bbc36d173396af69c71 prompt_sha256=80a37fa22e93302cf2c8402087e955396a453acda0287641568552503a75fe4b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/__tests__/reportScreens.golden.test.ts:259 "const g = JSON.parse(fs.readFileSync(path.join(process.cwd(), '..', 'src/tests/fixtures/report-page', `${st}.mobile.json`), 'utf8'));" — this one path is anchored on process.cwd() while the same file computes REPO at line 20 ("const REPO = path.resolve(MOBILE, '..');"), so the case only resolves when jest is invoked from mobile/ and throws ENOENT anywhere else — read path.join(REPO, 'src/tests/fixtures/report-page', `${st}.mobile.json`) like every other read in the file.
+
+DEFER severity=LOW — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:133 "expect(mockSemi.every((v) => v === undefined)).toBe(true);" — after "mockSemi.length = 0;" the assertion is vacuously true when the second render never calls the hook, so the "no semi param means undefined" lock can pass without the hook being called at all — assert on a non-empty array, e.g. expect(mockSemi).toEqual([undefined]) behind a length check.
+
+DEFER severity=LOW — mobile/__tests__/semiQuestionScreens.golden.test.ts:66 "const checked = radios.filter((n) => (n.props.accessibilityState as Json).checked === true);" — the cast hides that accessibilityState may be absent, so a binding that stops emitting it makes the helper throw "Cannot read properties of undefined" instead of producing the problem line the helper exists for — read (n.props.accessibilityState as Json | undefined)?.checked === true and emit a problem when the key is missing.
+
+DEFER severity=LOW — mobile/__tests__/reportScreens.golden.test.ts:53 "const p = v.sections.find((s) => s.id === id)?.parts[at as unknown as number];" — the double cast makes a malformed part ref ("o1.title", "o1.") index undefined, so the pending-style check silently passes for exactly the refs it exists to police — parse the index and push a problem when it is not an integer inside parts.length.
+
+REJECT — mobile/__tests__/parcelSearchMatch.test.ts "} as unknown as Partial<ConsumerParcelLookupResult>);" — looks like an unchecked double cast hiding a type hole — it is deliberate, commented at the call site (the widened contract's matchType), test-only, and never reaches production code.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  134125ms (134.1s)
+📊 Tokens — total: 69764, input: 35214, output: 34550, reasoning: 33982

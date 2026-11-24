@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:21:57.606Z file_sha256=1124705edd4a5887e6690e66e7b29e5dccced3dfe87b4bd84c3518093d6be2f7 prompt_sha256=6b26ee3aa41a2131c4ad4a2b7ef64572f21d5b8cc0ebbc6220546fc73a909887
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=MED — 2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for `null` or `undefined`." — scripts/analysis/proof-slice.mjs:152 "head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim()," — unguarded nested access: when the spawn itself fails (ENOENT, EAGAIN) `spawnSync` returns `stdout: null`, so `.trim()` throws a TypeError inside `realIo()` before `main`'s own guard "if (!io.head) { console.error('proof-slice: cannot determine HEAD ...'); return 2; }" can run, and the promised exit 2 becomes an uncaught stack trace — guard the result (`const r = spawnSync(...); r.status === 0 ? (r.stdout ?? '').trim() : ''`).
+
+DEFER severity=LOW — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/generated-docs.mjs:106 "export function selfTest() {" and scripts/analysis/proof-slice.mjs:28 "export function timeoutMsFromVariable(value) {" — the pure derivation logic added here (`checkSpec`, `runSlice`, `rowViolation`, `checkGeneratedDocs`, `timeoutMsFromVariable`) is exercised only by an embedded `--self-test` arm, which §5.5 places outside `npm run test`; a `.logic.test.ts` for these exports is not visible in this chunk (cannot see whether another chunk holds it) — add one `*.logic.test.ts` importing the exports so the derivation is proved in the default suite.
+
+REJECT — 9.4 Pipeline SDK Mandate "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — accused of bypassing `pipeline.run`/`pipeline.log` — these are analysis CLIs under `scripts/analysis/*.mjs` that open no pool and write no database row (proof-slice.mjs:12 "Commits nothing; reads and writes no database."), so the SDK mandate does not bind them.
+
+REJECT — 6.1 logError Mandate "never bare `console.error()` in API routes or lib modules" — accused of bare `console.error`/`process.stderr.write` logging — the rule scopes itself to API routes and lib modules; these are standalone Node CLIs where `src/lib/logger.ts` (server-only, Sentry) is not the mandated sink.
+
+MET — 2.3 — scripts/analysis/proof-slice.mjs:41 "const rows = spec?.[slice]?.rows;" — the untrusted JSON data file is walked with optional chaining and `checkSpec` rejects every malformed shape before any row runs.
+
+MET — 8.2 — scripts/analysis/backlog-lane.mjs:206 "const acBlock = /<!-- AC:BEGIN -->([\s\S]*?)<!-- AC:END -->/.exec(t.body)?.[1] ?? '';" — uses `[\s\S]`, not the ES2018 `s` flag, per the ES2017 target note.
+
+MET — 9.3 — scripts/analysis/backlog-lane.mjs:74 "if (fs.existsSync(wt)) refuse(`worktree ${wt} already exists`);" — re-running a launch refuses before any write instead of duplicating the take or the worktree.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  43952ms (44.0s)
+📊 Tokens — total: 36888, input: 27881, output: 9007, reasoning: 8216

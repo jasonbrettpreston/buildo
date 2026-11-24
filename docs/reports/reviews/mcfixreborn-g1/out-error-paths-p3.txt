@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T03:23:18.259Z file_sha256=2f9171c2851f2a4adcb3a51aa4e57de44825b1e20062268fea9582aef8c9d138 prompt_sha256=ea35e47a82d5ecc3195aba1f0ebe41828d235333de7ab1aa0c7c76ad0f392007
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-error-paths-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/lib/leads/lead-detail-query.ts:121 "      AND lv2.user_id != $4::uuid" — with a NULL viewer id (the route's own documented "or NULL" dev-bypass path, lines 61-62) the predicate is NULL for every lead_views row, so the lateral counts nothing and COALESCE(lv_count.c, 0) serves competition_count 0 for every permit; the CoA branch repeats it against "$3::uuid" — change both to `lv2.user_id IS DISTINCT FROM $4::uuid` (and the CoA one to $3), so a viewer with no id counts every other user.
+
+DEFER severity=MED — src/lib/surfaces/maxbld-landing.ts:99 "String(tpl[l.key]).replace(SLOT, () => l.value)" — a stored citywide line whose key has no template in report-presentation.json renders the literal text "undefined" as that figure in the hero, instead of the line being left out (FE-05, honest display) — check `typeof tpl[l.key] === 'string'` and drop the line (and log once) when it is not.
+
+DEFER severity=MED — src/lib/surfaces/maxbld-landing.ts:131 "if (p.role === 'checked') return Object.keys(values).some((k) => k.startsWith(`checked.${p.group}.`));" — one present citywide key keeps the whole checked group through keepValued, while StaticBinding's figuresNode emits a derived ref for every CITYWIDE_KEYS entry, so any key missing from the row throws in valueOf and the whole landing becomes the error page rather than the degraded page it has for exactly this case — require every CITYWIDE_KEYS entry to be present before keeping the group (or emit only the keys actually returned; cannot see citywideLines, so cannot say whether a partial set is reachable).
+
+DEFER severity=MED — src/lib/surfaces/maxbld-landing.ts:147 "footer: pickFooterText(SEARCH_CONTENT)" — the landing takes its four footer strings from the SEARCH surface's content and pickFooterText throws on a missing or empty key, outside every try, so editing the search page's strings takes out maxbld.ca/ with a 500; line 144 "const view = sampleView();" has the same shape — wrap both in readLanding and, on failure, log and serve the degraded page (or the footer with a documented fallback rule), since the module's contract at line 19-20 is "never a 500".
+
+DEFER severity=MED — src/components/report/ReportPage.tsx:42 "<T p={vs[i]} as="dd" className="m-0 text-right text-[14px]/[20px] font-semibold tabular-nums" />" — labels and values are paired by array index with no length check, so one value part the server failed to build shifts every later value under the wrong label (or leaves a blank value cell); the lot_facts branch pairs the same way — pair by the part's brief/key, or render nothing when all(s,label).length does not equal all(s,value).length (cannot see the page builder to say whether an uneven pair is reachable).
+
+DEFER severity=LOW — src/components/report/ReportView.tsx:52 "<img src={im.src} alt={im.alt} className={fill ? 'block min-h-0 w-full flex-1 object-cover' : 'block h-auto w-full'} />" — a server-issued signed URL that has expired or 404s by the time the phone or a cached page loads it leaves a broken image inside the v21 picture box; the ruled empty state only covers a picture absent at build time — serve a longer-lived or re-signed URL at render, or draw the picture only from a URL the server has just minted (there is no client handler here by design).
+
+REJECT — src/components/report/ReportPage.tsx:406 "pickFooterText(footer); // a missing footer string throws, never a blank (FE-18)" — a missing footer string turns the whole report page into a server error — handled: deliberate fail-closed per FE-18, no partial footer and no wrong data, and it fails on the first render, not on a user action.
+
+VERDICT: FAIL on error-path safety
+Paths walked: call failure (readCitywide/readAllowances/readDemo each caught and logged), empty (no cost_estimates row, no neighbourhoods row, missing part, missing value ref, partial citywide row, missing footer key), retry (StaticBinding retry = boundary reset, one action), time-out (none in this chunk, cannot see the route), double-submit (report sheet submit is disabled and method=dialog, no write anywhere in this chunk), degrade (citywide read down, degraded page lookup, footer read), idempotency (lead-detail SQL is a pure SELECT keyed on permit_num+revision_num / application_number, no write or counted event)
+Unguarded: 3
+
+---
+⏱  132524ms (132.5s)
+📊 Tokens — total: 54769, input: 34695, output: 20074, reasoning: 18971

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:19:57.502Z file_sha256=9f241637efb5909680b7e9007f11ac20641997228536d5f148020ee1839fa928 prompt_sha256=f6e1a983b84fae2d732a8e5481c278d2b58d53b8da2070e20d563639a55e719f
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-all-p7.txt (model: deepseek-reasoner)
+
+BUG list, only clauses the pasted list actually binds on these five test files:
+
+DEFER severity=MED — §5.2 Test File Pattern "Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard)" — src/tests/surfaces/search-parity.golden.test.ts:58 "export const parityProblems = (state: string, web: Json, mobile: Json): string[] => {" — a web/mobile drift guard is a parity battery, and §5.2 gives parity batteries exactly two names; `.golden.test.ts` is in no row of the table, so the §5.5 layer map ("which layer proves what", "Runs in") does not say which npm script runs this lock — rename the file to `search-parity.logic.test.ts` (or `.infra.test.ts`) so the drift guard sits inside a mapped layer
+DEFER severity=MED — §5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/site-footer.logic.test.ts:117 "const sec = (parts: Json[]) => ({ id: 'footer', parts }) as never;" — the footer section inputs and the mount payload (site-footer.ui.test.tsx "mount(rest as never)") are inline object literals cast through `never`, which bypasses the type check a factory would give, so a shape change in a footer section cannot fail to compile — add a typed footer-section factory next to the existing ones and build the RED and control cases from it
+DEFER severity=LOW — §11 "If UI Component Created/Modified: [ ] 375px viewport test in test plan" — src/tests/surfaces/site-footer.ui.test.tsx:38 "Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q," — both jsdom suites stub matchMedia but never set a 375px width, so the mobile-first claim the footer work rests on is only exercised at the jsdom default viewport — set `window.innerWidth = 375` (with the `matchMedia` match flipped) in `beforeAll` and assert the footer in that render
+
+MET — §1.1 Touch Targets — src/tests/surfaces/site-footer-route.ui.test.tsx:70 "cls.includes('min-h-11'), cls.includes('min-w-11')" — every report footer link is asserted to carry the 44 x 44 px box plus `inline-flex`, `items-center`, `justify-center`, and the other classes are asserted unchanged
+MET — §2.3 Assumption Documentation — src/tests/surfaces/search-parity.golden.test.ts:38 "typeof n.props?.testID === 'string'" — nested access in all five files uses optional chaining and no non-null assertion `!` appears in the pasted material
+MET — §2.1 Unhappy Path Test Mandate — src/tests/surfaces/site-footer.logic.test.ts:120 "expect(() => footerNode(sec([{ role: 'legal' }]), L, 'p')).toThrow('footerNode: a legal part needs a content key');" — the failure paths (unknown role, link with no href, missing layout class, missing content key, missing footer string) are forced and asserted by name, with no fallback string
+MET — §5.2 Test File Pattern — src/tests/surfaces/site-footer-route.ui.test.tsx:1 "// @vitest-environment jsdom" — pure derivations are in `.logic.test.ts`, component renders in `.ui.test.tsx`, matching the table's mandated layer per claim
+MET — §14 Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — src/tests/surfaces/rules-acc-notes.logic.test.ts:33 "expect(n).toContain('operator, verbatim: \"1 a\"');" — the 2026-11-20 rulings are pinned verbatim in each cited spec, the decisions log and bindings.json, with the earlier wording kept
+MET — §1.2 Component Isolation — src/tests/surfaces/site-footer.logic.test.ts:47 "it('the module imports no binding (no cycle: the report page imports it, the static binding imports the report page)', () => {" — the shared footer builder is locked as one pure module with no binding or page import
+
+REJECT — §5.1 — that `type Json = Record<string, any>` and reading goldens from disk are untyped inline mocks — the JSON read is the committed golden under test, not a stand-in for a DB entity, and §5.1's example is an entity literal
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  99674ms (99.7s)
+📊 Tokens — total: 40094, input: 25974, output: 14120, reasoning: 13011

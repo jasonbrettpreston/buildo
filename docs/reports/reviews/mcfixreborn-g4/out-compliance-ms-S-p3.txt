@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:02:28.966Z file_sha256=74db57f9d4fd5cb5239d74c5f3c5a6c009f4e44199e1ead8ae667c84edc08bc8 prompt_sha256=07d1d4204d93fd886e3360d95d049186337410c0d80af0f63ebff47e92ed00dd
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — rule-lists.mjs:9 "a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks (each chunk against every list" — the same changed files are sent once per resolved rule list and once per list part, and plan-prep produces one input per list ("--list", l.id) while the joined "--list rules" form that would meet the one-pass objective is only accepted by the checks, never produced — make plan-prep build one joined list set with joinLists over the resolved ids and keep the per-list inputs as the declared fallback.
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it" — material stamp "material sha256:a59be40147a77f8ff22e4cdb4bc00ccdae2de4c61d209d4f5f1059aa8f0cc3af part 1 of 1 chunk 3 of 7 ... paths: [\"scripts/analysis/rule-lists.mjs\",\"scripts/deepseek-review.js\",\"scripts/hooks/check-task-files.mjs\",\"scripts/lib/review-template.js\"]" — every chunk carries every path of the change against a single list, and buildLensInputs has no filter that narrows the diff to the paths the list's own rows matched — filter splitDiff segments by the Files entries that hit each list's rows before packing that list's input.
+
+DEFER severity=MED — PLAN-PROTOCOL.md:3 "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — rule-lists.mjs:14 "plan-prep <review|post|commit> --task task-N --lane <name> [--board dir] [--dry-run]" — one 876-line reader now carries nine subcommands including a three-phase launch-prep orchestrator that spawns review calls, edits backlog tasks and makes a git commit, plus a page generator, none of it named by a pasted clause or ruling — move plan-prep and page into their own module and card so the reader stays the simple reader the header names, or cite the pasted clause that requires them.
+
+DEFER severity=LOW — "the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report)" — NONE — nothing in the chunk delivers any of A to G and nothing in it states which supporting function it serves for them — recorded against the increment objectives, not a defect inside these files.
+
+MET — RR-0439 "each call is at most 120,000 characters" — rule-lists.mjs:29 — "const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS", and every rendered prompt is re-measured and refused over the bound.
+
+MET — RR-0408 "As you suggested keep the review calls small" — deepseek-review.js:35 — "const MAX_PROMPT_CHARS = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || 120000", with lens-input cutting material at file boundaries and refusing a single file over the room.
+
+MET — RR-0387 "a separate grounder rules every finding" — rule-lists.mjs:15 — "it rules nothing": plan-prep writes no ruling, seat report, grounder file or Plan line.
+
+REJECT — "A task that serves neither a designed element nor a supporting function is most likely not relevant" — the chunk is accused of serving no designed search element — the clause exempts supporting functions and these files are the review gate the launch and close hooks call (rule-lists.mjs:3 "Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close)").
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+Rules met: none
+
+---
+⏱  74835ms (74.8s)
+📊 Tokens — total: 50512, input: 35159, output: 15353, reasoning: 14449

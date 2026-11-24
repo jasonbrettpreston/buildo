@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:52:54.274Z file_sha256=bd1d0e430f8be4a7be19ceb278c8180ab9690ca1f4692653bb0c7b652c477f46 prompt_sha256=593e79fcb633b6b13ecbef90f9502f234fb65cd015dcd1b2195f1e48a2d6786d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-2 B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message" — src/components/surfaces/web/SearchBinding.tsx:231 "onClick: { action: 'open_help', topic: 'address_match', q: derived('input') }," — the only help link sits under the candidate list, not under any notice, and it targets /help#topic=address_match&q= instead of /help?topic=wrong-lot, so B.7's URL shape and placement are both unmet on the web SEARCH surface — render the open_help link inside every notice and emit /help?topic=wrong-lot with the query carried as the spec names it.
+
+DEFER severity=MED — doc-2 Built state "All of it is the old dark look (zinc and #0e0e10), not Daylight." — src/components/surfaces/web/SearchBinding.tsx:55 "screen: 'min-h-screen w-full bg-zinc-950'," — the web SEARCH page is rendered in the zinc dark palette the spec records as the deviation from the Daylight small-pages-v8 look, so the design clause is unmet on the surface this binding owns — swap WEB_SEARCH_LAYOUT's zinc-950/zinc-900/zinc-800 tokens for the v8 Daylight surface and ink tokens.
+
+DEFER severity=MED — task-378 "FIX.TUNE-Phone tunables are data not code, lookup and entitlement contract entries corrected D14 D15" — src/app/api/permits/[id]/route.ts:271 "feet_per_metre: M_TO_FT," against src/lib/massing/geometry.ts:107 "the registered pinned variable parcels_m_to_ft the permits route serves" — the served factor is the code constant M_TO_FT, not the registered pinned variable the same change says it serves, so the tunable is still code — read parcels_m_to_ft from logic_variables and serve that value (or delete the claim).
+
+DEFER severity=LOW — doc-2 E.1 "W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account)" — src/components/surfaces/web/SearchBinding.tsx:253 "export function searchWebTree(s: WebSituation): WebNode {" — the tree renders header, pill, reportsLeft, chips, notices, addressList, tail and the footer only, with no Lookup/Tracked Lots/Account web top bar anywhere in the pasted material, cannot see it — name the mount file that draws the web top bar or add the three items to the tree.
+
+DEFER severity=LOW — doc-2 A.7 "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=" — src/components/surfaces/web/SearchBinding.tsx:147 "node('Group', { key: 'chips', className: L.chipRow }, s.recent.map((q, i) => node('Button', {" — the web chip row carries chips only, with no Recent label, so the labelled element A.7 names is missing on the web counterpart — add the Recent label Text before the chip buttons.
+
+MET — doc-2 E.2 "Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright" — src/components/surfaces/web/SearchBinding.tsx:125 — SEARCH_FOOTER carries exactly those five parts in that order through one shared footer builder.
+MET — doc-2 A.10 "Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." — src/components/surfaces/web/SearchBinding.tsx:128 — the sentence is served once as the footer legal part (search.legal).
+MET — doc-2 A.6 "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026" — src/lib/entitlements/index.ts:665 — resetsOnDisplay is the served Toronto date label and reportsLeft draws the line only when all three served fields are present.
+MET — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — src/lib/entitlements/index.ts:591 — openReport counts a new lot once under the row lock and returns limit_reached at the allowance.
+MET — doc-2 E.5 "W6 web report route /parcel-tool/{lot}" — src/components/surfaces/web/SearchBinding.tsx:51 — WEB_BASE '/parcel-tool' is the route base the select action pushes to.
+MET — doc-2 B.1 "candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick" — src/components/surfaces/web/SearchBinding.tsx:215 — candidates render as role="radio" cards with segmentDiffers amber and Select disabled while route is null.
+MET — task-395 "FIX.CONFIG-BOUNDS-Every-page-setting-carries-bounds-and-a-stated-failure-behaviour Spec 128 Rule 3" — src/lib/entitlements/index.ts:455 — REPORT_LIMIT_BOUNDS and the meter timeout read their seed min/max and readReportLimits fails closed with ReportLimitsMissingError.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 5
+Rules met: none
+
+---
+⏱  168836ms (168.8s)
+📊 Tokens — total: 57629, input: 33503, output: 24126, reasoning: 22932

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:15:08.765Z file_sha256=f3bb4876d3106b738ef16c817fc1af0f5430f78c29a17e721f305e7240356c0d prompt_sha256=f76c3fc5b149366738da437b51ecacf7f901eeda11c2000e17e633effb51862a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/lotMapPage.behaviour.test.tsx:92 "Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)" vs the visible line 89 "Lot A · has the house · faces Dunmore Lane" — a screen-reader user on the lot card hears the area, frontage and zoning codes but never the two new facts the sighted card leads with (footprint presence, fronting street), so the same card says different things to different people — put the title facts into the card's accessibilityLabel, or remove the label so the visible title is announced, design is silent on the spoken wording.
+
+DEFER severity=MED — mobile/__tests__/lotMapScreens.golden.test.ts "expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');" — the person is sent to the lot map page for an intersection query (search page carries it as navigate) and is told to type a house number on a page whose query is a static Text ("parcel-lotmap-query").children).toEqual([i.query]) with no field — the instruction cannot be carried out where it is given, so pin the back control (parcel-lotmap-clear) in this state in the behaviour test, and the X labelled "Back to search" is the only way out.
+
+DEFER severity=LOW — mobile/__tests__/lotMapScreens.golden.test.ts "expect(LOT_MAP_SLICE.content['state.too_many']).toBe('This address has many lots. Add a unit number or pick a nearby address.');" — same shape: the person is told to add a unit number on a page that shows the query as read-only text, the copy describes an action only the previous screen offers.
+
+DEFER severity=MED — mobile/__tests__/parcelScreens.golden.test.ts "it('RateLimitError(0) renders BOTH the 429 notice (\"0s\") and the error block with Retry (MF35-DF1, pinned, not fixed)'" — a person who hit the rate limit sees a wait of "0s" and, in the same breath, a generic error block with a Retry button, so the screen gives two contradictory instructions for one failure — recorded as a known defect, keep it as a fix candidate, design text on the 0-second wording cannot see.
+
+DEFER severity=LOW — mobile/__tests__/lotMapPage.behaviour.test.tsx:92 "zoning RD (f12.0; a370)" — the spoken card label ends in unexplained frontage/area codes with no words around them, so a listener is read abbreviations that mean nothing to them — record for whoever owns the accessible wording, design is silent on it.
+
+REJECT — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.getByText('Pick a lot on the map or in the list.')).toBeTruthy();" — the hint mentions the map, which is hidden from the accessibility tree, which looks like a dead instruction for a screen-reader user — the same sentence names the list, and the cards carry the selection, so the person is not blocked.
+
+REJECT — mobile/__tests__/parcelScreens.golden.test.ts "the legal line is the LAST block of the column, after the chips, notices, address list and the tail" — moving the estimate disclaimer below the results looks like hiding it — it is the ruled placement (operator C3 b, v8 search.html:267-269) and the string is asserted verbatim, so this matches the approved design text.
+
+VERDICT: PASS on the person's experience
+States checked: lot map open (nothing picked), lot map with a lot picked, lot map unlinked, unlinked with no pin, too many lots, intersection, loading, error, rate limited, rate limited 0s, unauthorized, schema drift, background refetch, cold open back, help sheet, search static, ambiguous, empty, miss, prompt, reports left, outside Toronto; semi question busy state is a fixture only here, cannot see the drawn screen.
+Dead ends found: 1
+
+---
+⏱  86813ms (86.8s)
+📊 Tokens — total: 46507, input: 30970, output: 15537, reasoning: 14614

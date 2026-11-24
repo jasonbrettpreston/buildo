@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:19:38.513Z file_sha256=48b59cbcda0e729412d3786d4a3d227acc85c427a6662f7da26316db4d7cd7b4 prompt_sha256=31c6a0ee5e16e91f4334e141dfddb57f5c694d8518575564b3d36cd75aa7ba56
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p12.txt (model: deepseek-reasoner)
+
+MET — 14. The Prevention Loop (SPEC LINK row) "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — src/tests/backlog/backlog-lane.logic.test.ts:1 "// SPEC LINK: RR-0240 ..., Spec 08 section 7 rule 9 (08_agents.md:339), task-310 (R8e)." — header names the governing spec (Spec 08) and its numbered section/rule, as the row requires.
+MET — 14. The Prevention Loop (SPEC LINK row) "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — src/tests/backlog/check-task-files.logic.test.ts:1 "// SPEC LINK: Spec 137 §4 rule 3 (137_mcqueue.md:84); task-3 (CHK.1) ..." — header names Spec 137 and §4 rule 3.
+MET — 12.12 Property-Based Tests "Example-based tests are still required for happy paths and explicit edge cases." — src/tests/backlog/check-task-files.logic.test.ts "it('glob form: * stays in one segment, ** crosses directories and matches zero depth, ? is one non-slash char'" — the change is example-based tests with explicit boundary/edge cases, satisfying that sentence.
+REJECT — 13.3 Backend Structured Logging "NEVER bare `console.error`." — src/tests/backlog/backlog-lane.logic.test.ts "console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);" accused of a bare console call — not a real issue, the clause bans bare `console.error` and binds catch blocks, API routes and pipeline scripts, not a `console.log` inside a test.
+REJECT — 12.12 Property-Based Tests "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test" — src/tests/backlog/check-task-files.logic.test.ts "it('prefix form matches on a directory boundary, with or without a trailing slash'" accused of no `fast-check` test for the glob/prefix matcher and the highest-numbered context picker — not a real issue, the clause scopes property tests to pure functions with arithmetic invariants (scoring, key normalization, unit conversion, cursors), not a path/glob matcher exercised here by example tests.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  61680ms (61.7s)
+📊 Tokens — total: 46699, input: 33754, output: 12945, reasoning: 12388

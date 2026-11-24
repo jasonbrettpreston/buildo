@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:09:23.908Z file_sha256=8b3a6d7203956290a8472b3939b3cd211be380e05c80e4bd192cbfc8fd6b8c75 prompt_sha256=950148ab8cd19215c617a8eb8085df53cd9a785567c9eed26c581c5ad831a2a7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/hooks/useParcelLookup.ts:108 "retry: shouldRetryParcelLookup," — the counted lookup is a cached query: line 105 sends `semi='answered'` and the key at line 104 omits `semi`, so a 5xx/network retry, a remount or a focus refetch after staleTime re-sends `semi=answered` and nothing on the client stops the meter counting one report twice (route.ts dedup cannot be seen in this chunk) — send the answered lookup as a retry-0 mutation that writes the cache (as answeredParcelLookup already does) or carry an idempotency token the route can dedup on.
+
+BUG severity=HIGH — mobile/src/lib/semiQuestion.ts:30 "const timer = setTimeout(() => reject(new SemiContinueTimeoutError()), ms);" — the timeout rejects but never aborts the fetch, so Try again starts a second `semi='answered'` lookup with the first still in flight: if the route counts per request the report is counted twice, and a late success of the first is dropped and never reaches useSetParcelLookup — thread an AbortSignal through fetchParcelLookup and abort on timeout, or keep Try again disabled until the first promise settles.
+
+DEFER severity=MED — mobile/src/lib/lotMap.ts:105 "else if (outcome === 'multi_parcel' && map) state = map.truncated ? 'too_many_lots' : 'multi_parcel';" — `map` is `.optional()` in the schema, so a payload naming a map kind without the block falls through to the redirect at line 108 and the page silently replaces itself with the Lookup tab, losing the address with no error and no notice — treat a map-kind resolution with a null or missing map as the error state, not a redirect.
+
+DEFER severity=MED — mobile/src/lib/lotMap.ts:104 "else { state = 'redirect'; navigate = PARCEL_TAB_ROUTE.lookup; }" — this fires on `!data && !isFetching`, and the lookup query is disabled while the token is absent (useParcelLookup.ts:106 "enabled: !!parcelId && !!accessToken"), so a cold deep link during auth hydration latches useSettledRedirect's one-shot ref and bounces the user off the linked lot permanently — gate the redirect on the query being enabled or on auth being settled, and stay in loading otherwise.
+
+DEFER severity=MED — mobile/src/lib/lotMap.ts:70 "latitudeDelta: (fit.north - fit.south) * LOT_MAP_REGION_PAD," — a fit whose north equals south (one row, one point) yields delta 0 and an inverted box yields a negative delta; the pad multiplies and cannot lift a zero, so react-native-maps gets a degenerate initial region and the outlines never frame — floor both deltas at a small minimum and treat a zero-size fit as null.
+
+DEFER severity=MED — mobile/src/lib/lotMap.ts:62 "return parts.filter((rings) => rings.length > 0).map(([outer, ...holes]) => ({ coordinates: outer!.map(point), holes: holes.map((h) => h.map(point)) }));" — the filter checks the ring count, not the outer ring, and RingSchema accepts a ring of any length, so `coordinates: [[]]` (or a 1-2 point ring) parses and hands react-native-maps a point-less polygon — require `rings[0]?.length >= 3` before mapping and skip the part otherwise.
+
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts:151 "No retry on 401/403/429 or drift (the line is simply absent); never persisted across a restart" — the shared guard skips only 400, 403, 429 and schema drift (line 66 "!(err instanceof ApiError && (err.status === 400 || err.status === 403))"), so a 401 on the entitlement read is retried LOOKUP_RETRY_MAX times against a dead token, contradicting the stated rule — add status 401 to the deterministic skip list.
+
+REJECT — mobile/src/lib/parcelSearchMatch.ts:298 "const unexpected = error != null && !retryAfterSeconds && !entitlement;" — looks unsafe: a RateLimitError with retryAfterSeconds 0 sets rateLimited and unexpected together, so two error blocks render for one 429 — the field comment names it DEFECT MF35-DF1, pinned by the truth-table test and kept deliberately, so it is a recorded defect, not a new one.
+
+VERDICT: FAIL on error-path safety
+Paths walked: typeahead search query (retry, disabled, outside-Toronto empty arg), detail lookup query (retry, refetch, shared cache key ignoring semi), semi Continue mutation (retry 0, networkMode always, bounded wait timeout, late settle), entitlement read (retry classes, no persistence), lot map situation (loading, redirect, error, map kinds with and without the map block), polygon and region derivation from server GeoJSON and fit box, setQueryData of the answered result, config reader bounds failure   Unguarded: 6
+
+---
+⏱  203796ms (203.8s)
+📊 Tokens — total: 61300, input: 34267, output: 27033, reasoning: 25899

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:12:44.259Z file_sha256=dd40e23d1734399113539a38b643fb9d97f91df81d71773a1298bd31a0b14c3f prompt_sha256=077037720e3130a36479acba785fe7c12d53bcf9e09f2027b40712db9ef1a290
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — Rule 13 "The board is a view; the row is the record." / "Nobody edits the board." — scripts/analysis/backlog-lane.mjs:3 "// Usage: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name> [--board ~/Buildo-wt-board]" — the flag and the whole file call a writable checkout "the board" and step 1 writes a status into it, and no preflight refuses `--board ~/Buildo-scratch/backlog-pilot`, the read-only view Rule 13 protects — rename the flag to --cards/--queue and refuse a board dir that resolves to the pilot view.
+
+BUG severity=MED — task-375 "proof-slice reads its limits from settings (D11, D10)" — scripts/analysis/proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the row timeout is still the typed constant and `timeoutMsFromVariable` is exported but never called, so the clause is satisfied only by a TODO comment — read TIMEOUT_VARIABLE through gateVariable in realIo/commandRow and let timeoutMsFromVariable refuse a missing registration.
+
+DEFER severity=LOW — Rule 14 "The orchestrator reads the board's status at the start of every session, reports any `WARN` to the operator, and reads the board before giving any queue status or next step." — scripts/analysis/backlog-lane.mjs:6 "//   1. take the task on the board checkout" — the one command that hands the orchestrator its next step reads board HEAD and backlog/ but never BOARD-STATUS.txt, so a WARN is not surfaced at that point — read BOARD-STATUS.txt in preflight and print or refuse on WARN; the orchestrator's own session-start read is not in this chunk (cannot see).
+
+REJECT — §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — accused of building the deferred commit check — not a real issue: the added refusal in backlog-lane.mjs is a launch-time plan gate over docs/reports/reviews evidence, not a commit check over status lines, expiry or DROPPED, so the deferral stands.
+
+REJECT — §5a Limits "it shows what is pushed to origin, so unpushed lane commits appear after their push" — accused of verifying the take against a local commit the board does not yet show — not a real issue: the wait checks the record's commit on the local checkout, and the pasted Limits state the view lags until push, so a push is not required of the launch.
+
+MET — Rule 13 "The board shows every `Status:` line of the repo queue files and of the cards" — scripts/analysis/backlog-lane.mjs:6 — the only status write is the card's own file under backlog/, committed through com.maxbld.board-commit, so the view is rebuilt from the record and is never written.
+
+MET — §6 "Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted." — scripts/analysis/backlog-lane.mjs:6 — the take edits the committed markdown card via the CLI and waits for that commit, so the repo file stays the record rather than a Backlog.md store.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: none
+
+---
+⏱  83707ms (83.7s)
+📊 Tokens — total: 40074, input: 22239, output: 17835, reasoning: 17036

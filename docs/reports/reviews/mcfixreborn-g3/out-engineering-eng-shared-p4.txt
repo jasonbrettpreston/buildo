@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:03:28.217Z file_sha256=cab0b1d8b69aacde905b3015c4af7fbe288a1d6c9182b687ce771d9beb572222 prompt_sha256=d96c78206755dafec927fbf3bd713068b8e4c525c81dee1ba8331448e51c83fb
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p4.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings on the nine files of chunk 4, judged only against the pasted rule list.
+
+DEFER severity=MED — 13. Observability Standards §13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — mobile/app/(app)/parcel-tool/semi-question.tsx:91 "return <SurfaceRenderer tree={semiQuestionProps(situation) as SurfaceTree} content={SEMI_QUESTION_SLICE.content} data={semiQuestionData(situation)} actions={actions} />" — none of the four new routes (index, disambiguate, semi-question, [parcelId]) carries a feature flag check at the route level — add a PostHog flag gate per route, or record the ruling that exempts MaxBLD pages from §13.5.
+
+DEFER severity=MED — 11. Plan Compliance Checklist (Cross-Layer Contracts) "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — mobile/src/constants/parcelSearch.ts:22 "export const SEARCH_CANDIDATE_LIMIT = 10;" — the candidate cap is a third literal copy of a spec figure (Spec 100 §2 "candidates (<=10)") and a SQL figure (`LIMIT 10`), tied to them only by the comment above it, with no contracts row or contracts mapping visible in the pasted material — add the key to `docs/specs/_contracts.json` plus a consumer row, as `maxbld_page_debounce_ms` already has, or read it from the generated slice.
+
+DEFER severity=MED — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/useParcelLookup.test.ts:62 "const hitResponse = {" — the server payloads (`parcelPayload`, `hitResponse`, `searchCandidatesResponse`) are untyped inline object literals fed straight into `mockResolvedValueOnce` — build them with a typed factory/builder so a contract change breaks typecheck instead of only runtime Zod.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step." — mobile/__tests__/useParcelLookup.test.ts:164 "const emittedId = search.candidates[0]!.parcelId;" — `candidates[0]` is asserted non-null with no prior length check (line 163's `safeParse` validates shape, not population) and no inline justification comment — assert `expect(search.candidates.length).toBeGreaterThan(0)` first, or index through a typed factory.
+
+REJECT — 12. Frontend Foundation Tooling §12.3 "Never: Use local `useState` for form fields." — the search box (`useState('')`, index.tsx:35) and the semi answer (`useState<SemiAnswer | null>`, semi-question.tsx:34) are local-state fields — the dated note 2026-11-22 in §12 supersedes §12.3 for the front end, so this is not a live rule for these files.
+
+MET — 12. Frontend Foundation Tooling §12.2 — mobile/app/(app)/parcel-tool/index.tsx:61 "const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));" — all server reads go through the TanStack hook, the `useEffect` present is navigation only, not fetching.
+MET — 5. Testing Standards §5.5 — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx:27 "const { result } = renderHook(() => useAnswerParcelLookup(), { wrapper });" — the real hook runs under a real QueryClient and the options are read from the mutation cache, the right layer for the claim.
+MET — 2. Error Handling & Stability §2.3 — mobile/app/(app)/parcel-tool/[parcelId].tsx:30 "reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError })" — the nested page access is guarded with `??` and no non-null assertion appears in any of the four screens.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 30   Unmet: 4
+
+---
+⏱  122060ms (122.1s)
+📊 Tokens — total: 59991, input: 32581, output: 27410, reasoning: 26394

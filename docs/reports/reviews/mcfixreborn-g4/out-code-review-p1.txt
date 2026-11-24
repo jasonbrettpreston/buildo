@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:35:12.817Z file_sha256=8fed57f79bd6c3ab8acc368bfe9834586521fc04fa7eaffb737e8827f3c7e76d prompt_sha256=598ac20f720b312f900f56598ba51f7cf14a5e879426942a12ead0ae02bc4523
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:15 "const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js')" — this const is dead: nothing in the file ever prints the --section flags (the output names only ${ctxRel} and ${ctxSha} on the "Review (output only)" line, and the live one is backlog-lane.mjs:181), so the comment on :14 ("the committed context file is passed to the review tool with one --section per CONTEXT_SECTIONS entry") asserts behaviour this script does not implement — delete the const, or emit the flags in the review line so the claim on :14 is true — no reader of this file can tell the section flags are built elsewhere.
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:99 "const line = all[k - 1].slice(0, 4000);" — a document line longer than 4000 characters is cut silently and the block header still reads "lines ${from}-${last} of ${all.length}" with no cut note, while the range cut is marked "(cut at 12 KB)" — the reviewer takes the block as verbatim, so mark the line cut (or split the long line) the way the range cut is marked.
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:163 "fs.writeFileSync(path.join(root, ctxRel), ctx);" — neither this call nor the mkdirSync on :162 is guarded, so a read-only or permission-denied review dir throws an uncaught stack trace instead of the one-line die() the rest of the file uses and can leave a partial context file — wrap both in try/catch and die with the path and e.code.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:37 "if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/.test(lane)) refuse(" — a malformed lane name is reported through refuse() (exit 3) although the header on :14 says "Usage errors exit 2" and the refusal list on :13 does not include the lane name, while the sibling value checks for --task (:36), --date (:40) and --stage (:51) use usage() — call usage() here too, because an orchestrator that branches on the exit code treats a typo as a launch refusal that may need the undo command.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:77 "const letterOf = milestoneLetter(board, t.fm.milestone);" — the milestone group letter is derived twice: this call feeds resolveTask({...letter: letterOf}), and :175 re-parses it independently ("const letter = /\[([^\]]+)\]\s*$/.exec(String(msTitle ?? ''))?.[1];") for spec.groups ([letter ?? 'F']) — if the two parses ever disagree the rule lists are resolved for one group while the brief names another, so derive the letter once and reuse the value.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:238 "} catch (e) { fail('write', { stderr: String(e && e.message) }); }" — this catch covers the worktree add, both node_modules links, the spec read, the JSON.parse of a caller --spec and brief.mjs, so every one of those failures is logged "FAILED at write" and exits 1, including an unreadable or malformed --spec that the header (:14) lists as an input refusal (exit 3) — catch per step, or pass the step name into fail, so the log line names what actually failed.
+
+DEFER severity=NIT — .claude/review-templates/README.md:165 "the other four lens templates still carry the plan placeholder twice in their own prose" — each of the four templates in this same change (lens-code-review.md, lens-error-paths.md, lens-security.md, lens-ux.md) carries one literal {{PLAN}} and one {{SPECS}}, so the stated doubling no longer exists and callers who size a diff part from this note (38000 characters with a 33000 character pack) trim material for no reason — correct the note to the single-placeholder size.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none (no CRIT or HIGH finding)
+
+---
+⏱  176958ms (177.0s)
+📊 Tokens — total: 76698, input: 33924, output: 42774, reasoning: 41808

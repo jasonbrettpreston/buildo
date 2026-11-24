@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:05:13.402Z file_sha256=9cac38214d765568e13cfbcd382c3007660c20419ebf3b07e0bb4b5bccc6de79 prompt_sha256=787fb382f7c5b439a3ebf4aafd6d6e35b2bb8f5aaeb9f5199e1f36020d228984
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99 §3 "This table is **normative**. Adding a field to the mobile app requires adding a row here." — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — cost.modeled_gfa_sqft (and detail.is_saved, rendered into SaveButton at :369) enter the app with no §3 row, so neither field has a declared Owner Layer, Canonical Writer or Bridge — add read-only rows (Owner Layer Server, Canonical Writer none, Bridge B1, no local mirror) or record a dated deviation.
+DEFER severity=MED — Spec 99 §B3 "Optimistic local writes MUST go through the field's canonical writer per §3." and §4 "A seventh pattern requires a spec amendment." — mobile/app/(app)/[lead].tsx:14 "useSaveLead mirrors optimistic state across both ['lead-feed'] and ['lead-detail', id] cache keys for cold-boot deep-link correctness." — is_saved has no §3 canonical writer and no Zustand owner, so the optimistic write lands directly in two TanStack keys, a flow §4 does not enumerate — express it as a B3 onMutate/onSettled pair naming the §3 writer, or amend §4.
+DEFER severity=LOW — Spec 99 §3.2 "| `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only |" — mobile/__tests__/useLeadDetail.test.ts:21 "getState: () => ({ accessToken: 'tok-1' })," — the change reads an accessToken store field §3.2 does not define, and [lead].tsx:3 cites "§B4 (accessToken gate)" though §B4 is "Auth Listener → Cache Invalidation" and names no gate — use idToken per §3.2 and cite §B1's "use `!!user` for user-scoped queries".
+DEFER severity=LOW — no pasted clause names a funnel anchor event (the code cites §7.6, which is not in the pasted part 1 of 2) — mobile/app/(app)/[lead].tsx:54 "// Spec 99 §7.6 — product funnel anchor event." — lead_detail_viewed rests only on an unpasted clause, so its compliance cannot be shown from the pasted text — cite the pasted clause that names the event, or drop the effect.
+MET — Spec 99 §B1 query-key registry "| `['lead-detail', id]` | `useLeadDetail` | single lead |" — mobile/app/(app)/[lead].tsx:52 "const { data: detail, isLoading, isError } = useLeadDetail(id);" — the detail read goes through the registered TanStack key and hook, not a component fetch.
+MET — task-411 "The lead-detail API serves the area already converted, the two typed phone copies of the factor are deleted" — mobile/src/lib/leadDetailFormat.ts:20 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — both helpers format only, and neither file carries a 10.76 / SQM_TO_SQFT factor.
+MET — Spec 99 §6.5 "A render gate condition … MUST evaluate to the same value across consecutive renders" — mobile/app/(app)/[lead].tsx:103 "const showLoading = isLoading && !detail;" — the !detail conjunct stops a background refetch from swapping the mounted tree for the skeleton, and no unenumerated isFetching carve-out is added.
+REJECT — Spec 99 §5.1 "Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s." — accused of adding an unpermitted useEffect in the (app)/[lead] screen — [lead].tsx:57 "useEffect(() => {" calls only track(...), with no router.replace or navigation, so §5.1 does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  78107ms (78.1s)
+📊 Tokens — total: 45958, input: 30634, output: 15324, reasoning: 14374

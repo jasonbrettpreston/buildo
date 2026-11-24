@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:48:01.787Z file_sha256=938c2b27730c2f6cc33ed8c559d561c9cedcee76875a1c19e521ce5156b2d2a4 prompt_sha256=bcf228e10bd035919157a69f4733cd2ca96fd059785e846619e5fc81be68e475
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s7-s11-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-438 note (RR-0385 item 2, decision-170) "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — scripts/analysis/rule-lists.mjs:120 "const sorted = Object.keys(table.lists).filter((k) => want.has(k));" — joinLists never consults seatOf, so `lens-input --list rules --lists eng-back,eng-shared,doc-x` builds one joined list and, with no --template, renders the engineering rules under `.claude/review-templates/lens-compliance.md`, undoing the seat split the operator ordered — throw when the named ids span two seats (name the seats), or make the join per seat only — `<one-line claim: clause unmet> — <one-line fix>`.
+
+DEFER severity=MED — Spec 08 section 7 rule 7 "Security fires only on money/auth/PII/admin" — scripts/analysis/rule-lists.mjs:185 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e));" — every path under src/app/api or src/lib switches the security lens on, so a task touching src/lib/format.ts gets security at plan and output, wider than money/auth/PII/admin, and the cited task-445 ruling (08_agents.md section 5.7) is not pasted — keep the money/auth/PII/admin token test and drop the bare api/lib path test, or require a money/auth/PII/admin segment before the api/lib branch fires.
+
+DEFER severity=MED — task-423 note "the objective is an effective compliance review on the plan and the output.  It isn't 17" — scripts/analysis/rule-lists.mjs:657 "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)" — reviewPhase admits fix tasks (line 637: "if (type !== 'build' && type !== 'fix') refuse") yet attaches zero resolved lists for them, so a fix task's plan stage holds no compliance output set at all and the check-lane-close.mjs:604 exemption is not in the pasted clauses — attach r.lists for fix tasks too, or refuse plan-prep review for a fix task whose plan is not reviewed.
+
+MET — task-423 note "the default stays one compliance run per rule list" — scripts/analysis/rule-lists.mjs:657 — plan-prep makes one lens-input and one review call per resolved list and joins only when the caller asks for --list rules.
+
+MET — task-438 note "a rule list whose file is the engineering standards ... is reviewed by `.claude/review-templates/lens-engineering.md`" — scripts/analysis/rule-lists.mjs:112 — seatOf returns engineering only for docs/specs/00_engineering_standards.md, and inputArgv names in-plan-<seat>-<id> with lens-<seat>.md.
+
+MET — task-431 note "the whole list is kept and the sections list is dropped (`resolveTask`)" — scripts/analysis/rule-lists.mjs:280 — the filter drops a sections list whose file is already carried whole, so no rule is sent twice.
+
+MET — task-423 note "a list is never trimmed in either form" — scripts/analysis/rule-lists.mjs:412 — the only fallback when a part cannot fit is to split the material at file boundaries ("split the material (a list is never trimmed)"); the list part is re-packed, never cut.
+
+MET — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/rule-lists.mjs:28 — BOUND = 120000 and buildLensInputs refuses naming the file rather than exceed it.
+
+MET — task-358 / Spec 08 section 7 rule 4 "NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt" — scripts/analysis/rule-lists.mjs:656 — lensSet yields the narrow per-lens files and the calls are started together through runAsync.
+
+MET — Spec 08 section 7 rule 10 note (2026-11-19) "the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`" — scripts/analysis/rule-lists.mjs:597 — plan evidence is written and committed under docs/reports/reviews/<taskId>.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+Rules met: none
+
+---
+⏱  112602ms (112.6s)
+📊 Tokens — total: 58366, input: 31545, output: 26821, reasoning: 25768

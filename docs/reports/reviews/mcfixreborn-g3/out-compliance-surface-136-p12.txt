@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:42:23.267Z file_sha256=987c0dd1d08db000c74c5377d5fbfa4acd69d32438942d261d31a025cc579f91 prompt_sha256=e1d3370ab209305908ecafac5ff875d4d9e8fa1ff1ba51524827452653318cd1
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.18 "every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot / external_embed ... The set is in a protected file" — src/components/surfaces/web/SearchBinding.tsx:286 "candidate_count: s.candidates.length," — the result-count badge and the per-segment highlight resolve through a seventh ref kind, {derived}, computed inside searchWebData in the browser, so a displayed value's source is neither in the closed set nor a contract field — have the mount or producer send candidate_count and the diffed segments as contract fields, or rule the derived ref kind into the closed set in the protected file before this binding ships.
+
+DEFER severity=MED — fe.32 "the member must exist in that descriptor; any other value fails" — src/components/surfaces/web/SearchBinding.tsx:283 "errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } })," — the renderer resolves contract_parcels_lookup.errors.429.retryAfterSeconds against an object the binding itself builds from the situation, so nothing checks that path exists in the declared descriptor's response projection (cannot see the descriptor or contract-binding.logic.test.ts from this chunk) — resolve the 429 value from the served response, or declare the path in the contract descriptor so the contract lock checks it.
+
+DEFER severity=MED — fe.24 "the renderer throws on an unknown field or status" — src/components/surfaces/web/SearchBinding.tsx:336 "  return v;" — a displayed value whose shape is not content, contract, derived or text+vars falls through resolveWebValue unchanged and text() renders String(v), i.e. "[object Object]" on screen, so the unknown-field case is skipped silently rather than thrown — make the final branch throw for any object that is not a recognised ref or template.
+
+DEFER severity=MED — fe.56 "a lock never red against the defect it names is not a lock" — src/tests/surfaces/lot-map-help-link.logic.test.ts:110 "it('every committed golden is classified above (a new state must be placed here)', () => {" — the whole Help-link lock names the defect "a golden with no help link" and carries no planted-defect case (unlike admin-media.golden.test.ts, which plants three), so its redness is unproven in this file — add one RED case that drops the help row from a temp copy of intersection.mobile.json and asserts the lock fails.
+
+DEFER severity=LOW — fe.07 "The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31)." — src/components/surfaces/web/SearchBinding.tsx:11 "// The parity lock src/tests/surfaces/search-parity.golden.test.ts holds the two targets equal per state." — parity between the web and mobile SEARCH targets rests on a comment inside the file under review; that lock is not in this chunk (cannot see) — cite the parity lock from a test that runs in this tree, so the claim is checked and not asserted.
+
+MET — fe.31 — src/components/surfaces/web/SearchBinding.tsx:25 — "import { footerNode, type FooterLayout, type FooterSection } from './footerNode';" the web footer is the one shared component the dated note requires.
+MET — fe.36 — src/components/surfaces/web/SearchBinding.tsx:381 — "<Button key={k} {...base} ... component={Link} href={p.href}>{kids}</Button>" controls that move the user go through next/link, never a local-state view swap.
+MET — fe.46 — src/components/surfaces/web/SearchBinding.tsx:24 — "import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';" every rendered part is a listed Mantine component, no new library and no hand-built standard component.
+MET — fe.03 — src/tests/surfaces/admin-media.golden.test.ts:75 — "expect([g.surface, g.state, g.covers]).toEqual([id, s.name, [s.name]]);" every declared state has its golden and each golden covers its own state, both directions.
+MET — fe.56 — src/tests/surfaces/admin-media.golden.test.ts:63 — "RED: a sort_field planted on the image column changes the props (the generic map, not a hard-coded preview)" this lock is proven red on a planted column change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+Rules met: fe.03, fe.31, fe.36, fe.46
+
+---
+⏱  161642ms (161.6s)
+📊 Tokens — total: 43137, input: 24719, output: 18418, reasoning: 17364

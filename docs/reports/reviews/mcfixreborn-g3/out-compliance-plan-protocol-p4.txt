@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:33:03.242Z file_sha256=c5ee81c204e3f6a70ad1d5c8eff9a01d745951599e862a4c6a95da10db3f5d41 prompt_sha256=1872d1748a6268d476e758f595039ae26e41bdd402b06445892d863b59299bb4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it." — NONE — every file in this chunk (SearchBinding.tsx, SurfaceRenderer.tsx, useParcelLookup.ts, lotMap.ts, parcelSearchCore.ts) is mobile source that the pasted plan-protocol never names, so this list can only reach their traceability comments and not their substance — re-home these files to the lens list that names them (Spec 08 section 7 set, per the dated note item 4) and re-run, keeping this list to the plan artifacts it names.
+DEFER severity=LOW — section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — SearchBinding.tsx:2 "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 (one binding per archetype per platform; refs only)" — the source is a spec section, not a file:line, so the clause's stated granularity cannot be checked from the pasted material — carry the file:line (or the seq-patch row with its source) alongside each SPEC LINK.
+
+MET — RR-0414 — "9 file(s) come as changed parts only." — this chunk arrives entirely as creation diffs from the empty tree (new file mode 100644 on all 11 paths), no oversized whole file, consistent with the changed-parts ruling.
+MET — section 5.1 "one DB job at a time (Spec 137 rule 9)" — useParcelLookup.ts:38 "const raw = await fetchWithAuth<{ data: unknown }>(`/api/parcels/lookup?${qs}`);" — the added client paths are GET reads only (lookup, entitlement), no DB job, write or migration added.
+MET — section 5.6 "INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule)" — maxbldHelp.ts:16 "import * as WebBrowser from 'expo-web-browser';" — the one platform call uses an existing dependency; no infra, grounder or hook script is touched.
+
+REJECT — section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — the change is accused of adding unlisted behaviour (in-app help sheet, answered-lookup mutation, page-table pilot, entitlement line) — each names a homed task id in the pasted group list (task-362, task-373, task-390, task-320), so it is named, not invented.
+REJECT — section 2 steps C/D and section 4 "seq-patch.json ... + SITTING.md + PASS lines" — the change is accused of carrying no panel verdicts, patch or sitting — this is the output-only review (no plan in the material, RR-0431, RR-0433), those artifacts belong to the increment review, not to this chunk.
+REJECT — dated note 2026-11-20 item 4 "the nine-seat roster ... applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set" — the change is accused of carrying no nine-seat verdicts — it is neither an increment plan nor a single lane close, and RR-0433 makes this the folded tasks' one output review.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  55156ms (55.2s)
+📊 Tokens — total: 40000, input: 30475, output: 9525, reasoning: 8738

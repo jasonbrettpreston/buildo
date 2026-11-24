@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:54:30.067Z file_sha256=0af7f19a3a68b8082072e21a4b0052781d882dd62997a6b059158e27605b33a4 prompt_sha256=60cb0ca25c91c1eb43eec9fd398e896547a63a2e209c0701645a7faa3d8d51a2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-411 "FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted" — NONE — cannot see the lead detail endpoint or serializer in chunk 1, so "the API serves the area already converted" is unverified here — confirm it in the API chunk before task-411 closes.
+
+DEFER severity=LOW — task-332 "SRCH.FOOTER-Shared-web-footer-component" and task-374 "FIX.FOOTER" "use-the-router-and-meet-the-44-px-target" — NONE — cannot see footerNode.ts, StaticBinding.tsx or the report footer files in chunk 1 — confirm in the chunk that holds the footer.
+
+DEFER severity=LOW — task-384 "STD.REPORT-OWN" "comes-under-the-existing-text-component-and-44-px-checks" — mcbylaws/protected-paths.json "src/components/report/**" — the path is listed for the surface checks, but the census owner in bindings.json and the renderer files are not in chunk 1 — confirm in the renderer chunk.
+
+MET — task-411 "the two typed phone copies of the factor are deleted" — mobile/__tests__/leadDetailFormat.test.ts "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" — the factor is absent from leadDetailFormat.ts and parcelCostFormat.ts and a test pins the deletion.
+
+MET — task-411 "the phone only formats" — mobile/app/(app)/[lead].tsx "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the screen formats served modeled_gfa_sqft, not modeled_gfa_sqm.
+
+MET — task-411 "the phone only formats" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx "expect(screen.queryByTestId('lead-detail-sqft')).toBeNull();" — with modeled_gfa_sqm present but modeled_gfa_sqft absent the section is omitted, proving no phone conversion.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+Rules met: none
+
+---
+⏱  167740ms (167.7s)
+📊 Tokens — total: 57126, input: 35380, output: 21746, reasoning: 21241

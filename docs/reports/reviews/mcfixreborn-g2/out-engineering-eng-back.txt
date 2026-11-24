@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T02:37:35.618Z file_sha256=fe1e3eb8b9a2ab0d1a8f2e687ca2b48df6f9e1351f0fb8cbd85d4fe23464d6df prompt_sha256=738a9ec07955af48c1eb8e7dd7c039063c855dbfa8e47a63b7d971c4da116d97
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-engineering-eng-back.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 3.2 Migration Rollback Safety "the migration file is a mandatory deliverable" — scripts/seeds/logic_variables.json:8201 "The DB mirror row (a migration, number to be claimed) is owed for admin visibility; nothing reads it." — two new pinned variables ship with the mirror row admitted owed, so no migration with UP and DOWN exists for them (the budget re-pin cites "migration 334", which is not in the material: cannot see) — land one NNN migration containing -- UP (insert both keys) and -- DOWN (delete both keys), or state Database Impact NO on the task.
+MET — 3.3 Pagination Enforcement "Any API route that reads from growing database tables" — src/lib/admin/parcel-lookup.ts:392 "LIMIT 20" — the coa_applications read is bounded at 20, and every parcels and address_points read in the same file carries LIMIT 1, 10 or 11.
+MET — 3.1 Zero-Downtime Migration Pattern "do NOT use `ALTER TABLE ... ALTER COLUMN` directly" — scripts/seeds/logic_variables.json:8189 "@@ -8189,6 +8189,26 @@" — the change adds seed rows only, no ALTER TABLE and no CREATE INDEX, so the add-backfill-drop and CONCURRENTLY requirements have nothing to bind here.
+REJECT — 3.3 Pagination Enforcement — report-compute.ts reads bylaw_resolution_units and bylaw_resolution_texts whole, with no LIMIT — src/lib/parcels/report-compute.ts:33 "SELECT unit_key, unit_id FROM bylaw_resolution_units" is not a `SELECT *`, and neither table is one of the growing tables the clause names (permits, coa_applications).
+REJECT — 9.4 Pipeline SDK Mandate — a web module runs pipeline-core SQL with a raw pool, outside the shared SDK — src/lib/parcels/report-compute.ts:100 "await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])" runs the core's own read statement from a Next.js server module, and 9.4 binds `scripts/*.js` pipeline scripts only, none of which this change modifies.
+REJECT — 3.3 Pagination Enforcement — src/lib/report-projection/read-stored.ts:53 "FROM parcel_maxbld_scenarios WHERE parcel_id = $1" has no LIMIT — the statement is keyed to one lot's stored rows (at most one page table's worth), not an unbounded scan of a growing table, and it is not `SELECT *`.
+REJECT — 9.2 PostgreSQL Parameter Limit — report-compute.ts binds without sub-batch chunking — src/lib/parcels/report-compute.ts:100 "[lot.id - 1, 1]" binds two parameters for a one-lot read; no batch INSERT and no MAX_ROWS_PER_INSERT exists in this material, so the 65,535 limit is not in play.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  39819ms (39.8s)
+📊 Tokens — total: 37905, input: 30519, output: 7386, reasoning: 6698

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:18:10.330Z file_sha256=6734ef1faa9c52b41b5c146aece2a0a9876e2a695035868dc9647469367e89b7 prompt_sha256=bfc1cfd65d8ac69543c98fc3d10ddce3cba293f3e5deade31e7e363c1626b8b6
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/admin-report-preview-live.logic.test.ts "const f = formatPageRule(rule, n) as { value: string; unit?: string };" — the cast drops the nullable return, so a formatter refusal surfaces as "Cannot read properties of null (reading 'value')" and the failure names no rule, while the same file asserts the same call returns null for bad input ("expect(formatPageRule('pct0', 3)).toBeNull();") — replace the cast with a null check that throws `formatter refused ${rule} ${n}` — a real refusal is currently reported as a type error, not a test failure.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "return (unit ? f.unit : f.value) as string;" — `unit?: string` is asserted to `string`, so an `area_sqft` result without a unit would print "undefined sq ft" from the template literal that consumes it ("expect(`${fmt('area_sqft', m)} sq ft`).toBe(...)"), and no call site in the file passes the third argument so the `unit` branch is dead — drop the parameter and the branch, or assert `typeof f.unit === 'string'` before returning it.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const dirs = JSON.parse(((/const DIRS = (\[[^\]]*\])/.exec(lock) as RegExpExecArray)[1] as string).replace(/'/g, '\"')) as string[];" — `RegExpExecArray` is asserted non-null on a nullable `exec` result, so a renamed `DIRS` line in report-no-maths.logic.test.ts crashes the test with "Cannot read properties of null (reading '1')" — bind the match first and `expect(m).not.toBeNull()` before indexing.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts "const o3Pairs = new Set(pageBindings().flatMap((b) => (b.section === 'o3' && b.source.kind === 'catalogue' ? [b.source.field_id] : []))).size;" — this counts o3 field ids without the `building_type !== null` filter that `unwritten` applies ("if (b.building_type === null || b.source.kind !== 'catalogue') continue;") and it counts distinct field ids while the findings are keyed per pair, so a null-typed or second-typed o3 binding makes "expect(findings).toHaveLength(o3Pairs)" fail for the wrong reason — count the same `${section} ${field_id} ${building_type}` triples `unwritten` uses.
+
+DEFER severity=NIT — src/tests/admin-report-preview-live.logic.test.ts "interface DigitText { key: string; count: number; kind: 'legal' | 'input_hint' | 'exception'; why: string }" — the 'exception' member can never be used because the same describe asserts it empty ("expect(DIGIT_TEXTS.filter((e) => e.kind === 'exception')).toEqual([]);"), a dead union member introduced by this diff — drop 'exception' from the union.
+
+DEFER severity=NIT — src/tests/report-projection-settings.logic.test.ts "import { pinnedSetting } from '@/lib/report-projection/pinned-settings';" and "import { pinnedWindow } from '@/lib/report-projection/pinned-settings';" — two import statements from one module in the same file, which `import/no-duplicates` rejects — merge into one statement.
+
+DEFER severity=NIT — src/tests/admin-report-preview-live.logic.test.ts "expect(fs.existsSync(`${PROJ}/format.ts`)).toBe(true);" — placed after "expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(...)" on the same path, so it can never be the assertion that reports a missing file, the readFileSync throws first — move the existence check above the read.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  91276ms (91.3s)
+📊 Tokens — total: 55520, input: 35882, output: 19638, reasoning: 18741

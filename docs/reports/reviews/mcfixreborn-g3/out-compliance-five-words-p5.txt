@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:02.523Z file_sha256=8c1c3e86a88265f9cd8c55df82d5f5700a9a442df10d107b1826158c7393291d prompt_sha256=97efda1ad7433ebab62b700716c14f2d5d7f196551b9fb83ea8fe7274c1cf2fc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-353 "C-9m 44 px" — scripts/surfaces/_schema/bindings.json touch_targets.mobile:Button `"Button": ["min-h-[44px]", "min-h-[48px]"]` — the same file states `"The check C-9m still requires exactly one min-h- token on the list"`, which the two-token Button entry contradicts, so one of the two is stale — confirm C-9m accepts two tokens per entry (cannot see scripts/surfaces/screen-checks.mjs) or list only `min-h-[48px]` for Button.
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1 stale comments and cites left in built 1·B files" — mobile/src/lib/parcelSearchMatch.ts:39 `"the one further change needed for the server value to reach here"` against mobile/src/lib/schemas.ts ConsumerParcelLookupResultSchema `"resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional()"` — the server value already reaches the client through `resolution`, so the header overstates what remains — reword to say widening `matchType` would only let the legacy enum carry it.
+DEFER severity=LOW — task-376 "FIX.SPECS Specs and contracts brought up to the 1·B rulings" — scripts/surfaces/_schema/census/contracts.json:22003 `"It reads 9 tables"` against the same string `"the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`"` plus `bylaw_resolution_units`, `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population` — the count was raised from 7 to 9 but the LOAD.1 reads recorded in the same entry take it past 9 — recount or state the count per web live switch state.
+MET — task-334 "Report meter counts only when a report is produced for a found address and lot" — scripts/surfaces/_schema/census/contracts.json:22003 — `"a parcel_tool hit counts one report only when its `page` is produced"` with the non-counting states (candidates, miss, map, dangling id, semi_pending, not_evaluated) enumerated.
+MET — task-338 "the two new lot-map fields declared in the lookup contract and the consumer registry regenerated" — scripts/surfaces/_schema/census/contracts.json:22129 — `"frontageStreet"`, `"hasFootprint"` are in the lookup field_whitelist and ParcelMapLotSchema carries both as optional.
+MET — task-351 "SRCH.A6 reset date served as a Toronto time label" — scripts/surfaces/_schema/census/contracts.json:22899 — `"the seventh, `resetsOnDisplay`, was added with the reset-date label"`, and the whitelist, the `__schema_declared` why (`"seven inputs.field_whitelist names"`) and ParcelToolEntitlementSchema all count seven.
+MET — task-336 "Lot-map footprint layer C.5 and card line C.7 from two new reads" — scripts/analysis/lot-map-data-check.mjs — `"Only the rehearsal stack (host 127.0.0.1 or localhost, port 55322) is accepted"`, and the single SELECT counts footprint, primary footprint and fronting street read-only.
+MET — glossary lock "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — scripts/surfaces/_schema/bindings.json — `"pinned per file and per kind in src/tests/surfaces/surface-conformance.logic.test.ts (REPORT_RENDERER_PIN, shrink-only, both directions)"` is a src/tests test naming FE-31 for the REPORT renderer.
+MET — RR-0439 "each rule list reads only the files the rule table names for it" — chunk 5 paths — the mobile lib, census and surface schema files read here are the ones this group's cards name (task-319, 320, 322, 336, 338, 351, 376, 395), and no file outside the pasted block is judged.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 39   Unmet: 0
+Rules met: none
+
+---
+⏱  84938ms (84.9s)
+📊 Tokens — total: 52615, input: 33846, output: 18769, reasoning: 17767

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:11:03.923Z file_sha256=136a68ad63fc5d8c488f9108cda671533f6f4e90864a0f9900a37c49c90f4200 prompt_sha256=c40dcaf7815897674851e4deafa629d2895fd1c976a4e94cd2a4f15e9738f122
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-plan-protocol-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-384 "STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks" — src/tests/surfaces/report-page.ui.test.tsx "const src = ['ReportPage.tsx', 'ReportPageToggles.tsx'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');" — the visible no-literal check reads 2 of the 3 renderer files task-384 names and omits ReportView.tsx, so "comes under the existing text component check" is not shown met for that file — add ReportView.tsx to the checked file list or confirm the global text-component rule list covers it.
+DEFER severity=LOW — task-332 "backlog/tasks/task-332 - SRCH.FOOTER-Shared-web-footer-component.md, Acceptance Criteria from line 65" — NONE — cannot see the AC text (Implementation Notes list "backlog cards" as left out), so only the visible footer tests can be judged — paste the AC text or confirm another rule list carries it.
+DEFER severity=LOW — task-374 "Acceptance Criteria from line 27" — NONE — cannot see the AC text, only the task title naming D7/D8 which the visible test asserts — confirm the AC text is carried by another rule list.
+DEFER severity=LOW — task-411 "backlog/tasks/task-411 - FIX.AREA-FACTOR..., Acceptance Criteria from line 0" — NONE — cannot see any task-411 file or assertion in chunk 5 of 5 — confirm task-411's files sit in an earlier chunk.
+REJECT — Implementation Notes "test fixtures and goldens" — accused: site-footer.logic.test.ts reads fixtures and goldens — not a real issue, the material is the test source and reading a fixture at run time is not including it in the review material.
+MET — RR-0431 "We only want to review the same set of files once" — all 8 pasted paths — 8 distinct test files, none repeated, one output review of the set.
+MET — Implementation Notes "Left out of every group: generated files ..., documents, lane and review records, backlog cards" — all 8 pasted paths — material is hand-written test source only, no generated, fixture, document or record file appears.
+MET — RR-0414 "changed parts only as per your recommendation" — "new file mode 100644" on every hunk — every visible file is a whole-file creation diff, consistent with the 2 changed-part files living in another chunk.
+MET — RR-0408 "ensure you do the merge correctly with the right files" — src/tests/surface-registry.infra.test.ts, src/tests/surfaces/site-footer-route.ui.test.tsx, src/tests/surfaces/site-footer.logic.test.ts — files line up with the homed tasks 384, 374 and 332.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  82128ms (82.1s)
+📊 Tokens — total: 47039, input: 30257, output: 16782, reasoning: 16098

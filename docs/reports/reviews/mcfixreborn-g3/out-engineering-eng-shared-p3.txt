@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:01:39.091Z file_sha256=03a3f4e4984f9d3128c179fc67d5dd4899aec6247f7afc51ddaf97b2b6a688ca prompt_sha256=0539a3fd6b5319f89f730bc67c25b22c97558a87acafe852776d44f0bcbaf3c5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-shared-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:77 "expect(screen.getByText(LIFE.miss!)).toBeTruthy();" — LIFE is a `Record<string, string>` parsed from JSON, so `.miss` is unvalidated and no inline comment documents the assertion; the pattern repeats as "goldens[n]!.view as PageView" (mobile/__tests__/reportScreens.golden.test.ts:27) and "bindings.mapping.mobile.LIST!" (mobile/__tests__/semiQuestionScreens.golden.test.ts:53) — replace each `!` with an explicit guard that throws a named error, or add the one-line justification comment the clause requires.
+
+DEFER severity=MED — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/sliceConfig.test.ts:8 "const slice = (config: Record<string, unknown>, bounds?: Record<string, unknown>): SliceNumbers => ({ config, bounds } as SliceNumbers);" — the SliceNumbers fixture is an untyped literal laundered through an `as` cast instead of a typed factory (same shape as "const noActions = {} as unknown as SurfaceActions;" in the report goldens) — build the fixture through a typed factory so a shape change fails the type instead of the cast silently passing.
+
+DEFER severity=MED — 12.12 Property-Based Tests "Pure functions with arithmetic invariants — ... MUST have at least one `fast-check` property test asserting the invariant." — mobile/__tests__/sliceConfig.test.ts:20 "expect(sliceNumber(slice({ k: 99 }, b), 'k')).toBe(10);" — sliceNumber is a clamp with a for-all invariant (min <= result <= max), yet the file is example-based only, no `forAll` — add a `fast-check` property over generated min/max/values asserting the returned value never leaves the bounds and never returns a non-finite number.
+
+DEFER severity=LOW — 5.2 Test File Pattern "*.ui.test.tsx | React component rendering, interactions | Any new/changed component" — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:60 "describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => {" — component mounts and golden comparisons land under names absent from the 5.2 table (`*.mount.behaviour.test.tsx`, `*.golden.test.ts`) while `*.ui.test.tsx` and the parity-battery names are the sanctioned ones — rename the files to the mandated pattern, or add the new suffixes to the 5.2 table so the proving layer is identifiable from the filename.
+
+MET — 2.1 — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:86 "it('an error with nothing cached: the error text and Retry ("Try again"); a press refetches once', () => {" — errors are forced at the hook layer and the recovery path (one refetch, cached page surviving an error, no error text) is asserted.
+MET — 5.5 — mobile/__tests__/sliceConfig.test.ts:44 "expect(() => sliceNumber(slice({ k: Number.NaN }, b), 'k')).toThrow(/"k"/);" — happy, boundary, inverted-bounds and invalid inputs are all covered in the logic layer, so the layer proves the claim.
+MET — 5.5 — mobile/__tests__/semiQuestionScreens.golden.test.ts:110 "expect(semiQuestionProps(situation(g.situation))).toStrictEqual(g.props);" — committed goldens are diffed against binding output, which is the drift guard the parity battery exists for.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  54450ms (54.5s)
+📊 Tokens — total: 45138, input: 33547, output: 11591, reasoning: 10670

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:59:19.385Z file_sha256=0a131db4fdedc68b71969d5bf0445323349e7901b46f6aca234f3c4521b14775 prompt_sha256=5eb3b63aa2144c71782d23c8a13b6e4a2fc171377246ce9658448b018ffe6cd2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-inc-S-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — F.3 "no View report button, nothing navigates" — src/components/report/ReportView.tsx:89 "{c.paced && c.href ? (" — the same guard that draws the demo's Skip link at :68 also draws the checked-open View report anchor, and StaticBinding.tsx:206 passes report.demo straight through ("node('ReportView', { key, testID: 'landing-demo', view: derived('demo') })"), so the landing sample frame gets a View report button plus a navigating link that F.3 rules out — have StaticBinding pass the demo a view with no href and no open part, or gate the checked-open anchor on a flag the landing view never sets
+DEFER severity=MED — task-384 "The web report renderer gets a census owner and comes under the existing text component and 44-px checks" — src/components/report/ReportPage.tsx:24 "const T = ({ p, className = '', as = 'span', id }" — cannot see: the acceptance criteria from line 32 are not pasted, and the visible renderer declares a file-local T while ReportView uses raw dt/dd/p, so nothing here shows the renderer under the existing text component — record against the census owner file and the line 32 criteria in the run that carries them
+DEFER severity=LOW — task-411 "FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted" — NONE — cannot see: no task-411 file (lead detail API, phone factor copies) is in chunk 4 of 6 — record only, judge in the chunk that carries them
+REJECT — E.2 — the shared footer supplies no legal part on the report page — E.2 names the E Web search pages' footer, and ReportPage draws the report's own legal line as its own section (ReportPage.tsx:351 "case 'legal':"), so the four parts the report footer supplies are not a breach of E.2
+MET — task-332 — src/components/surfaces/web/footerNode.ts:37 — one footer tree builder plus pickFooterText, imported by StaticBinding.tsx:36 and ReportPage.tsx:15, no per-page footer markup
+MET — task-374 — src/components/report/ReportPage.tsx:249 — the footer Button parts render as the Next Link router and the link class at :238 is min-h-11 min-w-11, the 44 px target
+MET — G.3 — src/components/report/ReportView.tsx:87 — the ready line is drawn from the view and the web View report control follows it at :89
+MET — G.4 — src/components/report/ReportView.tsx:68 — the Skip control is drawn on a paced row from the view's own skip part
+MET — E.2 — src/components/surfaces/web/footerNode.ts:52 — the shared footer carries the legal, line, link and copyright roles, the three links and copyright supplied from FOOTER_TEXT_KEYS
+MET — F.1 — src/components/surfaces/web/StaticBinding.tsx:180 — the hero builder emits only the named roles into nav, copy and media, no search input node is ever created
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: E.2, F.1, G.3, G.4, task-332, task-374
+
+---
+⏱  260989ms (261.0s)
+📊 Tokens — total: 68492, input: 33038, output: 35454, reasoning: 34687

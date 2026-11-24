@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:55:24.145Z file_sha256=5dbf4b834c678e12b068534d3377a50ee0b726ba91b112e0b1fc8511408ddeb2 prompt_sha256=a4f2388528b9c6a340a20fa9f4435c00b715cfbb8b0520e3efb37a6116dc1918
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p18.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/static-page.logic.test.ts:29 "type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON documents" (and :212 "const db = (v: unknown) => ({ query: vi.fn(async (_sql: string, _params: unknown[]) => ({ rows: ..." , :55 "t.pages.web_help.static.sections[0].parts[1].content = 9.99;") — every fixture in both files is an inline untyped object with no factory import — move the JSON page table, the fake pool and the touch-target tree into typed factories in src/tests/factories.ts and import them.
+
+BUG severity=HIGH — 6. Centralized Logging §6.1 "All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules." — src/tests/surfaces/static-page.logic.test.ts:223 "expect([warn.mock.calls.length, err.mock.calls.length]).toEqual([8, 1]);" — the assertion only passes if src/lib/surfaces/maxbld-support.ts (a lib module, file not in the material) writes seven console.warn and one console.error in its read and catch paths — replace the bare console calls with logWarn/logError(tag, err, context) and retarget the T7 spy at the logger, keeping the 8/1 count.
+
+DEFER severity=MED — 5. Testing Standards §5.2/§5.5 "`*.infra.test.ts` (no DB) | API envelope / query shape / error paths" vs "`*.logic.test.ts` | The pure function computes the right value" — src/tests/surfaces/static-page.logic.test.ts:216 "expect(d.query.mock.calls[0]?.[1]).toEqual([SUPPORT_INBOX_KEY]);" and :222 "expect(await readSupportInbox({ query: async () => { throw new Error('down'); } } as never)).toEqual({});" — a query-shape assertion and a throwing-read error path are proven in the logic layer, the map's wrong layer, so a regression there is false confidence — move T7 to a support-inbox `.infra.test.ts` and leave the derivation checks in the logic file.
+
+DEFER severity=LOW — 2. Error Handling §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/surfaces/surface-conformance.logic.test.ts:889 "if (mins.length !== 1 || !sizes[o.component]!.includes(mins[0]!)) lines.push(`C-9m ${p}: ${o.component} ...`" — the touched line keeps both non-null assertions with no inline justification comment — add the one-line comment stating why sizes[o.component] and mins[0] are guaranteed here, or guard them.
+
+MET — 1.1 Mobile-First UI Mandate (44px) — src/tests/surfaces/surface-conformance.logic.test.ts "it('RED: a chip without min-h-[44px], min-h-11, min-h-[44px] with sm:min-h-8, and sizes not on the list (40, 46 px; 48 px on an Input); the listed 48 px Button passes'" — 40px and 46px Buttons are refused and the accepted Button size is min-h-[48px], so the 44px floor is enforced, not loosened.
+
+MET — 5.3 Red-Green Test Cycle — src/tests/surfaces/static-page.logic.test.ts:53 "it('RED: each planted defect is refused', () => {" and ":239-ish it('RED: a planted gate import is caught'" — each new contract has a failing-first planted-defect case before the green assertion.
+
+MET — 5.5 Test-Layer Map (parity battery) — src/tests/surfaces/surface-conformance.logic.test.ts "expect(s.bounds).toEqual({ debounce_ms: { min: 400, max: 5000, on_invalid: 'clamp' }, ..." — seed row, descriptor entry and generated slice are pinned to the same bounds, which is the parity layer the map assigns to drift guards.
+
+REJECT — 8.2 TypeScript Target Gotchas — the new test code uses Object.hasOwn, structuredClone and Object.fromEntries under the pasted ES2017 target — the clause names three specific gotchas (regex s flag, process.env assignment, typeof globalThis.google) and none is used; the tsconfig lib level cannot be seen.
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — no unhappy-path case added for an API route — the mandate is scoped to "When writing integration tests (`.infra.test.ts`)", and this diff writes `.logic.test.ts` files only.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  83594ms (83.6s)
+📊 Tokens — total: 49296, input: 32442, output: 16854, reasoning: 15679

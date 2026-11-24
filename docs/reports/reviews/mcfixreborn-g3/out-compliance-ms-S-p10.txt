@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:23:09.929Z file_sha256=e40bc1e2e4f0c540e299e4d1d3784277893879c720834ef3bbb316f27442dbec prompt_sha256=679a0d36e62f95e07e5dbe3ee0de4178694c1b374e19c878519f1a05111611ba
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-ms-S-p10.txt (model: deepseek-reasoner)
+
+MET — project objective "our objective is to finish a completed project ie a database that works and is ready" — src/lib/parcels/lookup-flow.ts "runLookupFlow" — the flow reads the parcel row, assembles the consumer payload, and serves the stored or computed page for a found lot, so the database is put to work for a real request.
+MET — project objective "the database is created to service the existing report and details... This includes the search page" — src/lib/parcels/consumer-lookup.ts "assembleConsumerPayload" — the consumer whitelist assembler is the search/details data path.
+MET — increment objective "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — src/lib/parcels/lookup-flow.ts "resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true })" — multi-parcel, mistyped and unlinked resolutions are requested and a found lot is wired to the page.
+MET — increment objective "the semi calculation stays in Increment 7 (7.25)" — src/lib/parcels/lookup-flow.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — the flow only holds the page for an unsure lot, no semi is calculated in the pasted files.
+MET — increment objective "C (lot confusion, lot map), D (semi question page)" — src/lib/parcels/lot-map.ts "assembleLotMap(rows: LotMapRows): ConsumerLotMap" — the choose-your-lot map block is delivered.
+MET — project objective "keep it simple; no scope creep" — src/lib/parcels/tool-gate.ts "parcelToolAccess" — one shared gate replaces a duplicated one (STD.ROUTE), a simplification not a growth.
+
+DEFER severity=LOW — project objective "A task that serves neither a designed element nor a supporting function is most likely not relevant" — src/lib/massing/geometry.ts "export function inferMassingUseType(" — the 227-line massing module (story cascade, footprint area, coverage, industrial inference) has no importer among the pasted files, so its binding to the designed report/details is not visible here — confirm the report page imports these functions, else it is unreferenced supporting code.
+
+DEFER severity=LOW — project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/lib/parcels/lot-size-entry.ts "MF-19 · Add lot size, the server half" — a 350-line lot-size entry, width/depth path, settings read and admin revert sit in this search/lookup group file, and its governing acceptance text is not pasted — record and confirm the card (task-395/task-12) names the lot-size subsystem before merge.
+
+REJECT — project objective "the database is created to service the existing report and details" — withholding the legacy cost menu as null (consumer-lookup.ts "costMenu: { menu: null, scalars: null }") read as failing to serve the report — the null is the operator EI-D1 ruling cited in the code, and the pasted clause names no cost line, so no pasted clause is broken.
+
+REJECT — increment objective "the semi calculation stays in Increment 7" — the unsure-lot page hold ("const held = lotForm?.unsure === true && semi !== 'answered';") read as doing the semi work early — the hold asks the question and computes no semi, and the semi page is named in the pasted task list (task-319, task-360).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  55121ms (55.1s)
+📊 Tokens — total: 44778, input: 33979, output: 10799, reasoning: 9975

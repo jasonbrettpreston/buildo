@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T02:41:36.256Z file_sha256=05dc0f81291cb7a872fb3355f525e14b4af9a597c9e97c3d46cb31bd2b867076 prompt_sha256=6ddabc53b24e3925a4c8d53724dbc127c3b3a260c83a758708fec1e0babc72b4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-engineering-eng-shared-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 14. The Prevention Loop "Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares**" — src/lib/report-projection/project.ts:82 "const LOT_SIZE_COLUMN = 'lot_size_sqm';" — projectStoredPage reads `lot.columns['lot_size_sqm']`, but readLotFacts only copies the columns some page binding names (src/lib/report-projection/read-stored.ts:51 "for (const c of PARCEL_COLUMNS) columns[c] = p[c];"), so `lot_size_implausible` silently reads undefined and never fires unless a page field happens to bind `parcels:lot_size_sqm` — declare lot_size_sqm (and the K2 columns) as explicit LotFacts fields and assert them at load — the exact SELECT-omits-a-declared-field class this row prevents.
+
+DEFER severity=MED — 13.5 Feature Flags "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — src/lib/parcels/report-page.ts:57 "if (!MAXBLD_WEB_LIVE) return null;" — the customer report page and the one-lot compute are gated by a build-time constant imported at src/lib/parcels/report-page.ts:22, so the ruled 0% → 10% → 25% → 50% → 100% rollout and instant rollback without redeploy are unavailable — read the app flag at the lookup route or record the operator ruling that supersedes §13.5 for this feature.
+
+DEFER severity=LOW — 14. The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/lib/report-projection/seed-shas.ts:2 "docs/specs/01-pipeline/78_optimal_lot_configuration.md (compute_maxbld_scenarios step identity)." — the SPEC LINK names the spec with no section (same for the standards citation at src/lib/report-projection/read-stored.ts:1) — add the §N for each cited spec.
+
+DEFER severity=LOW — 12.12 Property-Based Tests "Pure functions with arithmetic invariants … distance/unit conversions … MUST have at least one `fast-check` property test asserting the invariant." — src/lib/report-projection/format.ts:32 "export function formatPageRule(rule: string, n: number, sqftPerM2: number): Formatted | null {" — the sqm→sqft rounding, the digit grouping and the pinned min<max window are exactly this class; the property test file is not in this chunk, cannot see.
+
+DEFER severity=LOW — 13.3 Backend Structured Logging "API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}`" — src/lib/admin/report-preview-live/stored-page.ts:57 "logInfo(TAG, 'maxbld_internal_preview_view', { uid: opts.uid ?? null, outcome, duration_ms: Date.now() - started, ...extra });" — the success line carries `uid`, not the ruled `user_id` key, so a user_id-keyed log query misses every preview view — emit `user_id` (pseudonymous UID value) alongside or instead of `uid`.
+
+REJECT — 12.11 (rule 1 silent-catch-fallback) — readPreviewSwitch returns `false` from its catch at src/lib/admin/report-preview-live/stored-page.ts:44-46 — the catch calls logError with tag, cause and context and the fail-closed value is the ruled posture (D-3 a "a read error … is off"), so it is neither silent nor one of the banned `[] / null / emptyResult()` returns.
+
+MET — 13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — src/lib/admin/report-preview-live/stored-page.ts:45 — both catches pass tag, error and context; no `console.` call appears anywhere in the material.
+MET — 12.11 (rule 5 pool-boundary) — src/lib/parcels/report-page.ts:19 — the pool is imported from '@/lib/db/client'; no `new Pool(` in the material.
+MET — 14. The Prevention Loop "every `SELECT` feeding a typed client includes every field the client type declares" — src/lib/report-projection/read-stored.ts:32-34 — ROWS_SQL selects all 14 fields StoredRow declares, `switches` included.
+MET — 12.11 (rule 2 env-default-in-lib) — src/lib/parcels/report-compute.ts:32 — the gate is the imported constant MAXBLD_WEB_LIVE, no `process.env.X || 'default'`.
+MET — 12.8 / 12.10 migration rules — NONE — the material contains no new migration file, so `sqlfluff`, `validate-migration.js`, DOWN blocks and `*.db.test.ts` are not engaged.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 13   Unmet: 5
+
+---
+⏱  90827ms (90.8s)
+📊 Tokens — total: 54659, input: 34289, output: 20370, reasoning: 19218

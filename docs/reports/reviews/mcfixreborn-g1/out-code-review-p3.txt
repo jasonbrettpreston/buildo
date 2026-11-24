@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:49:15.794Z file_sha256=2f9171c2851f2a4adcb3a51aa4e57de44825b1e20062268fea9582aef8c9d138 prompt_sha256=1363790f853c4fe235142e4ca6ab0b7940420fae6f80184832b3c3a66f77cb38
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/surfaces/maxbld-landing.ts "if (p.role === 'checked') return Object.keys(values).some((k) => k.startsWith(`checked.${p.group}.`));" — the keep-test accepts any one citywide key, while figuresNode in StaticBinding.tsx emits a ref for every CITYWIDE_KEYS entry (`derived(\`checked.${p.group}.${k}\`)`) and valueOf throws on a missing one, so a partial stored row keeps the part and then throws at render instead of degrading — require every citywide key here (or have figuresNode skip keys absent from values) so a partial row falls back to the degraded page.
+
+DEFER severity=MED — src/lib/leads/lead-detail-query.ts "  opportunity_score: number | null;" — opportunity_score is selected raw while every other decimal in the same SELECT is cast (ce.estimated_cost::text, ce.cost_range_low::text, p.latitude::text) and unwrapped by toNumberOrNull, and the file header states pg returns NUMERIC as a string, so if trade_forecasts.opportunity_score is NUMERIC the mapper passes a string through a field typed number — add ::text plus toNumberOrNull like the cost columns, or confirm the column is an int column.
+
+DEFER severity=LOW — src/lib/surfaces/maxbld-landing.ts "String(tpl[l.key]).replace(SLOT, () => l.value)" — a citywide line key with no matching template becomes the literal text "undefined" rendered as a public figure, with no throw and no log — throw a named error when tpl[l.key] is not a string, the way ReportPage.tsx renderFooter does for an unknown text key.
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx "back={one(s, 'size.panel.hide')}" — the how sheet's Back control is fed the size panel's hide part, not a how-panel part, so the dialog can show another panel's wording — pass the hide part that belongs to this dialog, as the size and cost dialogs do.
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx "const vs = all(s, value);" — labels and values are paired by index with no check that the two counts match, so a build defect shows a label with no value (T returns null) and nothing throws or logs — compare ls.length to vs.length and throw on a mismatch, as the neighbouring builders do.
+
+DEFER severity=LOW — src/components/surfaces/web/StaticBinding.tsx "const defined = (o: Json): Record<string, never> => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Record<string, never>;" — the declared return says every prop value is never, so the cast disables prop type checking for every Mantine spread in the file and a wrong-typed value (onClick as a string, tabIndex as a string) would not be caught — declare the real spread type instead of never.
+
+DEFER severity=NIT — src/lib/surfaces/maxbld-landing.ts "return { title: `${c['nav.home']} ${c['hero.tagline']}`, description: String(c['hero.sub']).replace(SLOT, () => scenarioList()) };" — c is cast to Record<string, string>, so a missing content key yields "undefined undefined" as the page title rather than a throw — reuse a validated lookup (pickFooterText style) for these keys.
+
+REJECT — src/components/report/ReportPage.tsx "open ? null : (" (HideButton) — looks like dead code because SizePanel passes open true in the sheet branch and the other branch renders a hidden wrapper — in the collapsed layout open is false, the button renders inside the panel the toggle island unhides, so it is reachable.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The citywide keep-test uses some while the renderer needs every CITYWIDE_KEYS value, so a partial stored row throws on the landing page instead of degrading
+- opportunity_score is passed through as a number while every sibling decimal column is cast to text and unwrapped, risking a string in a number-typed API field
+- A missing citywide template key renders the literal text "undefined" as a public figure with no throw or log
+
+---
+⏱  314206ms (314.2s)
+📊 Tokens — total: 74261, input: 34678, output: 39583, reasoning: 38638

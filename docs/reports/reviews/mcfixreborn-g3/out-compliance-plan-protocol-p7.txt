@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:34:52.891Z file_sha256=09d9922593c04511b0db1b1b75d938b8b9c35ae7855c0eeb0e5e3faeb5e62293 prompt_sha256=965f586fd29621110c59a4636df726aba510cf160cd7cf5882a4652f75184344
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p7.txt (model: deepseek-reasoner)
+
+BUG — none.
+
+DEFER severity=MED — task-378 "FIX.TUNE-Phone-tunables-are-data-not-code-lookup-and-entitlement-contract-entries-corrected-D14-D15" — scripts/surfaces/emit-mobile-surfaces.mjs "const config = Object.fromEntries(CONFIG_KEYS.filter((k) => d.config?.[k] !== undefined).map((k) => [k, d.config[k]]));" — a numeric page setting a descriptor declares that is not one of the six keys in PAGE_SETTINGS is dropped from the slice before pageSettingBounds ever sees it, so it is neither emitted nor reported as a problem line, and the "tunables are data" guarantee only holds for the six names written today — iterate d.config's own numeric keys and push a problem for any key absent from PAGE_SETTINGS (mirroring the existing "no config.logic_variables entry named" line).
+
+DEFER severity=MED — FIX.CONFIG-BOUNDS "when debounce_ms holds a number above 0 (0 states that a binding module has no such setting; the SEARCH profile requires the key and has no none value)" — scripts/surfaces/emit-mobile-surfaces.mjs "if (typeof v !== 'number') continue;" — the schema carves 0 out of the registration requirement (its if-clause is "minimum": 1) but the generator requires a logic_variables entry for any number including 0 and then refuses a value differing from the seed default, so a descriptor the schema blesses makes generation throw — apply the same "above 0" test in pageSettingBounds for debounce_ms and min_query_len, or drop the carve-out from the schema description.
+
+DEFER severity=MED — task-351 "SRCH.A6-reset-date-served-as-a-Toronto-time-label-RR-0310" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:23 "search.reports_left": "{left} of {allowance} reports left until {reset}" — the string interpolates three names (left, allowance, reset) while the descriptor states the reset value "binds as a contract value" as resetsOnDisplay, and inputs.field_whitelist lists none of the three, so either the whitelist is incomplete or the binding name is wrong — name the served fields in field_whitelist (and align {reset} with resetsOnDisplay) so the A6 line has a declared source.
+
+MET — task-395 FIX.CONFIG-BOUNDS — scripts/surfaces/_schema/surface.schema.json new allOf blocks — each of the six page settings gains an if/then requiring a config.logic_variables entry named maxbld_page_<key> carrying name, min, max and on_invalid.
+MET — task-378 FIX.TUNE — scripts/surfaces/emit-mobile-surfaces.mjs:57 "if (!(entry.on_invalid === 'fail' || entry.on_invalid === 'clamp'))" — the stated failure behaviour, the seed row's bounds and the seed default are all enforced at generate time, and the slice carries bounds.<key>.
+MET — task-336 SRCH.LOTCARD C.7 card line — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:10 "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}" — the card line reads only the declared parcel columns.
+MET — task-321 SRCH.C12 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:26 "help.lot.prompt": "Not sure which lot?" — the help link task on the lot map is carried by its own content keys.
+MET — task-362 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:14 "select.hint": "Pick a lot on the map or in the list." — the pick hint line is a content key, not a hardcoded string.
+MET — task-390 PAGE.TABLE — scripts/surfaces/emit-mobile-surfaces.mjs:19 "const PAGE_TABLE = 'scripts/surfaces/_schema/static-page.json'; // PAGE.TABLE (task-390)" — the interactive page rows are read from the table and ride the slice as page: screens[id], never copied by hand.
+MET — task-378 lookup/entitlement entries — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json config block — the five registered entries (debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms) are declared with bounds and on_invalid, and the four moved tunables are no longer code.
+
+REJECT — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — the mobile_parcel_search descriptor still holds stale cites such as "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is the closed enum ['exact','typeahead','direct']" in limitations[0].measured — not a real issue: each such cite sits under its own dated closure note ("Closed 2026-11-11 (MF-53, prior text kept): the contract now emits `resolution`"), which is the prior-text-kept convention, not a stale claim.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+Rules met: none
+
+---
+⏱  97258ms (97.3s)
+📊 Tokens — total: 49800, input: 30600, output: 19200, reasoning: 17973

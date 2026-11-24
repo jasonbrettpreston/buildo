@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:22:57.687Z file_sha256=e322fd71420b52c777a82b23e47892f732f66e28dd23be09aef976b5ba67e85a prompt_sha256=be43a2f5d50bb396848591f0476b2ef810811433bd907ecd55073b34f3af7160
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p8.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings
+
+DEFER severity=MED — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — scripts/analysis/rule-lists.mjs:467 "try { paths = pm ? JSON.parse(pm[1]) : null; } catch { paths = null; }" — a malformed `paths: [...]` head is swallowed, so parseLensInput returns paths: null while `ok` stays true because `ok` hashes only listPart and material (:468 "ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3]"), and the chunk path evidence is dropped with no log line — let the JSON error surface (or return null naming the bad head) and fold the head line into the `ok` hash.
+
+DEFER severity=LOW — §12.12 "MUST have at least one `fast-check` property test asserting the invariant." — NONE — the pure normalizers in this module (splitDiff round-trip, candidates/coveredBy path normalization, findingsIn ordinals) carry invariants but no property test is in this material and the test tree is not in this chunk (cannot see) — add one property test per normalizer under src/tests/property/ unless the sibling tests already do it.
+
+MET — §12.11 "bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`." — scripts/analysis/rule-lists.mjs:1 — the file lives under `scripts/`, which the rule allows, and the diff instantiates no pool.
+
+MET — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/analysis/rule-lists.mjs:16 — the header names "Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14", spec plus section.
+
+MET — §12.1 "Biome MUST pass on all files in `src/features/leads/` before commit." — scripts/analysis/rule-lists.mjs:1 — the path is outside the leads scope and the diff touches no lint config, so the companion note "Do NOT replace ESLint repo-wide" holds.
+
+REJECT — §12.11 "bans `try/catch { return [] / null / emptyResult() }`." — the two silent catches (`paths = null`, `p = 0`) accused as silent-catch-fallback — this gate is "Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`", so it does not reach `scripts/analysis/`; the same lines are raised under §13.3 above instead.
+
+REJECT — §13.3 "Pipeline scripts use `pipeline.log.info/warn/error` from the SDK" — writing operator text with `console.log` and `process.stderr.write` instead of the shared logger — this is a dev-time analysis CLI whose output is the operator's command lines, file paths and exit codes, not a pipeline stage, so the pipeline-logger rule does not reach it.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 20   Unmet: 1
+
+---
+⏱  89716ms (89.7s)
+📊 Tokens — total: 52910, input: 30676, output: 22234, reasoning: 21509

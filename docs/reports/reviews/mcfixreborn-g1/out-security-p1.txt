@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T03:23:18.258Z file_sha256=e5561c6d1dfd1d46ee6bd2e82f97959a962682326055a2161d0148da2847c947 prompt_sha256=1bde71673cbc5a6c594b6e43703ae9615647b31cc055498e56ae3dab99e6b0c9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-security-p1.txt (model: deepseek-reasoner)
+
+Touches: auth and admin (report-preview gate), PII (lead detail address/location and per-viewer save flag), entitlements (read-only report limits); no money path.
+
+REJECT — src/app/admin/report-preview/page.tsx:36 "await requireAdminPage();" — a query-string driven admin report preview looks reachable by any holder of an auth cookie because the /admin blanket only checks cookie presence — the gate is awaited before searchParams and before any state, target or scenario lookup, and the gate implementation is outside the pasted diff, cannot see.
+
+REJECT — src/lib/leads/lead-detail-query.ts:121 "AND lv2.user_id != $4::uuid" — a caller who controls $4 could hide another user's save from competition_count or read that user's is_saved — $4 is documented as the viewer's session uid and every value is bound, while the route that supplies it is outside the pasted diff, cannot see.
+
+VERDICT: PASS on exploitability
+Surfaces touched: auth, admin, PII, entitlements
+
+---
+⏱  130182ms (130.2s)
+📊 Tokens — total: 30736, input: 12810, output: 17926, reasoning: 17695

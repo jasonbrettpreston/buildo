@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:20:44.330Z file_sha256=99522deceaddb63863baf0497174923a64d76cd01f6c282ff293c735c43e00b0 prompt_sha256=5f7c5d4b7404fc40ac1b5a58c7c8caf585a41310630d70850184086f3f76a202
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+```text
+DEFER severity=MED — 13.3 "All catch blocks use logError(tag, err, context). NEVER bare console.error." — scripts/analysis/backlog-brief.mjs:67 "try { return fs.readdirSync(dir); } catch { return []; }" — the catch blocks at lines 65, 67 and 68 swallow the error silently, so an unreadable decisions or docs directory is dropped from the brief with no trace — a script degrade with bounded blast radius, but still a swallow the clause forbids; route each through logError or add a one-line comment that the degrade is intended
+MET — 12.11 "Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`" — .husky/pre-commit:53 "bash scripts/hooks/ast-grep-leads.sh" — the footgun ast-grep gate is chained into pre-commit
+MET — 12.8 "All NEW migrations must pass `scripts/validate-migration.js`" — .husky/pre-commit:51 "bash scripts/hooks/validate-migrations.sh" and :52 "bash scripts/hooks/check-migration-down-comments.sh" — the migration-safety and DOWN-comment gates are both wired in pre-commit
+REJECT — 12.11 "silent-catch-fallback ... bans try/catch { return [] / null / emptyResult() }" — scripts/analysis/backlog-brief.mjs:67,68 catch-and-return matches the banned shape — 12.11 is scoped to `src/features/leads/` and rule-by-rule `src/lib/`, and this file is under `scripts/analysis/`, so it is out of scope for this clause
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 6   Unmet: 1
+```
+
+---
+⏱  53562ms (53.6s)
+📊 Tokens — total: 41682, input: 28716, output: 12966, reasoning: 12561

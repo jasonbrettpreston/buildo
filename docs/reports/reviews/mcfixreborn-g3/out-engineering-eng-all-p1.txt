@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:51:02.935Z file_sha256=bbf1e5f0f1a4e8abc208bc371705e4eef38473942ca8e1c608583ce0c48609d9 prompt_sha256=b1f337c7fbaa9ed63608629f2413564b308af86059a9bbcaab55ab866ac40eb3
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 2.3 Assumption Documentation "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — mobile/src/components/surfaces/LotMapBinding.tsx:161 "const lot = s.map!.lots[i]!;" — two non-null assertions with no inline justification, while the same file treats the map block as nullable at line 132 "s.map?.lots[i]?.hasFootprint === true", so cards() throws a raw TypeError in the multi_parcel state whenever the map block is absent — replace with an explicit guard (const lot = s.map?.lots[i]; if (!lot) return [] with a named error) or add the prior-validation comment that licenses the `!`.
+
+DEFER severity=MED — 2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for null or undefined." — mobile/src/components/surfaces/LotMapBinding.tsx:201 "letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}" — findIndex can return -1, building the derived name "letter.-1" which is outside LOT_MAP_DERIVED_NAMES and makes SurfaceRenderer throw instead of rendering a safe label — check the index is >= 0 and otherwise fall back to content('select.label').
+
+DEFER severity=LOW — 1.1 Mobile-First UI Mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — mobile/src/components/surfaces/LotMapBinding.tsx:52 "size: 'icon'," — cannot see: the 44px area of the icon-size clear and back buttons is decided by the className tables in constants/lotMap.ts, which are not in this chunk — confirm L.clear, L.semiBack and L.back carry min-h-[44px] min-w-[44px] or that the vendored icon Button adds hitSlop.
+
+DEFER severity=LOW — 4.3 Frontend Security "User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted." — mobile/src/components/surfaces/SurfaceRenderer.tsx:128 "return () => act.open_help?.(String(a.topic), String(resolveValue(a.q, ctx)));" — the typed query is handed unencoded to the help URL builder in mobile/src/lib/maxbldHelp.ts, which is not pasted, so the encode step cannot be seen — confirm the helper encodeURIComponent-s q before the URL reaches the browser.
+
+DEFER severity=LOW — 1.3 Mobile Front-End Patterns & UX "Dark-mode colour tokens must use NativeWind `dark:` variants ... so the system colour scheme is respected." — mobile/src/components/surfaces/LotMapBinding.tsx:153 "userInterfaceStyle: 'light'," — the map hardcodes the light appearance and ignores the device scheme, a literal that the class tables elsewhere avoid — source the value from the layout/theme table or drop the prop and let the system decide.
+
+MET — 14 The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — mobile/src/components/surfaces/SearchBinding.tsx:1 — all five files open with a SPEC LINK naming the spec and its numbered sections.
+
+MET — 4.3 Frontend Security "Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default." — mobile/src/components/surfaces/SurfaceRenderer.tsx:90 "return String(resolveValue(v.text, ctx)).replace(/\{(\w+)\}/g, ..." — every displayed value is resolved to a string and passed as a Text child, no HTML sink exists in these files.
+
+MET — 10.1 Data Flow Direction "The data flow is strictly one-directional ... Frontend components never write to pipeline tables." — mobile/src/components/surfaces/PageTableBinding.tsx:66 "export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boolean>>, values: PageValues, styles: PageStyles): PageNode {" — the five files are pure props builders plus a renderer, with no fetch, no mutation and no database access.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 13   Unmet: 1
+
+---
+⏱  94816ms (94.8s)
+📊 Tokens — total: 46052, input: 33280, output: 12772, reasoning: 11807

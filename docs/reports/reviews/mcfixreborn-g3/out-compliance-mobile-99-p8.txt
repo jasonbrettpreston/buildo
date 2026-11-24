@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:21:21.608Z file_sha256=9deaf1e3aac164a998d528bac30407b49f96e25a42edbda069eea5ee6d741f70 prompt_sha256=65dcd617204ecaf96794fed1acbd588e3d87549381f644d6040088a1439ff3bc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:200 "mockHook = { ...mockHook, data: data(form(false)), isFetching: true };" — the settled-gate case flips isFetching true to false and asserts the redirect, but never renders the same tree twice and compares JSX as the pasted pattern asks, so only the redirect count carries the stability claim — one extra render with isFetching=false compared against the isFetching=true tree would close the half the pattern names, bounded because the once-only replace assertion already covers the double-fire risk the clause targets
+
+MET — §8.3 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:205 — "view.rerender(<Question />);" run twice after settle with exactly one replace asserted at :206, the settled gate does not re-fire per render
+MET — §8.3 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:250 — "view.rerender(<Report />);" run twice on the report mount with a single replace asserted, the report settled gate does not flip per render
+MET — §10 Out-of-Scope — mobile/__tests__/reportScreens.golden.test.ts:1 — the diff adds only files under mobile/__tests__, none of the pasted out-of-scope paths (mobile/src/store/*, mobile/app/**/_layout.tsx, mobile/src/hooks/useUserProfile.ts, mobile/src/lib/debug/stateDebug.ts) is touched
+MET — §9.5b — mobile/__tests__/semiQuestionScreens.golden.test.ts:1 — no call to dumpDiagnostics or getDiagnosticsSnapshot is introduced, so the §10 rule that stateDebug.ts changes only via §9.5b is untouched
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  108236ms (108.2s)
+📊 Tokens — total: 43442, input: 27594, output: 15848, reasoning: 15386

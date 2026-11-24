@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:09:22.832Z file_sha256=d3d8a14b0e7d50525d6b616aef6ddf98ca2c47c037eebfae92af305ee210a6fd prompt_sha256=4babc3367401be4631b21ebbcef79009a9d8263aaedeb1e4021bd3024784e69a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-plan-protocol-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-374 card (pasted acceptance criterion, line "task-374: backlog/tasks/task-374 - FIX.FOOTER-Web-report-footer-links-use-the-router-and-meet-the-44-px-target-D7-D8.md") "Web-report-footer-links-use-the-router-and-meet-the-44-px-target" — src/components/surfaces/web/footerNode.ts:53 "links.children.push(node('Button', { key: `${s.id}-${n}`, testID: `${prefix}-link-${p.href}`, href: p.href, size: 'lg', variant: 'subtle', color: 'gray', className: cls('link') }, [{ content: key(p) }]));" — the shared builder emits href plus size 'lg' but the report page's own render (router Link, 44 px) is not in this chunk — cannot see ReportPage.tsx, so the criterion is unverified, not unmet.
+DEFER severity=LOW — task-384 card (pasted acceptance criterion, line "task-384: backlog/tasks/task-384 - STD.REPORT-OWN-...") "The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks" — NONE — no file in this chunk touches the report renderer's census owner or its text/44 px checks — cannot see, the owning renderer files are not in the pasted material.
+DEFER severity=LOW — task-411 card (pasted acceptance criterion, line "task-411: backlog/tasks/task-411 - FIX.AREA-FACTOR-...") "the-two-typed-phone-copies-of-the-factor-are-deleted" — src/lib/leads/lead-detail-query.ts:160 "return sqm === null ? null : sqm * SQM_TO_SQFT;" — the converted-area half is present with the pinned constant, the deletion half names phone files that are not in this chunk — cannot see, so the deletion is unverified, not unmet.
+DEFER severity=LOW — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — NONE — the pasted rule list is plan-protocol.md, which names no code file, so most of this chunk is judged only against the four task cards and the rulings — cannot see a code-file rule table for this list.
+MET — task-332 card "SRCH.FOOTER-Shared-web-footer-component" — src/components/surfaces/web/StaticBinding.tsx:201 "const footerOf = (s: StaticSection): StaticNode => footerNode(s, STATIC_FOOTER, 'static');" — the footer tree comes from one module, footerNode.ts:38 "export const footerNode = (s: FooterSection, L: FooterLayout, prefix: string): FooterNode => {", and the static binding calls it rather than holding its own copy.
+MET — task-411 card "The-lead-detail-API-serves-the-area-already-converted" — src/lib/leads/lead-detail-query.ts:160 "sqm * SQM_TO_SQFT" and line 187 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — both branches serve the converted value from the imported factor and null when the area is null.
+MET — RR-0414 "changed parts only as per your recommendation (the oversized files are read as changed parts)" — the material block "chunk 4 of 5 ... paths: [...]" — the chunk is cut at file boundaries and carries whole files only for the small ones, which is the changed-part treatment ruled.
+REJECT — Specs 126 §11b.5, 135 FE-05/FE-34, 91 §4.3, 42 §6.11 — the change is accused of breaching the surface standard, closed kinds, the lead-detail envelope and the CoA branch — those clauses appear only inside code comments, they are not pasted in the governing context, so they are not mine to judge (not pasted).
+REJECT — RR-0385 "CRITICAL, HIGH and MED findings are resolved; LOW and NIT are recorded" — the change is accused of carrying unresolved medium findings — no grounder ruling is pasted and no finding in this run reaches MED, so nothing is shown unresolved.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+
+---
+⏱  65644ms (65.6s)
+📊 Tokens — total: 39374, input: 31636, output: 7738, reasoning: 6734

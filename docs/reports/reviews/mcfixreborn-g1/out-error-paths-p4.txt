@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T03:23:18.260Z file_sha256=55bb54414c447f580b178c4d5a9c11597a43983270dcd3626a404b329d81703f prompt_sha256=a05b61b4c067c397e5d0a4a372af4faca1eb10cdd9b0676f269fa4348d008606
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-error-paths-p4.txt (model: deepseek-reasoner)
+
+BUG none found at CRIT/HIGH in this chunk.
+
+DEFER severity=MED — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:79 "it('the error container is role=\"alert\" and is the field\\'s description', () => {" — the invalid/empty entry path is never exercised: the test only reads a container that is already in the DOM, so nothing pins that a blank width or depth produces the alert text, keeps focus in the sheet, or blocks the submit — a submission with an empty field would pass this suite — add a case that leaves width empty, fires the submit, and asserts the alert text is non-empty, focus is still inside the dialog and no closed event fired.
+DEFER severity=MED — src/tests/leads-detail.infra.test.ts:265 "it('returns 401 when no user context resolves', async () => {" — only the resolved-null path is pinned; the auth call rejecting (get-user-context timeout or network error) has no test, so whether the route degrades to 401/503 or leaks a 500 on the request that times out is unverified — add a case with mockedGetUserContext.mockRejectedValueOnce(new Error('timeout')) and assert 401/503 and a sanitized body.
+DEFER severity=LOW — src/tests/leads-detail.infra.test.ts:346 "it('returns sanitized 500 when the pool throws (no err.message in body)', async () => {" — the failure is proven hidden from the client but nothing pins that it is recorded, so a swallowed pool error yields a silent 500 with no trace a retry or operator can find — spy on the route's logger/console.error and assert it received the error before returning 500.
+DEFER severity=LOW — src/tests/surface-registry.infra.test.ts:34 "return execFileSync('node', [GENERATOR, ...args], {" — the generator child has no time bound and no retry budget, so a hung or lock-waiting run stalls the whole suite indefinitely instead of failing one test — pass timeout: 60000 (and killSignal) and assert a timed-out run surfaces as a non-zero code with output, not a hang.
+DEFER severity=LOW — src/tests/surfaces/search-parity.golden.test.ts:80 "const STATES: Json[] = rj(DESCRIPTOR).states;" — the descriptor and the ambiguous golden pair are read at collection time, so one missing or truncated fixture throws outside any test and takes the whole file's parity coverage with it rather than failing one named case — move the rj/pair reads inside each it() so a missing golden is reported as that state's failure.
+REJECT — src/tests/surfaces/site-footer.logic.test.ts:135 "expect(() => pickFooterText(rest as Record<string, string>)).toThrow('footer text: missing key \"footer.help\"');" — a missing content key looks like a hard throw at render instead of a blank footer link — that is the safe direction (no wrong text rendered, no silent fallback) and the throw is explicitly locked by the RED case.
+REJECT — src/tests/surfaces/report-page.ui.test.tsx:107 "expect(dlg.querySelector('button[type=\"submit\"]')?.hasAttribute('disabled')).toBe(true);" — the Add lot size sheet could be double-submitted — the submit is disabled and the assertion is strict (an absent button fails the toBe(true)), so no second write path exists today.
+
+VERDICT: PASS on error-path safety
+Paths walked: lead detail GET (404 empty, 400 malformed/empty id, 401 no context, 500 pool throw, non-uuid uid normalize), CoA detail branch (404 empty), report page sheet (open/close via hash, Escape, dialog close, submit), sheet entry error, footer text resolution, surface generator invocations, golden fixture reads
+Unguarded: 3
+
+---
+⏱  52421ms (52.4s)
+📊 Tokens — total: 46476, input: 33510, output: 12966, reasoning: 12119

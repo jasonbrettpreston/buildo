@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:09:23.908Z file_sha256=4041e7a342c131fa17cf16734383763a7fe312178cf1ebef6d8e53c357693635 prompt_sha256=abc74fb2c953a0d34322669f9c0990b09a975958fb573589142516d619c24955
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs "if (typeof v !== 'number') continue;" — a config key whose descriptor value is a non-number (the schema allows "UNRESEARCHED" for every FIX.TUNE key) is still copied into the slice by `config` but gets no `bounds.<key>` and no on_invalid, so the emitted slice carries an unbounded literal and the phone has nothing to clamp or fail on; what sliceConfig.ts does with a string value cannot see — drop non-number values from the slice `config` (or emit a marker that sliceConfig resolves to the code default) so an unresearched tunable never reaches the phone as a number.
+
+DEFER severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs "if (entry === undefined) { problems.push(`config.${k}: no config.logic_variables entry named ${name}`); continue; }" — the schema gates the registration rule on "minimum": 1 for debounce_ms and min_query_len and states 0 means "a binding module has no such setting", but pageSettingBounds demands a seed entry for the numeric 0 too, so a schema-valid descriptor with 0 fails generation and blocks every slice in the run — skip 0 for exactly the keys whose schema gate is above 0, or align the two gates.
+
+DEFER severity=MED — scripts/surfaces/_schema/static-page.schema.json "busy": { — busy is optional on screen_button and is absent from the closed part set of the notice's button, so a submit or report button can be declared with no busy state at all and two taps fire its action twice with no declared dedup — require busy (or the target key) whenever action is not back, and add the same property to the notice button.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "why": "A map response shows no report and counts nothing (MF-45 fold 12 carry); the chosen lot opens through the metered parcelId path." — the map read itself is safe to repeat, but the select action pushes the metered report route and no client-side dedup key or busy state is declared for that push, so two quick taps on "Continue with Lot {letter}" reach the meter twice; whether the count is keyed cannot see — name the meter key (parcelId + user + period) or gate the select on a pressed flag.
+
+DEFER severity=LOW — scripts/surfaces/emit-mobile-surfaces.mjs "out.set(`${SLICE_DIR}/${id}.json`, text({ $comment: `${COMMENT} (input_sha ${sha(slice)})`, ...slice }));" — this is the report loop's line and it writes the same slice path the converted loop just wrote, so an id listed in both converted and report silently replaces config, bounds and page rows with config:{} instead of failing — throw when an id appears in both manifest lists.
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "state.ratelimit": "Too many searches. Try again in {seconds}s.", — the only 429 copy is a template and there is no fallback key for a 429 that carries no Retry-After, so the notice can render an unfilled slot; how the binding fills it cannot see — add a placeholder-free fallback key or have the binding default the number.
+
+REJECT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json "ui": "Inline red \"Couldn’t reach the lot service.\" with a Try-again button wired to refetch()." — a double tap on Try again looked like a double request — handled because refetch re-runs the same GET on the same query key, so a repeat is deduped and changes nothing.
+
+VERDICT: PASS on error-path safety
+Paths walked: generator config bounds (non-number value, zero value), generator write and duplicate-id overwrite, screen button busy and notice button action, map select to metered report, 429 template, 500 retry, empty and error classes (403, 500, schema_drift, unlinked, too_many) in the map descriptor   Unguarded: 6
+
+---
+⏱  88927ms (88.9s)
+📊 Tokens — total: 40267, input: 24433, output: 15834, reasoning: 14892

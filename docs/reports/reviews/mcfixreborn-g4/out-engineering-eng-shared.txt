@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:25:37.499Z file_sha256=fe6aaffab8b6c8d9d661c787cecfb12d50db5bd9c49dda7f56d57d45e4b44605 prompt_sha256=90b6f6605d566b5b4ebfca89f272022ec8884762ea7bb1e72004757ed5d7e376
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-shared.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 12.8 SQL Linting & Migration Safety "All migrations must include a DOWN section that reverses the UP changes." — migrations/334:16-17 "-- DOWN — manual rollback only, intentionally not transactional (matches migrations 159, 283, 294, 296 and 316). / -- UPDATE logic_variables SET variable_value = 27.5 WHERE variable_key = 'tooling_precommit_budget_registry_s';" — the DOWN is satisfied only by a comment, so the §11 Database/Migration Check item "New migration has DOWN block (§3.2, §12.8)" is met by prose, not by a reversing section no runner can execute — emit the inverse UPDATE as the DOWN block's executable statement (in the form `scripts/migrate.js` parses) so a rollback restores 27.5 without hand-editing the file.
+
+MET — 12.8 "UPDATE without WHERE clause (full-table scan risk)" — migrations/334:13 "WHERE variable_key = 'tooling_precommit_budget_registry_s';" — the single-row UPDATE is bounded by an equality predicate on the variable key, not a full-table scan.
+MET — 4.2 Parameterization — migrations/334:14 "SET variable_value = 33.2," — no string concatenation and no dynamic identifier; the only literals are a fixed number and a static key, so nothing is interpolated.
+MET — 14 The Prevention Loop "Every source/test file's SPEC LINK points at the spec AND the section (§N)" — migrations/334:6-7 "SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (R-EB, R-CV)" — both governing specs and their section ids are named.
+MET — 12.10 Real-DB Integration Tests — migrations/334:11 "-- UP" — the migration adds no CHECK constraint, no FK with cascade and no PostGIS expression, so the `*.db.test.ts` mandate does not fire (only a data value and a description change).
+MET — 11 Database/Migration Check "No raw SQL string concatenation, parameterized only (§4.2)" — migrations/334:12-14 "UPDATE logic_variables SET variable_value = 33.2, description = '...'" — a static statement with escaped quotes ('' in "McDonald''s"), no assembled fragments.
+
+REJECT — 12.10 Real-DB Integration Tests — the new migration ships with no `*.db.test.ts` under `src/tests/db/` — the mandate fires only for a migration that adds a CHECK constraint, an FK with cascade or a PostGIS expression, and this one only re-pins one `logic_variables` row, so the rule is not triggered.
+REJECT — 11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from docs/specs/_contracts.json" — the 33.2 value is a bare literal in the migration rather than a contracts.json reference — the pinned variable's single source is the logic_variables registry seed that migrations mirror (named at migrations/334:4, "The seed (scripts/seeds/logic_variables.json, min = max = 33.2) is what the file-only gates read"), not a spec/Zod threshold with several code consumers, so the contracts row does not govern this pin.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 18   Unmet: 1
+
+---
+⏱  45449ms (45.4s)
+📊 Tokens — total: 22121, input: 13554, output: 8567, reasoning: 7823

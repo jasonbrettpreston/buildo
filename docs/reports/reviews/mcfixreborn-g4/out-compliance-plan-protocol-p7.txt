@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:10:27.659Z file_sha256=793654ca7f4de780a280a5200945be81643d274bd2a7c3cad86eb3d975837e3b prompt_sha256=5cd73e927cb031ba349a042d26902ce0e3e9502aa1c163e79b22668e78c5f8a1
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p7.txt (model: deepseek-reasoner)
+
+MET — plan-protocol principles line ("keep it simple; no scope creep") — src/tests/backlog/rule-lists.logic.test.ts:1 — the file binds itself to a named source, "// SPEC LINK: task-366 (COMPLY.2); Spec 08 section 7 rule 4 and section 5.3 (08_agents.md)", and every describe names its task/spec origin, so no out-of-source behaviour is added.
+
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — src/tests/backlog/rule-lists.logic.test.ts:1 — the header carries the source "task-366 (COMPLY.2); Spec 08 section 7 rule 4 and section 5.3 (08_agents.md)".
+
+MET — plan-protocol "the repo plan protocol carries the five principles line" — src/tests/backlog/rule-lists.logic.test.ts (V2.LIST glossary test) — `expect(fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/plan-protocol.md'), 'utf8')).toContain('standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep')`.
+
+MET — plan-protocol §0 whole-file attachment (the pasted list is `whole: true`) — src/tests/backlog/rule-lists.logic.test.ts (V2.LIST describe) — `expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true })` and `expect(t.every_task).toEqual(['five-words', 'plan-protocol'])`, matching the pasted "RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file)".
+
+MET — plan-protocol §0 "the board is the plan" after the Spec 137 note — src/tests/backlog/rule-lists.logic.test.ts (V2.LIST describe) — the table is driven from `scripts/analysis/rule-lists.json` and the plan protocol is attached by data, no second plan artefact is introduced.
+
+REJECT — plan-protocol §1 (the slice definition, done = the scenario works for a customer) — the change is accused of not delivering a customer slice — not a real issue: this is a new test file for the rule-lists tool, it adds or removes no slice task and the plan is not in this material.
+
+REJECT — plan-protocol §4 (per-increment seq-patch.json delta) — the change is accused of producing no increment patch — not a real issue: output-only review of already-landed code, plan artefacts are outside the pasted material.
+
+REJECT — plan-protocol §3 "No new research topics. Only the sources in step A." — the change is accused of adding rule-list coverage beyond the plan — not a real issue: each describe block is anchored to a backlog task id already in the group (task-406, task-410, task-423, task-433, task-438), which is the source step A allows.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  44447ms (44.4s)
+📊 Tokens — total: 40347, input: 30354, output: 9993, reasoning: 9262

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:35:12.820Z file_sha256=461d4fdbe00de1a9986794a76c9b62f33d8cf8935c6fec19db5d5c3eb0036328 prompt_sha256=2675a37e813d1d5eec85332d2ac232af9dbbd399c561d35deadbd924d837afcf
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/lib/review-template.js:138 "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — the next round number is a file COUNT, not the highest N, so after any gap (an aborted round, or a hand-removed context-r1.md) it returns a number that already exists and the brief overwrites that round's context file, breaking the per-round evidence the review stamps — fix: Math.max(0, ...the Ns found) + 1.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:558 "try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }" — a bare catch swallows every failure (a missing .claude/review-templates/lens-compliance.md, a render or room error) and the cell then prints "does not fit", so the real cause is never logged and a missing template reads as a size problem in the generated page — fix: let the error through, or put e.message in the cell.
+
+DEFER severity=LOW — scripts/hooks/check-task-files.mjs:20 "function globToRegex(g) {" — the Files glob grammar now has two implementations, this local one and the shared one imported at scripts/analysis/rule-lists.mjs:25 "import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';", so one Files entry can be in scope for the commit hook and match no row at launch (or the reverse), and the header's reason ("package.json has no glob library") is stale — rationale: reuse globToRegExp so one matcher fix reaches both.
+
+DEFER severity=LOW — scripts/deepseek-review.js:39 "if (!process.env.DEEPSEEK_API_KEY) {" — the module-level key check runs before main(), so --dry-run and the help text exit 1 without a key, contradicting the flag's own contract in the help "Print the messages as one DRY-RUN line instead of calling the API" — rationale: move the key check after the help and dry-run branches, or into callDeepSeek.
+
+DEFER severity=LOW — scripts/deepseek-review.js:94 "if (text) console.log(text);" — on a timeout the partial answer is printed here and then printed again by the caller ("console.log(lensResult.text);"), so the same partial text lands twice in stdout and in any file a caller writes from it — rationale: drop this line and let the caller print, or return no text on abort.
+
+DEFER severity=LOW — scripts/lib/review-template.js:77 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — a caller that omits plan or specs gets the literal string "undefined" substituted, which contradicts the docstring "Missing values are NOT silently substituted — the caller passes the literal fallback string" — rationale: throw when plan or specs is undefined; no current caller is hit, so no live defect.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  185901ms (185.9s)
+📊 Tokens — total: 80219, input: 34264, output: 45955, reasoning: 45238

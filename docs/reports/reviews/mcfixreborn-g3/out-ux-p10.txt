@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:15:08.765Z file_sha256=21dea75d1f79a90b9820cf4c91e4dbc29c4696c921c4e21267841f273cfe80bd prompt_sha256=13c2ec4f85cbbe6a065de78ae94a24ab8e19ae51131f7da815e8be7f7936d1e8
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/nav-by-route.logic.test.ts:50 "// Named, not yet created: `/signup` is public in src/lib/auth/route-guard.ts with no page until MF-46 (Spec 126 §11b.7 W2)" — a person who follows a sign-up link on web is allowed through the guard and finds no page at all, a dead end with no way forward and no copy — the diff names it as owed to MF-46, so keep the NOT_YET tripwire and close the state with that task before any signup link is published.
+
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx:98 "for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);" — on the web search page with the live switch off the input and every button are dead and no case here asserts a line telling the person why, so whoever reaches that state can type nothing, click nothing and is told nothing — design text is silent on the off-state copy, so defer: decide what the page says while MAXBLD_WEB_LIVE is false.
+
+DEFER severity=MED — src/tests/surfaces/search-reports-left.logic.test.ts:113 "expect(reportsLeftShown({ ...full, resetsOnDisplay: null })).toBe(false);" — a person with 6 of 10 reports left but no served reset label sees no reports-left line at all, so a fact they could see yesterday silently disappears rather than showing "6 of 10" without the date — design text is silent on partial data, so defer the decision: show the count when the date is missing, or teach the page to say the date is unknown.
+
+DEFER severity=MED — src/tests/surfaces/nav-by-route.logic.test.ts:300 "why: 'owed: MF-49 (A1: router.back() with role and label once #15 is a route)'" — on the phone sign-in screen the email and idle modes are still local state swaps, so the hardware back leaves the app instead of returning to the mode list, and that Pressable carries no role or label for a screen reader — named exception the operator accepted on 2026-11-11, so record it and fix with MF-49, not a merge block.
+
+DEFER severity=MED — src/tests/surfaces/nav-by-route.logic.test.ts:169 "if (NON_INTERACTIVE.has(tag) && ['onClick', 'onPress', 'onKeyDown'].some((k) => at.has(k)) && !at.has('role') && !at.has('accessibilityRole'))" — a div with role="button" and onClick but no key handler passes NAV-2 and, if it does not push, passes NAV-6 too, so a person driving by keyboard cannot activate a control the lock calls clean — the rule exempts any role rather than any focusable element, so a keyboard-only path stays invisible.
+
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx:130 "expect(set_input).toHaveBeenCalledWith(st.recent[0]);" — tapping a recent-search chip only refills the box and does not run the search, so a person who taps a remembered address sees the text change and nothing else happen until they press search — design text is silent on whether a chip submits, so defer.
+
+REJECT — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:30 "'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)'" — two taps to open a lot reads at first as a lost one-tap behaviour — it is the accepted design (tap selects, SELECT opens) and the label change is ruled, so it matches the pasted decision and is harmless.
+
+VERDICT: PASS on the person's experience
+States checked: web /signup with no page, phone sign-in modes (idle, email, phone sheet, otp), web search page live switch off, web search idle, unauthorized, error with Retry, rate limited 429, ambiguous candidates, static with chips, reports-left line present, reports-left with a missing served field, reports-left at zero, lot map two lots, lot map three lots with missing fields, lot map no entitlement data, screen reader on an unlabelled Pressable, keyboard on a role-only div, repeat visit with persisted entitlement query   Dead ends found: 1
+
+---
+⏱  51834ms (51.8s)
+📊 Tokens — total: 44875, input: 35791, output: 9084, reasoning: 8104

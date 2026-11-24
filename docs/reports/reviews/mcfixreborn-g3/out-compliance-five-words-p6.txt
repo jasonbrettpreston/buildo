@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:49:02.523Z file_sha256=3906d6638040a4d59f27884c6f87369da2e5d56b517ad07040109d40fcf83797 prompt_sha256=03a4bd812420329a0f68cb2ce2f09d6eb91aa66697fa12854dc5e6ada415fde2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-five-words-p6.txt (model: deepseek-reasoner)
+
+REJECT — RE-FREEZE #N "A field is added or deleted only by one" — the diff adds continue_wait_ms, entitlement_stale_ms, lookup_retry_max and lookup_stale_ms to scripts/surfaces/_schema/surface.schema.json without a RE-FREEZE — the clause governs only the frozen step vocabulary ("scripts/steps/_schema/step.schema.json, template-freeze.json"), and surface.schema.json is not in that vocabulary.
+REJECT — archetype vs shape "identity.archetype (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is" — the new scripts/surfaces/_schema/census/web-product.json row carries "archetype": "REPORT", a value absent from that list — that list is the step archetype vocabulary of a step's identity.archetype; this is a surface census row (kind SURFACE), a different vocabulary, so the clause does not reach it.
+REJECT — lock / lock-db / check / hook "A lock is a test under src/tests/ run by npm test that names the rule id" — the new binding_web_report_auth_class_parity check rests on a named test file (src/tests/surfaces/auth-class-parity.infra.test.ts) not pasted here — the definition governs rule-map enforcement of rules, not census `checks` rows, and the test file is outside the pasted material (cannot see).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+Rules met: none
+
+---
+⏱  16047ms (16.0s)
+📊 Tokens — total: 34763, input: 31757, output: 3006, reasoning: 2653

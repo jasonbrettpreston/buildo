@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T05:01:39.090Z file_sha256=82539367201670d6e2fd7465e72319b524672182fb027a290b30af92422551a3 prompt_sha256=9f20fb4929e4ed4a899510feb5a9ebf7749db7c15febd9409ad365f28942302c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-front-p4.txt (model: deepseek-reasoner)
+
+MET — 1.2 Component Isolation — mobile/src/lib/persistFilter.ts:30 — exported `shouldDehydrateQueryFn` is a pure predicate; all five files are stateless helpers with no API fetch and no global-context read, so the rule's purity requirement is not broken by this chunk.
+MET — 1.3 Mobile Front-End Patterns & UX — mobile/src/lib/parcelSearchMatch.ts:1 — no JSX, no Tailwind class strings, no `Pressable`/`TouchableOpacity`, no Reanimated/haptics call sites and no `fetchWithAuth` interceptor appear anywhere in this chunk, so the UI-behaviour clauses (touch targets, spring feedback, haptics, 401 refresh, `font-mono`, `dark:` tokens) have no code here to bind and none is contradicted.
+
+NOTE — 1.3 Safe MMKV hydration — the `JSON.parse()` guard the clause names ("must be structurally validated ... before casting to `PersistedClient`") lives in `mmkvPersister.ts`, which is not in the pasted material: cannot see, not raised.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  15537ms (15.5s)
+📊 Tokens — total: 20573, input: 17940, output: 2633, reasoning: 2372

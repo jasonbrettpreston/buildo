@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:35:12.817Z file_sha256=2488cff2e74c511c93ce28f398593180cee70fb841e7885f7919452c3d1ea712 prompt_sha256=be6336dbf9e91b35f3090fc131cd997578f6a99aa4d56c694c10dc1b982f9afe
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/proof-slice.mjs:146 "head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim()," — when git cannot be spawned `.stdout` is null and `.trim()` throws a TypeError at `main`'s default-argument evaluation, so the intended guard at line 156 never runs and the user gets a stack instead of the exit-2 message — read the result first and use `.stdout ?? ''` (or test `status`/`error`) so `!io.head` is what fails.
+DEFER severity=LOW — scripts/analysis/gates/generated-docs.mjs:134 "const detail = violations.length" — this whole summary string (and the only `rows.filter(isRetired)` call) is computed and then neither returned nor printed, the JSDoc return at line 113 does not include it — either return it as `detail` and print it in `main`, or delete the block.
+DEFER severity=LOW — scripts/analysis/proof-slice.mjs:29 "export function timeoutMsFromVariable(value) {" — neither this function nor `TIMEOUT_VARIABLE` (line 27) has a caller in the file; the only timeout source is the literal at line 22 "const DEFAULT_TIMEOUT_MS = 120000;" — wire it into `realIo.run` from `gateVariable(TIMEOUT_VARIABLE)`, or drop the export with the comment, so it is not dead until registration.
+DEFER severity=LOW — scripts/analysis/gates/generated-docs.mjs:170 "const live = new Set(liveGeneratedDocs(repoRoot));" — `--report` calls the listing with no try/catch, so a missing or unreadable dir throws a stack trace, while the gate path at lines 124-128 records the same failure as a `listing` violation — wrap the call and print the listing error instead of throwing.
+DEFER severity=NIT — scripts/analysis/proof-slice.mjs:55 "for (const k of ['waits', 'expect']) {" — the argv-only rule is enforced for `waits` and `expect` but not for `timeoutMs`, so a `timeoutMs` on a suite or notbuilt row passes `checkSpec` and is silently ignored by `commandRow` — add `timeoutMs` to the same argv-only guard.
+DEFER severity=NIT — scripts/analysis/proof-slice.mjs:62 "if (r?.notbuilt !== undefined && (typeof r.notbuilt !== 'object' || r.notbuilt === null)) problems.push(" — an array passes this test, so `notbuilt: []` is then rejected with the misleading "notbuilt.blockedBy must be an array of task ids" — add `|| Array.isArray(r.notbuilt)` so the type error is reported as one.
+REJECT — scripts/analysis/gates/generated-docs.mjs:130 "if (!byName.has(name)) {" — it looks like a registry row naming a deleted file should be RED here — it is deliberately not: rule 1 guards unowned live files only and a stale row is surfaced as "STALE (not in tree)" by `report` (line 173), as the header comment states.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (no CRIT or HIGH findings; the six above are deferrals)
+- the `detail` summary in generated-docs.mjs:134 is dead code
+- proof-slice.mjs:146 crashes on a null stdout before its own HEAD guard
+
+---
+⏱  72084ms (72.1s)
+📊 Tokens — total: 39960, input: 22502, output: 17458, reasoning: 16673

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:38:32.363Z file_sha256=846e23da68a6a977efab2113220ecd163dfcb92fe9eb1f05aa4b395540d1d258 prompt_sha256=acc99b740e4eb56cb768e85fba807e10c41a671b97a516e16abf28c0136822a5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.33 "each binding renders its archetype's goldens on each platform" — mobile/__tests__/lotMapPage.behaviour.test.tsx:82 "buildLotMapSituation({ query: i.query, data: i.data as never, error: null, isFetching: i.isFetching ?? false, schemaDrift: false, selectedParcelId: i.selectedParcelId ?? null })" — the render smoke lists error, rate_limited, unauthorized and schema_drift in its it.each, but builds every case with error null and schemaDrift false, so those four golden states are never actually rendered — the render-smoke coverage fe.33 requires is unmet for those states; construct the error via errorOf(i.error) and set schemaDrift from i.error === 'schema_drift' as lotMapScreens.golden.test.ts does.
+
+DEFER severity=LOW — fe.57 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px — mobile/__tests__/lotMapScreens.golden.test.ts:69 "if ((n.component === 'Button') && !String(n.props.className ?? '').split(/\s+/).includes('min-h-[44px]')) out.push(...)" — the mobile 44 px floor lock checks only Button nodes, not the tappable lot cards (role radio) or the clear and help pressables — a pressable card without the size class passes the a11y check, so the touch-target floor is enforced for buttons only.
+
+MET — fe.31 — mobile/__tests__/lotMapScreens.golden.test.ts "11 committed goldens, one per declared state, each equal to lotMapProps(situation) exactly" — one props golden per declared state, names matched to the descriptor.
+MET — fe.24 — mobile/__tests__/pageTable.logic.test.ts "an unknown button target, an unknown choices select and a screen not drawn on the phone each throw by name" — the builder throws on an unknown name rather than rendering a blank.
+MET — fe.56 — mobile/__tests__/lotMapScreens.golden.test.ts "RED (planted): a pre-checked card, an enabled Continue with nothing picked" — the lock is proven red against planted defects.
+MET — fe.36 — mobile/__tests__/parcelPageHooks.test.tsx "replaces with the Lookup route on a cold open (nothing to go back to)" — back() gated by canGoBack, replace used on cold open.
+
+REJECT — fe.44 — the lot card shows both units at once "3,052 sq ft · 284 m²" — fe.44 scopes units to the report, this is the choose-lot card, not the report page.
+REJECT — fe.45 — the client computes regionOf and polygonsOf map geometry — a map viewport region is device state, one of the five client-side allowances named in fe.45.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: fe.24, fe.31, fe.36, fe.56
+
+---
+⏱  91332ms (91.3s)
+📊 Tokens — total: 50041, input: 32269, output: 17772, reasoning: 17076

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:57:17.891Z file_sha256=0f2cd3f9609f0715e7e02136808041f03445b8b2889206dda3bef946b8599b08 prompt_sha256=72cc5b15a728eafd6619a1aa82faede45c95d7d3de5d79bd5efba03bca1200dc
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-five-words-p3.txt (model: deepseek-reasoner)
+
+REJECT — task-332/374/384/411 acceptance criteria ("task-384: backlog/tasks/task-384 ... Acceptance Criteria from line 32", "task-411: ... Acceptance Criteria from line 0") — accused of failing the four cards' acceptance criteria and their 44 px / text-component / checks requirements — the criteria bodies are pointers to backlog files that are not pasted ("cannot see"), and the only pasted rule list is the 132 step-handbook glossary, which names no requirement on these five files — so nothing here can be ruled unmet.
+
+REJECT — Glossary definitional bullets, e.g. "**slug**: A step's name: its `scripts/manifest.json` key and `identity.name`" and "**Gate A … K, V**: Lettered R-BA gates" — accused of step-pipeline non-compliance — these files contain no manifest key, descriptor, compute module, converted[] entry, gate token or rule id, so no pasted definition binds them; raising one would be judging a clause that is not pasted.
+
+DEFER severity=LOW — task-411 card title "The lead-detail API serves the area already converted, the two typed phone copies of the factor are deleted" — src/lib/leads/lead-detail-query.ts "we do NOT recompute in JS" vs "return sqm === null ? null : sqm * SQM_TO_SQFT;" — the file's own contract sentence is contradicted by its code, so this chunk cannot show whether the conversion is single-sourced on the server — fix the header sentence to name the one server conversion (the mobile copies are outside this material, cannot see).
+
+MET — task-411 card title "The lead-detail API serves the area already converted" — src/lib/leads/lead-detail-query.ts "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))" — the payload carries the area already converted from the pinned SQM_TO_SQFT on the server, including the CoA branch.
+
+MET — task-374 card title "Web report footer links use the router and meet the 44 px target" — src/components/report/ReportPage.tsx "case 'Button': return <Link key={k} href={String(p.href)} className={cls}>{kids}</Link>" with layout "link: 'inline-flex min-h-11 min-w-11 items-center justify-center ...'" — footer links are Next routes and carry a 44 px target.
+
+MET — task-332 card title "SRCH.FOOTER-Shared-web-footer-component" — src/components/surfaces/web/footerNode.ts "export const footerNode = (s: FooterSection, L: FooterLayout, prefix: string): FooterNode" — one shared tree builder used by the report page and the static binding, each rendering it with its own class table.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 0
+Rules met: none
+
+---
+⏱  41227ms (41.2s)
+📊 Tokens — total: 40815, input: 33159, output: 7656, reasoning: 7011

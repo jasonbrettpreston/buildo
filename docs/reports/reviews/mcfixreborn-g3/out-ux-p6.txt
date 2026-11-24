@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:21:13.428Z file_sha256=ef7ce965505e5cfa0a6d4e1eead8b46565b0e48a882a0e12154e28189652ca66 prompt_sha256=682d05619261451f9e62aa1eb1b8a62a75de15902a5b3fe8d4f40426bb2ab0f6
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:15 "That looks like an intersection. Type a house number to see the lots." vs design "An intersection shows the message only; the corner lots on the map are MF-60." — the person is told to type a house number, but this page's own content carries no input label or placeholder and the state draws the message only, so its one instruction cannot be carried out and the page reads as broken — reword so the message sends the person back to the search page to enter the house number there.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:17 "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address." — the descriptor's field_whitelist gives the neighbours only "map.neighbours[].parcelId" and "map.neighbours[].outline", so the faint neighbouring lots the person is told to try carry no address to read or tap — label the neighbours with their address, or send the person to the search page instead.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:20 "Couldn’t reach the lot service. Check your connection and try again." — the descriptor's 500 class uses this same copy ("Inline red \"Couldn’t reach the lot service.\" with a Try-again button wired to refetch()."), so a server failure tells the person their own connection is at fault and they may chase a connection that is fine — separate the server-failure text from the offline text.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:5 "Lot {letter} · has the house" — the read behind this card is "has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry", so a garage or shed footprint is shown as the house and the person can choose a lot on a claim the data does not make — say building or footprint instead of house.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:13 "reactivate to search lots again." — the descriptor's locked-out entry describes only a line ("A distinct locked-out line: the parcel tool is not in the current subscription.") and names no control, so the person is told to reactivate with nothing on the page to do it, and I cannot see a reactivate target in the pasted material — point the instruction at a destination or drop it.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:15 "Enter at least 3 characters to search for a lot" — the threshold is a registered setting ("config.logic_variables names its registered logic variable maxbld_page_min_query_len with min, max and on_invalid"), so after a tune the copy still tells the person 3 while the search needs another count, and the same page carries a second wording of the number at :21 ("Type at least 3 characters to search.") — bind the number to the setting or leave it out of both strings.
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:14 "Pick a lot on the map or in the list." — the descriptor's own limitation says "The map is hidden from screen readers; the lot cards are the accessible list of the same lots", so a screen-reader user is pointed at a map they cannot reach before being told about the list — name the list first.
+
+DEFER severity=NIT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:9 "—" — this value fills "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}", so a lot with no area or zoning reads "Lot 3, —, frontage —, zoning —" and a screen reader announces a bare dash — use a word such as unknown instead of the dash.
+
+VERDICT: FAIL on the person's experience
+States checked: search first view, below-minimum typing, loading, candidate list, over-limit refine, miss, outside Toronto, entitlement, rate limited, error, schema drift, reports-left line, footer; lot map loading, 2 lots, 3+ lots, unlinked, too many lots, intersection, redirect, error, schema drift, rate limited, unauthorized, nothing selected, selected; static page table states: cannot see (page table not in this chunk, so the STATIC page rows are not judged here)   Dead ends found: 3
+
+---
+⏱  185026ms (185.0s)
+📊 Tokens — total: 47178, input: 24432, output: 22746, reasoning: 21688

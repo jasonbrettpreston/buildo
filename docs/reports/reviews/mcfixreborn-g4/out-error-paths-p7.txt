@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T04:29:10.490Z file_sha256=b3d509b2f43fb449584effe4b2b0e0f24ff8c037d0db7d2499db2adc2e5fceed prompt_sha256=fd425ce6be256988922144b868541de755ffde98af36774b62924089712a4490
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-error-paths-p7.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second case has no row-length assertion, so when the variable is absent from logic_variables (the exact drift this file exists to catch) rows[0] is undefined and the test dies on a TypeError instead of naming the missing variable, unlike the first case at line 24 which asserts toHaveLength(1) — add the same `expect(rows, TIMEOUT_VARIABLE).toHaveLength(1)` before dereferencing rows[0]. — DEFER? no, list as DEFER MED to match severity gate.
+
+DEFER severity=MED — src/tests/proof-slice.db.test.ts:20 "afterAll(async () => { await pool.end().catch(() => undefined); });" — the catch sits on end(), not on pool being set, so if getTestPool() throws in beforeAll the afterAll hook throws its own TypeError and the reported failure masks the real connection error — guard with `if (pool) await pool.end().catch(() => undefined);`.
+
+DEFER severity=MED — src/tests/hooks-composition.infra.test.ts:29 "const PRE_PUSH = fs.readFileSync(PRE_PUSH_PATH, 'utf8');" — the three hook reads run at module scope with no existsSync guard, so a missing or renamed hook (fresh worktree, source tarball, H6 regression) crashes collection and turns every case in the file red with no named case, the exact failure the next line already defends against for the list — use the same `fs.existsSync(...) ? readFileSync(...) : ''` form for pre-commit, pre-push and commit-msg.
+
+DEFER severity=MED — src/tests/hooks-composition.infra.test.ts "const evidence = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, budget.EVIDENCE_REL_PATH), 'utf8'));" — this read and parse run in the describe body, so a missing or half-written budgets evidence file throws during collection and the "missing evidence owes a re-measure" RED case (which only passes a null object in memory) never runs — wrap the read in try/catch and pass null to budgetDecision on failure.
+
+DEFER severity=LOW — src/tests/hooks-composition.infra.test.ts:39 ".map((line) => (line.trim().startsWith('#') ? '' : line))" — only whole-line comments are stripped, so a trailing `# e.g. curl ...` comment on a live stage command trips preCommitTouchesDbOrNetwork and fails the file-only GREEN case with no real network call — strip from the first unquoted `#` or restrict the predicate to line starts.
+
+DEFER severity=LOW — src/tests/hooks-composition.infra.test.ts:51 "return /\bnpm run test\b/.test(code) || /\bvitest run\b/.test(code);" — the doc above it says "a bare vitest run with no path/related scoping", but the regex also matches a scoped `vitest run src/tests/x.ts`, so a legitimate scoped run added to pre-commit fails the GREEN "does NOT invoke the full suite" case on a false positive — require no path argument after `vitest run`.
+
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts "const r = mod.realIo().run(['node', '-e', \"process.stdout.write('x'.repeat(20 * 1024 * 1024))\"], { timeoutMs: 60000 });" — a real child spawn with a typed 60 s literal inside a file whose own rule is that limits come from registered variables; on a loaded runner it expires, status is null and the case reports "expected null to be 0" rather than naming the timeout or ENOBUFS — assert on r.signal/error first and read the bound from the registered variable.
+
+REJECT — src/tests/hooks-composition.infra.test.ts "fs.rmSync(calls, { force: true });" — re-running a FAIL_AT case re-uses one calls.log, which looks like a double-count hazard — each run deletes the log first and asserts the exact prefix, so a repeat is a no-op.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing file (hook read, evidence read, list read, pass file), empty rows (DB variable row), spawn failure and timeout (git ls-files, node -e child, sh -c chain), double-run of the behaviour harness, exactly-once counting (gates, suite line, fork caps), temp dir cleanup.   Unguarded: 4
+
+---
+⏱  53256ms (53.3s)
+📊 Tokens — total: 37898, input: 26582, output: 11316, reasoning: 10296

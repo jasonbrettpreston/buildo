@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T05:12:47.789Z file_sha256=963949f428531d19fcf3ec9df941463e45d76c2e4264c11cbf0d3a4c12c330b2 prompt_sha256=350ba08e9c58971593fa71b517007d6764413a8a89dca2da56051cf6856ca63a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-error-paths-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, staleness.why: "the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache" — a 400 ms debounce floor permits up to 150 requests a minute, so it cannot protect a 60/min bucket, and steady typing can walk the user straight into the 429 state — raise debounce_ms or add a client cap of one in-flight request per window so typing alone cannot exceed the bucket.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, config.why: "how long Continue waits for the answered lookup; 60 s, an open operator timeframe" — the wait is bounded but nothing declares what happens when the 60 s expires (busy ends how, report opens, error shown) and no check id covers it, on a page whose only action is Continue — declare the expiry outcome and add a check id that drives the bound.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, errors.classes 429: "Inline red \"Too many searches. Try again in Ns.\" from RateLimitError.retryAfterSeconds." — the 429 path tells the user to wait N seconds, but this page declares no refetch control and its one action (Continue) routes into the same parcels-lookup bucket, so there is no way to re-arm after the wait — enable a retry control at retryAfterSeconds or make Continue re-run the lookup.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, docs.data_story: "No `parcel_tool` row is a 200 with every field null." — the all-null 200 is a declared empty, but the consumer side declares no state for it (the search descriptor's states[] has eleven entries, none for a null reports-left), so "N of M reports left" has no defined degrade when the row is absent — declare that the line hides when reportsLeft is null and pin it with a test.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, errors.no_retry: "ApiError(400)" — a 400 is listed as non-retryable, yet errors.classes[] declares only 403, 429, 500 and schema_drift and no client length bound is declared against the server range "3 to 120", so an over-long pasted address falls into an undeclared render (generic error with a Try-again that fails identically, or nothing) — map 400 to a "shorten this address" state and cap the input at 120.
+
+DEFER severity=MED — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, limitations[0].what: "the client derivation runs only when `resolution` is absent (an older server)" — the same descriptor's versioning says the response is strict on both sides and "so an added key is a break, not an extension", so an older server that omits `resolution` either trips ParcelLookupSchemaError into the no-retry schema_drift dead end or silently falls back; the descriptor asserts both and the field's optionality is not declared — mark `resolution` optional in the mobile mirror and pin the version-skew case with a test.
+
+REJECT — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, docs.data_story: "usage_events (the distinct lots opened this billing month)" — a double-submit or a re-opened lot looks like it counts a second report — the count is distinct by lot inside the billing month, so a repeat open is a no-op and the read writes nothing (grounder to confirm the DISTINCT in src/lib/entitlements/index.ts:467-473, I cannot see it).
+
+REJECT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, versioning.why: "the block is optional in the mobile mirror, so a payload from an older server still parses and the page never asks" — a missing lotForm fails open to the full report for a lot the detector would have flagged — that older-server fallback is the checked, operator-ruled case named in parcelsemi_ask_only_when_unsure, and the skew window is transient during rollout.
+
+VERDICT: PASS on error-path safety
+Paths walked: lookup 403/429/500/schema_drift/400 renders, no_retry list and retry_max bound, try-again refetch, empty (no_match, prompt, candidate cap, entitlement all-null 200), Continue bounded wait and expiry, double-submit of Continue and of the report meter, older-server skew (lotForm absent, resolution absent), Toronto-only pre-network refusal, usage_events dedup key.   Unguarded: 6
+
+---
+⏱  57527ms (57.5s)
+📊 Tokens — total: 34897, input: 25075, output: 9822, reasoning: 8695

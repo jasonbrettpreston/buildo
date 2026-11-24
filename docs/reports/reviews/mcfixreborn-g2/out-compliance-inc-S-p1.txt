@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:25:03.900Z file_sha256=437739355d87848e7a8c526689d3e6d25afe1994cbb217779e94d6736303f7d9 prompt_sha256=71e7b267a8de0f2067937ecf624f10500133e996da8c2142df25d4d1742631fe
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings (7 max used):
+
+DEFER severity=MED — doc-2 A.5 "| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |" — src/lib/admin/parcel-lookup.ts:152 "The unit is not used to narrow the match (parcels are lots, not units; the ruled "add a unit number" text stays)." — doc-2 names 1.4 as the deliverer of A.5 and this change is 1.4, yet a typed unit is deleted before the parse, so the many-lots notice "Add a unit number or pick a nearby address" still fires for a user who just added one — fix: record in the lane that A.5 stays NOT-BUILT after 1.4 and that B.5's text is served unchanged, or return the unit-bearing outcome the element rules.
+
+DEFER severity=MED — doc-2 G.6 "| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | main | AVAILABLE | LS.12 | BUILT |" — src/lib/parcels/report-compute.ts:19 "Server only: no meter, no entitlement, no usage, no user id, no write." — the new hit path returns a servable page with no meter and no entitlement read, so "a hit counts one report" now rests entirely on src/app/api/parcels/lookup/route.ts, which is not in the pasted material (cannot see) — fix: land or cite the route's single meter around both the stored read and the compute entry in this review set.
+
+DEFER severity=MED — scripts/analysis/src-sql-ledger.mjs:77 "it may not grow (`grew:`)" — scripts/analysis/src-sql-ledger.mjs:111 "'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19)" — the file states its closed interpolated set may not grow and the diff grows it from 29 to 30, so the ledger's own invariant and the change cannot both hold — fix: show the `grew:` acknowledgement the ledger mechanism expects, or keep the statement static so no new member is needed.
+
+DEFER severity=LOW — doc-2 G.1 "| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE | | BUILT |" — src/lib/admin/parcel-lookup.ts:213 "return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };" — a ONE-row hit whose printed direction differs from the typed one is turned into the candidate list, which is the extra page G.1 says a unique match never gets — fix: keep the single row as a unique match and surface the direction mismatch as a note, or cite the pasted ruling that authorises the downgrade.
+
+DEFER severity=LOW — doc-2 E.5 "| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |" — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "MAXBLD_WEB_LIVE stays pinned false, so every customer still gets the miss; the problem Customer report returns nothing stays open." — doc-2 lists MB-44 as the deliverer of E.5 and G.5 and this change is the MB-44 landing, so both elements stay NOT-BUILT and the deliverer column is now unmet — fix: re-point E.5 and G.5 to the remaining MB-44 part, the pinned-false module being named by task-123's own title.
+
+DEFER severity=LOW — scripts/seeds/logic_variables.json:9782 "a change is a reviewed seed + migration commit" — scripts/seeds/logic_variables.json:9780 "Re-pinned from 27.5 to 33.2 on 2026-11-20 (migration 334)" — the row's own rule requires the seed change to arrive with its migration and the pasted material carries no migration file (cannot see), so half of the ruled pair is unverified — fix: include migration 334 in the review set or note why the DB mirror is out of the chunk.
+
+DEFER severity=NIT — Implementation Notes "Left out of every group: generated files ... documents, lane and review records, backlog cards." — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json:2 "\"$comment\": \"Pre-registration, task MB-44 ... round 197, claimed in the ID ledger\"" — the two prereg files in this material are round records of exactly the kind the notes exclude, and their claim "Zero scorer moves (no file under scripts/analysis/bylaw ...)" is contradicted by their own path — fix: move the preregs out of the reviewed set and let the bylaw lane review them.
+
+MET — doc-2 A.3 "Typeahead resolution of the typed text (street-prefix, up to 10)" — src/lib/admin/parcel-lookup.ts:262 "AND ap.linear_name_normalized LIKE $1" with "LIMIT 10" — resolution is the street prefix over the normalized key, capped at ten rows, as A.3 rules.
+
+MET — doc-2 C.14 "Routing: one printed address over two or more lots opens this page (shown only then)" — src/lib/admin/parcel-lookup.ts:137 "if (num && printed.size === 1 && !printed.has(''))" — a single printed address with a typed house number over two or more rows becomes multi_parcel, and nothing else does.
+
+MET — doc-2 A.4 "Typed street direction (E/W/N/S) kept in the match" — src/lib/admin/parcel-lookup.ts:182 "const same = rows.filter((_, i) => dirs[i] === typed);" — the typed direction narrows the already matched rows and never becomes a syntax element.
+
+MET — RR-0433 "tasks 381, 383, 390, 395 and 411 were folded as they stood; this group review is their one output review." — scripts/seeds/logic_variables.json, src/lib/admin/parcel-lookup.ts, src/lib/parcels/report-page.ts, src/lib/parcels/report-compute.ts, src/lib/admin/report-preview-live/stored-page.ts each appear once in this material — the folded set is read once, no file twice.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  101370ms (101.4s)
+📊 Tokens — total: 51744, input: 31281, output: 20463, reasoning: 18929

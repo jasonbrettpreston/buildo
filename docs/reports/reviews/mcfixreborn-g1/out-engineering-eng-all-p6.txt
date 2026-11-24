@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T03:19:57.502Z file_sha256=eaf8a9c8b6713ec6beda0dd3a93f1851df1929bb4278989772f5d631d56a4f30 prompt_sha256=92ece4fad6a867791890bb15da706b186a5af49c9fd62cd11ea5484e30290f9c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-engineering-eng-all-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/leads-detail.infra.test.ts:52 "const sampleRow = {" plus ":43 const sampleContext = {" or NONE — the 26 field permit row and the user context are hand written inline literals that every 200/400/401/404/500 case is built from, and the file imports no factory at all, so the rule's MUST is unmet — add a lead-detail row factory and a user-context factory to src/tests/factories.ts and build sampleRow/sampleContext and the per-case overrides from them
+
+DEFER severity=MED — 12. Frontend Foundation Tooling §12.12 "MUST have at least one `fast-check` property test asserting the invariant" (distance/unit conversions, key normalizers) — src/tests/leads-detail.infra.test.ts:130 "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the new m2 to sq ft conversion and the `isUuid` to NULL binding normalizer ("215 expect(callParams[3]).toBeNull()") are proven by single examples only, no property test exists in the material — add src/tests/property/lead-detail.property.test.ts with forAll over non-negative decimals (sqft equals sqm times the pinned factor within rounding) and forAll over non-uuid strings (the bound $4 is null, never the raw string)
+
+DEFER severity=LOW — 4. Security and API Contracts §4.4 "All API routes must return a consistent envelope: `{ data, error, meta }`." — src/tests/leads-detail.infra.test.ts:96 "const body = (await readJson(res)) as { data: Record<string, unknown>; error: null };" — the envelope assertion types only data and error and never asserts meta, so a route that drops meta from the envelope would still pass every case in this suite — assert meta is present (an object) in the 200 happy path
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "If using `!`, you must document why in an inline comment." — src/tests/surfaces/report-sheet-a11y.ui.test.tsx:87 "return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;" (also ":92 return m[1]!;") — the non-null assertions rest on `.map()` destructuring, which is not a prior validation step, and carry no inline justification — type the mapped array as a 3-tuple (`as [number, number, number]`) or add the one line comment the rule requires
+
+DEFER severity=LOW — 5. Testing Standards §5.2 "`*.security.test.ts` ... Auth-guarded / externally-reachable surfaces" — src/tests/leads-detail.infra.test.ts:254 "describe('GET /api/leads/detail/[id] — 401', () => {" or NONE — the new auth-guarded, externally reachable detail route has its negative cases (400/401) only in the infra file and no `*.security.test.ts` appears anywhere in this chunk, so the mandated layer is absent from what is reviewable here — add a leads-detail security suite covering forged ids, abusive id payloads and cross-user lead_views access
+
+MET — 2. Error Handling & Stability §2.1 — src/tests/leads-detail.infra.test.ts:339 "expect(body).not.toContain('OOPS_INTERNAL_DETAIL');" — the pool rejection is forced at the DB boundary and the 500 body is asserted free of err.message
+
+MET — 4. Security and API Contracts §4.2 — src/tests/leads-detail.infra.test.ts:198 "expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.user_id\s*=\s*\$4::uuid/);" — the parameter binding is locked structurally rather than string concatenation
+
+MET — 5. Testing Standards §5.5 — src/tests/surface-registry.infra.test.ts:109 "it('the committed registry is byte-identical to what the census currently generates'" — the generated artifact is regenerated and diffed against the committed file, which is the parity/drift guard
+
+MET — 4. Security and API Contracts §4.1 — src/tests/leads-detail.infra.test.ts:260 "expect(body.error.code).toBe('UNAUTHORIZED');" — a null user context is proven to be refused before any query runs
+
+REJECT — 1. Architecture & UI Standards §1.1 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — the report toggles and detail links are not shown to meet the 44px target — the component source (src/components/report/ReportPage.tsx) is outside this chunk, cannot see, so it is not a finding on this material
+
+REJECT — 3. Database Management & Scaling §3.2 "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks" — no migration file is present in the diff — this chunk is four test files only, the migration and its DB replay suite are outside it, cannot see
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 22   Unmet: 5
+
+---
+⏱  124098ms (124.1s)
+📊 Tokens — total: 51245, input: 32206, output: 19039, reasoning: 17783

@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T05:16:38.482Z file_sha256=16d7bdb7381b9a75e1b0c1b2925dea1f1a3773e63f872f6c1f261f74c342e17a prompt_sha256=a0c9e828233bd60c9bb4463ecf51f3a100d01fa64c1d8194d5a2926b1fc63484
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-ux-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/parcelSearchMatch.test.ts:252 "expect(isOutsideToronto('123 Main St Mississauga')).toBe(false);" — the person who types a Mississauga address without a comma is sent to the no_match empty state instead of the outside-Toronto notice, so the coverage message the ruling requires is not shown — the no-comma form is a common address input and the test itself calls this a stated limitation; the bounded fix is a trailing-city check after a street-type token or the outside-Toronto notice.
+DEFER severity=LOW — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:100 "expect(screen.queryByText(LIFE.error!)).toBeNull();" — when an error arrives with a cached page the person sees the full report with no offline or out-of-date note, so stale sizes and costs look current — the design text is silent on a stale notice, so this is a record, not a departure; confirm the approved state text before adding one.
+DEFER severity=NIT — mobile/__tests__/parcelSearchMatch.test.ts:312 "expect(shouldHideAppTabBar(undefined)).toBe(false);" — on a first render where the focused route is not yet resolved inside the parcel tool the five-tab lead-gen bar is shown and then hidden, a visible flash of the wrong navigation — one-frame flash on an unresolved route, low impact; the safe default is to hide until the route resolves.
+
+VERDICT: PASS on the person's experience
+States checked: search idle, typed before debounce, first search in flight (cannot see), unique redirect, candidate list, selected candidate, intersection, miss/empty, error/retry, outside Toronto, recent chip, report link, semi ask, semi answer yes/no, semi answer not sure landing state (cannot see), semi busy, semi error/retry, semi no data redirect, report loading, report miss, report served, report error/retry, report cached page with error, report held unsure, report back cold/history, product shelf tabs, five-tab bar hidden   Dead ends found: 0
+
+---
+⏱  274862ms (274.9s)
+📊 Tokens — total: 86684, input: 35230, output: 51454, reasoning: 51001

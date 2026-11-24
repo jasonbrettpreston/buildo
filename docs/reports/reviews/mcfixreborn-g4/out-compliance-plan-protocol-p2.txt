@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:05:31.913Z file_sha256=6ca68845e60b69f6dba7772bd881f985b4f26872281b59100edd50decee27f71 prompt_sha256=0221498f79bb4a150ac2e6a2af740921b276ffee54e6ed5a0c5e48b1738962c2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — plan-protocol section 3 "One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it." — scripts/analysis/backlog-lane.mjs:70 "if (fs.existsSync(wt)) refuse(`worktree ${wt} already exists`);" — the preflight refuses only a duplicate worktree or branch for its own lane name and never checks whether another task of the same increment is already RUNNING, so two lanes of one increment can be launched at once — add a preflight refusal when another task of the same milestone already carries a @lane- assignee with status RUNNING.
+DEFER severity=MED — plan-protocol section 4 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" and dated note 2026-11-20 item 4 "plus its separate grounder" — scripts/analysis/backlog-lane.mjs:92 "if (gateType === 'build' || gateType === 'fix') {" — a lane task of any other type (chore, tooling, docs) launches with no plan evidence folder, no per-list plan compliance output and no GROUNDER-PLAN.md checked, so the lane gate binds only two of the types the board uses — gate every lane task whose type is not record-only, or refuse a type outside the known set.
+DEFER severity=LOW — plan-protocol section 1 "(9) measured check on the page" — scripts/analysis/proof-slices.json:8 "\"notbuilt\": { \"blockedBy\": [], \"reason\": \"not run by this tool: duration unmeasured, and the lane rule refuses the test-runner call; the PLAN gives no other way to measure it\" }" — a row with no blocker and no runner keeps slice S at exit 3 forever, so the pages' behaviour is never measured by this runner — give the row a suite-style form that reads a recorded pass file, or name the task that unblocks it.
+DEFER severity=LOW — plan-protocol principles "accuracy, understandability; keep it simple" — scripts/analysis/backlog-lane.mjs:12 "A task with no Files line (a record-only task gets the every-task, increment and milestone lists only, since task-448) or a Files path no row matches is refused before any write, the path named." — the table routes a no-Files record task to the queue-records row and launches it with the every-task lists, so the header and rule-lists.json disagree on the same launch decision — reword the header so only a Files path no row matches is refused.
+REJECT — plan-protocol section 0 "Every new task carries its SOURCE ... A task with no source is not added." — accused: the launch takes a task that carries no source line — the launch does not add a task, it takes one already on the board; the source rule binds step A's seq-patch merge.
+REJECT — plan-protocol section 3 "Every step reports: tasks before, added (with source), removed-candidate, after." — accused: the launch script prints no task counts — that reporting clause binds steps A to F and the SITTING, not the one-command lane launch.
+REJECT — plan-protocol section 5 item 1 "one DB job at a time (Spec 137 rule 9)" — accused: rule-lists.json turns Spec 137 off on the queue-records row — that check is made across all increments at the integration pass, not by attaching a rule list to one lane.
+MET — plan-protocol dated note 2026-11-20 item 4 — scripts/analysis/backlog-lane.mjs:181 — the brief builds the lens line from rule-lists.mjs lensSet by task type and Files and states a separate grounder must rule every out-*.txt before BUILT.
+MET — plan-protocol section 0 bullet 1 as superseded (the board is the plan) — scripts/analysis/backlog-lane.mjs:63 — the task is read from the board checkout, and the lane waits for the board commit before any worktree is made.
+MET — plan-protocol section 2 step D "exact commands" — scripts/analysis/backlog-lane.mjs:120 — every step prints "$ cd <dir> && <command>" and --dry-run prints the same command list while writing nothing.
+MET — plan-protocol section 5 item 6 "listed in the plan as tasks with sources" — scripts/analysis/backlog-lane.mjs:2 — each new tool file's header names the task and ruling that ordered it ("task-310, R8e; RR-0242").
+MET — plan-protocol section 2 step A gate "board re-rendered" — scripts/analysis/backlog-lane.mjs:137 — the launch kickstarts the board-commit job and waits until backlog/ is clean and HEAD has advanced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  83398ms (83.4s)
+📊 Tokens — total: 52482, input: 34316, output: 18166, reasoning: 17068

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:34:52.890Z file_sha256=d92c0ef95b6618e328f792c91f982a4a49ecce095482aa651ecb6281020816ab prompt_sha256=cf3181baa8531de71cbe953f9f64515e950b12571a8364ada2958b38b2398809
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p9.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-378 "FIX.TUNE-Phone-tunables-are-data-not-code-lookup-and-entitlement-contract-entries-corrected-D14-D15" — src/app/api/parcels/lookup/route.ts:59 "const SEARCH_LIMIT_PER_MIN = 60;" and src/app/api/parcels/entitlement/route.ts:25 "const ENTITLEMENT_LIMIT_PER_MIN = 30;" — the per-minute limits stay code constants, so the tunables-are-data reading is not evidenced in these two files — read both limits from the tunables registry the task corrects, keeping the constant only as a documented fallback.
+
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — scripts/surfaces/surface-validate.mjs:29 "the third generator is the mobile library theme (plan v2 section 5; Spec 117 section 7 dated note 2026-11-10)" and scripts/surfaces/screen-checks.mjs:11 "the gate reads only the tree it sits in (plan.min M-0)" — stale plan v2, v3 and plan.min cites remain in built surface files — repoint each cite to the board (Spec 137) or drop the plan reference.
+
+REJECT — task-383 "STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size" — the route is accused of keeping lookup logic in the handler — why not real: "await runLookupFlow({ q, parcelId, semi })" delegates resolve, map, page and parse, and src/app/api/parcels/lot-size/route.ts calls the same "parcelToolAccess", so the thin-route and shared-gate clauses are met not breached.
+
+REJECT — group scope — src/app/api/permits/[id]/route.ts and src/components/permits/BuildingMassing.tsx read as outside G3's phone/search surfaces — why not a real issue: the Description pastes "Files of other tasks are also read here: task-123, task-266, task-332, task-333, task-372, task-384, task-411", so their presence is sanctioned.
+
+MET — task-383 — src/app/api/parcels/lookup/route.ts "await runLookupFlow({ q, parcelId, semi })" — the flow lives in src/lib/parcels and the lot-size route uses the same gate helper.
+
+MET — task-390 — scripts/surfaces/screen-checks.mjs "export function pageArm(ctx)" and "pageProblems(id, screens[id], supplied, content, ...)" — the page-table arm checks screen rows against the binding supply.
+
+MET — task-338 — src/app/api/parcels/lookup/types.ts "frontageStreet: z.string().nullable()," and "hasFootprint: z.boolean()," — the two lot-map fields are declared in the lookup contract (registry regeneration is outside this chunk).
+
+MET — RR-0433 — the folded tasks 383 and 390 appear here as their single output review (lookup route plus page arm in this chunk).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  122131ms (122.1s)
+📊 Tokens — total: 58136, input: 33653, output: 24483, reasoning: 23736

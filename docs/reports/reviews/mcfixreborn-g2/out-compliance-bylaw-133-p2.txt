@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:22:19.818Z file_sha256=b972c2b7036831a078e3c1933aeeaeadd93d80ff186e2e8c0a9850322a68386b prompt_sha256=9238bd97ee589a26d6bb222debd7c2c0440c0a8eab95bfdf6ef12027f15dc0e4
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-bylaw-133-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — m.511 "CITE-2 cite by id and anchor" — prereg-MB-44-1.json:2 "no by-law reading changes and no literal or zone name enters code (M-61)" — the literal-free claim is anchored to M-61, which governs declared formula report fields and says nothing about literals or zone names, the pasted rule that names non-law literals is m.68 — re-anchor the claim to M-68 (and m.46 for the heuristic door) and leave M-61 to the formula statement it supports.
+
+DEFER severity=LOW — m.513 "CITE-4 stage-6 prereg rules[] checklist" — prereg-MB-44-2.json:6 "\"rules\": [ \"M-384\" ]" — both preregs carry a one-rule checklist while the round's own comment rests on the read rule and the projection rules (M-61, the m.305 coa-* tool layout, the m.321 pre-registration it is performing), so the checklist does not record every rule the round is checked against — list each rule the round is checked against, not only M-384.
+
+DEFER severity=LOW — m.320 "Each City figure is scored against the by-law in force on its decision date" — prereg-MB-44-1.json:84 "\"expected_unchanged\": \"every row of the 172, 4d and cumulative sets: class and City figure\"" — the prereg asserts every City figure is untouched without recording the in_force_basis those figures were scored against (the basis m.375 requires a scope note to name) — record the in_force_basis pin beside expected_unchanged in both files.
+
+DEFER severity=LOW — m.116 "table_version = <adoption_id>:<sha256 of the LF bylaw-provisions.json>, the same sha oracle C records" — prereg-MB-44-1.json:3 "\"schema\": \"coa-round-prereg-v1\"," — neither prereg records any table_version, so round 197 and round 198 declare 407 MATCH and 459 cumulative MATCH against no pinned table and the zeros cannot later be shown to have been scored on the same bylaw-provisions.json — add the table_version pin to both preregs, the same value the round record carries.
+
+MET — m.321 — prereg-MB-44-1.json:11 — "\"expected_moves\": []," with expected_before_totals equal to expected_totals, the round pre-registers the rows it expects to move (none) and the totals it expects on each of the 172, 4d and cumulative sets.
+
+MET — m.71 — prereg-MB-44-2.json:2 — "MAXBLD_WEB_LIVE stays pinned false, so every customer still gets the miss", and the new compute entry is declared dark at landing, so no live report column moves.
+
+MET — m.305 — scripts/analysis/bylaw-validation/coa-expected/prereg-MB-44-1.json — the round records live under the coa-* tool directory and the data they name are referenced by path, not embedded in the reader.
+
+MET — m.384 — prereg-MB-44-1.json:7 "M-384" — "W only reads stored rows, never recomputes" and in prereg 2 "imports the Layer 3 core ... and never copies a formula", so the new entry runs the existing table-driven core rather than a second implementation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: m.71, m.305, m.321, m.380, m.384
+
+---
+⏱  69409ms (69.4s)
+📊 Tokens — total: 43681, input: 34978, output: 8703, reasoning: 7891

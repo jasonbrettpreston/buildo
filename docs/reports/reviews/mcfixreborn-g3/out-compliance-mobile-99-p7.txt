@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:21:21.610Z file_sha256=9579ea85fefce7ff21ff8b8fe3cd7362463a50ecfae3b4b5820ab8d90d309a76 prompt_sha256=2242490519fc2b8c792ce9dcb0c53d2aa8a19ecec6547ae3aa3a83e5db5cbb2e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-99-p7.txt (model: deepseek-reasoner)
+
+MET — 99 §B1 "Every server fetch MUST go through TanStack Query — never raw `fetch()` in components." — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(src).not.toMatch(/fetchParcelLookup/)" — Continue runs through useAnswerParcelLookup and the page source carries no raw fetch, so the Layer 2 bridge is honoured.
+MET — 99 §B1 registry "`['parcel-lookup', parcelId]` ... depends ONLY on `parcelId` (query-key hygiene — never on the search string)" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "mockSetQueryData(['parcel-lookup', id], result)" — the answered lookup is cached under a parcelId-only key, matching the registered key.
+MET — 99 §6.5 "A render gate condition ... MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/semi-question?parcelId=PCL-S1']])" after two rerenders — the redirect is asserted to fire exactly once, on settled data, not on every render.
+MET — 99 §5.2 "Routers MUST read from the canonical source" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx report mount reads `useParcelLookup().data` — the redirect decision reads the TanStack canonical cache, not a local mirror.
+REJECT — 99 §1 "a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec" — accused: the semi-question page and report-mount redirects form a third router beyond the two §5.1 boundaries — not a real issue: they read canonical source, fire once on settled data, and are intra-`(app)` navigation named by task-319/task-360, not a gate boundary.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+Rules met: none
+
+---
+⏱  82914ms (82.9s)
+📊 Tokens — total: 50620, input: 33427, output: 17193, reasoning: 16719

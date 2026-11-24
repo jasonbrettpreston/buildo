@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:15:27.853Z file_sha256=60f07aedf736e7146a036ebffef4ea98f01e2e78ed81631ab1a16b509bec049e prompt_sha256=2768fb85e1c9a553728e23eb23630786ddc2e92261767c55eb900aac1ccee512
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 137 §4 Rule 12 note (task-366) "one compliance lens output per rule list the task attaches" — scripts/analysis/rule-lists.mjs:113 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — a resolved list whose file is the engineering standards is reviewed by the engineering lens, so the task carries no compliance output for that list — either put the task-438 seat ruling into the governing text or keep every resolved list on the compliance seat.
+
+DEFER severity=MED — Spec 137 §4 Rule 12 note (task-423) "the objective is an effective compliance review on the plan and the output" — scripts/analysis/rule-lists.mjs:651 "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only" — plan-prep review makes no compliance call for a fix task, so a fix task's plan is never judged against its rule lists — run the resolved lists in the review phase for fix tasks too, or write the exemption into the note.
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/rule-lists.mjs:387 "max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND" — the bound can be raised past 120,000 by the env var and by the CLI --max, so the tool does not hold the operator's cap — clamp with Math.min(BOUND, ...) and refuse a --max above BOUND.
+
+DEFER severity=MED — RR-0439 "each rule list reads only the files the rule table names for it" — scripts/analysis/rule-lists.mjs:441 "chunks.forEach((ch, ci) => parts.forEach((p, i) => {" — every list part is paired with every chunk of the whole material, so a list reads paths its rows did not name — cut the material per list to the paths its rows matched, or record that this ruling is not carried by the tool.
+
+DEFER severity=LOW — Spec 137 §3 word list "Built and committed locally; not yet pushed or not yet landed." — scripts/analysis/rule-lists.mjs:503 "const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));" — check-tasks skips BUILT tasks, an open word in §3, so their compliance: references and unresolvable Files lines are never listed — list BUILT tasks as not yet resolvable instead of skipping them.
+
+DEFER severity=LOW — Spec 137 §4 Rule 12 note (task-366) "the launch refuses a task whose Files line is missing or matches no row" — scripts/analysis/rule-lists.mjs:255 "const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase()) ? table.rows.find((r) => r.id === d.row) : null;" — a task whose type sits in no_files_default attaches the queue lists instead of the refusal, and no code keeps build and fix out of that key — refuse build and fix types outright and let the default row serve record-only types only.
+
+MET — Spec 137 §4 Rule 12 note (task-419) "a rule-list input keeps its unsuffixed name for one file" — scripts/analysis/rule-lists.mjs:447 — the suffix is empty only for a listed input of one chunk and one part, and a no-list input always takes -pN.
+
+MET — Spec 137 §4 Rule 12 note (task-423) "the resolved rule lists may be joined whole in table order" — scripts/analysis/rule-lists.mjs:121 — joinLists takes the named ids in table order and copies each list whole as a member.
+
+MET — Spec 137 §4 Rule 12 note (task-410) "when a chunk, an input or an output hash does not match" — scripts/analysis/rule-lists.mjs:467 — parseLensInput recomputes the list and material sha256 from the text it read.
+
+MET — Spec 137 §4 Rule 12 note (task-410) "the TOOL splits it at FILE boundaries into chunks" — scripts/analysis/rule-lists.mjs:38 — splitDiff cuts at each diff header and throws on a header it cannot read.
+
+MET — Spec 137 §4 Rule 12 note (task-423) "packed by size" — scripts/analysis/rule-lists.mjs:401 — partsFor packs whole blocks in order up to the unit bound without dropping a block.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+Rules met: none
+
+---
+⏱  139741ms (139.7s)
+📊 Tokens — total: 72027, input: 35370, output: 36657, reasoning: 35597

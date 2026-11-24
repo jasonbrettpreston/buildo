@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T04:29:10.489Z file_sha256=69cc9f033ab703c9ab9db5b43b714521481e5b45b58f6520ab7740329dbd2105 prompt_sha256=2c1f3a284fdebd4e20b09d90a1f55abd7c9d25583d438bccfb57ec4a5da6b944
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-error-paths-p6.txt (model: deepseek-reasoner)
+
+BUG-severity summary: no CRIT or HIGH. All findings are bounded-coverage gaps in a test file that otherwise pins the refusal paths.
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:306 "it('removes its own earlier input files with the same prefix before writing'" — cleanup is keyed on the output name prefix, and round names share it: --out in-out-code-review-r2 writes in-out-code-review-r2-p1.txt, which has in-out-code-review as its prefix, so a second round in the same out dir deletes round 1's input file; the r2 test writes into its own dir (out1) so the collision is never exercised — write r1 and r2 into one out dir and assert r1's file still exists, or assert the tool refuses to clobber another round's input
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts "const r = script(CLI, ['lens-input', '--list', 'rules', '--lists', listIds.join(','), '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x-compliance-rules'), ...(max ? ['--max', String(max)] : [])]);" — a repeated id in --lists (a,a, or an empty entry from a comma) is never passed, so nothing pins whether joinLists de-dups; if it maps ids to members as given, the same list's rules are sent twice in one part and judged twice with a different sha — add a test that --lists five-words,five-words yields one member, or is refused
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(out.length, `${files.slice(0, 40)} material ${mat}`).toBeLessThanOrEqual(3);" — the pinned count is an upper bound only, so a regression that writes no input files at all still passes this test — assert files.length is at least 1 beside the at-most-3 bound
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(edit((t) => { t.every_task = ['queue']; t.milestone_docs = { F: ['nope'] }; }).stderr).toMatch(/milestone_docs F.*nope/);" — the empty case milestone_docs F: [] is tested for no key, for an undefined list and for missing every_task, but never for an empty entry, so a letter mapped to zero milestone lists may pass validate and resolve with no objectives — add F: [] and expect a named milestone_docs refusal
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:143 "expect(ids(JSON.parse(res(f, 'docs/c.md', ['--type', 'build']).stdout) as Res)).toContain('crlf');" — the res helper (line 128) returns without checking status, so a refusal (exit 1 or 3, empty stdout) surfaces as "Unexpected end of JSON input" and the CLI's named stderr is never printed; same at lines 152 to 159 and 182 to 186 — assert status and stderr inside res() the way the other call sites do
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "const filesLineOf = (n: number) => /^Files: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'backlog/tasks', fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((f) => f.startsWith(`task-${n} -`)) as string), 'utf8'))?.[1] as string;" — the counts test reads the real cards of tasks 419 and 412 by name prefix with no guard: an archived or renamed card throws ENOENT on an "undefined" path, and a card with no Files line passes undefined into resolve, neither with a named failure — assert the card exists and has a Files line with a message naming the task number
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "for (const t of texts) expect(2 * t.length + 80).toBeLessThanOrEqual(40000); // TPL puts the input twice" — the "inside the bound" check adds a fixed 80 characters instead of rendering TPL, so a head-accounting regression under 80 chars passes while the real prompt is over the bound (the A4 room test does render it with substitutePlaceholders) — render the template with substitutePlaceholders here as well
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts "for (const [k, v] of [['GIT_DIR', saved.d], ['GIT_INDEX_FILE', saved.i], ['GIT_WORK_TREE', saved.w]] as const) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }" — mutating process.env looks like ambient repo identity leaks into later tests — it is set inside try and restored for all three keys in finally even when the assertions throw, and vitest runs tests in a file sequentially, so the next test sees the original environment
+
+VERDICT: PASS on error-path safety
+Paths walked: error (validate, resolve, lens-input, page, findings refusals), empty (no Files line, no rows, empty list part, list with no rule ids), retry (second run over the same out dir, repeated check-tasks), time-out (none in this material, cannot see the CLI bound), double-submit (repeated --lists id, repeated --add-ref), degrade-safety (page --check, close-check stamp recompute), idempotency and dedup (output-name prefix cleanup, compliance refs by id token)   Unguarded: 3
+
+---
+⏱  89566ms (89.6s)
+📊 Tokens — total: 47140, input: 27862, output: 19278, reasoning: 17982

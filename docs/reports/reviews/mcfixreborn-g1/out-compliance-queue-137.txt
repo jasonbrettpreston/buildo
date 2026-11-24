@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:11:03.922Z file_sha256=94e9d358540de0138f5a4aa3d5a481e2c176dcb8ba575e578835ec4ee36572f6 prompt_sha256=b5bfb99b3c7f0849bff78f60cb681bf15c3e9c07ff952797fd5b17599ee5af04
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — mcbylaws/protected-paths.json:2 "and his words at :1422, verbatim: \"approved [the five items pasted] - remember the app is not beign used - we are in development\"" — the quoted words carry an editorial bracket inside the quotation marks and the note names no queue, so the copy is not exact and lacks the queue the rule requires — restate the words with no bracket inside the quote, name the queue (Backlog), and keep the M-246 prior-text marker.
+
+DEFER severity=LOW — Spec 137 §4 Rule 4 "The orchestrator writes each ruling into the row's status line the same day." — NONE (task-384's row is not in the pasted material, cannot see) — the 2026-11-20 operator approval at MORNING-DECISIONS.md:1422 is recorded here only as a JSON comment line; whether task-384's status line carries the same dated note cannot be seen from this chunk — confirm task-384's row carries that dated note, and add it if the row is the only record the weekly check reads (§5 step 4).
+
+MET — Spec 137 §4 Rule 2 "A card, or a claimed id, gets a status line too. A task with no row does not exist." — mcbylaws/protected-paths.json:2 — the added frontend row "src/components/report/**" is attributed to registered task-384 (named in the Task block), so the change introduces no unregistered task.
+
+REJECT — Spec 137 §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended." — accused: each new dated note is appended to the growing "$comment" string — not a real issue: "$comment" is a ruling record on a policy file, not a row's status line, and Rule 4 requires the dated notes to be kept.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: Rule 2
+
+---
+⏱  35230ms (35.2s)
+📊 Tokens — total: 22375, input: 15597, output: 6778, reasoning: 6291

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:29:15.514Z file_sha256=c81a52fd4111ec332b74df0c0748d162f9a4829c21f59410eb45f10a489f6662 prompt_sha256=3cd899687eb909e3082219ebe0ed7412fbbd7806e0de1b3a5f7d37e417c7c04b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-396 "FIX.MASSING-The-two-massing-thresholds-become-registered-settings-20-and-60-square-metres" — src/tests/massing.logic.test.ts:598 "const config = { massing_shed_threshold_sqm: 20, massing_garage_max_sqm: 60, link_massing_centroid_confidence: 0.95, link_massing_nearest_confidence: 0.6 };" — the two thresholds are handed to classifyMatches as test literals and only the two confidences are asserted as declared, so nothing here locks 20 and 60 as registered settings — add asserts that both threshold names appear in the descriptor config.logic_variables and carry the 20 and 60 defaults in scripts/seeds/logic_variables.json
+DEFER severity=LOW — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — src/tests/massing.logic.test.ts:2 "// SPEC LINK: docs/specs/31_building_massing.md" — the header names a whole spec with no section, row or line, unlike the sibling headers in this chunk — cite the section or row the massing locks come from
+MET — plan-protocol §2 step D "red-first tests named" — src/tests/parcel-tool-gate.logic.test.ts:3 "// G1..G4: the arms; G5 a failed read is never "not entitled"; G6 both routes call the helper and neither holds the status set; G7 RED plant." — the red-first plant is named and executed by its own it block
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — src/tests/parcel-lot-form.logic.test.ts:1 "// SPEC LINK: docs/specs/01-pipeline/78_optimal_lot_configuration.md O-4, ML-4, the lot_form_detected row (dated note 2026-11-13)" — the source is named to section and row
+MET — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — src/tests/parcel-lookup-gate.infra.test.ts:121 "// Dated 2026-11-12 (operator, verbatim "1 b 2 a", item 1 (b); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md," — the ruling is quoted verbatim with the record path beside it
+REJECT — plan-protocol §1 "(9) measured check on the page" — the change is accused of locking a file outside this chunk — src/tests/parcel-lot-form.logic.test.ts "expect(readLotFormCalls(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8'))).toBe(1);" reads a file not in chunk 12 of 15, cannot see, and a file outside the pasted material is not a finding
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  38005ms (38.0s)
+📊 Tokens — total: 41704, input: 33756, output: 7948, reasoning: 7227

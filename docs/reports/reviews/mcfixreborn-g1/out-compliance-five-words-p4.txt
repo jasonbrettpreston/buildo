@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:57:17.892Z file_sha256=3cc29498d902506edc22d7eecc24cbcd8e4bacf0c9afc2cb15ac1cafa4dbeccc prompt_sha256=be0ec12814b9422790a3de15444c39cf9d492b657a6f5e85dad381fcbf1dec8d
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-five-words-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Glossary, lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`" — src/tests/lead-detail-query.coa.infra.test.ts:131 "// Regression lock (P1 uuid-fk residual): COA_LEAD_DETAIL_SQL's $3 also" — the test calls itself a regression lock but names P1 uuid-fk residual, no rule id and no declared alias, so by the pasted definition it is not a lock and the rule-map row it stands for cannot be traced to it — the behaviour (null bind, ::uuid cast) is independently asserted, so the gap is traceability only and bounded to one rule row.
+
+DEFER severity=LOW — Glossary, lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/surface-registry.infra.test.ts:112 "describe('surface registry — generated, never hand-edited (drift lock)'" — the drift lock names no rule id, and the R-13 direction-2 check is written `it.fails` (line 199), so it passes for as long as the estate is unowned and cannot fire on a newly unowned component — the companion test at line 209 pins the exact 11-file unowned set, so only the title and the it.fails wrapper are untraceable.
+
+DEFER severity=NIT — Glossary, OWED "Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — src/lib/surfaces/maxbld-landing.ts:21 "// Owed (not in the page until their readers land; no typed value, no setting created here)" — the pasted OWED is the #44 (h) print for a reader whose pin is due, and here the term is borrowed for a plain list of unbuilt readers with no producer swap and no print — no code path reads the word, so this is vocabulary drift only and deferrable.
+
+DEFER severity=LOW — pasted Task block "Tasks homed in this group: task-332, task-374, task-384, task-411. Files of other tasks are also read here: task-320, task-353, task-387, task-390, task-395." — src/lib/surfaces/maxbld-landing.ts:6 "// MF-76 · McFrontend queue · lane E. The server half of web_landing, the MaxBLD landing on maxbld.ca / (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md" — no pasted card or ruling names MF-76 or web_landing, so the declared stored reads (data_quality_snapshots, logic_variables) and the static/degraded switch rest on an MF-46 plan outside the paste — cannot see that card, so the gap is review coverage, not a behaviour found wrong.
+
+DEFER severity=NIT — RR-0439 (operator) "each rule list reads only the files the rule table names for it." — NONE — the pasted rule list is the 01-pipeline 132 Glossary and it names no file in this chunk (maxbld-landing.ts plus the eight src/tests files), so almost nothing here is judgeable against it — this is chunk 4 of 5 and the other parts run separately, so the mismatch is a pairing artefact.
+
+MET — task-374 FIX.FOOTER D7 and D8 — src/tests/surfaces/site-footer-route.ui.test.tsx:46 — the footer links are rendered through a next/link marker and asserted on the DOM, and the D8 describe asserts min-h-11/min-w-11/items-center/justify-center/inline-flex on each rendered link, so both halves are asserted output, not just named.
+
+MET — Glossary, lock / lock-db / check / hook (the src/tests and npm test half) — src/tests/surfaces/search-parity.golden.test.ts:1 — a plain .test.ts under src/tests with no DB and no network, asserting parity in both directions with planted RED cases.
+
+MET — Glossary, lock (the asserts-it half) — src/tests/leads-detail.infra.test.ts:129 "// 142.5 m2 at the pinned 10.7639" — the converted area is asserted numerically at the pinned factor and the null case is asserted null, so the area behaviour is checked rather than described.
+
+REJECT — Glossary, lock / lock-db / check / hook — that the three .infra.test.ts files are database tests slipping past npm test — all of them replace the pool with a mock (src/tests/lead-detail-query.coa.infra.test.ts:13 "pool: { query: vi.fn() },") and read a committed catalog, so they are ordinary npm test locks, not lock-db.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  121409ms (121.4s)
+📊 Tokens — total: 62860, input: 34957, output: 27903, reasoning: 26733

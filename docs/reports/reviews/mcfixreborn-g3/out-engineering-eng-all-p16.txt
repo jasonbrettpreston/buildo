@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:53:00.672Z file_sha256=eb3fa8fc86ab3deb7eab82fbc4d5c9b35de1c1522ce4a04cac3bed3251b7a1f2 prompt_sha256=75396238b45e7331a69dd513ed0e8ea6d26cb66b54ce460bfc09c91c6fc69887
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-engineering-eng-all-p16.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/page-arm.logic.test.ts:92 "const ctxOf = (root: string, ok = true) => ({" (with :17 "type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON documents") and src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:21 "const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDIDATE_LIMIT: '10' };" — both hand-build `any`-shaped inline fixtures and neither file imports a typed factory from `src/tests/factories.ts`, so an arm-input or config-shape change is not a compile error — add typed factories (page-arm context, search config) to `src/tests/factories.ts` and build both fixtures through them.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/surfaces/nav-by-route.logic.test.ts:203 "if (!at.has('accessibilityRole') && !at.has('role')) add(n, 'NAV-3', comp, `${calls[0]!.getText(sf)} (no role)`);" (and :209 "if (nav.length > 0) add(n, 'NAV-6', comp, nav[0]!.getText(sf));") — two bare `!` assertions carry no inline justification comment — bind the guarded element to a const after the length check and drop `!`, or add the required comment.
+
+DEFER severity=LOW — 2. Error Handling & Stability §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`." — src/tests/surfaces/page-arm.logic.test.ts:42 "['a part's when', (s, v) => { sec(s, 'error').parts[0].when = v; }, 'nearest_lot', 'schema_drift']," — the `find` result, its `.parts` and `[0]` are dereferenced with no optional chaining or guard, so a renamed section id throws an opaque TypeError instead of failing the case with a clear message — assert existence of the section and part before the write (or use `?.` plus an explicit expect).
+
+DEFER severity=LOW — 5. Testing Standards §5.2 "*.regression.test.ts | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — diff --git a/src/tests/surfaces/nav-by-route.logic.test.ts b/src/tests/surfaces/nav-by-route.logic.test.ts (allow-list comment "the list only shrinks") — the file's primary claim is a whole-tree fence lock plus an infra-style guardrail, which §5.2 assigns to `.regression.test.ts`, yet it ships as `.logic.test.ts` (pure derivation only) — rename it to `nav-by-route.regression.test.ts`, or split the pure `scanSource`/`judge` cases into the logic file and the tree scan into a regression file.
+
+MET — 8. Next.js & TypeScript Constraints §8.2 — src/tests/surfaces/nav-by-route.logic.test.ts:63 "const squash = (s: string): string => s.replace(/\s+/g, ' ').trim().slice(0, 80);" — no `s`-flag regex, no `process.env` literal narrowing, no `globalThis.google`; ES2017-clean.
+
+MET — 5. Testing Standards §5.3 — src/tests/surfaces/nav-by-route.logic.test.ts "expect(planted).not.toBe(real); // dead-man: the edit really changed the text" — one planted failing case per rule with a passing sibling, and the real-file copies prove the mutation landed.
+
+MET — 5. Testing Standards §5.2 (logic layer: happy + edge) — src/tests/surfaces/page-arm.logic.test.ts "expect([why, run(wrong).length > 0]).toEqual([why, true]);" — positive control plus each planted wrong name and the empty/missing-table edges.
+
+MET — 14. Prevention Loop registry, SPEC LINK row — src/tests/surfaces/parcel-legacy-oracle.logic.test.ts:1 "// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 dated note 2026-11-10 (what is kept and what changes, as ruled)," — spec and section are both named, as are the other two files' headers.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  75140ms (75.1s)
+📊 Tokens — total: 47343, input: 31272, output: 16071, reasoning: 14922

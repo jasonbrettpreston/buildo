@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:27:35.338Z file_sha256=dac256bcf9fc14f544a9a2ad58d4890dbf8c11ff8566c57d6f48b48c9eb9cf47 prompt_sha256=d67c13bc7eefcbabeea9c6059098fe866acfb5bef91b1e8120ac3e1f27803a9a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — task-372 "FIX.PROJ-Report-projection-freshness-compares-the-whole-stamp-the-sq-ft-factor-and-the-lot-size-window-are-settings" — src/lib/report-projection/project.ts freshnessOf "if (rows.some((r) => r.switchboard_sha !== current.switchboard_sha)) moved.push('switchboard');" — the verdict compares three of the four row stamps only, settings_sha is carried on the row and listed in lineage "settings_sha: distinct(stored.map((r) => r.settings_sha))" but is never moved and SeedShas declares only "catalogue_sha: string; switchboard_sha: string", so rows computed under other settings read as current — add settings_sha to SeedShas, CURRENT_SEED_SHAS and a fourth moved/lost branch with its own LOST sentence.
+
+DEFER severity=MED — Increment objectives "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25)" — src/lib/admin/parcel-lookup.ts "export type ParcelResolution = 'unique' | 'text_candidates' | 'multi_parcel' | 'unlinked' | 'no_match';" — the third named case, a possible semi lot, has no outcome in the pasted resolver and no semi case is identified anywhere in the pasted material (the lookup route that could set it is chunk 2 of 3, cannot see) — name the semi outcome here or point to the pasted route line that sets it, if any.
+
+DEFER severity=LOW — Increment objectives "The search identifies two-or-more parcels at one address ... and wires each to the report" — src/lib/admin/parcel-lookup.ts "lotMap: { kind: 'multi_parcel', parcelIds: truncated ? [] : rows.map((r) => r.parcel_id), num, truncated }," — when 11+ lots print one address the map is emitted with no parcel ids at all, so exactly the large multi-lot case is not wired to the report — keep the ids (or the first ten) and let `truncated` carry the overflow.
+
+MET — Increment objectives "two-or-more parcels at one address" — src/lib/admin/parcel-lookup.ts classifyRows — one printed address with a typed house number returns resolution 'multi_parcel' with a LotMapSeed for the consumer map read.
+
+MET — Increment objectives "(1) address confusion" — src/lib/admin/parcel-lookup.ts guardByDirection and conflictList — a one-lot hit whose printed direction differs from the typed one is answered as the address list with the lot still shown.
+
+MET — task-333 "SRCH.FUZZY-Mis-typed address resolves to candidates through the permit pipeline address spec matcher, same module" — src/lib/admin/parcel-lookup.ts matchMistyped — the miss-only read uses normalize_address() and levenshtein() against enrich_heritage_address_levenshtein_threshold, the permit pipeline's own pair, with no literal fallback.
+
+MET — task-123 "customer-scoped read module ... behind MAXBLD_WEB_LIVE pinned false" — src/lib/parcels/report-page.ts "if (!MAXBLD_WEB_LIVE) return null;" — the customer producer answers a miss for every lot before any read while the switch is false.
+
+MET — Project objectives "The database exists to service the designed report, details and search page" — src/lib/report-projection/read-stored.ts ROWS_SQL — the report page and the admin preview both read the stored parcel_maxbld_scenarios rows through one static statement and one projection.
+
+MET — Increment objectives "the semi calculation stays in Increment 7 (7.25)" — src/lib/parcels/report-compute.ts computeCustomerPageResponse — the entry adds no semi formula; it runs the step's own core and maps its rows.
+
+REJECT — Project objectives "keep it simple; no scope creep" — the 27.5 s to 33.2 s re-pin of tooling_precommit_budget_registry_s is accused of riding in this material — task-406 owns that seed row and RR-0433 folded it into this one group review, so it is in scope by the pasted ruling.
+
+REJECT — Project objectives "we need one plan - we can only execute one plan" — the diff spanning tasks 69, 123, 266, 318, 333, 372, 395 and 406 is accused of being more than one plan — RR-0431 "We only want to review the same set of files once" and RR-0433 rule them one group output review, not several plans.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+Rules met: none
+
+---
+⏱  56740ms (56.7s)
+📊 Tokens — total: 44382, input: 33681, output: 10701, reasoning: 9625

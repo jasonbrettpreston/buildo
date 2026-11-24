@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T03:25:30.867Z file_sha256=2c50091c4e3a41051eeada3e7770c6d662b95036a01c51d52f13858cec07bb56 prompt_sha256=57f1cb1e33b6be589db5ec03b7e00e95d1e66bd8c96b6d820120299e9b6d9c3c
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-ux-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json errors.classes `"ui": "Not-found block; the retry guard deliberately does not burn retries against a throttle."` (500: "then the not-found block", schema_drift: "rendered as the not-found block") vs the 400 copy `"This permit is no longer available"` — a person who is throttled or hits a server fault is told the permit no longer exists and is offered no retry — give 429, 500 and schema_drift their own message and a retry action, keep the not-found words for 400 and 404.
+
+BUG severity=HIGH — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json limitations `"CoA leads are declared in the payload type but 404 from the backend, so the lead_type union is effectively single-valued on this screen."` with measured `"[lead].tsx:67-70 narrows lead_type to \"permit\" with an inline comment citing Spec 91 §4.3.1."` vs src/app/api/leads/detail/[id]/types.ts `lead_type: 'permit' | 'coa';` — a person opening any CoA lead dead-ends on "This permit is no longer available" for a record that exists — serve the CoA detail or stop offering CoA leads the detail cannot open.
+
+BUG severity=HIGH — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json limitations `"[lead].tsx:390-396 passes testID=\"save-button-detail\"; SaveButton.tsx:67-72 sets no accessibilityLabel or accessibilityRole."` vs a11y `"labels": "partial"` — a screen reader user reaches the one action the page exists for and hears an unnamed button — add accessibilityRole and an accessibilityLabel that changes with `is_saved`.
+
+DEFER severity=MED — src/app/admin/report-preview/page.tsx `{pg.response_fixture.synthetic ? <p data-synthetic ...>Synthetic golden fixture. Not this lot.</p> : null}` vs the same file's `// operator T-3 (separate admin-only page, labelled synthetic goldens).` — if any page golden is not flagged, the label disappears and the admin reads synthetic art as a real lot report — make the label unconditional on this page, the page only ever renders goldens.
+
+DEFER severity=MED — scripts/surfaces/_schema/seed-report-v2.mjs `view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' },` — a person gets a "provenance" token and an unlabelled confidence value under every report; design text for this line is silent in the pasted material and I cannot see what fills the slots — check the slot values are words a household understands, since the proposal's own plain-words rule turns "high" into "By-law derived".
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json `"text": "the basement, not shared stairs and halls"` replacing `"text": "the basement; 10 % circulation"` — a person can no longer tell whether in-unit circulation is inside the area quoted, only that shared stairs are not — confirm the new exclusion is accurate; the design text for this row is not in the pasted material.
+
+DEFER severity=LOW — src/app/admin/report-preview/page.tsx `<nav aria-label="Target" ...>` containing `<a href="/admin/report-preview">states</a>` — a screen reader user hears "states" read as one of the targets, and a keyboard user leaving the page view lands on the first state, not the state they were reading — move the back link out of the "Target" nav and carry the current state and scenario in its href.
+
+REJECT — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json `"on a refetch failure the screen keeps rendering the cached detail behind a \"Showing last loaded\" banner rather than blanking."` — it looks like an error state that blocks the content, but it matches the pasted design ("the old data stays on screen with a warning strip rather than blanking out") and leaves the person their data plus a way back.
+
+VERDICT: FAIL on the person's experience
+States checked: lead detail loading, hit, miss, degraded, error (400, 404, 429, 500, schema_drift), offline, cold-boot deep link for permit and CoA; report preview states view, page view, state, target and scenario pickers, unauthenticated (cannot see, guard only), missing golden key (cannot see); presentation seed and proposal text; lead-detail types carry no rendered state   Dead ends found: 1
+
+---
+⏱  87424ms (87.4s)
+📊 Tokens — total: 45973, input: 34757, output: 11216, reasoning: 10151

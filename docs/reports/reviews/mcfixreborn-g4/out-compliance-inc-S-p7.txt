@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:58.817Z file_sha256=66aed919cc218d0a163f0cf191ebd1df46b4f8ddac4ba4abd0b6d6f3490f9769 prompt_sha256=3068ed024d43b358c1a47658ba9d615e9437d1aa8c8014f74e51724ec2f14af7
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p7.txt (model: deepseek-reasoner)
+
+MET — RR-0431 "We only want to review the same set of files once - that is the objective and just the output" — src/tests/backlog/rule-lists-table.logic.test.ts:1-375 — the chunk carries exactly one hand-written test file, judged as output only, no plan and no second copy of any file.
+
+MET — Implementation Notes "Left out of every group: generated files ... test fixtures and goldens, documents, lane and review records, backlog cards." — src/tests/backlog/rule-lists-table.logic.test.ts:1 "// SPEC LINK: task-406 (V2.LIST round 2)" — the file is a hand-written .test.ts, and fixture paths appear only as string literals under test at :262-268 and :271-275, not as included fixtures.
+
+MET — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — src/tests/backlog/rule-lists-table.logic.test.ts:1-375 — one named file, well under the cap; the artefacts it asserts on (scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json, mcbylaws/protected-paths.json) are not in this chunk, cannot see.
+
+REJECT — doc-2 A.11 "A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT" — the change is accused of not delivering a search-page element — doc-2 elements describe the Increment S search pages; this file asserts rule-table resolution only and touches no search-page element, so the status line cannot be charged against it.
+
+REJECT — doc-2 F-SEARCH-WEB "page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false" — the change is accused of leaving the web search unbuilt — the clause governs the web search page, not a backlog rule-list test; the file has no web search code path at all.
+
+REJECT — doc-2 Built state "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map..." — the change is accused of leaving those items unbuilt — these are pre-existing product gaps recorded by doc-2, and this test file neither claims nor implements them.
+
+REJECT — doc-2 D.9 "Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT" — the change is accused of not building the semi distance input — the clause scopes the semi question page; the material is a rule-table test and contains no semi question code.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  40704ms (40.7s)
+📊 Tokens — total: 24566, input: 19371, output: 5195, reasoning: 4565

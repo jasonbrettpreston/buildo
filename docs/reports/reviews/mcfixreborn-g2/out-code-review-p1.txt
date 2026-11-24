@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T02:18:10.330Z file_sha256=a586d4d552066d95624997506ade1b3f45c74e932027d4fba766bfe57431a502 prompt_sha256=505ad5692acf978cab35808bbb4a5d8b85f8abcf4b6070d4189bd1a9693c1875
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "const comparableBuilds = Array.isArray(row.comparable_builds) ? (row.comparable_builds as ComparableBuild[]) : null;" — the one Tier 2 jsonb field that skips validation: an element-shaped drift is handed to the client typed as ComparableBuild[] while the two neighbouring jsonb fields degrade through safeParse — add a ComparableBuildSchema.safeParse here and push a warning plus logWarn on failure, as the cost menu and nearby summary do.
+
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "const num = (v: unknown): number | null => (v == null ? null : Number(v));" — a non-numeric string returns NaN, which contradicts the declared number | null and the areas branch three lines below ("never coerce to NaN"), so compStats and the cost scalars can carry NaN to the admin UI — return Number.isFinite(n) ? n : null.
+
+DEFER severity=LOW — src/lib/parcels/report-compute.ts "switches: (typeof r.switches === 'string' ? JSON.parse(r.switches) : r.switches ?? null) as NonNullable<StoredRow['switches']> | null," — JSON.parse can throw a bare SyntaxError with no parcel or field context and this module has no catch or log, and the cast asserts an array shape that project.ts then silently drops — parse under try/catch that logs and yields null, or assert Array.isArray.
+
+DEFER severity=LOW — src/lib/report-projection/project.ts "const HIDDEN_STATES: string[] = (presentation as unknown as { states: { hidden: string[] } }).states.hidden;" — a table drift leaves HIDDEN_STATES undefined and the first projection throws a TypeError on .includes instead of a named load-time refusal, unlike pinned-settings.ts which throws by name — check Array.isArray at load and throw naming report-presentation.json (same for STATUS_TEXT below it).
+
+DEFER severity=NIT — scripts/analysis/src-sql-ledger.mjs "(72 SQL-bearing files: 41 static, 29 interpolated, 2 not_postgres)" — the counted header still says 72 files and 29 interpolated while the sentence it introduces adds "the 30th" — recount the header so the measured set and its prose agree.
+
+DEFER severity=NIT — src/lib/report-projection/format.ts "export type PageRule = (typeof PAGE_RULES)[number];" — never referenced: formatPageRule takes a bare "rule: string", so the closed rule union is declared but unused — either type the parameter against the union or drop the export.
+
+REJECT — src/lib/parcels/report-compute.ts "if (plan.batch_binds.join() !== 'last_key,batch_size') throw new Error('report-compute: the core batch statement no longer binds last_key and batch_size');" — looks wrong that the binds are only checked by name while the values are hard-coded positionally as "[lot.id - 1, 1]" — it is correct: the check refuses a changed core before the query, and the next line re-checks the returned row (Number(row.id) !== lot.id returns a miss), so a placeholder reorder degrades to a miss and never to another lot's page.
+
+REJECT — src/lib/parcels/report-page.ts "case 'gated': return stored.response as unknown as Json;" — looks wrong that a gated lot is served a page instead of a miss — it is correct: projectStoredPage sets every option to not_evaluated and fills shownPermitted only for ungated lots, so a gated response carries no option numbers (the deliberate all-not-evaluated page, D2).
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none, no CRIT or HIGH finding in this chunk
+
+---
+⏱  249431ms (249.4s)
+📊 Tokens — total: 65215, input: 32786, output: 32429, reasoning: 31591

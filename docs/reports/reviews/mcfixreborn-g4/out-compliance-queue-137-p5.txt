@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:12:44.257Z file_sha256=4cd0dfe6f68369cb857be585d05868e2ebaf78bb869b7090ffca71816196a926 prompt_sha256=44110550f98685d629b365ddf7f3b078b865abf0aef98478653f95d9a6d9f7c9
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 Rule 12 (task-366 note) "the launch refuses a task whose Files line is missing or matches no row" — scripts/analysis/rule-lists.json "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"] and "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"] — the step-pipeline row excludes scripts/gemini-review.js as a lane tool, but the lane-tools row lists the other two review tools and not scripts/gemini-review.js, so a task editing that CLI matches no row and is refused — add "scripts/gemini-review.js" to the lane-tools globs.
+DEFER severity=MED — Spec 137 §3 word list "BUILT | Built and committed locally; not yet pushed or not yet landed." — scripts/analysis/rule-lists.json "finished_statuses": ["BUILT", "DONE", "MERGED"] — the table classifies BUILT as finished although the closed word list says BUILT is not yet landed — remove BUILT from finished_statuses or rename the field to close_statuses and document the lane close.
+DEFER severity=MED — Spec 137 §4 Rule 12 (task-366 note) "the launch refuses a task whose Files line is missing or matches no row" — scripts/analysis/rule-lists.json "no_files_default": { "types": ["record"], "row": "queue-records" } — a record task with no Files line gets the queue-records row instead of being refused, a default the pasted note does not name — remove no_files_default or add the operator ruling for record tasks to Spec 137 §4.
+DEFER severity=MED — Spec 137 §4 Rule 12 (task-366 note) "Which lists a task attaches is decided by scripts/analysis/rule-lists.json from the task's Files line" — scripts/analysis/rule-lists.json "every_task": ["five-words", "plan-protocol"] and "$comment": "every_task lists are attached to EVERY task whatever its Files line" — two lists are attached regardless of the Files line, and increment_docs and milestone_docs attach by milestone letter, so the Files line does not decide the list set — attach these lists through rows matched by the Files line, or add the operator ruling for every_task, increment_docs and milestone_docs to the spec.
+DEFER severity=MED — Spec 137 §4 Rule 12 (task-366 note) "one compliance lens output per rule list the task attaches" — scripts/analysis/rule-lists.json "$comment": "exempt globs ... resolve to NO list" and "This exempts the REVIEW MATERIAL only ... list resolution is unchanged" — the same exempt key both removes list resolution and leaves it unchanged for golden files, so the close check cannot tell which lists a golden-file task attaches — split the key into review-exempt and list-exempt or state one rule for every exempt glob.
+MET — Spec 137 §4 Rule 12 (task-448 note) — scripts/analysis/rule-lists.json "queue-records": { "globs": ["backlog/**", ".cursor/*QUEUE*", "docs/specs/00-architecture/**"], "lists": [] } — the queue-records row attaches no Spec 137 or Spec 08 list.
+MET — Spec 137 §4 Rule 12 (task-439 note) — scripts/analysis/rule-lists.json "surfaces": { "lists": ["surface-136", "eng-all"] } — the surfaces row no longer attaches Specs 126, 127, 128 or 135 and sends Spec 136 section 2.
+MET — Spec 137 §4 Rule 12 (task-448 note) — scripts/analysis/rule-lists.json "specs-web-admin": { "lists": ["surface-136"] } — the specs-web-admin row no longer keeps the four surface specs.
+MET — Spec 137 §4 Rule 12 (task-448 note) — scripts/analysis/rule-lists.json "generated-127": { "lists": ["eng-all"] } — the generated-127 row no longer attaches surface-127.
+MET — Spec 137 §4 Rule 12 (task-448 note) — scripts/analysis/rule-lists.json "panel-records": { "lists": [] } — the panel-records row attaches no list after task-448.
+MET — Spec 137 §4 Rule 12 (task-448 note) — scripts/analysis/rule-lists.json "storage": { "lists": [] } — the storage row no longer attaches doc-16 after task-448.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  131723ms (131.7s)
+📊 Tokens — total: 54751, input: 23398, output: 31353, reasoning: 30268

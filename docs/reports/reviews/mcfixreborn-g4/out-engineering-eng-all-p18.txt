@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T04:20:44.333Z file_sha256=32146f099e185af7fa5ee30d22bf30531d16a62827609c2e1c5f9412219a5f5e prompt_sha256=8fd312450509b76c8d70e24fe6e377642032aef4c7778712bfc6800a6544746a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-engineering-eng-all-p18.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+```
+DEFER severity=LOW — 12.10 Real-DB Integration Tests "MUST land with a `*.db.test.ts` file under `src/tests/db/`" — src/tests/proof-slice.db.test.ts:1 "// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db)," — the new db test sits at src/tests/ root, not under src/tests/db/ where the clause and the pinned sibling src/tests/db/db-target-version.db.test.ts put it — move it to src/tests/db/proof-slice.db.test.ts so any db-glob runner and the clause path agree
+DEFER severity=LOW — 13.3 Backend Structured Logging "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — src/tests/proof-slice.db.test.ts:20 "afterAll(async () => { await pool.end().catch(() => undefined); });" — the catch swallows the teardown error with no logError, so a failed pool.end() is invisible — log it through logError or drop the catch and let it surface
+DEFER severity=LOW — 14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/review-template.logic.test.ts:1 "// 🔗 SPEC LINK: .claude/review-templates/README.md (template format + invocation)" — the link names a README, no spec and no §N, so the traceability row is not satisfied for this file — point it at the governing spec and its section
+MET — 12.10 Skip semantics — src/tests/proof-slice.db.test.ts:17 "describe.skipIf(!dbAvailable())" — the db test self-skips when no DATABASE_URL/BUILDO_TEST_DB is set, so npm run test is unaffected
+MET — 12.10 Target guard / shared pool — src/tests/proof-slice.db.test.ts:19 "beforeAll(() => { pool = getTestPool() as Pool; });" — connects through the shared testcontainer harness, not an ad hoc pool
+MET — 12.11.5 pool-boundary — src/tests/proof-slice.db.test.ts:19 "getTestPool()" — src/tests/ is an allowed location and no "new Pool(" appears in the chunk
+MET — 12.8 SQL Linting and Migration Safety — src/tests/hooks-composition.infra.test.ts:65 "'validate-migrations.sh'," and :66 "'check-migration-down-comments.sh'," — both migration gates stay pinned in pre-commit, and this chunk adds no migration file for sqlfluff/validate-migration to bind
+MET — 14 SPEC LINK sections — src/tests/proof-slice.db.test.ts:2 "docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form)," — cites spec plus rule id rather than the file alone
+```
+
+```
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 13   Unmet: 3
+```
+
+---
+⏱  43839ms (43.8s)
+📊 Tokens — total: 41876, input: 31709, output: 10167, reasoning: 9439

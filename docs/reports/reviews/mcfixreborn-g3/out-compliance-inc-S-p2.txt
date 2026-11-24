@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:48.437Z file_sha256=eed796c47801b10aca0ad00130050b049da6cdd290dde7c494b41a37114eab6b prompt_sha256=8562c22f4ea5a45a81abf506bcc41cb0335bbf42133b88e904756547129473fd
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 B.7 "Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:158-164 "expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=Bathurst%20St');" — the clause names the target /help?topic=wrong-lot with the report affordance inside the no-lot message; the material locks a full https URL with a different topic slug and places the report link in the candidate list, and no test asserts a help link under any of the B.4, B.5 or B.6 notices — fix: pin the ruled /help?topic=wrong-lot target (or cite the ruling that changes it) and add the help link assertion under each ruled notice.
+DEFER severity=LOW — doc-2 A.7 "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:144-152 "expect(mockCalls).not.toContain('Bathurst St');" — the ruled per-chip route to /lookup?q= is replaced by filling the box and letting the 400 ms debounce fire, and no push is asserted for a chip — fix: assert the chip pushes the lookup route carrying q, or record the ruling that keeps the chip filling the box in place.
+DEFER severity=LOW — doc-2 A.9 "Outside Toronto state: Lots are only available in Toronto." — mobile/__tests__/parcelSearchMatch.test.ts:255 "expect(isOutsideToronto('123 Main St Mississauga')).toBe(false);" — an outside-Toronto address typed without a comma or FSA is locked to fall through to the no_match miss, so the ruled outside-Toronto notice cannot appear for that input — fix: carry this limitation against A.9 on the task or widen the city-position match.
+DEFER severity=LOW — doc-2 D.8 "Owner answer stored (a reopened lot does not ask again)" — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:140-146 "mockParams = { parcelId: 'PIN-777', semi: 'answered' };" — the only way the route stops asking is the semi param carried on the URL, so a reopened lot without that param asks again; the material locks the param shape and nothing locks a stored answer — fix: point at the GAP.12 storage row or assert the stored answer on a param-free reopen.
+REJECT — doc-2 A.2 "Search box: one pill, placeholder Enter lot address, search icon" — the accusation that mobile/__tests__/parcelScreens.golden.test.ts:265-267 pins the wrong placeholder text — not a real issue: the pasted task list names task-356 "SRCH.A6-search-box-reads-Enter-a-Toronto-address-RR-0313-RR-0314", which supersedes the A.2 wording.
+MET — doc-2 A.10 "Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." — mobile/__tests__/parcelScreens.golden.test.ts:198-225 — search.legal is asserted to hold the ruled text verbatim and the line is asserted drawn once as the last column child in every golden and named case.
+MET — doc-2 B.1 "radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick" — mobile/__tests__/parcelScreens.golden.test.ts:113-116 — layoutProblems fails any tree whose SELECT is enabled with nothing checked, and the planted case pins that message.
+MET — doc-2 A.3 "Typeahead resolution of the typed text (street-prefix, up to 10)" — mobile/__tests__/parcelSearchMatch.test.ts:84-92 — the candidate cap is pinned to 10 and the over-cap boundary is exercised.
+MET — doc-2 A.12 "Bottom tab bar: Lookup, Tracked Lots, Account (app)" — mobile/__tests__/parcelSearchMatch.test.ts:288-310 — the three tabs, their labels and the route round trip are locked.
+MET — doc-2 A.9 "Outside Toronto state: Lots are only available in Toronto." — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:110-118 — the outside notice renders and nothing is pushed or recorded.
+MET — doc-2 A.13 "In-bar Account button (MF-35 builds it amber)" status AVAILABLE, REMOVED by the design — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:148-153 — the screen asserts no parcel-search-account testID, matching the removal named by task-322.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 4
+Rules met: none
+
+---
+⏱  129854ms (129.9s)
+📊 Tokens — total: 49849, input: 31466, output: 18383, reasoning: 17262

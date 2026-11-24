@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:34:42.395Z file_sha256=d73648acbde37453abb075628fcb6212df6dcd4c82c6a7bdaa7c5f28bac30e02 prompt_sha256=f029e886585e8fce338184a5e5981cdb52bc286f234aeb573ad28987d9d103ff
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+BUG vs DEFER are the only severity forms; below, MED/LOW go under DEFER per the format.
+
+DEFER severity=MED — mobile/src/components/surfaces/SurfaceRenderer.tsx:119 "return () => act.select(String(resolveValue(a.parcelId, ctx)));" — action arguments are stringified with no missing-value guard, and PageTableBinding writes the argument under the row's own name ("onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }"), so a select row whose arg is not exactly parcelledId reaches the screen as the literal string "undefined" with no throw, silently dropping the tap — resolve the argument by the row's declared name and throw when it resolves to undefined, as resolveValue does for refs.
+DEFER severity=MED — mobile/src/components/surfaces/LotMapBinding.tsx:179 "const lot = s.map!.lots[i]!;" — cards() dereferences the nullable map with non-null assertions while mapView() treats the same field as nullable ("const plain = s.map?.lots[i]?.hasFootprint === true"), so a multi_parcel situation whose map block is absent crashes the render instead of failing closed — guard s.map in cards (return [] or the unlinked notice) or read lots from s.map?.lots ?? [].
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:59 "let result;" — an uninitialised let is implicit any, so storeLookup(id, result) accepts anything, including a resolved undefined, with no type error — type it as the awaited return of answeredParcelLookup or restructure so the awaited value is const.
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:63 "if (mountedRef.current) setSubmitError(e);" — the caught answered-lookup failure is never logged (no captureException, unlike the lookup hooks) and is discarded entirely when the page unmounted during the fetch — capture the exception before the mounted check, then set state only when mounted.
+DEFER severity=LOW — mobile/src/components/surfaces/SurfaceRenderer.tsx:147 "const DATA_PROPS = new Set(['key', 'navigate']);" — navigate is written into every tree ("...(s.route ? { navigate: s.route } : {})") and skipped here, and every mount reads the situation field instead ("const route = situation.route;"), so within this material the tree prop is write-only — drop it from the bindings and goldens or have the mounts read tree.props.navigate.
+REJECT — mobile/app/(app)/parcel-tool/[parcelId].tsx:27 "const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });" — passing undefined while data exists looks like discarding the fetched report — it is the SRCH.METER-2 hold (an unsure lot's page is server-null until the semi answer), so the loading state rather than the miss text is the ruled outcome.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  341985ms (342.0s)
+📊 Tokens — total: 83436, input: 34766, output: 48670, reasoning: 47991

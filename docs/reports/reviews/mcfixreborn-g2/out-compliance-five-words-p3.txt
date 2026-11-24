@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T02:25:03.899Z file_sha256=5a7015deb54b7717e9408b28a59f93f764cd769f4c26e21a319891674c6c9a86 prompt_sha256=e8d37947061c476a1168bf9f1e796cf86bb7bdc0c4e885c89756e737d458d418
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g2/in-out-compliance-five-words-p3.txt (model: deepseek-reasoner)
+
+MET — task-318 "SRCH.ROUTE-Search identifies the case and routes it two or more parcels at one...." — src/tests/search-routing.logic.test.ts:98 — the suite covers the multi-parcel, unlinked, unclear, semi and plain route cases.
+MET — task-333 "SRCH.FUZZY-Mis-typed-address-resolves-to-candidates-through-the-permit-pipeline-address-spec-matcher-same-module" — src/tests/search-routing.logic.test.ts:181 — the suite covers the levenshtein matcher after exact, typeahead and unlinked miss.
+MET — task-266 "LOAD.1-Start-the-one-lot-report-calculation-the-moment-the-user-picks-an-address-on...." — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:108 — the golden 25 is materialized through the runtime loader.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  68748ms (68.7s)
+📊 Tokens — total: 41190, input: 26943, output: 14247, reasoning: 14016

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:12:44.260Z file_sha256=e9e9af7e9a5c245081c42bb5a5b6a30fbf424576d6d9721974c1378bc067dd37 prompt_sha256=310ff7047eed485481cfcf324950d1451beddf0634d197c9cc5bf3c58ce1254e
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §6 "Not adopted. It needs an operator amendment of this spec after the infra-freeze lift, because the queue gates read the queue rows" — scripts/analysis/backlog-brief.mjs:180 "backlog task edit ${taskId} -s RUNNING -a ${laneArg}" — the brief makes the Backlog task card the source of the lane's governing rules, plan, status transitions and final summary (also "backlog task edit ${taskId} --check-ac <n>" -s BUILT at line 187), which is Backlog.md as the source of truth, so the status and the rules of record move off the queue row the spec still names — either read the queue row as the record and keep the card as a board view input, or paste the operator amendment of §6 into the context this file is judged against.
+
+DEFER severity=MED — RR-0439 "each call is at most 120,000 characters" — scripts/analysis/backlog-brief.mjs:62 "const CAP_TOTAL = 120 * 1024;" — the context pack the brief writes can reach 122,880 bytes, past the 120,000 character call bound before the diff and the prompt are added (the pack's own notice prints "Cap: 120 KB in total") — cap the pack below the bound with room for the material and measure the exact prompt, as rule-lists.mjs does.
+
+DEFER severity=MED — Rule 14 "The orchestrator reads the board's status at the start of every session, reports any WARN to the operator, and reads the board before giving any queue status or next step." — scripts/analysis/backlog-brief.mjs:22 "if (boardDir && !fs.existsSync(path.join(boardDir, 'backlog/decisions'))) die(" — the brief reads the board's decisions but never the board's status or its WARN line, and it is the thing that hands out the next step ("Take order:" at line 179), so a launch can proceed over a board whose last rebuild WARNed — read `<board>/BOARD-STATUS.txt` and print any WARN line in the brief before the take order.
+
+MET — Rule 13 "Nobody edits the board. A change on the board changes nothing" — scripts/analysis/backlog-brief.mjs:164 — the brief's only write is the review context file under docs/reports/reviews, nothing is written into the board checkout.
+
+MET — §5a dated note 2026-11-16 "the board reads two queue files plus the cards" — scripts/analysis/backlog-brief.mjs:44 — the lane context reads its decisions from the board checkout itself, so it follows the board's own source instead of a second copy.
+
+MET — §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now" — .husky/commit-msg:7 — the chain adds check-lane-close.mjs and check-backlog-task.mjs, and nothing in the pasted material refuses a status line, an expiry or a DROPPED without a quote (those two scripts are not in this chunk, cannot see).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+Rules met: none
+
+---
+⏱  147053ms (147.1s)
+📊 Tokens — total: 47611, input: 24953, output: 22658, reasoning: 21936

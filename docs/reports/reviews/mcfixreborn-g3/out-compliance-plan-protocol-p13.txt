@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:30:36.418Z file_sha256=970ad86d08e7919779f94af5a7656baae8cd2b232950dcb899a060bc30301368 prompt_sha256=65f87f9faa3dabe7396a8d807c7fddde7230e451b093f94781d6fb9509e846b2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-plan-protocol-p13.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-334 "SRCH.METER-Report-meter-counts-only-when-a-report-is-produced-for-a-found-address-and-lot" — src/tests/parcels-lookup-page.logic.test.ts:180 "expect([log.access, log.meter, log.page]).toEqual(['parcel_tool', 'not_evaluated', true]);" — a served page for a found parcel is pinned as not counted, so the produced-report meter clause is unmet — count the produced page at the route and assert the ledger insert or counted meter, or move this pin to a still-open task.
+DEFER severity=MED — task-351 "SRCH.A6-reset-date-served-as-a-Toronto-time-label-RR-0310" — src/tests/parcels-entitlement.infra.test.ts:81 "resetsOnDisplay: '5 Dec 2026'" — a bare date does not evidence a Toronto time label and would pass for a UTC date formatter — assert the exact Toronto label including time and ET for a UTC instant near a date boundary.
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/tests/parcel-tool-meter.logic.test.ts:2 "§11b.7 rules 5-6 (dated note 2026-11-11: 20 a month, plan and trial, D-2..D-6 a)" — the header cites the superseded 20 a month while line 81 asserts "MF-47 RULED 2026-11-14: trial 10, Basic 10, Pro 25" — replace the header cite with the MF-47 10/10/25 ruling.
+DEFER severity=LOW — task-364 "SRCH.HYGIENE-1-stale-comments-and-cites-left-in-built-1·B-files" — src/tests/surfaces/admin-media.golden.test.ts:32 "it('56 goldens, byte for byte', () => {" — the case name says 56 while line 36 asserts "expect(fresh.size).toBe(70);" — rename the case and correct the count comments to the single current total.
+DEFER severity=MED — group scope "Files of other tasks are also read here: task-123, task-266, task-332, task-333, task-372, task-384, task-411." — src/tests/spec-notes-1b.logic.test.ts:137 "// FINAL.1b (task-444, lane BL-DOCS444; RR-0385 item 1, decision-170; RR-0389, decision-174): the documents that still state the" — task-444 is outside the named group and its other-task list, so the file adds out-of-scope assertions — move the FINAL.1b block to task-444's own test file.
+MET — task-376 — src/tests/spec-notes-1b.logic.test.ts:34 — D3-a pins the seven-field entitlement whitelist and D3-b/D3-ext pin the dated notes with operator words and prior text.
+MET — task-319 — src/tests/semi-question-design.logic.test.ts:32 — the golden test pins the question heading spanning the cards and the v8 radio cards, Continue and top bar.
+MET — task-321 — src/tests/surfaces/lot-map-help-link.logic.test.ts:72 — the test pins the help row under the multi-lot cards and the address notices with the built open_help topics.
+MET — task-362 — src/tests/surfaces/lot-map-help-link.logic.test.ts:57 — the test pins the pick-hint line only when nothing is picked and the help row after the button.
+VERDICT: FAIL
+Clauses checked: 8   Unmet: 4
+Rules met: none
+
+---
+⏱  146762ms (146.8s)
+📊 Tokens — total: 63025, input: 31943, output: 31082, reasoning: 30233

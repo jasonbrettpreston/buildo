@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:57:58.820Z file_sha256=766b03b98221096267ab4cd227642c982d0c4938183e990958b7ff480a7ba02d prompt_sha256=b334b613ed77a1110e724bcc74d032a803ae796da6a65f334cc2ae8ff8d3b9c2
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-inc-S-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0414 "4. changed parts only as per your recommendation" (the oversized files are read as changed parts) — src/tests/backlog/backlog-lane.logic.test.ts:312 "one file alone over the room is refused naming the file and its size: report that to the orchestrator at once" — the brief this test pins refuses a file that alone fills the room and pins chunking "never inside a file" (:308 "splits the DIFF at file boundaries into chunks (never by hand, never inside a file)"), so the changed-parts route the ruling names for an oversized file is unavailable — let a file larger than the room be cut at its changed parts, or pin in the same brief which ruling supersedes RR-0414 for lane reviews — blast radius is bounded to one file larger than the room, which the lane then reports instead of reviewing.
+
+MET — RR-0439 "each call is at most 120,000 characters; each rule list reads only the files the rule table names for it" — src/tests/backlog/review-templates.logic.test.ts:15 "expect(text.split('{{PLAN}}').length - 1, `lens-${lens}.md`).toBe(1)" — the second material block that made the 181,810 character prompt is pinned out of every lens template, and the per-list inputs are built from the table rows only (backlog-lane.logic.test.ts:367 "in-plan-${seat(l)}-${l.id}${x.suffix}.txt").
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  73267ms (73.3s)
+📊 Tokens — total: 53843, input: 36195, output: 17648, reasoning: 17281

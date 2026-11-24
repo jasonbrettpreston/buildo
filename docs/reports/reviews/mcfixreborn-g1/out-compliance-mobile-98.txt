@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:03:40.460Z file_sha256=b6c784d589a1c71c9a3de32e5ce2a8d9bfccc23a3f2d92c2435adaabb476ad1c prompt_sha256=3b84b773c574fcb97e174bd5a0848b9453de23fc9de180e4e9b4b102c8f4157b
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g1/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 98 §4 "`parcelCostFormat.test.ts`: envelope-fallback label ..., absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off" — mobile/__tests__/parcelCostFormat.test.ts:81 "so its test leaves. Prior text: describe('SponsorSlot renders null while flag-off (Spec 100 §6.8)')" — the mandated SponsorSlot flag-off assertion is met by a comment only, no test remains — restore the SponsorSlot null-while-flag-off assertion, or land the Spec 98 §4 amendment that retires it in this same change.
+
+DEFER severity=MED — Spec 98 §3.1 "`clearState: false` (Persistent State) ... Requires manual setup (or a setup script) to populate the local MMKV state before running." — mobile/maestro/lead-detail.yaml:19 "saved=true in lead_views for the test user." — the only documented preconditions contradict the flow, which taps save then asserts "save-heart-filled-detail" (":68 id: \"save-heart-filled-detail\""), and the seed step is deferred (":21 Document the seed step in mobile/maestro/README when CI integration lands."), so the persistent-state setup is not deliverable as written — seed saved=false and commit the seed command in this change.
+
+DEFER severity=LOW — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" (required suites, no testID convention) — mobile/app/(app)/[lead].tsx:4 "docs/specs/03-mobile/98_mobile_testing_protocol.md §3.2 (testIDs)" — §3.2 defines launch-blocker flows only, so the cited testID convention does not exist at that section — cite the section that actually defines testIDs, or drop the citation.
+
+DEFER severity=LOW — Spec 98 §3.2 "**`auth.yaml`**: `clearState: true`." — mobile/maestro/lead-detail.yaml:26 "# See auth.yaml for the clearState: false rationale (Expo dev-client" — auth.yaml cannot carry a clearState:false rationale because the pasted clause fixes it at clearState:true — inline the clearState:false rationale here, or cite the feed flow precedent.
+
+REJECT — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — adding lead-detail.yaml as a flow outside the launch-blocker list — §3.2 requires the listed flows, does not forbid additional ones, and §3.1's clearState requirement is met by ":28 clearState: false".
+
+MET — Spec 98 §3 "Location: `mobile/maestro/`" — mobile/maestro/lead-detail.yaml:1 — the new flow sits in the mandated directory.
+
+MET — Spec 98 §3.1 "Every Maestro YAML file must explicitly define its state expectations using `clearState`" — mobile/maestro/lead-detail.yaml:28 "clearState: false" — the state expectation is declared, not left implicit.
+
+MET — Spec 98 §4 "Location: `mobile/__tests__/`" — leadDetailFormat.test.ts, leadDetailScreen.sqft.behaviour.test.tsx, parcelCostFormat.test.ts, useLeadDetail.test.ts — all four unit/screen tests live in the mandated directory.
+
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:70 "expect(screen.getByText('1,534 sq ft')).toBeTruthy();" — behaviour assertions only, no snapshot, permitted by the pasted dated note that "a screen-behaviour test are not snapshots".
+
+MET — Spec 98 §4 "envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters" — mobile/__tests__/parcelCostFormat.test.ts:20-77 — each of those named items is asserted.
+
+MET — Spec 98 §4 "No Maestro flow covers parcel-tool today." — no parcel-tool flow appears in the material — the statement remains true after this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  59315ms (59.3s)
+📊 Tokens — total: 31708, input: 19558, output: 12150, reasoning: 11157

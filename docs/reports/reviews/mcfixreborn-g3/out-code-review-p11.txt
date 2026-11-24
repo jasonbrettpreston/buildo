@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T03:29:58.440Z file_sha256=c16307c59ef3364d18e0a74a483328ec4d7879f27f5e75290d137eecf4f622a9 prompt_sha256=54701a8eaff393f6c3f5b3d1a9dc88707650e89a6d663aebe8ec721dbd3c0f00
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-code-review-p11.txt (model: deepseek-reasoner)
+
+BUG severity=<none> — cannot see? No CRIT/HIGH found. Provide the mandated form only.
+
+```
+BUG severity=CRIT — none found
+BUG severity=HIGH — none found
+DEFER severity=LOW — src/tests/customer-report-compute.logic.test.ts:46 "const m = cr(`${process.cwd()}/package.json`)(`${process.cwd()}/scripts/lib/compute/compute-maxbld-scenarios.js`) as Record<string, unknown>;" — the core mock resolves through process.cwd() while the same file pins "const ROOT = path.resolve(__dirname, '..', '..');" on :25, so a run from any other directory throws MODULE_NOT_FOUND inside the vi.mock factory instead of a readable failure — resolve the two paths from ROOT (and CORE_REL) in the factory.
+DEFER severity=LOW — src/tests/customer-report-compute.logic.test.ts:47 "h.loaded.core += 1;" — the counters increment only on the first evaluation of each mock factory, so once any earlier test has loaded the core the C1 assertion "expect(h.loaded.core).toBe(coreBefore);" can no longer detect an import before the gate (vitest --sequence.shuffle makes it vacuous) — reset the module registry before the C1 case or assert on a per-import spy (vi.mocked on the lazy import) rather than a one-shot load counter.
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:120 "const realAssemble = vi.mocked(assembleConsumerPayload).getMockImplementation()!;" — an unchecked non-null assertion captured at module scope; if the factory's vi.fn(a.assembleConsumerPayload) is ever changed every "real assembler" case throws "realAssemble is not a function" inside a mock with no hint of the cause — assert typeof realAssemble === 'function' at capture, or throw a named Error there.
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:306 "vi.mocked(assembleConsumerPayload).mockImplementation(realAssemble as never);" — the as never cast erases the whole mock signature, so a change to the route's call signature or the assembler's parameters still compiles and only fails at runtime — drop the cast (realAssemble already has the mock's type) or type it as Parameters<typeof assembleConsumerPayload>.
+DEFER severity=LOW — src/tests/fix-tune.logic.test.ts:62 "expect(code('mobile/src/lib/semiQuestion.ts')).toMatch(/sliceNumber\(slice, 'continue_wait_ms'\)/);" — the case is titled "both phone read sites use the one reader" but asserts only semiQuestion.ts, and the hook half is already asserted one case above, so this test adds no coverage while its name claims a second site — either add the HOOK assertion here (sliceNumber(searchSlice, ...) over KEYS) or retitle it to the one site it checks.
+DEFER severity=NIT — src/tests/link-massing.infra.test.ts:63 "expect(declared[name]!.min, `${name} declares no lower bound`).toBe(SEED[name]!.min);" — SEED[name] carries a non-null assertion this test never proves, so a seed key dropped later surfaces as "TypeError: Cannot read properties of undefined (reading 'min')" instead of naming the variable — replumb through the same `if (!entry) throw new Error(...)` guard the three cases above use.
+REJECT — src/tests/customer-report-compute.logic.test.ts:171 "['a batch row with no Layer 2 stamp', (): Scenario => ({ batch: [{ ...ROW, lot: null }] })]" — it reads as ROW being dereferenced at it.each collection time, before beforeAll assigns it — correct: the tuple holds an arrow that is only invoked inside the case body, after beforeAll, which is what lets the stamp and parcels guards be reached.
+```
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  136451ms (136.5s)
+📊 Tokens — total: 65840, input: 33664, output: 32176, reasoning: 31285

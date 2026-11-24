@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:13:41.153Z file_sha256=e01a5e0f07b0e6a42d27becac08f549af29858a37f255571825c903a83bd1fd0 prompt_sha256=127e4fa1d28fad88959b62d2a210a36247776d2d696664910f849e09623b1d1a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-mobile-98-p3.txt (model: deepseek-reasoner)
+
+BUG: none
+DEFER severity=LOW — 98 §4 dated note 2026-11-10 "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0)" — mobile/package.json "cannot see" — the named dependency versions are not in this chunk, so the amendment's pin cannot be verified from the material — check package.json and the lockfile in the remaining chunks (or a later run) for 13.3.3 / 19.1.0.
+DEFER severity=LOW — 98 §4.1 "§8.3 — gate-stability tests (no `isFetching` in render gates per §6.5)" and "`storeReset.coverage.test.ts` finds it with no count change" — mobile/app/(app)/parcel-tool/[parcelId].tsx:30 "const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });" — no gate-stability test for this render gate and no evidence of the recentSearchesStore reset registration appear in chunk 3, cannot see the rest — confirm the §8.3 test and the §8.5 coverage grep land in the remaining chunks with this screen and store in scope.
+DEFER severity=LOW — 98 §4.1 "`parcelCostFormat.test.ts`: envelope-fallback label (\"maximum envelope\" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off." — mobile/app/(app)/parcel-tool/[parcelId].tsx:10 "The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i)." — the mandated parcelCostFormat boundary is absent from chunk 3 and the sponsor slot it pins is declared retired, cannot see whether the test file survives — confirm the file still exists and still passes, or record it as deleted by ruling.
+DEFER severity=LOW — 98 §4 dated note 2026-11-10 "a render smoke (throws / renders non-empty / finds its test ids, labels and host props)" — mobile/__tests__/surfaceRenderer.smoke.test.tsx:35 "const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error'];" — the rendered set is a hand-kept list, so a new committed golden state silently escapes the smoke that is the non-snapshot UI check — derive the list from the fixture goldens so a new state cannot be missed.
+MET — 98 §4 "Location: `mobile/__tests__/`" — mobile/__tests__/sliceConfig.test.ts:6 "import { sliceNumber, type SliceNumbers } from '@/lib/sliceConfig';" — all five new test files sit under mobile/__tests__/.
+MET — 98 §4.1 "`fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`" — mobile/__tests__/useParcelLookup.test.ts:82 "parses a well-formed hit response and unwraps raw.data" — the three named cases each have their own assertion.
+MET — 98 §4.1 "the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema)" — mobile/__tests__/useParcelLookup.test.ts:160 "a parcelId from the SEARCH response resolves through the LOOKUP path, same schema" — the search-emitted id is piped straight into the lookup call and asserted on the URL.
+MET — 98 §4.1 "`shouldRetryParcelLookup` skips 400/403/429/drift" — mobile/__tests__/useParcelLookup.test.ts:177 "no retry on 400 / 403 / rate-limit / deleted / schema-drift" — all four named states are pinned false, with retry true up to three attempts.
+MET — 98 §4 dated note 2026-11-10 "a render smoke (throws / renders non-empty / finds its test ids, labels and host props)" — mobile/__tests__/surfaceRenderer.smoke.test.tsx:12 "import { fireEvent, render, screen, within } from '@testing-library/react-native';" — the mobile render smoke uses RNTL and asserts render, test ids, labels, host props and action args, not snapshots.
+REJECT — 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — the semi-question and search golden tests accused of being UI snapshots — they compare a pure builder's props tree to a committed JSON golden with no renderer, and the pasted dated note already separates render smokes and screen-behaviour tests from snapshots.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  66720ms (66.7s)
+📊 Tokens — total: 48273, input: 32859, output: 15414, reasoning: 14245

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T04:42:23.267Z file_sha256=94fb938aa9b0b98b2d655b90de7b2c8ec3d6bc0056484c91bc5022e7d91ca5f2 prompt_sha256=8ff7cffb03ea53b49fbdcf5667c7b61aef2b8edc9ac526408a3a1db84fc4bc7a
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g3/in-out-compliance-surface-136-p14.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.33 "One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo)" — search-web-binding.ui.test.tsx "the mobile tree is executed by search-golden-capture.ts --check, and the mobile jest cases are not run by the hook: UNVERIFIED" — the reports_left mobile render is only structurally checked, not rendered by mobile jest-expo, so fe.33 per-platform is not demonstrated for the new state — add and run the mobile jest-expo render case for reports_left, then drop the UNVERIFIED note
+DEFER severity=LOW — fe.45 "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date" — search-web-binding.ui.test.tsx "replace('{count}', String(amb.candidates.length))" — the ambiguous badge count is predicted from candidates.length, implying the list count is counted client-side while the map heading binds the server derived lot_count — bind the badge count to a server/derived field and assert it the way the heading uses { derived: 'lot_count' }
+DEFER severity=LOW — fe.37 "a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently" — static-page.logic.test.ts "expect(await readSupportInbox({ query: async () => { throw new Error('down'); } } as never)).toEqual({});" — T7 exercises the inbox reader only, not the page binding, so "never a partial group" and "never skips a part silently" at render are not shown — add a web_help render case with the inbox unset proving the mailto group is wholly absent and logged
+MET — fe.05 — search-reports-left.logic.test.ts "not.toMatch(/reportsLimit\s*[-+*/]|[-+*/]\s*reportsLeft|reportsLeft\s*[-+*/]/)" plus "formatResetDate).toBeUndefined()" — the served numbers are shown with no arithmetic and the client date formatter is gone
+MET — fe.18 — search-follow-ups.logic.test.ts "expect(searchContent['search.tagline']).toBe('Lot Intelligence')" and map.heading bound as content key — displayed strings bound to content keys
+MET — fe.31 — static-page.logic.test.ts T2 "expect(Object.keys(TABLE.pages).sort()).toEqual(converted.sort())" and "Object.keys(TABLE.pages[id]).sort())).toEqual([id, descriptor(id).states...])" — page table totality both ways with declared states
+MET — fe.32 — search-reports-left.logic.test.ts "left: { contract: 'contract_parcels_entitlement.reportsLeft' }" and "resetsOnDisplay: { contract: ... }" — every displayed value binds a field of the declared contract descriptor
+MET — fe.36 — search-web-binding.ui.test.tsx "expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`)" — a select navigates via router.push, and the report control carries an href
+MET — fe.37 — static-page.logic.test.ts T7 "expect([warn.mock.calls.length, err.mock.calls.length]).toEqual([8, 1])" — a failed read leaves its part out and is logged, never thrown
+MET — fe.49 — static-page.logic.test.ts T4 "expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true])" — every static link resolves to a public host-table page, none scope D
+REJECT — fe.50 — the Terms test requires Basic, Pro, Enterprise and bars "one plan" — the pasted note only says "The monthly plan is also offered as an Apple in-app purchase beside web checkout", which neither forbids tiered plans nor mandates a single plan, so there is no conflict with the pasted clause
+REJECT — fe.49 — the persistence test references the 'lead-feed' query key as a key kept by shouldDehydrateQueryFn — the fence bars "lead_parcels is read by no surface" and scope-D links from a MaxBLD page; a query-client dehydrate filter is neither a surface read nor a page link
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: fe.05, fe.18, fe.31, fe.32, fe.36, fe.37, fe.49
+
+---
+⏱  125009ms (125.0s)
+📊 Tokens — total: 54031, input: 29918, output: 24113, reasoning: 23091

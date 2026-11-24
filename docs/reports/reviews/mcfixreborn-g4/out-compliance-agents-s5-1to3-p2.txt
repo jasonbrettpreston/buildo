@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T03:43:18.217Z file_sha256=2c268d9f5e0fac64570e702fd749488a905a314c24e1e9a0f91e8d7d97364f0a prompt_sha256=8f63c2a21591044bf9814010c176f9fad81ef523f88703e5d3825e819653aec5
+🔍 Lens review of docs/reports/reviews/mcfixreborn-g4/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings, then MET lines, then the verdict block.
+
+DEFER severity=MED — task-375 pasted AC "proof-slice-reads-its-limits-from-settings-D11-D10" — scripts/analysis/proof-slice.mjs:75 "const res = run(row.argv, { timeoutMs: row.timeoutMs ?? DEFAULT_TIMEOUT_MS });" — the command rows take their timeout from the typed constant DEFAULT_TIMEOUT_MS (proof-slice.mjs:22) and the exported timeoutMsFromVariable has no caller in the file, so proof-slice does not read this limit from settings — when the variable is registered, pass gateVariable(TIMEOUT_VARIABLE) through timeoutMsFromVariable into realIo's run instead of the constant.
+
+DEFER severity=MED — task-363 pasted AC "exit-2-on-an-unwritable-out-dir" — scripts/analysis/proof-slice.mjs:160 "try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }" — mkdirSync with recursive:true returns cleanly when the directory already exists, so an existing but unwritable --out passes this arm and the first evidence writeFile throws uncaught (exit 1 with a stack), i.e. only a non-creatable path gets exit 2 — probe writability (fs.accessSync W_OK, or write and unlink a temp file) after mkdir and return 2 when it fails.
+
+DEFER severity=MED — dated note 2026-11-20 (grounder round 5) "the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on)" — scripts/analysis/backlog-lane.mjs:63 "const t = readItems(board).find((x) => x.id === taskId);" — the launcher reads the task from the board checkout's working tree, and its dirty check (backlog-lane.mjs:84 "filter((p) => !p.startsWith('backlog/')") lets uncommitted backlog/ edits stand, so an uncommitted type or milestone edit on the board checkout decides the launch gate and the resolved rule lists rather than the board ref copy the ruling pins — read type, assignee and the Files line from `git show refs/heads/wf2/board:<path>` with the origin fallback, the same copy the launch-commit search uses.
+
+DEFER severity=LOW — task-366 dated note 2026-11-20 (2) "the path to rule-list table: data, not code, says which rule lists ... govern a touched path" — scripts/analysis/backlog-lane.mjs:74 "if (rlOpt && path.resolve(home(rlOpt)) !== path.resolve(DEFAULT_TABLE) && process.env.RULE_LISTS_ALLOW_OVERRIDE !== '1') refuse(...)" — the only launch-time check that the table is the repo's own is switched off by an environment variable no pasted ruling names, so a launch can be briefed from a narrower table — drop the env arm or restrict it to a test-only path that still refuses a table outside the repo.
+
+DEFER severity=MED — task-410 dated note 2026-11-20 (2) "With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept)" — scripts/analysis/backlog-lane.mjs:188 "the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list" — the brief conditions those four lenses on fitting the bound, so a lane reading it can skip them entirely for a change too large for the bound, where the ruling says the tool chunks the diff for them as it does for a rule list — state in the same sentence that lens-input chunks the diff at file boundaries for those four lenses too, never by hand, and file them as out-<lens>-pN.txt.
+
+DEFER severity=NIT — pasted group scope "Tasks homed in this group: task-68, task-358, task-363, task-365, task-366, task-369, task-375, task-399, task-406, task-407, task-410, task-412, task-418, task-419, task-423, task-432, task-433" — scripts/analysis/backlog-lane.mjs:234 "const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model \"opus\" on the Agent call that takes the BRIEF-FILE line below)';" — a model-split instruction and its printed line are added that no pasted clause or ruling names (task-436 is not in the pasted set) — keep it only if its ruling is pasted at the next review, otherwise list it as an out-of-scope addition with its ruling reference.
+
+MET — task-366 dated note 2026-11-20 (2) "puts the governing lists into the brief (READ each whole before planning)" — scripts/analysis/backlog-lane.mjs:195 — the brief's rule block names each resolved list, its file, whole-file or sections, why, and says READ each whole before planning, never hand-pick a clause.
+
+MET — task-423 dated note 2026-11-21 "The default stays one compliance run per rule list" — scripts/analysis/backlog-lane.mjs:186 — the brief keeps one run per list by default, names the joined run an accepted form that is not the default with the RR-0374 measurement, and says a stage holding both forms is refused.
+
+MET — section 5.3 "Rejected findings are written to the plan *with reasons*" — scripts/analysis/backlog-lane.mjs:189 — the grounder line requires a reason for REJECTED and CONFLICT, and the lane leaves the task RUNNING with "grounder owed".
+
+MET — task-410 dated note 2026-11-20 (1) "one file alone over the room is refused naming it" — scripts/analysis/backlog-lane.mjs:188 — the brief refuses a single file over the room naming the file and its size, splits the diff at file boundaries only by the tool, and stamps each chunk c of m with its path list.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+Rules met: none
+
+---
+⏱  117767ms (117.8s)
+📊 Tokens — total: 52292, input: 24944, output: 27348, reasoning: 25885
