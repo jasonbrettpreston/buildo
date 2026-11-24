@@ -3,10 +3,11 @@ id: TASK-453
 title: >-
   SEARCHFIX.5 Review tooling: the two planning lists turned off for output
   reviews, the close check's fail-open paths closed, review-tool fixes
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX5'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:40:00Z'
+updated_date: '2026-11-24T15:42:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -17,6 +18,18 @@ references:
   - docs/reports/reviews/task-453/seat-integration-1.md
   - docs/reports/reviews/task-453/seat-reality-check-1.md
   - docs/reports/reviews/task-453/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 150030
 ---
@@ -295,4 +308,6 @@ rg#5 MED folded is still held to the
 2026-11-24: scope added by the operator's ruling RR-0450 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2325, verbatim: "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive."): (a) the queue-137 and orchestrator-doc17 lists come off the lane-tools row of scripts/analysis/rule-lists.json; (b) the step handbook list stays on the compute rows only (orchestrator reading: already so, the plan confirms); (c) the five-principles list is replaced by three focused questions asked at the plan stage: is this the simplest design; are we adding infrastructure and complexity for small gains; is the scope limited (RR-0449, /Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2320). Switches and text changes only. Also on the Files line by this note: docs/specs/00-architecture/plan-protocol.md.
 
 2026-11-24: RR-0452 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2336, operator verbatim: "Plan approved with one change - do not add the addiitonal 3 questions"): item (c) of the note above is withdrawn. The five-principles list is turned off and nothing replaces it; no three questions; docs/specs/00-architecture/plan-protocol.md is not edited for them.
+
+2026-11-24 taken on the board at lane launch (lane BL-SFX5, worktree /Users/brettpreston_macmini/Buildo-wt-sfx5, branch wf2/inc1b-sfx5), RR-0240
 <!-- SECTION:NOTES:END -->
