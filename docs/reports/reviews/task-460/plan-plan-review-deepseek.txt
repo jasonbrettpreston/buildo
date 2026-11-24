@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T18:17:57.776Z file_sha256=aabab331b51671bffa0d757b5753347a2a7e619e0fe7110cd065942579f3ae04 prompt_sha256=92cc1c570ec0ecd23f48c9b09d64d79a52dddfbef24ea9953808a8b993176d2d
+🔍 Lens review of docs/reports/reviews/task-460/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2 "outputLists, rule-lists.mjs:306 ... already drops any id" vs AC4/T9 — output_off (rule-lists.json:238) becomes a single global 58-id line; the plan never states outputLists is type-aware, but AC4 ("a check or doc task still gets every list") and T9 (check task with output_off=all still refused /out-compliance-first/) only hold if outputLists subtracts output_off for build/fix *only*. If it drops unconditionally, a check task gets `ls=[]` at check-lane-close.mjs:526 and silently loses all output lists — AC4 fails and T9 cannot pass — read outputLists (rule-lists.mjs:306) to confirm the type guard; if absent, add it (rule-lists.mjs is on the Files line) before writing T2/T5.
+
+DEFER severity=MED — §4.1 lensSet `out: [...(code ? ['code-review'] : [])]`; T3 (:build/fix Files lines) — the `code` predicate decides whether a code review fires at all, and T3 only exercises `.ts/.tsx/.mjs`/routes; a build task whose Files line is migration/`.sql`/schema-only could resolve `code=false` → out=[] → zero code review AND zero compliance (output_off), i.e. a grounder-only "build" review; verify the predicate covers every code-bearing extension the repo builds (RR-0409/0410 hand-written schema), add a .sql case to T3.
+
+BUG severity=HIGH — §6 "This card's own reviews" + §3 test :549 attack 27 — for a build/fix lane, the close verifies only lenses in `set.out` (code-review); any `out-error-paths.txt` or `out-compliance-*` produced because a brief still names it is unvalidated, so findings written there are silently dropped rather than folded; generalize the fix beyond the pinned error-paths case (a close that ignores a produced compliance/error-paths file loses its findings) or state that no such file is generated.
+
+DEFER severity=MED — §4 steps 1-2 + commits line — rule-lists.mjs (relaxed validate: `!table.lists?.[id]`) and rule-lists.json (output_off → 58 ids) MUST land in one commit: old validate against the new 58-id output_off rejects every id not in `every_task` (["plan-protocol"]), so a split/rebase producing JSON-without-MJS leaves the table refused by the pre-commit/CI check; state the atomicity requirement explicitly.
+
+DEFER severity=MED — §5 locks :932/:980 ("at most 3 files; tooling lists are 143,119 characters in memory plus about 620"); §9 "The cap result (arithmetic only)" — the ~620-char Spec 08 note is assumed to fit the cap without a run; if it does not, the note shrinks and the page must be regenerated again (step 6 depends on step 5 being final) — compute `sum(current block sizes)+620` vs cap before writing the note.
+
+DEFER severity=MED — Basis "Every file on the Files line is byte-identical to 283cb3857 except ... rule-lists-by-kind.md" — this rests on board head 5af0f7be2; if head moves before build, both the byte-identical claim and the page regen base are stale — verify `git diff --stat 283cb3857..HEAD -- <Files>` is empty-but-page before starting.
+
+DEFER severity=MED — Sequencing "BL-SFX3 (task-451) is closed: 6bcfa5ce6 BUILT, an ancestor of HEAD" — precondition asserted, not shown; confirm `git merge-base --is-ancestor 6bcfa5ce6 HEAD` and task-451 status before build, else a concurrent lane edits a list doc and the generated page collides (regenerate-on-merge only, no detection).
+
+DEFER severity=LOW — §4.1 validate message change ("is not in every_task" → "output_off: list <id> is not defined") and T1 edit of :1128 — grep all tests/scripts for the old string; any other consumer of the old refusal text breaks silently.
+
+DEFER severity=LOW — §6 "Pre-commit related tests skip a commit that changes only JSON (.husky/pre-commit:55)" — a JSON-only drift (new list added without output_off entry, or an output_off id whose list is deleted) can land on pre-commit and only fail in CI, committing a table whose validate now refuses every subsequent commit; acceptable because it fails toward more review, but note the recovery is a follow-on fix commit.
+
+DEFER severity=LOW — no explicit rollback in §6/§7 — the change is reversible in two edits (empty/restore output_off in rule-lists.json + revert lensSet out to the old set) plus reverting the Spec 08 note and regenerating the page; the plan should name this so a mid-landing close-refusal has a stated path rather than an improvised revert of a protected path.
+
+REJECT — §9 "The exact MD line of each RR quote beyond the lines opened" — marked UNVERIFIED, but the RR quotes are citations in notes/§1, not behavioral inputs; a wrong line number is a doc nit caught by review, not a plan-readiness defect.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- outputLists type-awareness unverified: with a global 58-id output_off, a check/doc task may silently lose every output list at check-lane-close.mjs:526, contradicting AC4 and making T9 unpinnable — confirm rule-lists.mjs:306 guards by type or add the guard.
+- lensSet `code` predicate may zero-out review for a migration/schema/.sql-only build task (out=[] + output_off = no code review, no compliance) — verify the predicate and add a non-.ts code-file case to T3.
+- Off-set lens output files (error-paths, or any brief-named off list) are no longer validated by the close; their findings are dropped rather than folded — pin the behavior or guarantee no such file is produced.
+Top 3 unverified data premises (if any, regardless of verdict):
+- "58 lists / output_off = Object.keys(lists)": `node -e "const t=require('./scripts/analysis/rule-lists.json');console.log(Object.keys(t.lists).length, t.output_off.length)"`
+- "outputLists is type-aware / plan stage ignores output_off": read `rule-lists.mjs:306` and `resolve()`/`verifyResolved`; check for any read of `output_off` outside `outputLists`.
+- "Every File byte-identical to 283cb3857 except the page" and "cap fits +620": `git diff --stat 283cb3857..HEAD -- <Files>` and sum the tooling-kind block sizes vs the :932/:980 cap.
+
+---
+⏱  83858ms (83.9s)
+📊 Tokens — total: 38435, input: 22666, output: 15769, reasoning: 14215

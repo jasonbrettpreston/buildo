@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T18:17:57.777Z file_sha256=aabab331b51671bffa0d757b5753347a2a7e619e0fe7110cd065942579f3ae04 prompt_sha256=68927ee1e3b9baa443ead0fb802ab2fc12c81a550813e975db492bb8ef6d1579
+🔍 Lens review of docs/reports/reviews/task-460/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/rule-lists.mjs:194 "Old: out = code-review plus ux, error-paths and security. New: `out: [...(code ? ['code-review'] : [])]`." — the old line was type-blind, the new one is conditional, so any task whose type is not exactly build or fix (check, doc, a blank or misspelled type) now yields out=[], the loop at check-lane-close.mjs:529-563 over set.out finds nothing to require and the lane closes with no output lens at all; no AC covers it and T3 pins build and fix only — keep the old four-lens literal on the non-code branch and add one pin test for a check, a doc and a blank type, or state and pin the removal as intended.
+
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs:188 "make no out-compliance or out-engineering file." against check-lane-close.mjs:852-855 "its output_off is the range base's ["plan-protocol"]. The close asks out-compliance-agents-s5-1to3, -agents-s7-s11, -inc-S and -ms-S, plus out-engineering-eng-all" — a task whose Files line names the table gets a brief built from the branch table (all 58 off, "none for this task") and a close built from the range-base table (five out-* files), so this card's own lane is told to make none and then refused for not making five; the cheap escape is writing five empty lens files, which fabricates review evidence — build the brief from the same table F10 will use for those tasks, or put the countermand in the brief text.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:160-161 "New: `if (!table.lists?.[id]) bad.push(\`output_off: list ${id} is not defined\`)`." — the bracket lookup walks the prototype, so output_off ids "constructor", "toString" or "hasOwnProperty" validate though no such list exists, which is exactly the unknown id AC#1 says is still refused, and outputLists then drops nothing — test own keys (`Object.hasOwn(table.lists ?? {}, id)`) in validate and in the outputLists filter.
+
+DEFER severity=MED — check-lane-close.mjs:549 ":549, attack 27. A stale out-error-paths.txt would no longer be checked, because the close verifies only lenses in set.out." — a lane that does produce an out-<lens>.txt outside set.out (a stale brief, a hand run, an in-flight lane) closes with that file unpinned by file_sha256 and never compared with the diff, so a partial or rewritten lens file passes without a finding — apply the :549 hash pin to every out-*.txt present in the lane folder, not only to lenses in set.out.
+
+DEFER severity=MED — "The close proves presence only. Nothing proves the descriptor or milestone duties were done." — the one new validating seat is unpinned prose in GROUNDER.md, while each of the four lenses it replaces was a separate hash-pinned file covering the diff, so a lane satisfies the descriptor, acceptance-line and red-then-green duties with a GROUNDER.md that never mentions them — settle Q4 (the `Seat: validate <path> sha256:<12>` and `validate#N SEV` report form) so the close's TRIAGE and verdict rules reach the grounder's output.
+
+DEFER severity=MED — src/tests/backlog/rule-lists-table.logic.test.ts "T5 (AC1, drift guard), a new case: every key of `lists` is in output_off" against AC #3 "emptying output_off puts every list back" — the documented restore path (an empty output_off) fails T5, so the rollback cannot be committed without also editing the test, and CI refuses the one action the card promises puts every list back — exempt an empty output_off in T5 as the all-on state and keep the drift guard for partial lists.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:191 "the milestone objectives list of the task (its ms- list above) against the diff" against rule-lists.mjs:654 "`type === 'build' ? r.lists : []`" and SURPRISE 1 "a fix task gets no rule list at either stage" — for a fix task the brief names a duty that points at an ms- list the brief does not contain, so the grounder either skips the milestone-objective duty or guesses it, and this card is type fix — resolve the ms- lists for the grounder duty alone on fix tasks, or drop the parenthetical reference where the list is not above.
+
+REJECT — scripts/analysis/rule-lists.mjs:160-161 "A typo still fails closed." — a missing or null `lists`, or an output_off that is not an array, looks like an unchecked shape — validate refuses both before any lane runs, and a missing entry means nothing is dropped, so the degrade is toward more review and not fewer, except for the prototype-name case above.
+
+VERDICT: FAIL on error-path safety
+Paths walked: unknown id in output_off, empty output_off rollback, non-array output_off, non-code task type in lensSet, brief versus close table disagreement (F10), unexpected out-*.txt at close, grounder presence-only, milestone duty with no ms- list   Unguarded: 5
+
+---
+⏱  86461ms (86.5s)
+📊 Tokens — total: 38519, input: 21780, output: 16739, reasoning: 15531
